@@ -477,7 +477,7 @@
 }
 
 .pdf-template-nature .pdf-header {
-  border-bottom: 3px solid #22c55e;
+  border-bottom: 3px solid #059669;
   padding-bottom: 20px;
   margin-bottom: 30px;
 }
@@ -485,13 +485,13 @@
 .pdf-template-nature .pdf-title {
   font-size: 28px;
   font-weight: 700;
-  color: #14532d;
+  color: #064e3b;
   margin-bottom: 8px;
 }
 
 .pdf-template-nature .pdf-subtitle {
   font-size: 14px;
-  color: #16a34a;
+  color: #059669;
 }
 
 .pdf-template-nature .pdf-section {
@@ -501,15 +501,15 @@
 .pdf-template-nature .pdf-section-title {
   font-size: 18px;
   font-weight: 600;
-  color: #14532d;
+  color: #064e3b;
   margin-bottom: 15px;
   padding-bottom: 8px;
-  border-bottom: 2px solid #86efac;
+  border-bottom: 2px solid #6ee7b7;
 }
 
 .pdf-template-nature .pdf-summary-card {
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-  border: 1px solid #86efac;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 1px solid #6ee7b7;
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 15px;
@@ -517,7 +517,7 @@
 
 .pdf-template-nature .pdf-summary-label {
   font-size: 12px;
-  color: #16a34a;
+  color: #059669;
   margin-bottom: 5px;
   font-weight: 500;
 }
@@ -525,7 +525,7 @@
 .pdf-template-nature .pdf-summary-value {
   font-size: 32px;
   font-weight: 700;
-  color: #14532d;
+  color: #064e3b;
 }
 
 .pdf-template-nature .pdf-table {
@@ -535,7 +535,7 @@
 }
 
 .pdf-template-nature .pdf-table th {
-  background: #22c55e;
+  background: #059669;
   color: white;
   padding: 12px;
   text-align: right;
@@ -545,15 +545,15 @@
 
 .pdf-template-nature .pdf-table td {
   padding: 12px;
-  border-bottom: 1px solid #bbf7d0;
+  border-bottom: 1px solid #a7f3d0;
   font-size: 13px;
 }
 
 .pdf-preview-nature {
-  background: #f0fdf4 !important;
-  border-color: #22c55e !important;
+  background: #ecfdf5 !important;
+  border-color: #059669 !important;
   font-family: "Inter", sans-serif !important;
-  color: #14532d !important;
+  color: #064e3b !important;
 }
 
 /* ==================== OCEAN TEMPLATE ==================== */
@@ -562,7 +562,7 @@
 }
 
 .pdf-template-ocean .pdf-header {
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  background: linear-gradient(135deg, #0891B2 0%, #0e7490 100%);
   color: white;
   padding: 30px;
   margin: -40px -40px 30px -40px;
@@ -587,15 +587,15 @@
 .pdf-template-ocean .pdf-section-title {
   font-size: 18px;
   font-weight: 600;
-  color: #0369a1;
+  color: #155e75;
   margin-bottom: 15px;
   padding-bottom: 8px;
-  border-bottom: 2px solid #7dd3fc;
+  border-bottom: 2px solid #67e8f9;
 }
 
 .pdf-template-ocean .pdf-summary-card {
-  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
-  border: 1px solid #7dd3fc;
+  background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+  border: 1px solid #67e8f9;
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 15px;
@@ -603,7 +603,7 @@
 
 .pdf-template-ocean .pdf-summary-label {
   font-size: 12px;
-  color: #0284c7;
+  color: #0891B2;
   margin-bottom: 5px;
   font-weight: 500;
 }
@@ -611,7 +611,7 @@
 .pdf-template-ocean .pdf-summary-value {
   font-size: 32px;
   font-weight: 700;
-  color: #0c4a6e;
+  color: #164e63;
 }
 
 .pdf-template-ocean .pdf-table {
@@ -621,7 +621,7 @@
 }
 
 .pdf-template-ocean .pdf-table th {
-  background: #0ea5e9;
+  background: #0891B2;
   color: white;
   padding: 12px;
   text-align: right;
@@ -631,13 +631,17 @@
 
 .pdf-template-ocean .pdf-table td {
   padding: 12px;
-  border-bottom: 1px solid #bae6fd;
+  border-bottom: 1px solid #a5f3fc;
   font-size: 13px;
 }
 
+.pdf-template-ocean .pdf-table tr:nth-child(even) {
+  background-color: #f0f9ff;
+}
+
 .pdf-preview-ocean {
-  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%) !important;
-  border-color: #0ea5e9 !important;
+  background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%) !important;
+  border-color: #0891B2 !important;
   font-family: "Inter", sans-serif !important;
-  color: #0c4a6e !important;
+  color: #164e63 !important;
 }
