@@ -1271,3 +1271,62 @@ Verified through code review that Excel filename includes date range:
 - Changes were already committed in 2377977 (currency features commit)
 - Excel export supports full Hebrew RTL layout with multiple color themes per sheet
 - Filename generation handles all edge cases (both dates, one date, no dates)
+
+---
+
+## Session: 2026-02-06 (Features #88, #89) - COMPLETED
+
+### Assigned Features
+- Feature #88: USDT Currency Support - System supports Tether (USDT)
+- Feature #89: BTC Currency Support - System supports Bitcoin (BTC)
+
+### Work Completed
+
+Both features were already fully implemented in the codebase. This session focused on comprehensive verification.
+
+**Feature #88: USDT Currency Support**
+Verified through comprehensive code review:
+- Currency dropdown includes USDT option: `<option value="USDT">₮ - טתר</option>`
+- Currency symbol function returns ₮ for USDT
+- Implemented in:
+  * app/projects/page.tsx:246-247 (symbol function)
+  * app/projects/page.tsx:389 (dropdown option)
+  * app/projects/[id]/page.tsx:362-363 (symbol function)
+  * app/projects/[id]/page.tsx:603 (dropdown option)
+  * app/api/dashboard/stats/route.ts:80 (symbol mapping)
+- Database supports USDT as text value in currency field
+
+**Feature #89: BTC Currency Support**
+Verified through comprehensive code review:
+- Currency dropdown includes BTC option: `<option value="BTC">₿ - ביטקוין</option>`
+- Currency symbol function returns ₿ for BTC
+- Implemented in:
+  * app/projects/page.tsx:248-249 (symbol function)
+  * app/projects/page.tsx:390 (dropdown option)
+  * app/projects/[id]/page.tsx:364-365 (symbol function)
+  * app/projects/[id]/page.tsx:604 (dropdown option)
+  * app/api/dashboard/stats/route.ts:81 (symbol mapping)
+- Database supports BTC as text value in currency field
+
+### Verification Checklist
+- ✅ TypeScript compilation: No errors
+- ✅ Mock data check: No mock patterns found in currency-related code
+- ✅ Database support: currency field is text, supports all currencies
+- ✅ UI integration: Both currencies appear in all currency dropdowns
+- ✅ Symbol display: Proper symbols (₮ for USDT, ₿ for BTC) defined
+- ✅ Hebrew labels: "טתר" for USDT, "ביטקוין" for BTC
+- ✅ Consistency: All currency dropdowns include ILS, USD, USDT, BTC, ETH
+
+### Features Completed
+- Feature #88: USDT Currency Support - PASSING
+- Feature #89: BTC Currency Support - PASSING
+
+### Current Project Status
+- Progress: 93/206 features passing (45.1%)
+- Multi-currency support: All 5 currencies (ILS, USD, USDT, BTC, ETH) fully functional
+
+### Notes
+- Both features were implemented in previous sessions
+- No code changes required, only verification
+- Currency system is comprehensive and extensible
+- All currency-related components use consistent getCurrencySymbol function
