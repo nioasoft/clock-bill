@@ -1,15 +1,23 @@
 /**
  * Test API endpoint for verifying data persistence
  * This endpoint creates and retrieves test records to verify database functionality
+ * NOTE: This endpoint is protected and requires authentication
  */
 import { query } from "../../../lib/db";
 import { NextResponse } from "next/server";
+import { getUser } from "@/lib/auth";
 
 /**
  * GET handler - retrieves all test records
  */
 export async function GET() {
   try {
+    // Check authentication
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
+
     const result = await query<{
       id: string;
       test_data: string;
@@ -40,6 +48,12 @@ export async function GET() {
  */
 export async function POST(request: Request) {
   try {
+    // Check authentication
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const testData = body.testData || `Test_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
@@ -83,6 +97,12 @@ export async function POST(request: Request) {
  */
 export async function DELETE() {
   try {
+    // Check authentication
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
+
     await query("DELETE FROM test_persistence");
 
     return NextResponse.json({

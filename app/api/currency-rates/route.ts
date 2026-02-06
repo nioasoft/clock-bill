@@ -5,7 +5,7 @@ import { getUser } from "@/lib/auth";
 // GET /api/currency-rates - Get all currency conversion rates for current user
 export async function GET(request: NextRequest) {
   try {
-    const user = await getUser(request);
+    const user = await getUser();
 
     if (!user) {
       return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 // POST /api/currency-rates - Create or update currency conversion rate
 export async function POST(request: NextRequest) {
   try {
-    const user = await getUser(request);
+    const user = await getUser();
 
     if (!user) {
       return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
 // DELETE /api/currency-rates - Delete a currency conversion rate
 export async function DELETE(request: NextRequest) {
   try {
-    const user = await getUser(request);
+    const user = await getUser();
 
     if (!user) {
       return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
