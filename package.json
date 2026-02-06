@@ -9,7 +9,10 @@
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "test": "node --import tsx tests/run-tests.ts",
+    "test:format": "node --import tsx tests/unit/format.test.ts",
+    "test:validation": "node --import tsx tests/unit/validation.test.ts"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
