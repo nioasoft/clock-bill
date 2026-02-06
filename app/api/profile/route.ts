@@ -32,6 +32,11 @@ export interface Profile {
   bankSwift: string | null;
   pdfPrimaryColor: string;
   pdfAccentColor: string;
+  longTimerEnabled: boolean;
+  longTimerThreshold: number;
+  dailyReminderEnabled: boolean;
+  dailyReminderTime: string;
+  lastReminderDate: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -60,6 +65,10 @@ export interface ProfileUpdateRequest {
   bankSwift?: string;
   pdfPrimaryColor?: string;
   pdfAccentColor?: string;
+  longTimerEnabled?: boolean;
+  longTimerThreshold?: number;
+  dailyReminderEnabled?: boolean;
+  dailyReminderTime?: string;
 }
 
 /**
@@ -90,6 +99,9 @@ export async function GET(): Promise<NextResponse> {
               bank_account_number as "bankAccountNumber", bank_branch as "bankBranch",
               bank_swift as "bankSwift", pdf_primary_color as "pdfPrimaryColor",
               pdf_accent_color as "pdfAccentColor",
+              long_timer_enabled as "longTimerEnabled", long_timer_threshold as "longTimerThreshold",
+              daily_reminder_enabled as "dailyReminderEnabled", daily_reminder_time as "dailyReminderTime",
+              last_reminder_date as "lastReminderDate",
               created_at as "createdAt", updated_at as "updatedAt"
        FROM user_profiles
        WHERE user_id = $1`,
@@ -226,6 +238,26 @@ export async function PATCH(request: Request): Promise<NextResponse> {
       values.push(body.pdfAccentColor);
     }
 
+    if (body.longTimerEnabled !== undefined) {
+      updates.push(`long_timer_enabled = $${paramIndex++}`);
+      values.push(body.longTimerEnabled);
+    }
+
+    if (body.longTimerThreshold !== undefined) {
+      updates.push(`long_timer_threshold = $${paramIndex++}`);
+      values.push(body.longTimerThreshold);
+    }
+
+    if (body.dailyReminderEnabled !== undefined) {
+      updates.push(`daily_reminder_enabled = $${paramIndex++}`);
+      values.push(body.dailyReminderEnabled);
+    }
+
+    if (body.dailyReminderTime !== undefined) {
+      updates.push(`daily_reminder_time = $${paramIndex++}`);
+      values.push(body.dailyReminderTime);
+    }
+
     if (updates.length === 0) {
       return NextResponse.json(
         { success: false, message: "No fields to update" },
@@ -251,6 +283,9 @@ export async function PATCH(request: Request): Promise<NextResponse> {
                  bank_account_number as "bankAccountNumber", bank_branch as "bankBranch",
                  bank_swift as "bankSwift", pdf_primary_color as "pdfPrimaryColor",
                  pdf_accent_color as "pdfAccentColor",
+                 long_timer_enabled as "longTimerEnabled", long_timer_threshold as "longTimerThreshold",
+                 daily_reminder_enabled as "dailyReminderEnabled", daily_reminder_time as "dailyReminderTime",
+                 last_reminder_date as "lastReminderDate",
                  created_at as "createdAt", updated_at as "updatedAt"`,
       values
     );

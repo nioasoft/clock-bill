@@ -1,0 +1,15 @@
+
+> clock-bill@0.1.0 dev
+> next dev
+
+⨯ Failed to start server
+Error: listen EPERM: operation not permitted 0.0.0.0:3001
+    at <unknown> (Error: listen EPERM: operation not permitted 0.0.0.0:3001)
+    at new Promise (<anonymous>) {
+  code: 'EPERM',
+  errno: -1,
+  syscall: 'listen',
+  address: '0.0.0.0',
+  port: 3001
+}
+[?25h

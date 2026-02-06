@@ -17,6 +17,18 @@ export const userProfile = pgTable('user_profiles', {
   invoicePrefix: text('invoice_prefix'),
   nextInvoiceNumber: integer('next_invoice_number'),
   paymentTerms: text('payment_terms'),
+  bankName: text('bank_name'),
+  bankAccountNumber: text('bank_account_number'),
+  bankBranch: text('bank_branch'),
+  bankSwift: text('bank_swift'),
+  pdfPrimaryColor: text('pdf_primary_color').default('#2563EB'),
+  pdfAccentColor: text('pdf_accent_color').default('#059669'),
+  // Notification settings
+  longTimerEnabled: boolean('long_timer_enabled').default(true).notNull(),
+  longTimerThreshold: integer('long_timer_threshold').default(120), // in minutes (2 hours default)
+  dailyReminderEnabled: boolean('daily_reminder_enabled').default(false).notNull(),
+  dailyReminderTime: text('daily_reminder_time').default('09:00'), // format: HH:MM
+  lastReminderDate: date('last_reminder_date'),
   createdAt: timestamp('created_at').default(sql`NOW()`),
   updatedAt: timestamp('updated_at').default(sql`NOW()`),
 });
