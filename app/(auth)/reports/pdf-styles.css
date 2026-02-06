@@ -1,0 +1,643 @@
+/* PDF Template Styles for Print Export */
+
+/* Hide PDF content on screen */
+.print-only {
+  display: none !important;
+}
+
+/* Base print styles - show only PDF content */
+@media print {
+  /* Hide everything by default */
+  body > * {
+    display: none !important;
+  }
+
+  /* Show only the PDF content */
+  #pdf-content {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 40px;
+    background: white;
+  }
+
+  /* Reset any visibility overrides */
+  #pdf-content,
+  #pdf-content * {
+    visibility: visible !important;
+    display: block !important;
+  }
+
+  /* Ensure tables are properly displayed */
+  #pdf-content table,
+  #pdf-content thead,
+  #pdf-content tbody,
+  #pdf-content th,
+  #pdf-content td,
+  #pdf-content tr {
+    display: table-cell !important;
+  }
+
+  #pdf-content table {
+    display: table !important;
+  }
+
+  #pdf-content thead {
+    display: table-header-group !important;
+  }
+
+  #pdf-content tbody {
+    display: table-row-group !important;
+  }
+
+  #pdf-content tr {
+    display: table-row !important;
+  }
+}
+
+/* PDF Content Container base styles */
+#pdf-content {
+  background: white;
+  color: black;
+  direction: rtl;
+  text-align: right;
+}
+
+#pdf-content .grid {
+  display: grid;
+}
+
+#pdf-content .grid-cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+#pdf-content .gap-4 {
+  gap: 1rem;
+}
+
+#pdf-content .col-span-2 {
+  grid-column: span 2 / span 2;
+}
+
+#pdf-content .flex {
+  display: flex;
+}
+
+#pdf-content .justify-between {
+  justify-content: space-between;
+}
+
+#pdf-content .items-center {
+  align-items: center;
+}
+
+/* ==================== MODERN TEMPLATE ==================== */
+.pdf-template-modern #pdf-content {
+  font-family: "Inter", sans-serif;
+}
+
+.pdf-template-modern .pdf-header {
+  border-bottom: 3px solid #3b82f6;
+  padding-bottom: 20px;
+  margin-bottom: 30px;
+}
+
+.pdf-template-modern .pdf-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+.pdf-template-modern .pdf-subtitle {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.pdf-template-modern .pdf-section {
+  margin-bottom: 30px;
+}
+
+.pdf-template-modern .pdf-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.pdf-template-modern .pdf-summary-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 15px;
+}
+
+.pdf-template-modern .pdf-summary-label {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 5px;
+}
+
+.pdf-template-modern .pdf-summary-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.pdf-template-modern .pdf-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.pdf-template-modern .pdf-table th {
+  background: #f1f5f9;
+  padding: 12px;
+  text-align: right;
+  font-weight: 600;
+  font-size: 13px;
+  color: #475569;
+  border-bottom: 2px solid #cbd5e1;
+}
+
+.pdf-template-modern .pdf-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 13px;
+}
+
+.pdf-template-modern .pdf-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Preview styles */
+.pdf-preview-modern {
+  background: #f8fafc !important;
+  border-color: #3b82f6 !important;
+  font-family: "Inter", sans-serif !important;
+}
+
+/* ==================== CLASSIC TEMPLATE ==================== */
+.pdf-template-classic #pdf-content {
+  font-family: "Source Serif 4", serif;
+}
+
+.pdf-template-classic .pdf-header {
+  border-bottom: 4px double #1e293b;
+  padding-bottom: 25px;
+  margin-bottom: 35px;
+  text-align: center;
+}
+
+.pdf-template-classic .pdf-title {
+  font-size: 32px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+}
+
+.pdf-template-classic .pdf-subtitle {
+  font-size: 14px;
+  color: #64748b;
+  font-style: italic;
+}
+
+.pdf-template-classic .pdf-section {
+  margin-bottom: 35px;
+}
+
+.pdf-template-classic .pdf-section-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 20px;
+  text-align: center;
+  text-decoration: underline;
+  text-decoration-color: #94a3b8;
+}
+
+.pdf-template-classic .pdf-summary-card {
+  border: 2px solid #1e293b;
+  padding: 25px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.pdf-template-classic .pdf-summary-label {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.pdf-template-classic .pdf-summary-value {
+  font-size: 36px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.pdf-template-classic .pdf-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.pdf-template-classic .pdf-table th {
+  background: #1e293b;
+  color: white;
+  padding: 15px;
+  text-align: right;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.pdf-template-classic .pdf-table td {
+  padding: 15px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+}
+
+.pdf-preview-classic {
+  background: #fafafa !important;
+  border-color: #1e293b !important;
+  font-family: "Source Serif 4", serif !important;
+  border-width: 2px !important;
+}
+
+/* ==================== BOLD TEMPLATE ==================== */
+.pdf-template-bold #pdf-content {
+  font-family: "Inter", sans-serif;
+}
+
+.pdf-template-bold .pdf-header {
+  background: linear-gradient(135deg, #E85D04 0%, #f97316 100%);
+  color: white;
+  padding: 30px;
+  margin: -40px -40px 30px -40px;
+  border-radius: 0;
+}
+
+.pdf-template-bold .pdf-title {
+  font-size: 36px;
+  font-weight: 900;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.pdf-template-bold .pdf-subtitle {
+  font-size: 16px;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+.pdf-template-bold .pdf-section {
+  margin-bottom: 35px;
+}
+
+.pdf-template-bold .pdf-section-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #E85D04;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-right: 6px solid #E85D04;
+  padding-right: 15px;
+}
+
+.pdf-template-bold .pdf-summary-card {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  border: 3px solid #E85D04;
+  border-radius: 0;
+  padding: 25px;
+  margin-bottom: 20px;
+}
+
+.pdf-template-bold .pdf-summary-label {
+  font-size: 11px;
+  color: #c2410c;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 600;
+}
+
+.pdf-template-bold .pdf-summary-value {
+  font-size: 42px;
+  font-weight: 900;
+  color: #E85D04;
+}
+
+.pdf-template-bold .pdf-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.pdf-template-bold .pdf-table th {
+  background: #E85D04;
+  color: white;
+  padding: 18px;
+  text-align: right;
+  font-weight: 800;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.pdf-template-bold .pdf-table td {
+  padding: 18px;
+  border: 2px solid #fed7aa;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.pdf-preview-bold {
+  background: linear-gradient(135deg, #E85D04 0%, #f97316 100%) !important;
+  border-color: #E85D04 !important;
+  color: white !important;
+  font-family: "Inter", sans-serif !important;
+  font-weight: 700 !important;
+}
+
+/* ==================== ELEGANT TEMPLATE ==================== */
+.pdf-template-elegant #pdf-content {
+  font-family: "Source Serif 4", serif;
+}
+
+.pdf-template-elegant .pdf-header {
+  border-bottom: 1px solid #4A5568;
+  padding-bottom: 25px;
+  margin-bottom: 35px;
+}
+
+.pdf-template-elegant .pdf-title {
+  font-size: 30px;
+  font-weight: 400;
+  color: #1a202c;
+  margin-bottom: 10px;
+  letter-spacing: 3px;
+}
+
+.pdf-template-elegant .pdf-subtitle {
+  font-size: 13px;
+  color: #4A5568;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.pdf-template-elegant .pdf-section {
+  margin-bottom: 40px;
+}
+
+.pdf-template-elegant .pdf-section-title {
+  font-size: 16px;
+  font-weight: 400;
+  color: #4A5568;
+  margin-bottom: 25px;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  text-align: center;
+  position: relative;
+}
+
+.pdf-template-elegant .pdf-section-title::before,
+.pdf-template-elegant .pdf-section-title::after {
+  content: "—";
+  color: #4A5568;
+  margin: 0 20px;
+  letter-spacing: 2px;
+}
+
+.pdf-template-elegant .pdf-summary-card {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  padding: 30px;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.pdf-template-elegant .pdf-summary-label {
+  font-size: 11px;
+  color: #718096;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.pdf-template-elegant .pdf-summary-value {
+  font-size: 40px;
+  font-weight: 300;
+  color: #1a202c;
+}
+
+.pdf-template-elegant .pdf-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 25px;
+}
+
+.pdf-template-elegant .pdf-table th {
+  background: #f7fafc;
+  color: #2d3748;
+  padding: 18px;
+  text-align: right;
+  font-weight: 400;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  border-bottom: 1px solid #4A5568;
+}
+
+.pdf-template-elegant .pdf-table td {
+  padding: 18px;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 13px;
+}
+
+.pdf-preview-elegant {
+  background: #f7fafc !important;
+  border-color: #4A5568 !important;
+  font-family: "Source Serif 4", serif !important;
+  color: #2d3748 !important;
+}
+
+/* ==================== NATURE TEMPLATE ==================== */
+.pdf-template-nature #pdf-content {
+  font-family: "Inter", sans-serif;
+}
+
+.pdf-template-nature .pdf-header {
+  border-bottom: 3px solid #22c55e;
+  padding-bottom: 20px;
+  margin-bottom: 30px;
+}
+
+.pdf-template-nature .pdf-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #14532d;
+  margin-bottom: 8px;
+}
+
+.pdf-template-nature .pdf-subtitle {
+  font-size: 14px;
+  color: #16a34a;
+}
+
+.pdf-template-nature .pdf-section {
+  margin-bottom: 30px;
+}
+
+.pdf-template-nature .pdf-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #14532d;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #86efac;
+}
+
+.pdf-template-nature .pdf-summary-card {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 1px solid #86efac;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 15px;
+}
+
+.pdf-template-nature .pdf-summary-label {
+  font-size: 12px;
+  color: #16a34a;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.pdf-template-nature .pdf-summary-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #14532d;
+}
+
+.pdf-template-nature .pdf-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.pdf-template-nature .pdf-table th {
+  background: #22c55e;
+  color: white;
+  padding: 12px;
+  text-align: right;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.pdf-template-nature .pdf-table td {
+  padding: 12px;
+  border-bottom: 1px solid #bbf7d0;
+  font-size: 13px;
+}
+
+.pdf-preview-nature {
+  background: #f0fdf4 !important;
+  border-color: #22c55e !important;
+  font-family: "Inter", sans-serif !important;
+  color: #14532d !important;
+}
+
+/* ==================== OCEAN TEMPLATE ==================== */
+.pdf-template-ocean #pdf-content {
+  font-family: "Inter", sans-serif;
+}
+
+.pdf-template-ocean .pdf-header {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: white;
+  padding: 30px;
+  margin: -40px -40px 30px -40px;
+  border-radius: 0;
+}
+
+.pdf-template-ocean .pdf-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.pdf-template-ocean .pdf-subtitle {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.pdf-template-ocean .pdf-section {
+  margin-bottom: 30px;
+}
+
+.pdf-template-ocean .pdf-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #0369a1;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #7dd3fc;
+}
+
+.pdf-template-ocean .pdf-summary-card {
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  border: 1px solid #7dd3fc;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 15px;
+}
+
+.pdf-template-ocean .pdf-summary-label {
+  font-size: 12px;
+  color: #0284c7;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.pdf-template-ocean .pdf-summary-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #0c4a6e;
+}
+
+.pdf-template-ocean .pdf-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.pdf-template-ocean .pdf-table th {
+  background: #0ea5e9;
+  color: white;
+  padding: 12px;
+  text-align: right;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.pdf-template-ocean .pdf-table td {
+  padding: 12px;
+  border-bottom: 1px solid #bae6fd;
+  font-size: 13px;
+}
+
+.pdf-preview-ocean {
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%) !important;
+  border-color: #0ea5e9 !important;
+  font-family: "Inter", sans-serif !important;
+  color: #0c4a6e !important;
+}

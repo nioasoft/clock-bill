@@ -3,11 +3,21 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import "./pdf-styles.css";
+import "../pdf-templates.css";
 
 interface User {
   id: string;
   email: string;
+}
+
+interface UserProfile {
+  businessName: string | null;
+  logoUrl: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  taxId: string | null;
+  defaultCurrency: string;
 }
 
 interface Project {
@@ -91,6 +101,7 @@ export default function ReportsPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [clients, setClients] = useState<Client[]>([]);
@@ -133,6 +144,34 @@ export default function ReportsPage() {
 
     fetchUser();
   }, [router]);
+
+  useEffect(() => {
+    // Fetch user profile when user is loaded
+    const fetchUserProfile = async () => {
+      if (!user) return;
+
+      try {
+        const response = await fetch("/api/profile");
+        const data = await response.json();
+
+        if (data.success && data.profile) {
+          setUserProfile({
+            businessName: data.profile.businessName,
+            logoUrl: data.profile.logoUrl,
+            phone: data.profile.phone,
+            email: data.profile.email,
+            address: data.profile.address,
+            taxId: data.profile.taxId,
+            defaultCurrency: data.profile.defaultCurrency,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
 
   useEffect(() => {
     // Fetch clients when user is loaded
@@ -408,7 +447,7 @@ export default function ReportsPage() {
         {reportData && !reportLoading && (
           <div className="space-y-6">
             {/* Export Button */}
-            <div className="flex justify-end">
+            <div className="flex justify-end no-print">
               <button
                 onClick={handleExportPdf}
                 className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors shadow-md"
@@ -418,6 +457,117 @@ export default function ReportsPage() {
                 </svg>
                 יצא ל-PDF
               </button>
+            </div>
+
+            {/* PDF Content (for printing) - hidden on screen, visible in print */}
+            <div id="pdf-content" className="print-only">
+              <div className="pdf-header">
+                {userProfile?.logoUrl && (
+                  <img
+                    src={userProfile.logoUrl}
+                    alt="Logo"
+                    className="pdf-logo"
+                    style={{ maxHeight: "60px", marginBottom: "15px" }}
+                  />
+                )}
+                <h1 className="pdf-title">
+                  {userProfile?.businessName || "דוח שעות עבודה"}
+                </h1>
+                <p className="pdf-subtitle">
+                  {filters.startDate} עד {filters.endDate}
+                </p>
+              </div>
+
+              {/* Summary Section */}
+              <div className="pdf-section">
+                <h2 className="pdf-section-title">סיכום כללי</h2>
+                <div className="grid grid-cols-4 gap-4">
+                  <div className="pdf-summary-card">
+                    <div className="pdf-summary-label">סה״כ שעות</div>
+                    <div className="pdf-summary-value">
+                      {reportData.summary.totalHours.toFixed(1)}
+                    </div>
+                  </div>
+                  <div className="pdf-summary-card">
+                    <div className="pdf-summary-label">סה״כ רשומות</div>
+                    <div className="pdf-summary-value">
+                      {reportData.summary.totalEntries}
+                    </div>
+                  </div>
+                  {Object.keys(reportData.summary.totalAmounts).length > 0 && (
+                    <div className="pdf-summary-card col-span-2">
+                      <div className="pdf-summary-label">סה״כ סכום</div>
+                      <div className="pdf-summary-value">
+                        {Object.entries(reportData.summary.totalAmounts).map(
+                          ([currency, amount]) => formatCurrency(amount, currency)
+                        ).join(" + ")}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* By Client Section */}
+              {reportData.byClient.length > 0 && (
+                <div className="pdf-section">
+                  <h2 className="pdf-section-title">סיכום לפי לקוח</h2>
+                  {reportData.byClient.map((client) => (
+                    <div key={client.clientId} className="pdf-summary-card">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <div className="font-semibold text-lg">{client.clientName}</div>
+                          <div className="text-sm opacity-70">
+                            {client.entries.length} רשומות
+                          </div>
+                        </div>
+                        <div className="text-left">
+                          <div className="font-semibold text-xl">
+                            {formatDuration(client.totalMinutes)}
+                          </div>
+                          {Object.keys(client.totalAmounts).length > 0 && (
+                            <div className="text-sm opacity-70">
+                              {Object.entries(client.totalAmounts)
+                                .map(([currency, amount]) =>
+                                  formatCurrency(amount, currency)
+                                )
+                                .join(" + ")}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Detailed Entries Table */}
+              {reportData.entries.length > 0 && (
+                <div className="pdf-section">
+                  <h2 className="pdf-section-title">רשומות מפורטות</h2>
+                  <table className="pdf-table">
+                    <thead>
+                      <tr>
+                        <th>תאריך</th>
+                        <th>לקוח</th>
+                        <th>פרויקט</th>
+                        <th>תיאור</th>
+                        <th>משך</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportData.entries.map((entry) => (
+                        <tr key={entry.id}>
+                          <td>{entry.date}</td>
+                          <td>{entry.clientName}</td>
+                          <td>{entry.projectName}</td>
+                          <td>{entry.description}</td>
+                          <td>{formatDuration(entry.duration)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
             {/* Summary Cards */}
