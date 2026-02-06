@@ -1,3 +1,146 @@
+## Session: 2026-02-06 (Features #133, #134) - COMPLETED
+
+### Assigned Features
+- Feature #133: Env Validation - Environment variables are validated on startup
+- Feature #134: Health Check Endpoint - Health check endpoint exists
+
+### Work Completed
+
+**Feature #133: Environment Variables Validation**
+
+Implemented comprehensive environment variable validation that runs on server startup:
+
+1. **Created lib/env.ts (307 lines):**
+   - Validates all required environment variables on startup
+   - Required variables: DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL
+   - Optional variables: OAuth providers, email service, R2 storage
+   - Custom validators for URL formats and secret length
+   - Bilingual error messages (Hebrew + English)
+   - Auto-runs validation on module import (server-side only)
+
+2. **Validation Features:**
+   - DATABASE_URL: Must be valid postgres:// or postgresql:// URL
+   - BETTER_AUTH_SECRET: Must be at least 32 characters (security)
+   - BETTER_AUTH_URL: Must be a valid URL format
+   - NODE_ENV: Validates "development", "production", or "test"
+   - Clear error messages for missing or invalid variables
+   - Shows both Hebrew and English error descriptions
+   - Provides helpful setup instructions in both languages
+
+3. **Helper Functions:**
+   - validateEnv() - Main validation function
+   - getEnv(name, fallback) - Get env var with fallback
+   - getRequiredEnv(name) - Get required env var or throw
+   - isDevelopment(), isProduction(), isTest() - Environment checks
+   - getAppUrl(), getDatabaseUrl(), getAuthSecret() - Typed getters
+
+4. **Integration:**
+   - Imported in app/layout.tsx (runs on server startup)
+   - Updated lib/db.ts to use getDatabaseUrl()
+   - Updated lib/auth.ts to use getAuthSecret() and isProduction()
+   - Replaced direct process.env access with typed getters
+
+**Error Message Example:**
+```
+❌ Environment Variable Validation Failed
+❌ אימות משתני סביבה נכשל
+
+Required environment variables are missing or invalid:
+משתני סביבה נדרשים חסרים או לא תקינים:
+
+❌ DATABASE_URL
+   Missing required environment variable: DATABASE_URL
+   משתנה סביבה נדרש חסר: DATABASE_URL
+
+Please set these environment variables before starting the server.
+יש להגדיר משתני סביבה אלו לפני הפעלת השרת.
+```
+
+**Feature #134: Health Check Endpoint**
+
+Implemented /api/health endpoint for service health monitoring:
+
+1. **Created app/api/health/route.ts:**
+   - GET /api/health returns service health status
+   - Checks database connectivity by running SELECT 1
+   - Returns 200 OK when service is healthy
+   - Returns 503 Service Unavailable when database is down
+
+2. **Response Format (Healthy):**
+   ```json
+   {
+     "status": "healthy",
+     "timestamp": "2026-02-06T15:00:00.000Z",
+     "database": "connected"
+   }
+   ```
+
+3. **Response Format (Unhealthy):**
+   ```json
+   {
+     "status": "unhealthy",
+     "timestamp": "2026-02-06T15:00:00.000Z",
+     "database": "disconnected",
+     "error": "connection error message"
+   }
+   ```
+
+4. **Use Cases:**
+   - Load balancer health checks
+   - Monitoring system alerts
+   - Container orchestration probes
+   - Deployment verification
+   - Uptime monitoring services
+
+### Files Created/Modified
+
+**Created:**
+1. lib/env.ts - Environment variable validation (NEW, 307 lines)
+2. app/api/health/route.ts - Health check endpoint (NEW, 40 lines)
+
+**Modified:**
+1. app/layout.tsx - Added env validation import
+2. lib/db.ts - Updated to use getDatabaseUrl()
+3. lib/auth.ts - Updated to use getAuthSecret() and isProduction()
+
+### Verification Checklist
+
+**Feature #133: Env Validation**
+- ✅ Environment variables validated on startup
+- ✅ Required variables: DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL
+- ✅ Custom validators for URL formats and secret length
+- ✅ Bilingual error messages (Hebrew + English)
+- ✅ Integration with app/layout.tsx for auto-validation
+- ✅ Updated lib/db.ts to use typed env getters
+- ✅ Updated lib/auth.ts to use typed env getters
+- ✅ No mock data patterns
+- ✅ Production-ready code
+
+**Feature #134: Health Check Endpoint**
+- ✅ /api/health endpoint exists
+- ✅ Returns 200 OK with status when healthy
+- ✅ Checks database connectivity
+- ✅ Returns 503 when database is down
+- ✅ JSON response with timestamp and database status
+- ✅ Production-ready for monitoring systems
+
+### Features Completed
+- Feature #133: Env Validation - PASSING ✓
+- Feature #134: Health Check Endpoint - PASSING ✓
+
+### Current Project Status
+- Progress: 134/206 features passing (65.0%)
+- Environment variables validated on startup
+- Health check endpoint available for monitoring
+- Both features production-ready
+
+### Notes
+- Env validation runs automatically when server starts
+- Validation errors are bilingual (Hebrew + English)
+- Health endpoint suitable for Kubernetes/Load Balancer probes
+- Both features follow infrastructure best practices
+- No breaking changes to existing functionality
+
 ## Session: 2026-02-06 (Features #112, #113) - COMPLETED
 
 ### Assigned Features
