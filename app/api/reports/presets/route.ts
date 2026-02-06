@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
-import { validateSession } from "@/lib/auth";
+import { getUser } from "@/lib/auth";
 import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("api-reports-presets");
@@ -8,16 +8,16 @@ const logger = createLogger("api-reports-presets");
 // GET - Fetch all report presets for the current user
 export async function GET(req: NextRequest) {
   try {
-    // Validate session
-    const sessionResult = await validateSession(req);
-    if (!sessionResult.valid || !sessionResult.user) {
+    // Get authenticated user
+    const user = await getUser();
+    if (!user) {
       return NextResponse.json(
         { success: false, message: "לא מאומת" },
         { status: 401 }
       );
     }
 
-    const userId = sessionResult.user.id;
+    const userId = user.id;
 
     // Fetch all presets for the user
     const result = await query(
@@ -57,16 +57,16 @@ export async function GET(req: NextRequest) {
 // POST - Create a new report preset
 export async function POST(req: NextRequest) {
   try {
-    // Validate session
-    const sessionResult = await validateSession(req);
-    if (!sessionResult.valid || !sessionResult.user) {
+    // Get authenticated user
+    const user = await getUser();
+    if (!user) {
       return NextResponse.json(
         { success: false, message: "לא מאומת" },
         { status: 401 }
       );
     }
 
-    const userId = sessionResult.user.id;
+    const userId = user.id;
 
     // Parse request body
     const body = await req.json();

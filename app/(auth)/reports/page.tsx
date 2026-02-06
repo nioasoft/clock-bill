@@ -87,11 +87,32 @@ interface ProjectSummary {
   entries: ReportEntry[];
 }
 
+interface DateSummary {
+  date: string;
+  totalMinutes: number;
+  totalHours: number;
+  totalAmounts: Record<string, number>;
+  entryCount: number;
+  entries: ReportEntry[];
+}
+
+interface WeekSummary {
+  weekStart: string;
+  weekEnd: string;
+  totalMinutes: number;
+  totalHours: number;
+  totalAmounts: Record<string, number>;
+  entryCount: number;
+  entries: ReportEntry[];
+}
+
 interface ReportData {
   entries: ReportEntry[];
   summary: ReportSummary;
   byClient: ClientSummary[];
   byProject: ProjectSummary[];
+  byDate?: DateSummary[];
+  byWeek?: WeekSummary[];
 }
 
 type PdfTemplate = "modern" | "classic" | "bold" | "elegant" | "nature" | "ocean";
@@ -264,6 +285,34 @@ export default function ReportsPage() {
     };
 
     fetchPresets();
+  }, [user]);
+
+  // Check for URL parameters on mount (for shared links)
+  useEffect(() => {
+    if (!user) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const clientId = params.get("clientId");
+    const projectId = params.get("projectId");
+    const startDate = params.get("startDate");
+    const endDate = params.get("endDate");
+
+    // If any filter parameters exist in URL, update filters and generate report
+    if (clientId || projectId || startDate || endDate) {
+      setFilters({
+        clientId: clientId || "",
+        projectId: projectId || "",
+        startDate: startDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+          .toISOString()
+          .split("T")[0],
+        endDate: endDate || new Date().toISOString().split("T")[0],
+      });
+
+      // Auto-generate report after a short delay to ensure filters are set
+      setTimeout(() => {
+        generateReport();
+      }, 100);
+    }
   }, [user]);
 
   const generateReport = async () => {
@@ -560,6 +609,30 @@ export default function ReportsPage() {
     }
   };
 
+  const handleShareReport = async () => {
+    try {
+      // Build shareable URL with current filters
+      const params = new URLSearchParams();
+      if (filters.clientId) params.append("clientId", filters.clientId);
+      if (filters.projectId) params.append("projectId", filters.projectId);
+      if (filters.startDate) params.append("startDate", filters.startDate);
+      if (filters.endDate) params.append("endDate", filters.endDate);
+
+      const baseUrl = window.location.origin + "/reports";
+      const shareUrl = `${baseUrl}?${params.toString()}`;
+
+      // Copy to clipboard
+      await navigator.clipboard.writeText(shareUrl);
+      showSuccessToast("קישור לדוח הועתק ללוח");
+
+      // Optional: Auto-generate report when shared link is opened
+      // This will be handled by useEffect that reads URL params on mount
+    } catch (error) {
+      console.error("Error copying link:", error);
+      showErrorToast("שגיאה בהעתקת הקישור");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -668,7 +741,22 @@ export default function ReportsPage() {
               </div>
 
               {/* Generate Button */}
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setShowLoadPresetDialog(true)}
+                  disabled={presetsLoading || presets.length === 0}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={presets.length === 0 ? "אין פריסטים שמורים" : "טען פריסט"}
+                >
+                  📂 טען פריסט
+                </button>
+                <button
+                  onClick={() => setShowSavePresetDialog(true)}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                  title="שמור פריסט"
+                >
+                  💾 שמור פריסט
+                </button>
                 <button
                   onClick={generateReport}
                   disabled={reportLoading}
@@ -712,6 +800,16 @@ export default function ReportsPage() {
           <div className="space-y-6">
             {/* Export Buttons */}
             <div className="flex justify-end gap-3 no-print">
+              <button
+                onClick={handleShareReport}
+                className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-md"
+                title="העתק קישור לדוח"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+                שתף דוח
+              </button>
               <button
                 onClick={handleExportExcel}
                 className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-md"
@@ -851,6 +949,39 @@ export default function ReportsPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* By Date Summary in PDF */}
+              {reportData.byDate && reportData.byDate.length > 0 && (
+                <div className="pdf-section" style={{ marginBottom: "1.5rem", padding: "1.5rem" }}>
+                  <h2 className="pdf-section-title" style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "1rem" }}>סיכום לפי תאריך (יומי)</h2>
+                  <table className="pdf-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead style={{ backgroundColor: "#f1f5f9" }}>
+                      <tr>
+                        <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: "600", fontSize: "13px", color: "#475569" }}>תאריך</th>
+                        <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: "600", fontSize: "13px", color: "#475569" }}>משך</th>
+                        <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: "600", fontSize: "13px", color: "#475569" }}>רשומות</th>
+                        <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: "600", fontSize: "13px", color: "#475569" }}>סכום</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportData.byDate.map((dateSummary, index) => (
+                        <tr key={dateSummary.date} style={{ borderBottom: "1px solid #f1f5f9", backgroundColor: index % 2 === 0 ? "transparent" : "#f8fafc" }}>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px" }}>{dateSummary.date}</td>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px", fontWeight: "500" }}>{formatDuration(dateSummary.totalMinutes)}</td>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px" }}>{dateSummary.entryCount}</td>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px" }}>
+                            {Object.keys(dateSummary.totalAmounts).length > 0
+                              ? Object.entries(dateSummary.totalAmounts)
+                                  .map(([currency, amount]) => formatCurrency(amount, currency))
+                                  .join(" + ")
+                              : "-"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
 
@@ -1010,6 +1141,80 @@ export default function ReportsPage() {
               </div>
             )}
 
+            {/* By Date Summary (Daily Breakdown) */}
+            {reportData.byDate && reportData.byDate.length > 0 && (
+              <div className="bg-card border rounded-lg p-6">
+                <h3 className="text-lg font-semibold mb-4">סיכום לפי תאריך (יומי)</h3>
+                <div className="space-y-2">
+                  {reportData.byDate.map((dateSummary) => (
+                    <div
+                      key={dateSummary.date}
+                      className="flex items-center justify-between p-3 bg-accent rounded-md"
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium">{dateSummary.date}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {dateSummary.entryCount} רשומות
+                        </p>
+                      </div>
+                      <div className="text-left">
+                        <p className="text-lg font-semibold">
+                          {formatDuration(dateSummary.totalMinutes)}
+                        </p>
+                        {Object.keys(dateSummary.totalAmounts).length > 0 && (
+                          <p className="text-sm text-muted-foreground">
+                            {Object.entries(dateSummary.totalAmounts)
+                              .map(([currency, amount]) =>
+                                formatCurrency(amount, currency)
+                              )
+                              .join(" + ")}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* By Week Summary (Weekly Breakdown) */}
+            {reportData.byWeek && reportData.byWeek.length > 0 && (
+              <div className="bg-card border rounded-lg p-6">
+                <h3 className="text-lg font-semibold mb-4">סיכום לפי שבוע</h3>
+                <div className="space-y-2">
+                  {reportData.byWeek.map((weekSummary) => (
+                    <div
+                      key={weekSummary.weekStart}
+                      className="flex items-center justify-between p-3 bg-accent rounded-md"
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium">
+                          {weekSummary.weekStart} עד {weekSummary.weekEnd}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {weekSummary.entryCount} רשומות
+                        </p>
+                      </div>
+                      <div className="text-left">
+                        <p className="text-lg font-semibold">
+                          {formatDuration(weekSummary.totalMinutes)}
+                        </p>
+                        {Object.keys(weekSummary.totalAmounts).length > 0 && (
+                          <p className="text-sm text-muted-foreground">
+                            {Object.entries(weekSummary.totalAmounts)
+                              .map(([currency, amount]) =>
+                                formatCurrency(amount, currency)
+                              )
+                              .join(" + ")}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Detailed Entries Table */}
             {reportData.entries.length > 0 && (
               <div className="bg-card border rounded-lg overflow-hidden">
@@ -1159,6 +1364,182 @@ export default function ReportsPage() {
               <p className="text-sm text-muted-foreground text-center">
                 לחץ על התבנית הרצויה לפתיחת חלון הדפסה - בחר &quot;שמור כ-PDF&quot; כדי להוריד את הדוח
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Save Preset Dialog */}
+      {showSavePresetDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-lg shadow-xl max-w-md w-full">
+            <div className="border-b p-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">שמור פריסט</h2>
+                <button
+                  onClick={() => {
+                    setShowSavePresetDialog(false);
+                    setPresetName("");
+                  }}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-muted-foreground mt-2">
+                שמור את הגדרות הפילטרים הנוכחיות כפריסט
+              </p>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">שם הפריסט</label>
+                <input
+                  type="text"
+                  value={presetName}
+                  onChange={(e) => setPresetName(e.target.value)}
+                  placeholder="לדוגמה: דוח חודשי - לקוח הייטק"
+                  className="w-full px-3 py-2 border rounded-md bg-background"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && presetName.trim()) {
+                      handleSavePreset();
+                    }
+                  }}
+                />
+              </div>
+
+              <div className="bg-muted/50 rounded-md p-4 space-y-2 text-sm">
+                <p className="font-medium">הגדרות הפילטר:</p>
+                <div className="grid grid-cols-2 gap-2 text-muted-foreground">
+                  <div>תאריך התחלה:</div>
+                  <div className="text-left">{filters.startDate || "לא נבחר"}</div>
+                  <div>תאריך סיום:</div>
+                  <div className="text-left">{filters.endDate || "לא נבחר"}</div>
+                  <div>לקוח:</div>
+                  <div className="text-left">
+                    {filters.clientId
+                      ? clients.find((c) => c.id === filters.clientId)?.name || "לא נבחר"
+                      : "כל הלקוחות"}
+                  </div>
+                  <div>פרויקט:</div>
+                  <div className="text-left">
+                    {filters.projectId
+                      ? projects.find((p) => p.id === filters.projectId)?.name || "לא נבחר"
+                      : "כל הפרויקטים"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t p-6 flex gap-3">
+              <button
+                onClick={handleSavePreset}
+                disabled={!presetName.trim()}
+                className="flex-1 px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                שמור
+              </button>
+              <button
+                onClick={() => {
+                  setShowSavePresetDialog(false);
+                  setPresetName("");
+                }}
+                className="px-6 py-2 border border-border rounded-md hover:bg-accent transition-colors"
+              >
+                ביטול
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Load Preset Dialog */}
+      {showLoadPresetDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="sticky top-0 bg-card border-b p-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">טען פריסט</h2>
+                <button
+                  onClick={() => setShowLoadPresetDialog(false)}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-muted-foreground mt-2">
+                בחר פריסט שמור לטעינה
+              </p>
+            </div>
+
+            <div className="p-6">
+              {presets.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>לא נמצאו פריסטים שמורים</p>
+                  <p className="text-sm mt-2">שמור פריסט כדי שיופיע כאן</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {presets.map((preset) => (
+                    <div
+                      key={preset.id}
+                      className="border rounded-lg p-4 hover:border-primary/50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg mb-2">{preset.name}</h3>
+                          <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
+                            <div>תאריך התחלה:</div>
+                            <div className="text-left">{preset.startDate || "לא נבחר"}</div>
+                            <div>תאריך סיום:</div>
+                            <div className="text-left">{preset.endDate || "לא נבחר"}</div>
+                            <div>לקוח:</div>
+                            <div className="text-left">
+                              {preset.clientId
+                                ? clients.find((c) => c.id === preset.clientId)?.name || "לא נבחר"
+                                : "כל הלקוחות"}
+                            </div>
+                            <div>פרויקט:</div>
+                            <div className="text-left">
+                              {preset.projectId
+                                ? projects.find((p) => p.id === preset.projectId)?.name || "לא נבחר"
+                                : "כל הפרויקטים"}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 mr-4">
+                          <button
+                            onClick={() => handleLoadPreset(preset)}
+                            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm"
+                          >
+                            טען
+                          </button>
+                          <button
+                            onClick={() => handleDeletePreset(preset.id)}
+                            className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 transition-colors text-sm"
+                          >
+                            מחק
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="sticky bottom-0 bg-card border-t p-6">
+              <button
+                onClick={() => setShowLoadPresetDialog(false)}
+                className="w-full px-6 py-2 border border-border rounded-md hover:bg-accent transition-colors"
+              >
+                סגור
+              </button>
             </div>
           </div>
         </div>

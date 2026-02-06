@@ -210,6 +210,68 @@ export async function GET(request: NextRequest) {
       return acc;
     }, {} as Record<string, any>);
 
+    // Group by date (daily breakdown)
+    const byDate = entries.reduce((acc, entry) => {
+      const key = entry.date;
+      if (!acc[key]) {
+        acc[key] = {
+          date: entry.date,
+          totalMinutes: 0,
+          totalHours: 0,
+          totalAmounts: {} as Record<string, number>,
+          entryCount: 0,
+          entries: [],
+        };
+      }
+      acc[key].totalMinutes += entry.duration;
+      acc[key].totalHours = acc[key].totalMinutes / 60;
+      acc[key].entryCount += 1;
+
+      // Group amounts by currency
+      const currency = entry.currency || "ILS";
+      if (!acc[key].totalAmounts[currency]) {
+        acc[key].totalAmounts[currency] = 0;
+      }
+      acc[key].totalAmounts[currency] += entry.amount || 0;
+
+      acc[key].entries.push(entry);
+      return acc;
+    }, {} as Record<string, any>);
+
+    // Group by week (weekly breakdown)
+    const byWeek = entries.reduce((acc, entry) => {
+      const entryDate = new Date(entry.date);
+      // Get ISO week number
+      const weekStart = new Date(entryDate);
+      weekStart.setDate(entryDate.getDate() - entryDate.getDay()); // Start of week (Sunday)
+      const weekKey = weekStart.toISOString().split('T')[0];
+
+      if (!acc[weekKey]) {
+        acc[weekKey] = {
+          weekStart: weekKey,
+          weekEnd: new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          totalMinutes: 0,
+          totalHours: 0,
+          totalAmounts: {} as Record<string, number>,
+          entryCount: 0,
+          entries: [],
+        };
+      }
+      acc[weekKey].totalMinutes += entry.duration;
+      acc[weekKey].totalHours = acc[weekKey].totalMinutes / 60;
+      acc[weekKey].entryCount += 1;
+
+      // Group amounts by currency
+      const currency = entry.currency || "ILS";
+      if (!acc[weekKey].totalAmounts[currency]) {
+        acc[weekKey].totalAmounts[currency] = 0;
+      }
+      acc[weekKey].totalAmounts[currency] += entry.amount || 0;
+
+      acc[weekKey].entries.push(entry);
+      return acc;
+    }, {} as Record<string, any>);
+
     return NextResponse.json({
       success: true,
       report: {
@@ -222,6 +284,8 @@ export async function GET(request: NextRequest) {
         },
         byClient: Object.values(byClient),
         byProject: Object.values(byProject),
+        byDate: Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date)),
+        byWeek: Object.values(byWeek).sort((a, b) => a.weekStart.localeCompare(b.weekStart)),
       },
     });
   } catch (error) {

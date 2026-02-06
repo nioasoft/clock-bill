@@ -1653,3 +1653,39 @@ Implemented entry duplication functionality:
 - Toast notifications provide user feedback
 
 
+
+## Session: 2026-02-06 (Feature #159) - COMPLETED
+
+### Assigned Feature
+- Feature #159: Running Timer Indicator - Entries show running timer indicator
+
+### Work Completed
+
+**Feature #159: Running Timer Indicator**
+
+Implemented visual indicator for time entries with running timers:
+
+1. **UI Component Changes (app/entries/page.tsx):**
+   - Added Timer icon import from lucide-react
+   - Updated TimeEntry interface to include pausedAt and totalPausedTime fields
+   - Created isEntryRunning() helper function to detect active timers
+   - Added visual indicator in entries table description column:
+     * Green badge with "פעיל" (Active) text
+     * Pulsing green dot using Tailwind's animate-ping effect
+     * Timer icon for visual clarity
+     * Only shows when startTime \!== null && endTime === null
+
+2. **API Enhancement (app/api/entries/route.ts):**
+   - Added paused_at and total_paused_time to SQL SELECT queries
+   - Updated TypeScript interfaces for GET and POST handlers
+   - Updated response mapping to include these fields
+
+### Feature Completed
+- Feature #159: Running Timer Indicator - PASSING ✓
+
+### Current Project Status
+- Progress: 155/206 features passing (75.2%)
+
+### Git Commit
+- Commit: 2fbd9d0
+

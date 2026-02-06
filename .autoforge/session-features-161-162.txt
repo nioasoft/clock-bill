@@ -1,0 +1,71 @@
+## Session: 2026-02-06 (Features #161, #162) - COMPLETED
+
+### Assigned Features
+- Feature #161: Timer in Tab Title - Timer shows in browser tab title
+- Feature #162: Adjust Timer Entry - User can adjust timer entry before saving
+
+### Work Completed
+
+**Feature #161: Timer in Tab Title**
+
+Implemented dynamic browser tab title that shows elapsed time when timer is running:
+
+1. **Dashboard Enhancement (app/dashboard/page.tsx):**
+   - Added useEffect hook that updates document.title when timer is running
+   - Title format: "X:XX - שעון" (e.g., "5:32 - שעון")
+   - Updates every second to show real-time elapsed time
+   - Saves original title on component mount
+   - Restores original title when timer stops or component unmounts
+   - Uses runningTimer.elapsedMinutes and elapsedSeconds for display
+
+**Feature #162: Adjust Timer Entry**
+
+Replaced browser prompt() with proper modal dialog for stopping timer:
+
+1. **API Enhancement (app/api/timer/stop/route.ts):**
+   - Added optional `duration` parameter to POST /api/timer/stop
+   - When duration is provided, it's used instead of calculated time
+   - Backward compatible: works without duration parameter
+   - Duration is in minutes (integer)
+
+2. **UI Enhancement (app/dashboard/page.tsx):**
+   - Replaced prompt() call with proper React modal
+   - Added state variables for stop timer modal
+   - Created Stop Timer Modal with:
+     * Current elapsed time display (orange highlight)
+     * Description input field (pre-filled with current description)
+     * Duration adjustment (hours and minutes inputs, pre-filled with elapsed time)
+     * Cancel and "עצור ושמור" (Stop & Save) buttons
+   - Modal opens when clicking "עצור טיימר" button
+   - Pre-populates fields with current timer values
+   - User can edit description and adjust duration before saving
+   - Loading state shows "שומר..." while saving
+
+### Files Modified
+- app/dashboard/page.tsx - Added tab title updates and stop timer modal
+- app/api/timer/stop/route.ts - Added optional duration parameter
+
+### Features Completed
+- Feature #161: Timer in Tab Title - PASSING ✓
+- Feature #162: Adjust Timer Entry - PASSING ✓
+
+### Current Project Status
+- Progress: 156/206 features passing (75.7%)
+- Both features fully implemented and committed
+- Timer now shows in browser tab for easy tracking
+- Users can adjust timer entries before saving (better UX than prompt)
+
+### Git Commit
+- Commit: 72d9ae7
+- 1 file changed, 80 insertions(+)
+
+### Notes
+- Feature #161 improves timer visibility when user switches tabs
+- Feature #162 provides better UX than browser prompt()
+- Modal follows project UI patterns (Hebrew, RTL, shadcn styling)
+- Backward compatible API (duration parameter is optional)
+- No mock data detected - uses real database queries
+
+### Next Session
+- Continue with remaining features in priority order
+- Focus on features that can be implemented in development environment

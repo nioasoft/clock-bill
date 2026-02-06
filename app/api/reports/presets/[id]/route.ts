@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
-import { validateSession } from "@/lib/auth";
+import { getUser } from "@/lib/auth";
 import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("api-reports-presets-detail");
@@ -11,16 +11,16 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Validate session
-    const sessionResult = await validateSession(req);
-    if (!sessionResult.valid || !sessionResult.user) {
+    // Get authenticated user
+    const user = await getUser();
+    if (!user) {
       return NextResponse.json(
         { success: false, message: "לא מאומת" },
         { status: 401 }
       );
     }
 
-    const userId = sessionResult.user.id;
+    const userId = user.id;
     const presetId = params.id;
 
     // Check if preset exists and belongs to user
