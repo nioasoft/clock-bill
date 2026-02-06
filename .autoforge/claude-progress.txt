@@ -1,5 +1,43 @@
 # ClockBill Development Progress
 
+## Session: 2026-02-06 (Features #3, #4)
+
+### Assigned Features
+- Feature #3: Data Persistence - Data persists across server restart
+- Feature #4: No Mock Data - No mock data patterns in codebase
+
+### Work Completed
+
+1. **Feature #3: Data Persistence**
+   - Verified `lib/db.ts` uses Node.js built-in `node:sqlite` module
+   - Database file stored at `data/app.db` (SQLite)
+   - Created and ran persistence test script
+   - Confirmed: Data written to database persists after connection close/reopen
+   - Test result: SUCCESS - Record created with ID TEST_1770364079668 was retrievable after reconnect
+
+2. **Feature #4: No Mock Data**
+   - Removed `src/db/mock-drizzle.ts` (mock implementation file)
+   - Searched codebase for mock patterns: `mock`, `fake`, `dummy`, `sample`, `stub`
+   - Found only legitimate variable names (e.g., `testData` in API route for test record data)
+   - No mock data patterns remain in production code
+   - API routes use real database queries via `lib/db.ts`
+
+### Changes Made
+- Deleted: `src/db/mock-drizzle.ts`
+- Updated: `.env` - Changed DATABASE_URL to use SQLite (`file:./data/app.db`)
+- Verified: `lib/db.ts` initializes real SQLite database with all required tables
+
+### Features Completed
+- Feature #3: Data Persistence - PASSING
+- Feature #4: No Mock Data - PASSING
+
+### Current Project Status
+- Progress: 2/205 features passing
+- Database: SQLite with real persistence
+- All infrastructure features now use real database implementation
+
+---
+
 ## Session: 2026-02-06 (Continued)
 
 ### Assigned Features
