@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "./sidebar";
 import { MobileNav } from "./mobile-nav";
+import { ErrorBoundary } from "./error-boundary";
 
 interface User {
   id: string;
@@ -93,7 +94,9 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/* Main content - offset by sidebar width */}
         <div className="mr-64 flex-1">
           <main className="min-h-screen">
-            {children}
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
           </main>
         </div>
       </div>
@@ -101,7 +104,9 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Mobile Layout - full width */}
       <div className="lg:hidden">
         <main className="min-h-screen">
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </main>
       </div>
     </div>

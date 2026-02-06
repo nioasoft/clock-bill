@@ -51,9 +51,15 @@ export async function GET(request: NextRequest) {
       createdAt: client.created_at,
     }));
 
+    // Add cache headers for better performance
+    // Cache for 60 seconds since client list doesn't change that often
     return NextResponse.json({
       success: true,
       clients,
+    }, {
+      headers: {
+        'Cache-Control': 'private, max-age=60, stale-while-revalidate=120'
+      }
     });
   } catch (error) {
     console.error("Error fetching clients:", error);

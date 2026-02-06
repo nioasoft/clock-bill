@@ -120,6 +120,8 @@ export async function GET(request: NextRequest) {
       return `${hours}:${mins.toString().padStart(2, '0')}`;
     };
 
+    // Add cache headers for better performance
+    // Cache for 30 seconds since this is real-time data that changes frequently
     return NextResponse.json({
       success: true,
       stats: {
@@ -151,6 +153,10 @@ export async function GET(request: NextRequest) {
         formattedDuration: formatHours(entry.duration),
         projectId: entry.project_id
       }))
+    }, {
+      headers: {
+        'Cache-Control': 'private, max-age=30, stale-while-revalidate=60'
+      }
     });
   } catch (error) {
     console.error("Error fetching dashboard stats:", error);

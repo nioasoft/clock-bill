@@ -71,9 +71,15 @@ export async function GET(request: NextRequest) {
       createdAt: project.created_at,
     }));
 
+    // Add cache headers for better performance
+    // Cache for 60 seconds since project list doesn't change that often
     return NextResponse.json({
       success: true,
       projects,
+    }, {
+      headers: {
+        'Cache-Control': 'private, max-age=60, stale-while-revalidate=120'
+      }
     });
   } catch (error) {
     console.error("Error fetching projects:", error);
