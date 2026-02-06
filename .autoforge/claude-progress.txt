@@ -1,0 +1,83 @@
+# ClockBill Development Progress
+
+## Session: 2026-02-06 (Continued)
+
+### Assigned Features
+- Feature #1: Database Connection - SKIPPED (external blocker)
+- Feature #2: Database Schema - SKIPPED (external blocker)
+
+### Work Attempted
+1. **Feature #1: Database Connection**
+   - Found existing database setup code in `src/db/index.ts`
+   - Found migration script in `src/db/migrate.ts`
+   - Created JavaScript migration file to avoid TypeScript compilation issues
+   - Attempted to run migration but `better-sqlite3` package is not installed
+
+2. **Feature #2: Database Schema**
+   - Schema is defined in `src/db/schema.ts` with all required tables
+   - Migration script creates all tables and indexes
+   - Cannot apply migrations without better-sqlite3 package
+
+### External Blocker Confirmed
+**Issue:** Network restrictions prevent installation of required npm packages.
+- Error: 403 Forbidden from registry.npmjs.org
+- Both `npm install` and `pnpm install` fail
+- Missing packages: better-sqlite3, @types/better-sqlite3, and others
+
+### Resolution Required
+Network access to registry.npmjs.org must be allowed, OR packages need to be pre-installed.
+
+---
+
+## Session: 2026-02-06
+
+### Assigned Features
+- Feature #5: Backend API Queries - Backend API queries real database
+- Feature #131: Database Indexes - Database indexes are created for performance
+
+### External Blocker Identified
+**Issue:** Network restrictions prevent installation of required npm packages.
+
+**Details:**
+- Attempted to install: `drizzle-orm`, `better-auth`, `pg` (PostgreSQL driver)
+- Error: 403 Forbidden from registry.npmjs.org
+- Root cause: Network proxy blocking access to npm registry (X-Proxy-Error: blocked-by-allowlist)
+- Both npm and pnpm affected
+
+**Impact:**
+- Cannot set up Drizzle ORM for database schema
+- Cannot create database connection utilities
+- Cannot implement API routes that query real database
+- Cannot create database indexes
+
+**Resolution Required:**
+- Network access to registry.npmjs.org needs to be allowed, OR
+- Packages need to be pre-installed/provided, OR
+- Alternative package source needs to be configured
+
+### Features Skipped
+- Feature #1: Moved to priority 208 (Database Connection - network blocker: can't install better-sqlite3)
+- Feature #2: Moved to priority 209 (Database Schema - network blocker: can't install better-sqlite3)
+- Feature #5: Moved to priority 206
+- Feature #131: Moved to priority 207
+
+### Current Project Status
+- Project: Fresh Next.js 16 installation with shadcn/ui
+- Dependencies: Only base Next.js + Tailwind + React installed
+- Database: PostgreSQL configured in Docker (per setup.sh)
+- Environment: .env file exists with database connection string
+- Progress: 0/205 features passing
+
+### Next Steps (Once Network Resolved)
+1. Install required packages: drizzle-orm, better-auth, pg, drizzle-kit
+2. Set up Drizzle ORM with database schema
+3. Create database connection in lib/db/
+4. Implement API routes with real database queries
+5. Add database indexes for performance
+6. Mark features #5 and #131 as passing
+
+### Technical Notes
+- Project uses PostgreSQL via Docker (docker-compose.yml)
+- Better Auth for authentication
+- Drizzle ORM for type-safe database queries
+- App Router structure with Next.js 16

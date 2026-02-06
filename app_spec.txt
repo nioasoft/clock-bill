@@ -1,0 +1,709 @@
+<project_specification>
+  <project_name>שעון - מעקב שעות עבודה לפרילנסרים</project_name>
+
+  <overview>
+    מערכת רב-משתמשית (Multi-tenant) לניהול שעות עבודה לפרילנסרים ויועצים עצמאיים.
+    המערכת תומכת בעברית מלאה (RTL), מאפשרת מעקב זמן בזמן אמת (טיימר), ניהול לקוחות ופרויקטים,
+    מודלי תמחור גמישים (שעתי, חבילה, משולב), וייצוא דוחות מקצועיים ב-PDF בעברית עם 6 טמפלטים לבחירה.
+    כוללת תמיכה במטבעות מרובים (ILS, USD, USDT, BTC, ETH) ואפשרות להעלות לוגו אישי לדוחות.
+  </overview>
+
+  <technology_stack>
+    <frontend>
+      <framework>Next.js 16+ with App Router</framework>
+      <language>TypeScript (strict mode)</language>
+      <ui_library>shadcn/ui components</ui_library>
+      <styling>Tailwind CSS v4 with OKLCH colors</styling>
+      <rtl_support>Full RTL with logical properties</rtl_support>
+      <fonts>Inter (sans), Source Serif 4 (serif), JetBrains Mono (mono)</fonts>
+    </frontend>
+    <backend>
+      <runtime>Next.js API Routes (Edge/Node)</runtime>
+      <database_dev>SQLite (local development)</database_dev>
+      <database_prod>Neon PostgreSQL (production)</database_prod>
+      <orm>Drizzle ORM with type-safe queries</orm>
+      <auth>Better Auth (email/password, sessions)</auth>
+      <file_storage_dev>Local filesystem (/uploads)</file_storage_dev>
+      <file_storage_prod>Vercel Blob</file_storage_prod>
+    </backend>
+    <pdf_generation>
+      <library>@react-pdf/renderer</library>
+      <templates>6 templates: modern, classic, bold, elegant, nature, ocean</templates>
+      <rtl_support>Full Hebrew RTL support</rtl_support>
+    </pdf_generation>
+    <excel_export>
+      <library>exceljs</library>
+    </excel_export>
+    <hosting>Vercel with automatic deployments</hosting>
+  </technology_stack>
+
+  <prerequisites>
+    <environment_setup>
+      - Node.js 20+ with npm/pnpm
+      - SQLite for local development
+      - Environment variables in .env.local:
+        * DATABASE_URL (SQLite file path or Neon connection string)
+        * BETTER_AUTH_SECRET (random secret for auth)
+        * BETTER_AUTH_URL (app base URL)
+        * BLOB_READ_WRITE_TOKEN (Vercel Blob, production only)
+        * NEXT_PUBLIC_APP_URL
+    </environment_setup>
+  </prerequisites>
+
+  <feature_count>165</feature_count>
+
+  <security_and_access_control>
+    <user_roles>
+      <role name="authenticated_user">
+        <permissions>
+          - Manage own profile and business details
+          - CRUD operations on own clients
+          - CRUD operations on own projects
+          - Create and manage time entries
+          - Generate reports for own data
+          - Upload and manage own logo
+          - View dashboard with own statistics
+        </permissions>
+        <protected_routes>
+          - / (dashboard) - authenticated only
+          - /entries/* - authenticated only
+          - /clients/* - authenticated only
+          - /projects/* - authenticated only
+          - /reports - authenticated only
+          - /settings - authenticated only
+        </protected_routes>
+      </role>
+      <role name="guest">
+        <permissions>
+          - View login page
+          - View registration page
+          - Register new account
+          - Login to existing account
+        </permissions>
+        <protected_routes>
+          - Cannot access any authenticated routes
+          - Redirected to /login when accessing protected routes
+        </protected_routes>
+      </role>
+    </user_roles>
+    <authentication>
+      <method>Email/password via Better Auth</method>
+      <session_timeout>7 days (configurable)</session_timeout>
+      <password_requirements>Minimum 8 characters</password_requirements>
+      <features>
+        - User registration with email verification
+        - Login with email/password
+        - Password reset via email
+        - Session management (view active sessions, logout from all devices)
+        - Automatic session refresh
+      </features>
+    </authentication>
+    <data_isolation>
+      - Every database query must include userId filter
+      - Users cannot access other users' data (clients, projects, entries)
+      - API endpoints verify ownership before returning data
+    </data_isolation>
+  </security_and_access_control>
+
+  <core_features>
+    <infrastructure>
+      - Database connection established (SQLite/Neon)
+      - Database schema applied correctly (Drizzle migrations)
+      - Data persists across server restart
+      - No mock data patterns in codebase
+      - Backend API queries real database
+    </infrastructure>
+
+    <authentication>
+      - User can register with email and password
+      - User can login with email and password
+      - User can logout
+      - User can reset password
+      - Session persists across page refreshes
+      - Protected routes redirect unauthenticated users to login
+      - Authenticated users redirect from login to dashboard
+    </authentication>
+
+    <user_profile>
+      - User can view and edit business profile
+      - User can set business name
+      - User can upload business logo
+      - User can set phone number
+      - User can set business address
+      - User can set tax ID (ח.פ. / מספר עוסק)
+      - User can set default currency (ILS, USD, USDT, BTC, ETH)
+      - User can select preferred PDF template
+      - Logo displays correctly in reports
+      - Profile data persists across sessions
+    </user_profile>
+
+    <clients>
+      - User can create new client
+      - User can view list of all clients
+      - User can search clients by name
+      - User can filter clients by active/inactive status
+      - User can edit client details
+      - User can deactivate client (soft delete)
+      - User can reactivate deactivated client
+      - Client form validates required fields
+      - Client shows associated projects count
+      - Client shows total hours worked
+      - Client details page shows all projects
+      - User can set default hourly rate per client
+    </clients>
+
+    <projects>
+      - User can create project under client
+      - User can set project name
+      - User can select pricing model (hourly/package/mixed)
+      - User can set hourly rate for project
+      - User can set package price and included hours
+      - User can set overage rate for mixed model
+      - User can set project status (active/completed/paused)
+      - User can set project start and end dates
+      - User can add notes to project
+      - User can edit project details
+      - User can change project status
+      - User can view project details page
+      - Project shows total hours logged
+      - Project shows financial summary
+      - Project shows package utilization (if applicable)
+      - User can set custom rates per tag (rate overrides)
+    </projects>
+
+    <time_entries>
+      - User can start live timer
+      - User can stop live timer
+      - Timer shows elapsed time in real-time
+      - Timer requires selecting client and project
+      - User can add description while timer running
+      - User can add tags while timer running
+      - User can manually create time entry
+      - Manual entry supports date selection
+      - Manual entry supports start/end time or duration
+      - User can edit existing time entry
+      - User can delete time entry
+      - User can view list of all time entries
+      - User can filter entries by date range
+      - User can filter entries by client
+      - User can filter entries by project
+      - User can filter entries by tag
+      - User can mark entry as billable/non-billable
+      - Running timer persists across page navigation
+      - Entries show calculated amount based on rates
+    </time_entries>
+
+    <tags>
+      - System provides default tags: פיתוח, ייעוץ, תמיכה, ניהול, אחר
+      - User can create custom tags
+      - User can edit custom tag names
+      - User can delete custom tags (not defaults)
+      - Tags display with color coding
+      - Tags can be filtered in reports
+      - Custom rates can be set per tag per project
+    </tags>
+
+    <dashboard>
+      - Dashboard shows today's total hours
+      - Dashboard shows this week's total hours
+      - Dashboard shows this month's total hours
+      - Dashboard shows active timer status
+      - Dashboard shows recent time entries
+      - Dashboard shows summary by client
+      - Dashboard shows summary by project
+      - Dashboard shows package utilization alerts
+      - Dashboard updates in real-time
+      - Quick action to start timer from dashboard
+    </dashboard>
+
+    <reports>
+      - User can generate PDF report
+      - User can select date range for report (default: current month)
+      - User can filter report by client
+      - User can filter report by project
+      - User can select PDF template (6 options)
+      - PDF includes user logo if uploaded
+      - PDF includes business details
+      - PDF includes client details
+      - PDF includes project details and pricing model
+      - PDF includes detailed time entries table
+      - PDF includes package summary (if applicable)
+      - PDF includes financial summary
+      - PDF supports full Hebrew RTL
+      - User can preview PDF before download
+      - User can export to Excel/CSV
+      - Excel includes all filtered data
+      - Reports can be filtered by tags
+    </reports>
+
+    <currencies>
+      - Support for ILS (₪) - Israeli Shekel
+      - Support for USD ($) - US Dollar
+      - Support for USDT - Tether
+      - Support for BTC - Bitcoin
+      - Support for ETH - Ethereum
+      - Currency symbol displays correctly in UI
+      - Currency symbol displays correctly in reports
+      - User can set default currency in profile
+      - Currency can be set per project
+    </currencies>
+
+    <ui_ux>
+      - Full Hebrew RTL layout
+      - Dark mode support
+      - Responsive design (mobile + desktop)
+      - Loading states for all async operations
+      - Error handling with user-friendly messages
+      - Toast notifications for actions
+      - Form validation with clear error messages
+      - Confirmation dialogs for destructive actions
+      - Empty states for lists with no data
+      - Consistent spacing and typography
+    </ui_ux>
+
+    <settings>
+      - User can manage business profile
+      - User can upload/change logo
+      - User can manage custom tags
+      - User can set default PDF template
+      - User can set default currency
+      - User can view and manage sessions
+      - User can change password
+      - User can delete account
+    </settings>
+  </core_features>
+
+  <database_schema>
+    <tables>
+      <user_profile>
+        - id: UUID (PK)
+        - userId: string (FK to Better Auth user)
+        - businessName: string?
+        - logoUrl: string?
+        - phone: string?
+        - address: string?
+        - taxId: string?
+        - defaultCurrency: string (default: 'ILS')
+        - preferredPdfTemplate: string (default: 'modern')
+        - createdAt: timestamp
+        - updatedAt: timestamp
+      </user_profile>
+
+      <clients>
+        - id: UUID (PK)
+        - userId: string (FK, indexed)
+        - name: string
+        - contactName: string?
+        - email: string?
+        - phone: string?
+        - defaultRate: number?
+        - notes: text?
+        - isActive: boolean (default: true)
+        - createdAt: timestamp
+        - updatedAt: timestamp
+      </clients>
+
+      <projects>
+        - id: UUID (PK)
+        - userId: string (FK, indexed)
+        - clientId: UUID (FK to clients, indexed)
+        - name: string
+        - pricingModel: enum ('hourly', 'package', 'mixed')
+        - hourlyRate: number?
+        - packagePrice: number?
+        - packageHours: number?
+        - overageRate: number?
+        - currency: string (default: 'ILS')
+        - status: enum ('active', 'completed', 'paused')
+        - startDate: date?
+        - endDate: date?
+        - notes: text?
+        - createdAt: timestamp
+        - updatedAt: timestamp
+      </projects>
+
+      <time_entries>
+        - id: UUID (PK)
+        - userId: string (FK, indexed)
+        - projectId: UUID (FK to projects, indexed)
+        - description: string
+        - startTime: timestamp?
+        - endTime: timestamp?
+        - duration: number (minutes)
+        - date: date
+        - tags: string[] (JSON)
+        - notes: text?
+        - isBillable: boolean (default: true)
+        - createdAt: timestamp
+        - updatedAt: timestamp
+      </time_entries>
+
+      <rate_overrides>
+        - id: UUID (PK)
+        - projectId: UUID (FK to projects, indexed)
+        - tag: string
+        - rate: number
+        - createdAt: timestamp
+        - updatedAt: timestamp
+      </rate_overrides>
+
+      <custom_tags>
+        - id: UUID (PK)
+        - userId: string (FK, indexed)
+        - name: string
+        - color: string?
+        - isDefault: boolean (default: false)
+        - createdAt: timestamp
+        - updatedAt: timestamp
+      </custom_tags>
+    </tables>
+
+    <indexes>
+      - clients.userId (for data isolation)
+      - projects.userId (for data isolation)
+      - projects.clientId (for client queries)
+      - time_entries.userId (for data isolation)
+      - time_entries.projectId (for project queries)
+      - time_entries.date (for date range queries)
+      - rate_overrides.projectId (for project rate lookups)
+      - custom_tags.userId (for user tag lists)
+    </indexes>
+  </database_schema>
+
+  <api_endpoints_summary>
+    <auth>
+      - POST /api/auth/register - Register new user
+      - POST /api/auth/login - Login user
+      - POST /api/auth/logout - Logout user
+      - POST /api/auth/reset-password - Request password reset
+      - GET /api/auth/session - Get current session
+    </auth>
+
+    <profile>
+      - GET /api/profile - Get user profile
+      - PATCH /api/profile - Update user profile
+      - POST /api/profile/logo - Upload logo
+      - DELETE /api/profile/logo - Remove logo
+    </profile>
+
+    <clients>
+      - GET /api/clients - List all clients
+      - POST /api/clients - Create client
+      - GET /api/clients/[id] - Get client details
+      - PATCH /api/clients/[id] - Update client
+      - DELETE /api/clients/[id] - Deactivate client
+    </clients>
+
+    <projects>
+      - GET /api/projects - List all projects (with filters)
+      - POST /api/projects - Create project
+      - GET /api/projects/[id] - Get project details
+      - PATCH /api/projects/[id] - Update project
+      - DELETE /api/projects/[id] - Delete project
+      - GET /api/clients/[id]/projects - List client projects
+    </projects>
+
+    <time_entries>
+      - GET /api/time-entries - List entries (with filters)
+      - POST /api/time-entries - Create entry
+      - GET /api/time-entries/[id] - Get entry details
+      - PATCH /api/time-entries/[id] - Update entry
+      - DELETE /api/time-entries/[id] - Delete entry
+      - POST /api/time-entries/start - Start timer
+      - POST /api/time-entries/[id]/stop - Stop timer
+      - GET /api/time-entries/running - Get running timer
+    </time_entries>
+
+    <tags>
+      - GET /api/tags - List all tags (default + custom)
+      - POST /api/tags - Create custom tag
+      - PATCH /api/tags/[id] - Update custom tag
+      - DELETE /api/tags/[id] - Delete custom tag
+    </tags>
+
+    <reports>
+      - POST /api/reports/pdf - Generate PDF report
+      - POST /api/reports/excel - Generate Excel report
+      - GET /api/reports/summary - Get report summary data
+    </reports>
+
+    <dashboard>
+      - GET /api/dashboard/stats - Get dashboard statistics
+      - GET /api/dashboard/recent - Get recent entries
+    </dashboard>
+  </api_endpoints_summary>
+
+  <ui_layout>
+    <main_structure>
+      RTL layout with sidebar navigation on the right ( Hebrew )
+      - Sidebar: Logo, Navigation links, User menu
+      - Main content area: Page-specific content
+      - Top bar: Page title, Actions, Timer widget (when running)
+    </main_structure>
+
+    <navigation>
+      - דשבורד (Dashboard) - /
+      - רשומות זמן (Time Entries) - /entries
+      - לקוחות (Clients) - /clients
+      - דוחות (Reports) - /reports
+      - הגדרות (Settings) - /settings
+    </navigation>
+
+    <pages>
+      <login>
+        - Email input
+        - Password input
+        - Login button
+        - Link to registration
+        - Link to password reset
+      </login>
+
+      <register>
+        - Email input
+        - Password input
+        - Password confirmation
+        - Business name
+        - Register button
+        - Link to login
+      </register>
+
+      <dashboard>
+        - Today's hours summary card
+        - Week's hours summary card
+        - Month's hours summary card
+        - Active timer widget (if running)
+        - Quick start timer button
+        - Recent entries list
+        - Client summary chart
+      </dashboard>
+
+      <entries>
+        - Filter bar (date range, client, project, tag)
+        - Add entry button
+        - Entries table/list
+        - Start timer button
+        - Edit/delete actions per entry
+        - Pagination
+      </entries>
+
+      <clients>
+        - Search bar
+        - Add client button
+        - Clients list/table
+        - Active/inactive filter
+        - Client cards with stats
+      </clients>
+
+      <client_detail>
+        - Client info card
+        - Edit client button
+        - Projects list
+        - Add project button
+        - Total hours summary
+      </client_detail>
+
+      <project_detail>
+        - Project info card
+        - Pricing model display
+        - Package utilization (if applicable)
+        - Time entries list
+        - Add entry button
+        - Rate overrides section
+        - Financial summary
+      </project_detail>
+
+      <reports>
+        - Date range selector (default: current month)
+        - Client selector
+        - Project selector
+        - Template selector (6 options with preview)
+        - Generate PDF button
+        - Export Excel button
+        - Report preview area
+      </reports>
+
+      <settings>
+        - Profile tab: Business details, logo upload
+        - Tags tab: Manage custom tags
+        - Preferences tab: Default template, default currency
+        - Security tab: Password change, sessions
+      </settings>
+    </pages>
+  </ui_layout>
+
+  <design_system>
+    <color_palette>
+      Primary: oklch(0.6397 0.1720 36.4421) - Orange accent
+      Background Light: oklch(0.9383 0.0042 236.4993)
+      Background Dark: oklch(0.2598 0.0306 262.6666)
+      Card Light: oklch(1.0000 0 0)
+      Card Dark: oklch(0.3106 0.0301 268.6365)
+      Destructive: oklch(0.6368 0.2078 25.3313)
+      Border Light: oklch(0.9022 0.0052 247.8822)
+      Border Dark: oklch(0.3843 0.0301 269.7337)
+    </color_palette>
+
+    <typography>
+      Sans: Inter, sans-serif
+      Serif: Source Serif 4, serif
+      Mono: JetBrains Mono, monospace
+    </typography>
+
+    <spacing>
+      Base spacing: 0.25rem
+      Border radius: 0.75rem
+    </spacing>
+
+    <pdf_templates>
+      <modern>
+        - Primary: #2563EB (Blue)
+        - Style: Clean lines, minimal, lots of white space
+        - Features: Colorful top bar, table with light headers, rounded corners
+      </modern>
+
+      <classic>
+        - Primary: #1A1A1A (Black)
+        - Style: Traditional and formal, suitable for invoices
+        - Features: Thin borders, bold headers, bottom separator line, serif font
+      </classic>
+
+      <bold>
+        - Primary: #E85D04 (Orange)
+        - Style: Colorful and energetic, suitable for creatives
+        - Features: Large headers, colorful blocks, strong accents
+      </bold>
+
+      <elegant>
+        - Primary: #4A5568 (Blue-gray)
+        - Style: Refined and luxurious, dark tone
+        - Features: Light background, thin lines, generous spacing, refined typography
+      </elegant>
+
+      <nature>
+        - Primary: #059669 (Green)
+        - Style: Green tones, fresh and pleasant
+        - Features: Rounded elements, light green backgrounds, organic feel
+      </nature>
+
+      <ocean>
+        - Primary: #0891B2 (Turquoise)
+        - Style: Blue-turquoise, professional and calm
+        - Features: Subtle header gradient, alternating table rows, clean
+      </ocean>
+    </pdf_templates>
+  </design_system>
+
+  <implementation_steps>
+    <step number="1">
+      <title>Foundation &amp; Auth</title>
+      <tasks>
+        - Set up Next.js project with shadcn/ui and Tailwind v4
+        - Configure RTL support and Hebrew fonts
+        - Set up Drizzle ORM with SQLite
+        - Configure Better Auth with email/password
+        - Create auth pages (login, register)
+        - Set up protected routes middleware
+        - Create database schema and migrations
+        - Implement user profile table
+      </tasks>
+    </step>
+
+    <step number="2">
+      <title>Core Data Models</title>
+      <tasks>
+        - Implement clients CRUD API and UI
+        - Implement projects CRUD API and UI
+        - Create project pricing model logic
+        - Implement time entries CRUD
+        - Build manual time entry form
+        - Create live timer component
+        - Implement tags system (default + custom)
+        - Add rate overrides per tag
+      </tasks>
+    </step>
+
+    <step number="3">
+      <title>Dashboard &amp; Reporting</title>
+      <tasks>
+        - Build dashboard with statistics
+        - Create dashboard widgets
+        - Implement reports page with filters
+        - Build PDF generation with @react-pdf/renderer
+        - Implement all 6 PDF templates
+        - Add Excel export functionality
+        - Create report preview component
+      </tasks>
+    </step>
+
+    <step number="4">
+      <title>Profile &amp; Settings</title>
+      <tasks>
+        - Build profile settings page
+        - Implement logo upload (local filesystem)
+        - Create tags management page
+        - Add currency selection
+        - Implement PDF template preferences
+        - Add password change functionality
+        - Create session management
+      </tasks>
+    </step>
+
+    <step number="5">
+      <title>Polish &amp; Production</title>
+      <tasks>
+        - Implement dark mode
+        - Add responsive design for mobile
+        - Create loading states and error handling
+        - Add toast notifications
+        - Implement form validation
+        - Add empty states
+        - Set up production database (Neon)
+        - Configure Vercel Blob for file storage
+        - Deploy to Vercel
+      </tasks>
+    </step>
+  </implementation_steps>
+
+  <success_criteria>
+    <functionality>
+      - User can register, login, and logout
+      - User can manage profile and upload logo
+      - User can create and manage clients
+      - User can create projects with all pricing models
+      - User can track time with live timer
+      - User can manually add time entries
+      - User can generate PDF reports in Hebrew
+      - User can export data to Excel
+      - All data persists across sessions
+      - Multi-currency support works correctly
+    </functionality>
+
+    <user_experience>
+      - Full Hebrew RTL interface
+      - Dark mode works throughout
+      - Responsive on mobile and desktop
+      - Timer is always accessible
+      - Reports generate within 3 seconds
+      - Clear feedback for all actions
+      - Intuitive navigation
+    </user_experience>
+
+    <technical_quality>
+      - TypeScript strict mode with no any types
+      - All database queries are type-safe
+      - Data isolation between users enforced
+      - No mock data - all real database
+      - Proper error handling
+      - Clean code structure
+    </technical_quality>
+
+    <design_polish>
+      - Consistent design system
+      - Professional PDF reports
+      - Smooth animations
+      - Accessible (keyboard navigation, ARIA)
+      - Proper loading states
+      - Empty states designed
+    </design_polish>
+  </success_criteria>
+</project_specification>
