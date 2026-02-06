@@ -50,6 +50,8 @@ export default function SettingsPage() {
   const [address, setAddress] = useState("");
   const [taxId, setTaxId] = useState("");
   const [website, setWebsite] = useState("");
+  const [defaultCurrency, setDefaultCurrency] = useState("ILS");
+  const [preferredPdfTemplate, setPreferredPdfTemplate] = useState("modern");
 
   useEffect(() => {
     if (activeTab === "security") {
@@ -76,6 +78,8 @@ export default function SettingsPage() {
         setAddress(data.profile.address || "");
         setTaxId(data.profile.taxId || "");
         setWebsite(data.profile.website || "");
+        setDefaultCurrency(data.profile.defaultCurrency || "ILS");
+        setPreferredPdfTemplate(data.profile.preferredPdfTemplate || "modern");
       } else {
         setProfileError(data.message || "שגיאה בטעינת הפרופיל");
       }
@@ -165,6 +169,8 @@ export default function SettingsPage() {
           address: address || null,
           taxId: taxId || null,
           website: website || null,
+          defaultCurrency: defaultCurrency || null,
+          preferredPdfTemplate: preferredPdfTemplate || null,
         }),
       });
 
@@ -645,6 +651,57 @@ export default function SettingsPage() {
                         rows={3}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
                       />
+                    </div>
+
+                    {/* Default Currency */}
+                    <div>
+                      <label
+                        htmlFor="defaultCurrency"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        מטבע ברירת מחדל
+                      </label>
+                      <select
+                        id="defaultCurrency"
+                        value={defaultCurrency}
+                        onChange={(e) => setDefaultCurrency(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      >
+                        <option value="ILS">₪ - שקל ישראלי</option>
+                        <option value="USD">$ - דולר אמריקאי</option>
+                        <option value="USDT">₮ - טתר (USDT)</option>
+                        <option value="BTC">₿ - ביטקוין</option>
+                        <option value="ETH">Ξ - אתריום</option>
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        המטבע שיופיע כברירת מחדל בפרויקטים חדשים
+                      </p>
+                    </div>
+
+                    {/* Preferred PDF Template */}
+                    <div>
+                      <label
+                        htmlFor="preferredPdfTemplate"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        תבנית PDF ברירת מחדל
+                      </label>
+                      <select
+                        id="preferredPdfTemplate"
+                        value={preferredPdfTemplate}
+                        onChange={(e) => setPreferredPdfTemplate(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      >
+                        <option value="modern">מודרני (Modern)</option>
+                        <option value="classic">קלאסי (Classic)</option>
+                        <option value="bold">בולד (Bold)</option>
+                        <option value="elegant">אלגנטי (Elegant)</option>
+                        <option value="nature">טבע (Nature)</option>
+                        <option value="ocean">אוקיינוס (Ocean)</option>
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        התבנית שתשמש כברירת מחדל בייצוא דוחות PDF
+                      </p>
                     </div>
                   </div>
 
