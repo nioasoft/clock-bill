@@ -7,8 +7,11 @@ import { promisify } from "util";
 
 const scryptAsync = promisify(scrypt);
 
-// JWT secret from environment
-const JWT_SECRET = process.env.BETTER_AUTH_SECRET || "your-secret-key-at-least-32-characters-long";
+// Import env validation and getters
+import { getAuthSecret, isProduction } from "./env";
+
+// JWT secret from environment (validated)
+const JWT_SECRET = getAuthSecret();
 
 // Token expiration time (7 days)
 const TOKEN_EXPIRY = 60 * 60 * 24 * 7;
@@ -133,7 +136,7 @@ export function generateSessionToken(): string {
  */
 export const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
+  secure: isProduction(),
   sameSite: "lax" as const,
   maxAge: 60 * 60 * 24 * 7, // 7 days
   path: "/",
@@ -145,6 +148,7 @@ export const COOKIE_OPTIONS = {
 export interface User {
   id: string;
   email: string;
+  emailVerified?: boolean;
 }
 
 /**
@@ -165,8 +169,8 @@ export async function getUser(): Promise<User | null> {
     const { query } = await import("./db");
 
     // Get user from session
-    const result = await query<{ user_id: string; email: string }>(
-      `SELECT s.user_id, u.email
+    const result = await query<{ user_id: string; email: string; email_verified: boolean }>(
+      `SELECT s.user_id, u.email, u.email_verified
        FROM sessions s
        JOIN users u ON s.user_id = u.id
        WHERE s.token = $1 AND s.expires_at > NOW()`,
@@ -180,6 +184,7 @@ export async function getUser(): Promise<User | null> {
     return {
       id: result.rows[0].user_id,
       email: result.rows[0].email,
+      emailVerified: result.rows[0].email_verified,
     };
   } catch {
     return null;

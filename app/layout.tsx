@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
+// Validate environment variables on server startup
+import "@/lib/env";
+
 export const metadata: Metadata = {
   title: "שעון - מעקב שעות עבודה",
   description: "מערכת לניהול שעות עבודה לפרילנסרים ויועצים עצמאיים",

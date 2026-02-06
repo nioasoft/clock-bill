@@ -3,10 +3,12 @@
  * Connects to PostgreSQL via connection pool for concurrent request handling
  */
 import { Pool, QueryResult } from "pg";
+import { getDatabaseUrl } from "./env";
+import { createLogger } from "./logger";
 
-const DATABASE_URL =
-  process.env.DATABASE_URL ||
-  "postgresql://clockbill:clockbill_dev@localhost:5432/clockbill";
+const logger = createLogger("db");
+
+const DATABASE_URL = getDatabaseUrl();
 
 let pool: Pool | null = null;
 
@@ -112,7 +114,7 @@ export async function initSchema(): Promise<void> {
     `);
   } catch (error) {
     // Column might already exist, ignore error
-    console.log("Website column migration check complete");
+    logger.debug("Website column migration check complete");
   }
 
   // Add email column if it doesn't exist (for migrations)
@@ -122,7 +124,7 @@ export async function initSchema(): Promise<void> {
     `);
   } catch (error) {
     // Column might already exist, ignore error
-    console.log("Email column migration check complete");
+    logger.debug("Email column migration check complete");
   }
 
   // Clients table
@@ -154,7 +156,7 @@ export async function initSchema(): Promise<void> {
     `);
   } catch (error) {
     // Column might already exist, ignore error
-    console.log("Address column migration check complete");
+    logger.debug("Address column migration check complete");
   }
 
   // Projects table
@@ -197,7 +199,7 @@ export async function initSchema(): Promise<void> {
     `);
   } catch (error) {
     // Column might already exist, ignore error
-    console.log("fixed_budget column migration check complete");
+    logger.debug("fixed_budget column migration check complete");
   }
 
   // Add retainer_monthly_fee column if it doesn't exist (for migrations)
@@ -207,7 +209,7 @@ export async function initSchema(): Promise<void> {
     `);
   } catch (error) {
     // Column might already exist, ignore error
-    console.log("retainer_monthly_fee column migration check complete");
+    logger.debug("retainer_monthly_fee column migration check complete");
   }
 
   // Add retainer_hours column if it doesn't exist (for migrations)
@@ -217,7 +219,7 @@ export async function initSchema(): Promise<void> {
     `);
   } catch (error) {
     // Column might already exist, ignore error
-    console.log("retainer_hours column migration check complete");
+    logger.debug("retainer_hours column migration check complete");
   }
 
   // Add 'archived' to status CHECK constraint if it doesn't exist (for migrations)
@@ -232,7 +234,7 @@ export async function initSchema(): Promise<void> {
     `);
   } catch (error) {
     // Constraint might already exist or other issue
-    console.log("Status constraint migration check complete");
+    logger.debug("Status constraint migration check complete");
   }
 
   // Time entries table
@@ -271,7 +273,7 @@ export async function initSchema(): Promise<void> {
       ALTER TABLE time_entries ADD COLUMN IF NOT EXISTS paused_at TIMESTAMP
     `);
   } catch (error) {
-    console.log("paused_at column migration check complete");
+    logger.debug("paused_at column migration check complete");
   }
 
   // Add total_paused_time column if it doesn't exist (accumulated paused milliseconds)
@@ -280,7 +282,7 @@ export async function initSchema(): Promise<void> {
       ALTER TABLE time_entries ADD COLUMN IF NOT EXISTS total_paused_time INTEGER DEFAULT 0
     `);
   } catch (error) {
-    console.log("total_paused_time column migration check complete");
+    logger.debug("total_paused_time column migration check complete");
   }
 
   // Rate overrides table
@@ -338,6 +340,27 @@ export async function initSchema(): Promise<void> {
 
   await client.query(`
     CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user_id ON password_reset_tokens(user_id)
+  `);
+
+  // Email verification tokens table
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS email_verification_tokens (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      token TEXT UNIQUE NOT NULL,
+      expires_at TIMESTAMP NOT NULL,
+      used BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP DEFAULT NOW(),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_email_verification_tokens_token ON email_verification_tokens(token)
+  `);
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_email_verification_tokens_user_id ON email_verification_tokens(user_id)
   `);
 
   // Insert default tags if they don't exist
