@@ -22,8 +22,10 @@ export async function GET(request: NextRequest) {
       project_id: string;
       description: string;
       start_time: string;
+      paused_at: string | null;
+      total_paused_time: number;
     }>(
-      `SELECT id, project_id, description, start_time
+      `SELECT id, project_id, description, start_time, paused_at, total_paused_time
        FROM time_entries
        WHERE user_id = $1 AND start_time IS NOT NULL AND end_time IS NULL
        ORDER BY start_time DESC
@@ -41,7 +43,20 @@ export async function GET(request: NextRequest) {
     const entry = result.rows[0];
     const startTime = new Date(entry.start_time);
     const now = new Date();
-    const elapsedMs = now.getTime() - startTime.getTime();
+    let elapsedMs = now.getTime() - startTime.getTime();
+
+    // Subtract total paused time if exists
+    if (entry.total_paused_time) {
+      elapsedMs -= entry.total_paused_time;
+    }
+
+    // If currently paused, subtract the current pause duration
+    if (entry.paused_at) {
+      const pausedAt = new Date(entry.paused_at);
+      const currentPauseMs = now.getTime() - pausedAt.getTime();
+      elapsedMs -= currentPauseMs;
+    }
+
     const elapsedMinutes = Math.floor(elapsedMs / 1000 / 60);
 
     return NextResponse.json({
@@ -51,6 +66,7 @@ export async function GET(request: NextRequest) {
         projectId: entry.project_id,
         description: entry.description,
         startTime: entry.start_time,
+        pausedAt: entry.paused_at,
         elapsedMinutes,
         elapsedSeconds: Math.floor((elapsedMs / 1000) % 60)
       }

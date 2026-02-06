@@ -45,6 +45,7 @@ interface RunningTimer {
   projectId: string;
   description: string | null;
   startTime: string;
+  pausedAt: string | null;
   elapsedMinutes: number;
   elapsedSeconds: number;
 }
@@ -71,6 +72,8 @@ export default function DashboardPage() {
   const [timerDescription, setTimerDescription] = useState("");
   const [startingTimer, setStartingTimer] = useState(false);
   const [stoppingTimer, setStoppingTimer] = useState(false);
+  const [pausingTimer, setPausingTimer] = useState(false);
+  const [resumingTimer, setResumingTimer] = useState(false);
   const [elapsedTime, setElapsedTime] = useState("0:00");
 
   useEffect(() => {
@@ -160,9 +163,12 @@ export default function DashboardPage() {
     const updateElapsed = () => {
       const now = new Date();
       const start = new Date(runningTimer.startTime);
-      const elapsedMs = now.getTime() - start.getTime();
-      const minutes = Math.floor(elapsedMs / 1000 / 60);
-      const seconds = Math.floor((elapsedMs / 1000) % 60);
+      let elapsedMs = now.getTime() - start.getTime();
+
+      // Note: The API already accounts for paused time, so we use the values returned
+      // This is just for display formatting
+      const minutes = runningTimer.elapsedMinutes;
+      const seconds = runningTimer.elapsedSeconds;
       setElapsedTime(`${minutes}:${seconds.toString().padStart(2, '0')}`);
     };
 
@@ -290,6 +296,64 @@ export default function DashboardPage() {
       alert("שגיאה בעצירת הטיימר");
     } finally {
       setStoppingTimer(false);
+    }
+  };
+
+  const handlePauseTimer = async () => {
+    if (!runningTimer) return;
+
+    setPausingTimer(true);
+    try {
+      const response = await fetch("/api/timer/pause", {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Refresh running timer to get updated paused state
+        const timerResponse = await fetch("/api/timer/running");
+        const timerData = await timerResponse.json();
+        if (timerData.success && timerData.running) {
+          setRunningTimer(timerData.running);
+        }
+      } else {
+        alert(data.message || "שגיאה בהשהיית הטיימר");
+      }
+    } catch (error) {
+      console.error("Error pausing timer:", error);
+      alert("שגיאה בהשהיית הטיימר");
+    } finally {
+      setPausingTimer(false);
+    }
+  };
+
+  const handleResumeTimer = async () => {
+    if (!runningTimer) return;
+
+    setResumingTimer(true);
+    try {
+      const response = await fetch("/api/timer/resume", {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Refresh running timer to get updated state
+        const timerResponse = await fetch("/api/timer/running");
+        const timerData = await timerResponse.json();
+        if (timerData.success && timerData.running) {
+          setRunningTimer(timerData.running);
+        }
+      } else {
+        alert(data.message || "שגיאה בחידוש הטיימר");
+      }
+    } catch (error) {
+      console.error("Error resuming timer:", error);
+      alert("שגיאה בחידוש הטיימר");
+    } finally {
+      setResumingTimer(false);
     }
   };
 

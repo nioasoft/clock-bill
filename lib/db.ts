@@ -250,6 +250,24 @@ export async function initSchema(): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_time_entries_date ON time_entries(date)
   `);
 
+  // Add paused_at column if it doesn't exist (for pause functionality)
+  try {
+    await client.query(`
+      ALTER TABLE time_entries ADD COLUMN IF NOT EXISTS paused_at TIMESTAMP
+    `);
+  } catch (error) {
+    console.log("paused_at column migration check complete");
+  }
+
+  // Add total_paused_time column if it doesn't exist (accumulated paused milliseconds)
+  try {
+    await client.query(`
+      ALTER TABLE time_entries ADD COLUMN IF NOT EXISTS total_paused_time INTEGER DEFAULT 0
+    `);
+  } catch (error) {
+    console.log("total_paused_time column migration check complete");
+  }
+
   // Rate overrides table
   await client.query(`
     CREATE TABLE IF NOT EXISTS rate_overrides (

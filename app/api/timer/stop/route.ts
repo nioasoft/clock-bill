@@ -25,8 +25,10 @@ export async function POST(request: NextRequest) {
       id: string;
       start_time: string;
       description: string;
+      total_paused_time: number;
+      paused_at: string | null;
     }>(
-      `SELECT id, start_time, description
+      `SELECT id, start_time, description, total_paused_time, paused_at
        FROM time_entries
        WHERE id = $1 AND user_id = $2 AND start_time IS NOT NULL AND end_time IS NULL`,
       [entryId, userId]
@@ -42,13 +44,26 @@ export async function POST(request: NextRequest) {
     const entry = entryResult.rows[0];
     const startTime = new Date(entry.start_time);
     const endTime = new Date();
-    const durationMs = endTime.getTime() - startTime.getTime();
+    let durationMs = endTime.getTime() - startTime.getTime();
+
+    // Subtract total paused time if exists
+    if (entry.total_paused_time) {
+      durationMs -= entry.total_paused_time;
+    }
+
+    // If currently paused, subtract the current pause duration
+    if (entry.paused_at) {
+      const pausedAt = new Date(entry.paused_at);
+      const currentPauseMs = endTime.getTime() - pausedAt.getTime();
+      durationMs -= currentPauseMs;
+    }
+
     const durationMinutes = Math.floor(durationMs / 1000 / 60);
 
     // Update the entry with end_time, duration, and optionally description
     await query(
       `UPDATE time_entries
-       SET end_time = $1, duration = $2, description = COALESCE($3, description), updated_at = NOW()
+       SET end_time = $1, duration = $2, description = COALESCE($3, description), paused_at = NULL, updated_at = NOW()
        WHERE id = $4`,
       [endTime.toISOString(), durationMinutes, description || null, entryId]
     );
