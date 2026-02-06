@@ -461,6 +461,16 @@ export default function ReportsPage() {
     setSelectedTemplate(template);
     setShowExportDialog(false);
 
+    // Set document title for PDF filename (date + client name)
+    const originalTitle = document.title;
+    const clientName = filters.clientId
+      ? clients.find((c) => c.id === filters.clientId)?.name || "all-clients"
+      : "all-clients";
+    const dateRange = `${filters.startDate}_to_${filters.endDate}`;
+    // Sanitize filename: remove spaces, use Hebrew-friendly format
+    const pdfFilename = `report_${dateRange}_${clientName}`;
+    document.title = pdfFilename;
+
     // Inject print styles dynamically
     const styleId = 'pdf-print-styles';
     let styleEl = document.getElementById(styleId) as HTMLStyleElement;
@@ -556,11 +566,12 @@ export default function ReportsPage() {
     // Trigger browser print (which allows "Save as PDF")
     setTimeout(() => {
       window.print();
-      // Clean up styles after print
+      // Clean up styles and restore title after print
       setTimeout(() => {
         if (styleEl && styleEl.parentNode) {
           styleEl.parentNode.removeChild(styleEl);
         }
+        document.title = originalTitle;
       }, 1000);
     }, 100);
   };
@@ -831,7 +842,7 @@ export default function ReportsPage() {
             </div>
 
             {/* PDF Content (for printing) - hidden on screen, visible in print */}
-            <div id="pdf-content" className="print-only" dir="rtl">
+            <div id="pdf-content" className="print-only" dir="rtl" data-generated-date={new Date().toLocaleDateString('he-IL')}>
               <div className="pdf-header" style={{ marginBottom: "1rem" }}>
                 {userProfile?.logoUrl && (
                   <img
@@ -1013,6 +1024,14 @@ export default function ReportsPage() {
                   </table>
                 </div>
               )}
+
+              {/* PDF Footer with generation date and page numbers */}
+              <div className="pdf-footer" style={{ marginTop: "2rem", paddingTop: "1rem", borderTop: "1px solid #e2e8f0", textAlign: "center", fontSize: "11px", color: "#64748b" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>נוצר בתאריך: {new Date().toLocaleDateString('he-IL')}</div>
+                  <div>עמוד <span className="page-number">1</span></div>
+                </div>
+              </div>
             </div>
 
             {/* Summary Cards */}

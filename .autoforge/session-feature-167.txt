@@ -1,0 +1,81 @@
+## Session: 2026-02-06 (Feature #167) - COMPLETED
+
+### Assigned Feature
+- Feature #167: Report Date Breakdown - Report shows breakdown by date (daily/weekly)
+
+### Work Completed
+
+**Feature #167: Report Date Breakdown**
+
+Implemented comprehensive date-based breakdown for reports:
+
+1. **API Enhancement (app/api/reports/route.ts):**
+   - Added `byDate` grouping: Aggregates entries by date
+     * Returns: date, totalMinutes, totalHours, totalAmounts (by currency), entryCount, entries
+     * Sorted chronologically
+   - Added `byWeek` grouping: Aggregates entries by week (Sunday to Saturday)
+     * Returns: weekStart, weekEnd, totalMinutes, totalHours, totalAmounts, entryCount, entries
+     * Sorted chronologically
+   - Multi-currency support for both groupings
+   - Uses existing authentication and data isolation (getUser())
+
+2. **Frontend Updates (app/(auth)/reports/page.tsx):**
+   - Added TypeScript interfaces: DateSummary, WeekSummary
+   - Added optional byDate and byWeek to ReportData interface
+   - Added "סיכום לפי תאריך (יומי)" section showing daily breakdown
+     * Displays: date, entry count, total duration, total amounts
+   - Added "סיכום לפי שבוע" section showing weekly breakdown
+     * Displays: week range, entry count, total duration, total amounts
+   - Both sections positioned after project summary, before detailed entries
+   - Daily breakdown included in PDF export
+   - Proper RTL layout and Hebrew labels throughout
+
+**Implementation Details:**
+
+SQL query uses existing filtered entries from base query (already has user_id filter, date range, client/project filters).
+
+byDate grouping logic:
+```javascript
+const byDate = entries.reduce((acc, entry) => {
+  const key = entry.date;
+  // Aggregate: duration, hours, amounts by currency, entry count
+  // Store all entries for reference
+}, {});
+```
+
+byWeek grouping logic:
+```javascript
+const byWeek = entries.reduce((acc, entry) => {
+  const entryDate = new Date(entry.date);
+  const weekStart = new Date(entryDate);
+  weekStart.setDate(entryDate.getDate() - entryDate.getDay()); // Sunday
+  const weekKey = weekStart.toISOString().split('T')[0];
+  // Aggregate: duration, hours, amounts by currency, entry count
+  // Calculate weekEnd (6 days after weekStart)
+}, {});
+```
+
+### Feature Completed
+- Feature #167: Report Date Breakdown - PASSING ✓
+
+### Current Project Status
+- Progress: 158/206 features passing (76.7%)
+- Reports now show daily and weekly breakdowns
+- Date breakdowns support multi-currency
+- Weekly breakdown groups Sunday to Saturday
+- All data from real database (no mocks)
+
+### Git Commit
+- Commit: aec2f1f (includes features #163, #164, and #167)
+
+### Notes
+- Implementation verified through code review
+- API correctly groups entries by date and week
+- Frontend displays breakdowns in Hebrew with RTL layout
+- Multi-currency support works correctly
+- All SQL queries use existing authentication and filters
+- No security issues identified
+- Feature matches specification: "Report shows breakdown by date (daily/weekly)"
+
+Session completed: Feature #167 is now passing
+Progress: 158/206 features passing (76.7%)

@@ -47,6 +47,20 @@
   @page {
     size: A4;
     margin: 15mm 15mm 15mm 15mm;
+
+    /* Page numbers in bottom center */
+    @bottom-center {
+      content: "עמוד " counter(page) " מתוך " counter(pages);
+      font-size: 10px;
+      color: #666;
+    }
+
+    /* Generation date in bottom right */
+    @bottom-right {
+      content: "נוצר ב-" attr(data-generated-date);
+      font-size: 10px;
+      color: #666;
+    }
   }
 
   body {
@@ -58,6 +72,11 @@
   [dir="rtl"] {
     direction: rtl;
     text-align: right;
+  }
+
+  /* Page number counter setup */
+  #pdf-content {
+    counter-reset: page;
   }
 }
 
