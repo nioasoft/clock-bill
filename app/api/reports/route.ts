@@ -44,7 +44,11 @@ export async function GET(request: NextRequest) {
         p.hourly_rate,
         p.currency,
         c.name as client_name,
-        c.id as client_id
+        c.id as client_id,
+        c.contact_name as client_contact_name,
+        c.email as client_email,
+        c.phone as client_phone,
+        c.address as client_address
       FROM time_entries te
       JOIN projects p ON te.project_id = p.id
       JOIN clients c ON p.client_id = c.id
@@ -97,6 +101,10 @@ export async function GET(request: NextRequest) {
       currency: string;
       client_name: string;
       client_id: string;
+      client_contact_name: string | null;
+      client_email: string | null;
+      client_phone: string | null;
+      client_address: string | null;
     }>(queryText, queryParams);
 
     // Group entries by client and project for summary
@@ -112,6 +120,10 @@ export async function GET(request: NextRequest) {
         projectName: entry.project_name,
         clientId: entry.client_id,
         clientName: entry.client_name,
+        clientContactName: entry.client_contact_name,
+        clientEmail: entry.client_email,
+        clientPhone: entry.client_phone,
+        clientAddress: entry.client_address,
         description: entry.description,
         startTime: entry.start_time,
         endTime: entry.end_time,
@@ -149,6 +161,10 @@ export async function GET(request: NextRequest) {
         acc[key] = {
           clientId: entry.clientId,
           clientName: entry.clientName,
+          clientContactName: entry.clientContactName,
+          clientEmail: entry.clientEmail,
+          clientPhone: entry.clientPhone,
+          clientAddress: entry.clientAddress,
           totalMinutes: 0,
           totalHours: 0,
           totalAmounts: {} as Record<string, number>,

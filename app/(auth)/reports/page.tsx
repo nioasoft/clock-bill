@@ -37,6 +37,10 @@ interface ReportEntry {
   projectName: string;
   clientId: string;
   clientName: string;
+  clientContactName: string | null;
+  clientEmail: string | null;
+  clientPhone: string | null;
+  clientAddress: string | null;
   description: string;
   duration: number;
   date: string;
@@ -58,6 +62,10 @@ interface ReportSummary {
 interface ClientSummary {
   clientId: string;
   clientName: string;
+  clientContactName: string | null;
+  clientEmail: string | null;
+  clientPhone: string | null;
+  clientAddress: string | null;
   totalMinutes: number;
   totalHours: number;
   totalAmounts: Record<string, number>;
@@ -565,9 +573,33 @@ export default function ReportsPage() {
                 <h1 className="pdf-business-name" style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "0.5rem" }}>
                   {userProfile?.businessName || "דוח שעות עבודה"}
                 </h1>
-                <p className="pdf-subtitle" style={{ fontSize: "14px", opacity: 0.8 }}>
+                <p className="pdf-subtitle" style={{ fontSize: "14px", opacity: 0.8, marginBottom: "0.75rem" }}>
                   {filters.startDate} עד {filters.endDate}
                 </p>
+
+                {/* Business Contact Details */}
+                <div style={{ fontSize: "13px", opacity: 0.9, marginTop: "1rem" }}>
+                  {userProfile?.address && (
+                    <div style={{ marginBottom: "0.25rem" }}>
+                      📍 {userProfile.address}
+                    </div>
+                  )}
+                  {userProfile?.phone && (
+                    <div style={{ marginBottom: "0.25rem" }}>
+                      📞 {userProfile.phone}
+                    </div>
+                  )}
+                  {userProfile?.email && (
+                    <div style={{ marginBottom: "0.25rem" }}>
+                      ✉️ {userProfile.email}
+                    </div>
+                  )}
+                  {userProfile?.taxId && (
+                    <div style={{ marginBottom: "0.25rem" }}>
+                      🆔 עוסק: {userProfile.taxId}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Summary Section */}
@@ -605,9 +637,26 @@ export default function ReportsPage() {
                   <h2 className="pdf-section-title" style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "1rem" }}>סיכום לפי לקוח</h2>
                   {reportData.byClient.map((client) => (
                     <div key={client.clientId} className="pdf-summary-card" style={{ padding: "1rem", backgroundColor: "#f8fafc", borderRadius: "8px", marginBottom: "0.75rem" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div>
-                          <div style={{ fontWeight: "600", fontSize: "18px" }}>{client.clientName}</div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: "600", fontSize: "18px", marginBottom: "0.25rem" }}>{client.clientName}</div>
+                          {/* Client Contact Details */}
+                          {(client.clientContactName || client.clientEmail || client.clientPhone || client.clientAddress) && (
+                            <div style={{ fontSize: "12px", opacity: 0.8, marginBottom: "0.5rem" }}>
+                              {client.clientContactName && (
+                                <div style={{ marginBottom: "0.15rem" }}>👤 איש קשר: {client.clientContactName}</div>
+                              )}
+                              {client.clientEmail && (
+                                <div style={{ marginBottom: "0.15rem" }}>✉️ {client.clientEmail}</div>
+                              )}
+                              {client.clientPhone && (
+                                <div style={{ marginBottom: "0.15rem" }}>📞 {client.clientPhone}</div>
+                              )}
+                              {client.clientAddress && (
+                                <div style={{ marginBottom: "0.15rem" }}>📍 {client.clientAddress}</div>
+                              )}
+                            </div>
+                          )}
                           <div style={{ fontSize: "14px", opacity: 0.7 }}>
                             {client.entries.length} רשומות
                           </div>
