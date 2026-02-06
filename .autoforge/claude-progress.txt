@@ -798,3 +798,37 @@ Both features implemented together as they share the same API endpoint and UI st
 ### Current Project Status
 - Progress: 28/206 features passing (13.6%)
 - Client management: Create, List, View, Edit, Delete - all complete
+
+## Session: 2026-02-06 (Features #33, #147)
+
+### Assigned Features
+- Feature #33: Client Notes - User can add notes to client
+- Feature #147: Archive Client - User can archive client (soft delete)
+
+### Work Completed
+
+1. **Feature #33: Client Notes**
+   - Added edit button to clients list table
+   - Modified form to support both create and edit modes
+   - Added editingClient state to track current client being edited
+   - Form pre-populates with existing client data including notes
+   - PUT /api/clients/[id] endpoint updates client notes
+   - Updated Next.js 15+ params handling (Promise-based params)
+
+2. **Feature #147: Archive Client**
+   - Added archive button to clients list (only shows for active clients)
+   - Added confirmation dialog before archiving with Hebrew messaging
+   - DELETE /api/clients/[id] endpoint sets is_active = FALSE (soft delete)
+   - Client status updates in UI after archiving
+
+### Files Modified
+- app/clients/page.tsx - Added edit functionality, archive button, confirmation dialog
+- app/api/clients/[id]/route.ts - Fixed Next.js 15+ params handling
+
+### Features Completed
+- Feature #33: Client Notes - PASSING
+- Feature #147: Archive Client - PASSING
+
+### Current Project Status
+- Progress: 34/206 features passing (16.5%)
+
