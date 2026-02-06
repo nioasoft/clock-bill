@@ -52,6 +52,12 @@ export default async function DashboardPage() {
           <h1 className="text-2xl font-bold text-gray-900">שעון</h1>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">{user.email}</span>
+            <Link
+              href="/settings"
+              className="text-sm text-gray-600 hover:text-gray-900"
+            >
+              הגדרות
+            </Link>
             <form action="/api/auth/logout" method="POST">
               <button
                 type="submit"
