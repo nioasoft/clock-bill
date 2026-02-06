@@ -35,6 +35,7 @@ export default function ClientsPage() {
     contactName: "",
     email: "",
     phone: "",
+    address: "",
     defaultRate: "",
     notes: "",
   });
@@ -131,6 +132,7 @@ export default function ClientsPage() {
           contactName: "",
           email: "",
           phone: "",
+          address: "",
           defaultRate: "",
           notes: "",
         });
@@ -154,6 +156,7 @@ export default function ClientsPage() {
       contactName: client.contactName || "",
       email: client.email || "",
       phone: client.phone || "",
+      address: client.address || "",
       defaultRate: client.defaultRate?.toString() || "",
       notes: client.notes || "",
     });
@@ -167,6 +170,7 @@ export default function ClientsPage() {
       contactName: "",
       email: "",
       phone: "",
+      address: "",
       defaultRate: "",
       notes: "",
     });
