@@ -423,51 +423,36 @@ Network access to registry.npmjs.org must be allowed, OR packages need to be pre
 
 ---
 
-## Session: 2026-02-06 (Features #206, #1) - Fourth Attempt
+## Session: 2026-02-06 - PostgreSQL Migration COMPLETED (by user outside sandbox)
 
-### Assigned Features
-- Feature #206: Migrate database from SQLite to PostgreSQL (המרת מסד נתונים מ-SQLite ל-PostgreSQL)
-- Feature #1: Database Connection (depends on #206)
+### IMPORTANT: Migration Done - pg is pre-installed, do NOT attempt npm install
 
-### External Blocker Confirmed (Fourth Attempt)
-**Issue:** Network restrictions continue to prevent installation of required npm packages.
+The SQLite -> PostgreSQL migration was completed manually outside the Autoforge sandbox.
+All packages are already installed. Do NOT try to run `npm install` for pg.
 
-**Details:**
-- Attempted to install: `pg` and `@types/pg` (PostgreSQL driver for Node.js)
-- Error: 403 Forbidden from registry.npmjs.org
-- Root cause: Network proxy blocking access to npm registry (X-Proxy-Error: blocked-by-allowlist)
-- Both npm and pnpm affected
+### What Changed:
+1. **Packages:** `pg` and `@types/pg` installed, `better-sqlite3` and `@types/better-sqlite3` removed
+2. **lib/db.ts:** Fully rewritten - uses `pg.Pool` with `query()` helper (async, $1/$2 placeholders)
+3. **All API routes:** Converted from sync `db.prepare().run()` to async `await query()`
+4. **src/db/schema.ts:** `sqliteTable` -> `pgTable`, `integer(mode:boolean)` -> `boolean()`, etc.
+5. **src/db/index.ts:** `drizzle-orm/better-sqlite3` -> `drizzle-orm/node-postgres`
+6. **drizzle.config.ts:** `dialect: 'sqlite'` -> `dialect: 'postgresql'`
+7. **next.config.js:** Removed `better-sqlite3` from `serverExternalPackages`
+8. **.env:** `DATABASE_URL=postgres://clockbill:clockbill_dev@localhost:5432/clockbill`
 
-**Current State:**
-- Project uses SQLite with `better-sqlite3` driver (already installed)
-- `.env` file configured for SQLite (`DATABASE_URL=file:./data/app.db`)
-- Drizzle ORM configured for SQLite dialect
-- All existing features work correctly with SQLite
-- **7 features already passing with SQLite implementation**
+### Database: PostgreSQL via Docker
+- Container: `clockbill-db` (postgres:16-alpine) on port 5432
+- Credentials: clockbill:clockbill_dev@localhost:5432/clockbill
+- All 8 tables created and verified
+- Default Hebrew tags inserted
 
-**Impact:**
-- Cannot install `pg` package required for PostgreSQL connectivity
-- Cannot migrate from SQLite to PostgreSQL without the driver
-- Feature #206 (PostgreSQL migration) is blocked
-- Feature #1 (Database Connection) depends on #206, also blocked
+### Verified Working:
+- POST /api/test - creates records with gen_random_uuid()
+- GET /api/test - retrieves records from PostgreSQL
+- POST /api/auth/register - creates user + profile + session
+- POST /api/auth/login - authenticates and creates session
+- GET /api/auth/session - validates session cookie
+- Data persists across server restarts
 
-**Resolution Required:**
-- Network access to registry.npmjs.org needs to be allowed, OR
-- `pg` package needs to be pre-installed/provided
-
-### Features Skipped
-- Feature #206: Moved to priority 217 (Migrate SQLite to PostgreSQL - network blocker: can't install pg package)
-- Feature #1: Moved to priority 218 (Database Connection - depends on #206, also blocked)
-
-### Current Project Status
-- Progress: 7/206 features passing (3.4%)
-- Database: SQLite with real persistence (working well)
-- PostgreSQL migration: Blocked pending network access resolution
-
-### Notes
-- The project currently uses SQLite which is fully functional
-- According to app_spec.txt, SQLite is the intended database for local development
-- All existing features work correctly with SQLite
-- These features were re-attempted for the fourth time but the external blocker persists
-- **Recommendation:** Work on features that don't require new npm packages
+### Features #206 and #1 should now be marked PASSING
 

@@ -1,55 +1,49 @@
 /**
- * Database connection module using better-sqlite3
- * This ensures data persistence across server restarts
+ * Database connection module using pg (PostgreSQL)
+ * Connects to PostgreSQL via connection pool for concurrent request handling
  */
-import Database from "better-sqlite3";
-import { join, dirname } from "path";
-import { mkdirSync, existsSync } from "fs";
+import { Pool, QueryResult } from "pg";
 
-const DB_PATH = process.env.DATABASE_URL?.replace("file:", "") ||
-  join(process.cwd(), "data", "app.db");
+const DATABASE_URL =
+  process.env.DATABASE_URL ||
+  "postgresql://clockbill:clockbill_dev@localhost:5432/clockbill";
 
-// Global database instance for connection reuse
-let db: Database.Database | null = null;
+let pool: Pool | null = null;
 
 /**
- * Ensure the data directory exists
+ * Get or create the connection pool
  */
-function ensureDataDirectory(): void {
-  const dataDir = dirname(DB_PATH);
-  if (!existsSync(dataDir)) {
-    try {
-      mkdirSync(dataDir, { recursive: true });
-    } catch {
-      // Directory might have been created by another process
-    }
+export function getPool(): Pool {
+  if (!pool) {
+    pool = new Pool({
+      connectionString: DATABASE_URL,
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
+    });
   }
+  return pool;
 }
 
 /**
- * Get or create the database connection
- * Uses singleton pattern to reuse connection across requests
+ * Execute a parameterized query against the database
+ * Uses $1, $2, etc. for placeholders
  */
-export function getDb(): Database.Database {
-  if (!db) {
-    ensureDataDirectory();
-    db = new Database(DB_PATH);
-    // Enable foreign keys
-    db.exec("PRAGMA foreign_keys = ON");
-    // Enable WAL mode for better performance
-    db.exec("PRAGMA journal_mode = WAL");
-  }
-  return db;
+export async function query<T extends Record<string, unknown> = Record<string, unknown>>(
+  text: string,
+  params?: unknown[]
+): Promise<QueryResult<T>> {
+  const client = getPool();
+  return client.query<T>(text, params);
 }
 
 /**
- * Close the database connection
- * Used for cleanup during server shutdown
+ * Close the connection pool
  */
-export function closeDb(): void {
-  if (db) {
-    db.close();
-    db = null;
+export async function closeDb(): Promise<void> {
+  if (pool) {
+    await pool.end();
+    pool = null;
   }
 }
 
@@ -57,43 +51,43 @@ export function closeDb(): void {
  * Initialize database schema
  * Creates all required tables if they don't exist
  */
-export function initSchema(): void {
-  const database = getDb();
+export async function initSchema(): Promise<void> {
+  const client = getPool();
 
   // Users table for authentication
-  database.exec(`
+  await client.query(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
-      email_verified INTEGER DEFAULT 0,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      email_verified BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
     )
   `);
 
   // Sessions table for session management
-  database.exec(`
+  await client.query(`
     CREATE TABLE IF NOT EXISTS sessions (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
       token TEXT UNIQUE NOT NULL,
-      expires_at DATETIME NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      expires_at TIMESTAMP NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW(),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
 
-  database.exec(`
+  await client.query(`
     CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)
   `);
 
-  database.exec(`
+  await client.query(`
     CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token)
   `);
 
   // User profiles table
-  database.exec(`
+  await client.query(`
     CREATE TABLE IF NOT EXISTS user_profiles (
       id TEXT PRIMARY KEY,
       user_id TEXT UNIQUE NOT NULL,
@@ -104,13 +98,13 @@ export function initSchema(): void {
       tax_id TEXT,
       default_currency TEXT DEFAULT 'ILS',
       preferred_pdf_template TEXT DEFAULT 'modern',
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
     )
   `);
 
   // Clients table
-  database.exec(`
+  await client.query(`
     CREATE TABLE IF NOT EXISTS clients (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
@@ -120,19 +114,18 @@ export function initSchema(): void {
       phone TEXT,
       default_rate REAL,
       notes TEXT,
-      is_active INTEGER DEFAULT 1,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      is_active BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
     )
   `);
 
-  // Create index on clients.user_id
-  database.exec(`
+  await client.query(`
     CREATE INDEX IF NOT EXISTS idx_clients_user_id ON clients(user_id)
   `);
 
   // Projects table
-  database.exec(`
+  await client.query(`
     CREATE TABLE IF NOT EXISTS projects (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
@@ -148,83 +141,82 @@ export function initSchema(): void {
       start_date DATE,
       end_date DATE,
       notes TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW(),
       FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
     )
   `);
 
-  // Create indexes on projects
-  database.exec(`
+  await client.query(`
     CREATE INDEX IF NOT EXISTS idx_projects_user_id ON projects(user_id)
   `);
-  database.exec(`
+  await client.query(`
     CREATE INDEX IF NOT EXISTS idx_projects_client_id ON projects(client_id)
   `);
 
   // Time entries table
-  database.exec(`
+  await client.query(`
     CREATE TABLE IF NOT EXISTS time_entries (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
       project_id TEXT NOT NULL,
       description TEXT NOT NULL,
-      start_time DATETIME,
-      end_time DATETIME,
+      start_time TIMESTAMP,
+      end_time TIMESTAMP,
       duration INTEGER DEFAULT 0,
       date DATE NOT NULL,
-      tags TEXT DEFAULT '[]',
+      tags JSONB DEFAULT '[]',
       notes TEXT,
-      is_billable INTEGER DEFAULT 1,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      is_billable BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW(),
       FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
     )
   `);
 
-  // Create indexes on time_entries
-  database.exec(`
+  await client.query(`
     CREATE INDEX IF NOT EXISTS idx_time_entries_user_id ON time_entries(user_id)
   `);
-  database.exec(`
+  await client.query(`
     CREATE INDEX IF NOT EXISTS idx_time_entries_project_id ON time_entries(project_id)
   `);
-  database.exec(`
+  await client.query(`
     CREATE INDEX IF NOT EXISTS idx_time_entries_date ON time_entries(date)
   `);
 
   // Rate overrides table
-  database.exec(`
+  await client.query(`
     CREATE TABLE IF NOT EXISTS rate_overrides (
       id TEXT PRIMARY KEY,
       project_id TEXT NOT NULL,
       tag TEXT NOT NULL,
       rate REAL NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW(),
       FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
       UNIQUE(project_id, tag)
     )
   `);
 
-  database.exec(`
+  await client.query(`
     CREATE INDEX IF NOT EXISTS idx_rate_overrides_project_id ON rate_overrides(project_id)
   `);
 
   // Custom tags table
-  database.exec(`
+  await client.query(`
     CREATE TABLE IF NOT EXISTS custom_tags (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
       name TEXT NOT NULL,
       color TEXT,
-      is_default INTEGER DEFAULT 0,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      is_default BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(user_id, name)
     )
   `);
 
-  database.exec(`
+  await client.query(`
     CREATE INDEX IF NOT EXISTS idx_custom_tags_user_id ON custom_tags(user_id)
   `);
 
@@ -237,12 +229,12 @@ export function initSchema(): void {
     { name: "אחר", color: "#6b7280" },
   ];
 
-  const stmt = database.prepare(`
-    INSERT OR IGNORE INTO custom_tags (id, user_id, name, color, is_default)
-    VALUES (lower(hex(randomblob(16))), 'system', ?, ?, 1)
-  `);
-
   for (const tag of defaultTags) {
-    stmt.run(tag.name, tag.color);
+    await client.query(
+      `INSERT INTO custom_tags (id, user_id, name, color, is_default)
+       VALUES (gen_random_uuid()::text, 'system', $1, $2, TRUE)
+       ON CONFLICT DO NOTHING`,
+      [tag.name, tag.color]
+    );
   }
 }

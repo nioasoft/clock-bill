@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface Session {
   id: string;
@@ -11,10 +12,13 @@ interface Session {
 }
 
 export default function SettingsPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"profile" | "security">("security");
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [logoutAllLoading, setLogoutAllLoading] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   useEffect(() => {
     if (activeTab === "security") {
@@ -56,6 +60,31 @@ export default function SettingsPage() {
     // In a real implementation, this would use user-agent parsing
     // For now, we return a generic device identifier
     return `מכשיר ${sessionId.slice(0, 8)}`;
+  };
+
+  const handleLogoutAll = async () => {
+    setLogoutAllLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/sessions", {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Redirect to login page after successful logout
+        router.push("/login");
+      } else {
+        setError(data.message || "שגיאה בהתנתקות מכל המכשירים");
+        setShowConfirmDialog(false);
+      }
+    } catch {
+      setError("שגיאת תקשורת. אנא נסה שוב.");
+      setShowConfirmDialog(false);
+    } finally {
+      setLogoutAllLoading(false);
+    }
   };
 
   return (
@@ -117,9 +146,20 @@ export default function SettingsPage() {
           <div className="space-y-8">
             {/* Active Sessions Section */}
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                פעולות פעילות
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  פעולות פעילות
+                </h2>
+                {sessions.length > 1 && (
+                  <button
+                    onClick={() => setShowConfirmDialog(true)}
+                    disabled={logoutAllLoading}
+                    className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {logoutAllLoading ? "מתנתק..." : "התנתק מכל המכשירים"}
+                  </button>
+                )}
+              </div>
               <p className="text-sm text-gray-600 mb-6">
                 רשימת כל המכשירים שמחוברים כרגע לחשבון שלך.
               </p>
@@ -201,6 +241,36 @@ export default function SettingsPage() {
           </div>
         )}
       </main>
+
+      {/* Confirmation Dialog */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4" dir="rtl">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              האם אתה בטוח?
+            </h3>
+            <p className="text-gray-600 mb-6">
+              פעולה זו תנתק אותך מכל המכשירים המחוברים לחשבון שלך, כולל המכשיר הנוכחי. תצטרך להתחבר מחדש.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowConfirmDialog(false)}
+                disabled={logoutAllLoading}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors"
+              >
+                ביטול
+              </button>
+              <button
+                onClick={handleLogoutAll}
+                disabled={logoutAllLoading}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {logoutAllLoading ? "מתנתק..." : "התנתק מכל המכשירים"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

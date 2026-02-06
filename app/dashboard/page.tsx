@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { getDb } from "../../lib/db";
+import { query } from "../../lib/db";
 import Link from "next/link";
 
 async function getUser() {
@@ -11,15 +11,15 @@ async function getUser() {
     return null;
   }
 
-  const db = getDb();
-  const session = db.prepare(
+  const result = await query<{ user_id: string; expires_at: string; email: string }>(
     `SELECT s.user_id, s.expires_at, u.email
      FROM sessions s
      JOIN users u ON s.user_id = u.id
-     WHERE s.token = ?`
-  ).get(sessionToken) as
-    | { user_id: string; expires_at: string; email: string }
-    | undefined;
+     WHERE s.token = $1`,
+    [sessionToken]
+  );
+
+  const session = result.rows[0];
 
   if (!session) {
     return null;

@@ -3,7 +3,7 @@
  * Returns the current user session if valid
  */
 import { NextResponse } from "next/server";
-import { getDb } from "../../../../lib/db";
+import { query } from "../../../../lib/db";
 import { cookies } from "next/headers";
 
 export interface SessionResponse {
@@ -30,17 +30,16 @@ export async function GET(): Promise<NextResponse> {
       );
     }
 
-    const db = getDb();
-
     // Find session and check if it's valid
-    const session = db.prepare(
+    const sessionResult = await query<{ user_id: string; expires_at: string; email: string }>(
       `SELECT s.user_id, s.expires_at, u.email
        FROM sessions s
        JOIN users u ON s.user_id = u.id
-       WHERE s.token = ?`
-    ).get(sessionToken) as
-      | { user_id: string; expires_at: string; email: string }
-      | undefined;
+       WHERE s.token = $1`,
+      [sessionToken]
+    );
+
+    const session = sessionResult.rows[0];
 
     if (!session) {
       return NextResponse.json(
@@ -53,7 +52,7 @@ export async function GET(): Promise<NextResponse> {
     const expiresAt = new Date(session.expires_at);
     if (expiresAt < new Date()) {
       // Delete expired session
-      db.prepare("DELETE FROM sessions WHERE token = ?").run(sessionToken);
+      await query("DELETE FROM sessions WHERE token = $1", [sessionToken]);
       return NextResponse.json(
         { success: false, message: "Session expired" },
         { status: 401 }

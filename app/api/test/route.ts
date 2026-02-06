@@ -2,28 +2,24 @@
  * Test API endpoint for verifying data persistence
  * This endpoint creates and retrieves test records to verify database functionality
  */
-import { getDb } from "../../../lib/db";
+import { query } from "../../../lib/db";
 import { NextResponse } from "next/server";
 
 /**
  * GET handler - retrieves all test records
  */
-export function GET() {
+export async function GET() {
   try {
-    const db = getDb();
-    const stmt = db.prepare(
-      "SELECT * FROM test_persistence ORDER BY created_at DESC",
-    );
-    const records = stmt.all() as Array<{
+    const result = await query<{
       id: string;
       test_data: string;
       created_at: string;
-    }>;
+    }>("SELECT * FROM test_persistence ORDER BY created_at DESC");
 
     return NextResponse.json({
       success: true,
-      records,
-      count: records.length,
+      records: result.rows,
+      count: result.rows.length,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
@@ -47,24 +43,21 @@ export async function POST(request: Request) {
     const body = await request.json();
     const testData = body.testData || `Test_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
-    const db = getDb();
-
     // Create test_persistence table if it doesn't exist
-    db.exec(`
+    await query(`
       CREATE TABLE IF NOT EXISTS test_persistence (
         id TEXT PRIMARY KEY,
         test_data TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT NOW()
       )
     `);
 
     // Insert test record
-    const insertStmt = db.prepare(`
-      INSERT INTO test_persistence (id, test_data)
-      VALUES (lower(hex(randomblob(16))), ?)
-    `);
-
-    const result = insertStmt.run(testData);
+    await query(
+      `INSERT INTO test_persistence (id, test_data)
+       VALUES (gen_random_uuid()::text, $1)`,
+      [testData]
+    );
 
     return NextResponse.json({
       success: true,
@@ -88,10 +81,9 @@ export async function POST(request: Request) {
 /**
  * DELETE handler - removes all test records
  */
-export function DELETE() {
+export async function DELETE() {
   try {
-    const db = getDb();
-    db.exec("DELETE FROM test_persistence");
+    await query("DELETE FROM test_persistence");
 
     return NextResponse.json({
       success: true,

@@ -14,7 +14,12 @@ version: 1
 # Uncomment the commands you need for your specific project.
 # By default, this file has NO commands enabled - you must explicitly add them.
 
-commands: []
+commands:
+  - name: psql
+    description: PostgreSQL command-line client
+
+  - name: docker
+    description: Docker container management
 
   # ==========================================
   # iOS Development Example

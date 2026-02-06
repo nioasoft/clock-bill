@@ -1,8 +1,8 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { pgTable, text, boolean, real, integer, timestamp, date, jsonb, unique } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 // User Profile Table
-export const userProfile = sqliteTable('user_profile', {
+export const userProfile = pgTable('user_profiles', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull().unique(),
   businessName: text('business_name'),
@@ -12,12 +12,12 @@ export const userProfile = sqliteTable('user_profile', {
   taxId: text('tax_id'),
   defaultCurrency: text('default_currency').default('ILS').notNull(),
   preferredPdfTemplate: text('preferred_pdf_template').default('modern').notNull(),
-  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+  createdAt: timestamp('created_at').default(sql`NOW()`),
+  updatedAt: timestamp('updated_at').default(sql`NOW()`),
 });
 
 // Clients Table
-export const clients = sqliteTable('clients', {
+export const clients = pgTable('clients', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull(),
   name: text('name').notNull(),
@@ -26,13 +26,13 @@ export const clients = sqliteTable('clients', {
   phone: text('phone'),
   defaultRate: real('default_rate'),
   notes: text('notes'),
-  isActive: integer('is_active', { mode: 'boolean' }).default(true).notNull(),
-  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+  isActive: boolean('is_active').default(true).notNull(),
+  createdAt: timestamp('created_at').default(sql`NOW()`),
+  updatedAt: timestamp('updated_at').default(sql`NOW()`),
 });
 
 // Projects Table
-export const projects = sqliteTable('projects', {
+export const projects = pgTable('projects', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull(),
   clientId: text('client_id').notNull(),
@@ -44,50 +44,52 @@ export const projects = sqliteTable('projects', {
   overageRate: real('overage_rate'),
   currency: text('currency').default('ILS').notNull(),
   status: text('status').default('active').notNull(), // 'active', 'completed', 'paused'
-  startDate: integer('start_date', { mode: 'timestamp' }),
-  endDate: integer('end_date', { mode: 'timestamp' }),
+  startDate: date('start_date'),
+  endDate: date('end_date'),
   notes: text('notes'),
-  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+  createdAt: timestamp('created_at').default(sql`NOW()`),
+  updatedAt: timestamp('updated_at').default(sql`NOW()`),
 });
 
 // Time Entries Table
-export const timeEntries = sqliteTable('time_entries', {
+export const timeEntries = pgTable('time_entries', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull(),
   projectId: text('project_id').notNull(),
   description: text('description').notNull(),
-  startTime: integer('start_time', { mode: 'timestamp' }),
-  endTime: integer('end_time', { mode: 'timestamp' }),
+  startTime: timestamp('start_time'),
+  endTime: timestamp('end_time'),
   duration: integer('duration').notNull(), // in minutes
-  date: integer('date', { mode: 'timestamp' }).notNull(),
-  tags: text('tags', { mode: 'json' }).$type<string[]>().default(sql`'[]'`),
+  date: date('date').notNull(),
+  tags: jsonb('tags').$type<string[]>().default(sql`'[]'::jsonb`),
   notes: text('notes'),
-  isBillable: integer('is_billable', { mode: 'boolean' }).default(true).notNull(),
-  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+  isBillable: boolean('is_billable').default(true).notNull(),
+  createdAt: timestamp('created_at').default(sql`NOW()`),
+  updatedAt: timestamp('updated_at').default(sql`NOW()`),
 });
 
 // Rate Overrides Table
-export const rateOverrides = sqliteTable('rate_overrides', {
+export const rateOverrides = pgTable('rate_overrides', {
   id: text('id').primaryKey(),
   projectId: text('project_id').notNull(),
   tag: text('tag').notNull(),
   rate: real('rate').notNull(),
-  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+  createdAt: timestamp('created_at').default(sql`NOW()`),
+  updatedAt: timestamp('updated_at').default(sql`NOW()`),
 });
 
 // Custom Tags Table
-export const customTags = sqliteTable('custom_tags', {
+export const customTags = pgTable('custom_tags', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull(),
   name: text('name').notNull(),
   color: text('color'),
-  isDefault: integer('is_default', { mode: 'boolean' }).default(false).notNull(),
-  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
-});
+  isDefault: boolean('is_default').default(false).notNull(),
+  createdAt: timestamp('created_at').default(sql`NOW()`),
+  updatedAt: timestamp('updated_at').default(sql`NOW()`),
+}, (table) => [
+  unique().on(table.userId, table.name),
+]);
 
 // Export types
 export type UserProfile = typeof userProfile.$inferSelect;

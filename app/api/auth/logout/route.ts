@@ -3,7 +3,7 @@
  * Clears the session cookie and removes session from database
  */
 import { NextResponse } from "next/server";
-import { getDb } from "../../../../lib/db";
+import { query } from "../../../../lib/db";
 import { cookies } from "next/headers";
 
 export interface LogoutResponse {
@@ -21,8 +21,7 @@ export async function POST(): Promise<NextResponse> {
 
     if (sessionToken) {
       // Remove session from database
-      const db = getDb();
-      db.prepare("DELETE FROM sessions WHERE token = ?").run(sessionToken);
+      await query("DELETE FROM sessions WHERE token = $1", [sessionToken]);
 
       // Clear cookie
       cookieStore.delete("session");

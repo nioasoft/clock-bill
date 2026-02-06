@@ -3,7 +3,7 @@
  * Authenticates user with email and password
  */
 import { NextResponse } from "next/server";
-import { getDb } from "../../../../lib/db";
+import { query, initSchema } from "../../../../lib/db";
 import { verifyPassword, generateSessionToken, COOKIE_OPTIONS } from "../../../../lib/auth";
 import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
@@ -38,12 +38,15 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
     }
 
-    const db = getDb();
+    await initSchema();
 
     // Find user by email
-    const user = db.prepare("SELECT id, email, password_hash FROM users WHERE email = ?").get(email) as
-      | { id: string; email: string; password_hash: string }
-      | undefined;
+    const userResult = await query<{ id: string; email: string; password_hash: string }>(
+      "SELECT id, email, password_hash FROM users WHERE email = $1",
+      [email]
+    );
+
+    const user = userResult.rows[0];
 
     if (!user) {
       return NextResponse.json(
@@ -69,10 +72,11 @@ export async function POST(request: Request): Promise<NextResponse> {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
 
-    db.prepare(
+    await query(
       `INSERT INTO sessions (id, user_id, token, expires_at, created_at)
-       VALUES (?, ?, ?, ?, ?)`
-    ).run(sessionId, user.id, sessionToken, expiresAt.toISOString(), now);
+       VALUES ($1, $2, $3, $4, $5)`,
+      [sessionId, user.id, sessionToken, expiresAt.toISOString(), now]
+    );
 
     // Set session cookie
     const cookieStore = await cookies();
