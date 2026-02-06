@@ -12,7 +12,8 @@
     "db:studio": "drizzle-kit studio",
     "test": "node --import tsx tests/run-tests.ts",
     "test:format": "node --import tsx tests/unit/format.test.ts",
-    "test:validation": "node --import tsx tests/unit/validation.test.ts"
+    "test:validation": "node --import tsx tests/unit/validation.test.ts",
+    "verify:deployment": "node --import tsx scripts/verify-deployment.ts"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
@@ -26,6 +27,9 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "tailwind-merge": "^3.4.0"
+  },
+  "optionalDependencies": {
+    "@vercel/blob": "^0.23.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -126,6 +126,16 @@ const ENV_SCHEMA: EnvVarSchema[] = [
     description: "Cloudflare R2 public URL (optional)",
     descriptionHe: "כתובת ציבורית Cloudflare R2 (אופציונלי)",
   },
+  {
+    name: "BLOB_READ_WRITE_TOKEN",
+    required: false,
+    description: "Vercel Blob storage read-write token (required in production for file uploads)",
+    descriptionHe: "אסימון קריאה/כתיבה לאחסון Vercel Blob (נדרש בייצור להעלאת קבצים)",
+    validator: (value) => {
+      // Should start with vercel_blob_rw_
+      return value.startsWith("vercel_blob_rw_");
+    },
+  },
 ];
 
 /**
