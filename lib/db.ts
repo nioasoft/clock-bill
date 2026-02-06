@@ -197,6 +197,16 @@ export async function initSchema(): Promise<void> {
     logger.debug("bank_swift column migration check complete");
   }
 
+  // Add signature_url column if it doesn't exist (for digital signature)
+  try {
+    await client.query(`
+      ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS signature_url TEXT
+    `);
+  } catch (error) {
+    // Column might already exist, ignore error
+    logger.debug("signature_url column migration check complete");
+  }
+
   // Clients table
   await client.query(`
     CREATE TABLE IF NOT EXISTS clients (

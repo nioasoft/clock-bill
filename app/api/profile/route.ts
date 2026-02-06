@@ -15,6 +15,7 @@ export interface Profile {
   userId: string;
   businessName: string | null;
   logoUrl: string | null;
+  signatureUrl: string | null;
   phone: string | null;
   email: string | null;
   address: string | null;
@@ -78,7 +79,7 @@ export async function GET(): Promise<NextResponse> {
     // Get user profile
     const result = await query<Record<string, unknown>>(
       `SELECT id, user_id as "userId", business_name as "businessName",
-              logo_url as "logoUrl", phone, email, address, tax_id as "taxId", website,
+              logo_url as "logoUrl", signature_url as "signatureUrl", phone, email, address, tax_id as "taxId", website,
               default_currency as "defaultCurrency", preferred_pdf_template as "preferredPdfTemplate",
               invoice_prefix as "invoicePrefix", next_invoice_number as "nextInvoiceNumber",
               payment_terms as "paymentTerms", bank_name as "bankName",
@@ -228,7 +229,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
        SET ${updates.join(", ")}
        WHERE user_id = $${paramIndex}
        RETURNING id, user_id as "userId", business_name as "businessName",
-                 logo_url as "logoUrl", phone, email, address, tax_id as "taxId", website,
+                 logo_url as "logoUrl", signature_url as "signatureUrl", phone, email, address, tax_id as "taxId", website,
                  default_currency as "defaultCurrency", preferred_pdf_template as "preferredPdfTemplate",
                  invoice_prefix as "invoicePrefix", next_invoice_number as "nextInvoiceNumber",
                  payment_terms as "paymentTerms", bank_name as "bankName",

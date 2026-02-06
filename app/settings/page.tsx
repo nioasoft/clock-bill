@@ -16,6 +16,7 @@ interface Profile {
   userId: string;
   businessName: string | null;
   logoUrl: string | null;
+  signatureUrl: string | null;
   phone: string | null;
   email: string | null;
   address: string | null;
@@ -53,13 +54,16 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
   const [logoLoading, setLogoLoading] = useState(false);
+  const [signatureLoading, setSignatureLoading] = useState(false);
   const [error, setError] = useState("");
   const [profileError, setProfileError] = useState("");
   const [logoError, setLogoError] = useState("");
+  const [signatureError, setSignatureError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [logoutAllLoading, setLogoutAllLoading] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const signatureInputRef = useRef<HTMLInputElement>(null);
 
   // Currency rates form state
   const [fromCurrency, setFromCurrency] = useState("USD");
@@ -304,6 +308,73 @@ export default function SettingsPage() {
       setLogoError("שגיאת תקשורת. אנא נסה שוב.");
     } finally {
       setLogoLoading(false);
+    }
+  };
+
+  // Handle signature upload
+  const handleSignatureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSignatureLoading(true);
+    setSignatureError("");
+    setSuccessMessage("");
+
+    try {
+      const formData = new FormData();
+      formData.append("signature", file);
+
+      const response = await fetch("/api/profile/signature", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setProfile((prev) => (prev ? { ...prev, signatureUrl: data.signatureUrl } : null));
+        setSuccessMessage("החתימה הועלתה בהצלחה!");
+        setTimeout(() => setSuccessMessage(""), 3000);
+      } else {
+        setSignatureError(data.message || "שגיאה בהעלאת החתימה");
+      }
+    } catch {
+      setSignatureError("שגיאת תקשורת. אנא נסה שוב.");
+    } finally {
+      setSignatureLoading(false);
+      // Reset file input
+      if (signatureInputRef.current) {
+        signatureInputRef.current.value = "";
+      }
+    }
+  };
+
+  // Handle signature removal
+  const handleRemoveSignature = async () => {
+    if (!confirm("האם אתה בטוח שברצונך להסיר את החתימה?")) return;
+
+    setSignatureLoading(true);
+    setSignatureError("");
+    setSuccessMessage("");
+
+    try {
+      const response = await fetch("/api/profile/signature", {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setProfile((prev) => (prev ? { ...prev, signatureUrl: null } : null));
+        setSuccessMessage("החתימה הוסרה בהצלחה!");
+        setTimeout(() => setSuccessMessage(""), 3000);
+      } else {
+        setSignatureError(data.message || "שגיאה בהסרת החתימה");
+      }
+    } catch {
+      setSignatureError("שגיאת תקשורת. אנא נסה שוב.");
+    } finally {
+      setSignatureLoading(false);
     }
   };
 
@@ -853,6 +924,119 @@ export default function SettingsPage() {
 
               <p className="text-xs text-gray-500 mt-4">
                 פורמטים נתמכים: JPEG, PNG, GIF, WebP. גודל מקסימלי: 5MB.
+              </p>
+            </div>
+
+            {/* Signature Upload Section */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                חתימה דיגיטלית
+              </h2>
+              <p className="text-sm text-gray-600 mb-6">
+                החתימה תופיע בחשבוניות PDF. מומלץ להשתמש בתמונה עם רקע שקוף (PNG) בגודל 200x80 פיקסלים לפחות.
+              </p>
+
+              {signatureError && (
+                <div className="rounded-md bg-red-50 p-4 mb-4">
+                  <p className="text-sm text-red-700">{signatureError}</p>
+                </div>
+              )}
+
+              <div className="flex items-center gap-6">
+                {/* Signature Preview */}
+                <div className="w-64 h-32 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden">
+                  {profile?.signatureUrl ? (
+                    <img
+                      src={profile.signatureUrl}
+                      alt="חתימה דיגיטלית"
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <div className="text-center">
+                      <svg
+                        className="w-10 h-10 text-gray-400 mx-auto mb-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                        />
+                      </svg>
+                      <span className="text-xs text-gray-500">אין חתימה</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Upload Actions */}
+                <div className="space-y-3">
+                  <input
+                    ref={signatureInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={handleSignatureUpload}
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => signatureInputRef.current?.click()}
+                    disabled={signatureLoading}
+                    className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {signatureLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                        מעלה...
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                          />
+                        </svg>
+                        {profile?.signatureUrl ? "החלף חתימה" : "העלה חתימה"}
+                      </>
+                    )}
+                  </button>
+
+                  {profile?.signatureUrl && (
+                    <button
+                      onClick={handleRemoveSignature}
+                      disabled={signatureLoading}
+                      className="flex items-center gap-2 px-4 py-2 text-red-600 text-sm font-medium rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                      הסר חתימה
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-500 mt-4">
+                פורמטים נתמכים: JPEG, PNG, GIF, WebP. גודל מקסימלי: 2MB. מומלץ להשתמש ב-PNG עם רקע שקוף.
               </p>
             </div>
 
