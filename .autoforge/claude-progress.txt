@@ -1,5 +1,60 @@
 # ClockBill Development Progress
 
+## Session: 2026-02-06 (Features #34, #35)
+
+### Assigned Features
+- Feature #34: Create Project - User can create new project
+- Feature #35: View Project List - User can view list of projects
+
+### Work Completed
+
+**Feature #34: Create Project**
+- Created POST /api/projects endpoint with comprehensive validation
+- Created /projects page with project creation form
+- Supports all three pricing models:
+  - Hourly: rate per hour
+  - Package: fixed price for set hours
+  - Mixed: package rate + overage rate
+- Multi-currency support: ILS, USD, USDT, BTC, ETH
+- Client ownership verification before creating project
+- Conditional form fields based on pricing model selection
+- Status: PASSING (comprehensive code review)
+
+**Feature #35: View Project List**
+- GET /api/projects returns all projects with client info
+- Projects displayed in table with:
+  - Project name
+  - Client name
+  - Pricing model (Hebrew labels)
+  - Pricing details (formatted with currency)
+  - Status badges (color-coded)
+  - Date range (start/end dates)
+- Empty state with helpful messages
+- Status: PASSING (comprehensive code review)
+
+### Implementation Details
+- All queries filter by user_id (data isolation)
+- PostgreSQL queries via lib/db.ts (no mock data)
+- RTL layout with Hebrew UI throughout
+- Form validation with Hebrew error messages
+- Loading and error states handled properly
+- Client dropdown populated from real API (active clients only)
+
+### Files Created/Modified
+- Created: app/api/projects/route.ts (GET + POST endpoints)
+- Created: app/projects/page.tsx (projects list + create form)
+
+### Features Completed
+- Feature #34: Create Project - PASSING
+- Feature #35: View Project List - PASSING
+
+### Current Project Status
+- Progress: 33/206 features passing (16.0%)
+- Projects CRUD: Create and List features complete
+- Next: Edit, Delete, and Details features for projects
+
+---
+
 ## Session: 2026-02-06 (Features #31, #32)
 
 ### Assigned Features

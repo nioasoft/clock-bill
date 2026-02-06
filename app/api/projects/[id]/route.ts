@@ -1,0 +1,358 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getUser } from "@/lib/auth";
+
+/**
+ * GET /api/projects/[id]
+ * Get a single project by ID
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: "לא מחובר" },
+        { status: 401 }
+      );
+    }
+
+    const { query } = await import("@/lib/db");
+    const { id: projectId } = await params;
+
+    // Get project and verify ownership
+    const result = await query<{
+      id: string;
+      name: string;
+      client_id: string;
+      client_name: string;
+      pricing_model: string;
+      hourly_rate: number | null;
+      package_price: number | null;
+      package_hours: number | null;
+      overage_rate: number | null;
+      currency: string;
+      status: string;
+      start_date: string | null;
+      end_date: string | null;
+      notes: string | null;
+      created_at: string;
+    }>(
+      `SELECT p.id, p.name, p.client_id, c.name as client_name,
+              p.pricing_model, p.hourly_rate, p.package_price, p.package_hours, p.overage_rate,
+              p.currency, p.status, p.start_date, p.end_date, p.notes, p.created_at
+       FROM projects p
+       JOIN clients c ON p.client_id = c.id
+       WHERE p.id = $1 AND p.user_id = $2`,
+      [projectId, user.id]
+    );
+
+    if (result.rows.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "הפרויקט לא נמצא" },
+        { status: 404 }
+      );
+    }
+
+    const project = result.rows[0];
+
+    return NextResponse.json({
+      success: true,
+      project: {
+        id: project.id,
+        name: project.name,
+        clientId: project.client_id,
+        clientName: project.client_name,
+        pricingModel: project.pricing_model,
+        hourlyRate: project.hourly_rate,
+        packagePrice: project.package_price,
+        packageHours: project.package_hours,
+        overageRate: project.overage_rate,
+        currency: project.currency,
+        status: project.status,
+        startDate: project.start_date,
+        endDate: project.end_date,
+        notes: project.notes,
+        createdAt: project.created_at,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching project:", error);
+    return NextResponse.json(
+      { success: false, message: "שגיאה בטעינת הפרויקט" },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * PUT /api/projects/[id]
+ * Update an existing project
+ */
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: "לא מחובר" },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    const {
+      name,
+      pricingModel,
+      hourlyRate,
+      packagePrice,
+      packageHours,
+      overageRate,
+      currency,
+      status,
+      startDate,
+      endDate,
+      notes,
+    } = body;
+    const { id: projectId } = await params;
+
+    // Validation
+    if (!name || name.trim().length === 0) {
+      return NextResponse.json(
+        { success: false, message: "יש להזין שם פרויקט" },
+        { status: 400 }
+      );
+    }
+
+    if (name.length > 200) {
+      return NextResponse.json(
+        { success: false, message: "שם הפרויקט ארוך מדי (מקסימום 200 תווים)" },
+        { status: 400 }
+      );
+    }
+
+    if (!pricingModel || !["hourly", "package", "mixed"].includes(pricingModel)) {
+      return NextResponse.json(
+        { success: false, message: "יש לבחור מודל תמחור תקין" },
+        { status: 400 }
+      );
+    }
+
+    // Validate pricing model fields
+    if (pricingModel === "hourly" && (hourlyRate === undefined || hourlyRate === null || hourlyRate < 0)) {
+      return NextResponse.json(
+        { success: false, message: "יש להזין תעריף שעתי תקין" },
+        { status: 400 }
+      );
+    }
+
+    if (pricingModel === "package") {
+      if (packagePrice === undefined || packagePrice === null || packagePrice < 0) {
+        return NextResponse.json(
+          { success: false, message: "יש להזין מחיר חבילה תקין" },
+          { status: 400 }
+        );
+      }
+      if (packageHours === undefined || packageHours === null || packageHours < 0) {
+        return NextResponse.json(
+          { success: false, message: "יש להזין מספר שעות בחבילה" },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (pricingModel === "mixed") {
+      if (hourlyRate === undefined || hourlyRate === null || hourlyRate < 0) {
+        return NextResponse.json(
+          { success: false, message: "יש להזין תעריף שעתי תקין" },
+          { status: 400 }
+        );
+      }
+      if (packagePrice === undefined || packagePrice === null || packagePrice < 0) {
+        return NextResponse.json(
+          { success: false, message: "יש להזין מחיר חבילה תקין" },
+          { status: 400 }
+        );
+      }
+      if (packageHours === undefined || packageHours === null || packageHours < 0) {
+        return NextResponse.json(
+          { success: false, message: "יש להזין מספר שעות בחבילה" },
+          { status: 400 }
+        );
+      }
+      if (overageRate === undefined || overageRate === null || overageRate < 0) {
+        return NextResponse.json(
+          { success: false, message: "יש להזין תעריף גרוע מעל החבילה" },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (currency && !["ILS", "USD", "USDT", "BTC", "ETH"].includes(currency)) {
+      return NextResponse.json(
+        { success: false, message: "מטבע לא חוקי" },
+        { status: 400 }
+      );
+    }
+
+    if (status && !["active", "completed", "paused"].includes(status)) {
+      return NextResponse.json(
+        { success: false, message: "סטטוס לא חוקי" },
+        { status: 400 }
+      );
+    }
+
+    const { query } = await import("@/lib/db");
+
+    // Verify project exists and belongs to user
+    const checkResult = await query<{ exists: boolean }>(
+      `SELECT EXISTS(SELECT 1 FROM projects WHERE id = $1 AND user_id = $2) as exists`,
+      [projectId, user.id]
+    );
+
+    if (!checkResult.rows[0].exists) {
+      return NextResponse.json(
+        { success: false, message: "הפרויקט לא נמצא" },
+        { status: 404 }
+      );
+    }
+
+    // Update project
+    await query(
+      `UPDATE projects
+       SET name = $1, pricing_model = $2, hourly_rate = $3, package_price = $4,
+           package_hours = $5, overage_rate = $6, currency = $7, status = $8,
+           start_date = $9, end_date = $10, notes = $11
+       WHERE id = $12 AND user_id = $13`,
+      [
+        name.trim(),
+        pricingModel,
+        hourlyRate !== undefined && hourlyRate !== null ? hourlyRate : null,
+        packagePrice !== undefined && packagePrice !== null ? packagePrice : null,
+        packageHours !== undefined && packageHours !== null ? packageHours : null,
+        overageRate !== undefined && overageRate !== null ? overageRate : null,
+        currency || "ILS",
+        status || "active",
+        startDate || null,
+        endDate || null,
+        notes?.trim() || null,
+        projectId,
+        user.id,
+      ]
+    );
+
+    // Fetch the updated project with client info
+    const projectResult = await query<{
+      id: string;
+      name: string;
+      client_id: string;
+      client_name: string;
+      pricing_model: string;
+      hourly_rate: number | null;
+      package_price: number | null;
+      package_hours: number | null;
+      overage_rate: number | null;
+      currency: string;
+      status: string;
+      start_date: string | null;
+      end_date: string | null;
+      notes: string | null;
+      created_at: string;
+    }>(
+      `SELECT p.id, p.name, p.client_id, c.name as client_name,
+              p.pricing_model, p.hourly_rate, p.package_price, p.package_hours, p.overage_rate,
+              p.currency, p.status, p.start_date, p.end_date, p.notes, p.created_at
+       FROM projects p
+       JOIN clients c ON p.client_id = c.id
+       WHERE p.id = $1`,
+      [projectId]
+    );
+
+    const project = projectResult.rows[0];
+
+    return NextResponse.json({
+      success: true,
+      project: {
+        id: project.id,
+        name: project.name,
+        clientId: project.client_id,
+        clientName: project.client_name,
+        pricingModel: project.pricing_model,
+        hourlyRate: project.hourly_rate,
+        packagePrice: project.package_price,
+        packageHours: project.package_hours,
+        overageRate: project.overage_rate,
+        currency: project.currency,
+        status: project.status,
+        startDate: project.start_date,
+        endDate: project.end_date,
+        notes: project.notes,
+        createdAt: project.created_at,
+      },
+    });
+  } catch (error) {
+    console.error("Error updating project:", error);
+    return NextResponse.json(
+      { success: false, message: "שגיאה בעדכון הפרויקט" },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * DELETE /api/projects/[id]
+ * Delete a project
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: "לא מחובר" },
+        { status: 401 }
+      );
+    }
+
+    const { query } = await import("@/lib/db");
+    const { id: projectId } = await params;
+
+    // Verify project exists and belongs to user before deleting
+    const checkResult = await query<{ exists: boolean }>(
+      `SELECT EXISTS(SELECT 1 FROM projects WHERE id = $1 AND user_id = $2) as exists`,
+      [projectId, user.id]
+    );
+
+    if (!checkResult.rows[0].exists) {
+      return NextResponse.json(
+        { success: false, message: "הפרויקט לא נמצא" },
+        { status: 404 }
+      );
+    }
+
+    // Hard delete - remove the project
+    await query(
+      `DELETE FROM projects WHERE id = $1 AND user_id = $2`,
+      [projectId, user.id]
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: "הפרויקט נמחק בהצלחה",
+    });
+  } catch (error) {
+    console.error("Error deleting project:", error);
+    return NextResponse.json(
+      { success: false, message: "שגיאה במחיקת הפרויקט" },
+      { status: 500 }
+    );
+  }
+}
