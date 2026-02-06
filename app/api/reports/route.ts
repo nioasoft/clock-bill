@@ -100,29 +100,47 @@ export async function GET(request: NextRequest) {
     }>(queryText, queryParams);
 
     // Group entries by client and project for summary
-    const entries = result.rows.map((entry) => ({
-      id: entry.id,
-      projectId: entry.project_id,
-      projectName: entry.project_name,
-      clientId: entry.client_id,
-      clientName: entry.client_name,
-      description: entry.description,
-      startTime: entry.start_time,
-      endTime: entry.end_time,
-      duration: entry.duration,
-      date: entry.date,
-      tags: entry.tags || [],
-      notes: entry.notes,
-      isBillable: entry.is_billable,
-      pricingModel: entry.pricing_model,
-      hourlyRate: entry.hourly_rate,
-      currency: entry.currency,
-      createdAt: entry.created_at,
-    }));
+    const entries = result.rows.map((entry) => {
+      // Calculate amount for this entry: (duration in minutes / 60) * hourly_rate
+      const amount = entry.hourly_rate
+        ? (entry.duration / 60) * entry.hourly_rate
+        : 0;
+
+      return {
+        id: entry.id,
+        projectId: entry.project_id,
+        projectName: entry.project_name,
+        clientId: entry.client_id,
+        clientName: entry.client_name,
+        description: entry.description,
+        startTime: entry.start_time,
+        endTime: entry.end_time,
+        duration: entry.duration,
+        date: entry.date,
+        tags: entry.tags || [],
+        notes: entry.notes,
+        isBillable: entry.is_billable,
+        pricingModel: entry.pricing_model,
+        hourlyRate: entry.hourly_rate,
+        currency: entry.currency,
+        amount,
+        createdAt: entry.created_at,
+      };
+    });
 
     // Calculate summaries
     const totalMinutes = entries.reduce((sum, entry) => sum + entry.duration, 0);
     const totalHours = totalMinutes / 60;
+
+    // Calculate total amount (sum of all entry amounts, grouped by currency)
+    const totalAmountsByCurrency = entries.reduce((acc, entry) => {
+      const currency = entry.currency || "ILS";
+      if (!acc[currency]) {
+        acc[currency] = 0;
+      }
+      acc[currency] += entry.amount || 0;
+      return acc;
+    }, {} as Record<string, number>);
 
     // Group by client
     const byClient = entries.reduce((acc, entry) => {
@@ -133,11 +151,20 @@ export async function GET(request: NextRequest) {
           clientName: entry.clientName,
           totalMinutes: 0,
           totalHours: 0,
+          totalAmounts: {} as Record<string, number>,
           entries: [],
         };
       }
       acc[key].totalMinutes += entry.duration;
       acc[key].totalHours = acc[key].totalMinutes / 60;
+
+      // Group amounts by currency
+      const currency = entry.currency || "ILS";
+      if (!acc[key].totalAmounts[currency]) {
+        acc[key].totalAmounts[currency] = 0;
+      }
+      acc[key].totalAmounts[currency] += entry.amount || 0;
+
       acc[key].entries.push(entry);
       return acc;
     }, {} as Record<string, any>);
@@ -156,11 +183,13 @@ export async function GET(request: NextRequest) {
           currency: entry.currency,
           totalMinutes: 0,
           totalHours: 0,
+          totalAmount: 0,
           entries: [],
         };
       }
       acc[key].totalMinutes += entry.duration;
       acc[key].totalHours = acc[key].totalMinutes / 60;
+      acc[key].totalAmount += entry.amount || 0;
       acc[key].entries.push(entry);
       return acc;
     }, {} as Record<string, any>);
@@ -173,6 +202,7 @@ export async function GET(request: NextRequest) {
           totalMinutes,
           totalHours,
           totalEntries: entries.length,
+          totalAmounts: totalAmountsByCurrency,
         },
         byClient: Object.values(byClient),
         byProject: Object.values(byProject),

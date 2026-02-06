@@ -42,6 +42,7 @@ interface ReportSummary {
   totalMinutes: number;
   totalHours: number;
   totalEntries: number;
+  totalAmounts: Record<string, number>;
 }
 
 interface ClientSummary {
@@ -49,6 +50,7 @@ interface ClientSummary {
   clientName: string;
   totalMinutes: number;
   totalHours: number;
+  totalAmounts: Record<string, number>;
   entries: ReportEntry[];
 }
 
@@ -62,6 +64,7 @@ interface ProjectSummary {
   currency: string;
   totalMinutes: number;
   totalHours: number;
+  totalAmount: number;
   entries: ReportEntry[];
 }
 
@@ -372,7 +375,7 @@ export default function ReportsPage() {
         {reportData && !reportLoading && (
           <div className="space-y-6">
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="bg-card border rounded-lg p-6">
                 <h3 className="text-sm font-medium text-muted-foreground mb-2">
                   סה״כ שעות
@@ -388,6 +391,27 @@ export default function ReportsPage() {
                 <p className="text-3xl font-bold">
                   {reportData.summary.totalEntries}
                 </p>
+              </div>
+              <div className="bg-card border rounded-lg p-6">
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                  סה״כ סכום
+                </h3>
+                {Object.keys(reportData.summary.totalAmounts).length > 0 ? (
+                  <div className="space-y-1">
+                    {Object.entries(reportData.summary.totalAmounts).map(
+                      ([currency, amount]) => (
+                        <p
+                          key={currency}
+                          className="text-2xl font-bold"
+                        >
+                          {formatCurrency(amount, currency)}
+                        </p>
+                      )
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-lg text-muted-foreground">לא זמין</p>
+                )}
               </div>
               <div className="bg-card border rounded-lg p-6">
                 <h3 className="text-sm font-medium text-muted-foreground mb-2">
@@ -409,15 +433,26 @@ export default function ReportsPage() {
                       key={client.clientId}
                       className="flex items-center justify-between p-3 bg-accent rounded-md"
                     >
-                      <div>
+                      <div className="flex-1">
                         <p className="font-medium">{client.clientName}</p>
                         <p className="text-sm text-muted-foreground">
                           {client.entries.length} רשומות
                         </p>
                       </div>
-                      <p className="text-lg font-semibold">
-                        {formatDuration(client.totalMinutes)}
-                      </p>
+                      <div className="text-left">
+                        <p className="text-lg font-semibold">
+                          {formatDuration(client.totalMinutes)}
+                        </p>
+                        {Object.keys(client.totalAmounts).length > 0 && (
+                          <p className="text-sm text-muted-foreground">
+                            {Object.entries(client.totalAmounts)
+                              .map(([currency, amount]) =>
+                                formatCurrency(amount, currency)
+                              )
+                              .join(" + ")}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
