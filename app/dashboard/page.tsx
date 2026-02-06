@@ -1,47 +1,77 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { query } from "../../lib/db";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-async function getUser() {
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get("session")?.value;
-
-  if (!sessionToken) {
-    return null;
-  }
-
-  const result = await query<{ user_id: string; expires_at: string; email: string }>(
-    `SELECT s.user_id, s.expires_at, u.email
-     FROM sessions s
-     JOIN users u ON s.user_id = u.id
-     WHERE s.token = $1`,
-    [sessionToken]
-  );
-
-  const session = result.rows[0];
-
-  if (!session) {
-    return null;
-  }
-
-  // Check if session is expired
-  const expiresAt = new Date(session.expires_at);
-  if (expiresAt < new Date()) {
-    return null;
-  }
-
-  return {
-    id: session.user_id,
-    email: session.email,
-  };
+interface User {
+  id: string;
+  email: string;
 }
 
-export default async function DashboardPage() {
-  const user = await getUser();
+export default function DashboardPage() {
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [logoutLoading, setLogoutLoading] = useState(false);
+
+  useEffect(() => {
+    // Fetch current session
+    const fetchUser = async () => {
+      try {
+        const response = await fetch("/api/auth/session");
+        const data = await response.json();
+
+        if (data.success && data.user) {
+          setUser(data.user);
+        } else {
+          // No session, redirect to login
+          router.push("/login");
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+        router.push("/login");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [router]);
+
+  const handleLogout = async () => {
+    setLogoutLoading(true);
+    try {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Redirect to login page after successful logout
+        router.push("/login");
+        router.refresh();
+      } else {
+        console.error("Logout failed:", data.message);
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      setLogoutLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-zinc-50 flex items-center justify-center" dir="rtl">
+        <div className="text-gray-600">טוען...</div>
+      </div>
+    );
+  }
 
   if (!user) {
-    redirect("/login");
+    return null; // Will redirect
   }
 
   return (
@@ -58,14 +88,13 @@ export default async function DashboardPage() {
             >
               הגדרות
             </Link>
-            <form action="/api/auth/logout" method="POST">
-              <button
-                type="submit"
-                className="text-sm text-orange-600 hover:text-orange-500"
-              >
-                התנתק
-              </button>
-            </form>
+            <button
+              onClick={handleLogout}
+              disabled={logoutLoading}
+              className="text-sm text-orange-600 hover:text-orange-500 disabled:opacity-50"
+            >
+              {logoutLoading ? "מתנתק..." : "התנתק"}
+            </button>
           </div>
         </div>
       </header>
