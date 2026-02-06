@@ -62,6 +62,41 @@ export async function GET(
 
     const project = result.rows[0];
 
+    // Calculate total hours and amount from time entries
+    const statsResult = await query<{
+      total_duration: number;
+    }>(
+      `SELECT COALESCE(SUM(duration), 0) as total_duration
+       FROM time_entries
+       WHERE project_id = $1 AND user_id = $2`,
+      [projectId, user.id]
+    );
+
+    const totalDurationMs = statsResult.rows[0].total_duration || 0;
+    const totalHours = totalDurationMs / 3600000; // Convert milliseconds to hours
+
+    // Calculate total amount based on pricing model
+    let totalAmount = 0;
+    const pricingModel = project.pricing_model;
+
+    if (pricingModel === "hourly" && project.hourly_rate) {
+      totalAmount = totalHours * project.hourly_rate;
+    } else if (pricingModel === "package") {
+      // For package model, amount is the package price
+      totalAmount = project.package_price || 0;
+    } else if (pricingModel === "mixed") {
+      // For mixed model: package price + overage hours * overage rate
+      const packageHours = project.package_hours || 0;
+      const overageHours = Math.max(0, totalHours - packageHours);
+      totalAmount = (project.package_price || 0) + (overageHours * (project.overage_rate || 0));
+    } else if (pricingModel === "fixed") {
+      // For fixed budget, amount is the fixed budget
+      totalAmount = project.fixed_budget || 0;
+    } else if (pricingModel === "retainer") {
+      // For retainer, amount is monthly fee
+      totalAmount = project.retainer_monthly_fee || 0;
+    }
+
     return NextResponse.json({
       success: true,
       project: {
@@ -83,6 +118,8 @@ export async function GET(
         endDate: project.end_date,
         notes: project.notes,
         createdAt: project.created_at,
+        totalHours,
+        totalAmount,
       },
     });
   } catch (error) {

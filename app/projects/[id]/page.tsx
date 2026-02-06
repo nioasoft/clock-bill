@@ -30,6 +30,8 @@ interface Project {
   endDate: string | null;
   notes: string | null;
   createdAt: string;
+  totalHours?: number;
+  totalAmount?: number;
 }
 
 export default function ProjectDetailsPage() {
@@ -41,9 +43,15 @@ export default function ProjectDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [project, setProject] = useState<Project | null>(null);
   const [projectLoading, setProjectLoading] = useState(true);
+  const [projectStats, setProjectStats] = useState<{
+    totalHours: number;
+    entryCount: number;
+  } | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     pricingModel: "hourly",
@@ -144,6 +152,32 @@ export default function ProjectDetailsPage() {
 
     fetchProject();
   }, [user, projectId, router]);
+
+  useEffect(() => {
+    // Fetch project stats when project is loaded
+    const fetchProjectStats = async () => {
+      if (!user || !projectId) return;
+
+      try {
+        setStatsLoading(true);
+        const response = await fetch(`/api/projects/${projectId}/stats`);
+        const data = await response.json();
+
+        if (data.success && data.stats) {
+          setProjectStats({
+            totalHours: data.stats.totalHours,
+            entryCount: data.stats.entryCount,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching project stats:", error);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchProjectStats();
+  }, [user, projectId]);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -433,6 +467,33 @@ export default function ProjectDetailsPage() {
     }
   };
 
+  const handleDuplicate = async () => {
+    if (!project) return;
+
+    setFormError("");
+    setDuplicating(true);
+
+    try {
+      const response = await fetch(`/api/projects/${projectId}/duplicate`, {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Redirect to the duplicated project
+        router.push(`/projects/${data.project.id}`);
+      } else {
+        setFormError(data.message || "שגיאה בשכפול הפרויקט");
+      }
+    } catch (error) {
+      console.error("Error duplicating project:", error);
+      setFormError("שגיאה בשכפול הפרויקט");
+    } finally {
+      setDuplicating(false);
+    }
+  };
+
   const getPricingModelLabel = (model: string) => {
     switch (model) {
       case "hourly":
@@ -510,6 +571,108 @@ export default function ProjectDetailsPage() {
     return "-";
   };
 
+  const getBudgetProgress = () => {
+    if (!projectStats || !project) return null;
+
+    const { totalHours } = projectStats;
+    const { pricingModel, packageHours, retainerHours, fixedBudget, hourlyRate } = project;
+
+    // For package, mixed, and retainer models: show hours used vs included hours
+    if (pricingModel === "package" && packageHours) {
+      const percentage = Math.min((totalHours / packageHours) * 100, 100);
+      const isOverBudget = totalHours > packageHours;
+      return {
+        type: "hours",
+        current: totalHours.toFixed(1),
+        total: packageHours.toFixed(1),
+        percentage: isOverBudget ? 100 : percentage,
+        isOverBudget,
+        label: "שימוש בשעות החבילה",
+      };
+    }
+
+    if (pricingModel === "mixed" && packageHours) {
+      const percentage = Math.min((totalHours / packageHours) * 100, 100);
+      const isOverBudget = totalHours > packageHours;
+      return {
+        type: "hours",
+        current: totalHours.toFixed(1),
+        total: packageHours.toFixed(1),
+        percentage: isOverBudget ? 100 : percentage,
+        isOverBudget,
+        label: "שימוש בשעות החבילה",
+      };
+    }
+
+    if (pricingModel === "retainer" && retainerHours) {
+      const percentage = Math.min((totalHours / retainerHours) * 100, 100);
+      const isOverBudget = totalHours > retainerHours;
+      return {
+        type: "hours",
+        current: totalHours.toFixed(1),
+        total: retainerHours.toFixed(1),
+        percentage: isOverBudget ? 100 : percentage,
+        isOverBudget,
+        label: "שימוש בשעות הריטיינר",
+      };
+    }
+
+    // For fixed budget model: show actual cost vs budget
+    if (pricingModel === "fixed" && fixedBudget && hourlyRate) {
+      const actualCost = totalHours * hourlyRate;
+      const percentage = Math.min((actualCost / fixedBudget) * 100, 100);
+      const isOverBudget = actualCost > fixedBudget;
+      const symbol = getCurrencySymbol(project.currency);
+      return {
+        type: "currency",
+        current: `${symbol}${actualCost.toFixed(2)}`,
+        total: `${symbol}${fixedBudget.toFixed(2)}`,
+        percentage: isOverBudget ? 100 : percentage,
+        isOverBudget,
+        label: "צריכה מול התקציב",
+      };
+    }
+
+    return null;
+  };
+
+  const renderProgressBar = (progress: ReturnType<typeof getBudgetProgress>) => {
+    if (!progress) return null;
+
+    const { percentage, isOverBudget, current, total, label } = progress;
+    const barColor = isOverBudget
+      ? "bg-red-500"
+      : percentage >= 80
+      ? "bg-yellow-500"
+      : "bg-green-500";
+
+    return (
+      <div className="sm:col-span-2">
+        <dt className="text-sm font-medium text-gray-500 mb-2">{label}</dt>
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-700">
+              {current} / {total}
+              {progress.type === "hours" ? " שעות" : ""}
+            </span>
+            <span className={`font-semibold ${isOverBudget ? "text-red-600" : percentage >= 80 ? "text-yellow-600" : "text-green-600"}`}>
+              {percentage.toFixed(0)}%
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+            <div
+              className={`${barColor} h-full rounded-full transition-all duration-300`}
+              style={{ width: `${percentage}%` }}
+            />
+          </div>
+          {isOverBudget && (
+            <p className="text-xs text-red-600">חריגה מההיקף המוגדר</p>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-50 flex items-center justify-center" dir="rtl">
@@ -547,6 +710,11 @@ export default function ProjectDetailsPage() {
               ]}
             />
           </div>
+          {formError && !showEditForm && !showDeleteConfirm && !showArchiveConfirm && (
+            <div className="mb-4 rounded-md bg-red-50 p-4 text-sm text-red-800">
+              {formError}
+            </div>
+          )}
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
             <div className="flex gap-2">
@@ -557,6 +725,13 @@ export default function ProjectDetailsPage() {
                     className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
                   >
                     ערוך
+                  </button>
+                  <button
+                    onClick={handleDuplicate}
+                    disabled={duplicating}
+                    className="rounded-lg border border-blue-300 bg-blue-50 px-4 py-2 text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+                  >
+                    {duplicating ? "מעתיק..." : "שכפל"}
                   </button>
                   <button
                     onClick={() => setShowArchiveConfirm(true)}
@@ -573,13 +748,22 @@ export default function ProjectDetailsPage() {
                 </>
               )}
               {project.status === "archived" && (
-                <button
-                  onClick={() => handleUnarchive()}
-                  className="rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
-                  disabled={submitting}
-                >
-                  {submitting ? "משחזר..." : "שחזר פרויקט"}
-                </button>
+                <>
+                  <button
+                    onClick={handleDuplicate}
+                    disabled={duplicating}
+                    className="rounded-lg border border-blue-300 bg-blue-50 px-4 py-2 text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+                  >
+                    {duplicating ? "מעתיק..." : "שכפל"}
+                  </button>
+                  <button
+                    onClick={() => handleUnarchive()}
+                    className="rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+                    disabled={submitting}
+                  >
+                    {submitting ? "משחזר..." : "שחזר פרויקט"}
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -1052,6 +1236,9 @@ export default function ProjectDetailsPage() {
                 </dd>
               </div>
 
+              {/* Budget Progress Bar */}
+              {!statsLoading && renderProgressBar(getBudgetProgress())}
+
               <div>
                 <dt className="text-sm font-medium text-gray-500">סטטוס</dt>
                 <dd className="mt-1">
@@ -1088,6 +1275,32 @@ export default function ProjectDetailsPage() {
                   <dd className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{project.notes}</dd>
                 </div>
               )}
+            </dl>
+          </div>
+        </div>
+
+        {/* Project Totals Card */}
+        <div className="mt-6 rounded-lg bg-white shadow">
+          <div className="border-b border-gray-200 px-6 py-4">
+            <h2 className="text-lg font-semibold text-gray-900">סיכום פרויקט</h2>
+          </div>
+          <div className="px-6 py-4">
+            <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div className="rounded-lg bg-orange-50 p-4">
+                <dt className="text-sm font-medium text-orange-800">סה״כ שעות</dt>
+                <dd className="mt-2 text-3xl font-bold text-orange-900">
+                  {statsLoading ? "..." : projectStats?.totalHours?.toFixed(1) || "0.0"}
+                </dd>
+                <dt className="mt-2 text-xs text-orange-700">שעות רשומות בפרויקט</dt>
+              </div>
+
+              <div className="rounded-lg bg-green-50 p-4">
+                <dt className="text-sm font-medium text-green-800">מספר רשומות</dt>
+                <dd className="mt-2 text-3xl font-bold text-green-900">
+                  {statsLoading ? "..." : projectStats?.entryCount || 0}
+                </dd>
+                <dt className="mt-2 text-xs text-green-700">כמות רשומות זמן בפרויקט</dt>
+              </div>
             </dl>
           </div>
         </div>
