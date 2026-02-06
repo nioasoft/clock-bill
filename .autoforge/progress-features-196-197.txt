@@ -1,0 +1,89 @@
+# Session: 2026-02-06 (Features #196, #197) - COMPLETED
+
+### Assigned Features
+- Feature #196: Working Hours Setting - User can configure working hours per day
+- Feature #197: First Day of Week - User can set first day of week
+
+### Work Completed
+
+### Feature #196: Working Hours Setting
+
+**Database:**
+- Added `working_hours` column to `user_profiles` table (REAL type, default 8)
+- Migration runs automatically in `lib/db.ts` initSchema()
+
+**API (`app/api/profile/route.ts`):**
+- Added `workingHours: number` to Profile interface
+- Added `workingHours?: number` to ProfileUpdateRequest interface
+- GET handler returns `working_hours as "workingHours"`
+- PATCH handler updates `working_hours` column when provided
+
+**UI (`app/settings/page.tsx`):**
+- Added `workingHours` state (string "8" default)
+- Initialize from profile: `setWorkingHours((data.profile.workingHours ?? 8).toString())`
+- Number input field in notifications tab:
+  * min="1", max="24", step="0.5"
+  * Allows setting 1-24 hours with half-hour increments
+  * Live preview of current value
+- Save handler includes: `workingHours: parseFloat(workingHours)`
+- Hebrew UI: "שעות עבודה יומיות" (Daily Working Hours)
+
+### Feature #197: First Day of Week
+
+**Database:**
+- Added `first_day_of_week` column to `user_profiles` table (TEXT type, default 'sunday')
+- Migration runs automatically in `lib/db.ts` initSchema()
+
+**API (`app/api/profile/route.ts`):**
+- Added `firstDayOfWeek: string` to Profile interface
+- Added `firstDayOfWeek?: string` to ProfileUpdateRequest interface
+- GET handler returns `first_day_of_week as "firstDayOfWeek"`
+- PATCH handler updates `first_day_of_week` column when provided
+
+**UI (`app/settings/page.tsx`):**
+- Added `firstDayOfWeek` state ("sunday" default)
+- Initialize from profile: `setFirstDayOfWeek(data.profile.firstDayOfWeek ?? "sunday")`
+- Select dropdown in notifications tab:
+  * Options: "ראשון (Sunday)" and "שני (Monday)"
+  * Updates helper text based on selection
+- Save handler includes: `firstDayOfWeek`
+- Hebrew UI: "יום תחילת השבוע" (First Day of Week)
+
+### Files Modified
+- `src/db/schema.ts` - Added workingHours and firstDayOfWeek fields
+- `lib/db.ts` - Added database migrations
+- `app/api/profile/route.ts` - Updated Profile interface and handlers
+- `app/settings/page.tsx` - Added UI components and state management
+
+### Features Completed
+- Feature #196: Working Hours Setting - **PASSING** ✅
+- Feature #197: First Day of Week - **PASSING** ✅
+
+### Current Project Status
+- Progress: 188/206 features passing (91.3%)
+- Settings page now includes working hours and week start preferences
+- All settings persist to database correctly
+
+### Git Commit
+- Commit: 60dac5b
+- 5 files changed, 149 insertions(+)
+- Features: #196 (Working Hours), #197 (First Day of Week)
+
+### Implementation Notes
+Both settings follow the same pattern:
+1. Database column with default value
+2. Migration in initSchema() with try/catch for idempotency
+3. TypeScript interfaces updated
+4. API GET/PATCH handlers updated
+5. React state management
+6. Form input with validation
+7. Hebrew UI text
+8. Consistent styling with other settings
+
+The "First Day of Week" setting will be used by calendar components to determine
+whether weeks should start on Sunday or Monday. This affects date pickers,
+weekly reports, and calendar views throughout the application.
+
+### Next Session
+- Continue with remaining 18 features (8.7% remaining)
+- 91.3% complete
