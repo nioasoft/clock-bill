@@ -33,6 +33,11 @@ interface Profile {
   bankSwift: string | null;
   pdfPrimaryColor: string;
   pdfAccentColor: string;
+  longTimerEnabled: boolean;
+  longTimerThreshold: number;
+  dailyReminderEnabled: boolean;
+  dailyReminderTime: string;
+  lastReminderDate: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -49,7 +54,7 @@ interface CurrencyRate {
 
 export default function SettingsPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"profile" | "security" | "currencies">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "security" | "currencies" | "notifications" | "import">("profile");
   const [sessions, setSessions] = useState<Session[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [currencyRates, setCurrencyRates] = useState<CurrencyRate[]>([]);
@@ -67,6 +72,14 @@ export default function SettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const signatureInputRef = useRef<HTMLInputElement>(null);
 
+  // Notification settings state
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | null>(null);
+  const [longTimerEnabled, setLongTimerEnabled] = useState(true);
+  const [longTimerThreshold, setLongTimerThreshold] = useState("120");
+  const [dailyReminderEnabled, setDailyReminderEnabled] = useState(false);
+  const [dailyReminderTime, setDailyReminderTime] = useState("09:00");
+  const [testingNotification, setTestingNotification] = useState(false);
+
   // Currency rates form state
   const [fromCurrency, setFromCurrency] = useState("USD");
   const [toCurrency, setToCurrency] = useState("ILS");
@@ -74,6 +87,20 @@ export default function SettingsPage() {
   const [rateSaving, setRateSaving] = useState(false);
   const [rateError, setRateError] = useState("");
   const [rateSuccess, setRateSuccess] = useState("");
+
+  // Import state
+  const [importType, setImportType] = useState<"clients" | "entries">("clients");
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importError, setImportError] = useState("");
+  const [importSuccess, setImportSuccess] = useState("");
+  const [importResults, setImportResults] = useState<{ imported: number; errors?: Array<{ row: number; message: string }> } | null>(null);
+  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [csvPreview, setCsvPreview] = useState<Record<string, string>[]>([]);
+  const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
+  const [showMappingStep, setShowMappingStep] = useState(false);
+  const importClientsRef = useRef<HTMLInputElement>(null);
+  const importEntriesRef = useRef<HTMLInputElement>(null);
 
   // Profile form state
   const [businessName, setBusinessName] = useState("");
@@ -101,8 +128,39 @@ export default function SettingsPage() {
       fetchProfile();
     } else if (activeTab === "currencies") {
       fetchCurrencyRates();
+    } else if (activeTab === "notifications") {
+      fetchProfile();
+      checkNotificationPermission();
     }
   }, [activeTab]);
+
+  // Check notification permission on mount
+  useEffect(() => {
+    if ("Notification" in window) {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
+
+  const checkNotificationPermission = () => {
+    if ("Notification" in window) {
+      setNotificationPermission(Notification.permission);
+    }
+  };
+
+  const requestNotificationPermission = async () => {
+    if (!("Notification" in window)) {
+      alert("הדפדפן שלך לא תומך בהתראות");
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    setNotificationPermission(permission);
+
+    if (permission === "granted") {
+      setSuccessMessage("ההרשאה להתראות ניתנה בהצלחה!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    }
+  };
 
   // Fetch profile data
   const fetchProfile = async () => {
@@ -132,6 +190,11 @@ export default function SettingsPage() {
         setBankSwift(data.profile.bankSwift || "");
         setPdfPrimaryColor(data.profile.pdfPrimaryColor || "#2563EB");
         setPdfAccentColor(data.profile.pdfAccentColor || "#059669");
+        // Initialize notification settings
+        setLongTimerEnabled(data.profile.longTimerEnabled ?? true);
+        setLongTimerThreshold((data.profile.longTimerThreshold ?? 120).toString());
+        setDailyReminderEnabled(data.profile.dailyReminderEnabled ?? false);
+        setDailyReminderTime(data.profile.dailyReminderTime ?? "09:00");
       } else {
         setProfileError(data.message || "שגיאה בטעינת הפרופיל");
       }
@@ -250,6 +313,70 @@ export default function SettingsPage() {
     } finally {
       setProfileLoading(false);
     }
+  };
+
+  // Save notification settings
+  const handleSaveNotificationSettings = async () => {
+    setProfileLoading(true);
+    setProfileError("");
+    setSuccessMessage("");
+
+    try {
+      const response = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          longTimerEnabled,
+          longTimerThreshold: parseInt(longTimerThreshold, 10),
+          dailyReminderEnabled,
+          dailyReminderTime,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setProfile(data.profile);
+        setSuccessMessage("הגדרות ההתראות נשמרו בהצלחה!");
+        setTimeout(() => setSuccessMessage(""), 3000);
+      } else {
+        setProfileError(data.message || "שגיאה בשמירת הגדרות");
+      }
+    } catch {
+      setProfileError("שגיאת תקשורת. אנא נסה שוב.");
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  // Test notification
+  const handleTestNotification = async () => {
+    if (!("Notification" in window)) {
+      alert("הדפדפן שלך לא תומך בהתראות");
+      return;
+    }
+
+    setTestingNotification(true);
+
+    if (Notification.permission !== "granted") {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+
+      if (permission !== "granted") {
+        alert("נדרש אישור להתראות כדי לבדוק את הפונקציונליות");
+        setTestingNotification(false);
+        return;
+      }
+    }
+
+    // Show test notification
+    new Notification("בדיקת התראות - שעון", {
+      body: "זוהי התראת בדיקה מהמערכת. אם אתה רואה את ההודעה הזו, ההתראות עובדות כראוי!",
+      dir: "rtl",
+      lang: "he",
+    });
+
+    setTimeout(() => setTestingNotification(false), 1000);
   };
 
   // Handle logo upload
@@ -533,6 +660,16 @@ export default function SettingsPage() {
               פרופיל
             </button>
             <button
+              onClick={() => setActiveTab("notifications")}
+              className={`pb-4 px-2 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "notifications"
+                  ? "border-orange-500 text-orange-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              התראות
+            </button>
+            <button
               onClick={() => setActiveTab("currencies")}
               className={`pb-4 px-2 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === "currencies"
@@ -551,6 +688,16 @@ export default function SettingsPage() {
               }`}
             >
               אבטחה
+            </button>
+            <button
+              onClick={() => setActiveTab("import")}
+              className={`pb-4 px-2 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "import"
+                  ? "border-orange-500 text-orange-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              ייבוא נתונים
             </button>
           </nav>
         </div>
@@ -731,6 +878,177 @@ export default function SettingsPage() {
           </div>
         )}
 
+        {/* Notifications Tab Content */}
+        {activeTab === "notifications" && (
+          <div className="space-y-8">
+            {/* Notification Permission */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                הרשאת התראות דפדפן
+              </h2>
+              <p className="text-sm text-gray-600 mb-6">
+                כדי שהמערכת תוכל לשלוח לך התראות, עליך לאפשר התראות מהדפדפן.
+              </p>
+
+              <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200 bg-gray-50">
+                <div>
+                  <p className="font-medium text-gray-900">סטטוס הרשאה</p>
+                  <p className="text-sm text-gray-600">
+                    {notificationPermission === "granted" && "✅ ההתראות מאופשרות"}
+                    {notificationPermission === "denied" && "❌ ההתראות נחסמו"}
+                    {notificationPermission === "default" && "⏳ טרם ניתנה הרשאה"}
+                    {notificationPermission === null && "❌ הדפדפן לא תומך בהתראות"}
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  {notificationPermission !== "granted" && notificationPermission !== null && (
+                    <button
+                      onClick={requestNotificationPermission}
+                      className="px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 transition-colors"
+                    >
+                      אפשר התראות
+                    </button>
+                  )}
+                  <button
+                    onClick={handleTestNotification}
+                    disabled={testingNotification || notificationPermission !== "granted"}
+                    className="px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {testingNotification ? "שולח..." : "נסה התראה"}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Long Timer Notification */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                התראת טיימר ארוך
+              </h2>
+              <p className="text-sm text-gray-600 mb-6">
+                קבל התראה כאשר הטיימר רץ לפרק זמן ארוך (למשל, יותר מ-2 שעות).
+              </p>
+
+              {successMessage && activeTab === "notifications" && (
+                <div className="rounded-md bg-green-50 p-4 mb-4">
+                  <p className="text-sm text-green-700">{successMessage}</p>
+                </div>
+              )}
+
+              {profileError && activeTab === "notifications" && (
+                <div className="rounded-md bg-red-50 p-4 mb-4">
+                  <p className="text-sm text-red-700">{profileError}</p>
+                </div>
+              )}
+
+              <div className="space-y-6">
+                {/* Enable/Disable */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">אפשר התראת טיימר ארוך</label>
+                    <p className="text-xs text-gray-500 mt-1">קבל התראה כאשר הטיימר רץ זמן רב מדי</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={longTimerEnabled}
+                      onChange={(e) => setLongTimerEnabled(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                  </label>
+                </div>
+
+                {/* Threshold */}
+                {longTimerEnabled && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 block mb-2">
+                      סף זמן מינימלי (בדקות)
+                    </label>
+                    <input
+                      type="number"
+                      value={longTimerThreshold}
+                      onChange={(e) => setLongTimerThreshold(e.target.value)}
+                      min="30"
+                      max="480"
+                      step="30"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      התראה תישלח כאשר הטיימר רץ יותר מ-{parseInt(longTimerThreshold, 10)} דקות ({(parseInt(longTimerThreshold, 10) / 60).toFixed(1)} שעות)
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Daily Reminder */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                תזכורת יומית
+              </h2>
+              <p className="text-sm text-gray-600 mb-6">
+                קבל תזכורת יומית להזנת רשומות זמן אם טרם עשית זאת.
+              </p>
+
+              <div className="space-y-6">
+                {/* Enable/Disable */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">אפשר תזכורת יומית</label>
+                    <p className="text-xs text-gray-500 mt-1">קבל תזכורת להזנת רשומות זמן</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={dailyReminderEnabled}
+                      onChange={(e) => setDailyReminderEnabled(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                  </label>
+                </div>
+
+                {/* Time */}
+                {dailyReminderEnabled && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 block mb-2">
+                      שעת התזכורת
+                    </label>
+                    <input
+                      type="time"
+                      value={dailyReminderTime}
+                      onChange={(e) => setDailyReminderTime(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      התזכורת תישלח ב-{dailyReminderTime} בכל יום שבו לא נרשמו שעות
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <div className="flex justify-end">
+              <button
+                onClick={handleSaveNotificationSettings}
+                disabled={profileLoading}
+                className="px-6 py-2 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {profileLoading ? (
+                  <span className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    שומר...
+                  </span>
+                ) : (
+                  "שמור הגדרות התראות"
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Security Tab Content */}
         {activeTab === "security" && (
           <div className="space-y-8">
@@ -815,6 +1133,255 @@ export default function SettingsPage() {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Notifications Tab Content */}
+        {activeTab === "notifications" && (
+          <div className="space-y-8">
+            {/* Permission Status */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                מצב הרשאות התראות
+              </h2>
+              <p className="text-sm text-gray-600 mb-6">
+                כדי לקבל התראות מהדפדפן, עליך לאפשר הרשאות התראות.
+              </p>
+
+              <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200 bg-gray-50">
+                <div className="flex items-center gap-3">
+                  <div className={`w-3 h-3 rounded-full ${
+                    notificationPermission === "granted"
+                      ? "bg-green-500"
+                      : notificationPermission === "denied"
+                      ? "bg-red-500"
+                      : "bg-yellow-500"
+                  }`}></div>
+                  <div>
+                    <p className="font-medium text-gray-900">
+                      {notificationPermission === "granted"
+                        ? "ההרשאות מאופשרות"
+                        : notificationPermission === "denied"
+                        ? "ההרשאות נדחו"
+                        : notificationPermission === "default"
+                        ? "ההרשאות לא נקבעו עדיין"
+                        : "התראות לא נתמכות"}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {notificationPermission === "granted"
+                        ? "המערכת יכולה לשלוח התראות"
+                        : notificationPermission === "denied"
+                        ? "יש לאפשר התראות בהגדרות הדפדפן"
+                        : notificationPermission === "default"
+                        ? "לחץ על הכפתור למטה כדי לאפשר התראות"
+                        : "הדפדפן שלך לא תומך בהתראות"}
+                    </p>
+                  </div>
+                </div>
+                {notificationPermission === "default" && (
+                  <button
+                    onClick={requestNotificationPermission}
+                    className="px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 transition-colors"
+                  >
+                    אפשר התראות
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Test Notification */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                בדיקת התראות
+              </h2>
+              <p className="text-sm text-gray-600 mb-6">
+                בדוק אם ההתראות עובדות כראוי על ידי שליחת התראת בדיקה.
+              </p>
+
+              <button
+                onClick={handleTestNotification}
+                disabled={testingNotification || notificationPermission !== "granted"}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {testingNotification ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    שולח...
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                      />
+                    </svg>
+                    שלח התראת בדיקה
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Notification Settings */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                הגדרות התראות
+              </h2>
+              <p className="text-sm text-gray-600 mb-6">
+                הגדר מתי לקבל התראות אוטומטיות.
+              </p>
+
+              {profileError && (
+                <div className="rounded-md bg-red-50 p-4 mb-4">
+                  <p className="text-sm text-red-700">{profileError}</p>
+                </div>
+              )}
+
+              {successMessage && (
+                <div className="rounded-md bg-green-50 p-4 mb-4">
+                  <p className="text-sm text-green-700">{successMessage}</p>
+                </div>
+              )}
+
+              <form onSubmit={handleSaveNotificationSettings} className="space-y-6">
+                {/* Long Timer Notification */}
+                <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <svg
+                        className="w-6 h-6 text-orange-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          התראת טיימר ארוך
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          קבל התראה כשהטיימר רץ זמן רב מדי
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={longTimerEnabled}
+                      onChange={(e) => setLongTimerEnabled(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                  </label>
+                </div>
+
+                {longTimerEnabled && (
+                  <div className="mr-9 p-4 rounded-lg border border-gray-200 bg-gray-50">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      סף זמן (דקות)
+                    </label>
+                    <input
+                      type="number"
+                      value={longTimerThreshold}
+                      onChange={(e) => setLongTimerThreshold(e.target.value)}
+                      min="30"
+                      max="480"
+                      step="10"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      שלח התראה לאחר הזמן הזה (מינימום: 30 דקות, מקסימום: 480 דקות)
+                    </p>
+                  </div>
+                )}
+
+                {/* Daily Reminder Notification */}
+                <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <svg
+                        className="w-6 h-6 text-green-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                        />
+                      </svg>
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          תזכורת יומית
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          קבל תזכורת יומית לרשום זמן
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={dailyReminderEnabled}
+                      onChange={(e) => setDailyReminderEnabled(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                  </label>
+                </div>
+
+                {dailyReminderEnabled && (
+                  <div className="mr-9 p-4 rounded-lg border border-gray-200 bg-gray-50">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      שעת התזכורת
+                    </label>
+                    <input
+                      type="time"
+                      value={dailyReminderTime}
+                      onChange={(e) => setDailyReminderTime(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      התזכורת תישלח בשעה זו בכל יום
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={profileLoading}
+                    className="px-6 py-2 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {profileLoading ? (
+                      <span className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                        שומר...
+                      </span>
+                    ) : (
+                      "שמור הגדרות"
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
@@ -1468,6 +2035,34 @@ export default function SettingsPage() {
               )}
             </div>
           </div>
+        )}
+
+        {/* Import Tab Content */}
+        {activeTab === "import" && (
+          <ImportContent
+            importType={importType}
+            setImportType={setImportType}
+            importFile={importFile}
+            setImportFile={setImportFile}
+            importLoading={importLoading}
+            setImportLoading={setImportLoading}
+            importError={importError}
+            setImportError={setImportError}
+            importSuccess={importSuccess}
+            setImportSuccess={setImportSuccess}
+            importResults={importResults}
+            setImportResults={setImportResults}
+            csvHeaders={csvHeaders}
+            setCsvHeaders={setCsvHeaders}
+            csvPreview={csvPreview}
+            setCsvPreview={setCsvPreview}
+            columnMapping={columnMapping}
+            setColumnMapping={setColumnMapping}
+            showMappingStep={showMappingStep}
+            setShowMappingStep={setShowMappingStep}
+            importClientsRef={importClientsRef}
+            importEntriesRef={importEntriesRef}
+          />
         )}
       </main>
 
