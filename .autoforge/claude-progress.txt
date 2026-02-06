@@ -1261,3 +1261,66 @@ Both features implemented together as part of a complete time entries CRUD syste
 ### Current Project Status
 - Progress: 42/206 features passing (20.4%)
 
+
+## Session: 2026-02-06 (Features #52, #53)
+
+### Assigned Features
+- Feature #52: View Entries List - User can view list of time entries
+- Feature #53: Filter Entries by Date - User can filter entries by date range
+
+### Work Completed
+
+**Feature #52: View Entries List**
+- Already implemented in previous session
+- Verified through code review:
+  - /entries route displays all time entries in a table
+  - Authentication required (fetches user session)
+  - Real PostgreSQL database queries with proper user_id filtering
+  - Empty state and loading state handled correctly
+  - RTL layout with Hebrew UI
+
+**Feature #53: Filter Entries by Date**
+- Added date range filter functionality:
+  - Added startDate and endDate to filters state
+  - Created collapsible filters UI section
+  - Added date input fields for start and end dates
+  - API query parameters include startDate and endDate (already supported in API)
+  - Active filters display with removable tags
+  - Clear filters button to reset all filters
+  - Filters trigger refetch of entries when changed
+
+### Files Created/Modified
+- Modified: app/entries/page.tsx
+  - Added startDate and endDate to filters state
+  - Added showFilters state for collapsible UI
+  - Updated fetchEntries to include date parameters in API call
+  - Updated clearFilters to reset all filters including dates
+  - Added filters UI section with date inputs
+  - Added active filter tags display
+
+### Verification Checklist
+- TypeScript compilation: No errors
+- Mock data check: No mock data patterns found
+- API authentication: Verified (getUser() check in API endpoint)
+- Data isolation: All queries filter by user_id
+- Date filtering: startDate and endDate properly sent to API
+- SQL query filters: API correctly applies date range filters (>= startDate, <= endDate)
+- RTL layout: dir="rtl" with Hebrew UI
+- Real database: All queries use PostgreSQL via query() from lib/db
+
+### Features Completed
+- Feature #52: View Entries List - PASSING
+- Feature #53: Filter Entries by Date - PASSING
+
+### Current Project Status
+- Progress: 54/206 features passing (26.2%)
+- Date filtering fully functional
+- Combined with existing client/project filters for comprehensive filtering
+
+### Notes
+- The filter UI is collapsible to save screen space
+- Active filters show as removable tags
+- Date filters work independently or together with client/project filters
+- All filters trigger automatic refetch of filtered entries
+---
+
