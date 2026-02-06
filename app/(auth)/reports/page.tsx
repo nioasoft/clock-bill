@@ -396,6 +396,49 @@ export default function ReportsPage() {
     }, 100);
   };
 
+  const handleExportExcel = async () => {
+    try {
+      // Build query parameters
+      const params = new URLSearchParams();
+      if (filters.clientId) params.append("clientId", filters.clientId);
+      if (filters.projectId) params.append("projectId", filters.projectId);
+      if (filters.startDate) params.append("startDate", filters.startDate);
+      if (filters.endDate) params.append("endDate", filters.endDate);
+
+      // Fetch Excel file from API
+      const response = await fetch(`/api/reports/excel?${params.toString()}`);
+
+      if (!response.ok) {
+        throw new Error("שגיאה ביצירת קובץ Excel");
+      }
+
+      // Get blob and create download link
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+
+      // Extract filename from Content-Disposition header or use default
+      const contentDisposition = response.headers.get("Content-Disposition");
+      let filename = `report_${new Date().toISOString().split("T")[0]}.xlsx`;
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = decodeURIComponent(filenameMatch[1]);
+        }
+      }
+
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Error exporting Excel:", error);
+      alert("שגיאה ביציאת קובץ Excel");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -546,8 +589,17 @@ export default function ReportsPage() {
         {/* Report Results */}
         {reportData && !reportLoading && (
           <div className="space-y-6">
-            {/* Export Button */}
-            <div className="flex justify-end no-print">
+            {/* Export Buttons */}
+            <div className="flex justify-end gap-3 no-print">
+              <button
+                onClick={handleExportExcel}
+                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-md"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                יצא ל-Excel
+              </button>
               <button
                 onClick={handleExportPdf}
                 className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors shadow-md"
