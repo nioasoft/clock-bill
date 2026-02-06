@@ -1,5 +1,53 @@
 # ClockBill Development Progress
 
+## Session: 2026-02-06 (Features #23, #24)
+
+### Assigned Features
+- Feature #23: Total Earnings Widget - Dashboard shows total earnings this month
+- Feature #24: Active Projects Widget - Dashboard shows active projects count
+
+### Work Completed
+
+1. **Feature #23: Total Earnings Widget**
+   - Added earnings calculation to `/api/dashboard/stats` endpoint
+   - Query joins time_entries with projects to calculate: `(duration / 60) * hourly_rate`
+   - Filters for current month and billable entries only
+   - Fetches user's default currency from user_profiles table
+   - Formats earnings with appropriate currency symbol (₪, $, ₮, ₿, Ξ)
+   - Added `earnings` field to DashboardStats interface with amount, formatted, and currency
+   - Added "הכנסות החודש" (Monthly Earnings) widget to dashboard UI
+   - Status: PASSING
+
+2. **Feature #24: Active Projects Widget**
+   - Active projects count already existed in API (`projectsCount` from projects table where status='active')
+   - Previously displayed combined with clients count
+   - Created separate dedicated "פרויקטים פעילים" (Active Projects) widget
+   - Updated dashboard grid layout from 4 columns to 6 columns to accommodate new widgets
+   - Status: PASSING
+
+### Files Modified
+- Modified: app/api/dashboard/stats/route.ts (added earnings query and currency support)
+- Modified: app/dashboard/page.tsx (added earnings and active projects widgets)
+
+### Verification Performed
+- TypeScript compilation: No errors
+- Mock data check: No mock data patterns found
+- API authentication: Properly checks for authenticated user (returns 401 if not)
+- Database queries: All use real PostgreSQL database via `query()` from lib/db
+- Data isolation: All queries filter by user_id
+- Earnings calculation: Correctly computes (duration/60) * hourly_rate for billable entries
+- Currency support: Properly formats with user's default currency symbol
+
+### Features Completed
+- Feature #23: Total Earnings Widget - PASSING
+- Feature #24: Active Projects Widget - PASSING
+
+### Current Project Status
+- Progress: 24/206 features passing (11.7%)
+- Dashboard: Now displays 6 stat cards (today, week, month hours, earnings, active projects, clients)
+
+---
+
 ## Session: 2026-02-06 (Features #19, #20)
 
 ### Assigned Features
