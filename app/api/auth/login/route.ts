@@ -7,6 +7,9 @@ import { query, initSchema } from "../../../../lib/db";
 import { verifyPassword, generateSessionToken, COOKIE_OPTIONS } from "../../../../lib/auth";
 import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
+import { createLogger } from "../../../../lib/logger";
+
+const logger = createLogger("auth:login");
 
 export interface LoginRequest {
   email: string;
@@ -19,6 +22,7 @@ export interface LoginResponse {
   user?: {
     id: string;
     email: string;
+    emailVerified: boolean;
   };
 }
 
@@ -26,9 +30,11 @@ export interface LoginResponse {
  * POST handler - login user
  */
 export async function POST(request: Request): Promise<NextResponse> {
+  let email: string | undefined;
   try {
     const body: LoginRequest = await request.json();
-    const { email, password } = body;
+    email = body.email;
+    const { password } = body;
 
     // Validate input
     if (!email || !password) {
@@ -41,8 +47,8 @@ export async function POST(request: Request): Promise<NextResponse> {
     await initSchema();
 
     // Find user by email
-    const userResult = await query<{ id: string; email: string; password_hash: string }>(
-      "SELECT id, email, password_hash FROM users WHERE email = $1",
+    const userResult = await query<{ id: string; email: string; password_hash: string; email_verified: boolean }>(
+      "SELECT id, email, password_hash, email_verified FROM users WHERE email = $1",
       [email]
     );
 
@@ -88,10 +94,11 @@ export async function POST(request: Request): Promise<NextResponse> {
       user: {
         id: user.id,
         email: user.email,
+        emailVerified: user.email_verified,
       },
     });
   } catch (error) {
-    console.error("Login error:", error);
+    logger.error("Login failed", error, email ? { email } : undefined);
     return NextResponse.json(
       { success: false, message: "Internal server error" },
       { status: 500 }

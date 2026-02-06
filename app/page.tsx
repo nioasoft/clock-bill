@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmailVerificationNotice } from "@/components/email-verification-notice";
 
 function QuickActionsSkeleton() {
   return (
@@ -66,6 +67,9 @@ export default function Home() {
   return (
     <AppLayout>
       <div className="px-4 py-8 sm:px-6 lg:px-8">
+        {/* Email Verification Notice */}
+        <EmailVerificationNotice />
+
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900">
             ברוך הבא לשעון!
