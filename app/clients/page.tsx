@@ -29,6 +29,8 @@ interface Client {
   notes: string | null;
   isActive: boolean;
   createdAt: string;
+  totalBilled: number;
+  totalHours: number;
 }
 
 export default function ClientsPage() {
@@ -263,6 +265,27 @@ export default function ClientsPage() {
       showErrorToast("שגיאה במחיקת הלקוח");
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleRestore = async (client: Client) => {
+    try {
+      const response = await fetch(`/api/clients/${client.id}`, {
+        method: "PATCH",
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Update client in list (restore - sets isActive to true)
+        setClients(clients.map((c) => (c.id === client.id ? { ...c, isActive: true } : c)));
+        showSuccessToast("הלקוח שוחזר בהצלחה");
+      } else {
+        showErrorToast(data.message || "שגיאה בשחזור הלקוח");
+      }
+    } catch (error) {
+      console.error("Error restoring client:", error);
+      showErrorToast("שגיאה בשחזור הלקוח");
     }
   };
 
@@ -512,6 +535,12 @@ export default function ClientsPage() {
                       תעריף שעתי
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                      סך חויב
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                      שעות
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
                       סטטוס
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -548,6 +577,16 @@ export default function ClientsPage() {
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
+                        <div className="text-sm font-medium text-gray-900">
+                          {client.totalBilled > 0 ? `₪${client.totalBilled.toFixed(2)}` : "₪0"}
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <div className="text-sm text-gray-900">
+                          {client.totalHours > 0 ? `${client.totalHours.toFixed(1)} שעות` : "0 שעות"}
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4">
                         {client.isActive ? (
                           <span className="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800">
                             פעיל
@@ -565,12 +604,19 @@ export default function ClientsPage() {
                         >
                           ערוך
                         </button>
-                        {client.isActive && (
+                        {client.isActive ? (
                           <button
                             onClick={() => handleDelete(client)}
                             className="text-red-600 hover:text-red-900 font-medium ms-2"
                           >
                             ארכב
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleRestore(client)}
+                            className="text-green-600 hover:text-green-900 font-medium ms-2"
+                          >
+                            שחזר
                           </button>
                         )}
                       </td>

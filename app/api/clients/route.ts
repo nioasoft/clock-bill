@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     const { query } = await import("@/lib/db");
 
-    // Get all clients for this user
+    // Get all clients for this user with billed amounts and total hours
     const result = await query<{
       id: string;
       name: string;
@@ -30,11 +30,24 @@ export async function GET(request: NextRequest) {
       notes: string | null;
       is_active: boolean;
       created_at: string;
+      total_billed: string | null;
+      total_hours: number | null;
     }>(
-      `SELECT id, name, contact_name, email, phone, address, default_rate, notes, is_active, created_at
-       FROM clients
-       WHERE user_id = $1
-       ORDER BY created_at DESC`,
+      `SELECT c.id, c.name, c.contact_name, c.email, c.phone, c.address, c.default_rate, c.notes, c.is_active, c.created_at,
+              COALESCE(SUM(
+                CASE
+                  WHEN te.is_billable = TRUE THEN
+                    COALESCE(p.hourly_rate, c.default_rate, 0) * (te.duration / 3600000.0)
+                  ELSE 0
+                END
+              ), 0) as total_billed,
+              COALESCE(SUM(te.duration), 0) / 3600000.0 as total_hours
+       FROM clients c
+       LEFT JOIN projects p ON p.client_id = c.id
+       LEFT JOIN time_entries te ON te.project_id = p.id
+       WHERE c.user_id = $1
+       GROUP BY c.id, c.name, c.contact_name, c.email, c.phone, c.address, c.default_rate, c.notes, c.is_active, c.created_at
+       ORDER BY c.created_at DESC`,
       [user.id]
     );
 
@@ -49,6 +62,8 @@ export async function GET(request: NextRequest) {
       notes: client.notes,
       isActive: client.is_active,
       createdAt: client.created_at,
+      totalBilled: client.total_billed ? parseFloat(client.total_billed) : 0,
+      totalHours: client.total_hours || 0,
     }));
 
     // Add cache headers for better performance
