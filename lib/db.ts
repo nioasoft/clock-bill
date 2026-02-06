@@ -134,6 +134,7 @@ export async function initSchema(): Promise<void> {
       contact_name TEXT,
       email TEXT,
       phone TEXT,
+      address TEXT,
       default_rate REAL,
       notes TEXT,
       is_active BOOLEAN DEFAULT TRUE,
@@ -145,6 +146,16 @@ export async function initSchema(): Promise<void> {
   await client.query(`
     CREATE INDEX IF NOT EXISTS idx_clients_user_id ON clients(user_id)
   `);
+
+  // Add address column if it doesn't exist (for migrations)
+  try {
+    await client.query(`
+      ALTER TABLE clients ADD COLUMN IF NOT EXISTS address TEXT
+    `);
+  } catch (error) {
+    // Column might already exist, ignore error
+    console.log("Address column migration check complete");
+  }
 
   // Projects table
   await client.query(`

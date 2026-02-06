@@ -466,19 +466,18 @@ export default function ClientsPage() {
                       <td className="whitespace-nowrap px-6 py-4 text-sm">
                         <button
                           onClick={() => handleEdit(client)}
-                          className="text-orange-600 hover:text-orange-900 font-medium"
+                          className="text-orange-600 hover:text-orange-900 font-medium ms-2"
                         >
                           ערוך
                         </button>
-                      </td>
-                    </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm">
-                        <button
-                          onClick={() => handleEdit(client)}
-                          className="text-orange-600 hover:text-orange-900 ms-2"
-                        >
-                          ערוך
-                        </button>
+                        {client.isActive && (
+                          <button
+                            onClick={() => handleDelete(client)}
+                            className="text-red-600 hover:text-red-900 font-medium ms-2"
+                          >
+                            ארכב
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -488,6 +487,34 @@ export default function ClientsPage() {
           )}
         </div>
       </main>
+
+      {/* Delete Confirmation Dialog */}
+      {clientToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="rounded-lg bg-white p-6 shadow-xl max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">ארכב לקוח</h3>
+            <p className="text-gray-600 mb-6">
+              האם לארכב את הלקוח "{clientToDelete.name}"? הלקוח יוסתר מהרשימה אך יישמר במערכת.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={cancelDelete}
+                disabled={deleting}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                ביטול
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleting ? "מארכב..." : "ארכב"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

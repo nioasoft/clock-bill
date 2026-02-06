@@ -15,6 +15,7 @@ interface Client {
   contactName: string | null;
   email: string | null;
   phone: string | null;
+  address: string | null;
   defaultRate: number | null;
   notes: string | null;
   isActive: boolean;
@@ -38,6 +39,7 @@ export default function ClientDetailsPage() {
     contactName: "",
     email: "",
     phone: "",
+    address: "",
     defaultRate: "",
     notes: "",
   });
@@ -78,6 +80,7 @@ export default function ClientDetailsPage() {
             contactName: data.client.contactName || "",
             email: data.client.email || "",
             phone: data.client.phone || "",
+            address: data.client.address || "",
             defaultRate: data.client.defaultRate?.toString() || "",
             notes: data.client.notes || "",
           });
@@ -110,6 +113,7 @@ export default function ClientDetailsPage() {
           contactName: formData.contactName || undefined,
           email: formData.email || undefined,
           phone: formData.phone || undefined,
+          address: formData.address || undefined,
           defaultRate: formData.defaultRate ? parseFloat(formData.defaultRate) : undefined,
           notes: formData.notes || undefined,
         }),
@@ -298,6 +302,21 @@ export default function ClientDetailsPage() {
                   />
                 </div>
 
+                <div className="sm:col-span-2">
+                  <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+                    כתובת
+                  </label>
+                  <input
+                    type="text"
+                    id="address"
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    disabled={submitting}
+                    placeholder="רחוב, מספר, עיר"
+                  />
+                </div>
+
                 <div>
                   <label htmlFor="defaultRate" className="block text-sm font-medium text-gray-700">
                     תעריף שעתי (₪)
@@ -341,6 +360,7 @@ export default function ClientDetailsPage() {
                         contactName: client.contactName || "",
                         email: client.email || "",
                         phone: client.phone || "",
+                        address: client.address || "",
                         defaultRate: client.defaultRate?.toString() || "",
                         notes: client.notes || "",
                       });
@@ -419,6 +439,13 @@ export default function ClientDetailsPage() {
                   ) : (
                     <span className="text-gray-400">לא צוין</span>
                   )}
+                </p>
+              </div>
+
+              <div className="md:col-span-2">
+                <h3 className="text-sm font-medium text-gray-500 mb-1">כתובת</h3>
+                <p className="text-gray-900">
+                  {client.address || <span className="text-gray-400">לא צוינה</span>}
                 </p>
               </div>
 
