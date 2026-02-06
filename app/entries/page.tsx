@@ -97,6 +97,8 @@ export default function EntriesPage() {
   });
   const [bulkEditSubmitting, setBulkEditSubmitting] = useState(false);
   const [bulkEditError, setBulkEditError] = useState("");
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [bulkDeleteSubmitting, setBulkDeleteSubmitting] = useState(false);
 
   useEffect(() => {
     // Fetch current session
@@ -323,6 +325,39 @@ export default function EntriesPage() {
     setEntryToDelete(entry);
   };
 
+  const handleDuplicate = async (entry: TimeEntry) => {
+    try {
+      const response = await fetch("/api/entries", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          projectId: entry.projectId,
+          date: entry.date,
+          duration: entry.duration,
+          description: entry.description,
+          notes: entry.notes,
+          isBillable: entry.isBillable,
+          tags: entry.tags,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Add the duplicated entry to the list
+        setEntries([data.entry, ...entries]);
+        showSuccessToast("הרשומה שוכפלה בהצלחה");
+      } else {
+        showErrorToast(data.message || "שגיאה בשכפול הרשומה");
+      }
+    } catch (error) {
+      console.error("Error duplicating entry:", error);
+      showErrorToast("שגיאה בשכפול הרשומה");
+    }
+  };
+
   const handleDeleteConfirm = async () => {
     if (!entryToDelete) return;
 
@@ -437,6 +472,42 @@ export default function EntriesPage() {
       setBulkEditError("שגיאה בעדכון הרשומות");
     } finally {
       setBulkEditSubmitting(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    setBulkDeleteSubmitting(true);
+
+    try {
+      const response = await fetch("/api/entries/bulk", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          entryIds: Array.from(selectedEntries),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Remove deleted entries from list
+        setEntries(entries.filter((e) => !selectedEntries.has(e.id)));
+
+        // Close modal and clear selection
+        setShowBulkDeleteConfirm(false);
+        setSelectedEntries(new Set());
+
+        showSuccessToast(data.message || "הרשומות נמחקו בהצלחה");
+      } else {
+        showErrorToast(data.message || "שגיאה במחיקת הרשומות");
+      }
+    } catch (error) {
+      console.error("Error bulk deleting entries:", error);
+      showErrorToast("שגיאה במחיקת הרשומות");
+    } finally {
+      setBulkDeleteSubmitting(false);
     }
   };
 
@@ -829,6 +900,12 @@ export default function EntriesPage() {
                       ערוך נבחרים
                     </button>
                     <button
+                      onClick={() => setShowBulkDeleteConfirm(true)}
+                      className="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
+                    >
+                      מחק נבחרים
+                    </button>
+                    <button
                       onClick={() => setSelectedEntries(new Set())}
                       className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                     >
@@ -909,6 +986,12 @@ export default function EntriesPage() {
                         )}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm">
+                        <button
+                          onClick={() => handleDuplicate(entry)}
+                          className="text-blue-600 hover:text-blue-900 font-medium ms-2"
+                        >
+                          שכפל
+                        </button>
                         <button
                           onClick={() => handleEdit(entry)}
                           className="text-orange-600 hover:text-orange-900 font-medium ms-2"
@@ -1053,6 +1136,34 @@ export default function EntriesPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirmation Modal */}
+      {showBulkDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="rounded-lg bg-white p-6 shadow-xl max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">מחק {selectedEntries.size} רשומות</h3>
+            <p className="text-gray-600 mb-6">
+              האם למחוק את {selectedEntries.size} הרשומות הנבחרות? פעולה זו אינה הפיכה.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowBulkDeleteConfirm(false)}
+                disabled={bulkDeleteSubmitting}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                ביטול
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                disabled={bulkDeleteSubmitting}
+                className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {bulkDeleteSubmitting ? "מוחק..." : "מחק"}
+              </button>
+            </div>
           </div>
         </div>
       )}

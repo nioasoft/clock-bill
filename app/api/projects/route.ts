@@ -16,7 +16,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const { searchParams } = new URL(request.url);
+    const statusFilter = searchParams.get("status"); // "active", "archived", "all", or null (default: exclude archived)
+
     const { query } = await import("@/lib/db");
+
+    // Build WHERE clause based on status filter
+    let whereClause = "";
+    const params: any[] = [user.id];
+
+    if (statusFilter === "archived") {
+      whereClause = "AND p.status = 'archived'";
+    } else if (statusFilter === "all") {
+      // Show all projects, no additional filter
+    } else {
+      // Default: exclude archived projects
+      whereClause = "AND p.status != 'archived'";
+    }
 
     // Get all projects for the user with client info
     const result = await query<{
@@ -45,9 +61,9 @@ export async function GET(request: NextRequest) {
               p.currency, p.status, p.start_date, p.end_date, p.notes, p.created_at
        FROM projects p
        JOIN clients c ON p.client_id = c.id
-       WHERE p.user_id = $1 AND p.status != 'archived'
+       WHERE p.user_id = $1 ${whereClause}
        ORDER BY p.created_at DESC`,
-      [user.id]
+      params
     );
 
     const projects = result.rows.map((project) => ({

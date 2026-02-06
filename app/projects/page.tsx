@@ -46,6 +46,7 @@ export default function ProjectsPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<"active" | "archived">("active");
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     clientId: "",
@@ -128,13 +129,16 @@ export default function ProjectsPage() {
   }, [user]);
 
   useEffect(() => {
-    // Fetch projects when user is loaded
+    // Fetch projects when user or status filter changes
     const fetchProjects = async () => {
       if (!user) return;
 
       try {
         setProjectsLoading(true);
-        const response = await fetch("/api/projects");
+        const url = statusFilter === "archived"
+          ? "/api/projects?status=archived"
+          : "/api/projects?status=active";
+        const response = await fetch(url);
         const data = await response.json();
 
         if (data.success) {
@@ -148,7 +152,7 @@ export default function ProjectsPage() {
     };
 
     fetchProjects();
-  }, [user]);
+  }, [user, statusFilter]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -361,6 +365,8 @@ export default function ProjectsPage() {
         return "הושלם";
       case "paused":
         return "מושהה";
+      case "archived":
+        return "בארכיון";
       default:
         return status;
     }
@@ -400,6 +406,34 @@ export default function ProjectsPage() {
     return "-";
   };
 
+  const handleRestore = async (projectId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigating to project details
+
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: "active",
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Remove the restored project from the list
+        setProjects(projects.filter((p) => p.id !== projectId));
+      } else {
+        alert(data.message || "שגיאה בשחזור הפרויקט");
+      }
+    } catch (error) {
+      console.error("Error restoring project:", error);
+      alert("שגיאה בשחזור הפרויקט");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-50 flex items-center justify-center" dir="rtl">
@@ -416,19 +450,47 @@ export default function ProjectsPage() {
     <div className="min-h-screen bg-zinc-50" dir="rtl">
       {/* Header */}
       <header className="bg-white shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">
-              ← חזור לדשבורד
-            </Link>
-            <h1 className="text-2xl font-bold text-gray-900">פרויקטים</h1>
+        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-4">
+              <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">
+                ← חזור לדשבורד
+              </Link>
+              <h1 className="text-2xl font-bold text-gray-900">פרויקטים</h1>
+            </div>
+            {statusFilter === "active" && (
+              <button
+                onClick={() => setShowForm(!showForm)}
+                className="rounded-lg bg-orange-600 px-4 py-2 text-white hover:bg-orange-700"
+              >
+                {showForm ? "ביטול" : "+ פרויקט חדש"}
+              </button>
+            )}
           </div>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="rounded-lg bg-orange-600 px-4 py-2 text-white hover:bg-orange-700"
-          >
-            {showForm ? "ביטול" : "+ פרויקט חדש"}
-          </button>
+
+          {/* Status Filter Tabs */}
+          <div className="flex gap-2 border-b border-gray-200">
+            <button
+              onClick={() => setStatusFilter("active")}
+              className={`px-4 py-2 font-medium transition-colors ${
+                statusFilter === "active"
+                  ? "border-b-2 border-orange-600 text-orange-600"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              פעילים
+            </button>
+            <button
+              onClick={() => setStatusFilter("archived")}
+              className={`px-4 py-2 font-medium transition-colors ${
+                statusFilter === "archived"
+                  ? "border-b-2 border-orange-600 text-orange-600"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              ארכיון
+            </button>
+          </div>
         </div>
       </header>
 
@@ -836,10 +898,16 @@ export default function ProjectsPage() {
           ) : projects.length === 0 ? (
             <EmptyState
               icon={FolderOpen}
-              message="אין פרויקטים עדיין"
-              description={clients.length === 0 ? "צור לקוח תחילה ואז תוכל ליצור פרויקטים" : "צור פרויקט ראשון כדי להתחיל לעקוב אחר זמן העבודה שלך"}
-              actionLabel="צור פרויקט"
-              onAction={() => setShowForm(true)}
+              message={statusFilter === "archived" ? "אין פרויקטים בארכיון" : "אין פרויקטים עדיין"}
+              description={
+                statusFilter === "archived"
+                  ? "פרויקטים שארכבת יופיעו כאן"
+                  : clients.length === 0
+                  ? "צור לקוח תחילה ואז תוכל ליצור פרויקטים"
+                  : "צור פרויקט ראשון כדי להתחיל לעקוב אחר זמן העבודה שלך"
+              }
+              actionLabel={statusFilter === "archived" ? undefined : "צור פרויקט"}
+              onAction={statusFilter === "archived" ? undefined : () => setShowForm(true)}
             />
           ) : (
             <div className="overflow-x-auto">
@@ -864,30 +932,49 @@ export default function ProjectsPage() {
                     <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
                       תאריכים
                     </th>
+                    {statusFilter === "archived" && (
+                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                        פעולות
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
                   {projects.map((project) => (
                     <tr
                       key={project.id}
-                      className="hover:bg-gray-50 cursor-pointer"
-                      onClick={() => router.push(`/projects/${project.id}`)}
+                      className="hover:bg-gray-50"
                     >
-                      <td className="whitespace-nowrap px-6 py-4">
+                      <td
+                        className="whitespace-nowrap px-6 py-4 cursor-pointer"
+                        onClick={() => router.push(`/projects/${project.id}`)}
+                      >
                         <div className="text-sm font-medium text-orange-600 hover:text-orange-700">{project.name}</div>
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4">
+                      <td
+                        className="whitespace-nowrap px-6 py-4 cursor-pointer"
+                        onClick={() => router.push(`/projects/${project.id}`)}
+                      >
                         <div className="text-sm text-gray-900">{project.clientName}</div>
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4">
+                      <td
+                        className="whitespace-nowrap px-6 py-4 cursor-pointer"
+                        onClick={() => router.push(`/projects/${project.id}`)}
+                      >
                         <div className="text-sm text-gray-900">
                           {getPricingModelLabel(project.pricingModel)}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td
+                        className="px-6 py-4 cursor-pointer"
+                        onClick={() => router.push(`/projects/${project.id}`)}
+                      >
                         <div className="text-sm text-gray-900">{formatPricingDetails(project)}</div>
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4">
+                      <td
+                        className="whitespace-nowrap px-6 py-4 cursor-pointer"
+                        onClick={() => router.push(`/projects/${project.id}`)}
+                      >
                         {project.status === "active" ? (
                           <span className="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800">
                             {getStatusLabel(project.status)}
@@ -896,19 +983,36 @@ export default function ProjectsPage() {
                           <span className="inline-flex rounded-full bg-blue-100 px-2 text-xs font-semibold leading-5 text-blue-800">
                             {getStatusLabel(project.status)}
                           </span>
+                        ) : project.status === "archived" ? (
+                          <span className="inline-flex rounded-full bg-gray-100 px-2 text-xs font-semibold leading-5 text-gray-800">
+                            {getStatusLabel(project.status)}
+                          </span>
                         ) : (
                           <span className="inline-flex rounded-full bg-yellow-100 px-2 text-xs font-semibold leading-5 text-yellow-800">
                             {getStatusLabel(project.status)}
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4">
+                      <td
+                        className="px-6 py-4 cursor-pointer"
+                        onClick={() => router.push(`/projects/${project.id}`)}
+                      >
                         <div className="text-sm text-gray-500">
                           {project.startDate ? new Date(project.startDate).toLocaleDateString("he-IL") : "-"}
                           {" - "}
                           {project.endDate ? new Date(project.endDate).toLocaleDateString("he-IL") : "ללא תאריך סיום"}
                         </div>
                       </td>
+                      {statusFilter === "archived" && (
+                        <td className="whitespace-nowrap px-6 py-4">
+                          <button
+                            onClick={(e) => handleRestore(project.id, e)}
+                            className="rounded-md bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700"
+                          >
+                            שחזר
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

@@ -103,3 +103,56 @@ export async function PATCH(request: NextRequest) {
     );
   }
 }
+
+/**
+ * DELETE /api/entries/bulk
+ * Bulk delete multiple time entries
+ */
+export async function DELETE(request: NextRequest) {
+  try {
+    const user = await getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: "לא מחובר" },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    const { entryIds } = body;
+
+    // Validation
+    if (!entryIds || !Array.isArray(entryIds) || entryIds.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "יש לבחור לפחות רשומה אחת" },
+        { status: 400 }
+      );
+    }
+
+    const { query } = await import("@/lib/db");
+
+    // Build parameterized query for entry IDs
+    const entryIdsPlaceholder = entryIds.map((_, i) => `$${i + 1}`).join(",");
+
+    // Delete entries that belong to the user
+    const deleteQuery = `
+      DELETE FROM time_entries
+      WHERE id IN (${entryIdsPlaceholder}) AND user_id = $${entryIds.length + 1}
+    `;
+
+    const result = await query(deleteQuery, [...entryIds, user.id]);
+
+    return NextResponse.json({
+      success: true,
+      message: `נמחקו ${result.rowCount} רשומות`,
+      deletedCount: result.rowCount,
+    });
+  } catch (error) {
+    console.error("Error bulk deleting entries:", error);
+    return NextResponse.json(
+      { success: false, message: "שגיאה במחיקת הרשומות" },
+      { status: 500 }
+    );
+  }
+}
