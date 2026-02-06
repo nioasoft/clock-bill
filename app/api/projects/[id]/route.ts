@@ -33,6 +33,9 @@ export async function GET(
       package_price: number | null;
       package_hours: number | null;
       overage_rate: number | null;
+      fixed_budget: number | null;
+      retainer_monthly_fee: number | null;
+      retainer_hours: number | null;
       currency: string;
       status: string;
       start_date: string | null;
@@ -42,6 +45,7 @@ export async function GET(
     }>(
       `SELECT p.id, p.name, p.client_id, c.name as client_name,
               p.pricing_model, p.hourly_rate, p.package_price, p.package_hours, p.overage_rate,
+              p.fixed_budget, p.retainer_monthly_fee, p.retainer_hours,
               p.currency, p.status, p.start_date, p.end_date, p.notes, p.created_at
        FROM projects p
        JOIN clients c ON p.client_id = c.id
@@ -70,6 +74,9 @@ export async function GET(
         packagePrice: project.package_price,
         packageHours: project.package_hours,
         overageRate: project.overage_rate,
+        fixedBudget: project.fixed_budget,
+        retainerMonthlyFee: project.retainer_monthly_fee,
+        retainerHours: project.retainer_hours,
         currency: project.currency,
         status: project.status,
         startDate: project.start_date,
@@ -113,6 +120,9 @@ export async function PUT(
       packagePrice,
       packageHours,
       overageRate,
+      fixedBudget,
+      retainerMonthlyFee,
+      retainerHours,
       currency,
       status,
       startDate,
@@ -136,7 +146,7 @@ export async function PUT(
       );
     }
 
-    if (!pricingModel || !["hourly", "package", "mixed"].includes(pricingModel)) {
+    if (!pricingModel || !["hourly", "package", "mixed", "fixed", "retainer"].includes(pricingModel)) {
       return NextResponse.json(
         { success: false, message: "יש לבחור מודל תמחור תקין" },
         { status: 400 }
@@ -193,6 +203,30 @@ export async function PUT(
       }
     }
 
+    if (pricingModel === "fixed") {
+      if (fixedBudget === undefined || fixedBudget === null || fixedBudget < 0) {
+        return NextResponse.json(
+          { success: false, message: "יש להזין תקציב כולל תקין" },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (pricingModel === "retainer") {
+      if (retainerMonthlyFee === undefined || retainerMonthlyFee === null || retainerMonthlyFee < 0) {
+        return NextResponse.json(
+          { success: false, message: "יש להזין את התשלום החודשי" },
+          { status: 400 }
+        );
+      }
+      if (retainerHours === undefined || retainerHours === null || retainerHours < 0) {
+        return NextResponse.json(
+          { success: false, message: "יש להזין מספר שעות בחבילה" },
+          { status: 400 }
+        );
+      }
+    }
+
     if (currency && !["ILS", "USD", "USDT", "BTC", "ETH"].includes(currency)) {
       return NextResponse.json(
         { success: false, message: "מטבע לא חוקי" },
@@ -226,9 +260,10 @@ export async function PUT(
     await query(
       `UPDATE projects
        SET name = $1, pricing_model = $2, hourly_rate = $3, package_price = $4,
-           package_hours = $5, overage_rate = $6, currency = $7, status = $8,
-           start_date = $9, end_date = $10, notes = $11
-       WHERE id = $12 AND user_id = $13`,
+           package_hours = $5, overage_rate = $6, fixed_budget = $7,
+           retainer_monthly_fee = $8, retainer_hours = $9, currency = $10, status = $11,
+           start_date = $12, end_date = $13, notes = $14
+       WHERE id = $15 AND user_id = $16`,
       [
         name.trim(),
         pricingModel,
@@ -236,6 +271,9 @@ export async function PUT(
         packagePrice !== undefined && packagePrice !== null ? packagePrice : null,
         packageHours !== undefined && packageHours !== null ? packageHours : null,
         overageRate !== undefined && overageRate !== null ? overageRate : null,
+        fixedBudget !== undefined && fixedBudget !== null ? fixedBudget : null,
+        retainerMonthlyFee !== undefined && retainerMonthlyFee !== null ? retainerMonthlyFee : null,
+        retainerHours !== undefined && retainerHours !== null ? retainerHours : null,
         currency || "ILS",
         status || "active",
         startDate || null,
