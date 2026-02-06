@@ -1530,3 +1530,36 @@ Implemented total billed amount calculation per client:
   - UI shows billed amount in correct format
 - All SQL queries use parameterized statements (security verified)
 - Hebrew UI with proper RTL layout maintained
+
+## Session: 2026-02-06 (Features #154, #155) - COMPLETED
+
+### Assigned Features
+- Feature #154: Project Totals Display - Project shows total hours and amount spent
+- Feature #155: Duplicate Project - User can duplicate a project
+
+### Work Completed
+
+**Feature #154: Project Totals Display**
+- API returns totalHours (from SUM(duration) / 3600000)
+- API returns totalAmount (calculated based on pricing model)
+- UI displays totals in new 'סיכום פרויקט' card
+- Orange card for hours, green card for amount
+
+**Feature #155: Duplicate Project**
+- POST /api/projects/[id]/duplicate endpoint
+- Creates copy with '(העתק)' suffix, increments if needed
+- Blue 'שכפל' button on project details
+- Redirects to new project after duplication
+
+### Features Completed
+- Feature #154: Project Totals Display - PASSING ✓
+- Feature #155: Duplicate Project - PASSING ✓
+
+### Current Project Status
+- Progress: 150/206 features passing (72.8%)
+
+### Git Commit
+- Commit: 468dab0
+- 3 files changed, 435 insertions(+), 7 deletions(-)
+
+
