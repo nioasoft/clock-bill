@@ -563,15 +563,20 @@ export default function ReportsPage() {
 
     styleEl.innerHTML = getTemplateStyles(template);
 
+    // Set generation date on body element for @page margin boxes
+    const generatedDate = new Date().toLocaleDateString('he-IL');
+    document.body.setAttribute('data-generated-date', generatedDate);
+
     // Trigger browser print (which allows "Save as PDF")
     setTimeout(() => {
       window.print();
-      // Clean up styles and restore title after print
+      // Clean up styles, restore title, and remove data attribute after print
       setTimeout(() => {
         if (styleEl && styleEl.parentNode) {
           styleEl.parentNode.removeChild(styleEl);
         }
         document.title = originalTitle;
+        document.body.removeAttribute('data-generated-date');
       }, 1000);
     }, 100);
   };
