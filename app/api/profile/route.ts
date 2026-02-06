@@ -6,6 +6,9 @@
 import { NextResponse } from "next/server";
 import { query } from "../../../lib/db";
 import { getUser } from "../../../lib/auth";
+import { createLogger } from "../../../lib/logger";
+
+const logger = createLogger("api:profile");
 
 export interface Profile {
   id: string;
@@ -19,6 +22,9 @@ export interface Profile {
   website: string | null;
   defaultCurrency: string;
   preferredPdfTemplate: string;
+  invoicePrefix: string | null;
+  nextInvoiceNumber: number | null;
+  paymentTerms: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -38,12 +44,16 @@ export interface ProfileUpdateRequest {
   website?: string;
   defaultCurrency?: string;
   preferredPdfTemplate?: string;
+  invoicePrefix?: string;
+  nextInvoiceNumber?: number;
+  paymentTerms?: string;
 }
 
 /**
  * GET handler - retrieve user profile
  */
 export async function GET(): Promise<NextResponse> {
+  let userId: string | undefined;
   try {
     // Get current user from session
     const user = await getUser();
@@ -55,11 +65,15 @@ export async function GET(): Promise<NextResponse> {
       );
     }
 
+    userId = user.id;
+
     // Get user profile
     const result = await query<Record<string, unknown>>(
       `SELECT id, user_id as "userId", business_name as "businessName",
               logo_url as "logoUrl", phone, email, address, tax_id as "taxId", website,
               default_currency as "defaultCurrency", preferred_pdf_template as "preferredPdfTemplate",
+              invoice_prefix as "invoicePrefix", next_invoice_number as "nextInvoiceNumber",
+              payment_terms as "paymentTerms",
               created_at as "createdAt", updated_at as "updatedAt"
        FROM user_profiles
        WHERE user_id = $1`,
@@ -78,7 +92,7 @@ export async function GET(): Promise<NextResponse> {
       profile: result.rows[0],
     });
   } catch (error) {
-    console.error("Get profile error:", error);
+    logger.error("Failed to get profile", error, userId ? { userId } : undefined);
     return NextResponse.json(
       { success: false, message: "Internal server error" },
       { status: 500 }
@@ -90,6 +104,7 @@ export async function GET(): Promise<NextResponse> {
  * PATCH handler - update user profile
  */
 export async function PATCH(request: Request): Promise<NextResponse> {
+  let userId: string | undefined;
   try {
     // Get current user from session
     const user = await getUser();
@@ -100,6 +115,8 @@ export async function PATCH(request: Request): Promise<NextResponse> {
         { status: 401 }
       );
     }
+
+    userId = user.id;
 
     const body: ProfileUpdateRequest = await request.json();
 
@@ -148,6 +165,21 @@ export async function PATCH(request: Request): Promise<NextResponse> {
       values.push(body.preferredPdfTemplate);
     }
 
+    if (body.invoicePrefix !== undefined) {
+      updates.push(`invoice_prefix = $${paramIndex++}`);
+      values.push(body.invoicePrefix);
+    }
+
+    if (body.nextInvoiceNumber !== undefined) {
+      updates.push(`next_invoice_number = $${paramIndex++}`);
+      values.push(body.nextInvoiceNumber);
+    }
+
+    if (body.paymentTerms !== undefined) {
+      updates.push(`payment_terms = $${paramIndex++}`);
+      values.push(body.paymentTerms);
+    }
+
     if (updates.length === 0) {
       return NextResponse.json(
         { success: false, message: "No fields to update" },
@@ -168,6 +200,8 @@ export async function PATCH(request: Request): Promise<NextResponse> {
        RETURNING id, user_id as "userId", business_name as "businessName",
                  logo_url as "logoUrl", phone, email, address, tax_id as "taxId", website,
                  default_currency as "defaultCurrency", preferred_pdf_template as "preferredPdfTemplate",
+                 invoice_prefix as "invoicePrefix", next_invoice_number as "nextInvoiceNumber",
+                 payment_terms as "paymentTerms",
                  created_at as "createdAt", updated_at as "updatedAt"`,
       values
     );
@@ -185,7 +219,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
       profile: result.rows[0],
     });
   } catch (error) {
-    console.error("Update profile error:", error);
+    logger.error("Failed to update profile", error, userId ? { userId } : undefined);
     return NextResponse.json(
       { success: false, message: "Internal server error" },
       { status: 500 }

@@ -14,6 +14,9 @@ export const userProfile = pgTable('user_profiles', {
   website: text('website'),
   defaultCurrency: text('default_currency').default('ILS').notNull(),
   preferredPdfTemplate: text('preferred_pdf_template').default('modern').notNull(),
+  invoicePrefix: text('invoice_prefix'),
+  nextInvoiceNumber: integer('next_invoice_number'),
+  paymentTerms: text('payment_terms'),
   createdAt: timestamp('created_at').default(sql`NOW()`),
   updatedAt: timestamp('updated_at').default(sql`NOW()`),
 });

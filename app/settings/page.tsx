@@ -23,6 +23,9 @@ interface Profile {
   website: string | null;
   defaultCurrency: string;
   preferredPdfTemplate: string;
+  invoicePrefix: string | null;
+  nextInvoiceNumber: number | null;
+  paymentTerms: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -71,6 +74,9 @@ export default function SettingsPage() {
   const [website, setWebsite] = useState("");
   const [defaultCurrency, setDefaultCurrency] = useState("ILS");
   const [preferredPdfTemplate, setPreferredPdfTemplate] = useState("modern");
+  const [invoicePrefix, setInvoicePrefix] = useState("");
+  const [nextInvoiceNumber, setNextInvoiceNumber] = useState("");
+  const [paymentTerms, setPaymentTerms] = useState("");
 
   useEffect(() => {
     if (activeTab === "security") {
@@ -101,6 +107,9 @@ export default function SettingsPage() {
         setWebsite(data.profile.website || "");
         setDefaultCurrency(data.profile.defaultCurrency || "ILS");
         setPreferredPdfTemplate(data.profile.preferredPdfTemplate || "modern");
+        setInvoicePrefix(data.profile.invoicePrefix || "");
+        setNextInvoiceNumber(data.profile.nextInvoiceNumber?.toString() || "");
+        setPaymentTerms(data.profile.paymentTerms || "");
       } else {
         setProfileError(data.message || "שגיאה בטעינת הפרופיל");
       }
@@ -192,6 +201,9 @@ export default function SettingsPage() {
           website: website || null,
           defaultCurrency: defaultCurrency || null,
           preferredPdfTemplate: preferredPdfTemplate || null,
+          invoicePrefix: invoicePrefix || null,
+          nextInvoiceNumber: nextInvoiceNumber ? parseInt(nextInvoiceNumber, 10) : null,
+          paymentTerms: paymentTerms || null,
         }),
       });
 
@@ -1013,6 +1025,70 @@ export default function SettingsPage() {
                       </select>
                       <p className="text-xs text-gray-500 mt-1">
                         התבנית שתשמש כברירת מחדל בייצוא דוחות PDF
+                      </p>
+                    </div>
+
+                    {/* Invoice Prefix */}
+                    <div>
+                      <label
+                        htmlFor="invoicePrefix"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        קידומת חשבונית
+                      </label>
+                      <input
+                        type="text"
+                        id="invoicePrefix"
+                        value={invoicePrefix}
+                        onChange={(e) => setInvoicePrefix(e.target.value)}
+                        placeholder="לדוגמה: INV-"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        הקידומת תופיע לפני מספר החשבונית (לדוגמה: INV-001, INV-002)
+                      </p>
+                    </div>
+
+                    {/* Next Invoice Number */}
+                    <div>
+                      <label
+                        htmlFor="nextInvoiceNumber"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        מספר החשבונית הבא
+                      </label>
+                      <input
+                        type="number"
+                        id="nextInvoiceNumber"
+                        value={nextInvoiceNumber}
+                        onChange={(e) => setNextInvoiceNumber(e.target.value)}
+                        placeholder="לדוגמה: 1"
+                        min="1"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        מספר החשבונית הבא שיונפק. המספר יעלה אוטומטית לאחר כל חשבונית
+                      </p>
+                    </div>
+
+                    {/* Payment Terms */}
+                    <div className="md:col-span-2">
+                      <label
+                        htmlFor="paymentTerms"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        תנאי תשלום
+                      </label>
+                      <textarea
+                        id="paymentTerms"
+                        value={paymentTerms}
+                        onChange={(e) => setPaymentTerms(e.target.value)}
+                        placeholder="לדוגמה: תשלום בתוך 30 יום מתאריך החשבונית"
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        תנאי התשלום יופיעו בחשבוניות ובדוחות
                       </p>
                     </div>
                   </div>

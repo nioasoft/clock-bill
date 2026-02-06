@@ -127,6 +127,36 @@ export async function initSchema(): Promise<void> {
     logger.debug("Email column migration check complete");
   }
 
+  // Add invoice_prefix column if it doesn't exist (for migrations)
+  try {
+    await client.query(`
+      ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS invoice_prefix TEXT
+    `);
+  } catch (error) {
+    // Column might already exist, ignore error
+    logger.debug("invoice_prefix column migration check complete");
+  }
+
+  // Add next_invoice_number column if it doesn't exist (for migrations)
+  try {
+    await client.query(`
+      ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS next_invoice_number INTEGER
+    `);
+  } catch (error) {
+    // Column might already exist, ignore error
+    logger.debug("next_invoice_number column migration check complete");
+  }
+
+  // Add payment_terms column if it doesn't exist (for migrations)
+  try {
+    await client.query(`
+      ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS payment_terms TEXT
+    `);
+  } catch (error) {
+    // Column might already exist, ignore error
+    logger.debug("payment_terms column migration check complete");
+  }
+
   // Clients table
   await client.query(`
     CREATE TABLE IF NOT EXISTS clients (
