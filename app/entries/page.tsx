@@ -155,6 +155,7 @@ export default function EntriesPage() {
           description: formData.description,
           notes: formData.notes || undefined,
           isBillable: formData.isBillable,
+          tags: [],
         }),
       });
 
