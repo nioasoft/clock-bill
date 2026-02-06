@@ -8,6 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EarningsChart } from "@/components/earnings-chart";
 import { ProjectHoursChart } from "@/components/project-hours-chart";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
+import { useNotifications } from "@/hooks/use-notifications";
+import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
 
 interface DashboardStats {
   today: {
@@ -78,6 +80,9 @@ export default function DashboardPage() {
   const [stopTimerHours, setStopTimerHours] = useState("");
   const [stopTimerMinutes, setStopTimerMinutes] = useState("");
 
+  // Notifications hook
+  const { checkLongTimer, resetLongTimerNotification, checkDailyReminder } = useNotifications();
+
   useEffect(() => {
     // Fetch dashboard stats
     const fetchStats = async () => {
@@ -127,6 +132,35 @@ export default function DashboardPage() {
     const interval = setInterval(fetchRunningTimer, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Check for long timer notification
+  useEffect(() => {
+    if (runningTimer && !runningTimer.pausedAt) {
+      // Check if timer has exceeded threshold
+      checkLongTimer(runningTimer.elapsedMinutes);
+    } else {
+      // Reset notification flag when timer stops
+      resetLongTimerNotification();
+    }
+  }, [runningTimer, checkLongTimer, resetLongTimerNotification]);
+
+  // Check for daily reminder every minute
+  useEffect(() => {
+    const checkDailyReminderInterval = setInterval(() => {
+      if (stats) {
+        const todayHours = stats.today.hours;
+        checkDailyReminder(todayHours);
+      }
+    }, 60000); // Check every minute
+
+    // Also check on mount
+    if (stats) {
+      const todayHours = stats.today.hours;
+      checkDailyReminder(todayHours);
+    }
+
+    return () => clearInterval(checkDailyReminderInterval);
+  }, [stats, checkDailyReminder]);
 
   useEffect(() => {
     // Update elapsed time display with smooth real-time ticking
@@ -383,6 +417,29 @@ export default function DashboardPage() {
     }
   };
 
+  // Handle keyboard shortcut for timer toggle
+  const handleTimerShortcut = () => {
+    if (runningTimer) {
+      // If timer is running, toggle pause/resume
+      if (runningTimer.pausedAt) {
+        // Timer is paused, resume it
+        handleResumeTimer();
+      } else {
+        // Timer is running, pause it
+        handlePauseTimer();
+      }
+    } else {
+      // No timer running, show start modal
+      setShowTimerModal(true);
+    }
+  };
+
+  // Keyboard shortcut: 't' key toggles timer
+  useKeyboardShortcut({
+    key: "t",
+    callback: handleTimerShortcut,
+  });
+
   return (
     <AppLayout>
       <div className="px-4 py-8 sm:px-6 lg:px-8">
@@ -455,7 +512,10 @@ export default function DashboardPage() {
         <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {/* Quick Timer Widget */}
           <div className="rounded-lg bg-white p-6 shadow">
-            <h3 className="text-lg font-medium text-gray-900">טיימר מהיר</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-900">טיימר מהיר</h3>
+              <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-gray-600 bg-gray-100 border border-gray-300 rounded">T</kbd>
+            </div>
             {timerLoading ? (
               <p className="mt-4 text-sm text-gray-600">טוען...</p>
             ) : runningTimer ? (

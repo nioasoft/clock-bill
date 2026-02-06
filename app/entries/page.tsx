@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Clock, Timer } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { validateRequired, validateDate, validatePastDate, validateNumber } from "@/lib/validation";
+import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
 
 interface User {
   id: string;
@@ -101,6 +102,39 @@ export default function EntriesPage() {
   const [bulkEditError, setBulkEditError] = useState("");
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const [bulkDeleteSubmitting, setBulkDeleteSubmitting] = useState(false);
+
+  // Handle keyboard shortcut for quick entry
+  const handleQuickEntryShortcut = () => {
+    // Toggle the form
+    setShowForm((prev) => !prev);
+
+    // If opening the form, focus on the first input after a short delay
+    if (!showForm) {
+      setTimeout(() => {
+        const projectSelect = document.getElementById("projectId") as HTMLSelectElement;
+        if (projectSelect) {
+          projectSelect.focus();
+        }
+      }, 100);
+    }
+  };
+
+  // Keyboard shortcut: 'n' key toggles quick entry form
+  useKeyboardShortcut({
+    key: "n",
+    callback: handleQuickEntryShortcut,
+  });
+
+  // Keyboard shortcut: Escape key closes form
+  useKeyboardShortcut({
+    key: "Escape",
+    callback: () => {
+      if (showForm) {
+        handleCancelEdit();
+      }
+    },
+    disabled: !showForm,
+  });
 
   useEffect(() => {
     // Fetch current session
@@ -571,12 +605,15 @@ export default function EntriesPage() {
             </Link>
             <h1 className="text-2xl font-bold text-gray-900">רישום זמן</h1>
           </div>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="rounded-lg bg-orange-600 px-4 py-2 text-white hover:bg-orange-700"
-          >
-            {showForm ? "ביטול" : "+ רשום זמן"}
-          </button>
+          <div className="flex items-center gap-3">
+            <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-gray-600 bg-gray-100 border border-gray-300 rounded">N</kbd>
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="rounded-lg bg-orange-600 px-4 py-2 text-white hover:bg-orange-700"
+            >
+              {showForm ? "ביטול" : "+ רשום זמן"}
+            </button>
+          </div>
         </div>
       </header>
 
