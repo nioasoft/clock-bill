@@ -771,3 +771,30 @@ Both features were implemented from scratch with full CRUD functionality.
 ### Current Project Status
 - Progress: 24/206 features passing (11.7%)
 
+
+## Session: 2026-02-06 (Features #29, #30)
+
+### Assigned Features
+- Feature #29: Edit Client - User can edit existing client
+- Feature #30: Delete Client - User can delete client
+
+### Work Completed
+Both features implemented together as they share the same API endpoint and UI structure.
+
+1. API Endpoint /api/clients/[id] with GET, PUT, DELETE methods
+2. Client Details Page /clients/[id] with edit form and delete confirmation
+3. Database Schema Update - added address column to lib/db.ts
+
+### Files Created/Modified
+- Created: app/api/clients/[id]/route.ts
+- Created: app/clients/[id]/page.tsx
+- Modified: app/clients/page.tsx
+- Modified: lib/db.ts
+
+### Features Completed
+- Feature #29: Edit Client - PASSING
+- Feature #30: Delete Client - PASSING
+
+### Current Project Status
+- Progress: 28/206 features passing (13.6%)
+- Client management: Create, List, View, Edit, Delete - all complete
