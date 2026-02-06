@@ -1018,3 +1018,49 @@ Both features verified through browser automation.
 ### Git Commit
 - Commit: 90c7b84
 
+
+## Session: 2026-02-06 (Features #42, #43)
+
+### Assigned Features
+- Feature #42: Set Project Budget - User can set fixed budget for project
+- Feature #43: Set Retainer Details - User can set retainer hours and monthly fee
+
+### Work Completed
+
+Both features involved adding two new pricing models to the project system:
+
+1. **Fixed Pricing Model (תקציב קבוע)**
+   - User can set a fixed budget for the entire project
+   - Single fixedBudget field stores the total project cost
+
+2. **Retainer Pricing Model (רטיינר)**
+   - User can set a monthly retainer fee
+   - User can specify the number of hours included in the retainer
+   - Two fields: retainerMonthlyFee and retainerHours
+
+### Database Changes
+- Added columns to projects table:
+  - fixed_budget REAL
+  - retainer_monthly_fee REAL
+  - retainer_hours REAL
+- Updated CHECK constraint to include 'fixed' and 'retainer' in pricing_model
+- Added migration code in lib/db.ts
+
+### API Changes
+- app/api/projects/route.ts: Updated GET/POST endpoints
+- app/api/projects/[id]/route.ts: Updated GET/PUT endpoints
+- Added Hebrew validation messages for new models
+
+### UI Changes
+- Added "תקציב קבוע" and "רטיינר" to pricing model dropdowns
+- Fixed pricing: Shows "תקציב כולל" input field
+- Retainer pricing: Shows "תשלום חודשי" and "שעות בחבילה" fields
+- Updated both projects list and project details pages
+
+### Features Completed
+- Feature #42: Set Project Budget - PASSING
+- Feature #43: Set Retainer Details - PASSING
+
+### Current Project Status
+- Progress: 40/206 features passing (19.4%)
+
