@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Home, Clock, Users, FolderKanban, FileText, Settings, LogOut } from "lucide-react";
 import { useState } from "react";
+import { GlobalSearch } from "./global-search";
 
 interface NavItem {
   name: string;
@@ -66,8 +67,13 @@ export function Sidebar({ className = "" }: SidebarProps) {
         </Link>
       </div>
 
+      {/* Global Search */}
+      <div className="p-4">
+        <GlobalSearch />
+      </div>
+
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 px-4 pb-4 space-y-1">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
 
