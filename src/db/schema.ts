@@ -24,6 +24,7 @@ export const clients = pgTable('clients', {
   contactName: text('contact_name'),
   email: text('email'),
   phone: text('phone'),
+  address: text('address'),
   defaultRate: real('default_rate'),
   notes: text('notes'),
   isActive: boolean('is_active').default(true).notNull(),
