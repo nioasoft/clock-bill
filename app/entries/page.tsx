@@ -6,7 +6,7 @@ import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Clock } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
-import { validateRequired, validateDate, validatePastDate } from "@/lib/validation";
+import { validateRequired, validateDate, validatePastDate, validateNumber } from "@/lib/validation";
 
 interface User {
   id: string;
