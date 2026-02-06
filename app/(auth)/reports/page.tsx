@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import "./pdf-styles.css";
 
 interface User {
   id: string;
@@ -75,6 +76,17 @@ interface ReportData {
   byProject: ProjectSummary[];
 }
 
+type PdfTemplate = "modern" | "classic" | "bold" | "elegant" | "nature" | "ocean";
+
+const PDF_TEMPLATES: { value: PdfTemplate; label: string; description: string }[] = [
+  { value: "modern", label: "מודרני", description: "עיצוב נקי ומינימליסטי" },
+  { value: "classic", label: "קלאסי", description: "עיצוב מסורתי ומכובד" },
+  { value: "bold", label: "בולט", description: "עיצוב עם כותרות גדולות ובולטות" },
+  { value: "elegant", label: "אלגנטי", description: "עיצוב עדין ויוקרתי" },
+  { value: "nature", label: "טבע", description: "עיצוב בגווני ירוק וטבעי" },
+  { value: "ocean", label: "אוקיינוס", description: "עיצוב בגווני כחול" },
+];
+
 export default function ReportsPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -86,6 +98,8 @@ export default function ReportsPage() {
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
+  const [selectedTemplate, setSelectedTemplate] = useState<PdfTemplate>("modern");
+  const [showExportDialog, setShowExportDialog] = useState(false);
   const [filters, setFilters] = useState({
     clientId: "",
     projectId: "",
@@ -222,6 +236,25 @@ export default function ReportsPage() {
       ETH: "Ξ",
     };
     return `${symbols[currency] || currency}${amount.toFixed(2)}`;
+  };
+
+  const handleExportPdf = () => {
+    setShowExportDialog(true);
+  };
+
+  const confirmExportPdf = (template: PdfTemplate) => {
+    setSelectedTemplate(template);
+    setShowExportDialog(false);
+    // Add template class to body for print styling
+    document.body.classList.add(`pdf-template-${template}`);
+    // Trigger browser print (which allows "Save as PDF")
+    setTimeout(() => {
+      window.print();
+      // Remove template class after print dialog closes
+      setTimeout(() => {
+        document.body.classList.remove(`pdf-template-${template}`);
+      }, 1000);
+    }, 100);
   };
 
   if (loading) {
@@ -374,6 +407,19 @@ export default function ReportsPage() {
         {/* Report Results */}
         {reportData && !reportLoading && (
           <div className="space-y-6">
+            {/* Export Button */}
+            <div className="flex justify-end">
+              <button
+                onClick={handleExportPdf}
+                className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors shadow-md"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                יצא ל-PDF
+              </button>
+            </div>
+
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="bg-card border rounded-lg p-6">
@@ -571,6 +617,88 @@ export default function ReportsPage() {
           </div>
         )}
       </main>
+
+      {/* Template Selection Dialog */}
+      {showExportDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="sticky top-0 bg-card border-b p-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">בחר תבנית PDF</h2>
+                <button
+                  onClick={() => setShowExportDialog(false)}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-muted-foreground mt-2">
+                בחר את העיצוב המועדף עליך לדוח ה-PDF
+              </p>
+            </div>
+
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              {PDF_TEMPLATES.map((template) => (
+                <button
+                  key={template.value}
+                  onClick={() => confirmExportPdf(template.value)}
+                  className={`
+                    border-2 rounded-lg p-6 text-right transition-all hover:shadow-lg
+                    ${
+                      selectedTemplate === template.value
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50"
+                    }
+                  `}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <h3 className="text-lg font-semibold">{template.label}</h3>
+                    <div
+                      className={`
+                      w-6 h-6 rounded-full border-2 flex items-center justify-center
+                      ${
+                        selectedTemplate === template.value
+                          ? "border-primary bg-primary"
+                          : "border-muted-foreground"
+                      }
+                    `}
+                    >
+                      {selectedTemplate === template.value && (
+                        <svg className="w-4 h-4 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{template.description}</p>
+                  {/* Preview box with template style */}
+                  <div
+                    className={`
+                    mt-4 p-3 rounded border text-sm
+                    pdf-preview-${template.value}
+                  `}
+                  >
+                    <div className="font-semibold">תצוגה מקדימה</div>
+                    <div className="text-xs mt-1 opacity-70">הטקסט הזה יוצג בסגנון הנבחר</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="sticky bottom-0 bg-card border-t p-6">
+              <p className="text-sm text-muted-foreground text-center">
+                לחץ על התבנית הרצויה לפתיחת חלון הדפסה - בחר &quot;שמור כ-PDF&quot; כדי להוריד את הדוח
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
