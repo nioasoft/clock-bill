@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       `INSERT INTO time_entries (id, user_id, project_id, description, start_time, date, duration, is_billable)
        VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, 0, TRUE)
        RETURNING id`,
-      [userId, projectId, description || null, now.toISOString(), today]
+      [userId, projectId, description || '', now.toISOString(), today]
     );
 
     const newEntry = result.rows[0];
