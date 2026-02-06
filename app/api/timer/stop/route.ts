@@ -1,0 +1,71 @@
+import { NextRequest, NextResponse } from "next/server";
+import { query } from "@/lib/db";
+import { getUser } from "@/lib/auth";
+
+/**
+ * POST /api/timer/stop
+ * Stops a running timer by setting end_time and calculating duration
+ */
+export async function POST(request: NextRequest) {
+  try {
+    // Get authenticated user
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = user.id;
+
+    // Parse request body
+    const body = await request.json();
+    const { entryId, description } = body;
+
+    // Get the running entry
+    const entryResult = await query<{
+      id: string;
+      start_time: string;
+      description: string;
+    }>(
+      `SELECT id, start_time, description
+       FROM time_entries
+       WHERE id = $1 AND user_id = $2 AND start_time IS NOT NULL AND end_time IS NULL`,
+      [entryId, userId]
+    );
+
+    if (entryResult.rows.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "הטיימר לא נמצא או כבר הופסק" },
+        { status: 404 }
+      );
+    }
+
+    const entry = entryResult.rows[0];
+    const startTime = new Date(entry.start_time);
+    const endTime = new Date();
+    const durationMs = endTime.getTime() - startTime.getTime();
+    const durationMinutes = Math.floor(durationMs / 1000 / 60);
+
+    // Update the entry with end_time, duration, and optionally description
+    await query(
+      `UPDATE time_entries
+       SET end_time = $1, duration = $2, description = COALESCE($3, description), updated_at = NOW()
+       WHERE id = $4`,
+      [endTime.toISOString(), durationMinutes, description || null, entryId]
+    );
+
+    return NextResponse.json({
+      success: true,
+      entry: {
+        id: entryId,
+        duration: durationMinutes,
+        endTime: endTime.toISOString()
+      }
+    });
+  } catch (error) {
+    console.error("Error stopping timer:", error);
+    return NextResponse.json(
+      { success: false, message: "שגיאה בעצירת הטיימר" },
+      { status: 500 }
+    );
+  }
+}
