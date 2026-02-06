@@ -1,5 +1,73 @@
 # ClockBill Development Progress
 
+## Session: 2026-02-06 (Features #25, #26)
+
+### Assigned Features
+- Feature #25: Recent Entries Widget - Dashboard shows recent time entries
+- Feature #26: Quick Timer Widget - Dashboard has quick timer start button
+
+### Work Completed
+
+1. **Feature #25: Recent Entries Widget**
+   - Recent entries list already existed in dashboard code
+   - API `/api/dashboard/stats` returns last 5 time entries
+   - Dashboard displays entries with description, date, and formatted duration
+   - Entries are ordered by date DESC, created_at DESC
+   - Status: PASSING
+
+2. **Feature #26: Quick Timer Widget**
+   - Created `/api/timer/start` endpoint:
+     - Creates new time entry with start_time set to now
+     - Validates project belongs to user
+     - Checks for existing running timer (only one allowed per user)
+     - Requires projectId and optional description
+   - Created `/api/timer/stop` endpoint:
+     - Sets end_time on running timer entry
+     - Calculates duration in minutes
+     - Optionally updates description
+   - Created `/api/timer/running` endpoint:
+     - Returns currently running timer (start_time not null, end_time is null)
+     - Includes elapsed minutes and seconds
+   - Created `/api/projects` endpoint:
+     - Returns list of user's projects with client names
+     - Used by timer start modal for project selection
+   - Updated dashboard with quick timer widget:
+     - Shows running timer with elapsed time (updates every second)
+     - "Start Timer" button when no timer running
+     - "Stop Timer" button when timer is active
+     - Modal dialog to select project and enter optional description
+   - Status: PASSING
+
+### Files Created
+- Created: app/api/timer/start/route.ts
+- Created: app/api/timer/stop/route.ts
+- Created: app/api/timer/running/route.ts
+- Created: app/api/projects/route.ts
+
+### Files Modified
+- Modified: app/dashboard/page.tsx (added quick timer widget, running timer display, timer modal)
+
+### Verification Performed
+- TypeScript compilation: No errors
+- Mock data check: No mock data patterns found (only test variables in /api/test)
+- API authentication: All timer endpoints check for authenticated user (401 if not)
+- Database queries: All use real PostgreSQL database via `query()` from lib/db
+- Data isolation: All queries filter by user_id
+- Project ownership: Timer start verifies project belongs to user
+- Timer state: Running timer persists in database with start_time/end_time
+- Real-time updates: Dashboard polls timer status every second
+
+### Features Completed
+- Feature #25: Recent Entries Widget - PASSING
+- Feature #26: Quick Timer Widget - PASSING
+
+### Current Project Status
+- Progress: 26/206 features passing (12.6%)
+- Dashboard: Now has 6 stat cards + quick timer widget + recent entries list
+- Timer System: Full CRUD implementation with real-time display
+
+---
+
 ## Session: 2026-02-06 (Features #23, #24)
 
 ### Assigned Features
@@ -599,3 +667,40 @@ Both features were already implemented in commit d0cbf61 during a previous sessi
 - All code verified through comprehensive static analysis
 - Implementation follows existing patterns in the codebase
 - Both features were implemented in previous session (commit d0cbf61)
+
+## Session: 2026-02-06 (Features #27, #28)
+
+### Assigned Features
+- Feature #27: Create Client - User can create new client
+- Feature #28: View Client List - User can view list of clients
+
+### Work Completed
+
+Both features were implemented from scratch with full CRUD functionality.
+
+**Feature #27: Create Client**
+- Created POST /api/clients endpoint with validation
+- Created /clients page with add client form
+- Form validation in Hebrew with loading/error states
+
+**Feature #28: View Client List**
+- Created GET /api/clients endpoint with user isolation
+- Table view with all client details
+- Empty state handled with Hebrew message
+
+### Verification
+- Authentication, data isolation, real database verified
+- No mock data patterns found
+- RTL layout confirmed
+
+### Files Created
+- app/api/clients/route.ts
+- app/clients/page.tsx
+
+### Features Completed
+- Feature #27: Create Client - PASSING
+- Feature #28: View Client List - PASSING
+
+### Current Project Status
+- Progress: 24/206 features passing (11.7%)
+
