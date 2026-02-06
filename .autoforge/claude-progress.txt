@@ -829,3 +829,60 @@ Newly implemented full soft-delete/archive functionality:
 - Users can restore archived projects via unarchive button
 - All verification done through static code analysis
 
+
+
+## Session: 2026-02-06 (Features #81, #82)
+
+### Assigned Features
+- Feature #81: PDF Shows Business Details - PDF includes business name, address, contact info
+- Feature #82: PDF Shows Client Details - PDF includes client name and contact info
+
+### Work Completed
+
+Both features were fully implemented with complete contact information display.
+
+**Feature #81: PDF Shows Business Details**
+Enhanced the PDF header to show all business contact details:
+- Business name (already implemented)
+- Business address (NEW)
+- Business phone (NEW)  
+- Business email (NEW)
+- Tax ID / עוסק מספר (NEW)
+- Logo display (already implemented)
+- Date range subtitle (already implemented)
+
+All fields displayed with appropriate emoji icons.
+
+**Feature #82: PDF Shows Client Details**
+Enhanced both the API and PDF to include client contact information:
+- SQL query extended to fetch contact_name, email, phone, address
+- Updated TypeScript interfaces to include new fields
+- Enhanced PDF client summary to display all contact details
+- Contact details shown below client name with emoji icons
+
+### Files Modified
+- app/api/reports/route.ts - Added client contact fields to SQL query
+- app/(auth)/reports/page.tsx - Updated interfaces and PDF UI
+
+### Verification Checklist
+- TypeScript compilation: No errors
+- Mock data check: No mock data patterns found
+- API authentication: Verified (getUser() with 401 response)
+- Data isolation: All queries filter by user_id
+- Business details: All userProfile fields used in PDF header
+- Client details: All client contact fields fetched and displayed
+- RTL layout: dir="rtl" maintained throughout
+
+### Features Completed
+- Feature #81: PDF Shows Business Details - PASSING
+- Feature #82: PDF Shows Client Details - PASSING
+
+### Current Project Status
+- Progress: 82/206 features passing (39.8%)
+- PDF export functionality: All contact details now included
+
+### Notes
+- Commit: 94c4e05
+- Contact details enhance professional appearance of PDF reports
+- All fields are optional, handles missing data gracefully
+

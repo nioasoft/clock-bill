@@ -306,7 +306,7 @@ export default function ReportsPage() {
       const baseStyles = `
         @media print {
           body > *:not(#pdf-content) { display: none !important; }
-          #pdf-content { display: block !important; }
+          #pdf-content { display: block !important; direction: rtl !important; }
           @page { size: A4; margin: 15mm; }
           body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           .pdf-header { padding: 2rem; margin-bottom: 2rem; }
