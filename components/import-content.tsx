@@ -252,6 +252,230 @@ export function ImportContent({
 
   return (
     <div className="space-y-8">
+      {/* JSON Backup/Restore Section */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          גיבוי ושחזור נתונים
+        </h2>
+        <p className="text-sm text-gray-600 mb-6">
+          צור גיבוי מלא של כל הנתונים שלך כקובץ JSON, או שחזר נתונים מגיבוי קיים.
+        </p>
+
+        {backupError && (
+          <div className="rounded-md bg-red-50 p-4 mb-4">
+            <p className="text-sm text-red-700">{backupError}</p>
+          </div>
+        )}
+
+        {backupSuccess && (
+          <div className="rounded-md bg-green-50 p-4 mb-4">
+            <p className="text-sm text-green-700">{backupSuccess}</p>
+          </div>
+        )}
+
+        {/* Export Section */}
+        <div className="mb-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-3">יצירת גיבוי</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            הורד גיבוי מלא של כל הנתונים שלך כולל פרופיל, לקוחות, פרויקטים, רשומות זמן, תגיות מותאמות אישית ושערי מטבעות.
+          </p>
+          <button
+            onClick={handleExportBackup}
+            disabled={backupLoading}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {backupLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                יוצר גיבוי...
+              </>
+            ) : (
+              <>
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                  />
+                </svg>
+                הורד גיבוי JSON
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Import Section */}
+        <div className="border-t border-gray-200 pt-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-3">שחזור מגיבוי</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            שחזר נתונים מקובץ גיבוי שנוצר קודם לכן. אתה יכול לבחור למזג עם הנתונים הקיימים או להחליף את כל הנתונים.
+          </p>
+
+          {/* Import Mode Selection */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              מצב ייבוא
+            </label>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setImportMode("merge")}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  importMode === "merge"
+                    ? "bg-orange-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                מיזוג
+                <span className="block text-xs font-normal opacity-80">הוסף לנתונים קיימים</span>
+              </button>
+              <button
+                onClick={() => setImportMode("replace")}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  importMode === "replace"
+                    ? "bg-orange-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                החלפה
+                <span className="block text-xs font-normal opacity-80">מחק הכל והחלף</span>
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              {importMode === "merge"
+                ? "מיזוג: נתונים חדשים יתווספו, נתונים קיימים עם אותו שם לא יוחלפו"
+                : "החלפה: כל הנתונים הקיימים יימחקו לפני הייבוא"}
+            </p>
+          </div>
+
+          {/* File Upload */}
+          <div className="mb-4">
+            <input
+              ref={backupInputRef}
+              type="file"
+              accept=".json"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  if (!file.name.endsWith(".json")) {
+                    setBackupError("יש לבחור קובץ JSON");
+                    return;
+                  }
+                  setBackupFile(file);
+                  setBackupError("");
+                  setBackupSuccess("");
+                  setBackupImportResults(null);
+                }
+              }}
+              className="hidden"
+            />
+            <button
+              onClick={() => backupInputRef.current?.click()}
+              disabled={backupLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                />
+              </svg>
+              בחר קובץ גיבוי
+            </button>
+            {backupFile && (
+              <span className="me-4 text-sm text-gray-600">{backupFile.name}</span>
+            )}
+          </div>
+
+          {/* Import Button */}
+          {backupFile && (
+            <button
+              onClick={handleImportBackup}
+              disabled={backupLoading}
+              className="px-6 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {backupLoading ? (
+                <span className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                  משחזר...
+                </span>
+              ) : (
+                "שחזר נתונים"
+              )}
+            </button>
+          )}
+
+          {/* Import Results */}
+          {backupImportResults && (
+            <div className="mt-6 border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <h4 className="font-semibold text-gray-900 mb-3">תוצאות השחזור</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-green-600">{backupImportResults.profile}</p>
+                  <p className="text-xs text-gray-600">פרופיל</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-green-600">{backupImportResults.clients}</p>
+                  <p className="text-xs text-gray-600">לקוחות</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-green-600">{backupImportResults.projects}</p>
+                  <p className="text-xs text-gray-600">פרויקטים</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-green-600">{backupImportResults.timeEntries}</p>
+                  <p className="text-xs text-gray-600">רשומות זמן</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-green-600">{backupImportResults.customTags}</p>
+                  <p className="text-xs text-gray-600">תגיות</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-green-600">{backupImportResults.currencyRates}</p>
+                  <p className="text-xs text-gray-600">שערי מטבע</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-green-600">{backupImportResults.rateOverrides}</p>
+                  <p className="text-xs text-gray-600">עדפות תעריף</p>
+                </div>
+              </div>
+              {backupImportResults.errors.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-sm font-medium text-red-700 mb-2">
+                    ⚠️ {backupImportResults.errors.length} שגיאות:
+                  </p>
+                  <div className="max-h-40 overflow-y-auto">
+                    {backupImportResults.errors.slice(0, 10).map((error, idx) => (
+                      <p key={idx} className="text-xs text-red-600">
+                        {error.entity}: {error.message}
+                      </p>
+                    ))}
+                    {backupImportResults.errors.length > 10 && (
+                      <p className="text-xs text-gray-500 mt-2">
+                        ...ועוד {backupImportResults.errors.length - 10} שגיאות
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* CSV Import Section */}
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
           ייבוא נתונים מ-CSV

@@ -2192,6 +2192,23 @@ export default function SettingsPage() {
             setShowMappingStep={setShowMappingStep}
             importClientsRef={importClientsRef}
             importEntriesRef={importEntriesRef}
+            backupFile={backupFile}
+            setBackupFile={setBackupFile}
+            backupLoading={backupLoading}
+            setBackupLoading={setBackupLoading}
+            backupError={backupError}
+            setBackupError={setBackupError}
+            backupSuccess={backupSuccess}
+            setBackupSuccess={setBackupSuccess}
+            backupImportResults={backupImportResults}
+            setBackupImportResults={setBackupImportResults}
+            importMode={importMode}
+            setImportMode={setImportMode}
+            showImportConfirm={showImportConfirm}
+            setShowImportConfirm={setShowImportConfirm}
+            backupInputRef={backupInputRef}
+            handleExportBackup={handleExportBackup}
+            handleImportBackup={handleImportBackup}
           />
         )}
       </main>
@@ -2220,6 +2237,60 @@ export default function SettingsPage() {
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {logoutAllLoading ? "מתנתק..." : "התנתק מכל המכשירים"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import Confirmation Dialog */}
+      {showImportConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4" dir="rtl">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              אישור שחזור גיבוי
+            </h3>
+            <div className="space-y-3 mb-6">
+              <p className="text-gray-600">
+                אתה עומד לשחזר נתונים מקובץ הגיבוי:
+              </p>
+              <p className="text-sm font-medium text-gray-900">{backupFile?.name}</p>
+              <div className={`p-3 rounded-lg ${
+                importMode === "replace"
+                  ? "bg-red-50 border border-red-200"
+                  : "bg-blue-50 border border-blue-200"
+              }`}>
+                <p className="text-sm font-medium mb-1">
+                  {importMode === "replace" ? "⚠️ מצב החלפה" : "📥 מצב מיזוג"}
+                </p>
+                <p className="text-xs text-gray-600">
+                  {importMode === "replace"
+                    ? "כל הנתונים הקיימים יימחקו לפני השחזור. פעולה זו אינה הפיכה!"
+                    : "נתונים חדשים יתווספו. נתונים קיימים עם אותו שם לא יוחלפו."}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowImportConfirm(false);
+                  setBackupLoading(false);
+                }}
+                disabled={backupLoading}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors"
+              >
+                ביטול
+              </button>
+              <button
+                onClick={() => handleImportBackup()}
+                disabled={backupLoading}
+                className={`px-4 py-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                  importMode === "replace"
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-green-600 hover:bg-green-700"
+                }`}
+              >
+                {backupLoading ? "משחזר..." : "אשר שחזור"}
               </button>
             </div>
           </div>

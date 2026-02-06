@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getUser } from "@/lib/auth";
 import { query } from "@/lib/db";
 
 // Simple CSV parser function
@@ -75,12 +75,12 @@ function parseCSVWithHeaders(text: string): Record<string, string>[] {
 export async function POST(request: NextRequest) {
   try {
     // Check authentication
-    const session = await getSession(request);
-    if (!session) {
+    const user = await getUser();
+    if (!user) {
       return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
     }
 
-    const userId = session.user.id;
+    const userId = user.id;
 
     // Parse form data
     const formData = await request.formData();
