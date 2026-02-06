@@ -9,6 +9,14 @@ const nextConfig = {
     }
     return config;
   },
+  // Dev server configuration
+  devIndicators: false,
+  // Bind to localhost only to avoid permission issues
+  experimental: {
+    serverActions: {
+      allowedOrigins: ['localhost:3000'],
+    },
+  },
 };
 
 export default nextConfig;

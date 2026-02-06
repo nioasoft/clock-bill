@@ -3,7 +3,7 @@
  * Clears the session cookie and removes session from database
  */
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { getDb } from "../../../../lib/db";
 import { cookies } from "next/headers";
 
 export interface LogoutResponse {

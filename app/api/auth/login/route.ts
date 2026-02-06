@@ -3,8 +3,8 @@
  * Authenticates user with email and password
  */
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
-import { verifyPassword, generateSessionToken, COOKIE_OPTIONS } from "@/lib/auth";
+import { getDb } from "../../../../lib/db";
+import { verifyPassword, generateSessionToken, COOKIE_OPTIONS } from "../../../../lib/auth";
 import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
 

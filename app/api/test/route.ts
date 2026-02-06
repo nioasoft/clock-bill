@@ -2,7 +2,7 @@
  * Test API endpoint for verifying data persistence
  * This endpoint creates and retrieves test records to verify database functionality
  */
-import { getDb } from "@/lib/db";
+import { getDb } from "../../../lib/db";
 import { NextResponse } from "next/server";
 
 /**

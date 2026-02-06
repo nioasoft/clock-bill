@@ -3,7 +3,7 @@
  * Returns the current user session if valid
  */
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { getDb } from "../../../../lib/db";
 import { cookies } from "next/headers";
 
 export interface SessionResponse {

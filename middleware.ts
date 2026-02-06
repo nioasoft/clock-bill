@@ -23,7 +23,7 @@ export function middleware(request: NextRequest) {
   }
 
   // If user is not authenticated and trying to access protected routes, redirect to login
-  if (!sessionCookie && !isPublicRoute && pathname !== "/") {
+  if (!sessionCookie && !isPublicRoute) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
