@@ -112,3 +112,156 @@ Verified email format validation implementation:
 - Commit: f4e2891
 - Documentation added for features #112 and #113
 
+
+## Session: 2026-02-06 (Features #117, #118) - COMPLETED
+
+### Assigned Features
+- Feature #117: API Error Handling - API errors show user-friendly messages
+- Feature #118: 404 Page - 404 page exists for unknown routes
+
+### Work Completed
+
+**Feature #117: API Error Handling**
+Verified through comprehensive code review and testing:
+- All API routes return Hebrew error messages
+- Frontend displays errors via showErrorToast()
+- Login with invalid credentials shows "Invalid email or password" ✅
+- Client creation displays validation errors ✅
+- Entry deletion shows error message on failure ✅
+
+**Feature #118: 404 Page**
+Implemented from scratch:
+- Created app/not-found.tsx with Hebrew RTL support
+- Custom 404 page with gradient background
+- Hebrew heading: "העמוד לא נמצא"
+- Back to dashboard link and go back button
+- Helpful links to other pages
+
+### Verification Checklist
+**Feature #117:**
+- ✅ API routes return Hebrew error messages
+- ✅ Frontend displays errors via toast notifications
+- ✅ All pages have try-catch blocks
+- ✅ No mock data patterns found
+
+**Feature #118:**
+- ✅ 404 page created and working
+- ✅ Hebrew RTL support
+- ✅ Navigation buttons work
+- ✅ Screenshot taken
+
+### Features Completed
+- Feature #117: API Error Handling - PASSING ✓
+- Feature #118: 404 Page - PASSING ✓
+
+### Current Project Status
+- Progress: 124/206 features passing (60.2%)
+- Commit: cff0564
+
+
+## Session: 2026-02-06 (Feature #116) - COMPLETED
+
+### Assigned Feature
+- Feature #116: Date Validation - Date fields validate correctly
+
+### Work Completed
+
+**Date Validation Implementation**
+
+Added comprehensive date validation to the application with full Hebrew RTL support:
+
+1. **Validation Functions Added (lib/validation.ts):**
+   - `validateDate()`: Validates YYYY-MM-DD format, checks for valid dates (catches Feb 30, etc.)
+   - `validateDateRange()`: Ensures start date is not after end date
+   - `validatePastDate()`: Prevents future dates (for time entries)
+   - `validateFutureDate()`: Prevents past dates (for future bookings)
+
+2. **Forms Updated with Date Validation:**
+   - **Time Entries (app/entries/page.tsx):**
+     - Date field is required
+     - Uses `validateDate()` to ensure valid date format
+     - Error display with red border and Hebrew message
+     - Field errors state management
+   
+   - **Projects Create (app/projects/page.tsx):**
+     - Start/end dates are optional
+     - Uses `validateDateRange()` to validate date range
+     - Ensures start date <= end date
+     - Error messages for both date fields
+   
+   - **Projects Edit (app/projects/[id]/page.tsx):**
+     - Same validation as create form
+     - Prevents invalid date ranges on update
+
+3. **Validation Features:**
+   - Format validation (YYYY-MM-DD pattern)
+   - Date validity (catches impossible dates like Feb 30, April 31)
+   - Range validation (start before end)
+   - Required/optional field handling
+   - Hebrew error messages throughout
+   - Visual feedback (red borders, error text)
+
+### Verification Checklist
+
+**Functionality:**
+- ✅ Invalid date format detected (e.g., "invalid-date", "2024/12/31")
+- ✅ Impossible dates detected (e.g., "2024-02-30", "2024-04-31")
+- ✅ Valid dates accepted (e.g., "2024-01-15")
+- ✅ Required date field validation (empty field rejected)
+- ✅ Optional date field validation (empty field accepted)
+- ✅ Date range validation (start after end rejected)
+- ✅ Valid date range accepted (start <= end)
+- ✅ Same start and end date accepted
+- ✅ Partial date range accepted (only start or only end)
+
+**UI/UX:**
+- ✅ Error messages in Hebrew
+- ✅ Red border on invalid fields
+- ✅ Error text displayed below fields
+- ✅ Validation prevents form submission
+- ✅ Clear error messages
+- ✅ RTL support
+
+**Code Quality:**
+- ✅ TypeScript compilation: No new errors
+- ✅ Reusable validation functions
+- ✅ Consistent with existing validation patterns
+- ✅ No mock data
+- ✅ Real database integration
+
+### Test Results
+
+All date validation tests pass:
+1. Invalid format → rejected ✓
+2. Feb 30 (impossible) → rejected ✓
+3. April 31 (impossible) → rejected ✓
+4. Valid date → accepted ✓
+5. Empty required → rejected ✓
+6. Empty optional → accepted ✓
+7. Start > End → rejected ✓
+8. Valid range → accepted ✓
+9. Same start/end → accepted ✓
+10. Partial range → accepted ✓
+
+### Files Modified
+1. lib/validation.ts - Added 4 date validation functions (158 lines added)
+2. app/entries/page.tsx - Added date validation to form
+3. app/projects/page.tsx - Added date range validation to create form
+4. app/projects/[id]/page.tsx - Added date range validation to edit form
+
+### Feature Completed
+- Feature #116: Date Validation - PASSING ✓
+
+### Current Project Status
+- Progress: 118/206 features passing (57.3%)
+- Date validation fully functional with Hebrew error messages
+- All date fields properly validated with visual feedback
+
+### Notes
+- Date validation handles edge cases (leap years, month lengths)
+- Validates against JavaScript Date object edge cases
+- Supports both required and optional date fields
+- Validates date ranges correctly
+- All error messages in Hebrew
+- Consistent with existing validation patterns
+
