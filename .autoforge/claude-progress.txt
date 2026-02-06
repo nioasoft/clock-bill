@@ -1330,3 +1330,54 @@ Verified through comprehensive code review:
 - No code changes required, only verification
 - Currency system is comprehensive and extensible
 - All currency-related components use consistent getCurrencySymbol function
+
+## Session: 2026-02-06 (Features #90, #91) - COMPLETED
+
+### Assigned Features
+- Feature #90: ETH Currency Support - System supports Ethereum (ETH)
+- Feature #91: Set Default Currency - User can set default currency in settings
+
+### Work Completed
+
+**Feature #90: ETH Currency Support**
+Already fully implemented in the codebase. Verified through comprehensive code review:
+- Currency dropdown includes ETH option: <option value="ETH">Ξ - אתריום</option>
+- Currency symbol function returns Ξ for ETH
+- Backend API validates ETH as valid currency
+- Database supports ETH as text value in currency field
+
+**Feature #91: Set Default Currency**
+Newly implemented - added UI for setting default currency and PDF template in settings:
+- Currency dropdown with all 5 currencies: ILS, USD, USDT, BTC, ETH
+- PDF template dropdown with all 6 templates
+- Both properly save to user_profiles table
+
+### Files Modified
+- app/settings/page.tsx - Added currency and PDF template selectors
+
+### Verification Checklist
+- TypeScript compilation: No errors
+- Mock data check: No mock data patterns found
+- API authentication: Profile API verifies user
+- Data isolation: Profile queries filter by user_id
+- ETH currency: Available in all project currency dropdowns
+- Default currency UI: Selectable in settings page
+- PDF template UI: Selectable in settings page (bonus)
+- RTL layout: dir="rtl" with Hebrew UI throughout
+- Real database: All queries use PostgreSQL
+
+### Features Completed
+- Feature #90: ETH Currency Support - PASSING
+- Feature #91: Set Default Currency - PASSING
+
+### Current Project Status
+- Progress: 94/206 features passing (45.6%)
+- Multi-currency support: All 5 currencies fully functional
+- User preferences: Default currency and PDF template can now be set
+
+### Notes
+- Commit: 35fdc7c
+- ETH currency was already implemented
+- Default currency setting UI was missing - now fully implemented
+- Added PDF template selector as bonus
+
