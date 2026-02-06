@@ -13,7 +13,6 @@ const nextConfig = {
   },
   // Production optimizations
   productionBrowserSourceMaps: false,
-  optimizePackageImports: ['lucide-react'],
 };
 
 module.exports = nextConfig;

@@ -8,7 +8,7 @@ const logger = createLogger("api-reports-presets-detail");
 // DELETE - Delete a report preset
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get authenticated user
@@ -21,7 +21,7 @@ export async function DELETE(
     }
 
     const userId = user.id;
-    const presetId = params.id;
+    const { id: presetId } = await params;
 
     // Check if preset exists and belongs to user
     const checkResult = await query(

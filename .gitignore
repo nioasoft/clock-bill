@@ -40,3 +40,22 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .playwright-mcp/*.log
+
+# local uploads (development only)
+/uploads
+
+# production environment
+.env.production
+.env.production.local
+
+# backup and test files
+*.png
+*.jpg
+*.jpeg
+test-*.html
+test-*.js
+*.session-notes.txt
+FEATURE-*.md
+BLOCKING-*.md
+CRITICAL-*.md
+ACTION-REQUIRED-*.md

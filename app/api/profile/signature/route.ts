@@ -2,40 +2,21 @@
  * Signature Upload API endpoint
  * POST: Upload user signature
  * DELETE: Remove user signature
+ *
+ * Storage:
+ * - Development: Local filesystem (public/uploads/signatures)
+ * - Production: Vercel Blob (if BLOB_READ_WRITE_TOKEN is set)
  */
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "../../../../lib/db";
 import { getUser } from "../../../../lib/auth";
-import { writeFile, mkdir, unlink } from "fs/promises";
-import { existsSync } from "fs";
-import path from "path";
+import { uploadFile, deleteFile } from "../../../../lib/storage";
 
 // Maximum file size: 2MB (signatures are typically smaller)
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
 // Allowed MIME types
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-
-// Upload directory
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "signatures");
-
-/**
- * Ensure upload directory exists
- */
-async function ensureUploadDir(): Promise<void> {
-  if (!existsSync(UPLOAD_DIR)) {
-    await mkdir(UPLOAD_DIR, { recursive: true });
-  }
-}
-
-/**
- * Generate a unique filename
- */
-function generateFilename(userId: string, originalName: string): string {
-  const timestamp = Date.now();
-  const extension = path.extname(originalName) || ".png";
-  return `${userId}_${timestamp}${extension}`;
-}
 
 /**
  * POST handler - upload signature
@@ -79,18 +60,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // Ensure upload directory exists
-    await ensureUploadDir();
-
-    // Generate unique filename
-    const filename = generateFilename(user.id, file.name);
-    const filepath = path.join(UPLOAD_DIR, filename);
-
-    // Convert File to Buffer and save
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    await writeFile(filepath, buffer);
-
     // Get current signature URL to delete old file
     const currentResult = await query<{ signature_url: string | null }>(
       `SELECT signature_url FROM user_profiles WHERE user_id = $1`,
@@ -101,20 +70,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // Delete old signature file if exists
     if (oldSignatureUrl) {
-      const oldFilename = path.basename(oldSignatureUrl);
-      const oldFilepath = path.join(UPLOAD_DIR, oldFilename);
       try {
-        if (existsSync(oldFilepath)) {
-          await unlink(oldFilepath);
-        }
+        await deleteFile(oldSignatureUrl);
       } catch (error) {
         console.error("Failed to delete old signature:", error);
         // Continue even if old file deletion fails
       }
     }
 
+    // Upload new signature using storage adapter
+    const signatureUrl = await uploadFile(file, user.id, "signatures");
+
     // Update database with new signature URL
-    const signatureUrl = `/uploads/signatures/${filename}`;
     const result = await query(
       `UPDATE user_profiles
        SET signature_url = $1, updated_at = NOW()
@@ -126,7 +93,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (result.rows.length === 0) {
       // Delete uploaded file if database update failed
       try {
-        await unlink(filepath);
+        await deleteFile(signatureUrl);
       } catch {
         // Ignore cleanup errors
       }
@@ -180,13 +147,9 @@ export async function DELETE(): Promise<NextResponse> {
       );
     }
 
-    // Delete signature file
-    const filename = path.basename(signatureUrl);
-    const filepath = path.join(UPLOAD_DIR, filename);
+    // Delete signature file using storage adapter
     try {
-      if (existsSync(filepath)) {
-        await unlink(filepath);
-      }
+      await deleteFile(signatureUrl);
     } catch (error) {
       console.error("Failed to delete signature file:", error);
       // Continue even if file deletion fails
