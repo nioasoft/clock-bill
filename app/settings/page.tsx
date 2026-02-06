@@ -27,11 +27,22 @@ interface Profile {
   updatedAt: string;
 }
 
+interface CurrencyRate {
+  id: string;
+  user_id: string;
+  fromCurrency: string;
+  toCurrency: string;
+  rate: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function SettingsPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"profile" | "security">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "security" | "currencies">("profile");
   const [sessions, setSessions] = useState<Session[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [currencyRates, setCurrencyRates] = useState<CurrencyRate[]>([]);
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
   const [logoLoading, setLogoLoading] = useState(false);
@@ -42,6 +53,14 @@ export default function SettingsPage() {
   const [logoutAllLoading, setLogoutAllLoading] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Currency rates form state
+  const [fromCurrency, setFromCurrency] = useState("USD");
+  const [toCurrency, setToCurrency] = useState("ILS");
+  const [rate, setRate] = useState("");
+  const [rateSaving, setRateSaving] = useState(false);
+  const [rateError, setRateError] = useState("");
+  const [rateSuccess, setRateSuccess] = useState("");
 
   // Profile form state
   const [businessName, setBusinessName] = useState("");
@@ -58,6 +77,8 @@ export default function SettingsPage() {
       fetchSessions();
     } else if (activeTab === "profile") {
       fetchProfile();
+    } else if (activeTab === "currencies") {
+      fetchCurrencyRates();
     }
   }, [activeTab]);
 
@@ -258,6 +279,111 @@ export default function SettingsPage() {
     }
   };
 
+  // Fetch currency rates
+  const fetchCurrencyRates = async () => {
+    setLoading(true);
+    setRateError("");
+    try {
+      const response = await fetch("/api/currency-rates");
+      const data = await response.json();
+
+      if (data.success) {
+        setCurrencyRates(data.rates || []);
+      } else {
+        setRateError(data.message || "שגיאה בטעינת שערי חליפין");
+      }
+    } catch {
+      setRateError("שגיאת תקשורת. אנא נסה שוב.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Save currency rate
+  const handleSaveRate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRateSaving(true);
+    setRateError("");
+    setRateSuccess("");
+
+    try {
+      const response = await fetch("/api/currency-rates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fromCurrency,
+          toCurrency,
+          rate: parseFloat(rate),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setRateSuccess("שער החליפין נשמר בהצלחה!");
+        setTimeout(() => setRateSuccess(""), 3000);
+        // Refresh rates list
+        fetchCurrencyRates();
+        // Reset form
+        setFromCurrency("USD");
+        setToCurrency("ILS");
+        setRate("");
+      } else {
+        setRateError(data.message || "שגיאה בשמירת שער חליפין");
+      }
+    } catch {
+      setRateError("שגיאת תקשורת. אנא נסה שוב.");
+    } finally {
+      setRateSaving(false);
+    }
+  };
+
+  // Delete currency rate
+  const handleDeleteRate = async (rateId: string) => {
+    if (!confirm("האם למחוק את שער חליפין זה?")) return;
+
+    setRateError("");
+    setRateSuccess("");
+
+    try {
+      const response = await fetch("/api/currency-rates", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rateId }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setRateSuccess("שער החליפין נמחק בהצלחה!");
+        setTimeout(() => setRateSuccess(""), 3000);
+        // Refresh rates list
+        fetchCurrencyRates();
+      } else {
+        setRateError(data.message || "שגיאה במחיקת שער חליפין");
+      }
+    } catch {
+      setRateError("שגיאת תקשורת. אנא נסה שוב.");
+    }
+  };
+
+  const getCurrencySymbol = (currency: string) => {
+    switch (currency) {
+      case "ILS":
+        return "₪";
+      case "USD":
+        return "$";
+      case "USDT":
+        return "₮";
+      case "BTC":
+        return "₿";
+      case "ETH":
+        return "Ξ";
+      default:
+        return currency;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-zinc-50" dir="rtl">
       {/* Header */}
@@ -300,6 +426,16 @@ export default function SettingsPage() {
               פרופיל
             </button>
             <button
+              onClick={() => setActiveTab("currencies")}
+              className={`pb-4 px-2 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "currencies"
+                  ? "border-orange-500 text-orange-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              מטבעות
+            </button>
+            <button
               onClick={() => setActiveTab("security")}
               className={`pb-4 px-2 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === "security"
@@ -311,6 +447,182 @@ export default function SettingsPage() {
             </button>
           </nav>
         </div>
+
+        {/* Currencies Tab Content */}
+        {activeTab === "currencies" && (
+          <div className="space-y-8">
+            {/* Add Currency Rate Form */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                הוסף שער חליפין
+              </h2>
+              <p className="text-sm text-gray-600 mb-6">
+                הגדר שערי חליפין בין מטבעות שונים. שערים אלו ישמשו להמרת מטבעות בדוחות.
+              </p>
+
+              {rateError && (
+                <div className="rounded-md bg-red-50 p-4 mb-4">
+                  <p className="text-sm text-red-700">{rateError}</p>
+                </div>
+              )}
+
+              {rateSuccess && (
+                <div className="rounded-md bg-green-50 p-4 mb-4">
+                  <p className="text-sm text-green-700">{rateSuccess}</p>
+                </div>
+              )}
+
+              <form onSubmit={handleSaveRate} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* From Currency */}
+                  <div>
+                    <label
+                      htmlFor="fromCurrency"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      ממטבע
+                    </label>
+                    <select
+                      id="fromCurrency"
+                      value={fromCurrency}
+                      onChange={(e) => setFromCurrency(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      disabled={rateSaving}
+                    >
+                      <option value="ILS">₪ - שקל ישראלי</option>
+                      <option value="USD">$ - דולר אמריקאי</option>
+                      <option value="USDT">₮ - טתר (USDT)</option>
+                      <option value="BTC">₿ - ביטקוין</option>
+                      <option value="ETH">Ξ - אתריום</option>
+                    </select>
+                  </div>
+
+                  {/* To Currency */}
+                  <div>
+                    <label
+                      htmlFor="toCurrency"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      למטבע
+                    </label>
+                    <select
+                      id="toCurrency"
+                      value={toCurrency}
+                      onChange={(e) => setToCurrency(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      disabled={rateSaving}
+                    >
+                      <option value="ILS">₪ - שקל ישראלי</option>
+                      <option value="USD">$ - דולר אמריקאי</option>
+                      <option value="USDT">₮ - טתר (USDT)</option>
+                      <option value="BTC">₿ - ביטקוין</option>
+                      <option value="ETH">Ξ - אתריום</option>
+                    </select>
+                  </div>
+
+                  {/* Rate */}
+                  <div>
+                    <label
+                      htmlFor="rate"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      שער חליפין
+                    </label>
+                    <input
+                      type="number"
+                      id="rate"
+                      value={rate}
+                      onChange={(e) => setRate(e.target.value)}
+                      placeholder="לדוגמה: 3.5"
+                      step="0.00000001"
+                      min="0"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      disabled={rateSaving}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      כמה {getCurrencySymbol(toCurrency)} מקבלים עבור 1 {getCurrencySymbol(fromCurrency)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={rateSaving || fromCurrency === toCurrency}
+                    className="px-6 py-2 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {rateSaving ? "שומר..." : "שמור שער"}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Existing Rates List */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                שערי חליפין שהוגדרו
+              </h2>
+
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-orange-500 border-t-transparent"></div>
+                  <p className="mt-2 text-gray-600">טוען שערים...</p>
+                </div>
+              ) : currencyRates.length === 0 ? (
+                <p className="text-gray-600 text-center py-8">
+                  לא הוגדרו שערי חליפין עדיין
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {currencyRates.map((rate) => (
+                    <div
+                      key={rate.id}
+                      className="flex items-center justify-between p-4 rounded-lg border border-gray-200 bg-gray-50"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg font-semibold text-gray-900">
+                            {getCurrencySymbol(rate.fromCurrency)}
+                          </span>
+                          <span className="text-sm text-gray-600">({rate.fromCurrency})</span>
+                        </div>
+                        <svg
+                          className="w-5 h-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M14 5l7 7m0 0l-7 7m7-7H3"
+                          />
+                        </svg>
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg font-semibold text-gray-900">
+                            {getCurrencySymbol(rate.toCurrency)}
+                          </span>
+                          <span className="text-sm text-gray-600">({rate.toCurrency})</span>
+                        </div>
+                        <span className="text-2xl font-bold text-orange-600">
+                          {rate.rate}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteRate(rate.id)}
+                        className="px-3 py-1 text-red-600 text-sm font-medium rounded hover:bg-red-50 transition-colors"
+                      >
+                        מחק
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Security Tab Content */}
         {activeTab === "security" && (

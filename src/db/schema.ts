@@ -97,6 +97,19 @@ export const customTags = pgTable('custom_tags', {
   unique().on(table.userId, table.name),
 ]);
 
+// Currency Conversion Rates Table
+export const currencyRates = pgTable('currency_rates', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  fromCurrency: text('from_currency').notNull(), // e.g., 'USD'
+  toCurrency: text('to_currency').notNull(), // e.g., 'ILS'
+  rate: real('rate').notNull(), // Conversion rate (multiply by this to convert from->to)
+  createdAt: timestamp('created_at').default(sql`NOW()`),
+  updatedAt: timestamp('updated_at').default(sql`NOW()`),
+}, (table) => [
+  unique().on(table.userId, table.fromCurrency, table.toCurrency),
+]);
+
 // Export types
 export type UserProfile = typeof userProfile.$inferSelect;
 export type NewUserProfile = typeof userProfile.$inferInsert;
@@ -110,3 +123,5 @@ export type RateOverride = typeof rateOverrides.$inferSelect;
 export type NewRateOverride = typeof rateOverrides.$inferInsert;
 export type CustomTag = typeof customTags.$inferSelect;
 export type NewCustomTag = typeof customTags.$inferInsert;
+export type CurrencyRate = typeof currencyRates.$inferSelect;
+export type NewCurrencyRate = typeof currencyRates.$inferInsert;
