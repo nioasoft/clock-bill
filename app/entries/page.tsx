@@ -76,6 +76,15 @@ export default function EntriesPage() {
     endDate: "",
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedEntries, setSelectedEntries] = useState<Set<string>>(new Set());
+  const [showBulkEdit, setShowBulkEdit] = useState(false);
+  const [bulkEditData, setBulkEditData] = useState({
+    projectId: "",
+    date: "",
+    isBillable: undefined as boolean | undefined,
+  });
+  const [bulkEditSubmitting, setBulkEditSubmitting] = useState(false);
+  const [bulkEditError, setBulkEditError] = useState("");
 
   useEffect(() => {
     // Fetch current session
@@ -294,6 +303,92 @@ export default function EntriesPage() {
 
   const cancelDelete = () => {
     setEntryToDelete(null);
+  };
+
+  const handleSelectEntry = (entryId: string) => {
+    setSelectedEntries((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(entryId)) {
+        newSet.delete(entryId);
+      } else {
+        newSet.add(entryId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedEntries.size === entries.length) {
+      setSelectedEntries(new Set());
+    } else {
+      setSelectedEntries(new Set(entries.map((e) => e.id)));
+    }
+  };
+
+  const handleBulkEdit = () => {
+    if (selectedEntries.size === 0) return;
+    setBulkEditData({
+      projectId: "",
+      date: "",
+      isBillable: undefined,
+    });
+    setBulkEditError("");
+    setShowBulkEdit(true);
+  };
+
+  const handleBulkEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBulkEditError("");
+    setBulkEditSubmitting(true);
+
+    try {
+      const response = await fetch("/api/entries/bulk", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          entryIds: Array.from(selectedEntries),
+          projectId: bulkEditData.projectId || undefined,
+          date: bulkEditData.date || undefined,
+          isBillable: bulkEditData.isBillable,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Refresh entries to show updated values
+        const params = new URLSearchParams();
+        if (filters.clientId) params.append("clientId", filters.clientId);
+        if (filters.projectId) params.append("projectId", filters.projectId);
+        if (filters.startDate) params.append("startDate", filters.startDate);
+        if (filters.endDate) params.append("endDate", filters.endDate);
+
+        const entriesResponse = await fetch(`/api/entries?${params.toString()}`);
+        const entriesData = await entriesResponse.json();
+
+        if (entriesData.success) {
+          setEntries(entriesData.entries || []);
+        }
+
+        // Close modal and clear selection
+        setShowBulkEdit(false);
+        setSelectedEntries(new Set());
+        setBulkEditData({
+          projectId: "",
+          date: "",
+          isBillable: undefined,
+        });
+      } else {
+        setBulkEditError(data.message || "שגיאה בעדכון הרשומות");
+      }
+    } catch (error) {
+      console.error("Error bulk updating entries:", error);
+      setBulkEditError("שגיאה בעדכון הרשומות");
+    } finally {
+      setBulkEditSubmitting(false);
+    }
   };
 
   const handleFilterChange = (key: string, value: string) => {
@@ -660,38 +755,78 @@ export default function EntriesPage() {
               </button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                      תאריך
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                      תיאור
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                      לקוח
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                      פרויקט
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                      משך זמן
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                      פעולות
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
-                  {entries.map((entry) => (
-                    <tr key={entry.id} className="hover:bg-gray-50">
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm text-gray-900">
-                          {new Date(entry.date).toLocaleDateString("he-IL")}
-                        </div>
-                      </td>
+            <>
+              {/* Bulk Action Bar */}
+              {selectedEntries.size > 0 && (
+                <div className="mb-4 rounded-lg bg-orange-50 p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-medium text-orange-900">
+                      נבחרו {selectedEntries.size} רשומות
+                    </span>
+                    <button
+                      onClick={handleBulkEdit}
+                      className="rounded-lg bg-orange-600 px-4 py-2 text-sm text-white hover:bg-orange-700"
+                    >
+                      ערוך נבחרים
+                    </button>
+                    <button
+                      onClick={() => setSelectedEntries(new Set())}
+                      className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      בטל בחירה
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 w-12">
+                        <input
+                          type="checkbox"
+                          checked={selectedEntries.size === entries.length && entries.length > 0}
+                          onChange={handleSelectAll}
+                          className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                        />
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                        תאריך
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                        תיאור
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                        לקוח
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                        פרויקט
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                        משך זמן
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                        פעולות
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 bg-white">
+                    {entries.map((entry) => (
+                      <tr key={entry.id} className={`hover:bg-gray-50 ${selectedEntries.has(entry.id) ? "bg-orange-50" : ""}`}>
+                        <td className="whitespace-nowrap px-6 py-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedEntries.has(entry.id)}
+                            onChange={() => handleSelectEntry(entry.id)}
+                            className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                          />
+                        </td>
+                        <td className="whitespace-nowrap px-6 py-4">
+                          <div className="text-sm text-gray-900">
+                            {new Date(entry.date).toLocaleDateString("he-IL")}
+                          </div>
+                        </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900 max-w-xs truncate">
                           {entry.description}
@@ -733,7 +868,8 @@ export default function EntriesPage() {
                 </tbody>
               </table>
             </div>
-          )}
+          </>
+        )}
         </div>
       </main>
 
@@ -761,6 +897,103 @@ export default function EntriesPage() {
                 {deleting ? "מוחק..." : "מחק"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Edit Modal */}
+      {showBulkEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="rounded-lg bg-white p-6 shadow-xl max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              ערוך {selectedEntries.size} רשומות
+            </h3>
+            <form onSubmit={handleBulkEditSubmit} className="space-y-4">
+              {bulkEditError && (
+                <div className="rounded-md bg-red-50 p-4 text-sm text-red-800">
+                  {bulkEditError}
+                </div>
+              )}
+
+              <div>
+                <label htmlFor="bulkProjectId" className="block text-sm font-medium text-gray-700 mb-1">
+                  פרויקט (אופציונלי)
+                </label>
+                <select
+                  id="bulkProjectId"
+                  value={bulkEditData.projectId}
+                  onChange={(e) => setBulkEditData({ ...bulkEditData, projectId: e.target.value })}
+                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                  disabled={bulkEditSubmitting}
+                >
+                  <option value="">ללא שינוי</option>
+                  {Object.entries(groupedProjects).map(([clientId, { clientName, projects: clientProjects }]) => (
+                    <optgroup key={clientId} label={clientName}>
+                      {clientProjects.map((project) => (
+                        <option key={project.id} value={project.id}>
+                          {project.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="bulkDate" className="block text-sm font-medium text-gray-700 mb-1">
+                  תאריך (אופציונלי)
+                </label>
+                <input
+                  type="date"
+                  id="bulkDate"
+                  value={bulkEditData.date}
+                  onChange={(e) => setBulkEditData({ ...bulkEditData, date: e.target.value })}
+                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                  disabled={bulkEditSubmitting}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="bulkIsBillable" className="block text-sm font-medium text-gray-700 mb-1">
+                  ניתן לחיוב (אופציונלי)
+                </label>
+                <select
+                  id="bulkIsBillable"
+                  value={bulkEditData.isBillable === undefined ? "" : bulkEditData.isBillable ? "true" : "false"}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setBulkEditData({
+                      ...bulkEditData,
+                      isBillable: value === "" ? undefined : value === "true",
+                    });
+                  }}
+                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                  disabled={bulkEditSubmitting}
+                >
+                  <option value="">ללא שינוי</option>
+                  <option value="true">כן</option>
+                  <option value="false">לא</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowBulkEdit(false)}
+                  className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                  disabled={bulkEditSubmitting}
+                >
+                  ביטול
+                </button>
+                <button
+                  type="submit"
+                  disabled={bulkEditSubmitting}
+                  className="rounded-lg bg-orange-600 px-4 py-2 text-white hover:bg-orange-700 disabled:opacity-50"
+                >
+                  {bulkEditSubmitting ? "מעדכן..." : "עדכן רשומות"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
