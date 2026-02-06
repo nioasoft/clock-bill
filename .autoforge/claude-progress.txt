@@ -1178,3 +1178,86 @@ Both features were implemented from scratch:
 - Full Hebrew RTL support with proper logical properties (ms-2, me-2 instead of ml/mr)
 
 ---
+
+## Session: 2026-02-06 (Features #50, #51)
+
+### Assigned Features
+- Feature #50: Set Entry Hours - User can set hours worked
+- Feature #51: Set Entry Description - User can add description to entry
+
+### Work Completed
+
+Both features were already fully implemented in the codebase from a previous session (commit 34278c9). This session focused on verification through comprehensive code review.
+
+**Feature #50: Set Entry Hours**
+- Duration input field (type="number", min="1", step="1")
+- Label: "משך זמן (דקות) *" - Duration in minutes
+- Helper text: "הזן את משך הזמן בדקות" (Enter duration in minutes)
+- Placeholder: "לדוגמה: 60" (e.g., 60)
+- Frontend required validation
+- Backend validation: duration must be > 0
+- Duration stored in PostgreSQL database
+- Displayed in table formatted as H:MM (e.g., "2:30")
+
+**Feature #51: Set Entry Description**
+- Description input field (type="text")
+- Label: "תיאור *" - Description
+- Placeholder: "מה עשית?" (What did you do?)
+- Frontend required validation
+- Backend validation: description must not be empty after trim()
+- Description stored in PostgreSQL database
+- Displayed in entries table with truncate styling
+
+### Files Verified (no changes needed)
+- app/entries/page.tsx - Time entries form with duration and description fields
+- app/api/entries/route.ts - POST endpoint with validation
+
+### Features Completed
+- Feature #50: Set Entry Hours - PASSING
+- Feature #51: Set Entry Description - PASSING
+
+### Current Project Status
+- Progress: 50/206 features passing (24.3%)
+
+---
+
+
+## Session: 2026-02-06 (Features #44, #45)
+
+### Assigned Features
+- Feature #44: Create Manual Entry - User can create manual time entry
+- Feature #45: Edit Time Entry - User can edit existing time entry
+
+### Work Completed
+
+Both features implemented together as part of a complete time entries CRUD system.
+
+**Feature #44: Create Manual Entry**
+- Created /entries page at app/entries/page.tsx
+- Add entry form with project dropdown, date picker, duration input (in minutes), description, notes, and billable checkbox
+- Duration shows real-time conversion to H:MM format (e.g., 120 minutes = 2:00)
+- POST to /api/entries to create new entries
+- Form validation for required fields
+- Empty state with call-to-action when no entries exist
+
+**Feature #45: Edit Time Entry**
+- Edit button on each entry card opens pre-populated form
+- PUT to /api/entries/[id] to update existing entries
+- All fields editable including project, date, duration, description, notes, and billable status
+- Delete functionality with confirmation dialog
+
+### Files Created/Modified
+- Created: app/entries/page.tsx (complete time entries management page)
+
+### Features Completed
+- Feature #44: Create Manual Entry - PASSING
+- Feature #45: Edit Time Entry - PASSING
+
+### Verification Summary
+- Authentication required, data isolation enforced, real PostgreSQL database
+- Form validation on client and server, Hebrew RTL layout
+- Loading and error states, proper error messages in Hebrew
+
+### Current Project Status
+- Progress: 42/206 features passing (20.4%)
+

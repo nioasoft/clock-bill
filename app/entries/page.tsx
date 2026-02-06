@@ -16,6 +16,11 @@ interface Project {
   clientName: string;
 }
 
+interface Client {
+  id: string;
+  name: string;
+}
+
 interface TimeEntry {
   id: string;
   projectId: string;
@@ -48,6 +53,8 @@ export default function EntriesPage() {
   const [entriesLoading, setEntriesLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(true);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [clientsLoading, setClientsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState<TimeEntry | null>(null);
   const [formData, setFormData] = useState({
@@ -62,6 +69,13 @@ export default function EntriesPage() {
   const [submitting, setSubmitting] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState<TimeEntry | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [filters, setFilters] = useState({
+    clientId: "",
+    projectId: "",
+    startDate: "",
+    endDate: "",
+  });
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     // Fetch current session
@@ -88,6 +102,29 @@ export default function EntriesPage() {
   }, [router]);
 
   useEffect(() => {
+    // Fetch clients when user is loaded
+    const fetchClients = async () => {
+      if (!user) return;
+
+      try {
+        setClientsLoading(true);
+        const response = await fetch("/api/clients");
+        const data = await response.json();
+
+        if (data.success) {
+          setClients(data.clients || []);
+        }
+      } catch (error) {
+        console.error("Error fetching clients:", error);
+      } finally {
+        setClientsLoading(false);
+      }
+    };
+
+    fetchClients();
+  }, [user]);
+
+  useEffect(() => {
     // Fetch projects when user is loaded
     const fetchProjects = async () => {
       if (!user) return;
@@ -111,13 +148,21 @@ export default function EntriesPage() {
   }, [user]);
 
   useEffect(() => {
-    // Fetch entries when user is loaded
+    // Fetch entries when user is loaded or filters change
     const fetchEntries = async () => {
       if (!user) return;
 
       try {
         setEntriesLoading(true);
-        const response = await fetch("/api/entries");
+
+        // Build query parameters for filtering
+        const params = new URLSearchParams();
+        if (filters.clientId) params.append("clientId", filters.clientId);
+        if (filters.projectId) params.append("projectId", filters.projectId);
+        if (filters.startDate) params.append("startDate", filters.startDate);
+        if (filters.endDate) params.append("endDate", filters.endDate);
+
+        const response = await fetch(`/api/entries?${params.toString()}`);
         const data = await response.json();
 
         if (data.success) {
@@ -131,7 +176,7 @@ export default function EntriesPage() {
     };
 
     fetchEntries();
-  }, [user]);
+  }, [user, filters]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,6 +296,19 @@ export default function EntriesPage() {
     setEntryToDelete(null);
   };
 
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const clearFilters = () => {
+    setFilters({ clientId: "", projectId: "", startDate: "", endDate: "" });
+  };
+
+  const getFilteredProjects = () => {
+    if (!filters.clientId) return projects;
+    return projects.filter((p) => p.clientId === filters.clientId);
+  };
+
   const formatDuration = (minutes: number): string => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
@@ -303,6 +361,150 @@ export default function EntriesPage() {
 
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Filters Section */}
+        <div className="mb-6 rounded-lg bg-white p-4 shadow">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">סינון</h2>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="text-sm text-orange-600 hover:text-orange-700"
+            >
+              {showFilters ? "הסתר סינון" : "הצג סינון"}
+            </button>
+          </div>
+
+          {showFilters && (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div>
+                <label htmlFor="filterClient" className="block text-sm font-medium text-gray-700 mb-1">
+                  לקוח
+                </label>
+                <select
+                  id="filterClient"
+                  value={filters.clientId}
+                  onChange={(e) => {
+                    handleFilterChange("clientId", e.target.value);
+                    handleFilterChange("projectId", ""); // Reset project when client changes
+                  }}
+                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                  disabled={clientsLoading}
+                >
+                  <option value="">כל הלקוחות</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="filterProject" className="block text-sm font-medium text-gray-700 mb-1">
+                  פרויקט
+                </label>
+                <select
+                  id="filterProject"
+                  value={filters.projectId}
+                  onChange={(e) => handleFilterChange("projectId", e.target.value)}
+                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                  disabled={projectsLoading}
+                >
+                  <option value="">כל הפרויקטים</option>
+                  {getFilteredProjects().map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="filterStartDate" className="block text-sm font-medium text-gray-700 mb-1">
+                  תאריך התחלה
+                </label>
+                <input
+                  type="date"
+                  id="filterStartDate"
+                  value={filters.startDate}
+                  onChange={(e) => handleFilterChange("startDate", e.target.value)}
+                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="filterEndDate" className="block text-sm font-medium text-gray-700 mb-1">
+                  תאריך סיום
+                </label>
+                <input
+                  type="date"
+                  id="filterEndDate"
+                  value={filters.endDate}
+                  onChange={(e) => handleFilterChange("endDate", e.target.value)}
+                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                />
+              </div>
+
+              <div className="sm:col-span-2 lg:col-span-4 flex justify-end">
+                <button
+                  onClick={clearFilters}
+                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  נקה סינון
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Active filters display */}
+          {(filters.clientId || filters.projectId || filters.startDate || filters.endDate) && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {filters.clientId && (
+                <span className="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-sm text-orange-800">
+                  לקוח: {clients.find((c) => c.id === filters.clientId)?.name}
+                  <button
+                    onClick={() => handleFilterChange("clientId", "")}
+                    className="me-1 text-orange-600 hover:text-orange-700"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+              {filters.projectId && (
+                <span className="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-sm text-orange-800">
+                  פרויקט: {projects.find((p) => p.id === filters.projectId)?.name}
+                  <button
+                    onClick={() => handleFilterChange("projectId", "")}
+                    className="me-1 text-orange-600 hover:text-orange-700"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+              {filters.startDate && (
+                <span className="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-sm text-orange-800">
+                  מ: {new Date(filters.startDate).toLocaleDateString("he-IL")}
+                  <button
+                    onClick={() => handleFilterChange("startDate", "")}
+                    className="me-1 text-orange-600 hover:text-orange-700"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+              {filters.endDate && (
+                <span className="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-sm text-orange-800">
+                  עד: {new Date(filters.endDate).toLocaleDateString("he-IL")}
+                  <button
+                    onClick={() => handleFilterChange("endDate", "")}
+                    className="me-1 text-orange-600 hover:text-orange-700"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+            </div>
+          )}
+        </div>
         {/* Add/Edit Entry Form */}
         {showForm && (
           <div className="mb-8 rounded-lg bg-white p-6 shadow">
