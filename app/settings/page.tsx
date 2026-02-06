@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -11,20 +11,74 @@ interface Session {
   is_current: boolean;
 }
 
+interface Profile {
+  id: string;
+  userId: string;
+  businessName: string | null;
+  logoUrl: string | null;
+  phone: string | null;
+  address: string | null;
+  taxId: string | null;
+  defaultCurrency: string;
+  preferredPdfTemplate: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function SettingsPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"profile" | "security">("security");
+  const [activeTab, setActiveTab] = useState<"profile" | "security">("profile");
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [logoLoading, setLogoLoading] = useState(false);
   const [error, setError] = useState("");
+  const [profileError, setProfileError] = useState("");
+  const [logoError, setLogoError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [logoutAllLoading, setLogoutAllLoading] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Profile form state
+  const [businessName, setBusinessName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [taxId, setTaxId] = useState("");
 
   useEffect(() => {
     if (activeTab === "security") {
       fetchSessions();
+    } else if (activeTab === "profile") {
+      fetchProfile();
     }
   }, [activeTab]);
+
+  // Fetch profile data
+  const fetchProfile = async () => {
+    setLoading(true);
+    setProfileError("");
+    try {
+      const response = await fetch("/api/profile");
+      const data = await response.json();
+
+      if (data.success) {
+        setProfile(data.profile);
+        // Initialize form state
+        setBusinessName(data.profile.businessName || "");
+        setPhone(data.profile.phone || "");
+        setAddress(data.profile.address || "");
+        setTaxId(data.profile.taxId || "");
+      } else {
+        setProfileError(data.message || "שגיאה בטעינת הפרופיל");
+      }
+    } catch {
+      setProfileError("שגיאת תקשורת. אנא נסה שוב.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchSessions = async () => {
     setLoading(true);
@@ -84,6 +138,109 @@ export default function SettingsPage() {
       setShowConfirmDialog(false);
     } finally {
       setLogoutAllLoading(false);
+    }
+  };
+
+  // Save profile changes
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileLoading(true);
+    setProfileError("");
+    setSuccessMessage("");
+
+    try {
+      const response = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          businessName: businessName || null,
+          phone: phone || null,
+          address: address || null,
+          taxId: taxId || null,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setProfile(data.profile);
+        setSuccessMessage("הפרטים נשמרו בהצלחה!");
+        // Clear success message after 3 seconds
+        setTimeout(() => setSuccessMessage(""), 3000);
+      } else {
+        setProfileError(data.message || "שגיאה בשמירת הפרטים");
+      }
+    } catch {
+      setProfileError("שגיאת תקשורת. אנא נסה שוב.");
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  // Handle logo upload
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setLogoLoading(true);
+    setLogoError("");
+    setSuccessMessage("");
+
+    try {
+      const formData = new FormData();
+      formData.append("logo", file);
+
+      const response = await fetch("/api/profile/logo", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setProfile((prev) => (prev ? { ...prev, logoUrl: data.logoUrl } : null));
+        setSuccessMessage("הלוגו הועלה בהצלחה!");
+        setTimeout(() => setSuccessMessage(""), 3000);
+      } else {
+        setLogoError(data.message || "שגיאה בהעלאת הלוגו");
+      }
+    } catch {
+      setLogoError("שגיאת תקשורת. אנא נסה שוב.");
+    } finally {
+      setLogoLoading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  // Handle logo removal
+  const handleRemoveLogo = async () => {
+    if (!confirm("האם אתה בטוח שברצונך להסיר את הלוגו?")) return;
+
+    setLogoLoading(true);
+    setLogoError("");
+    setSuccessMessage("");
+
+    try {
+      const response = await fetch("/api/profile/logo", {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setProfile((prev) => (prev ? { ...prev, logoUrl: null } : null));
+        setSuccessMessage("הלוגו הוסר בהצלחה!");
+        setTimeout(() => setSuccessMessage(""), 3000);
+      } else {
+        setLogoError(data.message || "שגיאה בהסרת הלוגו");
+      }
+    } catch {
+      setLogoError("שגיאת תקשורת. אנא נסה שוב.");
+    } finally {
+      setLogoLoading(false);
     }
   };
 
@@ -231,13 +388,241 @@ export default function SettingsPage() {
 
         {/* Profile Tab Content */}
         {activeTab === "profile" && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              פרטי פרופיל
-            </h2>
-            <p className="text-gray-600">
-              ניהול פרטי פרופיל יהיה זמין בקרוב.
-            </p>
+          <div className="space-y-8">
+            {/* Logo Upload Section */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                לוגו עסקי
+              </h2>
+              <p className="text-sm text-gray-600 mb-6">
+                הלוגו יופיע בדוחות PDF שתייצרו. מומלץ להשתמש בתמונה ריבועית בגודל 200x200 פיקסלים לפחות.
+              </p>
+
+              {logoError && (
+                <div className="rounded-md bg-red-50 p-4 mb-4">
+                  <p className="text-sm text-red-700">{logoError}</p>
+                </div>
+              )}
+
+              <div className="flex items-center gap-6">
+                {/* Logo Preview */}
+                <div className="w-32 h-32 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden">
+                  {profile?.logoUrl ? (
+                    <img
+                      src={profile.logoUrl}
+                      alt="לוגו עסקי"
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <div className="text-center">
+                      <svg
+                        className="w-10 h-10 text-gray-400 mx-auto mb-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <span className="text-xs text-gray-500">אין לוגו</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Upload Actions */}
+                <div className="space-y-3">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={handleLogoUpload}
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={logoLoading}
+                    className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {logoLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                        מעלה...
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                          />
+                        </svg>
+                        {profile?.logoUrl ? "החלף לוגו" : "העלה לוגו"}
+                      </>
+                    )}
+                  </button>
+
+                  {profile?.logoUrl && (
+                    <button
+                      onClick={handleRemoveLogo}
+                      disabled={logoLoading}
+                      className="flex items-center gap-2 px-4 py-2 text-red-600 text-sm font-medium rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                      הסר לוגו
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-500 mt-4">
+                פורמטים נתמכים: JPEG, PNG, GIF, WebP. גודל מקסימלי: 5MB.
+              </p>
+            </div>
+
+            {/* Business Details Form */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                פרטי עסק
+              </h2>
+              <p className="text-sm text-gray-600 mb-6">
+                פרטים אלו יופיעו בדוחות ובחשבוניות שתייצרו.
+              </p>
+
+              {profileError && (
+                <div className="rounded-md bg-red-50 p-4 mb-4">
+                  <p className="text-sm text-red-700">{profileError}</p>
+                </div>
+              )}
+
+              {successMessage && (
+                <div className="rounded-md bg-green-50 p-4 mb-4">
+                  <p className="text-sm text-green-700">{successMessage}</p>
+                </div>
+              )}
+
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-orange-500 border-t-transparent"></div>
+                  <p className="mt-2 text-gray-600">טוען פרטים...</p>
+                </div>
+              ) : (
+                <form onSubmit={handleSaveProfile} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Business Name */}
+                    <div>
+                      <label
+                        htmlFor="businessName"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        שם העסק
+                      </label>
+                      <input
+                        type="text"
+                        id="businessName"
+                        value={businessName}
+                        onChange={(e) => setBusinessName(e.target.value)}
+                        placeholder="לדוגמה: חברת הייעוץ שלי"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      />
+                    </div>
+
+                    {/* Phone */}
+                    <div>
+                      <label
+                        htmlFor="phone"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        טלפון
+                      </label>
+                      <input
+                        type="tel"
+                        id="phone"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="לדוגמה: 050-1234567"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      />
+                    </div>
+
+                    {/* Tax ID */}
+                    <div>
+                      <label
+                        htmlFor="taxId"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        ח.פ. / מספר עוסק
+                      </label>
+                      <input
+                        type="text"
+                        id="taxId"
+                        value={taxId}
+                        onChange={(e) => setTaxId(e.target.value)}
+                        placeholder="לדוגמה: 123456789"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      />
+                    </div>
+
+                    {/* Address */}
+                    <div className="md:col-span-2">
+                      <label
+                        htmlFor="address"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        כתובת
+                      </label>
+                      <textarea
+                        id="address"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder="לדוגמה: רחוב הרצל 1, תל אביב"
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={profileLoading}
+                      className="px-6 py-2 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {profileLoading ? (
+                        <span className="flex items-center gap-2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                          שומר...
+                        </span>
+                      ) : (
+                        "שמור שינויים"
+                      )}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           </div>
         )}
       </main>

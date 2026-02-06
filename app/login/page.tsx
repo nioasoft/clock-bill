@@ -101,7 +101,15 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <div className="text-center">
+          <div className="text-center space-y-2">
+            <p className="text-sm text-gray-600">
+              <Link
+                href="/forgot-password"
+                className="font-medium text-orange-600 hover:text-orange-500"
+              >
+                שכחת סיסמה?
+              </Link>
+            </p>
             <p className="text-sm text-gray-600">
               אין לך חשבון עדיין?{" "}
               <Link

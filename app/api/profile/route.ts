@@ -52,7 +52,7 @@ export async function GET(): Promise<NextResponse> {
     }
 
     // Get user profile
-    const result = await query<Profile>(
+    const result = await query<Record<string, unknown>>(
       `SELECT id, user_id as "userId", business_name as "businessName",
               logo_url as "logoUrl", phone, address, tax_id as "taxId",
               default_currency as "defaultCurrency", preferred_pdf_template as "preferredPdfTemplate",
@@ -147,7 +147,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
     values.push(user.id);
 
     // Execute update
-    const result = await query<Profile>(
+    const result = await query<Record<string, unknown>>(
       `UPDATE user_profiles
        SET ${updates.join(", ")}
        WHERE user_id = $${paramIndex}

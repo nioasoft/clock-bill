@@ -138,3 +138,50 @@ export const COOKIE_OPTIONS = {
   maxAge: 60 * 60 * 24 * 7, // 7 days
   path: "/",
 };
+
+/**
+ * User object returned by getUser
+ */
+export interface User {
+  id: string;
+  email: string;
+}
+
+/**
+ * Get the current authenticated user from session cookie
+ * Returns null if not authenticated
+ */
+export async function getUser(): Promise<User | null> {
+  try {
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get("session")?.value;
+
+    if (!sessionToken) {
+      return null;
+    }
+
+    // Import query here to avoid circular dependency issues
+    const { query } = await import("./db");
+
+    // Get user from session
+    const result = await query<{ user_id: string; email: string }>(
+      `SELECT s.user_id, u.email
+       FROM sessions s
+       JOIN users u ON s.user_id = u.id
+       WHERE s.token = $1 AND s.expires_at > NOW()`,
+      [sessionToken]
+    );
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    return {
+      id: result.rows[0].user_id,
+      email: result.rows[0].email,
+    };
+  } catch {
+    return null;
+  }
+}

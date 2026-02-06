@@ -220,6 +220,27 @@ export async function initSchema(): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_custom_tags_user_id ON custom_tags(user_id)
   `);
 
+  // Password reset tokens table
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      token TEXT UNIQUE NOT NULL,
+      expires_at TIMESTAMP NOT NULL,
+      used BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP DEFAULT NOW(),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_token ON password_reset_tokens(token)
+  `);
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user_id ON password_reset_tokens(user_id)
+  `);
+
   // Insert default tags if they don't exist
   const defaultTags = [
     { name: "פיתוח", color: "#3b82f6" },
