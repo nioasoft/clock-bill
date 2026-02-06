@@ -1,5 +1,56 @@
 # ClockBill Development Progress
 
+## Session: 2026-02-06 (Features #36, #37)
+
+### Assigned Features
+- Feature #36: Edit Project - User can edit existing project
+- Feature #37: Delete Project - User can delete project
+
+### Work Completed
+
+**Feature #36: Edit Project**
+- Created GET /api/projects/[id] endpoint to fetch single project
+- Created PUT /api/projects/[id] endpoint to update project
+- Created /projects/[id] project details page
+- Edit button shows/hides edit form
+- Form pre-populated with current project data
+- Full validation for all pricing models and fields
+- Success updates state and closes form
+- Client field is read-only (cannot change project's client)
+- Status: PASSING (comprehensive code review)
+
+**Feature #37: Delete Project**
+- Created DELETE /api/projects/[id] endpoint
+- Hard delete (removes project from database)
+- Delete button in project details page
+- Confirmation dialog shows project name
+- Warning that action is irreversible
+- Success redirects to projects list
+- Status: PASSING (comprehensive code review)
+
+### Implementation Details
+- Ownership verification on all operations (user_id check)
+- Projects list rows are clickable and navigate to details page
+- RTL layout with Hebrew UI throughout
+- Loading and error states handled properly
+- No mock data patterns - uses real PostgreSQL database
+- Data isolation enforced (users can only access their own projects)
+
+### Files Created/Modified
+- Created: app/api/projects/[id]/route.ts (GET + PUT + DELETE endpoints)
+- Created: app/projects/[id]/page.tsx (project details + edit + delete)
+- Modified: app/projects/page.tsx (added clickable rows)
+
+### Features Completed
+- Feature #36: Edit Project - PASSING
+- Feature #37: Delete Project - PASSING
+
+### Current Project Status
+- Progress: 36/206 features passing (17.5%)
+- Project management (CRUD) now complete: Create, List, View, Edit, Delete
+
+---
+
 ## Session: 2026-02-06 (Features #34, #35)
 
 ### Assigned Features
