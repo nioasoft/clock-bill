@@ -7,6 +7,9 @@ import { query, initSchema } from "../../../../lib/db";
 import { hashPassword, generateSessionToken, COOKIE_OPTIONS } from "../../../../lib/auth";
 import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
+import { createLogger } from "../../../../lib/logger";
+
+const logger = createLogger("auth:register");
 
 export interface RegisterRequest {
   email: string;
@@ -27,9 +30,11 @@ export interface RegisterResponse {
  * POST handler - register a new user
  */
 export async function POST(request: Request): Promise<NextResponse> {
+  let email: string | undefined;
   try {
     const body: RegisterRequest = await request.json();
-    const { email, password, businessName } = body;
+    email = body.email;
+    const { password, businessName } = body;
 
     // Validate input
     if (!email || !password) {
@@ -65,6 +70,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
 
     if (existingResult.rows.length > 0) {
+      logger.warn("Registration attempted with existing email", { email });
       return NextResponse.json(
         { success: false, message: "User with this email already exists" },
         { status: 409 }
@@ -117,7 +123,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       },
     });
   } catch (error) {
-    console.error("Registration error:", error);
+    logger.error("Registration failed", error, email ? { email } : undefined);
     return NextResponse.json(
       { success: false, message: "Internal server error" },
       { status: 500 }

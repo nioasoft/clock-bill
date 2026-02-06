@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { getUser } from "@/lib/auth";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("timer:start");
 
 /**
  * POST /api/timer/start
  * Starts a new timer by creating a time entry with start_time
  */
 export async function POST(request: NextRequest) {
+  let userId: string | undefined;
+  let projectId: string | undefined;
   try {
     // Get authenticated user
     const user = await getUser();
@@ -14,11 +19,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = user.id;
+    userId = user.id;
 
     // Parse request body
     const body = await request.json();
-    const { projectId, description } = body;
+    projectId = body.projectId;
+    const { description } = body;
 
     // Validate required fields
     if (!projectId) {
@@ -48,6 +54,7 @@ export async function POST(request: NextRequest) {
     );
 
     if (runningTimer.rows.length > 0) {
+      logger.warn("Timer start attempted while another timer is running", { userId });
       return NextResponse.json(
         { success: false, message: "יש טיימר פעיל כבר. עצור אותו תחילה." },
         { status: 400 }
@@ -77,7 +84,7 @@ export async function POST(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error("Error starting timer:", error);
+    logger.error("Failed to start timer", error, userId && projectId ? { userId, projectId } : undefined);
     return NextResponse.json(
       { success: false, message: "שגיאה בהתחלת הטיימר" },
       { status: 500 }
