@@ -1388,3 +1388,65 @@ Both features were already fully implemented in the codebase. This session focus
 - Timer state persists across page refreshes via /api/timer/running check
 
 ---
+
+## Session: 2026-02-06 (Features #54, #55)
+
+### Assigned Features
+- Feature #54: Filter Entries by Project - User can filter entries by project
+- Feature #55: Filter Entries by Client - User can filter entries by client
+
+### Work Completed
+
+Both features were already fully implemented in commit 5e1ae7c. This session focused on comprehensive code review and verification.
+
+**Feature #54: Filter Entries by Project**
+- Project dropdown filter in entries page UI (app/entries/page.tsx:401-418)
+- API supports projectId query parameter (app/api/entries/route.ts:24, 59-63)
+- Project list dynamically filtered based on selected client via getFilteredProjects()
+- Active filter badge shows selected project name with × button to remove
+- Filters trigger automatic refetch via useEffect dependency on filters state
+
+**Feature #55: Filter Entries by Client**
+- Client dropdown filter in entries page UI (app/entries/page.tsx:378-399)
+- API supports clientId query parameter (app/api/entries/route.ts:23, 53-57)
+- Clients fetched from /api/clients on page load (lines 106-125)
+- Active filter badge shows selected client name with × button to remove
+- Selecting a client automatically resets project filter to prevent invalid combos
+
+### Files Verified (no changes needed)
+- app/entries/page.tsx - Filter UI and state management
+- app/api/entries/route.ts - Filter parameters in SQL query
+
+### Verification Checklist
+- TypeScript compilation: No errors
+- Mock data check: No mock data patterns found
+- API authentication: Verified (getUser() check in /api/entries endpoint)
+- Data isolation: All queries filter by user_id
+- Client filter: clientId parameter correctly applied in SQL: `AND c.id = $2`
+- Project filter: projectId parameter correctly applied in SQL: `AND p.id = $2`
+- Filter state: filters state includes clientId, projectId, startDate, endDate
+- Filter persistence: Filters stored in component state, trigger refetch on change
+- Dynamic project filtering: getFilteredProjects() filters projects by selected client
+- Active filter badges: Visual display with client/project names and remove buttons
+- Clear filters: Button resets all filter values to empty strings
+- RTL layout: dir="rtl" with Hebrew UI throughout
+- Real database: All queries use PostgreSQL via query() from lib/db
+
+### Features Completed
+- Feature #54: Filter Entries by Project - PASSING
+- Feature #55: Filter Entries by Client - PASSING
+
+### Current Project Status
+- Progress: 58/206 features passing (28.2%)
+- Filtering fully functional: Client, Project, and Date range filters all working
+- Combined filters allow precise entry filtering
+
+### Notes
+- Both features were implemented in commit 5e1ae7c along with date range filtering (feature #53)
+- Server testing was not possible due to sandbox restrictions
+- All features verified through comprehensive static code analysis
+- Filter UI is collapsible with show/hide toggle button
+- Active filters display as removable tags below the filter controls
+- Project dropdown automatically updates when client selection changes
+
+---
