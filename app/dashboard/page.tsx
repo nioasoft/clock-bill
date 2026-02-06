@@ -72,6 +72,7 @@ export default function DashboardPage() {
   const [pausingTimer, setPausingTimer] = useState(false);
   const [resumingTimer, setResumingTimer] = useState(false);
   const [elapsedTime, setElapsedTime] = useState("0:00");
+  const [lastApiUpdate, setLastApiUpdate] = useState<Date>(new Date());
   const [showStopTimerModal, setShowStopTimerModal] = useState(false);
   const [stopTimerDescription, setStopTimerDescription] = useState("");
   const [stopTimerHours, setStopTimerHours] = useState("");
@@ -109,6 +110,7 @@ export default function DashboardPage() {
 
         if (data.success && data.running) {
           setRunningTimer(data.running);
+          setLastApiUpdate(new Date());
         } else {
           setRunningTimer(null);
         }
@@ -127,28 +129,36 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    // Update elapsed time display
+    // Update elapsed time display with smooth real-time ticking
     if (!runningTimer) {
       setElapsedTime("0:00");
       return;
     }
 
     const updateElapsed = () => {
-      const now = new Date();
-      const start = new Date(runningTimer.startTime);
-      let elapsedMs = now.getTime() - start.getTime();
+      // Base elapsed time from API (accounts for pauses)
+      const baseElapsedSeconds = runningTimer.elapsedMinutes * 60 + runningTimer.elapsedSeconds;
 
-      // Note: The API already accounts for paused time, so we use the values returned
-      // This is just for display formatting
-      const minutes = runningTimer.elapsedMinutes;
-      const seconds = runningTimer.elapsedSeconds;
-      setElapsedTime(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+      if (runningTimer.pausedAt) {
+        // Timer is paused - show static time
+        const minutes = runningTimer.elapsedMinutes;
+        const seconds = runningTimer.elapsedSeconds;
+        setElapsedTime(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+      } else {
+        // Timer is running - add time elapsed since last API update for smooth ticking
+        const now = new Date();
+        const timeSinceLastUpdate = Math.floor((now.getTime() - lastApiUpdate.getTime()) / 1000);
+        const totalSeconds = baseElapsedSeconds + timeSinceLastUpdate;
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        setElapsedTime(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+      }
     };
 
     updateElapsed();
     const interval = setInterval(updateElapsed, 1000);
     return () => clearInterval(interval);
-  }, [runningTimer]);
+  }, [runningTimer, lastApiUpdate]);
 
   useEffect(() => {
     // Update browser tab title with timer
@@ -156,9 +166,24 @@ export default function DashboardPage() {
 
     if (runningTimer) {
       const updateTitle = () => {
-        const minutes = runningTimer.elapsedMinutes;
-        const seconds = runningTimer.elapsedSeconds;
-        document.title = `${minutes}:${seconds.toString().padStart(2, '0')} - שעון`;
+        let minutes: number;
+        let seconds: number;
+
+        if (runningTimer.pausedAt) {
+          // Timer is paused - show static time
+          minutes = runningTimer.elapsedMinutes;
+          seconds = runningTimer.elapsedSeconds;
+        } else {
+          // Timer is running - add time elapsed since last API update
+          const baseElapsedSeconds = runningTimer.elapsedMinutes * 60 + runningTimer.elapsedSeconds;
+          const now = new Date();
+          const timeSinceLastUpdate = Math.floor((now.getTime() - lastApiUpdate.getTime()) / 1000);
+          const totalSeconds = baseElapsedSeconds + timeSinceLastUpdate;
+          minutes = Math.floor(totalSeconds / 60);
+          seconds = totalSeconds % 60;
+        }
+
+        document.title = `${minutes}:${seconds.toString().padStart(2, '0')} - ${runningTimer.pausedAt ? 'מושהה - ' : ''}שעון`;
       };
 
       updateTitle();
@@ -171,7 +196,7 @@ export default function DashboardPage() {
       // Restore original title when timer is not running
       document.title = originalTitle;
     }
-  }, [runningTimer]);
+  }, [runningTimer, lastApiUpdate]);
 
   useEffect(() => {
     // Fetch projects for the timer modal
@@ -436,14 +461,35 @@ export default function DashboardPage() {
             ) : runningTimer ? (
               <div className="mt-4">
                 <p className="text-3xl font-bold text-gray-900">{elapsedTime}</p>
-                <p className="mt-2 text-sm text-gray-600">טיימר פעיל</p>
-                <button
-                  onClick={handleStopTimer}
-                  disabled={stoppingTimer}
-                  className="mt-4 w-full rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
-                >
-                  {stoppingTimer ? "עוצר..." : "עצור טיימר"}
-                </button>
+                <p className="mt-2 text-sm text-gray-600">
+                  {runningTimer.pausedAt ? "טיימר מושהה" : "טיימר פעיל"}
+                </p>
+                <div className="mt-4 flex gap-2">
+                  {runningTimer.pausedAt ? (
+                    <button
+                      onClick={handleResumeTimer}
+                      disabled={resumingTimer}
+                      className="flex-1 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                    >
+                      {resumingTimer ? "מחדש..." : "חדש טיימר"}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handlePauseTimer}
+                      disabled={pausingTimer}
+                      className="flex-1 rounded-md bg-yellow-600 px-4 py-2 text-sm font-medium text-white hover:bg-yellow-700 disabled:opacity-50"
+                    >
+                      {pausingTimer ? "משהה..." : "השהה טיימר"}
+                    </button>
+                  )}
+                  <button
+                    onClick={handleStopTimer}
+                    disabled={stoppingTimer}
+                    className="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                  >
+                    {stoppingTimer ? "עוצר..." : "עצור טיימר"}
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="mt-4">
