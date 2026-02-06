@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { validateEmail, validateRequired } from "@/lib/validation";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,9 +12,32 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Validation errors
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // Clear previous errors
+    setEmailError(null);
+    setPasswordError(null);
+
+    // Validate email
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      setEmailError(emailValidation.error);
+      return;
+    }
+
+    // Validate password (required)
+    const passwordValidation = validateRequired(password, "הסיסמה");
+    if (!passwordValidation.isValid) {
+      setPasswordError(passwordValidation.error);
+      return;
+    }
+
     setLoading(true);
 
     try {

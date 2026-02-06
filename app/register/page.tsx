@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { validateEmail, validatePassword, validatePasswordConfirm } from "@/lib/validation";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -13,17 +14,38 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Validation errors
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (password !== confirmPassword) {
-      setError("הסיסמאות אינן תואמות");
+    // Clear previous errors
+    setEmailError(null);
+    setPasswordError(null);
+    setConfirmPasswordError(null);
+
+    // Validate email
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      setEmailError(emailValidation.error);
       return;
     }
 
-    if (password.length < 8) {
-      setError("הסיסמה חייבת להכיל לפחות 8 תווים");
+    // Validate password
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      setPasswordError(passwordValidation.error);
+      return;
+    }
+
+    // Validate password confirmation
+    const confirmValidation = validatePasswordConfirm(password, confirmPassword);
+    if (!confirmValidation.isValid) {
+      setConfirmPasswordError(confirmValidation.error);
       return;
     }
 
@@ -75,10 +97,18 @@ export default function RegisterPage() {
                 type="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setEmailError(null);
+                }}
+                className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-orange-500 ${
+                  emailError
+                    ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                    : "border-gray-300 focus:border-orange-500"
+                }`}
                 placeholder="your@email.com"
               />
+              {emailError && <p className="mt-1 text-sm text-red-600">{emailError}</p>}
             </div>
 
             <div>
@@ -106,10 +136,18 @@ export default function RegisterPage() {
                 type="password"
                 required
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setPasswordError(null);
+                }}
+                className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-orange-500 ${
+                  passwordError
+                    ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                    : "border-gray-300 focus:border-orange-500"
+                }`}
                 placeholder="לפחות 8 תווים"
               />
+              {passwordError && <p className="mt-1 text-sm text-red-600">{passwordError}</p>}
             </div>
 
             <div>
@@ -122,10 +160,20 @@ export default function RegisterPage() {
                 type="password"
                 required
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  setConfirmPasswordError(null);
+                }}
+                className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-orange-500 ${
+                  confirmPasswordError
+                    ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                    : "border-gray-300 focus:border-orange-500"
+                }`}
                 placeholder="הקלד את הסיסמה שוב"
               />
+              {confirmPasswordError && (
+                <p className="mt-1 text-sm text-red-600">{confirmPasswordError}</p>
+              )}
             </div>
           </div>
 
