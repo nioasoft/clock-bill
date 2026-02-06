@@ -296,6 +296,86 @@ export default function ReportsPage() {
     }
   };
 
+  const handleSavePreset = async () => {
+    if (!user || !presetName.trim()) {
+      showErrorToast("נא להזין שם לפריסט");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/reports/presets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: presetName.trim(),
+          clientId: filters.clientId || null,
+          projectId: filters.projectId || null,
+          startDate: filters.startDate || null,
+          endDate: filters.endDate || null,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        showSuccessToast("הפריסט נשמר בהצלחה");
+        setPresetName("");
+        setShowSavePresetDialog(false);
+
+        // Refresh presets list
+        const presetsResponse = await fetch("/api/reports/presets");
+        const presetsData = await presetsResponse.json();
+        if (presetsData.success) {
+          setPresets(presetsData.presets || []);
+        }
+      } else {
+        showErrorToast(data.message || "שגיאה בשמירת הפריסט");
+      }
+    } catch (error) {
+      console.error("Error saving preset:", error);
+      showErrorToast("שגיאה בשמירת הפריסט");
+    }
+  };
+
+  const handleLoadPreset = async (preset: ReportPreset) => {
+    setFilters({
+      clientId: preset.clientId || "",
+      projectId: preset.projectId || "",
+      startDate: preset.startDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+        .toISOString()
+        .split("T")[0],
+      endDate: preset.endDate || new Date().toISOString().split("T")[0],
+    });
+    setShowLoadPresetDialog(false);
+    showSuccessToast("הפריסט נטען בהצלחה");
+  };
+
+  const handleDeletePreset = async (presetId: string) => {
+    try {
+      const response = await fetch(`/api/reports/presets/${presetId}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        showSuccessToast("הפריסט נמחק בהצלחה");
+
+        // Refresh presets list
+        const presetsResponse = await fetch("/api/reports/presets");
+        const presetsData = await presetsResponse.json();
+        if (presetsData.success) {
+          setPresets(presetsData.presets || []);
+        }
+      } else {
+        showErrorToast(data.message || "שגיאה במחיקת הפריסט");
+      }
+    } catch (error) {
+      console.error("Error deleting preset:", error);
+      showErrorToast("שגיאה במחיקת הפריסט");
+    }
+  };
+
   const handleClientChange = (clientId: string) => {
     setFilters({ ...filters, clientId, projectId: "" }); // Reset project when client changes
   };
