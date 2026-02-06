@@ -218,6 +218,94 @@ export async function PUT(
 }
 
 /**
+ * PATCH /api/clients/[id]
+ * Restore (reactivate) an archived client
+ */
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: "לא מחובר" },
+        { status: 401 }
+      );
+    }
+
+    const { query } = await import("@/lib/db");
+    const { id: clientId } = await params;
+
+    // Restore - set is_active to TRUE
+    await query(
+      `UPDATE clients
+       SET is_active = TRUE
+       WHERE id = $1 AND user_id = $2`,
+      [clientId, user.id]
+    );
+
+    // Check if client exists and was updated
+    const checkResult = await query<{ exists: boolean }>(
+      `SELECT EXISTS(SELECT 1 FROM clients WHERE id = $1 AND user_id = $2) as exists`,
+      [clientId, user.id]
+    );
+
+    if (!checkResult.rows[0].exists) {
+      return NextResponse.json(
+        { success: false, message: "הלקוח לא נמצא" },
+        { status: 404 }
+      );
+    }
+
+    // Fetch the restored client
+    const clientResult = await query<{
+      id: string;
+      name: string;
+      contact_name: string | null;
+      email: string | null;
+      phone: string | null;
+      address: string | null;
+      default_rate: number | null;
+      notes: string | null;
+      is_active: boolean;
+      created_at: string;
+    }>(
+      `SELECT id, name, contact_name, email, phone, address, default_rate, notes, is_active, created_at
+       FROM clients
+       WHERE id = $1`,
+      [clientId]
+    );
+
+    const client = clientResult.rows[0];
+
+    return NextResponse.json({
+      success: true,
+      message: "הלקוח שוחזר בהצלחה",
+      client: {
+        id: client.id,
+        name: client.name,
+        contactName: client.contact_name,
+        email: client.email,
+        phone: client.phone,
+        address: client.address,
+        defaultRate: client.default_rate,
+        notes: client.notes,
+        isActive: client.is_active,
+        createdAt: client.created_at,
+      },
+    });
+  } catch (error) {
+    console.error("Error restoring client:", error);
+    return NextResponse.json(
+      { success: false, message: "שגיאה בשחזור הלקוח" },
+      { status: 500 }
+    );
+  }
+}
+
+/**
  * DELETE /api/clients/[id]
  * Delete (deactivate) a client
  */
