@@ -251,3 +251,148 @@ export function validateForm(
 
   return { isValid, errors };
 }
+
+/**
+ * Validate date field (YYYY-MM-DD format)
+ */
+export function validateDate(value: string, required = false): ValidationResult {
+  if (!value || value.trim() === "") {
+    return required
+      ? { isValid: false, error: "שדה חובה" }
+      : { isValid: true, error: null };
+  }
+
+  // Check if it matches YYYY-MM-DD format
+  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+  if (!datePattern.test(value)) {
+    return {
+      isValid: false,
+      error: "פורמט תאריך לא תקין (YYYY-MM-DD)",
+    };
+  }
+
+  // Check if it's a valid date
+  const date = new Date(value);
+  if (isNaN(date.getTime())) {
+    return {
+      isValid: false,
+      error: "תאריך לא תקין",
+    };
+  }
+
+  // Additional validation: check if the date components match
+  // This catches dates like 2024-02-30 (Feb 30 doesn't exist)
+  const [year, month, day] = value.split("-").map(Number);
+  const constructedDate = new Date(year, month - 1, day);
+
+  if (
+    constructedDate.getFullYear() !== year ||
+    constructedDate.getMonth() !== month - 1 ||
+    constructedDate.getDate() !== day
+  ) {
+    return {
+      isValid: false,
+      error: "תאריך לא תקין",
+    };
+  }
+
+  return { isValid: true, error: null };
+}
+
+/**
+ * Validate date range (start date before end date)
+ */
+export function validateDateRange(startDate: string, endDate: string, required = false): ValidationResult {
+  // If not required and either field is empty, skip validation
+  if (!required && (!startDate || !endDate)) {
+    return { isValid: true, error: null };
+  }
+
+  // Validate individual dates first
+  const startValidation = validateDate(startDate, required);
+  if (!startValidation.isValid) {
+    return startValidation;
+  }
+
+  const endValidation = validateDate(endDate, required);
+  if (!endValidation.isValid) {
+    return endValidation;
+  }
+
+  // Check if start date is after end date
+  if (startDate && endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (start > end) {
+      return {
+        isValid: false,
+        error: "תאריך התחלה חייב להיות לפני תאריך הסיום",
+      };
+    }
+  }
+
+  return { isValid: true, error: null };
+}
+
+/**
+ * Validate that date is not in the future
+ */
+export function validatePastDate(value: string, required = false): ValidationResult {
+  if (!value || value.trim() === "") {
+    return required
+      ? { isValid: false, error: "שדה חובה" }
+      : { isValid: true, error: null };
+  }
+
+  // First validate it's a proper date
+  const dateValidation = validateDate(value, required);
+  if (!dateValidation.isValid) {
+    return dateValidation;
+  }
+
+  // Check if date is in the future
+  const inputDate = new Date(value);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Reset time part for accurate comparison
+
+  if (inputDate > today) {
+    return {
+      isValid: false,
+      error: "תאריך לא יכול להיות בעתיד",
+    };
+  }
+
+  return { isValid: true, error: null };
+}
+
+/**
+ * Validate that date is not in the past
+ */
+export function validateFutureDate(value: string, required = false): ValidationResult {
+  if (!value || value.trim() === "") {
+    return required
+      ? { isValid: false, error: "שדה חובה" }
+      : { isValid: true, error: null };
+  }
+
+  // First validate it's a proper date
+  const dateValidation = validateDate(value, required);
+  if (!dateValidation.isValid) {
+    return dateValidation;
+  }
+
+  // Check if date is in the past
+  const inputDate = new Date(value);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Reset time part for accurate comparison
+
+  if (inputDate < today) {
+    return {
+      isValid: false,
+      error: "תאריך לא יכול להיות בעבר",
+    };
+  }
+
+  return { isValid: true, error: null };
+}

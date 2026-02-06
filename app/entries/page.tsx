@@ -6,6 +6,7 @@ import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Clock } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
+import { validateRequired, validateDate, validatePastDate } from "@/lib/validation";
 
 interface User {
   id: string;
@@ -71,6 +72,14 @@ export default function EntriesPage() {
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState<TimeEntry | null>(null);
+
+  // Field validation errors
+  const [fieldErrors, setFieldErrors] = useState<{
+    projectId?: string;
+    date?: string;
+    duration?: string;
+    description?: string;
+  }>({});
   const [deleting, setDeleting] = useState(false);
   const [filters, setFilters] = useState({
     clientId: "",
@@ -193,6 +202,41 @@ export default function EntriesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
+    setFieldErrors({});
+
+    // Validate form fields
+    const errors: typeof fieldErrors = {};
+
+    // Validate project
+    const projectValidation = validateRequired(formData.projectId, "פרויקט");
+    if (!projectValidation.isValid) {
+      errors.projectId = projectValidation.error;
+    }
+
+    // Validate date
+    const dateValidation = validateDate(formData.date, true);
+    if (!dateValidation.isValid) {
+      errors.date = dateValidation.error;
+    }
+
+    // Validate duration
+    const durationValidation = validateNumber(formData.duration, true, 1);
+    if (!durationValidation.isValid) {
+      errors.duration = durationValidation.error;
+    }
+
+    // Validate description
+    const descValidation = validateRequired(formData.description, "תיאור");
+    if (!descValidation.isValid) {
+      errors.description = descValidation.error;
+    }
+
+    // If there are errors, display them and don't submit
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -237,6 +281,7 @@ export default function EntriesPage() {
         });
         setShowForm(false);
         setEditingEntry(null);
+        setFieldErrors({});
       } else {
         setFormError(data.message || isEditing ? "שגיאה בעדכון הרשומה" : "שגיאה ביצירת הרשומה");
       }
@@ -627,7 +672,7 @@ export default function EntriesPage() {
                     required
                     value={formData.projectId}
                     onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500 ${fieldErrors.projectId ? "border-red-500" : "border-gray-300"}`}
                     disabled={submitting || projectsLoading}
                   >
                     <option value="">בחר פרויקט</option>
@@ -641,6 +686,9 @@ export default function EntriesPage() {
                       </optgroup>
                     ))}
                   </select>
+                  {fieldErrors.projectId && (
+                    <p className="mt-1 text-xs text-red-600">{fieldErrors.projectId}</p>
+                  )}
                 </div>
 
                 <div>
@@ -653,9 +701,12 @@ export default function EntriesPage() {
                     required
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500 ${fieldErrors.date ? "border-red-500" : "border-gray-300"}`}
                     disabled={submitting}
                   />
+                  {fieldErrors.date && (
+                    <p className="mt-1 text-xs text-red-600">{fieldErrors.date}</p>
+                  )}
                 </div>
 
                 <div>
@@ -670,10 +721,13 @@ export default function EntriesPage() {
                     step="1"
                     value={formData.duration}
                     onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500 ${fieldErrors.duration ? "border-red-500" : "border-gray-300"}`}
                     disabled={submitting}
                     placeholder="לדוגמה: 60"
                   />
+                  {fieldErrors.duration && (
+                    <p className="mt-1 text-xs text-red-600">{fieldErrors.duration}</p>
+                  )}
                   <p className="mt-1 text-xs text-gray-500">הזן את משך הזמן בדקות</p>
                 </div>
 
@@ -701,10 +755,13 @@ export default function EntriesPage() {
                     required
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500 ${fieldErrors.description ? "border-red-500" : "border-gray-300"}`}
                     disabled={submitting}
                     placeholder="מה עשית?"
                   />
+                  {fieldErrors.description && (
+                    <p className="mt-1 text-xs text-red-600">{fieldErrors.description}</p>
+                  )}
                 </div>
 
                 <div className="sm:col-span-2">

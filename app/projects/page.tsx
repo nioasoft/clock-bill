@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FolderOpen } from "lucide-react";
-import { validateRequired, validateNumber } from "@/lib/validation";
+import { validateRequired, validateNumber, validateDate, validateDateRange } from "@/lib/validation";
 
 interface User {
   id: string;
@@ -66,6 +66,21 @@ export default function ProjectsPage() {
   });
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Field validation errors
+  const [fieldErrors, setFieldErrors] = useState<{
+    clientId?: string;
+    name?: string;
+    hourlyRate?: string;
+    packagePrice?: string;
+    packageHours?: string;
+    overageRate?: string;
+    fixedBudget?: string;
+    retainerMonthlyFee?: string;
+    retainerHours?: string;
+    startDate?: string;
+    endDate?: string;
+  }>({});
 
   useEffect(() => {
     // Fetch current session
@@ -138,6 +153,117 @@ export default function ProjectsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
+    setFieldErrors({});
+
+    // Validate form fields
+    const errors: typeof fieldErrors = {};
+
+    // Client is required
+    if (!formData.clientId) {
+      errors.clientId = "נא לבחור לקוח";
+    }
+
+    // Name is required
+    const nameValidation = validateRequired(formData.name, "שם הפרויקט");
+    if (!nameValidation.isValid) {
+      errors.name = nameValidation.error;
+    }
+
+    // Validate pricing fields based on pricing model
+    if (formData.pricingModel === "hourly") {
+      if (formData.hourlyRate && formData.hourlyRate.trim()) {
+        const rateValidation = validateNumber(formData.hourlyRate, true, 0);
+        if (!rateValidation.isValid) {
+          errors.hourlyRate = rateValidation.error;
+        }
+      } else {
+        errors.hourlyRate = "שדה חובה עבור מודל תמחור שעתי";
+      }
+    } else if (formData.pricingModel === "package") {
+      if (formData.packagePrice && formData.packagePrice.trim()) {
+        const priceValidation = validateNumber(formData.packagePrice, true, 0);
+        if (!priceValidation.isValid) {
+          errors.packagePrice = priceValidation.error;
+        }
+      } else {
+        errors.packagePrice = "שדה חובה עבור מודל תמחור חבילה";
+      }
+      if (formData.packageHours && formData.packageHours.trim()) {
+        const hoursValidation = validateNumber(formData.packageHours, true, 0);
+        if (!hoursValidation.isValid) {
+          errors.packageHours = hoursValidation.error;
+        }
+      } else {
+        errors.packageHours = "שדה חובה עבור מודל תמחור חבילה";
+      }
+    } else if (formData.pricingModel === "mixed") {
+      if (formData.packagePrice && formData.packagePrice.trim()) {
+        const priceValidation = validateNumber(formData.packagePrice, true, 0);
+        if (!priceValidation.isValid) {
+          errors.packagePrice = priceValidation.error;
+        }
+      } else {
+        errors.packagePrice = "שדה חובה עבור מודל תמחור משולב";
+      }
+      if (formData.packageHours && formData.packageHours.trim()) {
+        const hoursValidation = validateNumber(formData.packageHours, true, 0);
+        if (!hoursValidation.isValid) {
+          errors.packageHours = hoursValidation.error;
+        }
+      } else {
+        errors.packageHours = "שדה חובה עבור מודל תמחור משולב";
+      }
+      if (formData.overageRate && formData.overageRate.trim()) {
+        const overageValidation = validateNumber(formData.overageRate, true, 0);
+        if (!overageValidation.isValid) {
+          errors.overageRate = overageValidation.error;
+        }
+      } else {
+        errors.overageRate = "שדה חובה עבור מודל תמחור משולב";
+      }
+    } else if (formData.pricingModel === "fixed") {
+      if (formData.fixedBudget && formData.fixedBudget.trim()) {
+        const budgetValidation = validateNumber(formData.fixedBudget, true, 0);
+        if (!budgetValidation.isValid) {
+          errors.fixedBudget = budgetValidation.error;
+        }
+      } else {
+        errors.fixedBudget = "שדה חובה עבור מודל תמחור קבוע";
+      }
+    } else if (formData.pricingModel === "retainer") {
+      if (formData.retainerMonthlyFee && formData.retainerMonthlyFee.trim()) {
+        const feeValidation = validateNumber(formData.retainerMonthlyFee, true, 0);
+        if (!feeValidation.isValid) {
+          errors.retainerMonthlyFee = feeValidation.error;
+        }
+      } else {
+        errors.retainerMonthlyFee = "שדה חובה עבור מודל תמחור ריטיינר";
+      }
+      if (formData.retainerHours && formData.retainerHours.trim()) {
+        const hoursValidation = validateNumber(formData.retainerHours, true, 0);
+        if (!hoursValidation.isValid) {
+          errors.retainerHours = hoursValidation.error;
+        }
+      } else {
+        errors.retainerHours = "שדה חובה עבור מודל תמחור ריטיינר";
+      }
+    }
+
+    // Validate date fields (optional but must be valid if provided)
+    if (formData.startDate || formData.endDate) {
+      const dateRangeValidation = validateDateRange(formData.startDate, formData.endDate, false);
+      if (!dateRangeValidation.isValid) {
+        errors.startDate = dateRangeValidation.error;
+        errors.endDate = dateRangeValidation.error;
+      }
+    }
+
+    // If there are errors, display them and don't submit
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -328,8 +454,15 @@ export default function ProjectsPage() {
                     id="clientId"
                     required
                     value={formData.clientId}
-                    onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    onChange={(e) => {
+                      setFormData({ ...formData, clientId: e.target.value });
+                      setFieldErrors({ ...fieldErrors, clientId: undefined });
+                    }}
+                    className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-orange-500 disabled:opacity-50 ${
+                      fieldErrors.clientId
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:border-orange-500"
+                    }`}
                     disabled={submitting}
                   >
                     <option value="">בחר לקוח</option>
@@ -339,6 +472,7 @@ export default function ProjectsPage() {
                       </option>
                     ))}
                   </select>
+                  {fieldErrors.clientId && <p className="mt-1 text-sm text-red-600">{fieldErrors.clientId}</p>}
                 </div>
 
                 <div>
@@ -350,10 +484,18 @@ export default function ProjectsPage() {
                     id="name"
                     required
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    onChange={(e) => {
+                      setFormData({ ...formData, name: e.target.value });
+                      setFieldErrors({ ...fieldErrors, name: undefined });
+                    }}
+                    className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-orange-500 disabled:opacity-50 ${
+                      fieldErrors.name
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:border-orange-500"
+                    }`}
                     disabled={submitting}
                   />
+                  {fieldErrors.name && <p className="mt-1 text-sm text-red-600">{fieldErrors.name}</p>}
                 </div>
 
                 <div>
@@ -607,9 +749,12 @@ export default function ProjectsPage() {
                     id="startDate"
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500 ${fieldErrors.startDate ? "border-red-500" : "border-gray-300"}`}
                     disabled={submitting}
                   />
+                  {fieldErrors.startDate && (
+                    <p className="mt-1 text-xs text-red-600">{fieldErrors.startDate}</p>
+                  )}
                 </div>
 
                 <div>
@@ -621,9 +766,12 @@ export default function ProjectsPage() {
                     id="endDate"
                     value={formData.endDate}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500 ${fieldErrors.endDate ? "border-red-500" : "border-gray-300"}`}
                     disabled={submitting}
                   />
+                  {fieldErrors.endDate && (
+                    <p className="mt-1 text-xs text-red-600">{fieldErrors.endDate}</p>
+                  )}
                 </div>
 
                 <div className="sm:col-span-2">

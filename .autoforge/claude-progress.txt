@@ -209,3 +209,42 @@ All 5 currencies are:
 - Both features were already implemented in previous sessions
 - No code changes required, only verification
 - Currency system is comprehensive and production-ready
+
+## Session: 2026-02-06 (Features #110, #111) - COMPLETED
+
+### Assigned Features
+- Feature #110: Active Route Highlight - Current route is highlighted in nav
+- Feature #111: Breadcrumb Navigation - Breadcrumbs show on detail pages
+
+### Work Completed
+
+**Feature #110: Active Route Highlight**
+Verified through code review - already implemented in commit 5e24ab3:
+- Sidebar uses usePathname() hook to detect active route
+- Active styling: bg-orange-50 text-orange-700
+- All 6 navigation items covered
+- Exact path matching with smooth transitions
+
+**Feature #111: Breadcrumb Navigation**
+Implemented from scratch:
+- Created reusable Breadcrumb component (components/breadcrumb.tsx)
+- RTL support with ChevronLeft separators
+- Updated client details: לקוחות → client name
+- Updated project details: פרויקטים → project name
+
+### Files Created/Modified
+- NEW: components/breadcrumb.tsx
+- MODIFIED: app/clients/[id]/page.tsx
+- MODIFIED: app/projects/[id]/page.tsx
+
+### Features Completed
+- Feature #110: Active Route Highlight - PASSING ✓
+- Feature #111: Breadcrumb Navigation - PASSING ✓
+
+### Current Project Status
+- Progress: 115/206 features passing (55.8%)
+
+### Commits
+- 630c7ea: feat: verify active route highlighting (feature #110)
+- 393cafa: feat: implement breadcrumb navigation (feature #111)
+
