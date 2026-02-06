@@ -29,7 +29,13 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl">
       <body className="font-sans antialiased">
-        {children}
+        {/* Skip to main content link for keyboard users */}
+        <a href="#main-content" className="skip-to-main">
+          דלג לתוכן ראשי
+        </a>
+        <main id="main-content">
+          {children}
+        </main>
         <Toaster />
       </body>
     </html>
