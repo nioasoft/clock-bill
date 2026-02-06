@@ -19,6 +19,9 @@ interface Project {
   packagePrice: number | null;
   packageHours: number | null;
   overageRate: number | null;
+  fixedBudget: number | null;
+  retainerMonthlyFee: number | null;
+  retainerHours: number | null;
   currency: string;
   status: string;
   startDate: string | null;
@@ -45,6 +48,9 @@ export default function ProjectDetailsPage() {
     packagePrice: "",
     packageHours: "",
     overageRate: "",
+    fixedBudget: "",
+    retainerMonthlyFee: "",
+    retainerHours: "",
     currency: "ILS",
     status: "active",
     startDate: "",
@@ -98,6 +104,9 @@ export default function ProjectDetailsPage() {
             packagePrice: data.project.packagePrice?.toString() || "",
             packageHours: data.project.packageHours?.toString() || "",
             overageRate: data.project.overageRate?.toString() || "",
+            fixedBudget: data.project.fixedBudget?.toString() || "",
+            retainerMonthlyFee: data.project.retainerMonthlyFee?.toString() || "",
+            retainerHours: data.project.retainerHours?.toString() || "",
             currency: data.project.currency,
             status: data.project.status,
             startDate: data.project.startDate || "",
@@ -137,6 +146,9 @@ export default function ProjectDetailsPage() {
           packagePrice: formData.packagePrice ? parseFloat(formData.packagePrice) : null,
           packageHours: formData.packageHours ? parseFloat(formData.packageHours) : null,
           overageRate: formData.overageRate ? parseFloat(formData.overageRate) : null,
+          fixedBudget: formData.fixedBudget ? parseFloat(formData.fixedBudget) : null,
+          retainerMonthlyFee: formData.retainerMonthlyFee ? parseFloat(formData.retainerMonthlyFee) : null,
+          retainerHours: formData.retainerHours ? parseFloat(formData.retainerHours) : null,
           currency: formData.currency,
           status: formData.status,
           startDate: formData.startDate || null,
@@ -197,6 +209,10 @@ export default function ProjectDetailsPage() {
         return "חבילה";
       case "mixed":
         return "משולב";
+      case "fixed":
+        return "תקציב קבוע";
+      case "retainer":
+        return "רטיינר";
       default:
         return model;
     }
@@ -254,6 +270,10 @@ export default function ProjectDetailsPage() {
       return `${symbol}${project.packagePrice} עבור ${project.packageHours} שעות`;
     } else if (project.pricingModel === "mixed") {
       return `${symbol}${project.packagePrice} עבור ${project.packageHours} שעות, אז ${symbol}${project.overageRate}/שעה`;
+    } else if (project.pricingModel === "fixed") {
+      return `${symbol}${project.fixedBudget} (תקציב קבוע)`;
+    } else if (project.pricingModel === "retainer") {
+      return `${symbol}${project.retainerMonthlyFee}/חודש עבור ${project.retainerHours} שעות`;
     }
     return "-";
   };
@@ -400,6 +420,8 @@ export default function ProjectDetailsPage() {
                     <option value="hourly">שעתי</option>
                     <option value="package">חבילה</option>
                     <option value="mixed">משולב</option>
+                    <option value="fixed">תקציב קבוע</option>
+                    <option value="retainer">רטיינר</option>
                   </select>
                 </div>
 
@@ -551,6 +573,63 @@ export default function ProjectDetailsPage() {
                   </>
                 )}
 
+                {formData.pricingModel === "fixed" && (
+                  <div>
+                    <label htmlFor="fixedBudget" className="block text-sm font-medium text-gray-700">
+                      תקציב כולל *
+                    </label>
+                    <input
+                      type="number"
+                      id="fixedBudget"
+                      required
+                      min="0"
+                      step="0.01"
+                      value={formData.fixedBudget}
+                      onChange={(e) => setFormData({ ...formData, fixedBudget: e.target.value })}
+                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                      disabled={submitting}
+                    />
+                  </div>
+                )}
+
+                {formData.pricingModel === "retainer" && (
+                  <>
+                    <div>
+                      <label htmlFor="retainerMonthlyFee" className="block text-sm font-medium text-gray-700">
+                        תשלום חודשי *
+                      </label>
+                      <input
+                        type="number"
+                        id="retainerMonthlyFee"
+                        required
+                        min="0"
+                        step="0.01"
+                        value={formData.retainerMonthlyFee}
+                        onChange={(e) => setFormData({ ...formData, retainerMonthlyFee: e.target.value })}
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                        disabled={submitting}
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="retainerHours" className="block text-sm font-medium text-gray-700">
+                        שעות בחבילה *
+                      </label>
+                      <input
+                        type="number"
+                        id="retainerHours"
+                        required
+                        min="0"
+                        step="0.5"
+                        value={formData.retainerHours}
+                        onChange={(e) => setFormData({ ...formData, retainerHours: e.target.value })}
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                        disabled={submitting}
+                      />
+                    </div>
+                  </>
+                )}
+
                 <div>
                   <label htmlFor="status" className="block text-sm font-medium text-gray-700">
                     סטטוס
@@ -625,6 +704,9 @@ export default function ProjectDetailsPage() {
                       packagePrice: project.packagePrice?.toString() || "",
                       packageHours: project.packageHours?.toString() || "",
                       overageRate: project.overageRate?.toString() || "",
+                      fixedBudget: project.fixedBudget?.toString() || "",
+                      retainerMonthlyFee: project.retainerMonthlyFee?.toString() || "",
+                      retainerHours: project.retainerHours?.toString() || "",
                       currency: project.currency,
                       status: project.status,
                       startDate: project.startDate || "",

@@ -12,6 +12,7 @@ interface User {
 interface Client {
   id: string;
   name: string;
+  isActive: boolean;
 }
 
 interface Project {
@@ -24,6 +25,9 @@ interface Project {
   packagePrice: number | null;
   packageHours: number | null;
   overageRate: number | null;
+  fixedBudget: number | null;
+  retainerMonthlyFee: number | null;
+  retainerHours: number | null;
   currency: string;
   status: string;
   startDate: string | null;
@@ -48,6 +52,9 @@ export default function ProjectsPage() {
     packagePrice: "",
     packageHours: "",
     overageRate: "",
+    fixedBudget: "",
+    retainerMonthlyFee: "",
+    retainerHours: "",
     currency: "ILS",
     status: "active",
     startDate: "",
@@ -144,6 +151,9 @@ export default function ProjectsPage() {
           packagePrice: formData.packagePrice ? parseFloat(formData.packagePrice) : undefined,
           packageHours: formData.packageHours ? parseFloat(formData.packageHours) : undefined,
           overageRate: formData.overageRate ? parseFloat(formData.overageRate) : undefined,
+          fixedBudget: formData.fixedBudget ? parseFloat(formData.fixedBudget) : undefined,
+          retainerMonthlyFee: formData.retainerMonthlyFee ? parseFloat(formData.retainerMonthlyFee) : undefined,
+          retainerHours: formData.retainerHours ? parseFloat(formData.retainerHours) : undefined,
           currency: formData.currency,
           status: formData.status,
           startDate: formData.startDate || undefined,
@@ -166,6 +176,9 @@ export default function ProjectsPage() {
           packagePrice: "",
           packageHours: "",
           overageRate: "",
+          fixedBudget: "",
+          retainerMonthlyFee: "",
+          retainerHours: "",
           currency: "ILS",
           status: "active",
           startDate: "",
@@ -236,6 +249,10 @@ export default function ProjectsPage() {
       return `${symbol}${project.packagePrice} עבור ${project.packageHours} שעות`;
     } else if (project.pricingModel === "mixed") {
       return `${symbol}${project.packagePrice} עבור ${project.packageHours} שעות, אז ${symbol}${project.overageRate}/שעה`;
+    } else if (project.pricingModel === "fixed") {
+      return `${symbol}${project.fixedBudget} (תקציב קבוע)`;
+    } else if (project.pricingModel === "retainer") {
+      return `${symbol}${project.retainerMonthlyFee}/חודש עבור ${project.retainerHours} שעות`;
     }
     return "-";
   };
@@ -337,6 +354,8 @@ export default function ProjectsPage() {
                     <option value="hourly">שעתי</option>
                     <option value="package">חבילה</option>
                     <option value="mixed">משולב</option>
+                    <option value="fixed">תקציב קבוע</option>
+                    <option value="retainer">רטיינר</option>
                   </select>
                 </div>
 
@@ -488,6 +507,63 @@ export default function ProjectsPage() {
                   </>
                 )}
 
+                {formData.pricingModel === "fixed" && (
+                  <div>
+                    <label htmlFor="fixedBudget" className="block text-sm font-medium text-gray-700">
+                      תקציב כולל *
+                    </label>
+                    <input
+                      type="number"
+                      id="fixedBudget"
+                      required
+                      min="0"
+                      step="0.01"
+                      value={formData.fixedBudget}
+                      onChange={(e) => setFormData({ ...formData, fixedBudget: e.target.value })}
+                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                      disabled={submitting}
+                    />
+                  </div>
+                )}
+
+                {formData.pricingModel === "retainer" && (
+                  <>
+                    <div>
+                      <label htmlFor="retainerMonthlyFee" className="block text-sm font-medium text-gray-700">
+                        תשלום חודשי *
+                      </label>
+                      <input
+                        type="number"
+                        id="retainerMonthlyFee"
+                        required
+                        min="0"
+                        step="0.01"
+                        value={formData.retainerMonthlyFee}
+                        onChange={(e) => setFormData({ ...formData, retainerMonthlyFee: e.target.value })}
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                        disabled={submitting}
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="retainerHours" className="block text-sm font-medium text-gray-700">
+                        שעות בחבילה *
+                      </label>
+                      <input
+                        type="number"
+                        id="retainerHours"
+                        required
+                        min="0"
+                        step="0.5"
+                        value={formData.retainerHours}
+                        onChange={(e) => setFormData({ ...formData, retainerHours: e.target.value })}
+                        className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500 rounded-md"
+                        disabled={submitting}
+                      />
+                    </div>
+                  </>
+                )}
+
                 <div>
                   <label htmlFor="status" className="block text-sm font-medium text-gray-700">
                     סטטוס
@@ -561,6 +637,9 @@ export default function ProjectsPage() {
                       packagePrice: "",
                       packageHours: "",
                       overageRate: "",
+                      fixedBudget: "",
+                      retainerMonthlyFee: "",
+                      retainerHours: "",
                       currency: "ILS",
                       status: "active",
                       startDate: "",

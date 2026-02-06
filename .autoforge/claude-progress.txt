@@ -996,3 +996,25 @@ Both features were already implemented in the codebase. This session focused on 
 - feature-38-39-project-details.png
 
 
+
+## Session: 2026-02-06 (Features #40, #41)
+
+### Assigned Features
+- Feature #40: Set Project Pricing Model - User can set project pricing model
+- Feature #41: Set Hourly Rate - User can set hourly rate for project
+
+### Work Completed
+Both features verified through browser automation.
+- Feature #40: Pricing model dropdown (hourly/package/mixed) with dynamic form fields
+- Feature #41: Hourly rate input, tested creating and editing with rates 150 and 200
+
+### Features Completed
+- Feature #40: Set Project Pricing Model - PASSING
+- Feature #41: Set Hourly Rate - PASSING
+
+### Current Project Status
+- Progress: 38/206 features passing (18.4%)
+
+### Git Commit
+- Commit: 90c7b84
+
