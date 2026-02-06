@@ -17,9 +17,9 @@ export function middleware(request: NextRequest) {
     pathname.startsWith(route)
   );
 
-  // If user is authenticated and trying to access public routes, redirect to home
+  // If user is authenticated and trying to access public routes, redirect to dashboard
   if (sessionCookie && isPublicRoute) {
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // If user is not authenticated and trying to access protected routes, redirect to login

@@ -39,7 +39,7 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (data.success) {
-        router.push("/");
+        router.push("/dashboard");
         router.refresh();
       } else {
         setError(data.message || "שגיאה בהרשמה");
