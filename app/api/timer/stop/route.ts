@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { entryId, description } = body;
+    const { entryId, description, duration: customDuration } = body;
 
     // Get the running entry
     const entryResult = await query<{
@@ -42,23 +42,31 @@ export async function POST(request: NextRequest) {
     }
 
     const entry = entryResult.rows[0];
-    const startTime = new Date(entry.start_time);
     const endTime = new Date();
-    let durationMs = endTime.getTime() - startTime.getTime();
 
-    // Subtract total paused time if exists
-    if (entry.total_paused_time) {
-      durationMs -= entry.total_paused_time;
+    let durationMinutes: number;
+
+    // If custom duration is provided, use it; otherwise calculate from start time
+    if (customDuration !== undefined && customDuration !== null) {
+      durationMinutes = customDuration;
+    } else {
+      const startTime = new Date(entry.start_time);
+      let durationMs = endTime.getTime() - startTime.getTime();
+
+      // Subtract total paused time if exists
+      if (entry.total_paused_time) {
+        durationMs -= entry.total_paused_time;
+      }
+
+      // If currently paused, subtract the current pause duration
+      if (entry.paused_at) {
+        const pausedAt = new Date(entry.paused_at);
+        const currentPauseMs = endTime.getTime() - pausedAt.getTime();
+        durationMs -= currentPauseMs;
+      }
+
+      durationMinutes = Math.floor(durationMs / 1000 / 60);
     }
-
-    // If currently paused, subtract the current pause duration
-    if (entry.paused_at) {
-      const pausedAt = new Date(entry.paused_at);
-      const currentPauseMs = endTime.getTime() - pausedAt.getTime();
-      durationMs -= currentPauseMs;
-    }
-
-    const durationMinutes = Math.floor(durationMs / 1000 / 60);
 
     // Update the entry with end_time, duration, and optionally description
     await query(

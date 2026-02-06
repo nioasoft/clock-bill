@@ -72,6 +72,10 @@ export default function DashboardPage() {
   const [pausingTimer, setPausingTimer] = useState(false);
   const [resumingTimer, setResumingTimer] = useState(false);
   const [elapsedTime, setElapsedTime] = useState("0:00");
+  const [showStopTimerModal, setShowStopTimerModal] = useState(false);
+  const [stopTimerDescription, setStopTimerDescription] = useState("");
+  const [stopTimerHours, setStopTimerHours] = useState("");
+  const [stopTimerMinutes, setStopTimerMinutes] = useState("");
 
   useEffect(() => {
     // Fetch dashboard stats
@@ -147,6 +151,29 @@ export default function DashboardPage() {
   }, [runningTimer]);
 
   useEffect(() => {
+    // Update browser tab title with timer
+    const originalTitle = document.title;
+
+    if (runningTimer) {
+      const updateTitle = () => {
+        const minutes = runningTimer.elapsedMinutes;
+        const seconds = runningTimer.elapsedSeconds;
+        document.title = `${minutes}:${seconds.toString().padStart(2, '0')} - שעון`;
+      };
+
+      updateTitle();
+      const interval = setInterval(updateTitle, 1000);
+      return () => {
+        clearInterval(interval);
+        document.title = originalTitle;
+      };
+    } else {
+      // Restore original title when timer is not running
+      document.title = originalTitle;
+    }
+  }, [runningTimer]);
+
+  useEffect(() => {
     // Fetch projects for the timer modal
     const fetchProjects = async () => {
       try {
@@ -205,20 +232,38 @@ export default function DashboardPage() {
     }
   };
 
-  const handleStopTimer = async () => {
+  const handleStopTimer = () => {
     if (!runningTimer) return;
 
-    const description = prompt("תיאור לרשומת הזמן (אופציונלי):", runningTimer.description || "");
-    if (description === null) return; // User cancelled
+    // Calculate current elapsed time in hours and minutes
+    const totalMinutes = runningTimer.elapsedMinutes;
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    // Initialize modal with current values
+    setStopTimerDescription(runningTimer.description || "");
+    setStopTimerHours(hours.toString());
+    setStopTimerMinutes(minutes.toString());
+    setShowStopTimerModal(true);
+  };
+
+  const confirmStopTimer = async () => {
+    if (!runningTimer) return;
 
     setStoppingTimer(true);
     try {
+      // Calculate custom duration in minutes
+      const hours = parseInt(stopTimerHours) || 0;
+      const minutes = parseInt(stopTimerMinutes) || 0;
+      const totalDuration = hours * 60 + minutes;
+
       const response = await fetch("/api/timer/stop", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           entryId: runningTimer.id,
-          description: description || null,
+          description: stopTimerDescription || null,
+          duration: totalDuration,
         }),
       });
 
@@ -226,6 +271,7 @@ export default function DashboardPage() {
 
       if (data.success) {
         setRunningTimer(null);
+        setShowStopTimerModal(false);
         showSuccessToast("הטיימר נעצר ונשמר בהצלחה");
         // Refresh stats to show the new entry
         const statsResponse = await fetch("/api/dashboard/stats");
@@ -243,6 +289,13 @@ export default function DashboardPage() {
     } finally {
       setStoppingTimer(false);
     }
+  };
+
+  const cancelStopTimer = () => {
+    setShowStopTimerModal(false);
+    setStopTimerDescription("");
+    setStopTimerHours("");
+    setStopTimerMinutes("");
   };
 
   const handlePauseTimer = async () => {
@@ -526,6 +579,91 @@ export default function DashboardPage() {
                   className="px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 disabled:opacity-50"
                 >
                   {startingTimer ? "מתחיל..." : "התחל טיימר"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Timer Stop Modal */}
+      {showStopTimerModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" dir="rtl">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">עצור טיימר ושמור רשומה</h3>
+
+            <div className="space-y-4">
+              {/* Current elapsed time */}
+              <div className="bg-orange-50 rounded-lg p-3 mb-4">
+                <p className="text-sm text-gray-600 mb-1">זמן שעבר:</p>
+                <p className="text-2xl font-bold text-orange-600">{elapsedTime}</p>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label htmlFor="stop-description" className="block text-sm font-medium text-gray-700 mb-1">
+                  תיאור
+                </label>
+                <input
+                  type="text"
+                  id="stop-description"
+                  value={stopTimerDescription}
+                  onChange={(e) => setStopTimerDescription(e.target.value)}
+                  placeholder="מה עשית?"
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
+                  disabled={stoppingTimer}
+                />
+              </div>
+
+              {/* Duration adjustment */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  התאם את משך הזמן (אופציונלי)
+                </label>
+                <div className="flex gap-2 items-center">
+                  <div className="flex-1">
+                    <input
+                      type="number"
+                      min="0"
+                      value={stopTimerHours}
+                      onChange={(e) => setStopTimerHours(e.target.value)}
+                      placeholder="0"
+                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
+                      disabled={stoppingTimer}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">שעות</p>
+                  </div>
+                  <span className="text-gray-500 text-lg">:</span>
+                  <div className="flex-1">
+                    <input
+                      type="number"
+                      min="0"
+                      max="59"
+                      value={stopTimerMinutes}
+                      onChange={(e) => setStopTimerMinutes(e.target.value)}
+                      placeholder="00"
+                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
+                      disabled={stoppingTimer}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">דקות</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={cancelStopTimer}
+                  disabled={stoppingTimer}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 disabled:opacity-50"
+                >
+                  ביטול
+                </button>
+                <button
+                  onClick={confirmStopTimer}
+                  disabled={stoppingTimer}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50"
+                >
+                  {stoppingTimer ? "שומר..." : "עצור ושמור"}
                 </button>
               </div>
             </div>

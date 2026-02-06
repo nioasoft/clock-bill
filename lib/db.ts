@@ -443,6 +443,26 @@ export async function initSchema(): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_email_verification_tokens_user_id ON email_verification_tokens(user_id)
   `);
 
+  // Report presets table
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS report_presets (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      client_id TEXT,
+      project_id TEXT,
+      start_date DATE,
+      end_date DATE,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW(),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_report_presets_user_id ON report_presets(user_id)
+  `);
+
   // Insert default tags if they don't exist
   const defaultTags = [
     { name: "פיתוח", color: "#3b82f6" },

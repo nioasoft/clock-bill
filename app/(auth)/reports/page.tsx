@@ -96,6 +96,17 @@ interface ReportData {
 
 type PdfTemplate = "modern" | "classic" | "bold" | "elegant" | "nature" | "ocean";
 
+interface ReportPreset {
+  id: string;
+  name: string;
+  clientId: string | null;
+  projectId: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 const PDF_TEMPLATES: { value: PdfTemplate; label: string; description: string }[] = [
   { value: "modern", label: "מודרני", description: "עיצוב נקי ומינימליסטי" },
   { value: "classic", label: "קלאסי", description: "עיצוב מסורתי ומכובד" },
@@ -119,6 +130,11 @@ export default function ReportsPage() {
   const [showFilters, setShowFilters] = useState(true);
   const [selectedTemplate, setSelectedTemplate] = useState<PdfTemplate>("modern");
   const [showExportDialog, setShowExportDialog] = useState(false);
+  const [showSavePresetDialog, setShowSavePresetDialog] = useState(false);
+  const [showLoadPresetDialog, setShowLoadPresetDialog] = useState(false);
+  const [presets, setPresets] = useState<ReportPreset[]>([]);
+  const [presetsLoading, setPresetsLoading] = useState(false);
+  const [presetName, setPresetName] = useState("");
   const [filters, setFilters] = useState({
     clientId: "",
     projectId: "",
@@ -225,6 +241,29 @@ export default function ReportsPage() {
     };
 
     fetchProjects();
+  }, [user]);
+
+  useEffect(() => {
+    // Fetch presets when user is loaded
+    const fetchPresets = async () => {
+      if (!user) return;
+
+      try {
+        setPresetsLoading(true);
+        const response = await fetch("/api/reports/presets");
+        const data = await response.json();
+
+        if (data.success) {
+          setPresets(data.presets || []);
+        }
+      } catch (error) {
+        console.error("Error fetching presets:", error);
+      } finally {
+        setPresetsLoading(false);
+      }
+    };
+
+    fetchPresets();
   }, [user]);
 
   const generateReport = async () => {

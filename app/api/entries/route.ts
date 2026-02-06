@@ -39,6 +39,8 @@ export async function GET(request: NextRequest) {
         te.notes,
         te.is_billable,
         te.created_at,
+        te.paused_at,
+        te.total_paused_time,
         p.name as project_name,
         c.name as client_name,
         c.id as client_id
@@ -88,6 +90,8 @@ export async function GET(request: NextRequest) {
       notes: string | null;
       is_billable: boolean;
       created_at: string;
+      paused_at: string | null;
+      total_paused_time: number | null;
       project_name: string;
       client_name: string;
       client_id: string;
@@ -108,6 +112,8 @@ export async function GET(request: NextRequest) {
       notes: entry.notes,
       isBillable: entry.is_billable,
       createdAt: entry.created_at,
+      pausedAt: entry.paused_at,
+      totalPausedTime: entry.total_paused_time,
     }));
 
     return NextResponse.json({
@@ -223,6 +229,8 @@ export async function POST(request: NextRequest) {
       notes: string | null;
       is_billable: boolean;
       created_at: string;
+      paused_at: string | null;
+      total_paused_time: number | null;
       project_name: string;
       client_name: string;
       client_id: string;
@@ -239,6 +247,8 @@ export async function POST(request: NextRequest) {
         te.notes,
         te.is_billable,
         te.created_at,
+        te.paused_at,
+        te.total_paused_time,
         p.name as project_name,
         c.name as client_name,
         c.id as client_id
@@ -268,6 +278,8 @@ export async function POST(request: NextRequest) {
         notes: entry.notes,
         isBillable: entry.is_billable,
         createdAt: entry.created_at,
+        pausedAt: entry.paused_at,
+        totalPausedTime: entry.total_paused_time,
       },
     });
   } catch (error) {

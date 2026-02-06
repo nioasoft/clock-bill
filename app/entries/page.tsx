@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Clock } from "lucide-react";
+import { Clock, Timer } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { validateRequired, validateDate, validatePastDate, validateNumber } from "@/lib/validation";
 
@@ -40,6 +40,8 @@ interface TimeEntry {
   notes: string | null;
   isBillable: boolean;
   createdAt: string;
+  pausedAt: string | null;
+  totalPausedTime: number | null;
 }
 
 interface GroupedProjects {
@@ -530,6 +532,10 @@ export default function EntriesPage() {
     return `${hours}:${mins.toString().padStart(2, "0")}`;
   };
 
+  const isEntryRunning = (entry: TimeEntry): boolean => {
+    return entry.startTime !== null && entry.endTime === null;
+  };
+
   // Group projects by client
   const groupedProjects = projects.reduce<GroupedProjects>((acc, project) => {
     if (!acc[project.clientId]) {
@@ -964,11 +970,23 @@ export default function EntriesPage() {
                           </div>
                         </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900 max-w-xs truncate">
-                          {entry.description}
+                        <div className="flex items-center gap-2">
+                          {isEntryRunning(entry) && (
+                            <div className="flex items-center gap-1.5 inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">
+                              <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                              </span>
+                              <Timer className="h-3 w-3 me-1" />
+                              פעיל
+                            </div>
+                          )}
+                          <div className="text-sm text-gray-900 max-w-xs truncate">
+                            {entry.description}
+                          </div>
                         </div>
                         {entry.notes && (
-                          <div className="text-xs text-gray-500 truncate max-w-xs">{entry.notes}</div>
+                          <div className="text-xs text-gray-500 truncate max-w-xs ms-6">{entry.notes}</div>
                         )}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
