@@ -488,6 +488,11 @@ export default function ReportsPage() {
                         <p className="text-sm text-muted-foreground">
                           {project.entries.length} רשומות
                         </p>
+                        {project.totalAmount > 0 && (
+                          <p className="text-sm font-medium">
+                            {formatCurrency(project.totalAmount, project.currency)}
+                          </p>
+                        )}
                       </div>
                     </div>
                   ))}
