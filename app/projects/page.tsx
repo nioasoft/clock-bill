@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { EmptyState } from "@/components/ui/empty-state";
+import { FolderOpen } from "lucide-react";
 
 interface User {
   id: string;
@@ -683,26 +685,13 @@ export default function ProjectsPage() {
           {projectsLoading ? (
             <div className="p-8 text-center text-gray-600">טוען פרויקטים...</div>
           ) : projects.length === 0 ? (
-            <div className="p-8 text-center">
-              <p className="text-gray-600 mb-4">אין פרויקטים עדיין</p>
-              <p className="text-sm text-gray-500 mb-4">צור לקוח תחילה ואז תוכל ליצור פרויקטים</p>
-              <div className="flex gap-2 justify-center">
-                <button
-                  onClick={() => setShowForm(true)}
-                  className="rounded-lg bg-orange-600 px-4 py-2 text-white hover:bg-orange-700"
-                >
-                  צור פרויקט
-                </button>
-                {clients.length === 0 && (
-                  <Link
-                    href="/clients"
-                    className="rounded-lg border border-orange-600 px-4 py-2 text-orange-600 hover:bg-orange-50"
-                  >
-                    צור לקוח
-                  </Link>
-                )}
-              </div>
-            </div>
+            <EmptyState
+              icon={FolderOpen}
+              message="אין פרויקטים עדיין"
+              description={clients.length === 0 ? "צור לקוח תחילה ואז תוכל ליצור פרויקטים" : "צור פרויקט ראשון כדי להתחיל לעקוב אחר זמן העבודה שלך"}
+              actionLabel="צור פרויקט"
+              onAction={() => setShowForm(true)}
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">

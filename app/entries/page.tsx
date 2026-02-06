@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Clock } from "lucide-react";
 
 interface User {
   id: string;
@@ -745,15 +747,13 @@ export default function EntriesPage() {
           {entriesLoading ? (
             <div className="p-8 text-center text-gray-600">טוען רישומי זמן...</div>
           ) : entries.length === 0 ? (
-            <div className="p-8 text-center">
-              <p className="text-gray-600 mb-4">אין רישומי זמן עדיין</p>
-              <button
-                onClick={() => setShowForm(true)}
-                className="rounded-lg bg-orange-600 px-4 py-2 text-white hover:bg-orange-700"
-              >
-                רשום זמן ראשון
-              </button>
-            </div>
+            <EmptyState
+              icon={Clock}
+              message="אין רישומי זמן עדיין"
+              description="התחל לעקוב אחר זמני העבודה שלך על ידי רישום זמן ראשון"
+              actionLabel="רשום זמן ראשון"
+              onAction={() => setShowForm(true)}
+            />
           ) : (
             <>
               {/* Bulk Action Bar */}
