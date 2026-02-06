@@ -1,0 +1,835 @@
+/**
+ * PDF Templates for Clock-Bill Reports
+ * Supports 6 templates: modern, classic, bold, elegant, nature, ocean
+ * All templates support Hebrew RTL layout
+ */
+
+/* ============================================
+   BASE PDF STYLES
+   ============================================ */
+
+/* Print-only content (hidden in screen, visible in print) */
+.print-only {
+  display: none;
+}
+
+@media print {
+  /* Hide non-print elements */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Show print-only elements */
+  .print-only {
+    display: block !important;
+  }
+
+  /* Hide everything in body except pdf-content when printing */
+  body > *:not(#pdf-content) {
+    display: none !important;
+  }
+
+  /* Show only PDF content */
+  #pdf-content {
+    display: block !important;
+  }
+
+  /* Ensure proper page breaks */
+  .pdf-page {
+    page-break-after: always;
+  }
+
+  .pdf-no-break {
+    page-break-inside: avoid;
+  }
+
+  /* Base document settings */
+  @page {
+    size: A4;
+    margin: 15mm 15mm 15mm 15mm;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* RTL support for print */
+  [dir="rtl"] {
+    direction: rtl;
+    text-align: right;
+  }
+}
+
+/* ============================================
+   MODERN TEMPLATE
+   - Clean, minimal design with blue accents
+   - Lots of white space
+   - Rounded corners
+   - Colorful top bar
+   ============================================ */
+@media print {
+  body.pdf-template-modern {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  .pdf-template-modern .pdf-header {
+    background: linear-gradient(135deg, #2563EB 0%, #1d4ed8 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+  }
+
+  .pdf-template-modern .pdf-business-name {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .pdf-template-modern .pdf-report-title {
+    font-size: 18px;
+    opacity: 0.95;
+    font-weight: 500;
+  }
+
+  .pdf-template-modern .pdf-logo {
+    max-width: 80px;
+    max-height: 80px;
+    object-fit: contain;
+    border-radius: 8px;
+  }
+
+  .pdf-template-modern .pdf-section {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .pdf-template-modern .pdf-section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #2563EB;
+  }
+
+  .pdf-template-modern .pdf-summary-card {
+    background: white;
+    border-radius: 10px;
+    padding: 1.25rem;
+    border: 1px solid #e2e8f0;
+  }
+
+  .pdf-template-modern .pdf-summary-label {
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 0.25rem;
+  }
+
+  .pdf-template-modern .pdf-summary-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2563EB;
+  }
+
+  .pdf-template-modern .pdf-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .pdf-template-modern .pdf-table thead {
+    background: #f1f5f9;
+  }
+
+  .pdf-template-modern .pdf-table th {
+    padding: 0.875rem 1rem;
+    text-align: right;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  .pdf-template-modern .pdf-table td {
+    padding: 0.875rem 1rem;
+    text-align: right;
+    font-size: 13px;
+    color: #334155;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .pdf-template-modern .pdf-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .pdf-template-modern .pdf-table tbody tr:hover {
+    background: #f8fafc;
+  }
+
+  .pdf-template-modern .pdf-footer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 2px solid #e2e8f0;
+    text-align: center;
+    font-size: 12px;
+    color: #64748b;
+  }
+}
+
+/* ============================================
+   CLASSIC TEMPLATE
+   - Traditional and formal
+   - Suitable for invoices
+   - Thin borders
+   - Bold headers
+   - Serif font
+   - Bottom separator line
+   ============================================ */
+@media print {
+  body.pdf-template-classic {
+    font-family: 'Source Serif 4', Georgia, serif;
+  }
+
+  .pdf-template-classic .pdf-header {
+    border-bottom: 3px solid #1a1a1a;
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .pdf-template-classic .pdf-business-name {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 0.25rem;
+  }
+
+  .pdf-template-classic .pdf-report-title {
+    font-size: 16px;
+    color: #666;
+    font-weight: 400;
+    font-style: italic;
+  }
+
+  .pdf-template-classic .pdf-logo {
+    max-width: 60px;
+    max-height: 60px;
+    object-fit: contain;
+  }
+
+  .pdf-template-classic .pdf-section {
+    border: 1px solid #ddd;
+    margin-bottom: 1.5rem;
+  }
+
+  .pdf-template-classic .pdf-section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    background: #f5f5f5;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .pdf-template-classic .pdf-section-body {
+    padding: 1rem;
+  }
+
+  .pdf-template-classic .pdf-summary-card {
+    border: 1px solid #ddd;
+    padding: 1rem;
+    background: white;
+  }
+
+  .pdf-template-classic .pdf-summary-label {
+    font-size: 11px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+  }
+
+  .pdf-template-classic .pdf-summary-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .pdf-template-classic .pdf-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .pdf-template-classic .pdf-table thead {
+    border-bottom: 2px solid #1a1a1a;
+  }
+
+  .pdf-template-classic .pdf-table th {
+    padding: 0.75rem 1rem;
+    text-align: right;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a1a1a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .pdf-template-classic .pdf-table td {
+    padding: 0.75rem 1rem;
+    text-align: right;
+    font-size: 13px;
+    color: #333;
+    border-bottom: 1px solid #eee;
+  }
+
+  .pdf-template-classic .pdf-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .pdf-template-classic .pdf-footer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 3px solid #1a1a1a;
+    text-align: center;
+    font-size: 11px;
+    color: #666;
+  }
+}
+
+/* ============================================
+   BOLD TEMPLATE
+   - Colorful and energetic
+   - Orange primary color
+   - Large headers
+   - Colorful blocks
+   - Strong accents
+   ============================================ */
+@media print {
+  body.pdf-template-bold {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  .pdf-template-bold .pdf-header {
+    background: #E85D04;
+    color: white;
+    padding: 2.5rem 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .pdf-template-bold .pdf-business-name {
+    font-size: 32px;
+    font-weight: 900;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .pdf-template-bold .pdf-report-title {
+    font-size: 20px;
+    font-weight: 600;
+    opacity: 0.95;
+  }
+
+  .pdf-template-bold .pdf-logo {
+    max-width: 100px;
+    max-height: 100px;
+    object-fit: contain;
+    background: white;
+    padding: 8px;
+    border-radius: 8px;
+  }
+
+  .pdf-template-bold .pdf-section {
+    background: white;
+    border-left: 6px solid #E85D04;
+    box-shadow: 0 2px 8px rgba(232, 93, 4, 0.1);
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+  }
+
+  .pdf-template-bold .pdf-section-title {
+    font-size: 20px;
+    font-weight: 900;
+    color: #E85D04;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .pdf-template-bold .pdf-summary-card {
+    background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 2px solid #E85D04;
+  }
+
+  .pdf-template-bold .pdf-summary-label {
+    font-size: 12px;
+    color: #9A3412;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+  }
+
+  .pdf-template-bold .pdf-summary-value {
+    font-size: 28px;
+    font-weight: 900;
+    color: #E85D04;
+  }
+
+  .pdf-template-bold .pdf-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .pdf-template-bold .pdf-table thead {
+    background: #E85D04;
+    color: white;
+  }
+
+  .pdf-template-bold .pdf-table th {
+    padding: 1rem;
+    text-align: right;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .pdf-template-bold .pdf-table td {
+    padding: 1rem;
+    text-align: right;
+    font-size: 14px;
+    color: #1f2937;
+    border-bottom: 2px solid #FED7AA;
+  }
+
+  .pdf-template-bold .pdf-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .pdf-template-bold .pdf-table tbody tr:nth-child(even) {
+    background: #FFF7ED;
+  }
+
+  .pdf-template-bold .pdf-footer {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #E85D04;
+    color: white;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
+
+/* ============================================
+   ELEGANT TEMPLATE
+   - Refined and luxurious
+   - Blue-gray primary color
+   - Dark tone
+   - Thin lines
+   - Generous spacing
+   - Refined typography
+   ============================================ */
+@media print {
+  body.pdf-template-elegant {
+    font-family: 'Source Serif 4', Georgia, serif;
+  }
+
+  .pdf-template-elegant .pdf-header {
+    background: #2d3748;
+    color: #e2e8f0;
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .pdf-template-elegant .pdf-business-name {
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+  }
+
+  .pdf-template-elegant .pdf-report-title {
+    font-size: 15px;
+    color: #a0aec0;
+    font-weight: 400;
+  }
+
+  .pdf-template-elegant .pdf-logo {
+    max-width: 70px;
+    max-height: 70px;
+    object-fit: contain;
+    opacity: 0.9;
+  }
+
+  .pdf-template-elegant .pdf-section {
+    border: 1px solid #e2e8f0;
+    margin-bottom: 2rem;
+  }
+
+  .pdf-template-elegant .pdf-section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #4a5568;
+    margin: 0;
+    padding: 1rem 1.5rem;
+    background: #f7fafc;
+    border-bottom: 1px solid #e2e8f0;
+    letter-spacing: 0.5px;
+  }
+
+  .pdf-template-elegant .pdf-section-body {
+    padding: 1.5rem;
+  }
+
+  .pdf-template-elegant .pdf-summary-card {
+    border: 1px solid #e2e8f0;
+    padding: 1.25rem;
+    background: #fafafa;
+  }
+
+  .pdf-template-elegant .pdf-summary-label {
+    font-size: 11px;
+    color: #718096;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+  }
+
+  .pdf-template-elegant .pdf-summary-value {
+    font-size: 22px;
+    font-weight: 600;
+    color: #2d3748;
+  }
+
+  .pdf-template-elegant .pdf-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .pdf-template-elegant .pdf-table thead {
+    border-bottom: 1px solid #cbd5e0;
+  }
+
+  .pdf-template-elegant .pdf-table th {
+    padding: 0.875rem 1rem;
+    text-align: right;
+    font-size: 12px;
+    font-weight: 600;
+    color: #4a5568;
+    letter-spacing: 0.5px;
+  }
+
+  .pdf-template-elegant .pdf-table td {
+    padding: 0.875rem 1rem;
+    text-align: right;
+    font-size: 13px;
+    color: #2d3748;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .pdf-template-elegant .pdf-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .pdf-template-elegant .pdf-footer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #cbd5e0;
+    text-align: center;
+    font-size: 11px;
+    color: #718096;
+  }
+}
+
+/* ============================================
+   NATURE TEMPLATE
+   - Green tones
+   - Fresh and pleasant
+   - Rounded elements
+   - Light green backgrounds
+   - Organic feel
+   ============================================ */
+@media print {
+  body.pdf-template-nature {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  .pdf-template-nature .pdf-header {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+  }
+
+  .pdf-template-nature .pdf-business-name {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .pdf-template-nature .pdf-report-title {
+    font-size: 17px;
+    opacity: 0.95;
+    font-weight: 500;
+  }
+
+  .pdf-template-nature .pdf-logo {
+    max-width: 80px;
+    max-height: 80px;
+    object-fit: contain;
+    background: white;
+    padding: 8px;
+    border-radius: 12px;
+  }
+
+  .pdf-template-nature .pdf-section {
+    background: linear-gradient(to bottom, #ECFDF5 0%, #D1FAE5 100%);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #A7F3D0;
+  }
+
+  .pdf-template-nature .pdf-section-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #065F46;
+    margin-bottom: 1rem;
+  }
+
+  .pdf-template-nature .pdf-summary-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 2px solid #A7F3D0;
+  }
+
+  .pdf-template-nature .pdf-summary-label {
+    font-size: 12px;
+    color: #059669;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .pdf-template-nature .pdf-summary-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #047857;
+  }
+
+  .pdf-template-nature .pdf-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #A7F3D0;
+  }
+
+  .pdf-template-nature .pdf-table thead {
+    background: #059669;
+    color: white;
+  }
+
+  .pdf-template-nature .pdf-table th {
+    padding: 0.875rem 1rem;
+    text-align: right;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .pdf-template-nature .pdf-table td {
+    padding: 0.875rem 1rem;
+    text-align: right;
+    font-size: 13px;
+    color: #1f2937;
+    border-bottom: 1px solid #D1FAE5;
+    background: white;
+  }
+
+  .pdf-template-nature .pdf-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .pdf-template-nature .pdf-table tbody tr:nth-child(even) td {
+    background: #F0FDFA;
+  }
+
+  .pdf-template-nature .pdf-footer {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #059669;
+    color: white;
+    text-align: center;
+    font-size: 12px;
+    border-radius: 12px;
+  }
+}
+
+/* ============================================
+   OCEAN TEMPLATE
+   - Blue-turquoise colors
+   - Professional and calm
+   - Subtle header gradient
+   - Alternating table rows
+   - Clean design
+   ============================================ */
+@media print {
+  body.pdf-template-ocean {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  .pdf-template-ocean .pdf-header {
+    background: linear-gradient(135deg, #0891B2 0%, #0E7490 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+  }
+
+  .pdf-template-ocean .pdf-business-name {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .pdf-template-ocean .pdf-report-title {
+    font-size: 17px;
+    opacity: 0.95;
+    font-weight: 500;
+  }
+
+  .pdf-template-ocean .pdf-logo {
+    max-width: 80px;
+    max-height: 80px;
+    object-fit: contain;
+    border-radius: 8px;
+  }
+
+  .pdf-template-ocean .pdf-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(8, 145, 178, 0.1);
+    border: 1px solid #CFFAFE;
+  }
+
+  .pdf-template-ocean .pdf-section-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #0E7490;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #0891B2;
+  }
+
+  .pdf-template-ocean .pdf-summary-card {
+    background: linear-gradient(135deg, #ECFEFF 0%, #CFFAFE 100%);
+    border-radius: 10px;
+    padding: 1.5rem;
+    border: 1px solid #A5F3FC;
+  }
+
+  .pdf-template-ocean .pdf-summary-label {
+    font-size: 12px;
+    color: #0E7490;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .pdf-template-ocean .pdf-summary-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0891B2;
+  }
+
+  .pdf-template-ocean .pdf-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .pdf-template-ocean .pdf-table thead {
+    background: #0891B2;
+    color: white;
+  }
+
+  .pdf-template-ocean .pdf-table th {
+    padding: 0.875rem 1rem;
+    text-align: right;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .pdf-template-ocean .pdf-table td {
+    padding: 0.875rem 1rem;
+    text-align: right;
+    font-size: 13px;
+    color: #1f2937;
+    border-bottom: 1px solid #CFFAFE;
+  }
+
+  .pdf-template-ocean .pdf-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .pdf-template-ocean .pdf-table tbody tr:nth-child(even) {
+    background: #ECFEFF;
+  }
+
+  .pdf-template-ocean .pdf-footer {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid #0891B2;
+    text-align: center;
+    font-size: 12px;
+    color: #0E7490;
+  }
+}
+
+/* ============================================
+   TEMPLATE PREVIEW STYLES (for dialog)
+   ============================================ */
+.pdf-preview-modern {
+  background: linear-gradient(135deg, #2563EB 0%, #1d4ed8 100%);
+  color: white;
+  border-radius: 8px;
+}
+
+.pdf-preview-classic {
+  background: white;
+  border: 2px solid #1a1a1a;
+  color: #1a1a1a;
+}
+
+.pdf-preview-bold {
+  background: #E85D04;
+  color: white;
+  border-radius: 8px;
+}
+
+.pdf-preview-elegant {
+  background: #2d3748;
+  color: #e2e8f0;
+  border: 1px solid #4a5568;
+}
+
+.pdf-preview-nature {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: white;
+  border-radius: 12px;
+}
+
+.pdf-preview-ocean {
+  background: linear-gradient(135deg, #0891B2 0%, #0E7490 100%);
+  color: white;
+  border-radius: 8px;
+}

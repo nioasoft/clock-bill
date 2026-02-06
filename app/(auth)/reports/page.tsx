@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import "../pdf-templates.css";
 
 interface User {
   id: string;
@@ -284,14 +283,107 @@ export default function ReportsPage() {
   const confirmExportPdf = (template: PdfTemplate) => {
     setSelectedTemplate(template);
     setShowExportDialog(false);
-    // Add template class to body for print styling
-    document.body.classList.add(`pdf-template-${template}`);
+
+    // Inject print styles dynamically
+    const styleId = 'pdf-print-styles';
+    let styleEl = document.getElementById(styleId) as HTMLStyleElement;
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = styleId;
+      document.head.appendChild(styleEl);
+    }
+
+    // Define print styles for the selected template
+    const getTemplateStyles = (t: PdfTemplate) => {
+      const baseStyles = `
+        @media print {
+          body > *:not(#pdf-content) { display: none !important; }
+          #pdf-content { display: block !important; }
+          @page { size: A4; margin: 15mm; }
+          body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+          .pdf-header { padding: 2rem; margin-bottom: 2rem; }
+          .pdf-section { margin-bottom: 1.5rem; padding: 1.5rem; }
+          .pdf-table { width: 100%; border-collapse: collapse; }
+          .pdf-table th, .pdf-table td { padding: 0.75rem 1rem; text-align: right; }
+          .pdf-summary-card { padding: 1rem; margin-bottom: 0.5rem; }
+        }
+      `;
+
+      const templateStyles: Record<PdfTemplate, string> = {
+        modern: `
+          ${baseStyles}
+          @media print {
+            .pdf-header { background: #2563EB !important; color: white !important; border-radius: 12px; }
+            .pdf-section { background: #f8fafc !important; border-radius: 12px; }
+            .pdf-table thead { background: #f1f5f9 !important; }
+            .pdf-table th { color: #475569; font-weight: 600; }
+          }
+        `,
+        classic: `
+          ${baseStyles}
+          @media print {
+            .pdf-header { border-bottom: 3px solid #1a1a1a; padding-bottom: 1.5rem; }
+            .pdf-business-name { color: #1a1a1a; font-weight: 700; font-family: Georgia, serif; }
+            .pdf-section { border: 1px solid #ddd; }
+            .pdf-section-title { background: #f5f5f5; padding: 0.75rem 1rem; border-bottom: 1px solid #ddd; font-weight: 700; }
+            .pdf-table th { font-family: Georgia, serif; text-transform: uppercase; font-size: 11px; }
+          }
+        `,
+        bold: `
+          ${baseStyles}
+          @media print {
+            .pdf-header { background: #E85D04 !important; color: white !important; padding: 2.5rem 2rem; }
+            .pdf-business-name { font-size: 32px; font-weight: 900; text-transform: uppercase; }
+            .pdf-section { border-left: 6px solid #E85D04; box-shadow: 0 2px 8px rgba(232, 93, 4, 0.1); }
+            .pdf-table thead { background: #E85D04 !important; color: white !important; }
+            .pdf-table th { color: white; font-weight: 700; text-transform: uppercase; }
+          }
+        `,
+        elegant: `
+          ${baseStyles}
+          @media print {
+            .pdf-header { background: #2d3748 !important; color: #e2e8f0; padding: 2rem; }
+            .pdf-section { border: 1px solid #e2e8f0; }
+            .pdf-section-title { color: #4a5568; padding: 1rem 1.5rem; background: #f7fafc; border-bottom: 1px solid #e2e8f0; }
+            .pdf-table th { color: #4a5568; font-weight: 600; font-size: 12px; letter-spacing: 0.5px; }
+          }
+        `,
+        nature: `
+          ${baseStyles}
+          @media print {
+            .pdf-header { background: #059669 !important; color: white !important; border-radius: 16px; }
+            .pdf-section { background: linear-gradient(to bottom, #ECFDF5 0%, #D1FAE5 100%); border-radius: 16px; border: 1px solid #A7F3D0; }
+            .pdf-table thead { background: #059669 !important; color: white !important; }
+            .pdf-table th { color: white; font-weight: 600; }
+            .pdf-table tbody tr:nth-child(even) td { background: #F0FDFA !important; }
+          }
+        `,
+        ocean: `
+          ${baseStyles}
+          @media print {
+            .pdf-header { background: linear-gradient(135deg, #0891B2 0%, #0E7490 100%) !important; color: white !important; border-radius: 12px; }
+            .pdf-section { background: white; border-radius: 12px; border: 1px solid #CFFAFE; }
+            .pdf-section-title { color: #0E7490; padding-bottom: 0.75rem; border-bottom: 2px solid #0891B2; }
+            .pdf-table thead { background: #0891B2 !important; color: white !important; }
+            .pdf-table th { color: white; font-weight: 600; }
+            .pdf-table tbody tr:nth-child(even) { background: #ECFEFF !important; }
+          }
+        `
+      };
+
+      return templateStyles[t] || templateStyles.modern;
+    };
+
+    styleEl.innerHTML = getTemplateStyles(template);
+
     // Trigger browser print (which allows "Save as PDF")
     setTimeout(() => {
       window.print();
-      // Remove template class after print dialog closes
+      // Clean up styles after print
       setTimeout(() => {
-        document.body.classList.remove(`pdf-template-${template}`);
+        if (styleEl && styleEl.parentNode) {
+          styleEl.parentNode.removeChild(styleEl);
+        }
       }, 1000);
     }, 100);
   };
@@ -460,8 +552,8 @@ export default function ReportsPage() {
             </div>
 
             {/* PDF Content (for printing) - hidden on screen, visible in print */}
-            <div id="pdf-content" className="print-only">
-              <div className="pdf-header">
+            <div id="pdf-content" className="print-only" dir="rtl">
+              <div className="pdf-header" style={{ marginBottom: "1rem" }}>
                 {userProfile?.logoUrl && (
                   <img
                     src={userProfile.logoUrl}
@@ -470,34 +562,34 @@ export default function ReportsPage() {
                     style={{ maxHeight: "60px", marginBottom: "15px" }}
                   />
                 )}
-                <h1 className="pdf-title">
+                <h1 className="pdf-business-name" style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "0.5rem" }}>
                   {userProfile?.businessName || "דוח שעות עבודה"}
                 </h1>
-                <p className="pdf-subtitle">
+                <p className="pdf-subtitle" style={{ fontSize: "14px", opacity: 0.8 }}>
                   {filters.startDate} עד {filters.endDate}
                 </p>
               </div>
 
               {/* Summary Section */}
-              <div className="pdf-section">
-                <h2 className="pdf-section-title">סיכום כללי</h2>
-                <div className="grid grid-cols-4 gap-4">
-                  <div className="pdf-summary-card">
-                    <div className="pdf-summary-label">סה״כ שעות</div>
-                    <div className="pdf-summary-value">
+              <div className="pdf-section" style={{ marginBottom: "1.5rem", padding: "1.5rem" }}>
+                <h2 className="pdf-section-title" style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "1rem" }}>סיכום כללי</h2>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem" }}>
+                  <div className="pdf-summary-card" style={{ padding: "1rem", backgroundColor: "#f8fafc", borderRadius: "8px" }}>
+                    <div className="pdf-summary-label" style={{ fontSize: "12px", color: "#64748b", marginBottom: "0.25rem" }}>סה״כ שעות</div>
+                    <div className="pdf-summary-value" style={{ fontSize: "24px", fontWeight: "bold", color: "#2563EB" }}>
                       {reportData.summary.totalHours.toFixed(1)}
                     </div>
                   </div>
-                  <div className="pdf-summary-card">
-                    <div className="pdf-summary-label">סה״כ רשומות</div>
-                    <div className="pdf-summary-value">
+                  <div className="pdf-summary-card" style={{ padding: "1rem", backgroundColor: "#f8fafc", borderRadius: "8px" }}>
+                    <div className="pdf-summary-label" style={{ fontSize: "12px", color: "#64748b", marginBottom: "0.25rem" }}>סה״כ רשומות</div>
+                    <div className="pdf-summary-value" style={{ fontSize: "24px", fontWeight: "bold", color: "#2563EB" }}>
                       {reportData.summary.totalEntries}
                     </div>
                   </div>
                   {Object.keys(reportData.summary.totalAmounts).length > 0 && (
-                    <div className="pdf-summary-card col-span-2">
-                      <div className="pdf-summary-label">סה״כ סכום</div>
-                      <div className="pdf-summary-value">
+                    <div className="pdf-summary-card" style={{ padding: "1rem", backgroundColor: "#f8fafc", borderRadius: "8px", gridColumn: "span 2" }}>
+                      <div className="pdf-summary-label" style={{ fontSize: "12px", color: "#64748b", marginBottom: "0.25rem" }}>סה״כ סכום</div>
+                      <div className="pdf-summary-value" style={{ fontSize: "24px", fontWeight: "bold", color: "#2563EB" }}>
                         {Object.entries(reportData.summary.totalAmounts).map(
                           ([currency, amount]) => formatCurrency(amount, currency)
                         ).join(" + ")}
@@ -509,23 +601,23 @@ export default function ReportsPage() {
 
               {/* By Client Section */}
               {reportData.byClient.length > 0 && (
-                <div className="pdf-section">
-                  <h2 className="pdf-section-title">סיכום לפי לקוח</h2>
+                <div className="pdf-section" style={{ marginBottom: "1.5rem", padding: "1.5rem" }}>
+                  <h2 className="pdf-section-title" style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "1rem" }}>סיכום לפי לקוח</h2>
                   {reportData.byClient.map((client) => (
-                    <div key={client.clientId} className="pdf-summary-card">
-                      <div className="flex justify-between items-center">
+                    <div key={client.clientId} className="pdf-summary-card" style={{ padding: "1rem", backgroundColor: "#f8fafc", borderRadius: "8px", marginBottom: "0.75rem" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div>
-                          <div className="font-semibold text-lg">{client.clientName}</div>
-                          <div className="text-sm opacity-70">
+                          <div style={{ fontWeight: "600", fontSize: "18px" }}>{client.clientName}</div>
+                          <div style={{ fontSize: "14px", opacity: 0.7 }}>
                             {client.entries.length} רשומות
                           </div>
                         </div>
-                        <div className="text-left">
-                          <div className="font-semibold text-xl">
+                        <div style={{ textAlign: "left" }}>
+                          <div style={{ fontWeight: "600", fontSize: "20px" }}>
                             {formatDuration(client.totalMinutes)}
                           </div>
                           {Object.keys(client.totalAmounts).length > 0 && (
-                            <div className="text-sm opacity-70">
+                            <div style={{ fontSize: "14px", opacity: 0.7 }}>
                               {Object.entries(client.totalAmounts)
                                 .map(([currency, amount]) =>
                                   formatCurrency(amount, currency)
@@ -542,26 +634,26 @@ export default function ReportsPage() {
 
               {/* Detailed Entries Table */}
               {reportData.entries.length > 0 && (
-                <div className="pdf-section">
-                  <h2 className="pdf-section-title">רשומות מפורטות</h2>
-                  <table className="pdf-table">
-                    <thead>
+                <div className="pdf-section" style={{ marginBottom: "1.5rem", padding: "1.5rem" }}>
+                  <h2 className="pdf-section-title" style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "1rem" }}>רשומות מפורטות</h2>
+                  <table className="pdf-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead style={{ backgroundColor: "#f1f5f9" }}>
                       <tr>
-                        <th>תאריך</th>
-                        <th>לקוח</th>
-                        <th>פרויקט</th>
-                        <th>תיאור</th>
-                        <th>משך</th>
+                        <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: "600", fontSize: "13px", color: "#475569" }}>תאריך</th>
+                        <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: "600", fontSize: "13px", color: "#475569" }}>לקוח</th>
+                        <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: "600", fontSize: "13px", color: "#475569" }}>פרויקט</th>
+                        <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: "600", fontSize: "13px", color: "#475569" }}>תיאור</th>
+                        <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: "600", fontSize: "13px", color: "#475569" }}>משך</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {reportData.entries.map((entry) => (
-                        <tr key={entry.id}>
-                          <td>{entry.date}</td>
-                          <td>{entry.clientName}</td>
-                          <td>{entry.projectName}</td>
-                          <td>{entry.description}</td>
-                          <td>{formatDuration(entry.duration)}</td>
+                      {reportData.entries.map((entry, index) => (
+                        <tr key={entry.id} style={{ borderBottom: "1px solid #f1f5f9", backgroundColor: index % 2 === 0 ? "transparent" : "#f8fafc" }}>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px" }}>{entry.date}</td>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px" }}>{entry.clientName}</td>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px" }}>{entry.projectName}</td>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px" }}>{entry.description}</td>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px", fontWeight: "500" }}>{formatDuration(entry.duration)}</td>
                         </tr>
                       ))}
                     </tbody>

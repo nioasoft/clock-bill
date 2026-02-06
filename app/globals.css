@@ -324,3 +324,8 @@ a.text-orange-600 {
 a.text-orange-600:hover {
   color: #f97316;
 }
+
+/* Print styles for PDF export */
+.print-only {
+  display: none;
+}
