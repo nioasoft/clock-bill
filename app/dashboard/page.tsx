@@ -9,11 +9,40 @@ interface User {
   email: string;
 }
 
+interface DashboardStats {
+  today: {
+    hours: number;
+    formatted: string;
+  };
+  week: {
+    hours: number;
+    formatted: string;
+  };
+  month: {
+    hours: number;
+    formatted: string;
+  };
+  clientsCount: number;
+  projectsCount: number;
+}
+
+interface RecentEntry {
+  id: string;
+  description: string;
+  date: string;
+  duration: number;
+  formattedDuration: string;
+  projectId: string;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [logoutLoading, setLogoutLoading] = useState(false);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [recentEntries, setRecentEntries] = useState<RecentEntry[]>([]);
 
   useEffect(() => {
     // Fetch current session
@@ -38,6 +67,30 @@ export default function DashboardPage() {
 
     fetchUser();
   }, [router]);
+
+  useEffect(() => {
+    // Fetch dashboard stats when user is loaded
+    const fetchStats = async () => {
+      if (!user) return;
+
+      try {
+        setStatsLoading(true);
+        const response = await fetch("/api/dashboard/stats");
+        const data = await response.json();
+
+        if (data.success) {
+          setStats(data.stats);
+          setRecentEntries(data.recentEntries || []);
+        }
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [user]);
 
   const handleLogout = async () => {
     setLogoutLoading(true);
@@ -110,6 +163,46 @@ export default function DashboardPage() {
           </p>
         </div>
 
+        {/* Stats Cards */}
+        {statsLoading ? (
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="rounded-lg bg-white p-6 shadow animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+              </div>
+            ))}
+          </div>
+        ) : stats ? (
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Today's Hours */}
+            <div className="rounded-lg bg-white p-6 shadow">
+              <p className="text-sm font-medium text-gray-600">שעות היום</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900">{stats.today.formatted}</p>
+            </div>
+
+            {/* Week's Hours */}
+            <div className="rounded-lg bg-white p-6 shadow">
+              <p className="text-sm font-medium text-gray-600">שעות השבוע</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900">{stats.week.formatted}</p>
+            </div>
+
+            {/* Month's Hours */}
+            <div className="rounded-lg bg-white p-6 shadow">
+              <p className="text-sm font-medium text-gray-600">שעות החודש</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900">{stats.month.formatted}</p>
+            </div>
+
+            {/* Clients/Projects Count */}
+            <div className="rounded-lg bg-white p-6 shadow">
+              <p className="text-sm font-medium text-gray-600">לקוחות ופרויקטים</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900">
+                {stats.clientsCount} / {stats.projectsCount}
+              </p>
+            </div>
+          </div>
+        ) : null}
+
         {/* Quick Actions */}
         <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Link
@@ -142,6 +235,30 @@ export default function DashboardPage() {
             </p>
           </Link>
         </div>
+
+        {/* Recent Entries */}
+        {recentEntries.length > 0 && (
+          <div className="mt-8">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">רשומות אחרונות</h3>
+            <div className="rounded-lg bg-white shadow overflow-hidden">
+              <ul className="divide-y divide-gray-200">
+                {recentEntries.map((entry) => (
+                  <li key={entry.id} className="px-6 py-4 hover:bg-gray-50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">{entry.description}</p>
+                        <p className="text-sm text-gray-500">{entry.date}</p>
+                      </div>
+                      <div className="text-left">
+                        <p className="text-sm font-medium text-gray-900">{entry.formattedDuration}</p>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

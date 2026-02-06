@@ -17,8 +17,10 @@ interface Profile {
   businessName: string | null;
   logoUrl: string | null;
   phone: string | null;
+  email: string | null;
   address: string | null;
   taxId: string | null;
+  website: string | null;
   defaultCurrency: string;
   preferredPdfTemplate: string;
   createdAt: string;
@@ -44,8 +46,10 @@ export default function SettingsPage() {
   // Profile form state
   const [businessName, setBusinessName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [taxId, setTaxId] = useState("");
+  const [website, setWebsite] = useState("");
 
   useEffect(() => {
     if (activeTab === "security") {
@@ -68,8 +72,10 @@ export default function SettingsPage() {
         // Initialize form state
         setBusinessName(data.profile.businessName || "");
         setPhone(data.profile.phone || "");
+        setEmail(data.profile.email || "");
         setAddress(data.profile.address || "");
         setTaxId(data.profile.taxId || "");
+        setWebsite(data.profile.website || "");
       } else {
         setProfileError(data.message || "שגיאה בטעינת הפרופיל");
       }
@@ -155,8 +161,10 @@ export default function SettingsPage() {
         body: JSON.stringify({
           businessName: businessName || null,
           phone: phone || null,
+          email: email || null,
           address: address || null,
           taxId: taxId || null,
+          website: website || null,
         }),
       });
 
@@ -567,6 +575,24 @@ export default function SettingsPage() {
                       />
                     </div>
 
+                    {/* Email */}
+                    <div>
+                      <label
+                        htmlFor="email"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        אימייל עסקי
+                      </label>
+                      <input
+                        type="email"
+                        id="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="לדוגמה: info@example.com"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      />
+                    </div>
+
                     {/* Tax ID */}
                     <div>
                       <label
@@ -581,6 +607,24 @@ export default function SettingsPage() {
                         value={taxId}
                         onChange={(e) => setTaxId(e.target.value)}
                         placeholder="לדוגמה: 123456789"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      />
+                    </div>
+
+                    {/* Website */}
+                    <div>
+                      <label
+                        htmlFor="website"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        אתר אינטרנט
+                      </label>
+                      <input
+                        type="url"
+                        id="website"
+                        value={website}
+                        onChange={(e) => setWebsite(e.target.value)}
+                        placeholder="לדוגמה: https://example.com"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                       />
                     </div>

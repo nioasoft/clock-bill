@@ -94,14 +94,36 @@ export async function initSchema(): Promise<void> {
       business_name TEXT,
       logo_url TEXT,
       phone TEXT,
+      email TEXT,
       address TEXT,
       tax_id TEXT,
+      website TEXT,
       default_currency TEXT DEFAULT 'ILS',
       preferred_pdf_template TEXT DEFAULT 'modern',
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW()
     )
   `);
+
+  // Add website column if it doesn't exist (for migrations)
+  try {
+    await client.query(`
+      ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS website TEXT
+    `);
+  } catch (error) {
+    // Column might already exist, ignore error
+    console.log("Website column migration check complete");
+  }
+
+  // Add email column if it doesn't exist (for migrations)
+  try {
+    await client.query(`
+      ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS email TEXT
+    `);
+  } catch (error) {
+    // Column might already exist, ignore error
+    console.log("Email column migration check complete");
+  }
 
   // Clients table
   await client.query(`

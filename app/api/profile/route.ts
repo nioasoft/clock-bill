@@ -13,8 +13,10 @@ export interface Profile {
   businessName: string | null;
   logoUrl: string | null;
   phone: string | null;
+  email: string | null;
   address: string | null;
   taxId: string | null;
+  website: string | null;
   defaultCurrency: string;
   preferredPdfTemplate: string;
   createdAt: string;
@@ -30,8 +32,10 @@ export interface ProfileResponse {
 export interface ProfileUpdateRequest {
   businessName?: string;
   phone?: string;
+  email?: string;
   address?: string;
   taxId?: string;
+  website?: string;
   defaultCurrency?: string;
   preferredPdfTemplate?: string;
 }
@@ -54,7 +58,7 @@ export async function GET(): Promise<NextResponse> {
     // Get user profile
     const result = await query<Record<string, unknown>>(
       `SELECT id, user_id as "userId", business_name as "businessName",
-              logo_url as "logoUrl", phone, address, tax_id as "taxId",
+              logo_url as "logoUrl", phone, email, address, tax_id as "taxId", website,
               default_currency as "defaultCurrency", preferred_pdf_template as "preferredPdfTemplate",
               created_at as "createdAt", updated_at as "updatedAt"
        FROM user_profiles
@@ -114,6 +118,11 @@ export async function PATCH(request: Request): Promise<NextResponse> {
       values.push(body.phone);
     }
 
+    if (body.email !== undefined) {
+      updates.push(`email = $${paramIndex++}`);
+      values.push(body.email);
+    }
+
     if (body.address !== undefined) {
       updates.push(`address = $${paramIndex++}`);
       values.push(body.address);
@@ -122,6 +131,11 @@ export async function PATCH(request: Request): Promise<NextResponse> {
     if (body.taxId !== undefined) {
       updates.push(`tax_id = $${paramIndex++}`);
       values.push(body.taxId);
+    }
+
+    if (body.website !== undefined) {
+      updates.push(`website = $${paramIndex++}`);
+      values.push(body.website);
     }
 
     if (body.defaultCurrency !== undefined) {
@@ -152,7 +166,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
        SET ${updates.join(", ")}
        WHERE user_id = $${paramIndex}
        RETURNING id, user_id as "userId", business_name as "businessName",
-                 logo_url as "logoUrl", phone, address, tax_id as "taxId",
+                 logo_url as "logoUrl", phone, email, address, tax_id as "taxId", website,
                  default_currency as "defaultCurrency", preferred_pdf_template as "preferredPdfTemplate",
                  created_at as "createdAt", updated_at as "updatedAt"`,
       values
