@@ -1,34 +1,43 @@
 /**
- * Database connection module using Node.js built-in sqlite module
+ * Database connection module using better-sqlite3
  * This ensures data persistence across server restarts
  */
-import { DatabaseSync } from "node:sqlite";
-import { join } from "path";
+import Database from "better-sqlite3";
+import { join, dirname } from "path";
+import { mkdirSync, existsSync } from "fs";
 
 const DB_PATH = process.env.DATABASE_URL?.replace("file:", "") ||
   join(process.cwd(), "data", "app.db");
 
-// Ensure data directory exists
-import { mkdirSync } from "fs";
-const dataDir = join(process.cwd(), "data");
-try {
-  mkdirSync(dataDir, { recursive: true });
-} catch {
-  // Directory already exists
-}
-
 // Global database instance for connection reuse
-let db: DatabaseSync | null = null;
+let db: Database.Database | null = null;
+
+/**
+ * Ensure the data directory exists
+ */
+function ensureDataDirectory(): void {
+  const dataDir = dirname(DB_PATH);
+  if (!existsSync(dataDir)) {
+    try {
+      mkdirSync(dataDir, { recursive: true });
+    } catch {
+      // Directory might have been created by another process
+    }
+  }
+}
 
 /**
  * Get or create the database connection
  * Uses singleton pattern to reuse connection across requests
  */
-export function getDb(): DatabaseSync {
+export function getDb(): Database.Database {
   if (!db) {
-    db = new DatabaseSync(DB_PATH);
+    ensureDataDirectory();
+    db = new Database(DB_PATH);
     // Enable foreign keys
     db.exec("PRAGMA foreign_keys = ON");
+    // Enable WAL mode for better performance
+    db.exec("PRAGMA journal_mode = WAL");
   }
   return db;
 }
@@ -237,6 +246,3 @@ export function initSchema(): void {
     stmt.run(tag.name, tag.color);
   }
 }
-
-// Initialize schema on module load
-initSchema();
