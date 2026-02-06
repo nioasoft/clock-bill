@@ -18,6 +18,8 @@ interface UserProfile {
   address: string | null;
   taxId: string | null;
   defaultCurrency: string;
+  pdfPrimaryColor: string;
+  pdfAccentColor: string;
 }
 
 interface Project {
@@ -210,6 +212,8 @@ export default function ReportsPage() {
             address: data.profile.address,
             taxId: data.profile.taxId,
             defaultCurrency: data.profile.defaultCurrency,
+            pdfPrimaryColor: data.profile.pdfPrimaryColor || "#2563EB",
+            pdfAccentColor: data.profile.pdfAccentColor || "#059669",
           });
         }
       } catch (error) {
@@ -534,6 +538,10 @@ export default function ReportsPage() {
 
     // Define print styles for the selected template
     const getTemplateStyles = (t: PdfTemplate) => {
+      // Get custom colors from user profile, with fallback defaults
+      const primaryColor = userProfile?.pdfPrimaryColor || '#2563EB';
+      const accentColor = userProfile?.pdfAccentColor || '#059669';
+
       const baseStyles = `
         @media print {
           body > *:not(#pdf-content) { display: none !important; }
@@ -552,47 +560,48 @@ export default function ReportsPage() {
         modern: `
           ${baseStyles}
           @media print {
-            .pdf-header { background: #2563EB !important; color: white !important; border-radius: 12px; }
+            .pdf-header { background: ${primaryColor} !important; color: white !important; border-radius: 12px; }
             .pdf-section { background: #f8fafc !important; border-radius: 12px; }
             .pdf-table thead { background: #f1f5f9 !important; }
             .pdf-table th { color: #475569; font-weight: 600; }
+            .pdf-summary-value { color: ${primaryColor} !important; }
           }
         `,
         classic: `
           ${baseStyles}
           @media print {
-            .pdf-header { border-bottom: 3px solid #1a1a1a; padding-bottom: 1.5rem; }
-            .pdf-business-name { color: #1a1a1a; font-weight: 700; font-family: Georgia, serif; }
+            .pdf-header { border-bottom: 3px solid ${primaryColor}; padding-bottom: 1.5rem; }
+            .pdf-business-name { color: ${primaryColor}; font-weight: 700; font-family: Georgia, serif; }
             .pdf-section { border: 1px solid #ddd; }
-            .pdf-section-title { background: #f5f5f5; padding: 0.75rem 1rem; border-bottom: 1px solid #ddd; font-weight: 700; }
+            .pdf-section-title { background: #f5f5f5; padding: 0.75rem 1rem; border-bottom: 1px solid ${accentColor}; font-weight: 700; }
             .pdf-table th { font-family: Georgia, serif; text-transform: uppercase; font-size: 11px; }
           }
         `,
         bold: `
           ${baseStyles}
           @media print {
-            .pdf-header { background: #E85D04 !important; color: white !important; padding: 2.5rem 2rem; }
+            .pdf-header { background: ${primaryColor} !important; color: white !important; padding: 2.5rem 2rem; }
             .pdf-business-name { font-size: 32px; font-weight: 900; text-transform: uppercase; }
-            .pdf-section { border-left: 6px solid #E85D04; box-shadow: 0 2px 8px rgba(232, 93, 4, 0.1); }
-            .pdf-table thead { background: #E85D04 !important; color: white !important; }
+            .pdf-section { border-left: 6px solid ${accentColor}; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+            .pdf-table thead { background: ${primaryColor} !important; color: white !important; }
             .pdf-table th { color: white; font-weight: 700; text-transform: uppercase; }
           }
         `,
         elegant: `
           ${baseStyles}
           @media print {
-            .pdf-header { background: #2d3748 !important; color: #e2e8f0; padding: 2rem; }
+            .pdf-header { background: ${primaryColor} !important; color: #e2e8f0; padding: 2rem; }
             .pdf-section { border: 1px solid #e2e8f0; }
-            .pdf-section-title { color: #4a5568; padding: 1rem 1.5rem; background: #f7fafc; border-bottom: 1px solid #e2e8f0; }
-            .pdf-table th { color: #4a5568; font-weight: 600; font-size: 12px; letter-spacing: 0.5px; }
+            .pdf-section-title { color: ${primaryColor}; padding: 1rem 1.5rem; background: #f7fafc; border-bottom: 1px solid ${accentColor}; }
+            .pdf-table th { color: ${primaryColor}; font-weight: 600; font-size: 12px; letter-spacing: 0.5px; }
           }
         `,
         nature: `
           ${baseStyles}
           @media print {
-            .pdf-header { background: #059669 !important; color: white !important; border-radius: 16px; }
+            .pdf-header { background: ${accentColor} !important; color: white !important; border-radius: 16px; }
             .pdf-section { background: linear-gradient(to bottom, #ECFDF5 0%, #D1FAE5 100%); border-radius: 16px; border: 1px solid #A7F3D0; }
-            .pdf-table thead { background: #059669 !important; color: white !important; }
+            .pdf-table thead { background: ${accentColor} !important; color: white !important; }
             .pdf-table th { color: white; font-weight: 600; }
             .pdf-table tbody tr:nth-child(even) td { background: #F0FDFA !important; }
           }
@@ -600,10 +609,10 @@ export default function ReportsPage() {
         ocean: `
           ${baseStyles}
           @media print {
-            .pdf-header { background: linear-gradient(135deg, #0891B2 0%, #0E7490 100%) !important; color: white !important; border-radius: 12px; }
+            .pdf-header { background: linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%) !important; color: white !important; border-radius: 12px; }
             .pdf-section { background: white; border-radius: 12px; border: 1px solid #CFFAFE; }
-            .pdf-section-title { color: #0E7490; padding-bottom: 0.75rem; border-bottom: 2px solid #0891B2; }
-            .pdf-table thead { background: #0891B2 !important; color: white !important; }
+            .pdf-section-title { color: ${accentColor}; padding-bottom: 0.75rem; border-bottom: 2px solid ${primaryColor}; }
+            .pdf-table thead { background: ${primaryColor} !important; color: white !important; }
             .pdf-table th { color: white; font-weight: 600; }
             .pdf-table tbody tr:nth-child(even) { background: #ECFEFF !important; }
           }
@@ -806,6 +815,28 @@ export default function ReportsPage() {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Display Currency Filter */}
+              <div>
+                <label className="block text-sm font-medium mb-2">הצג סכומים במטבע</label>
+                <select
+                  value={displayCurrency}
+                  onChange={(e) => setDisplayCurrency(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md bg-background"
+                >
+                  <option value="original">מטבע מקורי (מרובה)</option>
+                  <option value="ILS">₪ - שקל ישראלי (ILS)</option>
+                  <option value="USD">$ - דולר אמריקני (USD)</option>
+                  <option value="USDT">₮ - טתר (USDT)</option>
+                  <option value="BTC">₿ - ביטקוין (BTC)</option>
+                  <option value="ETH">Ξ - אתריום (ETH)</option>
+                </select>
+                {displayCurrency !== "original" && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {!Object.keys(currencyRates).length ? "⚠️ לא הוגדרו שערי חליפין" : "✓ שערי חליפין זמינים"}
+                  </p>
+                )}
               </div>
 
               {/* Generate Button */}
@@ -1111,21 +1142,30 @@ export default function ReportsPage() {
               </div>
               <div className="bg-card border rounded-lg p-6">
                 <h3 className="text-sm font-medium text-muted-foreground mb-2">
-                  סה״כ סכום
+                  סה״כ סכום {displayCurrency !== "original" && `(${displayCurrency})`}
                 </h3>
                 {Object.keys(reportData.summary.totalAmounts).length > 0 ? (
-                  <div className="space-y-1">
-                    {Object.entries(reportData.summary.totalAmounts).map(
-                      ([currency, amount]) => (
-                        <p
-                          key={currency}
-                          className="text-2xl font-bold"
-                        >
-                          {formatCurrency(amount, currency)}
-                        </p>
-                      )
-                    )}
-                  </div>
+                  displayCurrency === "original" ? (
+                    <div className="space-y-1">
+                      {Object.entries(reportData.summary.totalAmounts).map(
+                        ([currency, amount]) => (
+                          <p
+                            key={currency}
+                            className="text-2xl font-bold"
+                          >
+                            {formatCurrency(amount, currency)}
+                          </p>
+                        )
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-3xl font-bold">
+                      {formatCurrency(
+                        convertAmounts(reportData.summary.totalAmounts, displayCurrency),
+                        displayCurrency
+                      )}
+                    </p>
+                  )
                 ) : (
                   <p className="text-lg text-muted-foreground">לא זמין</p>
                 )}
@@ -1162,11 +1202,16 @@ export default function ReportsPage() {
                         </p>
                         {Object.keys(client.totalAmounts).length > 0 && (
                           <p className="text-sm text-muted-foreground">
-                            {Object.entries(client.totalAmounts)
-                              .map(([currency, amount]) =>
-                                formatCurrency(amount, currency)
-                              )
-                              .join(" + ")}
+                            {displayCurrency === "original"
+                              ? Object.entries(client.totalAmounts)
+                                  .map(([currency, amount]) =>
+                                    formatCurrency(amount, currency)
+                                  )
+                                  .join(" + ")
+                              : formatCurrency(
+                                  convertAmounts(client.totalAmounts, displayCurrency),
+                                  displayCurrency
+                                )}
                           </p>
                         )}
                       </div>
@@ -1239,11 +1284,16 @@ export default function ReportsPage() {
                         </p>
                         {Object.keys(dateSummary.totalAmounts).length > 0 && (
                           <p className="text-sm text-muted-foreground">
-                            {Object.entries(dateSummary.totalAmounts)
-                              .map(([currency, amount]) =>
-                                formatCurrency(amount, currency)
-                              )
-                              .join(" + ")}
+                            {displayCurrency === "original"
+                              ? Object.entries(dateSummary.totalAmounts)
+                                  .map(([currency, amount]) =>
+                                    formatCurrency(amount, currency)
+                                  )
+                                  .join(" + ")
+                              : formatCurrency(
+                                  convertAmounts(dateSummary.totalAmounts, displayCurrency),
+                                  displayCurrency
+                                )}
                           </p>
                         )}
                       </div>
@@ -1277,11 +1327,16 @@ export default function ReportsPage() {
                         </p>
                         {Object.keys(weekSummary.totalAmounts).length > 0 && (
                           <p className="text-sm text-muted-foreground">
-                            {Object.entries(weekSummary.totalAmounts)
-                              .map(([currency, amount]) =>
-                                formatCurrency(amount, currency)
-                              )
-                              .join(" + ")}
+                            {displayCurrency === "original"
+                              ? Object.entries(weekSummary.totalAmounts)
+                                  .map(([currency, amount]) =>
+                                    formatCurrency(amount, currency)
+                                  )
+                                  .join(" + ")
+                              : formatCurrency(
+                                  convertAmounts(weekSummary.totalAmounts, displayCurrency),
+                                  displayCurrency
+                                )}
                           </p>
                         )}
                       </div>
