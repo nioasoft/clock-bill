@@ -34,6 +34,8 @@ export const userProfile = pgTable('user_profiles', {
   // Display format preferences
   dateFormat: text('date_format').default('DD/MM/YYYY').notNull(), // 'DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'
   timeFormat: text('time_format').default('24h').notNull(), // '12h' or '24h'
+  // Week preferences
+  firstDayOfWeek: text('first_day_of_week').default('sunday').notNull(), // 'sunday' or 'monday'
   createdAt: timestamp('created_at').default(sql`NOW()`),
   updatedAt: timestamp('updated_at').default(sql`NOW()`),
 });

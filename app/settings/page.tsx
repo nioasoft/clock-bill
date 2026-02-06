@@ -42,6 +42,7 @@ interface Profile {
   workingHours: number;
   dateFormat: string;
   timeFormat: string;
+  firstDayOfWeek: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -83,6 +84,7 @@ export default function SettingsPage() {
   const [dailyReminderEnabled, setDailyReminderEnabled] = useState(false);
   const [dailyReminderTime, setDailyReminderTime] = useState("09:00");
   const [workingHours, setWorkingHours] = useState("8");
+  const [firstDayOfWeek, setFirstDayOfWeek] = useState("sunday");
   const [testingNotification, setTestingNotification] = useState(false);
 
   // Currency rates form state
@@ -222,6 +224,7 @@ export default function SettingsPage() {
         setDailyReminderEnabled(data.profile.dailyReminderEnabled ?? false);
         setDailyReminderTime(data.profile.dailyReminderTime ?? "09:00");
         setWorkingHours((data.profile.workingHours ?? 8).toString());
+        setFirstDayOfWeek(data.profile.firstDayOfWeek ?? "sunday");
         // Initialize format preferences
         setDateFormat(data.profile.dateFormat || "DD/MM/YYYY");
         setTimeFormat(data.profile.timeFormat || "24h");
@@ -363,6 +366,7 @@ export default function SettingsPage() {
           dailyReminderEnabled,
           dailyReminderTime,
           workingHours: parseFloat(workingHours),
+          firstDayOfWeek,
         }),
       });
 
@@ -1196,6 +1200,33 @@ export default function SettingsPage() {
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   מספר השעות המלאות ליום עבודה: {workingHours} שעות
+                </p>
+              </div>
+            </div>
+
+            {/* First Day of Week */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                יום תחילת השבוע
+              </h2>
+              <p className="text-sm text-gray-600 mb-6">
+                בחר את היום שבו מתחיל השבוע שלך (משפיע על לוחות שנה ודוחות).
+              </p>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-2">
+                  יום תחילת שבוע
+                </label>
+                <select
+                  value={firstDayOfWeek}
+                  onChange={(e) => setFirstDayOfWeek(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                >
+                  <option value="sunday">ראשון (Sunday)</option>
+                  <option value="monday">שני (Monday)</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {firstDayOfWeek === "sunday" ? "השבוע מתחיל ביום ראשון" : "השבוע מתחיל ביום שני"}
                 </p>
               </div>
             </div>

@@ -40,6 +40,7 @@ export interface Profile {
   workingHours: number;
   dateFormat: string;
   timeFormat: string;
+  firstDayOfWeek: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -75,6 +76,7 @@ export interface ProfileUpdateRequest {
   workingHours?: number;
   dateFormat?: string;
   timeFormat?: string;
+  firstDayOfWeek?: string;
 }
 
 /**
@@ -109,6 +111,7 @@ export async function GET(): Promise<NextResponse> {
               daily_reminder_enabled as "dailyReminderEnabled", daily_reminder_time as "dailyReminderTime",
               last_reminder_date as "lastReminderDate", working_hours as "workingHours",
               date_format as "dateFormat", time_format as "timeFormat",
+              first_day_of_week as "firstDayOfWeek",
               created_at as "createdAt", updated_at as "updatedAt"
        FROM user_profiles
        WHERE user_id = $1`,
@@ -280,6 +283,11 @@ export async function PATCH(request: Request): Promise<NextResponse> {
       values.push(body.timeFormat);
     }
 
+    if (body.firstDayOfWeek !== undefined) {
+      updates.push(`first_day_of_week = $${paramIndex++}`);
+      values.push(body.firstDayOfWeek);
+    }
+
     if (updates.length === 0) {
       return NextResponse.json(
         { success: false, message: "No fields to update" },
@@ -309,6 +317,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
                  daily_reminder_enabled as "dailyReminderEnabled", daily_reminder_time as "dailyReminderTime",
                  last_reminder_date as "lastReminderDate", working_hours as "workingHours",
                  date_format as "dateFormat", time_format as "timeFormat",
+                 first_day_of_week as "firstDayOfWeek",
                  created_at as "createdAt", updated_at as "updatedAt"`,
       values
     );

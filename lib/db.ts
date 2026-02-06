@@ -296,6 +296,15 @@ export async function initSchema(): Promise<void> {
     logger.debug("time_format column migration check complete");
   }
 
+  // Add first_day_of_week column if it doesn't exist (for calendar preferences)
+  try {
+    await client.query(`
+      ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS first_day_of_week TEXT DEFAULT 'sunday'
+    `);
+  } catch (error) {
+    logger.debug("first_day_of_week column migration check complete");
+  }
+
   // Clients table
   await client.query(`
     CREATE TABLE IF NOT EXISTS clients (
