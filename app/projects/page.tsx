@@ -1007,7 +1007,7 @@ export default function ProjectsPage() {
                         <td className="whitespace-nowrap px-6 py-4">
                           <button
                             onClick={(e) => handleRestore(project.id, e)}
-                            className="rounded-md bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700"
+                            className="min-h-[44px] px-4 py-2 rounded-md bg-green-600 text-sm text-white hover:bg-green-700"
                           >
                             שחזר
                           </button>

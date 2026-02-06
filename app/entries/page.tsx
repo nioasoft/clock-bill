@@ -625,7 +625,7 @@ export default function EntriesPage() {
             <h2 className="text-lg font-semibold text-gray-900">סינון</h2>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="text-sm text-orange-600 hover:text-orange-700"
+              className="min-h-[44px] min-w-[44px] px-4 py-2 text-sm font-medium text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
             >
               {showFilters ? "הסתר סינון" : "הצג סינון"}
             </button>
@@ -721,7 +721,8 @@ export default function EntriesPage() {
                   לקוח: {clients.find((c) => c.id === filters.clientId)?.name}
                   <button
                     onClick={() => handleFilterChange("clientId", "")}
-                    className="me-1 text-orange-600 hover:text-orange-700"
+                    className="min-h-[44px] min-w-[44px] flex items-center justify-center me-1 text-orange-600 hover:text-orange-700 rounded-full transition-colors"
+                    aria-label="הסתר סינון לקוח"
                   >
                     ×
                   </button>
@@ -732,7 +733,8 @@ export default function EntriesPage() {
                   פרויקט: {projects.find((p) => p.id === filters.projectId)?.name}
                   <button
                     onClick={() => handleFilterChange("projectId", "")}
-                    className="me-1 text-orange-600 hover:text-orange-700"
+                    className="min-h-[44px] min-w-[44px] flex items-center justify-center me-1 text-orange-600 hover:text-orange-700 rounded-full transition-colors"
+                    aria-label="הסתר סינון פרויקט"
                   >
                     ×
                   </button>
@@ -743,7 +745,8 @@ export default function EntriesPage() {
                   מ: {new Date(filters.startDate).toLocaleDateString("he-IL")}
                   <button
                     onClick={() => handleFilterChange("startDate", "")}
-                    className="me-1 text-orange-600 hover:text-orange-700"
+                    className="min-h-[44px] min-w-[44px] flex items-center justify-center me-1 text-orange-600 hover:text-orange-700 rounded-full transition-colors"
+                    aria-label="הסתר סינון תאריך התחלה"
                   >
                     ×
                   </button>
@@ -754,7 +757,8 @@ export default function EntriesPage() {
                   עד: {new Date(filters.endDate).toLocaleDateString("he-IL")}
                   <button
                     onClick={() => handleFilterChange("endDate", "")}
-                    className="me-1 text-orange-600 hover:text-orange-700"
+                    className="min-h-[44px] min-w-[44px] flex items-center justify-center me-1 text-orange-600 hover:text-orange-700 rounded-full transition-colors"
+                    aria-label="הסתר סינון תאריך סיום"
                   >
                     ×
                   </button>
@@ -846,16 +850,16 @@ export default function EntriesPage() {
                 </div>
 
                 <div className="flex items-center">
-                  <label htmlFor="isBillable" className="flex items-center cursor-pointer">
+                  <label htmlFor="isBillable" className="flex items-center cursor-pointer min-h-[44px]">
                     <input
                       type="checkbox"
                       id="isBillable"
                       checked={formData.isBillable}
                       onChange={(e) => setFormData({ ...formData, isBillable: e.target.checked })}
-                      className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                      className="h-5 w-5 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
                       disabled={submitting}
                     />
-                    <span className="ms-2 text-sm font-medium text-gray-700">ניתן לחיוב</span>
+                    <span className="me-2 text-sm font-medium text-gray-700">ניתן לחיוב</span>
                   </label>
                 </div>
 
@@ -958,7 +962,8 @@ export default function EntriesPage() {
                 </div>
               )}
 
-              <div className="overflow-x-auto">
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -1064,6 +1069,93 @@ export default function EntriesPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4">
+              {entries.map((entry) => (
+                <div key={entry.id} className={`bg-white rounded-lg shadow p-4 ${selectedEntries.has(entry.id) ? "ring-2 ring-orange-500" : ""}`}>
+                  <div className="flex items-start gap-3">
+                    {/* Large touch-friendly checkbox */}
+                    <div className="pt-1">
+                      <input
+                        type="checkbox"
+                        checked={selectedEntries.has(entry.id)}
+                        onChange={() => handleSelectEntry(entry.id)}
+                        className="h-6 w-6 rounded border-gray-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
+                      />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      {/* Header with date and status */}
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-900">
+                          {new Date(entry.date).toLocaleDateString("he-IL")}
+                        </span>
+                        {isEntryRunning(entry) && (
+                          <div className="flex items-center gap-1.5 inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                            </span>
+                            <Timer className="h-3 w-3 me-1" />
+                            פעיל
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Description */}
+                      <div className="text-sm text-gray-900 mb-1">
+                        {entry.description}
+                      </div>
+                      {entry.notes && (
+                        <div className="text-xs text-gray-500 mb-2">{entry.notes}</div>
+                      )}
+
+                      {/* Client and Project */}
+                      <div className="flex items-center gap-2 text-xs text-gray-600 mb-2">
+                        <span>{entry.clientName}</span>
+                        <span>•</span>
+                        <span>{entry.projectName}</span>
+                      </div>
+
+                      {/* Duration and billable status */}
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-sm font-medium text-gray-900">
+                          {formatDuration(entry.duration)}
+                        </span>
+                        {entry.isBillable && (
+                          <span className="inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-semibold leading-5 text-green-800">
+                            לחיוב
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Action buttons - large touch targets */}
+                      <div className="grid grid-cols-3 gap-2">
+                        <button
+                          onClick={() => handleDuplicate(entry)}
+                          className="min-h-[44px] flex items-center justify-center rounded-lg border border-blue-600 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100 active:bg-blue-200 transition-colors"
+                        >
+                          שכפל
+                        </button>
+                        <button
+                          onClick={() => handleEdit(entry)}
+                          className="min-h-[44px] flex items-center justify-center rounded-lg bg-orange-600 px-3 py-2 text-sm font-medium text-white hover:bg-orange-700 active:bg-orange-800 transition-colors"
+                        >
+                          ערוך
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(entry)}
+                          className="min-h-[44px] flex items-center justify-center rounded-lg border border-red-600 bg-red-50 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-100 active:bg-red-200 transition-colors"
+                        >
+                          מחק
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </>
         )}

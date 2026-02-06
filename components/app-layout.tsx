@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "./sidebar";
 import { MobileNav } from "./mobile-nav";
+import { MobileBottomNav } from "./mobile-bottom-nav";
 import { ErrorBoundary } from "./error-boundary";
 
 interface User {
@@ -102,12 +103,15 @@ export function AppLayout({ children }: AppLayoutProps) {
       </div>
 
       {/* Mobile Layout - full width */}
-      <div className="lg:hidden">
+      <div className="lg:hidden pb-16">
         <main className="min-h-screen">
           <ErrorBoundary>
             {children}
           </ErrorBoundary>
         </main>
+
+        {/* Mobile Bottom Navigation */}
+        <MobileBottomNav />
       </div>
     </div>
   );

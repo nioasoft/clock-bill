@@ -745,7 +745,7 @@ export default function ReportsPage() {
             <h2 className="text-lg font-semibold">פילטרים</h2>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="min-h-[44px] min-w-[44px] px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
             >
               {showFilters ? "הסתר" : "הצג"}
             </button>

@@ -34,10 +34,10 @@ export function MobileNav({ userEmail, onLogout }: MobileNavProps) {
       {/* Header with hamburger menu */}
       <header className="lg:hidden bg-white shadow-sm sticky top-0 z-40">
         <div className="px-4 py-3 flex items-center justify-between">
-          {/* Hamburger button */}
+          {/* Hamburger button - large touch target */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+            className="min-h-[44px] min-w-[44px] p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
             aria-label="תפריט"
           >
             {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -98,7 +98,7 @@ export function MobileNav({ userEmail, onLogout }: MobileNavProps) {
               </Link>
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-2 rounded-lg text-gray-600 hover:bg-gray-100"
+                className="min-h-[44px] min-w-[44px] p-2 rounded-lg text-gray-600 hover:bg-gray-100"
                 aria-label="סגור"
               >
                 <X className="h-6 w-6" />
@@ -116,7 +116,7 @@ export function MobileNav({ userEmail, onLogout }: MobileNavProps) {
                     href={item.href}
                     onClick={() => setIsOpen(false)}
                     className={`
-                      flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors
+                      min-h-[44px] flex items-center gap-3 px-4 rounded-lg text-sm font-medium transition-colors
                       ${
                         isActive
                           ? "bg-orange-50 text-orange-700"
