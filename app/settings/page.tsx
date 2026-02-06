@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ImportContent } from "@/components/import-content";
 
 interface Session {
   id: string;
@@ -101,6 +102,25 @@ export default function SettingsPage() {
   const [showMappingStep, setShowMappingStep] = useState(false);
   const importClientsRef = useRef<HTMLInputElement>(null);
   const importEntriesRef = useRef<HTMLInputElement>(null);
+
+  // JSON Backup/Restore state
+  const [backupFile, setBackupFile] = useState<File | null>(null);
+  const [backupLoading, setBackupLoading] = useState(false);
+  const [backupError, setBackupError] = useState("");
+  const [backupSuccess, setBackupSuccess] = useState("");
+  const [backupImportResults, setBackupImportResults] = useState<{
+    profile: number;
+    clients: number;
+    projects: number;
+    timeEntries: number;
+    customTags: number;
+    currencyRates: number;
+    rateOverrides: number;
+    errors: Array<{ entity: string; message: string }>;
+  } | null>(null);
+  const [importMode, setImportMode] = useState<"merge" | "replace">("merge");
+  const [showImportConfirm, setShowImportConfirm] = useState(false);
+  const backupInputRef = useRef<HTMLInputElement>(null);
 
   // Profile form state
   const [businessName, setBusinessName] = useState("");
@@ -615,6 +635,116 @@ export default function SettingsPage() {
         return "Ξ";
       default:
         return currency;
+    }
+  };
+
+  // Handle JSON backup export
+  const handleExportBackup = async () => {
+    setBackupLoading(true);
+    setBackupError("");
+    setBackupSuccess("");
+
+    try {
+      const response = await fetch("/api/backup/export");
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "שגיאה ביצירת הגיבוי");
+      }
+
+      // Download the file
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = response.headers
+        .get("Content-Disposition")
+        ?.split('filename="')[1]
+        .replace(/"/g, "") || `clockbill-backup-${new Date().toISOString().split("T")[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      setBackupSuccess("הגיבוי נוצר בהצלחה!");
+      setTimeout(() => setBackupSuccess(""), 3000);
+    } catch (error) {
+      console.error("Error exporting backup:", error);
+      setBackupError(error instanceof Error ? error.message : "שגיאה ביצירת הגיבוי");
+    } finally {
+      setBackupLoading(false);
+    }
+  };
+
+  // Handle JSON backup file selection
+  const handleBackupFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.name.endsWith(".json")) {
+        setBackupError("יש לבחור קובץ JSON");
+        return;
+      }
+      setBackupFile(file);
+      setBackupError("");
+      setBackupSuccess("");
+      setBackupImportResults(null);
+    }
+  };
+
+  // Handle JSON backup import
+  const handleImportBackup = async () => {
+    if (!backupFile) {
+      setBackupError("יש לבחור קובץ גיבוי");
+      return;
+    }
+
+    setBackupLoading(true);
+    setBackupError("");
+    setBackupSuccess("");
+    setBackupImportResults(null);
+
+    try {
+      // Read and parse the backup file
+      const text = await backupFile.text();
+      const backup = JSON.parse(text);
+
+      // Show confirmation dialog
+      if (!showImportConfirm) {
+        setShowImportConfirm(true);
+        setBackupLoading(false);
+        return;
+      }
+
+      // Import the backup
+      const response = await fetch("/api/backup/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ backup, mode: importMode }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.message || "שגיאה בייבוא הגיבוי");
+      }
+
+      setBackupImportResults(data.stats);
+      setBackupSuccess(`הגיבוי יובא בהצלחה!`);
+      setShowImportConfirm(false);
+      setBackupFile(null);
+
+      // Reset file input
+      if (backupInputRef.current) {
+        backupInputRef.current.value = "";
+      }
+
+      setTimeout(() => setBackupSuccess(""), 5000);
+    } catch (error) {
+      console.error("Error importing backup:", error);
+      setBackupError(error instanceof Error ? error.message : "שגיאה בייבוא הגיבוי");
+      setShowImportConfirm(false);
+    } finally {
+      setBackupLoading(false);
     }
   };
 
