@@ -2,21 +2,20 @@
 const nextConfig = {
   // Server external packages for Node.js built-in modules
   serverExternalPackages: ['better-sqlite3'],
-  // Ensure we can use Node.js built-in modules
+  // Webpack config to fix React 19 resolution
   webpack: (config, { isServer }) => {
-    if (isServer) {
-      config.externals = config.externals || [];
+    if (!isServer) {
+      // Ensure React is resolved correctly on client-side
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'react': require.resolve('react'),
+        'react-dom': require.resolve('react-dom'),
+      };
     }
     return config;
   },
   // Dev server configuration
   devIndicators: false,
-  // Bind to localhost only to avoid permission issues
-  experimental: {
-    serverActions: {
-      allowedOrigins: ['localhost:3000'],
-    },
-  },
 };
 
 export default nextConfig;
