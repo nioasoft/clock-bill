@@ -113,6 +113,32 @@ export async function GET(request: NextRequest) {
       [userId]
     );
 
+    // Get upcoming deadlines (projects with end dates in the next 30 days)
+    const thirtyDaysFromNow = new Date(now);
+    thirtyDaysFromNow.setDate(now.getDate() + 30);
+    const thirtyDaysStr = thirtyDaysFromNow.toISOString().split('T')[0];
+
+    const upcomingDeadlinesResult = await query<{
+      id: string;
+      name: string;
+      end_date: string;
+      client_id: string;
+      client_name: string;
+      status: string;
+    }>(
+      `SELECT p.id, p.name, p.end_date, p.client_id, c.name as client_name, p.status
+       FROM projects p
+       JOIN clients c ON p.client_id = c.id
+       WHERE p.user_id = $1
+         AND p.end_date IS NOT NULL
+         AND p.end_date >= $2
+         AND p.end_date <= $3
+         AND p.status != 'completed'
+       ORDER BY p.end_date ASC
+       LIMIT 10`,
+      [userId, today, thirtyDaysStr]
+    );
+
     // Format duration as hours (convert from minutes)
     const formatHours = (minutes: number) => {
       const hours = Math.floor(minutes / 60);
@@ -152,6 +178,15 @@ export async function GET(request: NextRequest) {
         duration: entry.duration,
         formattedDuration: formatHours(entry.duration),
         projectId: entry.project_id
+      })),
+      upcomingDeadlines: upcomingDeadlinesResult.rows.map(project => ({
+        id: project.id,
+        name: project.name,
+        endDate: project.end_date,
+        clientId: project.client_id,
+        clientName: project.client_name,
+        status: project.status,
+        daysUntilDeadline: Math.ceil((new Date(project.end_date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
       }))
     }, {
       headers: {

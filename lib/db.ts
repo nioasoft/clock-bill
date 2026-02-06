@@ -157,6 +157,46 @@ export async function initSchema(): Promise<void> {
     logger.debug("payment_terms column migration check complete");
   }
 
+  // Add bank_name column if it doesn't exist (for bank details)
+  try {
+    await client.query(`
+      ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS bank_name TEXT
+    `);
+  } catch (error) {
+    // Column might already exist, ignore error
+    logger.debug("bank_name column migration check complete");
+  }
+
+  // Add bank_account_number column if it doesn't exist (for bank details)
+  try {
+    await client.query(`
+      ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS bank_account_number TEXT
+    `);
+  } catch (error) {
+    // Column might already exist, ignore error
+    logger.debug("bank_account_number column migration check complete");
+  }
+
+  // Add bank_branch column if it doesn't exist (for bank details)
+  try {
+    await client.query(`
+      ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS bank_branch TEXT
+    `);
+  } catch (error) {
+    // Column might already exist, ignore error
+    logger.debug("bank_branch column migration check complete");
+  }
+
+  // Add bank_swift column if it doesn't exist (for international transfers)
+  try {
+    await client.query(`
+      ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS bank_swift TEXT
+    `);
+  } catch (error) {
+    // Column might already exist, ignore error
+    logger.debug("bank_swift column migration check complete");
+  }
+
   // Clients table
   await client.query(`
     CREATE TABLE IF NOT EXISTS clients (

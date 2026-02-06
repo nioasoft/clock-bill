@@ -26,6 +26,10 @@ interface Profile {
   invoicePrefix: string | null;
   nextInvoiceNumber: number | null;
   paymentTerms: string | null;
+  bankName: string | null;
+  bankAccountNumber: string | null;
+  bankBranch: string | null;
+  bankSwift: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -77,6 +81,10 @@ export default function SettingsPage() {
   const [invoicePrefix, setInvoicePrefix] = useState("");
   const [nextInvoiceNumber, setNextInvoiceNumber] = useState("");
   const [paymentTerms, setPaymentTerms] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [bankAccountNumber, setBankAccountNumber] = useState("");
+  const [bankBranch, setBankBranch] = useState("");
+  const [bankSwift, setBankSwift] = useState("");
 
   useEffect(() => {
     if (activeTab === "security") {
@@ -110,6 +118,10 @@ export default function SettingsPage() {
         setInvoicePrefix(data.profile.invoicePrefix || "");
         setNextInvoiceNumber(data.profile.nextInvoiceNumber?.toString() || "");
         setPaymentTerms(data.profile.paymentTerms || "");
+        setBankName(data.profile.bankName || "");
+        setBankAccountNumber(data.profile.bankAccountNumber || "");
+        setBankBranch(data.profile.bankBranch || "");
+        setBankSwift(data.profile.bankSwift || "");
       } else {
         setProfileError(data.message || "שגיאה בטעינת הפרופיל");
       }
@@ -204,6 +216,10 @@ export default function SettingsPage() {
           invoicePrefix: invoicePrefix || null,
           nextInvoiceNumber: nextInvoiceNumber ? parseInt(nextInvoiceNumber, 10) : null,
           paymentTerms: paymentTerms || null,
+          bankName: bankName || null,
+          bankAccountNumber: bankAccountNumber || null,
+          bankBranch: bankBranch || null,
+          bankSwift: bankSwift || null,
         }),
       });
 
@@ -1090,6 +1106,91 @@ export default function SettingsPage() {
                       <p className="text-xs text-gray-500 mt-1">
                         תנאי התשלום יופיעו בחשבוניות ובדוחות
                       </p>
+                    </div>
+                  </div>
+
+                  {/* Bank Details Section */}
+                  <div className="border-t border-gray-200 pt-6 mt-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">פרטי בנק להעברות</h3>
+                    <p className="text-sm text-gray-600 mb-6">
+                      פרטים אלו יופיעו בחשבוניות כדי לאפשר העברת תשלומים
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Bank Name */}
+                      <div>
+                        <label
+                          htmlFor="bankName"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                          שם הבנק
+                        </label>
+                        <input
+                          type="text"
+                          id="bankName"
+                          value={bankName}
+                          onChange={(e) => setBankName(e.target.value)}
+                          placeholder="לדוגמה: בנק הפועלים"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        />
+                      </div>
+
+                      {/* Bank Branch */}
+                      <div>
+                        <label
+                          htmlFor="bankBranch"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                          מספר סניף
+                        </label>
+                        <input
+                          type="text"
+                          id="bankBranch"
+                          value={bankBranch}
+                          onChange={(e) => setBankBranch(e.target.value)}
+                          placeholder="לדוגמה: 123"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        />
+                      </div>
+
+                      {/* Bank Account Number */}
+                      <div>
+                        <label
+                          htmlFor="bankAccountNumber"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                          מספר חשבון
+                        </label>
+                        <input
+                          type="text"
+                          id="bankAccountNumber"
+                          value={bankAccountNumber}
+                          onChange={(e) => setBankAccountNumber(e.target.value)}
+                          placeholder="לדוגמה: 123456"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        />
+                      </div>
+
+                      {/* Bank Swift / BIC */}
+                      <div>
+                        <label
+                          htmlFor="bankSwift"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                          מזהה בנק בינלאומי (SWIFT/BIC)
+                        </label>
+                        <input
+                          type="text"
+                          id="bankSwift"
+                          value={bankSwift}
+                          onChange={(e) => setBankSwift(e.target.value)}
+                          placeholder="לדוגמה: POHALILIT"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          נדרש להעברות בינלאומיות בלבד
+                        </p>
+                      </div>
                     </div>
                   </div>
 

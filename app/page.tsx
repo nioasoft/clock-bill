@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmailVerificationNotice } from "@/components/email-verification-notice";
+import { UpcomingDeadlines } from "@/components/upcoming-deadlines";
 
 function QuickActionsSkeleton() {
   return (
@@ -77,6 +78,28 @@ export default function Home() {
           <p className="mt-2 text-gray-600">
             נהל את שעות העבודה והפרויקטים שלך בקלות
           </p>
+        </div>
+
+        {/* Upcoming Deadlines */}
+        <div className="mt-8">
+          <Suspense fallback={
+            <div className="rounded-lg bg-white p-6 shadow">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-5 w-5 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-6 bg-gray-200 rounded w-32 animate-pulse"></div>
+              </div>
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          }>
+            <UpcomingDeadlines />
+          </Suspense>
         </div>
 
         {/* Quick Actions with Suspense for better perceived performance */}

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AppLayout } from "@/components/app-layout";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EarningsChart } from "@/components/earnings-chart";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 
 interface DashboardStats {
@@ -431,6 +432,11 @@ export default function DashboardPage() {
               צור דוחות PDF ו-Excel
             </p>
           </Link>
+        </div>
+
+        {/* Earnings Chart */}
+        <div className="mt-8">
+          <EarningsChart />
         </div>
 
         {/* Recent Entries */}

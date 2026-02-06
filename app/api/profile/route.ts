@@ -25,6 +25,10 @@ export interface Profile {
   invoicePrefix: string | null;
   nextInvoiceNumber: number | null;
   paymentTerms: string | null;
+  bankName: string | null;
+  bankAccountNumber: string | null;
+  bankBranch: string | null;
+  bankSwift: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -47,6 +51,10 @@ export interface ProfileUpdateRequest {
   invoicePrefix?: string;
   nextInvoiceNumber?: number;
   paymentTerms?: string;
+  bankName?: string;
+  bankAccountNumber?: string;
+  bankBranch?: string;
+  bankSwift?: string;
 }
 
 /**
@@ -73,7 +81,9 @@ export async function GET(): Promise<NextResponse> {
               logo_url as "logoUrl", phone, email, address, tax_id as "taxId", website,
               default_currency as "defaultCurrency", preferred_pdf_template as "preferredPdfTemplate",
               invoice_prefix as "invoicePrefix", next_invoice_number as "nextInvoiceNumber",
-              payment_terms as "paymentTerms",
+              payment_terms as "paymentTerms", bank_name as "bankName",
+              bank_account_number as "bankAccountNumber", bank_branch as "bankBranch",
+              bank_swift as "bankSwift",
               created_at as "createdAt", updated_at as "updatedAt"
        FROM user_profiles
        WHERE user_id = $1`,
@@ -180,6 +190,26 @@ export async function PATCH(request: Request): Promise<NextResponse> {
       values.push(body.paymentTerms);
     }
 
+    if (body.bankName !== undefined) {
+      updates.push(`bank_name = $${paramIndex++}`);
+      values.push(body.bankName);
+    }
+
+    if (body.bankAccountNumber !== undefined) {
+      updates.push(`bank_account_number = $${paramIndex++}`);
+      values.push(body.bankAccountNumber);
+    }
+
+    if (body.bankBranch !== undefined) {
+      updates.push(`bank_branch = $${paramIndex++}`);
+      values.push(body.bankBranch);
+    }
+
+    if (body.bankSwift !== undefined) {
+      updates.push(`bank_swift = $${paramIndex++}`);
+      values.push(body.bankSwift);
+    }
+
     if (updates.length === 0) {
       return NextResponse.json(
         { success: false, message: "No fields to update" },
@@ -201,7 +231,9 @@ export async function PATCH(request: Request): Promise<NextResponse> {
                  logo_url as "logoUrl", phone, email, address, tax_id as "taxId", website,
                  default_currency as "defaultCurrency", preferred_pdf_template as "preferredPdfTemplate",
                  invoice_prefix as "invoicePrefix", next_invoice_number as "nextInvoiceNumber",
-                 payment_terms as "paymentTerms",
+                 payment_terms as "paymentTerms", bank_name as "bankName",
+                 bank_account_number as "bankAccountNumber", bank_branch as "bankBranch",
+                 bank_swift as "bankSwift",
                  created_at as "createdAt", updated_at as "updatedAt"`,
       values
     );
