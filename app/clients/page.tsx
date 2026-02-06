@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Users } from "lucide-react";
+import { showSuccessToast, showErrorToast } from "@/lib/toast";
 
 interface User {
   id: string;
@@ -198,12 +199,13 @@ export default function ClientsPage() {
         // Update client in list (soft delete - sets isActive to false)
         setClients(clients.map((c) => (c.id === clientToDelete.id ? { ...c, isActive: false } : c)));
         setClientToDelete(null);
+        showSuccessToast("הלקוח נמחק בהצלחה");
       } else {
-        alert(data.message || "שגיאה במחיקת הלקוח");
+        showErrorToast(data.message || "שגיאה במחיקת הלקוח");
       }
     } catch (error) {
       console.error("Error deleting client:", error);
-      alert("שגיאה במחיקת הלקוח");
+      showErrorToast("שגיאה במחיקת הלקוח");
     } finally {
       setDeleting(false);
     }

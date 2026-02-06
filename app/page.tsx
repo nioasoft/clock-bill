@@ -1,77 +1,16 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { query } from "../lib/db";
 import Link from "next/link";
+import { AppLayout } from "@/components/app-layout";
 
-async function getUser() {
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get("session")?.value;
-
-  if (!sessionToken) {
-    return null;
-  }
-
-  const result = await query<{ user_id: string; expires_at: string; email: string }>(
-    `SELECT s.user_id, s.expires_at, u.email
-     FROM sessions s
-     JOIN users u ON s.user_id = u.id
-     WHERE s.token = $1`,
-    [sessionToken]
-  );
-
-  const session = result.rows[0];
-
-  if (!session) {
-    return null;
-  }
-
-  // Check if session is expired
-  const expiresAt = new Date(session.expires_at);
-  if (expiresAt < new Date()) {
-    return null;
-  }
-
-  return {
-    id: session.user_id,
-    email: session.email,
-  };
-}
-
-export default async function Home() {
-  const user = await getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
+export default function Home() {
   return (
-    <div className="min-h-screen bg-zinc-50" dir="rtl">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">שעון</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user.email}</span>
-            <form action="/api/auth/logout" method="POST">
-              <button
-                type="submit"
-                className="text-sm text-orange-600 hover:text-orange-500"
-              >
-                התנתק
-              </button>
-            </form>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <AppLayout>
+      <div className="px-4 py-8 sm:px-6 lg:px-8">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900">
-            ברוך הבא, {user.email}!
+            ברוך הבא לשעון!
           </h2>
           <p className="mt-2 text-gray-600">
-            זהו הדשבורד שלך. כאן תוכל לנהל את שעות העבודה והפרויקטים שלך.
+            נהל את שעות העבודה והפרויקטים שלך בקלות
           </p>
         </div>
 
@@ -98,6 +37,16 @@ export default async function Home() {
           </Link>
 
           <Link
+            href="/projects"
+            className="rounded-lg bg-white p-6 shadow hover:shadow-md transition-shadow"
+          >
+            <h3 className="text-lg font-medium text-gray-900">פרויקטים</h3>
+            <p className="mt-2 text-sm text-gray-600">
+              נהל את הפרויקטים שלך
+            </p>
+          </Link>
+
+          <Link
             href="/reports"
             className="rounded-lg bg-white p-6 shadow hover:shadow-md transition-shadow"
           >
@@ -107,7 +56,7 @@ export default async function Home() {
             </p>
           </Link>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   );
 }

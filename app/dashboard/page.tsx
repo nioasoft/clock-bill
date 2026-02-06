@@ -3,11 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-
-interface User {
-  id: string;
-  email: string;
-}
+import { AppLayout } from "@/components/app-layout";
+import { Skeleton } from "@/components/ui/skeleton";
+import { showSuccessToast, showErrorToast } from "@/lib/toast";
 
 interface DashboardStats {
   today: {
@@ -58,9 +56,6 @@ interface Project {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [logoutLoading, setLogoutLoading] = useState(false);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [recentEntries, setRecentEntries] = useState<RecentEntry[]>([]);
@@ -77,34 +72,8 @@ export default function DashboardPage() {
   const [elapsedTime, setElapsedTime] = useState("0:00");
 
   useEffect(() => {
-    // Fetch current session
-    const fetchUser = async () => {
-      try {
-        const response = await fetch("/api/auth/session");
-        const data = await response.json();
-
-        if (data.success && data.user) {
-          setUser(data.user);
-        } else {
-          // No session, redirect to login
-          router.push("/login");
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-        router.push("/login");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, [router]);
-
-  useEffect(() => {
-    // Fetch dashboard stats when user is loaded
+    // Fetch dashboard stats
     const fetchStats = async () => {
-      if (!user) return;
-
       try {
         setStatsLoading(true);
         const response = await fetch("/api/dashboard/stats");
@@ -122,13 +91,11 @@ export default function DashboardPage() {
     };
 
     fetchStats();
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     // Fetch running timer
     const fetchRunningTimer = async () => {
-      if (!user) return;
-
       try {
         setTimerLoading(true);
         const response = await fetch("/api/timer/running");
@@ -151,7 +118,7 @@ export default function DashboardPage() {
     // Poll for timer updates every second
     const interval = setInterval(fetchRunningTimer, 1000);
     return () => clearInterval(interval);
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     // Update elapsed time display
@@ -180,8 +147,6 @@ export default function DashboardPage() {
   useEffect(() => {
     // Fetch projects for the timer modal
     const fetchProjects = async () => {
-      if (!user) return;
-
       try {
         const response = await fetch("/api/projects");
         const data = await response.json();
@@ -195,34 +160,11 @@ export default function DashboardPage() {
     };
 
     fetchProjects();
-  }, [user]);
-
-  const handleLogout = async () => {
-    setLogoutLoading(true);
-    try {
-      const response = await fetch("/api/auth/logout", {
-        method: "POST",
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Redirect to login page after successful logout
-        router.push("/login");
-        router.refresh();
-      } else {
-        console.error("Logout failed:", data.message);
-      }
-    } catch (error) {
-      console.error("Logout error:", error);
-    } finally {
-      setLogoutLoading(false);
-    }
-  };
+  }, []);
 
   const handleStartTimer = async () => {
     if (!selectedProject) {
-      alert("נא לבחור פרויקט");
+      showErrorToast("נא לבחור פרויקט");
       return;
     }
 
@@ -243,6 +185,7 @@ export default function DashboardPage() {
         setShowTimerModal(false);
         setSelectedProject("");
         setTimerDescription("");
+        showSuccessToast("הטיימר הופעל בהצלחה");
         // Refresh running timer
         const timerResponse = await fetch("/api/timer/running");
         const timerData = await timerResponse.json();
@@ -250,11 +193,11 @@ export default function DashboardPage() {
           setRunningTimer(timerData.running);
         }
       } else {
-        alert(data.message || "שגיאה בהתחלת הטיימר");
+        showErrorToast(data.message || "שגיאה בהתחלת הטיימר");
       }
     } catch (error) {
       console.error("Error starting timer:", error);
-      alert("שגיאה בהתחלת הטיימר");
+      showErrorToast("שגיאה בהתחלת הטיימר");
     } finally {
       setStartingTimer(false);
     }
@@ -281,6 +224,7 @@ export default function DashboardPage() {
 
       if (data.success) {
         setRunningTimer(null);
+        showSuccessToast("הטיימר נעצר ונשמר בהצלחה");
         // Refresh stats to show the new entry
         const statsResponse = await fetch("/api/dashboard/stats");
         const statsData = await statsResponse.json();
@@ -289,11 +233,11 @@ export default function DashboardPage() {
           setRecentEntries(statsData.recentEntries || []);
         }
       } else {
-        alert(data.message || "שגיאה בעצירת הטיימר");
+        showErrorToast(data.message || "שגיאה בעצירת הטיימר");
       }
     } catch (error) {
       console.error("Error stopping timer:", error);
-      alert("שגיאה בעצירת הטיימר");
+      showErrorToast("שגיאה בעצירת הטיימר");
     } finally {
       setStoppingTimer(false);
     }
@@ -311,6 +255,7 @@ export default function DashboardPage() {
       const data = await response.json();
 
       if (data.success) {
+        showSuccessToast("הטיימר הושהה בהצלחה");
         // Refresh running timer to get updated paused state
         const timerResponse = await fetch("/api/timer/running");
         const timerData = await timerResponse.json();
@@ -318,11 +263,11 @@ export default function DashboardPage() {
           setRunningTimer(timerData.running);
         }
       } else {
-        alert(data.message || "שגיאה בהשהיית הטיימר");
+        showErrorToast(data.message || "שגיאה בהשהיית הטיימר");
       }
     } catch (error) {
       console.error("Error pausing timer:", error);
-      alert("שגיאה בהשהיית הטיימר");
+      showErrorToast("שגיאה בהשהיית הטיימר");
     } finally {
       setPausingTimer(false);
     }
@@ -340,6 +285,7 @@ export default function DashboardPage() {
       const data = await response.json();
 
       if (data.success) {
+        showSuccessToast("הטיימר חודש בהצלחה");
         // Refresh running timer to get updated state
         const timerResponse = await fetch("/api/timer/running");
         const timerData = await timerResponse.json();
@@ -347,58 +293,22 @@ export default function DashboardPage() {
           setRunningTimer(timerData.running);
         }
       } else {
-        alert(data.message || "שגיאה בחידוש הטיימר");
+        showErrorToast(data.message || "שגיאה בחידוש הטיימר");
       }
     } catch (error) {
       console.error("Error resuming timer:", error);
-      alert("שגיאה בחידוש הטיימר");
+      showErrorToast("שגיאה בחידוש הטיימר");
     } finally {
       setResumingTimer(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-zinc-50 flex items-center justify-center" dir="rtl">
-        <div className="text-gray-600">טוען...</div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null; // Will redirect
-  }
-
   return (
-    <div className="min-h-screen bg-zinc-50" dir="rtl">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">שעון</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user.email}</span>
-            <Link
-              href="/settings"
-              className="text-sm text-gray-600 hover:text-gray-900"
-            >
-              הגדרות
-            </Link>
-            <button
-              onClick={handleLogout}
-              disabled={logoutLoading}
-              className="text-sm text-orange-600 hover:text-orange-500 disabled:opacity-50"
-            >
-              {logoutLoading ? "מתנתק..." : "התנתק"}
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <AppLayout>
+      <div className="px-4 py-8 sm:px-6 lg:px-8">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900">
-            ברוך הבא, {user.email}!
+            ברוך הבא!
           </h2>
           <p className="mt-2 text-gray-600">
             זהו הדשבורד שלך. כאן תוכל לנהל את שעות העבודה והפרויקטים שלך.
@@ -409,9 +319,9 @@ export default function DashboardPage() {
         {statsLoading ? (
           <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="rounded-lg bg-white p-6 shadow animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+              <div key={i} className="rounded-lg bg-white p-6 shadow">
+                <Skeleton className="h-4 w-1/2 mb-2" />
+                <Skeleton className="h-8 w-3/4" />
               </div>
             ))}
           </div>
@@ -546,7 +456,7 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
-      </main>
+      </div>
 
       {/* Timer Start Modal */}
       {showTimerModal && (
@@ -614,6 +524,6 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-    </div>
+    </AppLayout>
   );
 }

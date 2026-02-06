@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
   title: "שעון - מעקב שעות עבודה",
@@ -15,6 +16,7 @@ export default function RootLayout({
     <html lang="he" dir="rtl">
       <body className="font-sans antialiased">
         {children}
+        <Toaster />
       </body>
     </html>
   );

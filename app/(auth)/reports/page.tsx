@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { showSuccessToast, showErrorToast } from "@/lib/toast";
 
 interface User {
   id: string;
@@ -433,9 +434,10 @@ export default function ReportsPage() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      showSuccessToast("קובץ Excel יוצא בהצלחה");
     } catch (error) {
       console.error("Error exporting Excel:", error);
-      alert("שגיאה ביציאת קובץ Excel");
+      showErrorToast("שגיאה ביציאת קובץ Excel");
     }
   };
 

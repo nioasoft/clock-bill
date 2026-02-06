@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Clock } from "lucide-react";
+import { showSuccessToast, showErrorToast } from "@/lib/toast";
 
 interface User {
   id: string;
@@ -292,12 +293,13 @@ export default function EntriesPage() {
         // Remove entry from list
         setEntries(entries.filter((e) => e.id !== entryToDelete.id));
         setEntryToDelete(null);
+        showSuccessToast("הרשומה נמחקה בהצלחה");
       } else {
-        alert(data.message || "שגיאה במחיקת הרשומה");
+        showErrorToast(data.message || "שגיאה במחיקת הרשומה");
       }
     } catch (error) {
       console.error("Error deleting entry:", error);
-      alert("שגיאה במחיקת הרשומה");
+      showErrorToast("שגיאה במחיקת הרשומה");
     } finally {
       setDeleting(false);
     }
