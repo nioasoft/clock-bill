@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import { Breadcrumb } from "@/components/breadcrumb";
 
 interface User {
   id: string;
@@ -174,29 +175,34 @@ export default function ClientDetailsPage() {
   return (
     <div className="min-h-screen bg-zinc-50" dir="rtl">
       <header className="bg-white shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Link href="/clients" className="text-gray-600 hover:text-gray-900">
-              ← חזור ללקוחות
-            </Link>
-            <h1 className="text-2xl font-bold text-gray-900">פרטי לקוח</h1>
+        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+          <div className="mb-4">
+            <Breadcrumb
+              items={[
+                { label: "לקוחות", href: "/clients" },
+                { label: client?.name || "פרטי לקוח" },
+              ]}
+            />
           </div>
-          {client && client.isActive && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowEditForm(true)}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
-              >
-                ערוך
-              </button>
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="rounded-lg border border-red-300 px-4 py-2 text-red-700 hover:bg-red-50"
-              >
-                מחק
-              </button>
-            </div>
-          )}
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-gray-900">פרטי לקוח</h1>
+            {client && client.isActive && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowEditForm(true)}
+                  className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                >
+                  ערוך
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="rounded-lg border border-red-300 px-4 py-2 text-red-700 hover:bg-red-50"
+                >
+                  מחק
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 

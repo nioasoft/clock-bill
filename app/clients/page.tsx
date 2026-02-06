@@ -6,6 +6,12 @@ import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Users } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
+import {
+  validateRequired,
+  validateEmail,
+  validatePhone,
+  validateNumber,
+} from "@/lib/validation";
 
 interface User {
   id: string;
@@ -46,6 +52,14 @@ export default function ClientsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Field validation errors
+  const [fieldErrors, setFieldErrors] = useState<{
+    name?: string;
+    email?: string;
+    phone?: string;
+    defaultRate?: string;
+  }>({});
 
   useEffect(() => {
     // Fetch current session
@@ -97,6 +111,47 @@ export default function ClientsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
+    setFieldErrors({});
+
+    // Validate form fields
+    const errors: typeof fieldErrors = {};
+
+    // Name is required
+    const nameValidation = validateRequired(formData.name, "שם הלקוח");
+    if (!nameValidation.isValid) {
+      errors.name = nameValidation.error;
+    }
+
+    // Email is optional but must be valid if provided
+    if (formData.email && formData.email.trim()) {
+      const emailValidation = validateEmail(formData.email, false);
+      if (!emailValidation.isValid) {
+        errors.email = emailValidation.error;
+      }
+    }
+
+    // Phone is optional but must be valid if provided
+    if (formData.phone && formData.phone.trim()) {
+      const phoneValidation = validatePhone(formData.phone, false);
+      if (!phoneValidation.isValid) {
+        errors.phone = phoneValidation.error;
+      }
+    }
+
+    // Default rate is optional but must be valid number if provided
+    if (formData.defaultRate && formData.defaultRate.trim()) {
+      const rateValidation = validateNumber(formData.defaultRate, false, 0);
+      if (!rateValidation.isValid) {
+        errors.defaultRate = rateValidation.error;
+      }
+    }
+
+    // If there are errors, display them and don't submit
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -272,10 +327,18 @@ export default function ClientsPage() {
                     id="name"
                     required
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    onChange={(e) => {
+                      setFormData({ ...formData, name: e.target.value });
+                      setFieldErrors({ ...fieldErrors, name: undefined });
+                    }}
+                    className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-orange-500 disabled:opacity-50 ${
+                      fieldErrors.name
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:border-orange-500"
+                    }`}
                     disabled={submitting}
                   />
+                  {fieldErrors.name && <p className="mt-1 text-sm text-red-600">{fieldErrors.name}</p>}
                 </div>
 
                 <div>
@@ -287,7 +350,7 @@ export default function ClientsPage() {
                     id="contactName"
                     value={formData.contactName}
                     onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500 disabled:opacity-50"
                     disabled={submitting}
                   />
                 </div>
@@ -300,10 +363,18 @@ export default function ClientsPage() {
                     type="email"
                     id="email"
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    onChange={(e) => {
+                      setFormData({ ...formData, email: e.target.value });
+                      setFieldErrors({ ...fieldErrors, email: undefined });
+                    }}
+                    className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-orange-500 disabled:opacity-50 ${
+                      fieldErrors.email
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:border-orange-500"
+                    }`}
                     disabled={submitting}
                   />
+                  {fieldErrors.email && <p className="mt-1 text-sm text-red-600">{fieldErrors.email}</p>}
                 </div>
 
                 <div>
@@ -314,10 +385,18 @@ export default function ClientsPage() {
                     type="tel"
                     id="phone"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    onChange={(e) => {
+                      setFormData({ ...formData, phone: e.target.value });
+                      setFieldErrors({ ...fieldErrors, phone: undefined });
+                    }}
+                    className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-orange-500 disabled:opacity-50 ${
+                      fieldErrors.phone
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:border-orange-500"
+                    }`}
                     disabled={submitting}
                   />
+                  {fieldErrors.phone && <p className="mt-1 text-sm text-red-600">{fieldErrors.phone}</p>}
                 </div>
 
                 <div className="sm:col-span-2">
@@ -345,10 +424,20 @@ export default function ClientsPage() {
                     min="0"
                     step="0.01"
                     value={formData.defaultRate}
-                    onChange={(e) => setFormData({ ...formData, defaultRate: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    onChange={(e) => {
+                      setFormData({ ...formData, defaultRate: e.target.value });
+                      setFieldErrors({ ...fieldErrors, defaultRate: undefined });
+                    }}
+                    className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-orange-500 disabled:opacity-50 ${
+                      fieldErrors.defaultRate
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:border-orange-500"
+                    }`}
                     disabled={submitting}
                   />
+                  {fieldErrors.defaultRate && (
+                    <p className="mt-1 text-sm text-red-600">{fieldErrors.defaultRate}</p>
+                  )}
                 </div>
               </div>
 

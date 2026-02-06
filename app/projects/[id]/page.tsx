@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import { Breadcrumb } from "@/components/breadcrumb";
 
 interface User {
   id: string;
@@ -415,45 +416,50 @@ export default function ProjectDetailsPage() {
     <div className="min-h-screen bg-zinc-50" dir="rtl">
       {/* Header */}
       <header className="bg-white shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Link href="/projects" className="text-gray-600 hover:text-gray-900">
-              ← חזור לפרויקטים
-            </Link>
-            <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
+        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+          <div className="mb-4">
+            <Breadcrumb
+              items={[
+                { label: "פרויקטים", href: "/projects" },
+                { label: project.name },
+              ]}
+            />
           </div>
-          <div className="flex gap-2">
-            {project.status !== "archived" && (
-              <>
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
+            <div className="flex gap-2">
+              {project.status !== "archived" && (
+                <>
+                  <button
+                    onClick={() => setShowEditForm(!showEditForm)}
+                    className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                  >
+                    ערוך
+                  </button>
+                  <button
+                    onClick={() => setShowArchiveConfirm(true)}
+                    className="rounded-lg bg-gray-600 px-4 py-2 text-white hover:bg-gray-700"
+                  >
+                    ארכב
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                  >
+                    מחק
+                  </button>
+                </>
+              )}
+              {project.status === "archived" && (
                 <button
-                  onClick={() => setShowEditForm(!showEditForm)}
-                  className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                  onClick={() => handleUnarchive()}
+                  className="rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+                  disabled={submitting}
                 >
-                  ערוך
+                  {submitting ? "משחזר..." : "שחזר פרויקט"}
                 </button>
-                <button
-                  onClick={() => setShowArchiveConfirm(true)}
-                  className="rounded-lg bg-gray-600 px-4 py-2 text-white hover:bg-gray-700"
-                >
-                  ארכב
-                </button>
-                <button
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-                >
-                  מחק
-                </button>
-              </>
-            )}
-            {project.status === "archived" && (
-              <button
-                onClick={() => handleUnarchive()}
-                className="rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
-                disabled={submitting}
-              >
-                {submitting ? "משחזר..." : "שחזר פרויקט"}
-              </button>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </header>

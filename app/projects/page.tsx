@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FolderOpen } from "lucide-react";
+import { validateRequired, validateNumber } from "@/lib/validation";
 
 interface User {
   id: string;

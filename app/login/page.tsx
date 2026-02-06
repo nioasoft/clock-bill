@@ -86,10 +86,18 @@ export default function LoginPage() {
                 type="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setEmailError(null);
+                }}
+                className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-orange-500 ${
+                  emailError
+                    ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                    : "border-gray-300 focus:border-orange-500"
+                }`}
                 placeholder="your@email.com"
               />
+              {emailError && <p className="mt-1 text-sm text-red-600">{emailError}</p>}
             </div>
 
             <div>
@@ -102,10 +110,18 @@ export default function LoginPage() {
                 type="password"
                 required
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setPasswordError(null);
+                }}
+                className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-orange-500 ${
+                  passwordError
+                    ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                    : "border-gray-300 focus:border-orange-500"
+                }`}
                 placeholder="הסיסמה שלך"
               />
+              {passwordError && <p className="mt-1 text-sm text-red-600">{passwordError}</p>}
             </div>
           </div>
 
