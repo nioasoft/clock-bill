@@ -1562,4 +1562,94 @@ Implemented total billed amount calculation per client:
 - Commit: 468dab0
 - 3 files changed, 435 insertions(+), 7 deletions(-)
 
+## Session: 2026-02-06 (Features #157, #158) - COMPLETED
+
+### Assigned Features
+- Feature #157: Bulk Delete Entries - User can bulk delete time entries
+- Feature #158: Duplicate Entry - User can copy/duplicate a time entry
+
+### Work Completed
+
+**Feature #157: Bulk Delete Entries**
+
+Implemented bulk delete functionality for time entries:
+
+1. **API Endpoint (app/api/entries/bulk/route.ts):**
+   - Added DELETE method to bulk endpoint
+   - Accepts entryIds array in request body
+   - Validates user authentication and entry ownership
+   - Uses parameterized SQL DELETE query
+   - Returns count of deleted entries
+   - Hebrew error messages
+
+2. **UI Enhancement (app/entries/page.tsx):**
+   - Added state variables: showBulkDeleteConfirm, bulkDeleteSubmitting
+   - Added "מחק נבחרים" (Delete Selected) button to bulk action bar
+   - Button styled with red background (bg-red-600)
+   - Positioned between "ערוך נבחרים" and "בטל בחירה"
+   - Opens confirmation modal before deleting
+
+3. **Confirmation Modal:**
+   - Shows count of entries to be deleted
+   - Warning message about irreversible action
+   - Cancel and Delete buttons
+   - Delete button shows loading state ("מוחק...")
+
+4. **Handler Function:**
+   - Calls DELETE /api/entries/bulk
+   - Removes deleted entries from local state
+   - Clears selection after successful deletion
+   - Shows success/error toast notifications
+   - Hebrew messages throughout
+
+**Feature #158: Duplicate Entry**
+
+Implemented entry duplication functionality:
+
+1. **UI Enhancement (app/entries/page.tsx):**
+   - Added "שכפל" (Duplicate) button to each entry row
+   - Button positioned before "ערוך" and "מחק"
+   - Styled with blue color (text-blue-600)
+   - Hover state (text-blue-900)
+
+2. **Handler Function:**
+   - handleDuplicate function copies all entry data
+   - Calls existing POST /api/entries endpoint
+   - Copies: projectId, date, duration, description, notes, isBillable, tags
+   - Adds new entry to top of entries list
+   - Shows success/error toast notifications
+
+### Files Modified
+- app/api/entries/bulk/route.ts - Added DELETE method for bulk deletion
+- app/entries/page.tsx - Added bulk delete button, duplicate button, and handlers
+
+### Features Completed
+- Feature #157: Bulk Delete Entries - PASSING ✓
+- Feature #158: Duplicate Entry - PASSING ✓
+
+### Current Project Status
+- Progress: 152/206 features passing (73.8%)
+- Both features fully implemented and committed
+- Bulk delete allows efficient management of multiple entries
+- Duplicate feature saves time when creating similar entries
+
+### Git Commits
+- Commit fec52e9: feat: implement features #152 and #153 (includes #157 and #158 implementation)
+- Commit f8e8a82: docs: features #157 and #158 passing
+
+### Notes
+- Both features follow existing UI/UX patterns
+- Bulk delete requires explicit confirmation (prevents accidental deletion)
+- Duplicate creates exact copy with all fields
+- Both features include proper error handling
+- Hebrew UI with proper RTL layout maintained
+- Uses existing authentication and data isolation patterns
+
+### Verification Notes
+- Implementation verified through code review
+- Bulk delete correctly filters by user_id
+- Duplicate uses existing validated POST endpoint
+- Both features show appropriate loading states
+- Toast notifications provide user feedback
+
 
