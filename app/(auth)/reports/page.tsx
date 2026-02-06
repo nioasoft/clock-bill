@@ -165,6 +165,8 @@ export default function ReportsPage() {
     endDate: new Date().toISOString().split("T")[0], // Today
   });
   const [error, setError] = useState("");
+  const [displayCurrency, setDisplayCurrency] = useState<string>("original");
+  const [currencyRates, setCurrencyRates] = useState<Record<string, Record<string, number>>>({});
 
   useEffect(() => {
     // Fetch current session
@@ -285,6 +287,34 @@ export default function ReportsPage() {
     };
 
     fetchPresets();
+  }, [user]);
+
+  useEffect(() => {
+    // Fetch currency rates when user is loaded
+    const fetchCurrencyRates = async () => {
+      if (!user) return;
+
+      try {
+        const response = await fetch("/api/currency-rates");
+        const data = await response.json();
+
+        if (data.success && data.rates) {
+          // Build a nested map: rates[fromCurrency][toCurrency] = rate
+          const ratesMap: Record<string, Record<string, number>> = {};
+          data.rates.forEach((rate: { fromCurrency: string; toCurrency: string; rate: number }) => {
+            if (!ratesMap[rate.fromCurrency]) {
+              ratesMap[rate.fromCurrency] = {};
+            }
+            ratesMap[rate.fromCurrency][rate.toCurrency] = rate.rate;
+          });
+          setCurrencyRates(ratesMap);
+        }
+      } catch (error) {
+        console.error("Error fetching currency rates:", error);
+      }
+    };
+
+    fetchCurrencyRates();
   }, [user]);
 
   // Check for URL parameters on mount (for shared links)
@@ -451,6 +481,28 @@ export default function ReportsPage() {
       ETH: "Ξ",
     };
     return `${symbols[currency] || currency}${amount.toFixed(2)}`;
+  };
+
+  // Convert amount from one currency to another using stored rates
+  const convertCurrency = (amount: number, fromCurrency: string, toCurrency: string): number => {
+    if (fromCurrency === toCurrency) return amount;
+    if (!currencyRates[fromCurrency] || !currencyRates[fromCurrency][toCurrency]) {
+      console.warn(`No rate found for ${fromCurrency} -> ${toCurrency}`);
+      return amount; // Return original if no conversion rate available
+    }
+    return amount * currencyRates[fromCurrency][toCurrency];
+  };
+
+  // Convert totalAmounts object to target currency
+  const convertAmounts = (amounts: Record<string, number>, targetCurrency: string): number => {
+    if (targetCurrency === "original") {
+      // Return sum of all amounts (mixed currencies)
+      return Object.values(amounts).reduce((sum, amount) => sum + amount, 0);
+    }
+
+    return Object.entries(amounts).reduce((sum, [currency, amount]) => {
+      return sum + convertCurrency(amount, currency, targetCurrency);
+    }, 0);
   };
 
   const handleExportPdf = () => {

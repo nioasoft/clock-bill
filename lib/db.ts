@@ -207,6 +207,26 @@ export async function initSchema(): Promise<void> {
     logger.debug("signature_url column migration check complete");
   }
 
+  // Add pdf_primary_color column if it doesn't exist (for PDF customization)
+  try {
+    await client.query(`
+      ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS pdf_primary_color TEXT DEFAULT '#2563EB'
+    `);
+  } catch (error) {
+    // Column might already exist, ignore error
+    logger.debug("pdf_primary_color column migration check complete");
+  }
+
+  // Add pdf_accent_color column if it doesn't exist (for PDF customization)
+  try {
+    await client.query(`
+      ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS pdf_accent_color TEXT DEFAULT '#059669'
+    `);
+  } catch (error) {
+    // Column might already exist, ignore error
+    logger.debug("pdf_accent_color column migration check complete");
+  }
+
   // Clients table
   await client.query(`
     CREATE TABLE IF NOT EXISTS clients (

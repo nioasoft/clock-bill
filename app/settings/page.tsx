@@ -31,6 +31,8 @@ interface Profile {
   bankAccountNumber: string | null;
   bankBranch: string | null;
   bankSwift: string | null;
+  pdfPrimaryColor: string;
+  pdfAccentColor: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -89,6 +91,8 @@ export default function SettingsPage() {
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [bankBranch, setBankBranch] = useState("");
   const [bankSwift, setBankSwift] = useState("");
+  const [pdfPrimaryColor, setPdfPrimaryColor] = useState("#2563EB");
+  const [pdfAccentColor, setPdfAccentColor] = useState("#059669");
 
   useEffect(() => {
     if (activeTab === "security") {
@@ -126,6 +130,8 @@ export default function SettingsPage() {
         setBankAccountNumber(data.profile.bankAccountNumber || "");
         setBankBranch(data.profile.bankBranch || "");
         setBankSwift(data.profile.bankSwift || "");
+        setPdfPrimaryColor(data.profile.pdfPrimaryColor || "#2563EB");
+        setPdfAccentColor(data.profile.pdfAccentColor || "#059669");
       } else {
         setProfileError(data.message || "שגיאה בטעינת הפרופיל");
       }
@@ -224,6 +230,8 @@ export default function SettingsPage() {
           bankAccountNumber: bankAccountNumber || null,
           bankBranch: bankBranch || null,
           bankSwift: bankSwift || null,
+          pdfPrimaryColor: pdfPrimaryColor || "#2563EB",
+          pdfAccentColor: pdfAccentColor || "#059669",
         }),
       });
 
@@ -1225,6 +1233,68 @@ export default function SettingsPage() {
                       </select>
                       <p className="text-xs text-gray-500 mt-1">
                         התבנית שתשמש כברירת מחדל בייצוא דוחות PDF
+                      </p>
+                    </div>
+
+                    {/* PDF Primary Color */}
+                    <div>
+                      <label
+                        htmlFor="pdfPrimaryColor"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        צבע ראשי ל-PDF
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="color"
+                          id="pdfPrimaryColor"
+                          value={pdfPrimaryColor}
+                          onChange={(e) => setPdfPrimaryColor(e.target.value)}
+                          className="h-10 w-20 border border-gray-300 rounded-lg cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={pdfPrimaryColor}
+                          onChange={(e) => setPdfPrimaryColor(e.target.value)}
+                          placeholder="#2563EB"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 font-mono text-sm"
+                          pattern="^#[0-9A-Fa-f]{6}$"
+                          maxLength={7}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        הצבע הראשי שיופיע בכותרות ואלמנטים מרכזיים ב-PDF
+                      </p>
+                    </div>
+
+                    {/* PDF Accent Color */}
+                    <div>
+                      <label
+                        htmlFor="pdfAccentColor"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        צבע משני ל-PDF
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="color"
+                          id="pdfAccentColor"
+                          value={pdfAccentColor}
+                          onChange={(e) => setPdfAccentColor(e.target.value)}
+                          className="h-10 w-20 border border-gray-300 rounded-lg cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={pdfAccentColor}
+                          onChange={(e) => setPdfAccentColor(e.target.value)}
+                          placeholder="#059669"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 font-mono text-sm"
+                          pattern="^#[0-9A-Fa-f]{6}$"
+                          maxLength={7}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        הצבע המשני שיופיע בפרטים ואלמנטים נוספים ב-PDF
                       </p>
                     </div>
 

@@ -30,6 +30,8 @@ export interface Profile {
   bankAccountNumber: string | null;
   bankBranch: string | null;
   bankSwift: string | null;
+  pdfPrimaryColor: string;
+  pdfAccentColor: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -56,6 +58,8 @@ export interface ProfileUpdateRequest {
   bankAccountNumber?: string;
   bankBranch?: string;
   bankSwift?: string;
+  pdfPrimaryColor?: string;
+  pdfAccentColor?: string;
 }
 
 /**
@@ -84,7 +88,8 @@ export async function GET(): Promise<NextResponse> {
               invoice_prefix as "invoicePrefix", next_invoice_number as "nextInvoiceNumber",
               payment_terms as "paymentTerms", bank_name as "bankName",
               bank_account_number as "bankAccountNumber", bank_branch as "bankBranch",
-              bank_swift as "bankSwift",
+              bank_swift as "bankSwift", pdf_primary_color as "pdfPrimaryColor",
+              pdf_accent_color as "pdfAccentColor",
               created_at as "createdAt", updated_at as "updatedAt"
        FROM user_profiles
        WHERE user_id = $1`,
@@ -211,6 +216,16 @@ export async function PATCH(request: Request): Promise<NextResponse> {
       values.push(body.bankSwift);
     }
 
+    if (body.pdfPrimaryColor !== undefined) {
+      updates.push(`pdf_primary_color = $${paramIndex++}`);
+      values.push(body.pdfPrimaryColor);
+    }
+
+    if (body.pdfAccentColor !== undefined) {
+      updates.push(`pdf_accent_color = $${paramIndex++}`);
+      values.push(body.pdfAccentColor);
+    }
+
     if (updates.length === 0) {
       return NextResponse.json(
         { success: false, message: "No fields to update" },
@@ -234,7 +249,8 @@ export async function PATCH(request: Request): Promise<NextResponse> {
                  invoice_prefix as "invoicePrefix", next_invoice_number as "nextInvoiceNumber",
                  payment_terms as "paymentTerms", bank_name as "bankName",
                  bank_account_number as "bankAccountNumber", bank_branch as "bankBranch",
-                 bank_swift as "bankSwift",
+                 bank_swift as "bankSwift", pdf_primary_color as "pdfPrimaryColor",
+                 pdf_accent_color as "pdfAccentColor",
                  created_at as "createdAt", updated_at as "updatedAt"`,
       values
     );
