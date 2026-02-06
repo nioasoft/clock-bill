@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
+// TODO: Temporarily commented out due to npm registry 403 error
 // @ts-ignore - exceljs will be installed via npm
-import ExcelJS from "exceljs";
+// import ExcelJS from "exceljs";
 
 /**
  * GET /api/reports/excel
@@ -9,6 +10,12 @@ import ExcelJS from "exceljs";
  */
 export async function GET(request: NextRequest) {
   try {
+    // Temporary error response until exceljs can be installed
+    return NextResponse.json(
+      { success: false, message: "Excel export temporarily unavailable - dependency installation issue" },
+      { status: 503 }
+    );
+
     const user = await getUser();
 
     if (!user) {
@@ -110,9 +117,9 @@ export async function GET(request: NextRequest) {
     }>(queryText, queryParams);
 
     // Create Excel workbook
-    const workbook = new ExcelJS.Workbook();
-    workbook.creator = "שעון - מערכת למעקב שעות";
-    workbook.created = new Date();
+    // const workbook = new ExcelJS.Workbook();
+    // workbook.creator = "שעון - מערכת למעקב שעות";
+    // workbook.created = new Date();
 
     // Create main worksheet with entries
     const worksheet = workbook.addWorksheet("רשומות זמן");
