@@ -173,7 +173,7 @@ export async function initSchema(): Promise<void> {
       retainer_monthly_fee REAL,
       retainer_hours REAL,
       currency TEXT DEFAULT 'ILS',
-      status TEXT DEFAULT 'active' CHECK (status IN ('active', 'completed', 'paused')),
+      status TEXT DEFAULT 'active' CHECK (status IN ('active', 'completed', 'paused', 'archived')),
       start_date DATE,
       end_date DATE,
       notes TEXT,
@@ -218,6 +218,21 @@ export async function initSchema(): Promise<void> {
   } catch (error) {
     // Column might already exist, ignore error
     console.log("retainer_hours column migration check complete");
+  }
+
+  // Add 'archived' to status CHECK constraint if it doesn't exist (for migrations)
+  try {
+    // Drop the old check constraint and add a new one with 'archived'
+    await client.query(`
+      ALTER TABLE projects DROP CONSTRAINT IF EXISTS projects_status_check
+    `);
+    await client.query(`
+      ALTER TABLE projects ADD CONSTRAINT projects_status_check
+      CHECK (status IN ('active', 'completed', 'paused', 'archived'))
+    `);
+  } catch (error) {
+    // Constraint might already exist or other issue
+    console.log("Status constraint migration check complete");
   }
 
   // Time entries table

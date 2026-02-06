@@ -41,6 +41,7 @@ export default function ProjectDetailsPage() {
   const [projectLoading, setProjectLoading] = useState(true);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     pricingModel: "hourly",
@@ -134,27 +135,41 @@ export default function ProjectDetailsPage() {
     setSubmitting(true);
 
     try {
+      // Only send the pricing fields that are relevant to the current pricing model
+      const pricingData: any = {
+        name: formData.name,
+        pricingModel: formData.pricingModel,
+        currency: formData.currency,
+        status: formData.status,
+        startDate: formData.startDate || null,
+        endDate: formData.endDate || null,
+        notes: formData.notes || null,
+      };
+
+      // Add pricing fields based on the selected model
+      if (formData.pricingModel === "hourly") {
+        pricingData.hourlyRate = formData.hourlyRate ? parseFloat(formData.hourlyRate) : null;
+      } else if (formData.pricingModel === "package") {
+        pricingData.packagePrice = formData.packagePrice ? parseFloat(formData.packagePrice) : null;
+        pricingData.packageHours = formData.packageHours ? parseFloat(formData.packageHours) : null;
+      } else if (formData.pricingModel === "mixed") {
+        pricingData.hourlyRate = formData.hourlyRate ? parseFloat(formData.hourlyRate) : null;
+        pricingData.packagePrice = formData.packagePrice ? parseFloat(formData.packagePrice) : null;
+        pricingData.packageHours = formData.packageHours ? parseFloat(formData.packageHours) : null;
+        pricingData.overageRate = formData.overageRate ? parseFloat(formData.overageRate) : null;
+      } else if (formData.pricingModel === "fixed") {
+        pricingData.fixedBudget = formData.fixedBudget ? parseFloat(formData.fixedBudget) : null;
+      } else if (formData.pricingModel === "retainer") {
+        pricingData.retainerMonthlyFee = formData.retainerMonthlyFee ? parseFloat(formData.retainerMonthlyFee) : null;
+        pricingData.retainerHours = formData.retainerHours ? parseFloat(formData.retainerHours) : null;
+      }
+
       const response = await fetch(`/api/projects/${projectId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name: formData.name,
-          pricingModel: formData.pricingModel,
-          hourlyRate: formData.hourlyRate ? parseFloat(formData.hourlyRate) : null,
-          packagePrice: formData.packagePrice ? parseFloat(formData.packagePrice) : null,
-          packageHours: formData.packageHours ? parseFloat(formData.packageHours) : null,
-          overageRate: formData.overageRate ? parseFloat(formData.overageRate) : null,
-          fixedBudget: formData.fixedBudget ? parseFloat(formData.fixedBudget) : null,
-          retainerMonthlyFee: formData.retainerMonthlyFee ? parseFloat(formData.retainerMonthlyFee) : null,
-          retainerHours: formData.retainerHours ? parseFloat(formData.retainerHours) : null,
-          currency: formData.currency,
-          status: formData.status,
-          startDate: formData.startDate || null,
-          endDate: formData.endDate || null,
-          notes: formData.notes || null,
-        }),
+        body: JSON.stringify(pricingData),
       });
 
       const data = await response.json();
@@ -196,6 +211,100 @@ export default function ProjectDetailsPage() {
       console.error("Error deleting project:", error);
       setFormError("שגיאה במחיקת הפרויקט");
       setShowDeleteConfirm(false);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleArchive = async () => {
+    if (!project) return;
+
+    setFormError("");
+    setSubmitting(true);
+
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: project.name,
+          pricingModel: project.pricingModel,
+          hourlyRate: project.hourlyRate,
+          packagePrice: project.packagePrice,
+          packageHours: project.packageHours,
+          overageRate: project.overageRate,
+          fixedBudget: project.fixedBudget,
+          retainerMonthlyFee: project.retainerMonthlyFee,
+          retainerHours: project.retainerHours,
+          currency: project.currency,
+          status: "archived",
+          startDate: project.startDate,
+          endDate: project.endDate,
+          notes: project.notes,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Redirect to projects list
+        router.push("/projects");
+      } else {
+        setFormError(data.message || "שגיאה בארכוב הפרויקט");
+        setShowArchiveConfirm(false);
+      }
+    } catch (error) {
+      console.error("Error archiving project:", error);
+      setFormError("שגיאה בארכוב הפרויקט");
+      setShowArchiveConfirm(false);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleUnarchive = async () => {
+    if (!project) return;
+
+    setFormError("");
+    setSubmitting(true);
+
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: project.name,
+          pricingModel: project.pricingModel,
+          hourlyRate: project.hourlyRate,
+          packagePrice: project.packagePrice,
+          packageHours: project.packageHours,
+          overageRate: project.overageRate,
+          fixedBudget: project.fixedBudget,
+          retainerMonthlyFee: project.retainerMonthlyFee,
+          retainerHours: project.retainerHours,
+          currency: project.currency,
+          status: "active",
+          startDate: project.startDate,
+          endDate: project.endDate,
+          notes: project.notes,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Update the project in state
+        setProject(data.project);
+      } else {
+        setFormError(data.message || "שגיאה בשחזור הפרויקט");
+      }
+    } catch (error) {
+      console.error("Error unarchiving project:", error);
+      setFormError("שגיאה בשחזור הפרויקט");
     } finally {
       setSubmitting(false);
     }
@@ -314,18 +423,37 @@ export default function ProjectDetailsPage() {
             <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
           </div>
           <div className="flex gap-2">
-            <button
-              onClick={() => setShowEditForm(!showEditForm)}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
-            >
-              ערוך
-            </button>
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-            >
-              מחק
-            </button>
+            {project.status !== "archived" && (
+              <>
+                <button
+                  onClick={() => setShowEditForm(!showEditForm)}
+                  className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                >
+                  ערוך
+                </button>
+                <button
+                  onClick={() => setShowArchiveConfirm(true)}
+                  className="rounded-lg bg-gray-600 px-4 py-2 text-white hover:bg-gray-700"
+                >
+                  ארכב
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                >
+                  מחק
+                </button>
+              </>
+            )}
+            {project.status === "archived" && (
+              <button
+                onClick={() => handleUnarchive()}
+                className="rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+                disabled={submitting}
+              >
+                {submitting ? "משחזר..." : "שחזר פרויקט"}
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -361,6 +489,40 @@ export default function ProjectDetailsPage() {
                 className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:opacity-50"
               >
                 {submitting ? "מוחק..." : "מחק פרויקט"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Archive Confirmation Dialog */}
+        {showArchiveConfirm && (
+          <div className="mb-8 rounded-lg bg-white p-6 shadow border-2 border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">ארכוב פרויקט</h2>
+            <p className="text-gray-700 mb-4">
+              האם לארכב את הפרויקט &quot;{project.name}&quot;? הפרויקט יוסתר מרשימת הפרויקטים אך ניתן יהיה לשחזר אותו.
+            </p>
+            {formError && (
+              <div className="rounded-md bg-red-50 p-4 text-sm text-red-800 mb-4">
+                {formError}
+              </div>
+            )}
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => {
+                  setShowArchiveConfirm(false);
+                  setFormError("");
+                }}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                disabled={submitting}
+              >
+                ביטול
+              </button>
+              <button
+                onClick={handleArchive}
+                disabled={submitting}
+                className="rounded-lg bg-gray-600 px-4 py-2 text-white hover:bg-gray-700 disabled:opacity-50"
+              >
+                {submitting ? "מארכב..." : "ארכב פרויקט"}
               </button>
             </div>
           </div>

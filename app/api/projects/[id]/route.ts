@@ -147,6 +147,7 @@ export async function PUT(
     }
 
     if (!pricingModel || !["hourly", "package", "mixed", "fixed", "retainer"].includes(pricingModel)) {
+      // Note: 'archived' is a status, not a pricing model
       return NextResponse.json(
         { success: false, message: "יש לבחור מודל תמחור תקין" },
         { status: 400 }
@@ -234,7 +235,7 @@ export async function PUT(
       );
     }
 
-    if (status && !["active", "completed", "paused"].includes(status)) {
+    if (status && !["active", "completed", "paused", "archived"].includes(status)) {
       return NextResponse.json(
         { success: false, message: "סטטוס לא חוקי" },
         { status: 400 }

@@ -138,28 +138,42 @@ export default function ProjectsPage() {
     setSubmitting(true);
 
     try {
+      // Only send the pricing fields that are relevant to the current pricing model
+      const pricingData: any = {
+        clientId: formData.clientId,
+        name: formData.name,
+        pricingModel: formData.pricingModel,
+        currency: formData.currency,
+        status: formData.status,
+        startDate: formData.startDate || undefined,
+        endDate: formData.endDate || undefined,
+        notes: formData.notes || undefined,
+      };
+
+      // Add pricing fields based on the selected model
+      if (formData.pricingModel === "hourly") {
+        pricingData.hourlyRate = formData.hourlyRate ? parseFloat(formData.hourlyRate) : undefined;
+      } else if (formData.pricingModel === "package") {
+        pricingData.packagePrice = formData.packagePrice ? parseFloat(formData.packagePrice) : undefined;
+        pricingData.packageHours = formData.packageHours ? parseFloat(formData.packageHours) : undefined;
+      } else if (formData.pricingModel === "mixed") {
+        pricingData.hourlyRate = formData.hourlyRate ? parseFloat(formData.hourlyRate) : undefined;
+        pricingData.packagePrice = formData.packagePrice ? parseFloat(formData.packagePrice) : undefined;
+        pricingData.packageHours = formData.packageHours ? parseFloat(formData.packageHours) : undefined;
+        pricingData.overageRate = formData.overageRate ? parseFloat(formData.overageRate) : undefined;
+      } else if (formData.pricingModel === "fixed") {
+        pricingData.fixedBudget = formData.fixedBudget ? parseFloat(formData.fixedBudget) : undefined;
+      } else if (formData.pricingModel === "retainer") {
+        pricingData.retainerMonthlyFee = formData.retainerMonthlyFee ? parseFloat(formData.retainerMonthlyFee) : undefined;
+        pricingData.retainerHours = formData.retainerHours ? parseFloat(formData.retainerHours) : undefined;
+      }
+
       const response = await fetch("/api/projects", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          clientId: formData.clientId,
-          name: formData.name,
-          pricingModel: formData.pricingModel,
-          hourlyRate: formData.hourlyRate ? parseFloat(formData.hourlyRate) : undefined,
-          packagePrice: formData.packagePrice ? parseFloat(formData.packagePrice) : undefined,
-          packageHours: formData.packageHours ? parseFloat(formData.packageHours) : undefined,
-          overageRate: formData.overageRate ? parseFloat(formData.overageRate) : undefined,
-          fixedBudget: formData.fixedBudget ? parseFloat(formData.fixedBudget) : undefined,
-          retainerMonthlyFee: formData.retainerMonthlyFee ? parseFloat(formData.retainerMonthlyFee) : undefined,
-          retainerHours: formData.retainerHours ? parseFloat(formData.retainerHours) : undefined,
-          currency: formData.currency,
-          status: formData.status,
-          startDate: formData.startDate || undefined,
-          endDate: formData.endDate || undefined,
-          notes: formData.notes || undefined,
-        }),
+        body: JSON.stringify(pricingData),
       });
 
       const data = await response.json();

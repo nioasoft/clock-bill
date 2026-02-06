@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
               p.currency, p.status, p.start_date, p.end_date, p.notes, p.created_at
        FROM projects p
        JOIN clients c ON p.client_id = c.id
-       WHERE p.user_id = $1
+       WHERE p.user_id = $1 AND p.status != 'archived'
        ORDER BY p.created_at DESC`,
       [user.id]
     );
@@ -134,6 +134,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!pricingModel || !["hourly", "package", "mixed", "fixed", "retainer"].includes(pricingModel)) {
+      // Note: 'archived' is a status, not a pricing model
       return NextResponse.json(
         { success: false, message: "יש לבחור מודל תמחור תקין" },
         { status: 400 }
@@ -228,7 +229,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (status && !["active", "completed", "paused"].includes(status)) {
+    if (status && !["active", "completed", "paused", "archived"].includes(status)) {
       return NextResponse.json(
         { success: false, message: "סטטוס לא חוקי" },
         { status: 400 }
