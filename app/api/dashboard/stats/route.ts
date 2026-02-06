@@ -65,6 +65,38 @@ export async function GET(request: NextRequest) {
       [userId]
     );
 
+    // Get user's default currency
+    const currencyResult = await query<{ default_currency: string }>(
+      `SELECT default_currency FROM user_profiles WHERE user_id = $1`,
+      [userId]
+    );
+    const userCurrency = currencyResult.rows[0]?.default_currency || 'ILS';
+
+    // Get currency symbol
+    const getCurrencySymbol = (currency: string) => {
+      const symbols: Record<string, string> = {
+        'ILS': '₪',
+        'USD': '$',
+        'USDT': '₮',
+        'BTC': '₿',
+        'ETH': 'Ξ'
+      };
+      return symbols[currency] || currency;
+    };
+
+    // Get total earnings for this month
+    const earningsResult = await query<{ total: string }>(
+      `SELECT COALESCE(SUM(
+           (te.duration / 60.0) * COALESCE(p.hourly_rate, 0)
+         ), 0) as total
+       FROM time_entries te
+       JOIN projects p ON te.project_id = p.id
+       WHERE te.user_id = $1
+         AND te.date >= $2
+         AND te.is_billable = TRUE`,
+      [userId, startOfMonthStr]
+    );
+
     // Get recent time entries (last 5)
     const recentEntriesResult = await query<{
       id: string;
@@ -104,7 +136,12 @@ export async function GET(request: NextRequest) {
           formatted: formatHours(parseFloat(monthResult.rows[0]?.total || '0'))
         },
         clientsCount: parseInt(clientsResult.rows[0]?.count || '0'),
-        projectsCount: parseInt(projectsResult.rows[0]?.count || '0')
+        projectsCount: parseInt(projectsResult.rows[0]?.count || '0'),
+        earnings: {
+          amount: parseFloat(earningsResult.rows[0]?.total || '0'),
+          formatted: `${getCurrencySymbol(userCurrency)}${parseFloat(earningsResult.rows[0]?.total || '0').toFixed(2)}`,
+          currency: userCurrency
+        }
       },
       recentEntries: recentEntriesResult.rows.map(entry => ({
         id: entry.id,
