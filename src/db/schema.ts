@@ -40,11 +40,14 @@ export const projects = pgTable('projects', {
   userId: text('user_id').notNull(),
   clientId: text('client_id').notNull(),
   name: text('name').notNull(),
-  pricingModel: text('pricing_model').notNull(), // 'hourly', 'package', 'mixed'
+  pricingModel: text('pricing_model').notNull(), // 'hourly', 'package', 'mixed', 'fixed', 'retainer'
   hourlyRate: real('hourly_rate'),
   packagePrice: real('package_price'),
   packageHours: real('package_hours'),
   overageRate: real('overage_rate'),
+  fixedBudget: real('fixed_budget'), // For 'fixed' pricing model
+  retainerMonthlyFee: real('retainer_monthly_fee'), // For 'retainer' pricing model
+  retainerHours: real('retainer_hours'), // For 'retainer' pricing model
   currency: text('currency').default('ILS').notNull(),
   status: text('status').default('active').notNull(), // 'active', 'completed', 'paused'
   startDate: date('start_date'),

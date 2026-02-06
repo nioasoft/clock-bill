@@ -164,11 +164,14 @@ export async function initSchema(): Promise<void> {
       user_id TEXT NOT NULL,
       client_id TEXT NOT NULL,
       name TEXT NOT NULL,
-      pricing_model TEXT DEFAULT 'hourly' CHECK (pricing_model IN ('hourly', 'package', 'mixed')),
+      pricing_model TEXT DEFAULT 'hourly' CHECK (pricing_model IN ('hourly', 'package', 'mixed', 'fixed', 'retainer')),
       hourly_rate REAL,
       package_price REAL,
       package_hours REAL,
       overage_rate REAL,
+      fixed_budget REAL,
+      retainer_monthly_fee REAL,
+      retainer_hours REAL,
       currency TEXT DEFAULT 'ILS',
       status TEXT DEFAULT 'active' CHECK (status IN ('active', 'completed', 'paused')),
       start_date DATE,
@@ -186,6 +189,36 @@ export async function initSchema(): Promise<void> {
   await client.query(`
     CREATE INDEX IF NOT EXISTS idx_projects_client_id ON projects(client_id)
   `);
+
+  // Add fixed_budget column if it doesn't exist (for migrations)
+  try {
+    await client.query(`
+      ALTER TABLE projects ADD COLUMN IF NOT EXISTS fixed_budget REAL
+    `);
+  } catch (error) {
+    // Column might already exist, ignore error
+    console.log("fixed_budget column migration check complete");
+  }
+
+  // Add retainer_monthly_fee column if it doesn't exist (for migrations)
+  try {
+    await client.query(`
+      ALTER TABLE projects ADD COLUMN IF NOT EXISTS retainer_monthly_fee REAL
+    `);
+  } catch (error) {
+    // Column might already exist, ignore error
+    console.log("retainer_monthly_fee column migration check complete");
+  }
+
+  // Add retainer_hours column if it doesn't exist (for migrations)
+  try {
+    await client.query(`
+      ALTER TABLE projects ADD COLUMN IF NOT EXISTS retainer_hours REAL
+    `);
+  } catch (error) {
+    // Column might already exist, ignore error
+    console.log("retainer_hours column migration check complete");
+  }
 
   // Time entries table
   await client.query(`

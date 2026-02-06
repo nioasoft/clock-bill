@@ -29,6 +29,9 @@ export async function GET(request: NextRequest) {
       package_price: number | null;
       package_hours: number | null;
       overage_rate: number | null;
+      fixed_budget: number | null;
+      retainer_monthly_fee: number | null;
+      retainer_hours: number | null;
       currency: string;
       status: string;
       start_date: string | null;
@@ -38,6 +41,7 @@ export async function GET(request: NextRequest) {
     }>(
       `SELECT p.id, p.name, p.client_id, c.name as client_name,
               p.pricing_model, p.hourly_rate, p.package_price, p.package_hours, p.overage_rate,
+              p.fixed_budget, p.retainer_monthly_fee, p.retainer_hours,
               p.currency, p.status, p.start_date, p.end_date, p.notes, p.created_at
        FROM projects p
        JOIN clients c ON p.client_id = c.id
@@ -56,6 +60,9 @@ export async function GET(request: NextRequest) {
       packagePrice: project.package_price,
       packageHours: project.package_hours,
       overageRate: project.overage_rate,
+      fixedBudget: project.fixed_budget,
+      retainerMonthlyFee: project.retainer_monthly_fee,
+      retainerHours: project.retainer_hours,
       currency: project.currency,
       status: project.status,
       startDate: project.start_date,
@@ -101,6 +108,9 @@ export async function POST(request: NextRequest) {
       packagePrice,
       packageHours,
       overageRate,
+      fixedBudget,
+      retainerMonthlyFee,
+      retainerHours,
       currency,
       status,
       startDate,
@@ -123,7 +133,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!pricingModel || !["hourly", "package", "mixed"].includes(pricingModel)) {
+    if (!pricingModel || !["hourly", "package", "mixed", "fixed", "retainer"].includes(pricingModel)) {
       return NextResponse.json(
         { success: false, message: "יש לבחור מודל תמחור תקין" },
         { status: 400 }
