@@ -6,6 +6,7 @@ import Link from "next/link";
 import { AppLayout } from "@/components/app-layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EarningsChart } from "@/components/earnings-chart";
+import { ProjectHoursChart } from "@/components/project-hours-chart";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 
 interface DashboardStats {
@@ -434,9 +435,10 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        {/* Earnings Chart */}
-        <div className="mt-8">
+        {/* Charts Grid */}
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
           <EarningsChart />
+          <ProjectHoursChart />
         </div>
 
         {/* Recent Entries */}
