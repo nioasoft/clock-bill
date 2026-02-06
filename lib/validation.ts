@@ -2,6 +2,91 @@
  * Form validation utilities with Hebrew error messages
  */
 
+/**
+ * Password strength levels
+ */
+export enum PasswordStrength {
+  WEAK = 0,
+  FAIR = 1,
+  GOOD = 2,
+  STRONG = 3,
+}
+
+/**
+ * Password strength result
+ */
+export interface PasswordStrengthResult {
+  strength: PasswordStrength;
+  score: number; // 0-100
+  feedback: string;
+  checks: {
+    length: boolean;
+    lowercase: boolean;
+    uppercase: boolean;
+    number: boolean;
+    special: boolean;
+  };
+}
+
+/**
+ * Calculate password strength
+ * Returns a score from 0-100 and detailed feedback
+ */
+export function calculatePasswordStrength(password: string): PasswordStrengthResult {
+  const checks = {
+    length: password.length >= 8,
+    lowercase: /[a-z]/.test(password),
+    uppercase: /[A-Z]/.test(password),
+    number: /[0-9]/.test(password),
+    special: /[^a-zA-Z0-9]/.test(password),
+  };
+
+  // Count passed checks
+  const passedChecks = Object.values(checks).filter(Boolean).length;
+
+  // Calculate base score (0-100)
+  let score = 0;
+
+  // Length bonus (up to 40 points)
+  if (password.length >= 8) score += 20;
+  if (password.length >= 12) score += 10;
+  if (password.length >= 16) score += 10;
+
+  // Character variety (up to 60 points)
+  if (checks.lowercase) score += 12;
+  if (checks.uppercase) score += 12;
+  if (checks.number) score += 12;
+  if (checks.special) score += 24;
+
+  // Cap at 100
+  score = Math.min(score, 100);
+
+  // Determine strength level and feedback
+  let strength: PasswordStrength;
+  let feedback: string;
+
+  if (score < 40) {
+    strength = PasswordStrength.WEAK;
+    feedback = "סיסמה חלשה - כדאי לחזק אותה";
+  } else if (score < 60) {
+    strength = PasswordStrength.FAIR;
+    feedback = "סיסמה בינונית - עדיין יכולה להיות חזקה יותר";
+  } else if (score < 80) {
+    strength = PasswordStrength.GOOD;
+    feedback = "סיסמה טובה - כמעט שם";
+  } else {
+    strength = PasswordStrength.STRONG;
+    feedback = "סיסמה חזקה מצוינת!";
+  }
+
+  return {
+    strength,
+    score,
+    feedback,
+    checks,
+  };
+}
+
 export interface ValidationRule {
   value: string;
   required?: boolean;

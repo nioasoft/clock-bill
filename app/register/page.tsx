@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { validateEmail, validatePassword, validatePasswordConfirm } from "@/lib/validation";
+import { PasswordStrengthIndicator } from "@/components/password-strength-indicator";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -147,6 +148,7 @@ export default function RegisterPage() {
                 }`}
                 placeholder="לפחות 8 תווים"
               />
+              <PasswordStrengthIndicator password={password} />
               {passwordError && <p className="mt-1 text-sm text-red-600">{passwordError}</p>}
             </div>
 
