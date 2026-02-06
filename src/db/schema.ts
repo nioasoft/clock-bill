@@ -29,6 +29,11 @@ export const userProfile = pgTable('user_profiles', {
   dailyReminderEnabled: boolean('daily_reminder_enabled').default(false).notNull(),
   dailyReminderTime: text('daily_reminder_time').default('09:00'), // format: HH:MM
   lastReminderDate: date('last_reminder_date'),
+  // Working hours setting
+  workingHours: real('working_hours').default(8), // hours per day
+  // Display format preferences
+  dateFormat: text('date_format').default('DD/MM/YYYY').notNull(), // 'DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'
+  timeFormat: text('time_format').default('24h').notNull(), // '12h' or '24h'
   createdAt: timestamp('created_at').default(sql`NOW()`),
   updatedAt: timestamp('updated_at').default(sql`NOW()`),
 });

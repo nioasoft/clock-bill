@@ -37,6 +37,9 @@ export interface Profile {
   dailyReminderEnabled: boolean;
   dailyReminderTime: string;
   lastReminderDate: string | null;
+  workingHours: number;
+  dateFormat: string;
+  timeFormat: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -69,6 +72,9 @@ export interface ProfileUpdateRequest {
   longTimerThreshold?: number;
   dailyReminderEnabled?: boolean;
   dailyReminderTime?: string;
+  workingHours?: number;
+  dateFormat?: string;
+  timeFormat?: string;
 }
 
 /**
@@ -101,7 +107,8 @@ export async function GET(): Promise<NextResponse> {
               pdf_accent_color as "pdfAccentColor",
               long_timer_enabled as "longTimerEnabled", long_timer_threshold as "longTimerThreshold",
               daily_reminder_enabled as "dailyReminderEnabled", daily_reminder_time as "dailyReminderTime",
-              last_reminder_date as "lastReminderDate",
+              last_reminder_date as "lastReminderDate", working_hours as "workingHours",
+              date_format as "dateFormat", time_format as "timeFormat",
               created_at as "createdAt", updated_at as "updatedAt"
        FROM user_profiles
        WHERE user_id = $1`,
@@ -258,6 +265,21 @@ export async function PATCH(request: Request): Promise<NextResponse> {
       values.push(body.dailyReminderTime);
     }
 
+    if (body.workingHours !== undefined) {
+      updates.push(`working_hours = $${paramIndex++}`);
+      values.push(body.workingHours);
+    }
+
+    if (body.dateFormat !== undefined) {
+      updates.push(`date_format = $${paramIndex++}`);
+      values.push(body.dateFormat);
+    }
+
+    if (body.timeFormat !== undefined) {
+      updates.push(`time_format = $${paramIndex++}`);
+      values.push(body.timeFormat);
+    }
+
     if (updates.length === 0) {
       return NextResponse.json(
         { success: false, message: "No fields to update" },
@@ -285,7 +307,8 @@ export async function PATCH(request: Request): Promise<NextResponse> {
                  pdf_accent_color as "pdfAccentColor",
                  long_timer_enabled as "longTimerEnabled", long_timer_threshold as "longTimerThreshold",
                  daily_reminder_enabled as "dailyReminderEnabled", daily_reminder_time as "dailyReminderTime",
-                 last_reminder_date as "lastReminderDate",
+                 last_reminder_date as "lastReminderDate", working_hours as "workingHours",
+                 date_format as "dateFormat", time_format as "timeFormat",
                  created_at as "createdAt", updated_at as "updatedAt"`,
       values
     );

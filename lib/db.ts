@@ -227,6 +227,75 @@ export async function initSchema(): Promise<void> {
     logger.debug("pdf_accent_color column migration check complete");
   }
 
+  // Add working_hours column if it doesn't exist (for daily work hours tracking)
+  try {
+    await client.query(`
+      ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS working_hours REAL DEFAULT 8
+    `);
+  } catch (error) {
+    // Column might already exist, ignore error
+    logger.debug("working_hours column migration check complete");
+  }
+
+  // Add notification settings columns if they don't exist
+  try {
+    await client.query(`
+      ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS long_timer_enabled BOOLEAN DEFAULT TRUE
+    `);
+  } catch (error) {
+    logger.debug("long_timer_enabled column migration check complete");
+  }
+
+  try {
+    await client.query(`
+      ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS long_timer_threshold INTEGER DEFAULT 120
+    `);
+  } catch (error) {
+    logger.debug("long_timer_threshold column migration check complete");
+  }
+
+  try {
+    await client.query(`
+      ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS daily_reminder_enabled BOOLEAN DEFAULT FALSE
+    `);
+  } catch (error) {
+    logger.debug("daily_reminder_enabled column migration check complete");
+  }
+
+  try {
+    await client.query(`
+      ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS daily_reminder_time TEXT DEFAULT '09:00'
+    `);
+  } catch (error) {
+    logger.debug("daily_reminder_time column migration check complete");
+  }
+
+  try {
+    await client.query(`
+      ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS last_reminder_date DATE
+    `);
+  } catch (error) {
+    logger.debug("last_reminder_date column migration check complete");
+  }
+
+  // Add date_format column if it doesn't exist (for display preferences)
+  try {
+    await client.query(`
+      ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS date_format TEXT DEFAULT 'DD/MM/YYYY'
+    `);
+  } catch (error) {
+    logger.debug("date_format column migration check complete");
+  }
+
+  // Add time_format column if it doesn't exist (for display preferences)
+  try {
+    await client.query(`
+      ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS time_format TEXT DEFAULT '24h'
+    `);
+  } catch (error) {
+    logger.debug("time_format column migration check complete");
+  }
+
   // Clients table
   await client.query(`
     CREATE TABLE IF NOT EXISTS clients (

@@ -39,6 +39,9 @@ interface Profile {
   dailyReminderEnabled: boolean;
   dailyReminderTime: string;
   lastReminderDate: string | null;
+  workingHours: number;
+  dateFormat: string;
+  timeFormat: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -79,6 +82,7 @@ export default function SettingsPage() {
   const [longTimerThreshold, setLongTimerThreshold] = useState("120");
   const [dailyReminderEnabled, setDailyReminderEnabled] = useState(false);
   const [dailyReminderTime, setDailyReminderTime] = useState("09:00");
+  const [workingHours, setWorkingHours] = useState("8");
   const [testingNotification, setTestingNotification] = useState(false);
 
   // Currency rates form state
@@ -140,6 +144,8 @@ export default function SettingsPage() {
   const [bankSwift, setBankSwift] = useState("");
   const [pdfPrimaryColor, setPdfPrimaryColor] = useState("#2563EB");
   const [pdfAccentColor, setPdfAccentColor] = useState("#059669");
+  const [dateFormat, setDateFormat] = useState("DD/MM/YYYY");
+  const [timeFormat, setTimeFormat] = useState("24h");
 
   useEffect(() => {
     if (activeTab === "security") {
@@ -215,6 +221,10 @@ export default function SettingsPage() {
         setLongTimerThreshold((data.profile.longTimerThreshold ?? 120).toString());
         setDailyReminderEnabled(data.profile.dailyReminderEnabled ?? false);
         setDailyReminderTime(data.profile.dailyReminderTime ?? "09:00");
+        setWorkingHours((data.profile.workingHours ?? 8).toString());
+        // Initialize format preferences
+        setDateFormat(data.profile.dateFormat || "DD/MM/YYYY");
+        setTimeFormat(data.profile.timeFormat || "24h");
       } else {
         setProfileError(data.message || "שגיאה בטעינת הפרופיל");
       }
@@ -315,6 +325,8 @@ export default function SettingsPage() {
           bankSwift: bankSwift || null,
           pdfPrimaryColor: pdfPrimaryColor || "#2563EB",
           pdfAccentColor: pdfAccentColor || "#059669",
+          dateFormat: dateFormat || "DD/MM/YYYY",
+          timeFormat: timeFormat || "24h",
         }),
       });
 
@@ -350,6 +362,7 @@ export default function SettingsPage() {
           longTimerThreshold: parseInt(longTimerThreshold, 10),
           dailyReminderEnabled,
           dailyReminderTime,
+          workingHours: parseFloat(workingHours),
         }),
       });
 
@@ -1156,6 +1169,34 @@ export default function SettingsPage() {
                     </p>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Working Hours */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                שעות עבודה יומיות
+              </h2>
+              <p className="text-sm text-gray-600 mb-6">
+                הגדר את מספר השעות היומיות שאתה עובד. זה שימושי למעקב ודוחות.
+              </p>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-2">
+                  שעות עבודה ליום
+                </label>
+                <input
+                  type="number"
+                  value={workingHours}
+                  onChange={(e) => setWorkingHours(e.target.value)}
+                  min="1"
+                  max="24"
+                  step="0.5"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  מספר השעות המלאות ליום עבודה: {workingHours} שעות
+                </p>
               </div>
             </div>
 
@@ -1992,6 +2033,51 @@ export default function SettingsPage() {
                       </div>
                       <p className="text-xs text-gray-500 mt-1">
                         הצבע המשני שיופיע בפרטים ואלמנטים נוספים ב-PDF
+                      </p>
+                    </div>
+
+                    {/* Date Format */}
+                    <div>
+                      <label
+                        htmlFor="dateFormat"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        פורמט תאריך
+                      </label>
+                      <select
+                        id="dateFormat"
+                        value={dateFormat}
+                        onChange={(e) => setDateFormat(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      >
+                        <option value="DD/MM/YYYY">יום/חודש/שנה (DD/MM/YYYY)</option>
+                        <option value="MM/DD/YYYY">חודש/יום/שנה (MM/DD/YYYY)</option>
+                        <option value="YYYY-MM-DD">שנה-חודש-יום (YYYY-MM-DD)</option>
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        פורמט התצוגה של תאריכים במערכת
+                      </p>
+                    </div>
+
+                    {/* Time Format */}
+                    <div>
+                      <label
+                        htmlFor="timeFormat"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        פורמט שעה
+                      </label>
+                      <select
+                        id="timeFormat"
+                        value={timeFormat}
+                        onChange={(e) => setTimeFormat(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      >
+                        <option value="24h">24 שעות (14:30)</option>
+                        <option value="12h">12 שעות (02:30 PM)</option>
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        פורמט התצוגה של שעות במערכת
                       </p>
                     </div>
 
