@@ -282,8 +282,18 @@ export async function GET(request: NextRequest) {
     const buffer = await workbook.xlsx.writeBuffer();
 
     // Generate filename with date range
-    const dateStr = new Date().toISOString().split("T")[0];
-    const filename = `report_${dateStr}.xlsx`;
+    let filename = "report";
+    if (startDate && endDate) {
+      filename = `report_${startDate}_to_${endDate}`;
+    } else if (startDate) {
+      filename = `report_from_${startDate}`;
+    } else if (endDate) {
+      filename = `report_until_${endDate}`;
+    } else {
+      const dateStr = new Date().toISOString().split("T")[0];
+      filename = `report_${dateStr}`;
+    }
+    filename += ".xlsx";
 
     // Return Excel file
     return new NextResponse(Buffer.from(buffer) as any, {
