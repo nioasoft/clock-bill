@@ -72,7 +72,7 @@ export function showLongTimerNotification(minutes: number): void {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
 
-  let title = "הטיימר רץ זמן רב";
+  const title = "הטיימר רץ זמן רב";
   let body = "";
 
   if (hours > 0) {

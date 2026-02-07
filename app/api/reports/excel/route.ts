@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
 
     // Add data rows
     let totalMinutes = 0;
-    let totalAmounts: Record<string, number> = {};
+    const totalAmounts: Record<string, number> = {};
 
     result.rows.forEach((entry) => {
       const durationMinutes = entry.duration;
@@ -295,7 +295,7 @@ export async function GET(request: NextRequest) {
     filename += ".xlsx";
 
     // Return Excel file
-    return new NextResponse(Buffer.from(buffer) as any, {
+    return new NextResponse(Buffer.from(buffer) as unknown as BodyInit, {
       headers: {
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename="${encodeURIComponent(filename)}"`,

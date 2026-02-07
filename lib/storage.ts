@@ -29,16 +29,21 @@ interface VercelBlobPutResult {
 // Dynamic import for Vercel Blob (only available in production when package is installed)
 let blobPut: ((filename: string, file: File, options: VercelBlobPutOptions) => Promise<VercelBlobPutResult>) | null = null;
 let blobDel: ((pathname: string) => Promise<void>) | null = null;
+let blobInitialized = false;
 
-// Try to load Vercel Blob in production
-if (isProduction() && process.env.BLOB_READ_WRITE_TOKEN) {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const blob = require("@vercel/blob");
-    blobPut = blob.put;
-    blobDel = blob.del;
-  } catch (error) {
-    console.warn("@vercel/blob not available, falling back to local storage");
+// Lazily load Vercel Blob in production
+async function initBlobStorage(): Promise<void> {
+  if (blobInitialized) return;
+  blobInitialized = true;
+
+  if (isProduction() && process.env.BLOB_READ_WRITE_TOKEN) {
+    try {
+      const blob = await import("@vercel/blob");
+      blobPut = blob.put;
+      blobDel = blob.del;
+    } catch (error) {
+      console.warn("@vercel/blob not available, falling back to local storage");
+    }
   }
 }
 
@@ -144,7 +149,9 @@ class BlobStorageAdapter implements StorageAdapter {
 /**
  * Get the appropriate storage adapter based on environment
  */
-export function getStorageAdapter(): StorageAdapter {
+export async function getStorageAdapter(): Promise<StorageAdapter> {
+  await initBlobStorage();
+
   // In production, use Vercel Blob if token is available AND package is installed
   // Otherwise fall back to local storage (for compatibility)
   if (isProduction() && process.env.BLOB_READ_WRITE_TOKEN && blobPut && blobDel) {
@@ -163,7 +170,7 @@ export async function uploadFile(
   userId: string,
   prefix: string = "logos"
 ): Promise<string> {
-  const storage = getStorageAdapter();
+  const storage = await getStorageAdapter();
   return storage.upload(file, userId, prefix);
 }
 
@@ -171,6 +178,6 @@ export async function uploadFile(
  * Delete a file using the appropriate storage adapter
  */
 export async function deleteFile(url: string): Promise<void> {
-  const storage = getStorageAdapter();
+  const storage = await getStorageAdapter();
   return storage.delete(url);
 }

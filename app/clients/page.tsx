@@ -595,7 +595,7 @@ function ClientsPageContent() {
           <div className="rounded-[14px] bg-card p-6 shadow-xl max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-foreground mb-2">ארכב לקוח</h3>
             <p className="text-muted-foreground mb-6">
-              האם לארכב את הלקוח "{clientToDelete.name}"? הלקוח יוסתר מהרשימה אך יישמר במערכת.
+              האם לארכב את הלקוח &quot;{clientToDelete.name}&quot;? הלקוח יוסתר מהרשימה אך יישמר במערכת.
             </p>
             <div className="flex justify-end gap-2">
               <button

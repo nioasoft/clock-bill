@@ -1121,7 +1121,7 @@ export default function EntriesPage() {
           <div className="rounded-[14px] bg-card p-6 shadow-xl max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-foreground mb-2">מחק רישום זמן</h3>
             <p className="text-muted-foreground mb-6">
-              האם למחוק את רישום הזמן "{entryToDelete.description}"? פעולה זו אינה הפיכה.
+              האם למחוק את רישום הזמן &quot;{entryToDelete.description}&quot;? פעולה זו אינה הפיכה.
             </p>
             <div className="flex justify-end gap-2">
               <button

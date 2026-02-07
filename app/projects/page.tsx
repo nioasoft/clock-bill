@@ -257,7 +257,7 @@ function ProjectsPageContent() {
 
     try {
       // Only send the pricing fields that are relevant to the current pricing model
-      const pricingData: any = {
+      const pricingData: Record<string, string | number | undefined> = {
         clientId: formData.clientId,
         name: formData.name,
         pricingModel: formData.pricingModel,

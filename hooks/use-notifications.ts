@@ -137,8 +137,33 @@ export function useNotifications() {
 
   // Load settings on mount
   useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
+    let cancelled = false;
+
+    async function fetchSettings() {
+      try {
+        const response = await fetch("/api/profile");
+        const data = await response.json();
+
+        if (!cancelled && data.success && data.profile) {
+          setSettings({
+            longTimerEnabled: data.profile.longTimerEnabled ?? true,
+            longTimerThreshold: data.profile.longTimerThreshold ?? 120,
+            dailyReminderEnabled: data.profile.dailyReminderEnabled ?? false,
+            dailyReminderTime: data.profile.dailyReminderTime ?? "09:00",
+            lastReminderDate: data.profile.lastReminderDate ?? null,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load notification settings:", error);
+      }
+    }
+
+    fetchSettings();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return {
     permission,

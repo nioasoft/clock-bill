@@ -183,7 +183,18 @@ export async function GET(request: NextRequest) {
 
       acc[key].entries.push(entry);
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, {
+      clientId: string;
+      clientName: string;
+      clientContactName: string | null;
+      clientEmail: string | null;
+      clientPhone: string | null;
+      clientAddress: string | null;
+      totalMinutes: number;
+      totalHours: number;
+      totalAmounts: Record<string, number>;
+      entries: typeof entries;
+    }>);
 
     // Group by project
     const byProject = entries.reduce((acc, entry) => {
@@ -208,7 +219,19 @@ export async function GET(request: NextRequest) {
       acc[key].totalAmount += entry.amount || 0;
       acc[key].entries.push(entry);
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, {
+      projectId: string;
+      projectName: string;
+      clientId: string;
+      clientName: string;
+      pricingModel: string;
+      hourlyRate: number | null;
+      currency: string;
+      totalMinutes: number;
+      totalHours: number;
+      totalAmount: number;
+      entries: typeof entries;
+    }>);
 
     // Group by date (daily breakdown)
     const byDate = entries.reduce((acc, entry) => {
@@ -236,7 +259,14 @@ export async function GET(request: NextRequest) {
 
       acc[key].entries.push(entry);
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, {
+      date: string;
+      totalMinutes: number;
+      totalHours: number;
+      totalAmounts: Record<string, number>;
+      entryCount: number;
+      entries: typeof entries;
+    }>);
 
     // Group by week (weekly breakdown)
     const byWeek = entries.reduce((acc, entry) => {
@@ -270,7 +300,15 @@ export async function GET(request: NextRequest) {
 
       acc[weekKey].entries.push(entry);
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, {
+      weekStart: string;
+      weekEnd: string;
+      totalMinutes: number;
+      totalHours: number;
+      totalAmounts: Record<string, number>;
+      entryCount: number;
+      entries: typeof entries;
+    }>);
 
     return NextResponse.json({
       success: true,
