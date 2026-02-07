@@ -19,7 +19,7 @@ import {
   validatePastDate,
   validateFutureDate,
   PasswordStrength,
-} from '../lib/validation';
+} from '../../lib/validation';
 
 // Simple test runner
 class TestRunner {
@@ -140,7 +140,7 @@ runner.test('validateField: minLength pass', () => {
 runner.test('validateField: minLength fail', () => {
   const result = validateField({ value: 'te', required: true, minLength: 3 });
   assertFalse(result.isValid);
-  assertTrue(result.error?.includes('לפחות 3'));
+  assertTrue(result.error!.includes('לפחות 3'));
 });
 
 runner.test('validateField: maxLength pass', () => {
@@ -151,7 +151,7 @@ runner.test('validateField: maxLength pass', () => {
 runner.test('validateField: maxLength fail', () => {
   const result = validateField({ value: 'testing', required: true, maxLength: 5 });
   assertFalse(result.isValid);
-  assertTrue(result.error?.includes('לכל היותר 5'));
+  assertTrue(result.error!.includes('לכל היותר 5'));
 });
 
 runner.test('validateField: pattern pass', () => {
@@ -177,7 +177,7 @@ runner.test('validateField: custom validation pass', () => {
   const result = validateField({
     value: 'test@example.com',
     required: true,
-    custom: (v) => v.includes('@') ? null : 'Missing @'
+    custom: (v: string) => v.includes('@') ? null : 'Missing @'
   });
   assertTrue(result.isValid);
 });
@@ -186,7 +186,7 @@ runner.test('validateField: custom validation fail', () => {
   const result = validateField({
     value: 'testexample.com',
     required: true,
-    custom: (v) => v.includes('@') ? null : 'Missing @'
+    custom: (v: string) => v.includes('@') ? null : 'Missing @'
   });
   assertFalse(result.isValid);
   assertEqual(result.error, 'Missing @');
@@ -255,7 +255,7 @@ runner.test('validatePassword: valid password', () => {
 runner.test('validatePassword: too short', () => {
   const result = validatePassword('pass');
   assertFalse(result.isValid);
-  assertTrue(result.error?.includes('לפחות 8'));
+  assertTrue(result.error!.includes('לפחות 8'));
 });
 
 runner.test('validatePassword: empty', () => {
@@ -301,7 +301,7 @@ runner.test('validateNumber: invalid text', () => {
 runner.test('validateNumber: below minimum', () => {
   const result = validateNumber('-5', true, 0);
   assertFalse(result.isValid);
-  assertTrue(result.error?.includes('גדול או שווה ל-0'));
+  assertTrue(result.error!.includes('גדול או שווה ל-0'));
 });
 
 runner.test('validateNumber: optional field empty', () => {
@@ -367,13 +367,13 @@ runner.test('validateDate: valid date', () => {
 runner.test('validateDate: invalid format', () => {
   const result = validateDate('15/01/2024', true);
   assertFalse(result.isValid);
-  assertTrue(result.error?.includes('תאריך'));
+  assertTrue(result.error!.includes('תאריך'));
 });
 
 runner.test('validateDate: invalid date (Feb 30)', () => {
   const result = validateDate('2024-02-30', true);
   assertFalse(result.isValid);
-  assertTrue(result.error?.includes('תאריך'));
+  assertTrue(result.error!.includes('תאריך'));
 });
 
 runner.test('validateDate: leap year valid', () => {
@@ -400,7 +400,7 @@ runner.test('validateDateRange: valid range', () => {
 runner.test('validateDateRange: start after end', () => {
   const result = validateDateRange('2024-01-31', '2024-01-01', true);
   assertFalse(result.isValid);
-  assertTrue(result.error?.includes('לפני'));
+  assertTrue(result.error!.includes('לפני'));
 });
 
 runner.test('validateDateRange: invalid start date', () => {
@@ -424,7 +424,7 @@ runner.test('validatePastDate: future date invalid', () => {
   futureDate.setFullYear(futureDate.getFullYear() + 1);
   const result = validatePastDate(futureDate.toISOString().split('T')[0], true);
   assertFalse(result.isValid);
-  assertTrue(result.error?.includes('עתיד'));
+  assertTrue(result.error!.includes('עתיד'));
 });
 
 runner.test('validatePastDate: optional field empty', () => {
@@ -443,7 +443,7 @@ runner.test('validateFutureDate: future date valid', () => {
 runner.test('validateFutureDate: past date invalid', () => {
   const result = validateFutureDate('2020-01-01', true);
   assertFalse(result.isValid);
-  assertTrue(result.error?.includes('עבר'));
+  assertTrue(result.error!.includes('עבר'));
 });
 
 runner.test('validateFutureDate: optional field empty', () => {
@@ -456,8 +456,8 @@ runner.test('validateForm: multiple fields all valid', () => {
   const result = validateForm(
     { name: 'Test', email: 'test@example.com' },
     {
-      name: (v) => validateRequired(v),
-      email: (v) => validateEmail(v)
+      name: (v: string) => validateRequired(v),
+      email: (v: string) => validateEmail(v)
     }
   );
   assertTrue(result.isValid);
@@ -469,26 +469,26 @@ runner.test('validateForm: multiple fields one invalid', () => {
   const result = validateForm(
     { name: 'Test', email: 'invalid-email' },
     {
-      name: (v) => validateRequired(v),
-      email: (v) => validateEmail(v)
+      name: (v: string) => validateRequired(v),
+      email: (v: string) => validateEmail(v)
     }
   );
   assertFalse(result.isValid);
   assertEqual(result.errors.name, null);
-  assertTrue(result.errors.email?.length > 0);
+  assertTrue(result.errors.email!.length > 0);
 });
 
 runner.test('validateForm: multiple fields all invalid', () => {
   const result = validateForm(
     { name: '', email: 'invalid' },
     {
-      name: (v) => validateRequired(v),
-      email: (v) => validateEmail(v)
+      name: (v: string) => validateRequired(v),
+      email: (v: string) => validateEmail(v)
     }
   );
   assertFalse(result.isValid);
-  assertTrue(result.errors.name?.length > 0);
-  assertTrue(result.errors.email?.length > 0);
+  assertTrue(result.errors.name!.length > 0);
+  assertTrue(result.errors.email!.length > 0);
 });
 
 // Run tests

@@ -23,7 +23,7 @@ async function testEndpoint(name: string, testFn: () => Promise<void>) {
 }
 
 // Auth helper - get session token from login
-async function authenticate(email: string, password: string): Promise<string> {
+async function _authenticate(email: string, password: string): Promise<string> {
   const response = await fetch(`${BASE_URL}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -45,9 +45,9 @@ async function apiRequest(
   options: RequestInit = {},
   sessionToken?: string
 ): Promise<Response> {
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...(options.headers as Record<string, string>),
   };
 
   if (sessionToken) {

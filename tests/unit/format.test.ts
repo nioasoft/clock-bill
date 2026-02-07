@@ -11,7 +11,7 @@ import {
   formatDuration,
   type DateFormat,
   type TimeFormat,
-} from '../lib/format';
+} from '../../lib/format';
 
 // Simple test runner
 class TestRunner {
