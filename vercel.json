@@ -11,13 +11,6 @@
     "NEXT_PUBLIC_APP_URL": "@next-public-app-url",
     "BLOB_READ_WRITE_TOKEN": "@blob-read-write-token"
   },
-  "build": {
-    "env": {
-      "NEXT_PUBLIC_APP_URL": {
-        "description": "The production URL of the app",
-        "value": "https://your-app.vercel.app"
-      }
-    }
-  },
+  "build": {},
   "crons": []
 }
