@@ -2,6 +2,12 @@
 
 import Link from "next/link";
 import { useTimer } from "@/contexts/timer-context";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export function TimerStartModal() {
   const {
@@ -16,16 +22,20 @@ export function TimerStartModal() {
     handleStartTimer,
   } = useTimer();
 
-  if (!showTimerModal) return null;
-
   const hasProjects = projects.length > 0;
 
+  const handleClose = () => {
+    setShowTimerModal(false);
+    setSelectedProject("");
+    setTimerDescription("");
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-card border border-border rounded-[14px] p-6 max-w-md w-full mx-4 shadow-lg">
-        <h3 className="font-display text-lg font-semibold text-foreground mb-4">
-          התחל טיימר חדש
-        </h3>
+    <Dialog open={showTimerModal} onOpenChange={(open) => { if (!open) handleClose(); }}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle className="font-display">התחל טיימר חדש</DialogTitle>
+        </DialogHeader>
 
         <div className="space-y-4">
           {hasProjects ? (
@@ -73,11 +83,7 @@ export function TimerStartModal() {
 
               <div className="flex gap-3 justify-end">
                 <button
-                  onClick={() => {
-                    setShowTimerModal(false);
-                    setSelectedProject("");
-                    setTimerDescription("");
-                  }}
+                  onClick={handleClose}
                   disabled={startingTimer}
                   className="px-4 py-2 text-sm font-medium text-muted-foreground bg-muted rounded-md hover:bg-muted/80 disabled:opacity-50"
                 >
@@ -123,7 +129,7 @@ export function TimerStartModal() {
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

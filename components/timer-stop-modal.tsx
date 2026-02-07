@@ -1,6 +1,12 @@
 "use client";
 
 import { useTimer } from "@/contexts/timer-context";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export function TimerStopModal() {
   const {
@@ -17,14 +23,12 @@ export function TimerStopModal() {
     cancelStopTimer,
   } = useTimer();
 
-  if (!showStopTimerModal) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-card border border-border rounded-[14px] p-6 max-w-md w-full mx-4 shadow-lg">
-        <h3 className="font-display text-lg font-semibold text-foreground mb-4">
-          עצור טיימר ושמור רשומה
-        </h3>
+    <Dialog open={showStopTimerModal} onOpenChange={(open) => { if (!open) cancelStopTimer(); }}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle className="font-display">עצור טיימר ושמור רשומה</DialogTitle>
+        </DialogHeader>
 
         <div className="space-y-4">
           {/* Current elapsed time */}
@@ -106,7 +110,7 @@ export function TimerStopModal() {
             </button>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

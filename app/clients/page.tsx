@@ -15,6 +15,13 @@ import {
   validatePhone,
   validateNumber,
 } from "@/lib/validation";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 interface Client {
   id: string;
@@ -392,7 +399,7 @@ function ClientsPageContent() {
                     id="address"
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-border px-3 py-2 border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className="mt-1 block w-full rounded-md border border-border/50 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                     placeholder="רחוב, מספר, עיר"
                   />
@@ -590,32 +597,32 @@ function ClientsPageContent() {
         </div>
       </PageContainer>
       {/* Delete Confirmation Dialog */}
-      {clientToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="rounded-[14px] bg-card p-6 shadow-xl max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-foreground mb-2">ארכב לקוח</h3>
-            <p className="text-muted-foreground mb-6">
-              האם לארכב את הלקוח &quot;{clientToDelete.name}&quot;? הלקוח יוסתר מהרשימה אך יישמר במערכת.
-            </p>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={cancelDelete}
-                disabled={deleting}
-                className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted disabled:opacity-50"
-              >
-                ביטול
-              </button>
-              <button
-                onClick={confirmDelete}
-                disabled={deleting}
-                className="rounded-[14px] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
-              >
-                {deleting ? "מארכב..." : "ארכב"}
-              </button>
-            </div>
+      <Dialog open={!!clientToDelete} onOpenChange={(open) => { if (!open) cancelDelete(); }}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>ארכב לקוח</DialogTitle>
+            <DialogDescription>
+              האם לארכב את הלקוח &quot;{clientToDelete?.name}&quot;? הלקוח יוסתר מהרשימה אך יישמר במערכת.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={cancelDelete}
+              disabled={deleting}
+              className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted disabled:opacity-50"
+            >
+              ביטול
+            </button>
+            <button
+              onClick={confirmDelete}
+              disabled={deleting}
+              className="rounded-[14px] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
+            >
+              {deleting ? "מארכב..." : "ארכב"}
+            </button>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

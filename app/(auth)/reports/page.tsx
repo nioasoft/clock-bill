@@ -5,6 +5,14 @@ import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 interface UserProfile {
   businessName: string | null;
@@ -1357,262 +1365,228 @@ export default function ReportsPage() {
       </PageContainer>
 
       {/* Template Selection Dialog */}
-      {showExportDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-[14px] shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="sticky top-0 bg-card border-b p-6">
-              <div className="flex items-center justify-between">
-                <h2 className="font-mono text-2xl font-bold tabular-nums">בחר תבנית PDF</h2>
-                <button
-                  onClick={() => setShowExportDialog(false)}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <p className="text-muted-foreground mt-2">
+      <Dialog open={showExportDialog} onOpenChange={(open) => { if (!open) setShowExportDialog(false); }}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto p-0">
+          <div className="sticky top-0 bg-card border-b p-6 z-10">
+            <DialogHeader>
+              <DialogTitle className="font-mono text-2xl font-bold tabular-nums">בחר תבנית PDF</DialogTitle>
+              <DialogDescription>
                 בחר את העיצוב המועדף עליך לדוח ה-PDF
-              </p>
-            </div>
+              </DialogDescription>
+            </DialogHeader>
+          </div>
 
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-              {PDF_TEMPLATES.map((template) => (
-                <button
-                  key={template.value}
-                  onClick={() => confirmExportPdf(template.value)}
-                  className={`
-                    border-2 rounded-[14px] p-6 text-start transition-all hover:shadow-lg
-                    ${
-                      selectedTemplate === template.value
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
-                    }
-                  `}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-lg font-semibold">{template.label}</h3>
-                    <div
-                      className={`
-                      w-6 h-6 rounded-full border-2 flex items-center justify-center
-                      ${
-                        selectedTemplate === template.value
-                          ? "border-primary bg-primary"
-                          : "border-muted-foreground"
-                      }
-                    `}
-                    >
-                      {selectedTemplate === template.value && (
-                        <svg className="w-4 h-4 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      )}
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{template.description}</p>
-                  {/* Preview box with template style */}
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {PDF_TEMPLATES.map((template) => (
+              <button
+                key={template.value}
+                onClick={() => confirmExportPdf(template.value)}
+                className={`
+                  border-2 rounded-[14px] p-6 text-start transition-all hover:shadow-lg
+                  ${
+                    selectedTemplate === template.value
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  }
+                `}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <h3 className="text-lg font-semibold">{template.label}</h3>
                   <div
                     className={`
-                    mt-4 p-3 rounded border text-sm
-                    pdf-preview-${template.value}
+                    w-6 h-6 rounded-full border-2 flex items-center justify-center
+                    ${
+                      selectedTemplate === template.value
+                        ? "border-primary bg-primary"
+                        : "border-muted-foreground"
+                    }
                   `}
                   >
-                    <div className="font-semibold">תצוגה מקדימה</div>
-                    <div className="text-xs mt-1 opacity-70">הטקסט הזה יוצג בסגנון הנבחר</div>
+                    {selectedTemplate === template.value && (
+                      <svg className="w-4 h-4 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    )}
                   </div>
-                </button>
-              ))}
-            </div>
-
-            <div className="sticky bottom-0 bg-card border-t p-6">
-              <p className="text-sm text-muted-foreground text-center">
-                לחץ על התבנית הרצויה לפתיחת חלון הדפסה - בחר &quot;שמור כ-PDF&quot; כדי להוריד את הדוח
-              </p>
-            </div>
+                </div>
+                <p className="text-sm text-muted-foreground">{template.description}</p>
+                {/* Preview box with template style */}
+                <div
+                  className={`
+                  mt-4 p-3 rounded border text-sm
+                  pdf-preview-${template.value}
+                `}
+                >
+                  <div className="font-semibold">תצוגה מקדימה</div>
+                  <div className="text-xs mt-1 opacity-70">הטקסט הזה יוצג בסגנון הנבחר</div>
+                </div>
+              </button>
+            ))}
           </div>
-        </div>
-      )}
+
+          <div className="sticky bottom-0 bg-card border-t p-6">
+            <p className="text-sm text-muted-foreground text-center">
+              לחץ על התבנית הרצויה לפתיחת חלון הדפסה - בחר &quot;שמור כ-PDF&quot; כדי להוריד את הדוח
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Save Preset Dialog */}
-      {showSavePresetDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-[14px] shadow-xl max-w-md w-full">
-            <div className="border-b p-6">
-              <div className="flex items-center justify-between">
-                <h2 className="font-mono text-2xl font-bold tabular-nums">שמור פריסט</h2>
-                <button
-                  onClick={() => {
-                    setShowSavePresetDialog(false);
-                    setPresetName("");
-                  }}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <p className="text-muted-foreground mt-2">
+      <Dialog open={showSavePresetDialog} onOpenChange={(open) => { if (!open) { setShowSavePresetDialog(false); setPresetName(""); } }}>
+        <DialogContent className="p-0">
+          <div className="border-b p-6">
+            <DialogHeader>
+              <DialogTitle className="font-mono text-2xl font-bold tabular-nums">שמור פריסט</DialogTitle>
+              <DialogDescription>
                 שמור את הגדרות הפילטרים הנוכחיות כפריסט
-              </p>
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+
+          <div className="p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">שם הפריסט</label>
+              <input
+                type="text"
+                value={presetName}
+                onChange={(e) => setPresetName(e.target.value)}
+                placeholder="לדוגמה: דוח חודשי - לקוח הייטק"
+                className="w-full px-3 py-2 border rounded-[14px] bg-background"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && presetName.trim()) {
+                    handleSavePreset();
+                  }
+                }}
+              />
             </div>
 
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">שם הפריסט</label>
-                <input
-                  type="text"
-                  value={presetName}
-                  onChange={(e) => setPresetName(e.target.value)}
-                  placeholder="לדוגמה: דוח חודשי - לקוח הייטק"
-                  className="w-full px-3 py-2 border rounded-[14px] bg-background"
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && presetName.trim()) {
-                      handleSavePreset();
-                    }
-                  }}
-                />
-              </div>
-
-              <div className="bg-muted/50 rounded-[14px] p-4 space-y-2 text-sm">
-                <p className="font-medium">הגדרות הפילטר:</p>
-                <div className="grid grid-cols-2 gap-2 text-muted-foreground">
-                  <div>תאריך התחלה:</div>
-                  <div className="text-end">{filters.startDate || "לא נבחר"}</div>
-                  <div>תאריך סיום:</div>
-                  <div className="text-end">{filters.endDate || "לא נבחר"}</div>
-                  <div>לקוח:</div>
-                  <div className="text-end">
-                    {filters.clientId
-                      ? clients.find((c) => c.id === filters.clientId)?.name || "לא נבחר"
-                      : "כל הלקוחות"}
-                  </div>
-                  <div>פרויקט:</div>
-                  <div className="text-end">
-                    {filters.projectId
-                      ? projects.find((p) => p.id === filters.projectId)?.name || "לא נבחר"
-                      : "כל הפרויקטים"}
-                  </div>
+            <div className="bg-muted/50 rounded-[14px] p-4 space-y-2 text-sm">
+              <p className="font-medium">הגדרות הפילטר:</p>
+              <div className="grid grid-cols-2 gap-2 text-muted-foreground">
+                <div>תאריך התחלה:</div>
+                <div className="text-end">{filters.startDate || "לא נבחר"}</div>
+                <div>תאריך סיום:</div>
+                <div className="text-end">{filters.endDate || "לא נבחר"}</div>
+                <div>לקוח:</div>
+                <div className="text-end">
+                  {filters.clientId
+                    ? clients.find((c) => c.id === filters.clientId)?.name || "לא נבחר"
+                    : "כל הלקוחות"}
+                </div>
+                <div>פרויקט:</div>
+                <div className="text-end">
+                  {filters.projectId
+                    ? projects.find((p) => p.id === filters.projectId)?.name || "לא נבחר"
+                    : "כל הפרויקטים"}
                 </div>
               </div>
             </div>
+          </div>
 
-            <div className="border-t p-6 flex gap-3">
+          <div className="border-t p-6 flex gap-3">
+            <button
+              onClick={handleSavePreset}
+              disabled={!presetName.trim()}
+              className="flex-1 px-6 py-2 bg-primary text-primary-foreground rounded-[14px] hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              שמור
+            </button>
+            <DialogClose asChild>
               <button
-                onClick={handleSavePreset}
-                disabled={!presetName.trim()}
-                className="flex-1 px-6 py-2 bg-primary text-primary-foreground rounded-[14px] hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                שמור
-              </button>
-              <button
-                onClick={() => {
-                  setShowSavePresetDialog(false);
-                  setPresetName("");
-                }}
                 className="px-6 py-2 border border-border rounded-[14px] hover:bg-accent transition-colors"
               >
                 ביטול
               </button>
-            </div>
+            </DialogClose>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* Load Preset Dialog */}
-      {showLoadPresetDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-[14px] shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="sticky top-0 bg-card border-b p-6">
-              <div className="flex items-center justify-between">
-                <h2 className="font-mono text-2xl font-bold tabular-nums">טען פריסט</h2>
-                <button
-                  onClick={() => setShowLoadPresetDialog(false)}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <p className="text-muted-foreground mt-2">
+      <Dialog open={showLoadPresetDialog} onOpenChange={(open) => { if (!open) setShowLoadPresetDialog(false); }}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto p-0">
+          <div className="sticky top-0 bg-card border-b p-6 z-10">
+            <DialogHeader>
+              <DialogTitle className="font-mono text-2xl font-bold tabular-nums">טען פריסט</DialogTitle>
+              <DialogDescription>
                 בחר פריסט שמור לטעינה
-              </p>
-            </div>
+              </DialogDescription>
+            </DialogHeader>
+          </div>
 
-            <div className="p-6">
-              {presets.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>לא נמצאו פריסטים שמורים</p>
-                  <p className="text-sm mt-2">שמור פריסט כדי שיופיע כאן</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {presets.map((preset) => (
-                    <div
-                      key={preset.id}
-                      className="border rounded-[14px] p-4 hover:border-primary/50 transition-colors"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg mb-2">{preset.name}</h3>
-                          <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-                            <div>תאריך התחלה:</div>
-                            <div className="text-end">{preset.startDate || "לא נבחר"}</div>
-                            <div>תאריך סיום:</div>
-                            <div className="text-end">{preset.endDate || "לא נבחר"}</div>
-                            <div>לקוח:</div>
-                            <div className="text-end">
-                              {preset.clientId
-                                ? clients.find((c) => c.id === preset.clientId)?.name || "לא נבחר"
-                                : "כל הלקוחות"}
-                            </div>
-                            <div>פרויקט:</div>
-                            <div className="text-end">
-                              {preset.projectId
-                                ? projects.find((p) => p.id === preset.projectId)?.name || "לא נבחר"
-                                : "כל הפרויקטים"}
-                            </div>
+          <div className="p-6">
+            {presets.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>לא נמצאו פריסטים שמורים</p>
+                <p className="text-sm mt-2">שמור פריסט כדי שיופיע כאן</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {presets.map((preset) => (
+                  <div
+                    key={preset.id}
+                    className="border rounded-[14px] p-4 hover:border-primary/50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg mb-2">{preset.name}</h3>
+                        <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
+                          <div>תאריך התחלה:</div>
+                          <div className="text-end">{preset.startDate || "לא נבחר"}</div>
+                          <div>תאריך סיום:</div>
+                          <div className="text-end">{preset.endDate || "לא נבחר"}</div>
+                          <div>לקוח:</div>
+                          <div className="text-end">
+                            {preset.clientId
+                              ? clients.find((c) => c.id === preset.clientId)?.name || "לא נבחר"
+                              : "כל הלקוחות"}
+                          </div>
+                          <div>פרויקט:</div>
+                          <div className="text-end">
+                            {preset.projectId
+                              ? projects.find((p) => p.id === preset.projectId)?.name || "לא נבחר"
+                              : "כל הפרויקטים"}
                           </div>
                         </div>
-                        <div className="flex gap-2 mr-4">
-                          <button
-                            onClick={() => handleLoadPreset(preset)}
-                            className="px-4 py-2 bg-primary text-primary-foreground rounded-[14px] hover:bg-primary/90 transition-colors text-sm"
-                          >
-                            טען
-                          </button>
-                          <button
-                            onClick={() => handleDeletePreset(preset.id)}
-                            className="px-4 py-2 bg-destructive text-destructive-foreground rounded-[14px] hover:bg-destructive/90 transition-colors text-sm"
-                          >
-                            מחק
-                          </button>
-                        </div>
+                      </div>
+                      <div className="flex gap-2 me-4">
+                        <button
+                          onClick={() => handleLoadPreset(preset)}
+                          className="px-4 py-2 bg-primary text-primary-foreground rounded-[14px] hover:bg-primary/90 transition-colors text-sm"
+                        >
+                          טען
+                        </button>
+                        <button
+                          onClick={() => handleDeletePreset(preset.id)}
+                          className="px-4 py-2 bg-destructive text-destructive-foreground rounded-[14px] hover:bg-destructive/90 transition-colors text-sm"
+                        >
+                          מחק
+                        </button>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-            <div className="sticky bottom-0 bg-card border-t p-6">
+          <div className="sticky bottom-0 bg-card border-t p-6">
+            <DialogClose asChild>
               <button
-                onClick={() => setShowLoadPresetDialog(false)}
                 className="w-full px-6 py-2 border border-border rounded-[14px] hover:bg-accent transition-colors"
               >
                 סגור
               </button>
-            </div>
+            </DialogClose>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

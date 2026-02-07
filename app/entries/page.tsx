@@ -10,6 +10,13 @@ import { Clock, Timer } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { validateRequired, validateDate, validatePastDate, validateNumber } from "@/lib/validation";
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 interface Project {
   id: string;
@@ -584,7 +591,7 @@ export default function EntriesPage() {
                     handleFilterChange("clientId", e.target.value);
                     handleFilterChange("projectId", ""); // Reset project when client changes
                   }}
-                  className="block w-full rounded-md border border-border px-3 py-2 text-sm border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                  className="block w-full rounded-md border border-border/50 px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                   disabled={clientsLoading}
                 >
                   <option value="">כל הלקוחות</option>
@@ -604,7 +611,7 @@ export default function EntriesPage() {
                   id="filterProject"
                   value={filters.projectId}
                   onChange={(e) => handleFilterChange("projectId", e.target.value)}
-                  className="block w-full rounded-md border border-border px-3 py-2 text-sm border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                  className="block w-full rounded-md border border-border/50 px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                   disabled={projectsLoading}
                 >
                   <option value="">כל הפרויקטים</option>
@@ -625,7 +632,7 @@ export default function EntriesPage() {
                   id="filterStartDate"
                   value={filters.startDate}
                   onChange={(e) => handleFilterChange("startDate", e.target.value)}
-                  className="block w-full rounded-md border border-border px-3 py-2 text-sm border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                  className="block w-full rounded-md border border-border/50 px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                 />
               </div>
 
@@ -638,7 +645,7 @@ export default function EntriesPage() {
                   id="filterEndDate"
                   value={filters.endDate}
                   onChange={(e) => handleFilterChange("endDate", e.target.value)}
-                  className="block w-full rounded-md border border-border px-3 py-2 text-sm border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                  className="block w-full rounded-md border border-border/50 px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                 />
               </div>
 
@@ -731,7 +738,7 @@ export default function EntriesPage() {
                     required
                     value={formData.projectId}
                     onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
-                    className={`mt-1 block w-full rounded-md border px-3 py-2 border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.projectId ? "border-destructive" : "border-border"}`}
+                    className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.projectId ? "border border-destructive" : "border border-border/50"}`}
                     disabled={submitting || projectsLoading}
                   >
                     <option value="">בחר פרויקט</option>
@@ -768,7 +775,7 @@ export default function EntriesPage() {
                     required
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className={`mt-1 block w-full rounded-md border px-3 py-2 border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.date ? "border-destructive" : "border-border"}`}
+                    className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.date ? "border border-destructive" : "border border-border/50"}`}
                     disabled={submitting}
                   />
                   {fieldErrors.date && (
@@ -788,7 +795,7 @@ export default function EntriesPage() {
                     step="1"
                     value={formData.duration}
                     onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                    className={`mt-1 block w-full rounded-md border px-3 py-2 border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.duration ? "border-destructive" : "border-border"}`}
+                    className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.duration ? "border border-destructive" : "border border-border/50"}`}
                     disabled={submitting}
                     placeholder="לדוגמה: 60"
                   />
@@ -822,7 +829,7 @@ export default function EntriesPage() {
                     required
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className={`mt-1 block w-full rounded-md border px-3 py-2 border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.description ? "border-destructive" : "border-border"}`}
+                    className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.description ? "border border-destructive" : "border border-border/50"}`}
                     disabled={submitting}
                     placeholder="מה עשית?"
                   />
@@ -840,7 +847,7 @@ export default function EntriesPage() {
                     rows={3}
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-border px-3 py-2 border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className="mt-1 block w-full rounded-md border border-border/50 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                     placeholder="הערות נוספות (אופציונלי)"
                   />
@@ -922,6 +929,7 @@ export default function EntriesPage() {
                           checked={selectedEntries.size === entries.length && entries.length > 0}
                           onChange={handleSelectAll}
                           className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                          aria-label="בחר הכל"
                         />
                       </th>
                       <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -953,6 +961,7 @@ export default function EntriesPage() {
                             checked={selectedEntries.has(entry.id)}
                             onChange={() => handleSelectEntry(entry.id)}
                             className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                            aria-label="בחר רשומה"
                           />
                         </td>
                         <td className="whitespace-nowrap px-6 py-4">
@@ -1116,157 +1125,155 @@ export default function EntriesPage() {
       </PageContainer>
 
       {/* Delete Confirmation Dialog */}
-      {entryToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="rounded-[14px] bg-card p-6 shadow-xl max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-foreground mb-2">מחק רישום זמן</h3>
-            <p className="text-muted-foreground mb-6">
-              האם למחוק את רישום הזמן &quot;{entryToDelete.description}&quot;? פעולה זו אינה הפיכה.
-            </p>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={cancelDelete}
-                disabled={deleting}
-                className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted disabled:opacity-50"
-              >
-                ביטול
-              </button>
-              <button
-                onClick={handleDeleteConfirm}
-                disabled={deleting}
-                className="rounded-[14px] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
-              >
-                {deleting ? "מוחק..." : "מחק"}
-              </button>
-            </div>
+      <Dialog open={!!entryToDelete} onOpenChange={(open) => { if (!open) cancelDelete(); }}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>מחק רישום זמן</DialogTitle>
+            <DialogDescription>
+              האם למחוק את רישום הזמן &quot;{entryToDelete?.description}&quot;? פעולה זו אינה הפיכה.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={cancelDelete}
+              disabled={deleting}
+              className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted disabled:opacity-50"
+            >
+              ביטול
+            </button>
+            <button
+              onClick={handleDeleteConfirm}
+              disabled={deleting}
+              className="rounded-[14px] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
+            >
+              {deleting ? "מוחק..." : "מחק"}
+            </button>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* Bulk Edit Modal */}
-      {showBulkEdit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="rounded-[14px] bg-card p-6 shadow-xl max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-foreground mb-4">
-              ערוך {selectedEntries.size} רשומות
-            </h3>
-            <form onSubmit={handleBulkEditSubmit} className="space-y-4">
-              {bulkEditError && (
-                <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
-                  {bulkEditError}
-                </div>
-              )}
-
-              <div>
-                <label htmlFor="bulkProjectId" className="block text-sm font-medium text-foreground mb-1">
-                  פרויקט (אופציונלי)
-                </label>
-                <select
-                  id="bulkProjectId"
-                  value={bulkEditData.projectId}
-                  onChange={(e) => setBulkEditData({ ...bulkEditData, projectId: e.target.value })}
-                  className="block w-full rounded-md border border-border px-3 py-2 text-sm border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                  disabled={bulkEditSubmitting}
-                >
-                  <option value="">ללא שינוי</option>
-                  {Object.entries(groupedProjects).map(([clientId, { clientName, projects: clientProjects }]) => (
-                    <optgroup key={clientId} label={clientName}>
-                      {clientProjects.map((project) => (
-                        <option key={project.id} value={project.id}>
-                          {project.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
+      <Dialog open={showBulkEdit} onOpenChange={(open) => { if (!open) setShowBulkEdit(false); }}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>ערוך {selectedEntries.size} רשומות</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleBulkEditSubmit} className="space-y-4">
+            {bulkEditError && (
+              <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
+                {bulkEditError}
               </div>
+            )}
 
-              <div>
-                <label htmlFor="bulkDate" className="block text-sm font-medium text-foreground mb-1">
-                  תאריך (אופציונלי)
-                </label>
-                <input
-                  type="date"
-                  id="bulkDate"
-                  value={bulkEditData.date}
-                  onChange={(e) => setBulkEditData({ ...bulkEditData, date: e.target.value })}
-                  className="block w-full rounded-md border border-border px-3 py-2 text-sm border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                  disabled={bulkEditSubmitting}
-                />
-              </div>
+            <div>
+              <label htmlFor="bulkProjectId" className="block text-sm font-medium text-foreground mb-1">
+                פרויקט (אופציונלי)
+              </label>
+              <select
+                id="bulkProjectId"
+                value={bulkEditData.projectId}
+                onChange={(e) => setBulkEditData({ ...bulkEditData, projectId: e.target.value })}
+                className="block w-full rounded-md border border-border/50 px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                disabled={bulkEditSubmitting}
+              >
+                <option value="">ללא שינוי</option>
+                {Object.entries(groupedProjects).map(([clientId, { clientName, projects: clientProjects }]) => (
+                  <optgroup key={clientId} label={clientName}>
+                    {clientProjects.map((project) => (
+                      <option key={project.id} value={project.id}>
+                        {project.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </div>
 
-              <div>
-                <label htmlFor="bulkIsBillable" className="block text-sm font-medium text-foreground mb-1">
-                  ניתן לחיוב (אופציונלי)
-                </label>
-                <select
-                  id="bulkIsBillable"
-                  value={bulkEditData.isBillable === undefined ? "" : bulkEditData.isBillable ? "true" : "false"}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setBulkEditData({
-                      ...bulkEditData,
-                      isBillable: value === "" ? undefined : value === "true",
-                    });
-                  }}
-                  className="block w-full rounded-md border border-border px-3 py-2 text-sm border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                  disabled={bulkEditSubmitting}
-                >
-                  <option value="">ללא שינוי</option>
-                  <option value="true">כן</option>
-                  <option value="false">לא</option>
-                </select>
-              </div>
+            <div>
+              <label htmlFor="bulkDate" className="block text-sm font-medium text-foreground mb-1">
+                תאריך (אופציונלי)
+              </label>
+              <input
+                type="date"
+                id="bulkDate"
+                value={bulkEditData.date}
+                onChange={(e) => setBulkEditData({ ...bulkEditData, date: e.target.value })}
+                className="block w-full rounded-md border border-border/50 px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                disabled={bulkEditSubmitting}
+              />
+            </div>
 
-              <div className="flex justify-end gap-2 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowBulkEdit(false)}
-                  className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted"
-                  disabled={bulkEditSubmitting}
-                >
-                  ביטול
-                </button>
-                <button
-                  type="submit"
-                  disabled={bulkEditSubmitting}
-                  className="rounded-[14px] bg-primary px-4 py-2 text-white hover:bg-primary/90 disabled:opacity-50"
-                >
-                  {bulkEditSubmitting ? "מעדכן..." : "עדכן רשומות"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            <div>
+              <label htmlFor="bulkIsBillable" className="block text-sm font-medium text-foreground mb-1">
+                ניתן לחיוב (אופציונלי)
+              </label>
+              <select
+                id="bulkIsBillable"
+                value={bulkEditData.isBillable === undefined ? "" : bulkEditData.isBillable ? "true" : "false"}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setBulkEditData({
+                    ...bulkEditData,
+                    isBillable: value === "" ? undefined : value === "true",
+                  });
+                }}
+                className="block w-full rounded-md border border-border/50 px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                disabled={bulkEditSubmitting}
+              >
+                <option value="">ללא שינוי</option>
+                <option value="true">כן</option>
+                <option value="false">לא</option>
+              </select>
+            </div>
 
-      {/* Bulk Delete Confirmation Modal */}
-      {showBulkDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="rounded-[14px] bg-card p-6 shadow-xl max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-foreground mb-2">מחק {selectedEntries.size} רשומות</h3>
-            <p className="text-muted-foreground mb-6">
-              האם למחוק את {selectedEntries.size} הרשומות הנבחרות? פעולה זו אינה הפיכה.
-            </p>
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-2 pt-4">
               <button
-                onClick={() => setShowBulkDeleteConfirm(false)}
-                disabled={bulkDeleteSubmitting}
-                className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted disabled:opacity-50"
+                type="button"
+                onClick={() => setShowBulkEdit(false)}
+                className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted"
+                disabled={bulkEditSubmitting}
               >
                 ביטול
               </button>
               <button
-                onClick={handleBulkDelete}
-                disabled={bulkDeleteSubmitting}
-                className="rounded-[14px] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
+                type="submit"
+                disabled={bulkEditSubmitting}
+                className="rounded-[14px] bg-primary px-4 py-2 text-white hover:bg-primary/90 disabled:opacity-50"
               >
-                {bulkDeleteSubmitting ? "מוחק..." : "מחק"}
+                {bulkEditSubmitting ? "מעדכן..." : "עדכן רשומות"}
               </button>
             </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Delete Confirmation Modal */}
+      <Dialog open={showBulkDeleteConfirm} onOpenChange={(open) => { if (!open) setShowBulkDeleteConfirm(false); }}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>מחק {selectedEntries.size} רשומות</DialogTitle>
+            <DialogDescription>
+              האם למחוק את {selectedEntries.size} הרשומות הנבחרות? פעולה זו אינה הפיכה.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => setShowBulkDeleteConfirm(false)}
+              disabled={bulkDeleteSubmitting}
+              className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted disabled:opacity-50"
+            >
+              ביטול
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              disabled={bulkDeleteSubmitting}
+              className="rounded-[14px] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
+            >
+              {bulkDeleteSubmitting ? "מוחק..." : "מחק"}
+            </button>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

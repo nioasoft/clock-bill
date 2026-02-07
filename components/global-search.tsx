@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, Users, FolderKanban, Clock, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 
 interface SearchResult {
   id: string;
@@ -21,25 +22,7 @@ export function GlobalSearch() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Close search when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isOpen]);
 
   // Focus input when opening
   useEffect(() => {
@@ -55,14 +38,11 @@ export function GlobalSearch() {
         event.preventDefault();
         setIsOpen((prev) => !prev);
       }
-      if (event.key === "Escape" && isOpen) {
-        setIsOpen(false);
-      }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
+  }, []);
 
   // Search API call
   useEffect(() => {
@@ -106,28 +86,30 @@ export function GlobalSearch() {
   };
 
   return (
-    <>
+    <DialogPrimitive.Root open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); else setIsOpen(true); }}>
       {/* Search Trigger Button */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 w-full px-4 py-2 rounded-lg text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
-      >
-        <Search className="h-4 w-4" />
-        <span>חיפוש...</span>
-        <kbd className="ms-auto hidden sm:inline-block px-2 py-0.5 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">
-          ⌘K
-        </kbd>
-      </button>
+      <DialogPrimitive.Trigger asChild>
+        <button
+          className="flex items-center gap-2 w-full px-4 py-2 rounded-lg text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
+        >
+          <Search className="h-4 w-4" />
+          <span>חיפוש...</span>
+          <kbd className="ms-auto hidden sm:inline-block px-2 py-0.5 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">
+            ⌘K
+          </kbd>
+        </button>
+      </DialogPrimitive.Trigger>
 
       {/* Search Overlay */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-24 sm:pt-32 px-4">
-          {/* Backdrop */}
-          <div className="fixed inset-0 bg-black/20" onClick={handleClose} />
-
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/20 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <DialogPrimitive.Content
+          aria-label="חיפוש גלובלי"
+          className="fixed inset-0 z-50 flex items-start justify-center pt-24 sm:pt-32 px-4"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           {/* Search Modal */}
           <div
-            ref={searchRef}
             className="relative w-full max-w-2xl bg-card rounded-xl shadow-2xl overflow-hidden"
             dir="rtl"
           >
@@ -141,11 +123,13 @@ export function GlobalSearch() {
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="חפש לקוחות, פרויקטים, רשומות זמן..."
                 className="flex-1 text-lg text-foreground placeholder-muted-foreground/50 focus:outline-none"
+                aria-label="חיפוש"
               />
               {query && (
                 <button
                   onClick={() => setQuery("")}
                   className="flex-shrink-0 p-1 text-muted-foreground hover:text-muted-foreground"
+                  aria-label="נקה חיפוש"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -317,8 +301,8 @@ export function GlobalSearch() {
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
 }
