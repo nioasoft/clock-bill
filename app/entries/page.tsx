@@ -1,18 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { AppLayout } from "@/components/app-layout";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Clock, Timer } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { validateRequired, validateDate, validatePastDate, validateNumber } from "@/lib/validation";
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
-
-interface User {
-  id: string;
-  email: string;
-}
 
 interface Project {
   id: string;
@@ -53,9 +48,6 @@ interface GroupedProjects {
 }
 
 export default function EntriesPage() {
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
   const [entries, setEntries] = useState<TimeEntry[]>([]);
   const [entriesLoading, setEntriesLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -137,34 +129,8 @@ export default function EntriesPage() {
   });
 
   useEffect(() => {
-    // Fetch current session
-    const fetchUser = async () => {
-      try {
-        const response = await fetch("/api/auth/session");
-        const data = await response.json();
-
-        if (data.success && data.user) {
-          setUser(data.user);
-        } else {
-          // No session, redirect to login
-          router.push("/login");
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-        router.push("/login");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, [router]);
-
-  useEffect(() => {
-    // Fetch clients when user is loaded
+    // Fetch clients when component mounts
     const fetchClients = async () => {
-      if (!user) return;
-
       try {
         setClientsLoading(true);
         const response = await fetch("/api/clients");
@@ -181,13 +147,11 @@ export default function EntriesPage() {
     };
 
     fetchClients();
-  }, [user]);
+  }, []);
 
   useEffect(() => {
-    // Fetch projects when user is loaded
+    // Fetch projects when component mounts
     const fetchProjects = async () => {
-      if (!user) return;
-
       try {
         setProjectsLoading(true);
         const response = await fetch("/api/projects");
@@ -204,13 +168,11 @@ export default function EntriesPage() {
     };
 
     fetchProjects();
-  }, [user]);
+  }, []);
 
   useEffect(() => {
-    // Fetch entries when user is loaded or filters change
+    // Fetch entries when component mounts or filters change
     const fetchEntries = async () => {
-      if (!user) return;
-
       try {
         setEntriesLoading(true);
 
@@ -235,7 +197,7 @@ export default function EntriesPage() {
     };
 
     fetchEntries();
-  }, [user, filters]);
+  }, [filters]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -582,50 +544,29 @@ export default function EntriesPage() {
     return acc;
   }, {});
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
-        <div className="text-gray-600">טוען...</div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null; // Will redirect
-  }
-
   return (
-    <div className="min-h-screen bg-zinc-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">
-              ← חזור לדשבורד
-            </Link>
-            <h1 className="text-2xl font-bold text-gray-900">רישום זמן</h1>
-          </div>
+    <AppLayout>
+      <div className="mx-auto max-w-7xl">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-foreground">רישום זמן</h1>
           <div className="flex items-center gap-3">
-            <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-gray-600 bg-gray-100 border border-gray-300 rounded">N</kbd>
+            <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">N</kbd>
             <button
               onClick={() => setShowForm(!showForm)}
-              className="rounded-lg bg-orange-600 px-4 py-2 text-white hover:bg-orange-700"
+              className="rounded-[14px] bg-primary px-4 py-2 text-white hover:bg-primary/90"
             >
               {showForm ? "ביטול" : "+ רשום זמן"}
             </button>
           </div>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Filters Section */}
-        <div className="mb-6 rounded-lg bg-white p-4 shadow">
+        <div className="mb-6 rounded-[14px] bg-card p-4 shadow">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">סינון</h2>
+            <h2 className="text-lg font-semibold text-foreground">סינון</h2>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="min-h-[44px] min-w-[44px] px-4 py-2 text-sm font-medium text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+              className="min-h-[44px] min-w-[44px] px-4 py-2 text-sm font-medium text-primary hover:bg-primary-light rounded-[14px] transition-colors"
             >
               {showFilters ? "הסתר סינון" : "הצג סינון"}
             </button>
@@ -634,7 +575,7 @@ export default function EntriesPage() {
           {showFilters && (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div>
-                <label htmlFor="filterClient" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="filterClient" className="block text-sm font-medium text-foreground mb-1">
                   לקוח
                 </label>
                 <select
@@ -644,7 +585,7 @@ export default function EntriesPage() {
                     handleFilterChange("clientId", e.target.value);
                     handleFilterChange("projectId", ""); // Reset project when client changes
                   }}
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                  className="block w-full rounded-md border border-border px-3 py-2 text-sm border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                   disabled={clientsLoading}
                 >
                   <option value="">כל הלקוחות</option>
@@ -657,14 +598,14 @@ export default function EntriesPage() {
               </div>
 
               <div>
-                <label htmlFor="filterProject" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="filterProject" className="block text-sm font-medium text-foreground mb-1">
                   פרויקט
                 </label>
                 <select
                   id="filterProject"
                   value={filters.projectId}
                   onChange={(e) => handleFilterChange("projectId", e.target.value)}
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                  className="block w-full rounded-md border border-border px-3 py-2 text-sm border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                   disabled={projectsLoading}
                 >
                   <option value="">כל הפרויקטים</option>
@@ -677,7 +618,7 @@ export default function EntriesPage() {
               </div>
 
               <div>
-                <label htmlFor="filterStartDate" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="filterStartDate" className="block text-sm font-medium text-foreground mb-1">
                   תאריך התחלה
                 </label>
                 <input
@@ -685,12 +626,12 @@ export default function EntriesPage() {
                   id="filterStartDate"
                   value={filters.startDate}
                   onChange={(e) => handleFilterChange("startDate", e.target.value)}
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                  className="block w-full rounded-md border border-border px-3 py-2 text-sm border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                 />
               </div>
 
               <div>
-                <label htmlFor="filterEndDate" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="filterEndDate" className="block text-sm font-medium text-foreground mb-1">
                   תאריך סיום
                 </label>
                 <input
@@ -698,14 +639,14 @@ export default function EntriesPage() {
                   id="filterEndDate"
                   value={filters.endDate}
                   onChange={(e) => handleFilterChange("endDate", e.target.value)}
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                  className="block w-full rounded-md border border-border px-3 py-2 text-sm border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                 />
               </div>
 
               <div className="sm:col-span-2 lg:col-span-4 flex justify-end">
                 <button
                   onClick={clearFilters}
-                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  className="rounded-[14px] border border-border px-4 py-2 text-sm text-foreground hover:bg-muted"
                 >
                   נקה סינון
                 </button>
@@ -717,11 +658,11 @@ export default function EntriesPage() {
           {(filters.clientId || filters.projectId || filters.startDate || filters.endDate) && (
             <div className="mt-3 flex flex-wrap gap-2">
               {filters.clientId && (
-                <span className="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-sm text-orange-800">
+                <span className="inline-flex items-center rounded-full bg-primary-light px-3 py-1 text-sm text-primary">
                   לקוח: {clients.find((c) => c.id === filters.clientId)?.name}
                   <button
                     onClick={() => handleFilterChange("clientId", "")}
-                    className="min-h-[44px] min-w-[44px] flex items-center justify-center me-1 text-orange-600 hover:text-orange-700 rounded-full transition-colors"
+                    className="min-h-[44px] min-w-[44px] flex items-center justify-center me-1 text-primary hover:text-primary/80 rounded-full transition-colors"
                     aria-label="הסתר סינון לקוח"
                   >
                     ×
@@ -729,11 +670,11 @@ export default function EntriesPage() {
                 </span>
               )}
               {filters.projectId && (
-                <span className="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-sm text-orange-800">
+                <span className="inline-flex items-center rounded-full bg-primary-light px-3 py-1 text-sm text-primary">
                   פרויקט: {projects.find((p) => p.id === filters.projectId)?.name}
                   <button
                     onClick={() => handleFilterChange("projectId", "")}
-                    className="min-h-[44px] min-w-[44px] flex items-center justify-center me-1 text-orange-600 hover:text-orange-700 rounded-full transition-colors"
+                    className="min-h-[44px] min-w-[44px] flex items-center justify-center me-1 text-primary hover:text-primary/80 rounded-full transition-colors"
                     aria-label="הסתר סינון פרויקט"
                   >
                     ×
@@ -741,11 +682,11 @@ export default function EntriesPage() {
                 </span>
               )}
               {filters.startDate && (
-                <span className="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-sm text-orange-800">
+                <span className="inline-flex items-center rounded-full bg-primary-light px-3 py-1 text-sm text-primary">
                   מ: {new Date(filters.startDate).toLocaleDateString("he-IL")}
                   <button
                     onClick={() => handleFilterChange("startDate", "")}
-                    className="min-h-[44px] min-w-[44px] flex items-center justify-center me-1 text-orange-600 hover:text-orange-700 rounded-full transition-colors"
+                    className="min-h-[44px] min-w-[44px] flex items-center justify-center me-1 text-primary hover:text-primary/80 rounded-full transition-colors"
                     aria-label="הסתר סינון תאריך התחלה"
                   >
                     ×
@@ -753,11 +694,11 @@ export default function EntriesPage() {
                 </span>
               )}
               {filters.endDate && (
-                <span className="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-sm text-orange-800">
+                <span className="inline-flex items-center rounded-full bg-primary-light px-3 py-1 text-sm text-primary">
                   עד: {new Date(filters.endDate).toLocaleDateString("he-IL")}
                   <button
                     onClick={() => handleFilterChange("endDate", "")}
-                    className="min-h-[44px] min-w-[44px] flex items-center justify-center me-1 text-orange-600 hover:text-orange-700 rounded-full transition-colors"
+                    className="min-h-[44px] min-w-[44px] flex items-center justify-center me-1 text-primary hover:text-primary/80 rounded-full transition-colors"
                     aria-label="הסתר סינון תאריך סיום"
                   >
                     ×
@@ -767,22 +708,23 @@ export default function EntriesPage() {
             </div>
           )}
         </div>
+
         {/* Add/Edit Entry Form */}
         {showForm && (
-          <div className="mb-8 rounded-lg bg-white p-6 shadow">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          <div className="mb-8 rounded-[14px] bg-card p-6 shadow">
+            <h2 className="text-xl font-semibold text-foreground mb-4">
               {editingEntry ? "ערוך רישום זמן" : "רשום זמן חדש"}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               {formError && (
-                <div className="rounded-md bg-red-50 p-4 text-sm text-red-800">
+                <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
                   {formError}
                 </div>
               )}
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="projectId" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="projectId" className="block text-sm font-medium text-foreground">
                     פרויקט *
                   </label>
                   <select
@@ -790,7 +732,7 @@ export default function EntriesPage() {
                     required
                     value={formData.projectId}
                     onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
-                    className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500 ${fieldErrors.projectId ? "border-red-500" : "border-gray-300"}`}
+                    className={`mt-1 block w-full rounded-md border px-3 py-2 border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.projectId ? "border-destructive" : "border-border"}`}
                     disabled={submitting || projectsLoading}
                   >
                     <option value="">בחר פרויקט</option>
@@ -805,12 +747,20 @@ export default function EntriesPage() {
                     ))}
                   </select>
                   {fieldErrors.projectId && (
-                    <p className="mt-1 text-xs text-red-600">{fieldErrors.projectId}</p>
+                    <p className="mt-1 text-xs text-destructive">{fieldErrors.projectId}</p>
+                  )}
+                  {projects.length === 0 && !projectsLoading && (
+                    <Link
+                      href="/projects?create=true"
+                      className="mt-1 inline-block text-xs text-primary hover:text-primary/90"
+                    >
+                      + צור פרויקט חדש
+                    </Link>
                   )}
                 </div>
 
                 <div>
-                  <label htmlFor="date" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="date" className="block text-sm font-medium text-foreground">
                     תאריך *
                   </label>
                   <input
@@ -819,16 +769,16 @@ export default function EntriesPage() {
                     required
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500 ${fieldErrors.date ? "border-red-500" : "border-gray-300"}`}
+                    className={`mt-1 block w-full rounded-md border px-3 py-2 border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.date ? "border-destructive" : "border-border"}`}
                     disabled={submitting}
                   />
                   {fieldErrors.date && (
-                    <p className="mt-1 text-xs text-red-600">{fieldErrors.date}</p>
+                    <p className="mt-1 text-xs text-destructive">{fieldErrors.date}</p>
                   )}
                 </div>
 
                 <div>
-                  <label htmlFor="duration" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="duration" className="block text-sm font-medium text-foreground">
                     משך זמן (דקות) *
                   </label>
                   <input
@@ -839,14 +789,14 @@ export default function EntriesPage() {
                     step="1"
                     value={formData.duration}
                     onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                    className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500 ${fieldErrors.duration ? "border-red-500" : "border-gray-300"}`}
+                    className={`mt-1 block w-full rounded-md border px-3 py-2 border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.duration ? "border-destructive" : "border-border"}`}
                     disabled={submitting}
                     placeholder="לדוגמה: 60"
                   />
                   {fieldErrors.duration && (
-                    <p className="mt-1 text-xs text-red-600">{fieldErrors.duration}</p>
+                    <p className="mt-1 text-xs text-destructive">{fieldErrors.duration}</p>
                   )}
-                  <p className="mt-1 text-xs text-gray-500">הזן את משך הזמן בדקות</p>
+                  <p className="mt-1 text-xs text-muted-foreground">הזן את משך הזמן בדקות</p>
                 </div>
 
                 <div className="flex items-center">
@@ -856,15 +806,15 @@ export default function EntriesPage() {
                       id="isBillable"
                       checked={formData.isBillable}
                       onChange={(e) => setFormData({ ...formData, isBillable: e.target.checked })}
-                      className="h-5 w-5 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                      className="h-5 w-5 rounded border-border text-primary focus:ring-primary"
                       disabled={submitting}
                     />
-                    <span className="me-2 text-sm font-medium text-gray-700">ניתן לחיוב</span>
+                    <span className="me-2 text-sm font-medium text-foreground">ניתן לחיוב</span>
                   </label>
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="description" className="block text-sm font-medium text-foreground">
                     תיאור *
                   </label>
                   <input
@@ -873,17 +823,17 @@ export default function EntriesPage() {
                     required
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500 ${fieldErrors.description ? "border-red-500" : "border-gray-300"}`}
+                    className={`mt-1 block w-full rounded-md border px-3 py-2 border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.description ? "border-destructive" : "border-border"}`}
                     disabled={submitting}
                     placeholder="מה עשית?"
                   />
                   {fieldErrors.description && (
-                    <p className="mt-1 text-xs text-red-600">{fieldErrors.description}</p>
+                    <p className="mt-1 text-xs text-destructive">{fieldErrors.description}</p>
                   )}
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="notes" className="block text-sm font-medium text-foreground">
                     הערות
                   </label>
                   <textarea
@@ -891,7 +841,7 @@ export default function EntriesPage() {
                     rows={3}
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    className="mt-1 block w-full rounded-md border border-border px-3 py-2 border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                     placeholder="הערות נוספות (אופציונלי)"
                   />
@@ -902,7 +852,7 @@ export default function EntriesPage() {
                 <button
                   type="button"
                   onClick={handleCancelEdit}
-                  className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                  className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted"
                   disabled={submitting}
                 >
                   ביטול
@@ -910,7 +860,7 @@ export default function EntriesPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-lg bg-orange-600 px-4 py-2 text-white hover:bg-orange-700 disabled:opacity-50"
+                  className="rounded-[14px] bg-primary px-4 py-2 text-white hover:bg-primary/90 disabled:opacity-50"
                 >
                   {submitting ? "שומר..." : editingEntry ? "עדכן" : "שמור"}
                 </button>
@@ -920,9 +870,9 @@ export default function EntriesPage() {
         )}
 
         {/* Entries List */}
-        <div className="rounded-lg bg-white shadow">
+        <div className="rounded-[14px] bg-card shadow">
           {entriesLoading ? (
-            <div className="p-8 text-center text-gray-600">טוען רישומי זמן...</div>
+            <div className="p-8 text-center text-muted-foreground">טוען רישומי זמן...</div>
           ) : entries.length === 0 ? (
             <EmptyState
               icon={Clock}
@@ -935,26 +885,26 @@ export default function EntriesPage() {
             <>
               {/* Bulk Action Bar */}
               {selectedEntries.size > 0 && (
-                <div className="mb-4 rounded-lg bg-orange-50 p-4 flex items-center justify-between">
+                <div className="mb-4 rounded-[14px] bg-primary-light p-4 flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <span className="text-sm font-medium text-orange-900">
+                    <span className="text-sm font-medium text-primary">
                       נבחרו {selectedEntries.size} רשומות
                     </span>
                     <button
                       onClick={handleBulkEdit}
-                      className="rounded-lg bg-orange-600 px-4 py-2 text-sm text-white hover:bg-orange-700"
+                      className="rounded-[14px] bg-primary px-4 py-2 text-sm text-white hover:bg-primary/90"
                     >
                       ערוך נבחרים
                     </button>
                     <button
                       onClick={() => setShowBulkDeleteConfirm(true)}
-                      className="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
+                      className="rounded-[14px] bg-destructive px-4 py-2 text-sm text-white hover:bg-destructive/90"
                     >
                       מחק נבחרים
                     </button>
                     <button
                       onClick={() => setSelectedEntries(new Set())}
-                      className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      className="rounded-[14px] border border-border px-4 py-2 text-sm text-foreground hover:bg-muted"
                     >
                       בטל בחירה
                     </button>
@@ -964,83 +914,87 @@ export default function EntriesPage() {
 
               {/* Desktop Table View */}
               <div className="hidden md:block overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-border">
+                  <thead className="bg-muted">
                     <tr>
-                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500 w-12">
+                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground w-12">
                         <input
                           type="checkbox"
                           checked={selectedEntries.size === entries.length && entries.length > 0}
                           onChange={handleSelectAll}
-                          className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                          className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                         />
                       </th>
-                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                         תאריך
                       </th>
-                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                         תיאור
                       </th>
-                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                         לקוח
                       </th>
-                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                         פרויקט
                       </th>
-                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                         משך זמן
                       </th>
-                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                         פעולות
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white">
+                  <tbody className="divide-y divide-border bg-card">
                     {entries.map((entry) => (
-                      <tr key={entry.id} className={`hover:bg-gray-50 ${selectedEntries.has(entry.id) ? "bg-orange-50" : ""}`}>
+                      <tr key={entry.id} className={`hover:bg-muted ${selectedEntries.has(entry.id) ? "bg-primary-light" : ""}`}>
                         <td className="whitespace-nowrap px-6 py-4">
                           <input
                             type="checkbox"
                             checked={selectedEntries.has(entry.id)}
                             onChange={() => handleSelectEntry(entry.id)}
-                            className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                            className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                           />
                         </td>
                         <td className="whitespace-nowrap px-6 py-4">
-                          <div className="text-sm text-gray-900">
+                          <div className="text-sm text-foreground">
                             {new Date(entry.date).toLocaleDateString("he-IL")}
                           </div>
                         </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           {isEntryRunning(entry) && (
-                            <div className="flex items-center gap-1.5 inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">
+                            <div className="flex items-center gap-1.5 inline-flex items-center rounded-full bg-success/10 px-2 py-1 text-xs font-semibold text-success">
                               <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
                               </span>
                               <Timer className="h-3 w-3 me-1" />
                               פעיל
                             </div>
                           )}
-                          <div className="text-sm text-gray-900 max-w-xs truncate">
+                          <div className="text-sm text-foreground max-w-xs truncate">
                             {entry.description}
                           </div>
                         </div>
                         {entry.notes && (
-                          <div className="text-xs text-gray-500 truncate max-w-xs ms-6">{entry.notes}</div>
+                          <div className="text-xs text-muted-foreground truncate max-w-xs ms-6">{entry.notes}</div>
                         )}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm text-gray-900">{entry.clientName}</div>
+                        <Link href={`/clients/${entry.clientId}`} className="text-sm text-foreground hover:text-primary hover:underline">
+                          {entry.clientName}
+                        </Link>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm text-gray-900">{entry.projectName}</div>
+                        <Link href={`/projects/${entry.projectId}`} className="text-sm text-foreground hover:text-primary hover:underline">
+                          {entry.projectName}
+                        </Link>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm text-gray-900">{formatDuration(entry.duration)}</div>
+                        <div className="text-sm text-foreground">{formatDuration(entry.duration)}</div>
                         {entry.isBillable && (
-                          <span className="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800 me-2">
+                          <span className="inline-flex rounded-full bg-success/10 px-2 text-xs font-semibold leading-5 text-success me-2">
                             לחיוב
                           </span>
                         )}
@@ -1048,19 +1002,19 @@ export default function EntriesPage() {
                       <td className="whitespace-nowrap px-6 py-4 text-sm">
                         <button
                           onClick={() => handleDuplicate(entry)}
-                          className="text-blue-600 hover:text-blue-900 font-medium ms-2"
+                          className="text-secondary hover:text-secondary/90 font-medium ms-2"
                         >
                           שכפל
                         </button>
                         <button
                           onClick={() => handleEdit(entry)}
-                          className="text-orange-600 hover:text-orange-900 font-medium ms-2"
+                          className="text-primary hover:text-primary/90 font-medium ms-2"
                         >
                           ערוך
                         </button>
                         <button
                           onClick={() => handleDeleteClick(entry)}
-                          className="text-red-600 hover:text-red-900 font-medium ms-2"
+                          className="text-destructive hover:text-destructive/90 font-medium ms-2"
                         >
                           מחק
                         </button>
@@ -1074,7 +1028,7 @@ export default function EntriesPage() {
             {/* Mobile Card View */}
             <div className="md:hidden space-y-4">
               {entries.map((entry) => (
-                <div key={entry.id} className={`bg-white rounded-lg shadow p-4 ${selectedEntries.has(entry.id) ? "ring-2 ring-orange-500" : ""}`}>
+                <div key={entry.id} className={`bg-card rounded-[14px] shadow p-4 ${selectedEntries.has(entry.id) ? "ring-2 ring-primary" : ""}`}>
                   <div className="flex items-start gap-3">
                     {/* Large touch-friendly checkbox */}
                     <div className="pt-1">
@@ -1082,21 +1036,21 @@ export default function EntriesPage() {
                         type="checkbox"
                         checked={selectedEntries.has(entry.id)}
                         onChange={() => handleSelectEntry(entry.id)}
-                        className="h-6 w-6 rounded border-gray-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
+                        className="h-6 w-6 rounded border-border text-primary focus:ring-primary cursor-pointer"
                       />
                     </div>
 
                     <div className="flex-1 min-w-0">
                       {/* Header with date and status */}
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className="text-sm font-medium text-foreground">
                           {new Date(entry.date).toLocaleDateString("he-IL")}
                         </span>
                         {isEntryRunning(entry) && (
-                          <div className="flex items-center gap-1.5 inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">
+                          <div className="flex items-center gap-1.5 inline-flex items-center rounded-full bg-success/10 px-2 py-1 text-xs font-semibold text-success">
                             <span className="relative flex h-2 w-2">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
                             </span>
                             <Timer className="h-3 w-3 me-1" />
                             פעיל
@@ -1105,27 +1059,27 @@ export default function EntriesPage() {
                       </div>
 
                       {/* Description */}
-                      <div className="text-sm text-gray-900 mb-1">
+                      <div className="text-sm text-foreground mb-1">
                         {entry.description}
                       </div>
                       {entry.notes && (
-                        <div className="text-xs text-gray-500 mb-2">{entry.notes}</div>
+                        <div className="text-xs text-muted-foreground mb-2">{entry.notes}</div>
                       )}
 
                       {/* Client and Project */}
-                      <div className="flex items-center gap-2 text-xs text-gray-600 mb-2">
-                        <span>{entry.clientName}</span>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                        <Link href={`/clients/${entry.clientId}`} className="hover:text-primary hover:underline">{entry.clientName}</Link>
                         <span>•</span>
-                        <span>{entry.projectName}</span>
+                        <Link href={`/projects/${entry.projectId}`} className="hover:text-primary hover:underline">{entry.projectName}</Link>
                       </div>
 
                       {/* Duration and billable status */}
                       <div className="flex items-center gap-2 mb-3">
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className="text-sm font-medium text-foreground">
                           {formatDuration(entry.duration)}
                         </span>
                         {entry.isBillable && (
-                          <span className="inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-semibold leading-5 text-green-800">
+                          <span className="inline-flex rounded-full bg-success/10 px-2 py-1 text-xs font-semibold leading-5 text-success">
                             לחיוב
                           </span>
                         )}
@@ -1135,19 +1089,19 @@ export default function EntriesPage() {
                       <div className="grid grid-cols-3 gap-2">
                         <button
                           onClick={() => handleDuplicate(entry)}
-                          className="min-h-[44px] flex items-center justify-center rounded-lg border border-blue-600 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100 active:bg-blue-200 transition-colors"
+                          className="min-h-[44px] flex items-center justify-center rounded-[14px] border border-secondary bg-secondary-light px-3 py-2 text-sm font-medium text-secondary hover:bg-secondary-light/80 active:bg-secondary-light/60 transition-colors"
                         >
                           שכפל
                         </button>
                         <button
                           onClick={() => handleEdit(entry)}
-                          className="min-h-[44px] flex items-center justify-center rounded-lg bg-orange-600 px-3 py-2 text-sm font-medium text-white hover:bg-orange-700 active:bg-orange-800 transition-colors"
+                          className="min-h-[44px] flex items-center justify-center rounded-[14px] bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-primary/90 active:bg-primary/80 transition-colors"
                         >
                           ערוך
                         </button>
                         <button
                           onClick={() => handleDeleteClick(entry)}
-                          className="min-h-[44px] flex items-center justify-center rounded-lg border border-red-600 bg-red-50 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-100 active:bg-red-200 transition-colors"
+                          className="min-h-[44px] flex items-center justify-center rounded-[14px] border border-destructive bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/20 active:bg-destructive/30 transition-colors"
                         >
                           מחק
                         </button>
@@ -1160,28 +1114,28 @@ export default function EntriesPage() {
           </>
         )}
         </div>
-      </main>
+      </div>
 
       {/* Delete Confirmation Dialog */}
       {entryToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="rounded-lg bg-white p-6 shadow-xl max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">מחק רישום זמן</h3>
-            <p className="text-gray-600 mb-6">
+          <div className="rounded-[14px] bg-card p-6 shadow-xl max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-foreground mb-2">מחק רישום זמן</h3>
+            <p className="text-muted-foreground mb-6">
               האם למחוק את רישום הזמן "{entryToDelete.description}"? פעולה זו אינה הפיכה.
             </p>
             <div className="flex justify-end gap-2">
               <button
                 onClick={cancelDelete}
                 disabled={deleting}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted disabled:opacity-50"
               >
                 ביטול
               </button>
               <button
                 onClick={handleDeleteConfirm}
                 disabled={deleting}
-                className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:opacity-50"
+                className="rounded-[14px] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
               >
                 {deleting ? "מוחק..." : "מחק"}
               </button>
@@ -1193,26 +1147,26 @@ export default function EntriesPage() {
       {/* Bulk Edit Modal */}
       {showBulkEdit && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="rounded-lg bg-white p-6 shadow-xl max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="rounded-[14px] bg-card p-6 shadow-xl max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-foreground mb-4">
               ערוך {selectedEntries.size} רשומות
             </h3>
             <form onSubmit={handleBulkEditSubmit} className="space-y-4">
               {bulkEditError && (
-                <div className="rounded-md bg-red-50 p-4 text-sm text-red-800">
+                <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
                   {bulkEditError}
                 </div>
               )}
 
               <div>
-                <label htmlFor="bulkProjectId" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="bulkProjectId" className="block text-sm font-medium text-foreground mb-1">
                   פרויקט (אופציונלי)
                 </label>
                 <select
                   id="bulkProjectId"
                   value={bulkEditData.projectId}
                   onChange={(e) => setBulkEditData({ ...bulkEditData, projectId: e.target.value })}
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                  className="block w-full rounded-md border border-border px-3 py-2 text-sm border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                   disabled={bulkEditSubmitting}
                 >
                   <option value="">ללא שינוי</option>
@@ -1229,7 +1183,7 @@ export default function EntriesPage() {
               </div>
 
               <div>
-                <label htmlFor="bulkDate" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="bulkDate" className="block text-sm font-medium text-foreground mb-1">
                   תאריך (אופציונלי)
                 </label>
                 <input
@@ -1237,13 +1191,13 @@ export default function EntriesPage() {
                   id="bulkDate"
                   value={bulkEditData.date}
                   onChange={(e) => setBulkEditData({ ...bulkEditData, date: e.target.value })}
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                  className="block w-full rounded-md border border-border px-3 py-2 text-sm border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                   disabled={bulkEditSubmitting}
                 />
               </div>
 
               <div>
-                <label htmlFor="bulkIsBillable" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="bulkIsBillable" className="block text-sm font-medium text-foreground mb-1">
                   ניתן לחיוב (אופציונלי)
                 </label>
                 <select
@@ -1256,7 +1210,7 @@ export default function EntriesPage() {
                       isBillable: value === "" ? undefined : value === "true",
                     });
                   }}
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                  className="block w-full rounded-md border border-border px-3 py-2 text-sm border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                   disabled={bulkEditSubmitting}
                 >
                   <option value="">ללא שינוי</option>
@@ -1269,7 +1223,7 @@ export default function EntriesPage() {
                 <button
                   type="button"
                   onClick={() => setShowBulkEdit(false)}
-                  className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                  className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted"
                   disabled={bulkEditSubmitting}
                 >
                   ביטול
@@ -1277,7 +1231,7 @@ export default function EntriesPage() {
                 <button
                   type="submit"
                   disabled={bulkEditSubmitting}
-                  className="rounded-lg bg-orange-600 px-4 py-2 text-white hover:bg-orange-700 disabled:opacity-50"
+                  className="rounded-[14px] bg-primary px-4 py-2 text-white hover:bg-primary/90 disabled:opacity-50"
                 >
                   {bulkEditSubmitting ? "מעדכן..." : "עדכן רשומות"}
                 </button>
@@ -1290,23 +1244,23 @@ export default function EntriesPage() {
       {/* Bulk Delete Confirmation Modal */}
       {showBulkDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="rounded-lg bg-white p-6 shadow-xl max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">מחק {selectedEntries.size} רשומות</h3>
-            <p className="text-gray-600 mb-6">
+          <div className="rounded-[14px] bg-card p-6 shadow-xl max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-foreground mb-2">מחק {selectedEntries.size} רשומות</h3>
+            <p className="text-muted-foreground mb-6">
               האם למחוק את {selectedEntries.size} הרשומות הנבחרות? פעולה זו אינה הפיכה.
             </p>
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowBulkDeleteConfirm(false)}
                 disabled={bulkDeleteSubmitting}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted disabled:opacity-50"
               >
                 ביטול
               </button>
               <button
                 onClick={handleBulkDelete}
                 disabled={bulkDeleteSubmitting}
-                className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:opacity-50"
+                className="rounded-[14px] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
               >
                 {bulkDeleteSubmitting ? "מוחק..." : "מחק"}
               </button>
@@ -1314,6 +1268,6 @@ export default function EntriesPage() {
           </div>
         </div>
       )}
-    </div>
+    </AppLayout>
   );
 }

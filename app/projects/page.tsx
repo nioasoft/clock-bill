@@ -1,16 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { AppLayout } from "@/components/app-layout";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FolderOpen } from "lucide-react";
 import { validateRequired, validateNumber, validateDate, validateDateRange } from "@/lib/validation";
-
-interface User {
-  id: string;
-  email: string;
-}
 
 interface Client {
   id: string;
@@ -40,9 +36,16 @@ interface Project {
 }
 
 export default function ProjectsPage() {
+  return (
+    <Suspense>
+      <ProjectsPageContent />
+    </Suspense>
+  );
+}
+
+function ProjectsPageContent() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const searchParams = useSearchParams();
   const [clients, setClients] = useState<Client[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(true);
@@ -83,41 +86,24 @@ export default function ProjectsPage() {
     endDate?: string;
   }>({});
 
+  // Auto-open create form via URL params
   useEffect(() => {
-    // Fetch current session
-    const fetchUser = async () => {
-      try {
-        const response = await fetch("/api/auth/session");
-        const data = await response.json();
-
-        if (data.success && data.user) {
-          setUser(data.user);
-        } else {
-          // No session, redirect to login
-          router.push("/login");
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-        router.push("/login");
-      } finally {
-        setLoading(false);
+    if (searchParams.get("create") === "true") {
+      setShowForm(true);
+      const clientId = searchParams.get("clientId");
+      if (clientId) {
+        setFormData((prev) => ({ ...prev, clientId }));
       }
-    };
-
-    fetchUser();
-  }, [router]);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
-    // Fetch clients when user is loaded
     const fetchClients = async () => {
-      if (!user) return;
-
       try {
         const response = await fetch("/api/clients");
         const data = await response.json();
 
         if (data.success) {
-          // Only show active clients
           setClients(data.clients.filter((c: Client) => c.isActive && true));
         }
       } catch (error) {
@@ -126,13 +112,10 @@ export default function ProjectsPage() {
     };
 
     fetchClients();
-  }, [user]);
+  }, []);
 
   useEffect(() => {
-    // Fetch projects when user or status filter changes
     const fetchProjects = async () => {
-      if (!user) return;
-
       try {
         setProjectsLoading(true);
         const url = statusFilter === "archived"
@@ -152,7 +135,7 @@ export default function ProjectsPage() {
     };
 
     fetchProjects();
-  }, [user, statusFilter]);
+  }, [statusFilter]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -434,82 +417,58 @@ export default function ProjectsPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
-        <div className="text-gray-600">טוען...</div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null; // Will redirect
-  }
-
   return (
-    <div className="min-h-screen bg-zinc-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-4">
-              <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">
-                ← חזור לדשבורד
-              </Link>
-              <h1 className="text-2xl font-bold text-gray-900">פרויקטים</h1>
-            </div>
-            {statusFilter === "active" && (
-              <button
-                onClick={() => setShowForm(!showForm)}
-                className="rounded-lg bg-orange-600 px-4 py-2 text-white hover:bg-orange-700"
-              >
-                {showForm ? "ביטול" : "+ פרויקט חדש"}
-              </button>
-            )}
-          </div>
-
-          {/* Status Filter Tabs */}
-          <div className="flex gap-2 border-b border-gray-200">
+    <AppLayout>
+      <div className="px-4 py-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">פרויקטים</h1>
+          {statusFilter === "active" && (
             <button
-              onClick={() => setStatusFilter("active")}
-              className={`px-4 py-2 font-medium transition-colors ${
-                statusFilter === "active"
-                  ? "border-b-2 border-orange-600 text-orange-600"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
+              onClick={() => setShowForm(!showForm)}
+              className="rounded-lg bg-primary px-4 py-2 text-white hover:bg-primary/90"
             >
-              פעילים
+              {showForm ? "ביטול" : "+ פרויקט חדש"}
             </button>
-            <button
-              onClick={() => setStatusFilter("archived")}
-              className={`px-4 py-2 font-medium transition-colors ${
-                statusFilter === "archived"
-                  ? "border-b-2 border-orange-600 text-orange-600"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              ארכיון
-            </button>
-          </div>
+          )}
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Status Filter Tabs */}
+        <div className="flex gap-2 border-b border-border mb-6">
+          <button
+            onClick={() => setStatusFilter("active")}
+            className={`px-4 py-2 font-medium transition-colors ${
+              statusFilter === "active"
+                ? "border-b-2 border-primary text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            פעילים
+          </button>
+          <button
+            onClick={() => setStatusFilter("archived")}
+            className={`px-4 py-2 font-medium transition-colors ${
+              statusFilter === "archived"
+                ? "border-b-2 border-primary text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            ארכיון
+          </button>
+        </div>
         {/* Add Project Form */}
         {showForm && (
-          <div className="mb-8 rounded-lg bg-white p-6 shadow">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">הוסף פרויקט חדש</h2>
+          <div className="mb-8 rounded-lg bg-card p-6 shadow">
+            <h2 className="text-xl font-semibold text-foreground mb-4">הוסף פרויקט חדש</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               {formError && (
-                <div className="rounded-md bg-red-50 p-4 text-sm text-red-800">
+                <div className="rounded-[14px] bg-destructive/10 p-4 text-sm text-destructive">
                   {formError}
                 </div>
               )}
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="clientId" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="clientId" className="block text-sm font-medium text-muted-foreground">
                     לקוח *
                   </label>
                   <select
@@ -520,10 +479,10 @@ export default function ProjectsPage() {
                       setFormData({ ...formData, clientId: e.target.value });
                       setFieldErrors({ ...fieldErrors, clientId: undefined });
                     }}
-                    className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-orange-500 disabled:opacity-50 ${
+                    className={`mt-1 block w-full rounded-[14px] px-3 py-2 shadow-sm focus:outline-none focus:ring-primary disabled:opacity-50 ${
                       fieldErrors.clientId
-                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                        : "border-gray-300 focus:border-orange-500"
+                        ? "border-destructive/30 focus:border-destructive focus:ring-destructive/20"
+                        : "border-border focus:border-primary"
                     }`}
                     disabled={submitting}
                   >
@@ -534,11 +493,19 @@ export default function ProjectsPage() {
                       </option>
                     ))}
                   </select>
-                  {fieldErrors.clientId && <p className="mt-1 text-sm text-red-600">{fieldErrors.clientId}</p>}
+                  {fieldErrors.clientId && <p className="mt-1 text-sm text-destructive">{fieldErrors.clientId}</p>}
+                  {clients.length === 0 && (
+                    <Link
+                      href="/clients?create=true"
+                      className="mt-1 inline-block text-xs text-primary hover:text-primary/90"
+                    >
+                      + צור לקוח חדש
+                    </Link>
+                  )}
                 </div>
 
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="name" className="block text-sm font-medium text-muted-foreground">
                     שם הפרויקט *
                   </label>
                   <input
@@ -550,18 +517,18 @@ export default function ProjectsPage() {
                       setFormData({ ...formData, name: e.target.value });
                       setFieldErrors({ ...fieldErrors, name: undefined });
                     }}
-                    className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-orange-500 disabled:opacity-50 ${
+                    className={`mt-1 block w-full rounded-[14px] px-3 py-2 shadow-sm focus:outline-none focus:ring-primary disabled:opacity-50 ${
                       fieldErrors.name
-                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                        : "border-gray-300 focus:border-orange-500"
+                        ? "border-destructive/30 focus:border-destructive focus:ring-destructive/20"
+                        : "border-border focus:border-primary"
                     }`}
                     disabled={submitting}
                   />
-                  {fieldErrors.name && <p className="mt-1 text-sm text-red-600">{fieldErrors.name}</p>}
+                  {fieldErrors.name && <p className="mt-1 text-sm text-destructive">{fieldErrors.name}</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="pricingModel" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="pricingModel" className="block text-sm font-medium text-muted-foreground">
                     מודל תמחור *
                   </label>
                   <select
@@ -569,7 +536,7 @@ export default function ProjectsPage() {
                     required
                     value={formData.pricingModel}
                     onChange={(e) => setFormData({ ...formData, pricingModel: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                   >
                     <option value="hourly">שעתי</option>
@@ -581,14 +548,14 @@ export default function ProjectsPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="currency" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="currency" className="block text-sm font-medium text-muted-foreground">
                     מטבע
                   </label>
                   <select
                     id="currency"
                     value={formData.currency}
                     onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                   >
                     <option value="ILS">₪ - שקל ישראלי</option>
@@ -601,7 +568,7 @@ export default function ProjectsPage() {
 
                 {formData.pricingModel === "hourly" && (
                   <div>
-                    <label htmlFor="hourlyRate" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="hourlyRate" className="block text-sm font-medium text-muted-foreground">
                       תעריף שעתי *
                     </label>
                     <input
@@ -612,7 +579,7 @@ export default function ProjectsPage() {
                       step="0.01"
                       value={formData.hourlyRate}
                       onChange={(e) => setFormData({ ...formData, hourlyRate: e.target.value })}
-                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                      className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                       disabled={submitting}
                     />
                   </div>
@@ -621,7 +588,7 @@ export default function ProjectsPage() {
                 {formData.pricingModel === "package" && (
                   <>
                     <div>
-                      <label htmlFor="packagePrice" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="packagePrice" className="block text-sm font-medium text-muted-foreground">
                         מחיר חבילה *
                       </label>
                       <input
@@ -632,13 +599,13 @@ export default function ProjectsPage() {
                         step="0.01"
                         value={formData.packagePrice}
                         onChange={(e) => setFormData({ ...formData, packagePrice: e.target.value })}
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                        className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                         disabled={submitting}
                       />
                     </div>
 
                     <div>
-                      <label htmlFor="packageHours" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="packageHours" className="block text-sm font-medium text-muted-foreground">
                         שעות בחבילה *
                       </label>
                       <input
@@ -649,7 +616,7 @@ export default function ProjectsPage() {
                         step="0.5"
                         value={formData.packageHours}
                         onChange={(e) => setFormData({ ...formData, packageHours: e.target.value })}
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                        className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                         disabled={submitting}
                       />
                     </div>
@@ -659,7 +626,7 @@ export default function ProjectsPage() {
                 {formData.pricingModel === "mixed" && (
                   <>
                     <div>
-                      <label htmlFor="packagePrice" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="packagePrice" className="block text-sm font-medium text-muted-foreground">
                         מחיר חבילה *
                       </label>
                       <input
@@ -670,13 +637,13 @@ export default function ProjectsPage() {
                         step="0.01"
                         value={formData.packagePrice}
                         onChange={(e) => setFormData({ ...formData, packagePrice: e.target.value })}
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                        className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                         disabled={submitting}
                       />
                     </div>
 
                     <div>
-                      <label htmlFor="packageHours" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="packageHours" className="block text-sm font-medium text-muted-foreground">
                         שעות בחבילה *
                       </label>
                       <input
@@ -687,13 +654,13 @@ export default function ProjectsPage() {
                         step="0.5"
                         value={formData.packageHours}
                         onChange={(e) => setFormData({ ...formData, packageHours: e.target.value })}
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                        className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                         disabled={submitting}
                       />
                     </div>
 
                     <div>
-                      <label htmlFor="hourlyRate" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="hourlyRate" className="block text-sm font-medium text-muted-foreground">
                         תעריף שעתי בחבילה *
                       </label>
                       <input
@@ -704,13 +671,13 @@ export default function ProjectsPage() {
                         step="0.01"
                         value={formData.hourlyRate}
                         onChange={(e) => setFormData({ ...formData, hourlyRate: e.target.value })}
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                        className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                         disabled={submitting}
                       />
                     </div>
 
                     <div>
-                      <label htmlFor="overageRate" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="overageRate" className="block text-sm font-medium text-muted-foreground">
                         תעריף מעל החבילה *
                       </label>
                       <input
@@ -721,7 +688,7 @@ export default function ProjectsPage() {
                         step="0.01"
                         value={formData.overageRate}
                         onChange={(e) => setFormData({ ...formData, overageRate: e.target.value })}
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                        className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                         disabled={submitting}
                       />
                     </div>
@@ -730,7 +697,7 @@ export default function ProjectsPage() {
 
                 {formData.pricingModel === "fixed" && (
                   <div>
-                    <label htmlFor="fixedBudget" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="fixedBudget" className="block text-sm font-medium text-muted-foreground">
                       תקציב כולל *
                     </label>
                     <input
@@ -741,7 +708,7 @@ export default function ProjectsPage() {
                       step="0.01"
                       value={formData.fixedBudget}
                       onChange={(e) => setFormData({ ...formData, fixedBudget: e.target.value })}
-                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                      className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                       disabled={submitting}
                     />
                   </div>
@@ -750,7 +717,7 @@ export default function ProjectsPage() {
                 {formData.pricingModel === "retainer" && (
                   <>
                     <div>
-                      <label htmlFor="retainerMonthlyFee" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="retainerMonthlyFee" className="block text-sm font-medium text-muted-foreground">
                         תשלום חודשי *
                       </label>
                       <input
@@ -761,13 +728,13 @@ export default function ProjectsPage() {
                         step="0.01"
                         value={formData.retainerMonthlyFee}
                         onChange={(e) => setFormData({ ...formData, retainerMonthlyFee: e.target.value })}
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                        className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                         disabled={submitting}
                       />
                     </div>
 
                     <div>
-                      <label htmlFor="retainerHours" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="retainerHours" className="block text-sm font-medium text-muted-foreground">
                         שעות בחבילה *
                       </label>
                       <input
@@ -778,7 +745,7 @@ export default function ProjectsPage() {
                         step="0.5"
                         value={formData.retainerHours}
                         onChange={(e) => setFormData({ ...formData, retainerHours: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500 rounded-md"
+                        className="mt-1 block w-full rounded-[14px] border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary rounded-[14px]"
                         disabled={submitting}
                       />
                     </div>
@@ -786,14 +753,14 @@ export default function ProjectsPage() {
                 )}
 
                 <div>
-                  <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="status" className="block text-sm font-medium text-muted-foreground">
                     סטטוס
                   </label>
                   <select
                     id="status"
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                   >
                     <option value="active">פעיל</option>
@@ -803,7 +770,7 @@ export default function ProjectsPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="startDate" className="block text-sm font-medium text-muted-foreground">
                     תאריך התחלה
                   </label>
                   <input
@@ -811,16 +778,16 @@ export default function ProjectsPage() {
                     id="startDate"
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500 ${fieldErrors.startDate ? "border-red-500" : "border-gray-300"}`}
+                    className={`mt-1 block w-full rounded-[14px] border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.startDate ? "border-destructive" : "border-border"}`}
                     disabled={submitting}
                   />
                   {fieldErrors.startDate && (
-                    <p className="mt-1 text-xs text-red-600">{fieldErrors.startDate}</p>
+                    <p className="mt-1 text-xs text-destructive">{fieldErrors.startDate}</p>
                   )}
                 </div>
 
                 <div>
-                  <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="endDate" className="block text-sm font-medium text-muted-foreground">
                     תאריך סיום
                   </label>
                   <input
@@ -828,16 +795,16 @@ export default function ProjectsPage() {
                     id="endDate"
                     value={formData.endDate}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500 ${fieldErrors.endDate ? "border-red-500" : "border-gray-300"}`}
+                    className={`mt-1 block w-full rounded-[14px] border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.endDate ? "border-destructive" : "border-border"}`}
                     disabled={submitting}
                   />
                   {fieldErrors.endDate && (
-                    <p className="mt-1 text-xs text-red-600">{fieldErrors.endDate}</p>
+                    <p className="mt-1 text-xs text-destructive">{fieldErrors.endDate}</p>
                   )}
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="notes" className="block text-sm font-medium text-muted-foreground">
                     הערות
                   </label>
                   <textarea
@@ -845,7 +812,7 @@ export default function ProjectsPage() {
                     rows={3}
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                   />
                 </div>
@@ -874,7 +841,7 @@ export default function ProjectsPage() {
                       notes: "",
                     });
                   }}
-                  className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                  className="rounded-lg border border-border px-4 py-2 text-muted-foreground hover:bg-muted/50"
                   disabled={submitting}
                 >
                   ביטול
@@ -882,7 +849,7 @@ export default function ProjectsPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-lg bg-orange-600 px-4 py-2 text-white hover:bg-orange-700 disabled:opacity-50"
+                  className="rounded-[14px] bg-primary px-4 py-2 text-white hover:bg-primary/90 disabled:opacity-50"
                 >
                   {submitting ? "שומר..." : "שמור"}
                 </button>
@@ -892,9 +859,9 @@ export default function ProjectsPage() {
         )}
 
         {/* Projects List */}
-        <div className="rounded-lg bg-white shadow">
+        <div className="rounded-lg bg-card shadow">
           {projectsLoading ? (
-            <div className="p-8 text-center text-gray-600">טוען פרויקטים...</div>
+            <div className="p-8 text-center text-muted-foreground">טוען פרויקטים...</div>
           ) : projects.length === 0 ? (
             <EmptyState
               icon={FolderOpen}
@@ -911,57 +878,57 @@ export default function ProjectsPage() {
             />
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-border">
+                <thead className="bg-muted/50">
                   <tr>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       שם
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       לקוח
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       מודל תמחור
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       פירוט תמחור
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       סטטוס
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       תאריכים
                     </th>
                     {statusFilter === "archived" && (
-                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                         פעולות
                       </th>
                     )}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
+                <tbody className="divide-y divide-border bg-card">
                   {projects.map((project) => (
                     <tr
                       key={project.id}
-                      className="hover:bg-gray-50"
+                      className="hover:bg-muted/50"
                     >
                       <td
                         className="whitespace-nowrap px-6 py-4 cursor-pointer"
                         onClick={() => router.push(`/projects/${project.id}`)}
                       >
-                        <div className="text-sm font-medium text-orange-600 hover:text-orange-700">{project.name}</div>
+                        <div className="text-sm font-medium text-primary hover:text-primary/90">{project.name}</div>
                       </td>
                       <td
                         className="whitespace-nowrap px-6 py-4 cursor-pointer"
                         onClick={() => router.push(`/projects/${project.id}`)}
                       >
-                        <div className="text-sm text-gray-900">{project.clientName}</div>
+                        <div className="text-sm text-foreground">{project.clientName}</div>
                       </td>
                       <td
                         className="whitespace-nowrap px-6 py-4 cursor-pointer"
                         onClick={() => router.push(`/projects/${project.id}`)}
                       >
-                        <div className="text-sm text-gray-900">
+                        <div className="text-sm text-foreground">
                           {getPricingModelLabel(project.pricingModel)}
                         </div>
                       </td>
@@ -969,22 +936,22 @@ export default function ProjectsPage() {
                         className="px-6 py-4 cursor-pointer"
                         onClick={() => router.push(`/projects/${project.id}`)}
                       >
-                        <div className="text-sm text-gray-900">{formatPricingDetails(project)}</div>
+                        <div className="text-sm text-foreground">{formatPricingDetails(project)}</div>
                       </td>
                       <td
                         className="whitespace-nowrap px-6 py-4 cursor-pointer"
                         onClick={() => router.push(`/projects/${project.id}`)}
                       >
                         {project.status === "active" ? (
-                          <span className="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800">
+                          <span className="inline-flex rounded-full bg-success/10 px-2 text-xs font-semibold leading-5 text-success">
                             {getStatusLabel(project.status)}
                           </span>
                         ) : project.status === "completed" ? (
-                          <span className="inline-flex rounded-full bg-blue-100 px-2 text-xs font-semibold leading-5 text-blue-800">
+                          <span className="inline-flex rounded-full bg-secondary-light px-2 text-xs font-semibold leading-5 text-secondary">
                             {getStatusLabel(project.status)}
                           </span>
                         ) : project.status === "archived" ? (
-                          <span className="inline-flex rounded-full bg-gray-100 px-2 text-xs font-semibold leading-5 text-gray-800">
+                          <span className="inline-flex rounded-full bg-muted px-2 text-xs font-semibold leading-5 text-foreground">
                             {getStatusLabel(project.status)}
                           </span>
                         ) : (
@@ -997,7 +964,7 @@ export default function ProjectsPage() {
                         className="px-6 py-4 cursor-pointer"
                         onClick={() => router.push(`/projects/${project.id}`)}
                       >
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-muted-foreground">
                           {project.startDate ? new Date(project.startDate).toLocaleDateString("he-IL") : "-"}
                           {" - "}
                           {project.endDate ? new Date(project.endDate).toLocaleDateString("he-IL") : "ללא תאריך סיום"}
@@ -1007,7 +974,7 @@ export default function ProjectsPage() {
                         <td className="whitespace-nowrap px-6 py-4">
                           <button
                             onClick={(e) => handleRestore(project.id, e)}
-                            className="min-h-[44px] px-4 py-2 rounded-md bg-green-600 text-sm text-white hover:bg-green-700"
+                            className="min-h-[44px] px-4 py-2 rounded-[14px] bg-success text-sm text-white hover:bg-success/90"
                           >
                             שחזר
                           </button>
@@ -1020,7 +987,7 @@ export default function ProjectsPage() {
             </div>
           )}
         </div>
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   );
 }

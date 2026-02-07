@@ -72,23 +72,23 @@ function DefaultErrorFallback({
 }) {
   return (
     <div className="min-h-[400px] flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 border border-red-200">
+      <div className="max-w-md w-full bg-card rounded-lg shadow-lg p-6 border border-destructive/20">
         <div className="flex justify-center mb-4">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-            <AlertCircle className="w-8 h-8 text-red-500" />
+          <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center">
+            <AlertCircle className="w-8 h-8 text-destructive" />
           </div>
         </div>
 
-        <h3 className="text-xl font-bold text-gray-900 text-center mb-2">
+        <h3 className="text-xl font-bold text-foreground text-center mb-2">
           שגיאה ברכיב
         </h3>
-        <p className="text-gray-600 text-center mb-4">
+        <p className="text-muted-foreground text-center mb-4">
           אירעה שגיאה בטעינת התוכן. אנא נסה שוב.
         </p>
 
         {process.env.NODE_ENV === 'development' && error?.message && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-sm">
-            <p className="text-red-700 font-mono text-right" dir="ltr">
+          <div className="mb-4 p-3 bg-destructive/5 border border-destructive/20 rounded text-sm">
+            <p className="text-destructive font-mono text-right" dir="ltr">
               {error.message}
             </p>
           </div>
@@ -97,14 +97,14 @@ function DefaultErrorFallback({
         <div className="flex flex-col gap-2">
           <button
             onClick={retry}
-            className="inline-flex items-center justify-center gap-2 w-full px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium"
+            className="inline-flex items-center justify-center gap-2 w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium"
           >
             <RefreshCw className="w-4 h-4" />
             נסה שוב
           </button>
           <Link
             href="/"
-            className="inline-flex items-center justify-center gap-2 w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+            className="inline-flex items-center justify-center gap-2 w-full px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted transition-colors font-medium"
           >
             <Home className="w-4 h-4" />
             חזרה לדף הבית

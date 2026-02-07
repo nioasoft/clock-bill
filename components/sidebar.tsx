@@ -2,7 +2,17 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, Clock, Users, FolderKanban, FileText, Settings, LogOut } from "lucide-react";
+import {
+  Home,
+  Clock,
+  Users,
+  FolderKanban,
+  FileText,
+  Settings,
+  LogOut,
+  PanelRightClose,
+  PanelRightOpen,
+} from "lucide-react";
 import { useState } from "react";
 import { GlobalSearch } from "./global-search";
 import { navItemDefs } from "@/lib/nav-items";
@@ -11,14 +21,20 @@ const iconMap = { Home, Clock, Users, FolderKanban, FileText, Settings } as cons
 
 const navItems = navItemDefs.map((item) => {
   const Icon = iconMap[item.iconName];
-  return { name: item.name, href: item.href, icon: <Icon className="h-5 w-5" /> };
+  return { name: item.name, href: item.href, icon: Icon };
 });
 
 interface SidebarProps {
   className?: string;
+  isCollapsed?: boolean;
+  onToggle?: () => void;
 }
 
-export function Sidebar({ className = "" }: SidebarProps) {
+export function Sidebar({
+  className = "",
+  isCollapsed = false,
+  onToggle,
+}: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [logoutLoading, setLogoutLoading] = useState(false);
@@ -47,71 +63,110 @@ export function Sidebar({ className = "" }: SidebarProps) {
 
   return (
     <aside
-      className={`flex flex-col w-64 bg-white border-l border-gray-200 min-h-screen ${className}`}
+      className={`flex flex-col bg-sidebar text-sidebar-foreground min-h-screen transition-all duration-200 ${
+        isCollapsed ? "w-16" : "w-64"
+      } ${className}`}
       dir="rtl"
     >
       {/* Logo/Brand */}
-      <div className="p-6 border-b border-gray-200">
+      <div className={`border-b border-white/10 ${isCollapsed ? "p-3" : "p-6"}`}>
         <Link href="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center">
-            <Clock className="h-6 w-6 text-white" />
+          <div className="w-10 h-10 bg-gradient-to-br from-accent to-accent/80 rounded-lg flex items-center justify-center shrink-0">
+            <Clock className="h-6 w-6 text-sidebar" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">שעון</h1>
+          {!isCollapsed && (
+            <h1 className="text-2xl font-display font-bold text-white">שעון</h1>
+          )}
         </Link>
       </div>
 
-      {/* Global Search */}
-      <div className="p-4">
-        <GlobalSearch />
-      </div>
+      {/* Global Search - hidden when collapsed */}
+      {!isCollapsed && (
+        <div className="p-4">
+          <GlobalSearch />
+        </div>
+      )}
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 pb-4 space-y-1">
+      <nav className={`flex-1 pb-4 space-y-1 ${isCollapsed ? "px-1.5" : "px-3"}`}>
         {navItems.map((item) => {
           const isActive = pathname === item.href;
+          const Icon = item.icon;
 
           return (
             <Link
               key={item.href}
               href={item.href}
+              title={isCollapsed ? item.name : undefined}
               className={`
-                flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors
+                flex items-center gap-3 rounded-lg text-sm font-medium transition-colors
+                ${isCollapsed ? "justify-center px-2 py-3" : "px-4 py-3"}
                 ${
                   isActive
-                    ? "bg-orange-50 text-orange-700"
-                    : "text-gray-700 hover:bg-gray-50"
+                    ? "bg-white/12 text-white border-e-2 border-primary"
+                    : "text-white/60 hover:bg-white/8 hover:text-white"
                 }
               `}
             >
-              {item.icon}
-              <span>{item.name}</span>
+              <Icon className="h-5 w-5 shrink-0" />
+              {!isCollapsed && <span>{item.name}</span>}
             </Link>
           );
         })}
       </nav>
 
+      {/* Toggle button */}
+      {onToggle && (
+        <div className={`px-3 pb-2 ${isCollapsed ? "px-1.5" : ""}`}>
+          <button
+            onClick={onToggle}
+            className={`flex items-center gap-3 rounded-lg text-sm font-medium text-white/40 hover:bg-white/8 hover:text-white transition-colors w-full ${
+              isCollapsed ? "justify-center px-2 py-3" : "px-4 py-3"
+            }`}
+            title={isCollapsed ? "הרחב סרגל צד" : "כווץ סרגל צד"}
+          >
+            {isCollapsed ? (
+              <PanelRightOpen className="h-5 w-5 shrink-0" />
+            ) : (
+              <>
+                <PanelRightClose className="h-5 w-5 shrink-0" />
+                <span>כווץ</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
       {/* User info section at bottom */}
-      <div className="p-4 border-t border-gray-200 space-y-1">
+      <div className={`border-t border-white/10 space-y-1 ${isCollapsed ? "p-1.5" : "p-4"}`}>
         <Link
           href="/settings"
-          className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          title={isCollapsed ? "הפרופיל שלי" : undefined}
+          className={`flex items-center gap-3 rounded-lg text-sm font-medium text-white/60 hover:bg-white/8 hover:text-white transition-colors ${
+            isCollapsed ? "justify-center px-2 py-3" : "px-4 py-3"
+          }`}
         >
-          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-            <Users className="h-4 w-4 text-gray-600" />
+          <div className="w-8 h-8 bg-white/12 rounded-full flex items-center justify-center shrink-0">
+            <Users className="h-4 w-4 text-white/60" />
           </div>
-          <span>הפרופיל שלי</span>
+          {!isCollapsed && <span>הפרופיל שלי</span>}
         </Link>
         <button
           onClick={handleLogout}
           disabled={logoutLoading}
-          className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors w-full disabled:opacity-50 disabled:cursor-not-allowed"
+          title={isCollapsed ? "התנתק" : undefined}
+          className={`flex items-center gap-3 rounded-lg text-sm font-medium text-destructive/80 hover:bg-destructive/10 transition-colors w-full disabled:opacity-50 disabled:cursor-not-allowed ${
+            isCollapsed ? "justify-center px-2 py-3" : "px-4 py-3"
+          }`}
         >
           {logoutLoading ? (
-            <div className="animate-spin rounded-full h-4 w-4 border-2 border-red-600 border-t-transparent" />
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-destructive border-t-transparent" />
           ) : (
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-4 w-4 shrink-0" />
           )}
-          <span>{logoutLoading ? "מתנתק..." : "התנתק"}</span>
+          {!isCollapsed && (
+            <span>{logoutLoading ? "מתנתק..." : "התנתק"}</span>
+          )}
         </button>
       </div>
     </aside>

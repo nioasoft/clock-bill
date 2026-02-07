@@ -38,10 +38,10 @@ export function EarningsChart() {
 
   if (loading) {
     return (
-      <div className="rounded-lg bg-white p-6 shadow">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">הכנסות חודשיות</h3>
-        <div className="h-64 flex items-center justify-center">
-          <div className="animate-pulse text-gray-400">טוען נתונים...</div>
+      <div className="rounded-[14px] bg-card border border-border/50 p-6 shadow-sm">
+        <h3 className="font-display text-lg font-semibold text-foreground mb-4">הכנסות חודשיות</h3>
+        <div className="h-48 flex items-center justify-center">
+          <div className="animate-pulse text-muted-foreground">טוען נתונים...</div>
         </div>
       </div>
     );
@@ -49,10 +49,10 @@ export function EarningsChart() {
 
   if (error || earningsData.length === 0) {
     return (
-      <div className="rounded-lg bg-white p-6 shadow">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">הכנסות חודשיות</h3>
-        <div className="h-64 flex items-center justify-center">
-          <p className="text-gray-500">{error || "אין נתוני הכנסות זמינים"}</p>
+      <div className="rounded-[14px] bg-card border border-border/50 p-6 shadow-sm">
+        <h3 className="font-display text-lg font-semibold text-foreground mb-4">הכנסות חודשיות</h3>
+        <div className="h-48 flex items-center justify-center">
+          <p className="text-muted-foreground">{error || "אין נתוני הכנסות זמינים"}</p>
         </div>
       </div>
     );
@@ -60,7 +60,7 @@ export function EarningsChart() {
 
   // Calculate chart dimensions
   const maxAmount = Math.max(...earningsData.map(d => d.amount));
-  const chartHeight = 200;
+  const chartHeight = 150;
   const barWidth = 40;
   const gap = 20;
   const chartWidth = earningsData.length * (barWidth + gap) - gap;
@@ -78,10 +78,10 @@ export function EarningsChart() {
   };
 
   return (
-    <div className="rounded-lg bg-white p-6 shadow">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">הכנסות חודשיות</h3>
+    <div className="rounded-[14px] bg-card border border-border/50 p-6 shadow-sm">
+      <h3 className="font-display text-lg font-semibold text-foreground mb-4">הכנסות חודשיות</h3>
 
-      <div className="h-64 overflow-x-auto">
+      <div className="h-48 overflow-x-auto">
         <svg
           width={Math.max(chartWidth, 400)}
           height={chartHeight + 40}
@@ -119,7 +119,7 @@ export function EarningsChart() {
                   width={barWidth}
                   height={barHeight}
                   fill="currentColor"
-                  className="text-orange-500 hover:text-orange-600 transition-colors"
+                  className="text-primary hover:text-primary/90 transition-colors"
                   rx={4}
                 />
 
@@ -128,7 +128,7 @@ export function EarningsChart() {
                   x={x + barWidth / 2}
                   y={y - 5}
                   textAnchor="middle"
-                  className="fill-gray-700 text-xs font-medium"
+                  className="fill-foreground text-xs font-medium"
                 >
                   {data.formatted}
                 </text>
@@ -138,7 +138,7 @@ export function EarningsChart() {
                   x={x + barWidth / 2}
                   y={chartHeight + 20}
                   textAnchor="middle"
-                  className="fill-gray-600 text-xs"
+                  className="fill-muted-foreground text-xs"
                 >
                   {formatMonthName(data.month)}
                 </text>
@@ -149,7 +149,7 @@ export function EarningsChart() {
       </div>
 
       {/* Y-axis labels */}
-      <div className="flex justify-between text-xs text-gray-500 mt-2">
+      <div className="flex justify-between text-xs text-muted-foreground mt-2">
         <span>0</span>
         <span>₪{(maxAmount / 4).toFixed(0)}</span>
         <span>₪{(maxAmount / 2).toFixed(0)}</span>

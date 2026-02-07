@@ -1,9 +1,29 @@
 import type { Metadata } from "next";
+import { Heebo, Rubik, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { Providers } from "@/components/providers";
 
 // Validate environment variables on server startup
 import "@/lib/env";
+
+const heebo = Heebo({
+  subsets: ["hebrew", "latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const rubik = Rubik({
+  subsets: ["hebrew", "latin"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "שעון - מעקב שעות עבודה",
@@ -28,14 +48,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="he" dir="rtl">
-      <body className="font-sans antialiased">
+      <body className={`${heebo.variable} ${rubik.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
         {/* Skip to main content link for keyboard users */}
         <a href="#main-content" className="skip-to-main">
           דלג לתוכן ראשי
         </a>
-        <main id="main-content">
-          {children}
-        </main>
+        <Providers>
+          <main id="main-content">
+            {children}
+          </main>
+        </Providers>
         <Toaster />
       </body>
     </html>

@@ -19,26 +19,26 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
   const getStrengthColor = (level: PasswordStrength): string => {
     switch (level) {
       case PasswordStrength.WEAK:
-        return "bg-red-500";
+        return "bg-destructive";
       case PasswordStrength.FAIR:
-        return "bg-orange-500";
+        return "bg-primary";
       case PasswordStrength.GOOD:
         return "bg-yellow-500";
       case PasswordStrength.STRONG:
-        return "bg-green-500";
+        return "bg-success";
     }
   };
 
   const getStrengthTextColor = (level: PasswordStrength): string => {
     switch (level) {
       case PasswordStrength.WEAK:
-        return "text-red-700";
+        return "text-destructive";
       case PasswordStrength.FAIR:
-        return "text-orange-700";
+        return "text-primary";
       case PasswordStrength.GOOD:
         return "text-yellow-700";
       case PasswordStrength.STRONG:
-        return "text-green-700";
+        return "text-success";
     }
   };
 
@@ -49,7 +49,7 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
     <div className="mt-2 space-y-2">
       {/* Strength bar */}
       <div className="flex items-center gap-2">
-        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
           <div
             className={`h-full transition-all duration-300 ease-out ${getStrengthColor(strength.strength)}`}
             style={{ width: barWidth }}
@@ -62,54 +62,54 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
 
       {/* Requirements checklist - shown when typing */}
       {password.length > 0 && password.length < 16 && (
-        <div className="text-xs space-y-1 text-gray-600">
+        <div className="text-xs space-y-1 text-muted-foreground">
           <div className="flex items-center gap-1.5">
             {strength.checks.length ? (
-              <Check className="h-3.5 w-3.5 text-green-600" />
+              <Check className="h-3.5 w-3.5 text-success" />
             ) : (
-              <X className="h-3.5 w-3.5 text-red-400" />
+              <X className="h-3.5 w-3.5 text-destructive" />
             )}
-            <span className={strength.checks.length ? "text-green-700" : ""}>
+            <span className={strength.checks.length ? "text-success" : ""}>
               לפחות 8 תווים
             </span>
           </div>
           <div className="flex items-center gap-1.5">
             {strength.checks.lowercase ? (
-              <Check className="h-3.5 w-3.5 text-green-600" />
+              <Check className="h-3.5 w-3.5 text-success" />
             ) : (
-              <X className="h-3.5 w-3.5 text-red-400" />
+              <X className="h-3.5 w-3.5 text-destructive" />
             )}
-            <span className={strength.checks.lowercase ? "text-green-700" : ""}>
+            <span className={strength.checks.lowercase ? "text-success" : ""}>
               אות קטנה באנגלית (a-z)
             </span>
           </div>
           <div className="flex items-center gap-1.5">
             {strength.checks.uppercase ? (
-              <Check className="h-3.5 w-3.5 text-green-600" />
+              <Check className="h-3.5 w-3.5 text-success" />
             ) : (
-              <X className="h-3.5 w-3.5 text-red-400" />
+              <X className="h-3.5 w-3.5 text-destructive" />
             )}
-            <span className={strength.checks.uppercase ? "text-green-700" : ""}>
+            <span className={strength.checks.uppercase ? "text-success" : ""}>
               אות גדולה באנגלית (A-Z)
             </span>
           </div>
           <div className="flex items-center gap-1.5">
             {strength.checks.number ? (
-              <Check className="h-3.5 w-3.5 text-green-600" />
+              <Check className="h-3.5 w-3.5 text-success" />
             ) : (
-              <X className="h-3.5 w-3.5 text-red-400" />
+              <X className="h-3.5 w-3.5 text-destructive" />
             )}
-            <span className={strength.checks.number ? "text-green-700" : ""}>
+            <span className={strength.checks.number ? "text-success" : ""}>
               מספר (0-9)
             </span>
           </div>
           <div className="flex items-center gap-1.5">
             {strength.checks.special ? (
-              <Check className="h-3.5 w-3.5 text-green-600" />
+              <Check className="h-3.5 w-3.5 text-success" />
             ) : (
-              <X className="h-3.5 w-3.5 text-red-400" />
+              <X className="h-3.5 w-3.5 text-destructive" />
             )}
-            <span className={strength.checks.special ? "text-green-700" : ""}>
+            <span className={strength.checks.special ? "text-success" : ""}>
               תו מיוחד (!@#$%...)
             </span>
           </div>

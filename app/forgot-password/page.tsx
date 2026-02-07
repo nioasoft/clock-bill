@@ -37,27 +37,28 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4" dir="rtl">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4" dir="rtl">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-3xl font-display font-bold tracking-tight text-foreground">
             איפוס סיסמה
           </h1>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-muted-foreground">
             הזן את כתובת האימייל שלך ונשלח לך קישור לאיפוס הסיסמה
           </p>
         </div>
 
         {success ? (
           <div className="mt-8 space-y-6">
-            <div className="rounded-md bg-green-50 p-4">
-              <p className="text-sm text-green-700 text-center">
+            <div className="rounded-[var(--radius)] bg-success/10 p-4">
+              <p className="text-sm text-success text-center">
                 אם קיים חשבון עם כתובת האימייל הזו, שלחנו הוראות לאיפוס הסיסמה.
               </p>
-            </div>            <div className="text-center">
+            </div>
+            <div className="text-center">
               <Link
                 href="/login"
-                className="font-medium text-orange-600 hover:text-orange-500"
+                className="font-medium text-primary hover:text-primary/80"
               >
                 חזרה לדף ההתחברות
               </Link>
@@ -65,9 +66,9 @@ export default function ForgotPasswordPage() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-            <div className="space-y-4 rounded-md shadow-sm">
+            <div className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="email" className="block text-sm font-medium text-foreground">
                   כתובת אימייל
                 </label>
                 <input
@@ -77,15 +78,15 @@ export default function ForgotPasswordPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                  className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
                   placeholder="your@email.com"
                 />
               </div>
             </div>
 
             {error && (
-              <div className="rounded-md bg-red-50 p-4">
-                <p className="text-sm text-red-700">{error}</p>
+              <div className="rounded-[var(--radius)] bg-destructive/10 p-4">
+                <p className="text-sm text-destructive">{error}</p>
               </div>
             )}
 
@@ -93,18 +94,18 @@ export default function ForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="group relative flex w-full justify-center rounded-md border border-transparent bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group relative flex w-full justify-center rounded-[var(--radius)] border border-transparent bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
               >
                 {loading ? "שולח..." : "שלח קישור לאיפוס סיסמה"}
               </button>
             </div>
 
             <div className="text-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 נזכרת בסיסמה?{" "}
                 <Link
                   href="/login"
-                  className="font-medium text-orange-600 hover:text-orange-500"
+                  className="font-medium text-primary hover:text-primary/80"
                 >
                   התחבר כאן
                 </Link>

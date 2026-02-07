@@ -25,12 +25,12 @@ export function MobileNav({ userEmail, onLogout }: MobileNavProps) {
   return (
     <>
       {/* Header with hamburger menu */}
-      <header className="lg:hidden bg-white shadow-sm sticky top-0 z-40">
+      <header className="lg:hidden bg-sidebar shadow-sm sticky top-0 z-40">
         <div className="px-4 py-3 flex items-center justify-between">
           {/* Hamburger button - large touch target */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="min-h-[44px] min-w-[44px] p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+            className="min-h-[44px] min-w-[44px] p-2 rounded-lg text-white/60 hover:bg-white/8 transition-colors"
             aria-label="תפריט"
           >
             {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -38,23 +38,23 @@ export function MobileNav({ userEmail, onLogout }: MobileNavProps) {
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center">
-              <Clock className="h-5 w-5 text-white" />
+            <div className="w-8 h-8 bg-gradient-to-br from-accent to-accent/80 rounded-lg flex items-center justify-center">
+              <Clock className="h-5 w-5 text-sidebar" />
             </div>
-            <h1 className="text-xl font-bold text-gray-900">שעון</h1>
+            <h1 className="text-xl font-bold text-white">שעון</h1>
           </Link>
 
           {/* User menu */}
           <div className="flex items-center gap-2">
             {userEmail && (
-              <span className="text-xs text-gray-600 max-w-[120px] truncate">
+              <span className="text-xs text-white/60 max-w-[120px] truncate">
                 {userEmail}
               </span>
             )}
             {onLogout && (
               <button
                 onClick={onLogout}
-                className="text-sm text-orange-600 hover:text-orange-500"
+                className="text-sm text-white/80 hover:text-white"
               >
                 התנתק
               </button>
@@ -74,24 +74,24 @@ export function MobileNav({ userEmail, onLogout }: MobileNavProps) {
 
           {/* Slide-out menu */}
           <div
-            className="fixed inset-y-0 right-0 w-72 bg-white shadow-xl z-50 lg:hidden transform transition-transform duration-300 ease-in-out"
+            className="fixed inset-y-0 right-0 w-72 bg-sidebar shadow-xl z-50 lg:hidden transform transition-transform duration-300 ease-in-out"
             dir="rtl"
           >
             {/* Close button */}
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+            <div className="p-4 border-b border-white/10 flex items-center justify-between">
               <Link
                 href="/"
                 className="flex items-center gap-2"
                 onClick={() => setIsOpen(false)}
               >
-                <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-white" />
+                <div className="w-8 h-8 bg-gradient-to-br from-accent to-accent/80 rounded-lg flex items-center justify-center">
+                  <Clock className="h-5 w-5 text-sidebar" />
                 </div>
-                <h1 className="text-xl font-bold text-gray-900">שעון</h1>
+                <h1 className="text-xl font-bold text-white">שעון</h1>
               </Link>
               <button
                 onClick={() => setIsOpen(false)}
-                className="min-h-[44px] min-w-[44px] p-2 rounded-lg text-gray-600 hover:bg-gray-100"
+                className="min-h-[44px] min-w-[44px] p-2 rounded-lg text-white/60 hover:bg-white/8"
                 aria-label="סגור"
               >
                 <X className="h-6 w-6" />
@@ -112,8 +112,8 @@ export function MobileNav({ userEmail, onLogout }: MobileNavProps) {
                       min-h-[44px] flex items-center gap-3 px-4 rounded-lg text-sm font-medium transition-colors
                       ${
                         isActive
-                          ? "bg-orange-50 text-orange-700"
-                          : "text-gray-700 hover:bg-gray-50"
+                          ? "bg-white/12 text-white"
+                          : "text-white/60 hover:bg-white/8 hover:text-white"
                       }
                     `}
                   >
@@ -126,10 +126,10 @@ export function MobileNav({ userEmail, onLogout }: MobileNavProps) {
 
             {/* User info at bottom */}
             {userEmail && (
-              <div className="p-4 border-t border-gray-200">
+              <div className="p-4 border-t border-white/10">
                 <div className="px-4 py-2">
-                  <p className="text-xs text-gray-500 mb-1">מחובר כ:</p>
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-xs text-white/40 mb-1">מחובר כ:</p>
+                  <p className="text-sm font-medium text-white truncate">
                     {userEmail}
                   </p>
                 </div>

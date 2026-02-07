@@ -766,14 +766,14 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50" dir="rtl">
+    <div className="min-h-screen bg-background" dir="rtl">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-card shadow-sm">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <div className="flex items-center gap-4">
             <Link
               href="/dashboard"
-              className="text-2xl font-bold text-gray-900 hover:text-orange-600"
+              className="text-2xl font-bold text-foreground hover:text-primary"
             >
               שעון
             </Link>
@@ -781,7 +781,7 @@ export default function SettingsPage() {
           <div className="flex items-center gap-4">
             <Link
               href="/dashboard"
-              className="text-sm text-gray-600 hover:text-gray-900"
+              className="text-sm text-muted-foreground hover:text-foreground"
             >
               חזרה לדשבורד
             </Link>
@@ -790,18 +790,18 @@ export default function SettingsPage() {
       </header>
 
       {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">הגדרות</h1>
+      <main className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+        <h1 className="text-3xl font-bold text-foreground mb-8">הגדרות</h1>
 
         {/* Tabs */}
-        <div className="border-b border-gray-200 mb-8">
+        <div className="border-b border-border mb-8">
           <nav className="flex gap-8">
             <button
               onClick={() => setActiveTab("profile")}
               className={`pb-4 px-2 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === "profile"
-                  ? "border-orange-500 text-orange-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-muted-foreground"
               }`}
             >
               פרופיל
@@ -810,8 +810,8 @@ export default function SettingsPage() {
               onClick={() => setActiveTab("notifications")}
               className={`pb-4 px-2 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === "notifications"
-                  ? "border-orange-500 text-orange-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-muted-foreground"
               }`}
             >
               התראות
@@ -820,8 +820,8 @@ export default function SettingsPage() {
               onClick={() => setActiveTab("currencies")}
               className={`pb-4 px-2 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === "currencies"
-                  ? "border-orange-500 text-orange-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-muted-foreground"
               }`}
             >
               מטבעות
@@ -830,8 +830,8 @@ export default function SettingsPage() {
               onClick={() => setActiveTab("security")}
               className={`pb-4 px-2 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === "security"
-                  ? "border-orange-500 text-orange-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-muted-foreground"
               }`}
             >
               אבטחה
@@ -840,8 +840,8 @@ export default function SettingsPage() {
               onClick={() => setActiveTab("import")}
               className={`pb-4 px-2 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === "import"
-                  ? "border-orange-500 text-orange-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-muted-foreground"
               }`}
             >
               ייבוא נתונים
@@ -853,23 +853,23 @@ export default function SettingsPage() {
         {activeTab === "currencies" && (
           <div className="space-y-8">
             {/* Add Currency Rate Form */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <div className="bg-card rounded-[14px] shadow p-6">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
                 הוסף שער חליפין
               </h2>
-              <p className="text-sm text-gray-600 mb-6">
+              <p className="text-sm text-muted-foreground mb-6">
                 הגדר שערי חליפין בין מטבעות שונים. שערים אלו ישמשו להמרת מטבעות בדוחות.
               </p>
 
               {rateError && (
-                <div className="rounded-md bg-red-50 p-4 mb-4">
-                  <p className="text-sm text-red-700">{rateError}</p>
+                <div className="rounded-[14px] bg-destructive/10 p-4 mb-4">
+                  <p className="text-sm text-destructive">{rateError}</p>
                 </div>
               )}
 
               {rateSuccess && (
-                <div className="rounded-md bg-green-50 p-4 mb-4">
-                  <p className="text-sm text-green-700">{rateSuccess}</p>
+                <div className="rounded-[14px] bg-success/10 p-4 mb-4">
+                  <p className="text-sm text-success">{rateSuccess}</p>
                 </div>
               )}
 
@@ -879,7 +879,7 @@ export default function SettingsPage() {
                   <div>
                     <label
                       htmlFor="fromCurrency"
-                      className="block text-sm font-medium text-gray-700 mb-1"
+                      className="block text-sm font-medium text-muted-foreground mb-1"
                     >
                       ממטבע
                     </label>
@@ -887,7 +887,7 @@ export default function SettingsPage() {
                       id="fromCurrency"
                       value={fromCurrency}
                       onChange={(e) => setFromCurrency(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                       disabled={rateSaving}
                     >
                       <option value="ILS">₪ - שקל ישראלי</option>
@@ -902,7 +902,7 @@ export default function SettingsPage() {
                   <div>
                     <label
                       htmlFor="toCurrency"
-                      className="block text-sm font-medium text-gray-700 mb-1"
+                      className="block text-sm font-medium text-muted-foreground mb-1"
                     >
                       למטבע
                     </label>
@@ -910,7 +910,7 @@ export default function SettingsPage() {
                       id="toCurrency"
                       value={toCurrency}
                       onChange={(e) => setToCurrency(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                       disabled={rateSaving}
                     >
                       <option value="ILS">₪ - שקל ישראלי</option>
@@ -925,7 +925,7 @@ export default function SettingsPage() {
                   <div>
                     <label
                       htmlFor="rate"
-                      className="block text-sm font-medium text-gray-700 mb-1"
+                      className="block text-sm font-medium text-muted-foreground mb-1"
                     >
                       שער חליפין
                     </label>
@@ -938,10 +938,10 @@ export default function SettingsPage() {
                       step="0.00000001"
                       min="0"
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                       disabled={rateSaving}
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       כמה {getCurrencySymbol(toCurrency)} מקבלים עבור 1 {getCurrencySymbol(fromCurrency)}
                     </p>
                   </div>
@@ -951,7 +951,7 @@ export default function SettingsPage() {
                   <button
                     type="submit"
                     disabled={rateSaving || fromCurrency === toCurrency}
-                    className="px-6 py-2 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-6 py-2 bg-primary text-white font-medium rounded-[14px] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {rateSaving ? "שומר..." : "שמור שער"}
                   </button>
@@ -960,18 +960,18 @@ export default function SettingsPage() {
             </div>
 
             {/* Existing Rates List */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <div className="bg-card rounded-[14px] shadow p-6">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
                 שערי חליפין שהוגדרו
               </h2>
 
               {loading ? (
                 <div className="text-center py-8">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-orange-500 border-t-transparent"></div>
-                  <p className="mt-2 text-gray-600">טוען שערים...</p>
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
+                  <p className="mt-2 text-muted-foreground">טוען שערים...</p>
                 </div>
               ) : currencyRates.length === 0 ? (
-                <p className="text-gray-600 text-center py-8">
+                <p className="text-muted-foreground text-center py-8">
                   לא הוגדרו שערי חליפין עדיין
                 </p>
               ) : (
@@ -979,17 +979,17 @@ export default function SettingsPage() {
                   {currencyRates.map((rate) => (
                     <div
                       key={rate.id}
-                      className="flex items-center justify-between p-4 rounded-lg border border-gray-200 bg-gray-50"
+                      className="flex items-center justify-between p-4 rounded-[14px] border border-border bg-muted"
                     >
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
-                          <span className="text-lg font-semibold text-gray-900">
+                          <span className="text-lg font-semibold text-foreground">
                             {getCurrencySymbol(rate.fromCurrency)}
                           </span>
-                          <span className="text-sm text-gray-600">({rate.fromCurrency})</span>
+                          <span className="text-sm text-muted-foreground">({rate.fromCurrency})</span>
                         </div>
                         <svg
-                          className="w-5 h-5 text-gray-400"
+                          className="w-5 h-5 text-muted-foreground"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -1002,18 +1002,18 @@ export default function SettingsPage() {
                           />
                         </svg>
                         <div className="flex items-center gap-2">
-                          <span className="text-lg font-semibold text-gray-900">
+                          <span className="text-lg font-semibold text-foreground">
                             {getCurrencySymbol(rate.toCurrency)}
                           </span>
-                          <span className="text-sm text-gray-600">({rate.toCurrency})</span>
+                          <span className="text-sm text-muted-foreground">({rate.toCurrency})</span>
                         </div>
-                        <span className="text-2xl font-bold text-orange-600">
+                        <span className="text-2xl font-bold text-primary">
                           {rate.rate}
                         </span>
                       </div>
                       <button
                         onClick={() => handleDeleteRate(rate.id)}
-                        className="px-3 py-1 text-red-600 text-sm font-medium rounded hover:bg-red-50 transition-colors"
+                        className="px-3 py-1 text-destructive text-sm font-medium rounded hover:bg-destructive/10 transition-colors"
                       >
                         מחק
                       </button>
@@ -1029,18 +1029,18 @@ export default function SettingsPage() {
         {activeTab === "notifications" && (
           <div className="space-y-8">
             {/* Notification Permission */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <div className="bg-card rounded-[14px] shadow p-6">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
                 הרשאת התראות דפדפן
               </h2>
-              <p className="text-sm text-gray-600 mb-6">
+              <p className="text-sm text-muted-foreground mb-6">
                 כדי שהמערכת תוכל לשלוח לך התראות, עליך לאפשר התראות מהדפדפן.
               </p>
 
-              <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200 bg-gray-50">
+              <div className="flex items-center justify-between p-4 rounded-[14px] border border-border bg-muted">
                 <div>
-                  <p className="font-medium text-gray-900">סטטוס הרשאה</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="font-medium text-foreground">סטטוס הרשאה</p>
+                  <p className="text-sm text-muted-foreground">
                     {notificationPermission === "granted" && "✅ ההתראות מאופשרות"}
                     {notificationPermission === "denied" && "❌ ההתראות נחסמו"}
                     {notificationPermission === "default" && "⏳ טרם ניתנה הרשאה"}
@@ -1051,7 +1051,7 @@ export default function SettingsPage() {
                   {notificationPermission !== "granted" && notificationPermission !== null && (
                     <button
                       onClick={requestNotificationPermission}
-                      className="px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 transition-colors"
+                      className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-[14px] hover:bg-primary/90 transition-colors"
                     >
                       אפשר התראות
                     </button>
@@ -1059,7 +1059,7 @@ export default function SettingsPage() {
                   <button
                     onClick={handleTestNotification}
                     disabled={testingNotification || notificationPermission !== "granted"}
-                    className="px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-4 py-2 bg-foreground/70 text-white text-sm font-medium rounded-[14px] hover:bg-foreground/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {testingNotification ? "שולח..." : "נסה התראה"}
                   </button>
@@ -1068,23 +1068,23 @@ export default function SettingsPage() {
             </div>
 
             {/* Long Timer Notification */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <div className="bg-card rounded-[14px] shadow p-6">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
                 התראת טיימר ארוך
               </h2>
-              <p className="text-sm text-gray-600 mb-6">
+              <p className="text-sm text-muted-foreground mb-6">
                 קבל התראה כאשר הטיימר רץ לפרק זמן ארוך (למשל, יותר מ-2 שעות).
               </p>
 
               {successMessage && activeTab === "notifications" && (
-                <div className="rounded-md bg-green-50 p-4 mb-4">
-                  <p className="text-sm text-green-700">{successMessage}</p>
+                <div className="rounded-[14px] bg-success/10 p-4 mb-4">
+                  <p className="text-sm text-success">{successMessage}</p>
                 </div>
               )}
 
               {profileError && activeTab === "notifications" && (
-                <div className="rounded-md bg-red-50 p-4 mb-4">
-                  <p className="text-sm text-red-700">{profileError}</p>
+                <div className="rounded-[14px] bg-destructive/10 p-4 mb-4">
+                  <p className="text-sm text-destructive">{profileError}</p>
                 </div>
               )}
 
@@ -1092,8 +1092,8 @@ export default function SettingsPage() {
                 {/* Enable/Disable */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="text-sm font-medium text-gray-700">אפשר התראת טיימר ארוך</label>
-                    <p className="text-xs text-gray-500 mt-1">קבל התראה כאשר הטיימר רץ זמן רב מדי</p>
+                    <label className="text-sm font-medium text-muted-foreground">אפשר התראת טיימר ארוך</label>
+                    <p className="text-xs text-muted-foreground mt-1">קבל התראה כאשר הטיימר רץ זמן רב מדי</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
@@ -1102,14 +1102,14 @@ export default function SettingsPage() {
                       onChange={(e) => setLongTimerEnabled(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                    <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                   </label>
                 </div>
 
                 {/* Threshold */}
                 {longTimerEnabled && (
                   <div>
-                    <label className="text-sm font-medium text-gray-700 block mb-2">
+                    <label className="text-sm font-medium text-muted-foreground block mb-2">
                       סף זמן מינימלי (בדקות)
                     </label>
                     <input
@@ -1119,9 +1119,9 @@ export default function SettingsPage() {
                       min="30"
                       max="480"
                       step="30"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       התראה תישלח כאשר הטיימר רץ יותר מ-{parseInt(longTimerThreshold, 10)} דקות ({(parseInt(longTimerThreshold, 10) / 60).toFixed(1)} שעות)
                     </p>
                   </div>
@@ -1130,11 +1130,11 @@ export default function SettingsPage() {
             </div>
 
             {/* Daily Reminder */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <div className="bg-card rounded-[14px] shadow p-6">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
                 תזכורת יומית
               </h2>
-              <p className="text-sm text-gray-600 mb-6">
+              <p className="text-sm text-muted-foreground mb-6">
                 קבל תזכורת יומית להזנת רשומות זמן אם טרם עשית זאת.
               </p>
 
@@ -1142,8 +1142,8 @@ export default function SettingsPage() {
                 {/* Enable/Disable */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="text-sm font-medium text-gray-700">אפשר תזכורת יומית</label>
-                    <p className="text-xs text-gray-500 mt-1">קבל תזכורת להזנת רשומות זמן</p>
+                    <label className="text-sm font-medium text-muted-foreground">אפשר תזכורת יומית</label>
+                    <p className="text-xs text-muted-foreground mt-1">קבל תזכורת להזנת רשומות זמן</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
@@ -1152,23 +1152,23 @@ export default function SettingsPage() {
                       onChange={(e) => setDailyReminderEnabled(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                    <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                   </label>
                 </div>
 
                 {/* Time */}
                 {dailyReminderEnabled && (
                   <div>
-                    <label className="text-sm font-medium text-gray-700 block mb-2">
+                    <label className="text-sm font-medium text-muted-foreground block mb-2">
                       שעת התזכורת
                     </label>
                     <input
                       type="time"
                       value={dailyReminderTime}
                       onChange={(e) => setDailyReminderTime(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       התזכורת תישלח ב-{dailyReminderTime} בכל יום שבו לא נרשמו שעות
                     </p>
                   </div>
@@ -1177,16 +1177,16 @@ export default function SettingsPage() {
             </div>
 
             {/* Working Hours */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <div className="bg-card rounded-[14px] shadow p-6">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
                 שעות עבודה יומיות
               </h2>
-              <p className="text-sm text-gray-600 mb-6">
+              <p className="text-sm text-muted-foreground mb-6">
                 הגדר את מספר השעות היומיות שאתה עובד. זה שימושי למעקב ודוחות.
               </p>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 block mb-2">
+                <label className="text-sm font-medium text-muted-foreground block mb-2">
                   שעות עבודה ליום
                 </label>
                 <input
@@ -1196,36 +1196,36 @@ export default function SettingsPage() {
                   min="1"
                   max="24"
                   step="0.5"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   מספר השעות המלאות ליום עבודה: {workingHours} שעות
                 </p>
               </div>
             </div>
 
             {/* First Day of Week */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <div className="bg-card rounded-[14px] shadow p-6">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
                 יום תחילת השבוע
               </h2>
-              <p className="text-sm text-gray-600 mb-6">
+              <p className="text-sm text-muted-foreground mb-6">
                 בחר את היום שבו מתחיל השבוע שלך (משפיע על לוחות שנה ודוחות).
               </p>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 block mb-2">
+                <label className="text-sm font-medium text-muted-foreground block mb-2">
                   יום תחילת שבוע
                 </label>
                 <select
                   value={firstDayOfWeek}
                   onChange={(e) => setFirstDayOfWeek(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                 >
                   <option value="sunday">ראשון (Sunday)</option>
                   <option value="monday">שני (Monday)</option>
                 </select>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {firstDayOfWeek === "sunday" ? "השבוע מתחיל ביום ראשון" : "השבוע מתחיל ביום שני"}
                 </p>
               </div>
@@ -1236,7 +1236,7 @@ export default function SettingsPage() {
               <button
                 onClick={handleSaveNotificationSettings}
                 disabled={profileLoading}
-                className="px-6 py-2 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-6 py-2 bg-primary text-white font-medium rounded-[14px] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {profileLoading ? (
                   <span className="flex items-center gap-2">
@@ -1255,36 +1255,36 @@ export default function SettingsPage() {
         {activeTab === "security" && (
           <div className="space-y-8">
             {/* Active Sessions Section */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-card rounded-[14px] shadow p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-xl font-semibold text-foreground">
                   פעולות פעילות
                 </h2>
                 {sessions.length > 1 && (
                   <button
                     onClick={() => setShowConfirmDialog(true)}
                     disabled={logoutAllLoading}
-                    className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-4 py-2 bg-destructive text-white text-sm font-medium rounded-[14px] hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {logoutAllLoading ? "מתנתק..." : "התנתק מכל המכשירים"}
                   </button>
                 )}
               </div>
-              <p className="text-sm text-gray-600 mb-6">
+              <p className="text-sm text-muted-foreground mb-6">
                 רשימת כל המכשירים שמחוברים כרגע לחשבון שלך.
               </p>
 
               {loading ? (
                 <div className="text-center py-8">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-orange-500 border-t-transparent"></div>
-                  <p className="mt-2 text-gray-600">טוען פעולות...</p>
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
+                  <p className="mt-2 text-muted-foreground">טוען פעולות...</p>
                 </div>
               ) : error ? (
-                <div className="rounded-md bg-red-50 p-4">
-                  <p className="text-sm text-red-700">{error}</p>
+                <div className="rounded-[14px] bg-destructive/10 p-4">
+                  <p className="text-sm text-destructive">{error}</p>
                 </div>
               ) : sessions.length === 0 ? (
-                <p className="text-gray-600 text-center py-8">
+                <p className="text-muted-foreground text-center py-8">
                   אין פעולות פעילות
                 </p>
               ) : (
@@ -1292,16 +1292,16 @@ export default function SettingsPage() {
                   {sessions.map((session) => (
                     <div
                       key={session.id}
-                      className={`flex items-center justify-between p-4 rounded-lg border ${
+                      className={`flex items-center justify-between p-4 rounded-[14px] border ${
                         session.is_current
-                          ? "border-orange-200 bg-orange-50"
-                          : "border-gray-200 bg-gray-50"
+                          ? "border-primary/30 bg-primary-light"
+                          : "border-border bg-muted"
                       }`}
                     >
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
                           <svg
-                            className="w-5 h-5 text-gray-600"
+                            className="w-5 h-5 text-muted-foreground"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -1315,18 +1315,18 @@ export default function SettingsPage() {
                           </svg>
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">
+                          <p className="font-medium text-foreground">
                             {getDeviceInfo(session.id)}
                             {session.is_current && (
-                              <span className="mr-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                              <span className="mr-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-light text-primary">
                                 נוכחי
                               </span>
                             )}
                           </p>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-muted-foreground">
                             התחברות: {formatDate(session.created_at)}
                           </p>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-muted-foreground">
                             תפוגה: {formatDate(session.expires_at)}
                           </p>
                         </div>
@@ -1343,25 +1343,25 @@ export default function SettingsPage() {
         {activeTab === "notifications" && (
           <div className="space-y-8">
             {/* Permission Status */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <div className="bg-card rounded-[14px] shadow p-6">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
                 מצב הרשאות התראות
               </h2>
-              <p className="text-sm text-gray-600 mb-6">
+              <p className="text-sm text-muted-foreground mb-6">
                 כדי לקבל התראות מהדפדפן, עליך לאפשר הרשאות התראות.
               </p>
 
-              <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200 bg-gray-50">
+              <div className="flex items-center justify-between p-4 rounded-[14px] border border-border bg-muted">
                 <div className="flex items-center gap-3">
                   <div className={`w-3 h-3 rounded-full ${
                     notificationPermission === "granted"
-                      ? "bg-green-500"
+                      ? "bg-success/100"
                       : notificationPermission === "denied"
-                      ? "bg-red-500"
-                      : "bg-yellow-500"
+                      ? "bg-destructive/100"
+                      : "bg-accent0"
                   }`}></div>
                   <div>
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-foreground">
                       {notificationPermission === "granted"
                         ? "ההרשאות מאופשרות"
                         : notificationPermission === "denied"
@@ -1370,7 +1370,7 @@ export default function SettingsPage() {
                         ? "ההרשאות לא נקבעו עדיין"
                         : "התראות לא נתמכות"}
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       {notificationPermission === "granted"
                         ? "המערכת יכולה לשלוח התראות"
                         : notificationPermission === "denied"
@@ -1384,7 +1384,7 @@ export default function SettingsPage() {
                 {notificationPermission === "default" && (
                   <button
                     onClick={requestNotificationPermission}
-                    className="px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 transition-colors"
+                    className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-[14px] hover:bg-primary/90 transition-colors"
                   >
                     אפשר התראות
                   </button>
@@ -1393,18 +1393,18 @@ export default function SettingsPage() {
             </div>
 
             {/* Test Notification */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <div className="bg-card rounded-[14px] shadow p-6">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
                 בדיקת התראות
               </h2>
-              <p className="text-sm text-gray-600 mb-6">
+              <p className="text-sm text-muted-foreground mb-6">
                 בדוק אם ההתראות עובדות כראוי על ידי שליחת התראת בדיקה.
               </p>
 
               <button
                 onClick={handleTestNotification}
                 disabled={testingNotification || notificationPermission !== "granted"}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-secondary text-white text-sm font-medium rounded-[14px] hover:bg-secondary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {testingNotification ? (
                   <>
@@ -1433,33 +1433,33 @@ export default function SettingsPage() {
             </div>
 
             {/* Notification Settings */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <div className="bg-card rounded-[14px] shadow p-6">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
                 הגדרות התראות
               </h2>
-              <p className="text-sm text-gray-600 mb-6">
+              <p className="text-sm text-muted-foreground mb-6">
                 הגדר מתי לקבל התראות אוטומטיות.
               </p>
 
               {profileError && (
-                <div className="rounded-md bg-red-50 p-4 mb-4">
-                  <p className="text-sm text-red-700">{profileError}</p>
+                <div className="rounded-[14px] bg-destructive/10 p-4 mb-4">
+                  <p className="text-sm text-destructive">{profileError}</p>
                 </div>
               )}
 
               {successMessage && (
-                <div className="rounded-md bg-green-50 p-4 mb-4">
-                  <p className="text-sm text-green-700">{successMessage}</p>
+                <div className="rounded-[14px] bg-success/10 p-4 mb-4">
+                  <p className="text-sm text-success">{successMessage}</p>
                 </div>
               )}
 
               <form onSubmit={handleSaveNotificationSettings} className="space-y-6">
                 {/* Long Timer Notification */}
-                <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200">
+                <div className="flex items-center justify-between p-4 rounded-[14px] border border-border">
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
                       <svg
-                        className="w-6 h-6 text-orange-600"
+                        className="w-6 h-6 text-primary"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1472,10 +1472,10 @@ export default function SettingsPage() {
                         />
                       </svg>
                       <div>
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-foreground">
                           התראת טיימר ארוך
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-muted-foreground">
                           קבל התראה כשהטיימר רץ זמן רב מדי
                         </p>
                       </div>
@@ -1488,13 +1488,13 @@ export default function SettingsPage() {
                       onChange={(e) => setLongTimerEnabled(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                    <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                   </label>
                 </div>
 
                 {longTimerEnabled && (
-                  <div className="mr-9 p-4 rounded-lg border border-gray-200 bg-gray-50">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="mr-9 p-4 rounded-[14px] border border-border bg-muted">
+                    <label className="block text-sm font-medium text-muted-foreground mb-2">
                       סף זמן (דקות)
                     </label>
                     <input
@@ -1504,20 +1504,20 @@ export default function SettingsPage() {
                       min="30"
                       max="480"
                       step="10"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       שלח התראה לאחר הזמן הזה (מינימום: 30 דקות, מקסימום: 480 דקות)
                     </p>
                   </div>
                 )}
 
                 {/* Daily Reminder Notification */}
-                <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200">
+                <div className="flex items-center justify-between p-4 rounded-[14px] border border-border">
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
                       <svg
-                        className="w-6 h-6 text-green-600"
+                        className="w-6 h-6 text-success"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1530,10 +1530,10 @@ export default function SettingsPage() {
                         />
                       </svg>
                       <div>
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-foreground">
                           תזכורת יומית
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-muted-foreground">
                           קבל תזכורת יומית לרשום זמן
                         </p>
                       </div>
@@ -1546,22 +1546,22 @@ export default function SettingsPage() {
                       onChange={(e) => setDailyReminderEnabled(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                    <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                   </label>
                 </div>
 
                 {dailyReminderEnabled && (
-                  <div className="mr-9 p-4 rounded-lg border border-gray-200 bg-gray-50">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="mr-9 p-4 rounded-[14px] border border-border bg-muted">
+                    <label className="block text-sm font-medium text-muted-foreground mb-2">
                       שעת התזכורת
                     </label>
                     <input
                       type="time"
                       value={dailyReminderTime}
                       onChange={(e) => setDailyReminderTime(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       התזכורת תישלח בשעה זו בכל יום
                     </p>
                   </div>
@@ -1571,7 +1571,7 @@ export default function SettingsPage() {
                   <button
                     type="submit"
                     disabled={profileLoading}
-                    className="px-6 py-2 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-6 py-2 bg-primary text-white font-medium rounded-[14px] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {profileLoading ? (
                       <span className="flex items-center gap-2">
@@ -1592,23 +1592,23 @@ export default function SettingsPage() {
         {activeTab === "profile" && (
           <div className="space-y-8">
             {/* Logo Upload Section */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <div className="bg-card rounded-[14px] shadow p-6">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
                 לוגו עסקי
               </h2>
-              <p className="text-sm text-gray-600 mb-6">
+              <p className="text-sm text-muted-foreground mb-6">
                 הלוגו יופיע בדוחות PDF שתייצרו. מומלץ להשתמש בתמונה ריבועית בגודל 200x200 פיקסלים לפחות.
               </p>
 
               {logoError && (
-                <div className="rounded-md bg-red-50 p-4 mb-4">
-                  <p className="text-sm text-red-700">{logoError}</p>
+                <div className="rounded-[14px] bg-destructive/10 p-4 mb-4">
+                  <p className="text-sm text-destructive">{logoError}</p>
                 </div>
               )}
 
               <div className="flex items-center gap-6">
                 {/* Logo Preview */}
-                <div className="w-32 h-32 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden">
+                <div className="w-32 h-32 rounded-[14px] border-2 border-dashed border-border flex items-center justify-center bg-muted overflow-hidden">
                   {profile?.logoUrl ? (
                     <img
                       src={profile.logoUrl}
@@ -1618,7 +1618,7 @@ export default function SettingsPage() {
                   ) : (
                     <div className="text-center">
                       <svg
-                        className="w-10 h-10 text-gray-400 mx-auto mb-2"
+                        className="w-10 h-10 text-muted-foreground mx-auto mb-2"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1630,7 +1630,7 @@ export default function SettingsPage() {
                           d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                       </svg>
-                      <span className="text-xs text-gray-500">אין לוגו</span>
+                      <span className="text-xs text-muted-foreground">אין לוגו</span>
                     </div>
                   )}
                 </div>
@@ -1647,7 +1647,7 @@ export default function SettingsPage() {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={logoLoading}
-                    className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-[14px] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {logoLoading ? (
                       <>
@@ -1678,7 +1678,7 @@ export default function SettingsPage() {
                     <button
                       onClick={handleRemoveLogo}
                       disabled={logoLoading}
-                      className="flex items-center gap-2 px-4 py-2 text-red-600 text-sm font-medium rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 text-destructive text-sm font-medium rounded-[14px] hover:bg-destructive/10 disabled:opacity-50 transition-colors"
                     >
                       <svg
                         className="w-4 h-4"
@@ -1699,29 +1699,29 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <p className="text-xs text-gray-500 mt-4">
+              <p className="text-xs text-muted-foreground mt-4">
                 פורמטים נתמכים: JPEG, PNG, GIF, WebP. גודל מקסימלי: 5MB.
               </p>
             </div>
 
             {/* Signature Upload Section */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <div className="bg-card rounded-[14px] shadow p-6">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
                 חתימה דיגיטלית
               </h2>
-              <p className="text-sm text-gray-600 mb-6">
+              <p className="text-sm text-muted-foreground mb-6">
                 החתימה תופיע בחשבוניות PDF. מומלץ להשתמש בתמונה עם רקע שקוף (PNG) בגודל 200x80 פיקסלים לפחות.
               </p>
 
               {signatureError && (
-                <div className="rounded-md bg-red-50 p-4 mb-4">
-                  <p className="text-sm text-red-700">{signatureError}</p>
+                <div className="rounded-[14px] bg-destructive/10 p-4 mb-4">
+                  <p className="text-sm text-destructive">{signatureError}</p>
                 </div>
               )}
 
               <div className="flex items-center gap-6">
                 {/* Signature Preview */}
-                <div className="w-64 h-32 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden">
+                <div className="w-64 h-32 rounded-[14px] border-2 border-dashed border-border flex items-center justify-center bg-muted overflow-hidden">
                   {profile?.signatureUrl ? (
                     <img
                       src={profile.signatureUrl}
@@ -1731,7 +1731,7 @@ export default function SettingsPage() {
                   ) : (
                     <div className="text-center">
                       <svg
-                        className="w-10 h-10 text-gray-400 mx-auto mb-2"
+                        className="w-10 h-10 text-muted-foreground mx-auto mb-2"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1743,7 +1743,7 @@ export default function SettingsPage() {
                           d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
                         />
                       </svg>
-                      <span className="text-xs text-gray-500">אין חתימה</span>
+                      <span className="text-xs text-muted-foreground">אין חתימה</span>
                     </div>
                   )}
                 </div>
@@ -1760,7 +1760,7 @@ export default function SettingsPage() {
                   <button
                     onClick={() => signatureInputRef.current?.click()}
                     disabled={signatureLoading}
-                    className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-[14px] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {signatureLoading ? (
                       <>
@@ -1791,7 +1791,7 @@ export default function SettingsPage() {
                     <button
                       onClick={handleRemoveSignature}
                       disabled={signatureLoading}
-                      className="flex items-center gap-2 px-4 py-2 text-red-600 text-sm font-medium rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 text-destructive text-sm font-medium rounded-[14px] hover:bg-destructive/10 disabled:opacity-50 transition-colors"
                     >
                       <svg
                         className="w-4 h-4"
@@ -1812,36 +1812,36 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <p className="text-xs text-gray-500 mt-4">
+              <p className="text-xs text-muted-foreground mt-4">
                 פורמטים נתמכים: JPEG, PNG, GIF, WebP. גודל מקסימלי: 2MB. מומלץ להשתמש ב-PNG עם רקע שקוף.
               </p>
             </div>
 
             {/* Business Details Form */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <div className="bg-card rounded-[14px] shadow p-6">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
                 פרטי עסק
               </h2>
-              <p className="text-sm text-gray-600 mb-6">
+              <p className="text-sm text-muted-foreground mb-6">
                 פרטים אלו יופיעו בדוחות ובחשבוניות שתייצרו.
               </p>
 
               {profileError && (
-                <div className="rounded-md bg-red-50 p-4 mb-4">
-                  <p className="text-sm text-red-700">{profileError}</p>
+                <div className="rounded-[14px] bg-destructive/10 p-4 mb-4">
+                  <p className="text-sm text-destructive">{profileError}</p>
                 </div>
               )}
 
               {successMessage && (
-                <div className="rounded-md bg-green-50 p-4 mb-4">
-                  <p className="text-sm text-green-700">{successMessage}</p>
+                <div className="rounded-[14px] bg-success/10 p-4 mb-4">
+                  <p className="text-sm text-success">{successMessage}</p>
                 </div>
               )}
 
               {loading ? (
                 <div className="text-center py-8">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-orange-500 border-t-transparent"></div>
-                  <p className="mt-2 text-gray-600">טוען פרטים...</p>
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
+                  <p className="mt-2 text-muted-foreground">טוען פרטים...</p>
                 </div>
               ) : (
                 <form onSubmit={handleSaveProfile} className="space-y-6">
@@ -1850,7 +1850,7 @@ export default function SettingsPage() {
                     <div>
                       <label
                         htmlFor="businessName"
-                        className="block text-sm font-medium text-gray-700 mb-1"
+                        className="block text-sm font-medium text-muted-foreground mb-1"
                       >
                         שם העסק
                       </label>
@@ -1860,7 +1860,7 @@ export default function SettingsPage() {
                         value={businessName}
                         onChange={(e) => setBusinessName(e.target.value)}
                         placeholder="לדוגמה: חברת הייעוץ שלי"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                       />
                     </div>
 
@@ -1868,7 +1868,7 @@ export default function SettingsPage() {
                     <div>
                       <label
                         htmlFor="phone"
-                        className="block text-sm font-medium text-gray-700 mb-1"
+                        className="block text-sm font-medium text-muted-foreground mb-1"
                       >
                         טלפון
                       </label>
@@ -1878,7 +1878,7 @@ export default function SettingsPage() {
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="לדוגמה: 050-1234567"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                       />
                     </div>
 
@@ -1886,7 +1886,7 @@ export default function SettingsPage() {
                     <div>
                       <label
                         htmlFor="email"
-                        className="block text-sm font-medium text-gray-700 mb-1"
+                        className="block text-sm font-medium text-muted-foreground mb-1"
                       >
                         אימייל עסקי
                       </label>
@@ -1896,7 +1896,7 @@ export default function SettingsPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="לדוגמה: info@example.com"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                       />
                     </div>
 
@@ -1904,7 +1904,7 @@ export default function SettingsPage() {
                     <div>
                       <label
                         htmlFor="taxId"
-                        className="block text-sm font-medium text-gray-700 mb-1"
+                        className="block text-sm font-medium text-muted-foreground mb-1"
                       >
                         ח.פ. / מספר עוסק
                       </label>
@@ -1914,7 +1914,7 @@ export default function SettingsPage() {
                         value={taxId}
                         onChange={(e) => setTaxId(e.target.value)}
                         placeholder="לדוגמה: 123456789"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                       />
                     </div>
 
@@ -1922,7 +1922,7 @@ export default function SettingsPage() {
                     <div>
                       <label
                         htmlFor="website"
-                        className="block text-sm font-medium text-gray-700 mb-1"
+                        className="block text-sm font-medium text-muted-foreground mb-1"
                       >
                         אתר אינטרנט
                       </label>
@@ -1932,7 +1932,7 @@ export default function SettingsPage() {
                         value={website}
                         onChange={(e) => setWebsite(e.target.value)}
                         placeholder="לדוגמה: https://example.com"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                       />
                     </div>
 
@@ -1940,7 +1940,7 @@ export default function SettingsPage() {
                     <div className="md:col-span-2">
                       <label
                         htmlFor="address"
-                        className="block text-sm font-medium text-gray-700 mb-1"
+                        className="block text-sm font-medium text-muted-foreground mb-1"
                       >
                         כתובת
                       </label>
@@ -1950,7 +1950,7 @@ export default function SettingsPage() {
                         onChange={(e) => setAddress(e.target.value)}
                         placeholder="לדוגמה: רחוב הרצל 1, תל אביב"
                         rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
+                        className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary resize-none"
                       />
                     </div>
 
@@ -1958,7 +1958,7 @@ export default function SettingsPage() {
                     <div>
                       <label
                         htmlFor="defaultCurrency"
-                        className="block text-sm font-medium text-gray-700 mb-1"
+                        className="block text-sm font-medium text-muted-foreground mb-1"
                       >
                         מטבע ברירת מחדל
                       </label>
@@ -1966,7 +1966,7 @@ export default function SettingsPage() {
                         id="defaultCurrency"
                         value={defaultCurrency}
                         onChange={(e) => setDefaultCurrency(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                       >
                         <option value="ILS">₪ - שקל ישראלי</option>
                         <option value="USD">$ - דולר אמריקאי</option>
@@ -1974,7 +1974,7 @@ export default function SettingsPage() {
                         <option value="BTC">₿ - ביטקוין</option>
                         <option value="ETH">Ξ - אתריום</option>
                       </select>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         המטבע שיופיע כברירת מחדל בפרויקטים חדשים
                       </p>
                     </div>
@@ -1983,7 +1983,7 @@ export default function SettingsPage() {
                     <div>
                       <label
                         htmlFor="preferredPdfTemplate"
-                        className="block text-sm font-medium text-gray-700 mb-1"
+                        className="block text-sm font-medium text-muted-foreground mb-1"
                       >
                         תבנית PDF ברירת מחדל
                       </label>
@@ -1991,7 +1991,7 @@ export default function SettingsPage() {
                         id="preferredPdfTemplate"
                         value={preferredPdfTemplate}
                         onChange={(e) => setPreferredPdfTemplate(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                       >
                         <option value="modern">מודרני (Modern)</option>
                         <option value="classic">קלאסי (Classic)</option>
@@ -2000,7 +2000,7 @@ export default function SettingsPage() {
                         <option value="nature">טבע (Nature)</option>
                         <option value="ocean">אוקיינוס (Ocean)</option>
                       </select>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         התבנית שתשמש כברירת מחדל בייצוא דוחות PDF
                       </p>
                     </div>
@@ -2009,7 +2009,7 @@ export default function SettingsPage() {
                     <div>
                       <label
                         htmlFor="pdfPrimaryColor"
-                        className="block text-sm font-medium text-gray-700 mb-1"
+                        className="block text-sm font-medium text-muted-foreground mb-1"
                       >
                         צבע ראשי ל-PDF
                       </label>
@@ -2019,19 +2019,19 @@ export default function SettingsPage() {
                           id="pdfPrimaryColor"
                           value={pdfPrimaryColor}
                           onChange={(e) => setPdfPrimaryColor(e.target.value)}
-                          className="h-10 w-20 border border-gray-300 rounded-lg cursor-pointer"
+                          className="h-10 w-20 border border-border rounded-[14px] cursor-pointer"
                         />
                         <input
                           type="text"
                           value={pdfPrimaryColor}
                           onChange={(e) => setPdfPrimaryColor(e.target.value)}
                           placeholder="#2563EB"
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 font-mono text-sm"
+                          className="flex-1 px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary font-mono text-sm"
                           pattern="^#[0-9A-Fa-f]{6}$"
                           maxLength={7}
                         />
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         הצבע הראשי שיופיע בכותרות ואלמנטים מרכזיים ב-PDF
                       </p>
                     </div>
@@ -2040,7 +2040,7 @@ export default function SettingsPage() {
                     <div>
                       <label
                         htmlFor="pdfAccentColor"
-                        className="block text-sm font-medium text-gray-700 mb-1"
+                        className="block text-sm font-medium text-muted-foreground mb-1"
                       >
                         צבע משני ל-PDF
                       </label>
@@ -2050,19 +2050,19 @@ export default function SettingsPage() {
                           id="pdfAccentColor"
                           value={pdfAccentColor}
                           onChange={(e) => setPdfAccentColor(e.target.value)}
-                          className="h-10 w-20 border border-gray-300 rounded-lg cursor-pointer"
+                          className="h-10 w-20 border border-border rounded-[14px] cursor-pointer"
                         />
                         <input
                           type="text"
                           value={pdfAccentColor}
                           onChange={(e) => setPdfAccentColor(e.target.value)}
                           placeholder="#059669"
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 font-mono text-sm"
+                          className="flex-1 px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary font-mono text-sm"
                           pattern="^#[0-9A-Fa-f]{6}$"
                           maxLength={7}
                         />
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         הצבע המשני שיופיע בפרטים ואלמנטים נוספים ב-PDF
                       </p>
                     </div>
@@ -2071,7 +2071,7 @@ export default function SettingsPage() {
                     <div>
                       <label
                         htmlFor="dateFormat"
-                        className="block text-sm font-medium text-gray-700 mb-1"
+                        className="block text-sm font-medium text-muted-foreground mb-1"
                       >
                         פורמט תאריך
                       </label>
@@ -2079,13 +2079,13 @@ export default function SettingsPage() {
                         id="dateFormat"
                         value={dateFormat}
                         onChange={(e) => setDateFormat(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                       >
                         <option value="DD/MM/YYYY">יום/חודש/שנה (DD/MM/YYYY)</option>
                         <option value="MM/DD/YYYY">חודש/יום/שנה (MM/DD/YYYY)</option>
                         <option value="YYYY-MM-DD">שנה-חודש-יום (YYYY-MM-DD)</option>
                       </select>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         פורמט התצוגה של תאריכים במערכת
                       </p>
                     </div>
@@ -2094,7 +2094,7 @@ export default function SettingsPage() {
                     <div>
                       <label
                         htmlFor="timeFormat"
-                        className="block text-sm font-medium text-gray-700 mb-1"
+                        className="block text-sm font-medium text-muted-foreground mb-1"
                       >
                         פורמט שעה
                       </label>
@@ -2102,12 +2102,12 @@ export default function SettingsPage() {
                         id="timeFormat"
                         value={timeFormat}
                         onChange={(e) => setTimeFormat(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                       >
                         <option value="24h">24 שעות (14:30)</option>
                         <option value="12h">12 שעות (02:30 PM)</option>
                       </select>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         פורמט התצוגה של שעות במערכת
                       </p>
                     </div>
@@ -2116,7 +2116,7 @@ export default function SettingsPage() {
                     <div>
                       <label
                         htmlFor="invoicePrefix"
-                        className="block text-sm font-medium text-gray-700 mb-1"
+                        className="block text-sm font-medium text-muted-foreground mb-1"
                       >
                         קידומת חשבונית
                       </label>
@@ -2126,9 +2126,9 @@ export default function SettingsPage() {
                         value={invoicePrefix}
                         onChange={(e) => setInvoicePrefix(e.target.value)}
                         placeholder="לדוגמה: INV-"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                       />
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         הקידומת תופיע לפני מספר החשבונית (לדוגמה: INV-001, INV-002)
                       </p>
                     </div>
@@ -2137,7 +2137,7 @@ export default function SettingsPage() {
                     <div>
                       <label
                         htmlFor="nextInvoiceNumber"
-                        className="block text-sm font-medium text-gray-700 mb-1"
+                        className="block text-sm font-medium text-muted-foreground mb-1"
                       >
                         מספר החשבונית הבא
                       </label>
@@ -2148,9 +2148,9 @@ export default function SettingsPage() {
                         onChange={(e) => setNextInvoiceNumber(e.target.value)}
                         placeholder="לדוגמה: 1"
                         min="1"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                       />
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         מספר החשבונית הבא שיונפק. המספר יעלה אוטומטית לאחר כל חשבונית
                       </p>
                     </div>
@@ -2159,7 +2159,7 @@ export default function SettingsPage() {
                     <div className="md:col-span-2">
                       <label
                         htmlFor="paymentTerms"
-                        className="block text-sm font-medium text-gray-700 mb-1"
+                        className="block text-sm font-medium text-muted-foreground mb-1"
                       >
                         תנאי תשלום
                       </label>
@@ -2169,18 +2169,18 @@ export default function SettingsPage() {
                         onChange={(e) => setPaymentTerms(e.target.value)}
                         placeholder="לדוגמה: תשלום בתוך 30 יום מתאריך החשבונית"
                         rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
+                        className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary resize-none"
                       />
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         תנאי התשלום יופיעו בחשבוניות ובדוחות
                       </p>
                     </div>
                   </div>
 
                   {/* Bank Details Section */}
-                  <div className="border-t border-gray-200 pt-6 mt-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">פרטי בנק להעברות</h3>
-                    <p className="text-sm text-gray-600 mb-6">
+                  <div className="border-t border-border pt-6 mt-6">
+                    <h3 className="text-lg font-semibold text-foreground mb-4">פרטי בנק להעברות</h3>
+                    <p className="text-sm text-muted-foreground mb-6">
                       פרטים אלו יופיעו בחשבוניות כדי לאפשר העברת תשלומים
                     </p>
 
@@ -2189,7 +2189,7 @@ export default function SettingsPage() {
                       <div>
                         <label
                           htmlFor="bankName"
-                          className="block text-sm font-medium text-gray-700 mb-1"
+                          className="block text-sm font-medium text-muted-foreground mb-1"
                         >
                           שם הבנק
                         </label>
@@ -2199,7 +2199,7 @@ export default function SettingsPage() {
                           value={bankName}
                           onChange={(e) => setBankName(e.target.value)}
                           placeholder="לדוגמה: בנק הפועלים"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                         />
                       </div>
 
@@ -2207,7 +2207,7 @@ export default function SettingsPage() {
                       <div>
                         <label
                           htmlFor="bankBranch"
-                          className="block text-sm font-medium text-gray-700 mb-1"
+                          className="block text-sm font-medium text-muted-foreground mb-1"
                         >
                           מספר סניף
                         </label>
@@ -2217,7 +2217,7 @@ export default function SettingsPage() {
                           value={bankBranch}
                           onChange={(e) => setBankBranch(e.target.value)}
                           placeholder="לדוגמה: 123"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                         />
                       </div>
 
@@ -2225,7 +2225,7 @@ export default function SettingsPage() {
                       <div>
                         <label
                           htmlFor="bankAccountNumber"
-                          className="block text-sm font-medium text-gray-700 mb-1"
+                          className="block text-sm font-medium text-muted-foreground mb-1"
                         >
                           מספר חשבון
                         </label>
@@ -2235,7 +2235,7 @@ export default function SettingsPage() {
                           value={bankAccountNumber}
                           onChange={(e) => setBankAccountNumber(e.target.value)}
                           placeholder="לדוגמה: 123456"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                         />
                       </div>
 
@@ -2243,7 +2243,7 @@ export default function SettingsPage() {
                       <div>
                         <label
                           htmlFor="bankSwift"
-                          className="block text-sm font-medium text-gray-700 mb-1"
+                          className="block text-sm font-medium text-muted-foreground mb-1"
                         >
                           מזהה בנק בינלאומי (SWIFT/BIC)
                         </label>
@@ -2253,9 +2253,9 @@ export default function SettingsPage() {
                           value={bankSwift}
                           onChange={(e) => setBankSwift(e.target.value)}
                           placeholder="לדוגמה: POHALILIT"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
                         />
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           נדרש להעברות בינלאומיות בלבד
                         </p>
                       </div>
@@ -2266,7 +2266,7 @@ export default function SettingsPage() {
                     <button
                       type="submit"
                       disabled={profileLoading}
-                      className="px-6 py-2 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="px-6 py-2 bg-primary text-white font-medium rounded-[14px] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       {profileLoading ? (
                         <span className="flex items-center gap-2">
@@ -2333,25 +2333,25 @@ export default function SettingsPage() {
       {/* Confirmation Dialog */}
       {showConfirmDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4" dir="rtl">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="bg-card rounded-[14px] shadow-xl p-6 max-w-md w-full mx-4" dir="rtl">
+            <h3 className="text-lg font-semibold text-foreground mb-4">
               האם אתה בטוח?
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-muted-foreground mb-6">
               פעולה זו תנתק אותך מכל המכשירים המחוברים לחשבון שלך, כולל המכשיר הנוכחי. תצטרך להתחבר מחדש.
             </p>
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setShowConfirmDialog(false)}
                 disabled={logoutAllLoading}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 text-muted-foreground bg-muted rounded-[14px] hover:bg-muted disabled:opacity-50 transition-colors"
               >
                 ביטול
               </button>
               <button
                 onClick={handleLogoutAll}
                 disabled={logoutAllLoading}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 bg-destructive text-white rounded-[14px] hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {logoutAllLoading ? "מתנתק..." : "התנתק מכל המכשירים"}
               </button>
@@ -2363,24 +2363,24 @@ export default function SettingsPage() {
       {/* Import Confirmation Dialog */}
       {showImportConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4" dir="rtl">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="bg-card rounded-[14px] shadow-xl p-6 max-w-md w-full mx-4" dir="rtl">
+            <h3 className="text-lg font-semibold text-foreground mb-4">
               אישור שחזור גיבוי
             </h3>
             <div className="space-y-3 mb-6">
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 אתה עומד לשחזר נתונים מקובץ הגיבוי:
               </p>
-              <p className="text-sm font-medium text-gray-900">{backupFile?.name}</p>
-              <div className={`p-3 rounded-lg ${
+              <p className="text-sm font-medium text-foreground">{backupFile?.name}</p>
+              <div className={`p-3 rounded-[14px] ${
                 importMode === "replace"
-                  ? "bg-red-50 border border-red-200"
-                  : "bg-blue-50 border border-blue-200"
+                  ? "bg-destructive/10 border border-destructive/20"
+                  : "bg-secondary-light border border-secondary/20"
               }`}>
                 <p className="text-sm font-medium mb-1">
                   {importMode === "replace" ? "⚠️ מצב החלפה" : "📥 מצב מיזוג"}
                 </p>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-muted-foreground">
                   {importMode === "replace"
                     ? "כל הנתונים הקיימים יימחקו לפני השחזור. פעולה זו אינה הפיכה!"
                     : "נתונים חדשים יתווספו. נתונים קיימים עם אותו שם לא יוחלפו."}
@@ -2394,17 +2394,17 @@ export default function SettingsPage() {
                   setBackupLoading(false);
                 }}
                 disabled={backupLoading}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 text-muted-foreground bg-muted rounded-[14px] hover:bg-muted disabled:opacity-50 transition-colors"
               >
                 ביטול
               </button>
               <button
                 onClick={() => handleImportBackup()}
                 disabled={backupLoading}
-                className={`px-4 py-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                className={`px-4 py-2 text-white rounded-[14px] disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
                   importMode === "replace"
-                    ? "bg-red-600 hover:bg-red-700"
-                    : "bg-green-600 hover:bg-green-700"
+                    ? "bg-destructive hover:bg-destructive/90"
+                    : "bg-success hover:bg-success/90"
                 }`}
               >
                 {backupLoading ? "משחזר..." : "אשר שחזור"}

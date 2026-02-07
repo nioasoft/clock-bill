@@ -253,36 +253,36 @@ export function ImportContent({
   return (
     <div className="space-y-8">
       {/* JSON Backup/Restore Section */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+      <div className="bg-card rounded-lg shadow p-6">
+        <h2 className="text-xl font-semibold text-foreground mb-4">
           גיבוי ושחזור נתונים
         </h2>
-        <p className="text-sm text-gray-600 mb-6">
+        <p className="text-sm text-muted-foreground mb-6">
           צור גיבוי מלא של כל הנתונים שלך כקובץ JSON, או שחזר נתונים מגיבוי קיים.
         </p>
 
         {backupError && (
-          <div className="rounded-md bg-red-50 p-4 mb-4">
-            <p className="text-sm text-red-700">{backupError}</p>
+          <div className="rounded-md bg-destructive/5 p-4 mb-4">
+            <p className="text-sm text-destructive">{backupError}</p>
           </div>
         )}
 
         {backupSuccess && (
-          <div className="rounded-md bg-green-50 p-4 mb-4">
-            <p className="text-sm text-green-700">{backupSuccess}</p>
+          <div className="rounded-md bg-success/5 p-4 mb-4">
+            <p className="text-sm text-success">{backupSuccess}</p>
           </div>
         )}
 
         {/* Export Section */}
         <div className="mb-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-3">יצירת גיבוי</h3>
-          <p className="text-sm text-gray-600 mb-4">
+          <h3 className="text-lg font-medium text-foreground mb-3">יצירת גיבוי</h3>
+          <p className="text-sm text-muted-foreground mb-4">
             הורד גיבוי מלא של כל הנתונים שלך כולל פרופיל, לקוחות, פרויקטים, רשומות זמן, תגיות מותאמות אישית ושערי מטבעות.
           </p>
           <button
             onClick={handleExportBackup}
             disabled={backupLoading}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-secondary text-white text-sm font-medium rounded-lg hover:bg-secondary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {backupLoading ? (
               <>
@@ -311,15 +311,15 @@ export function ImportContent({
         </div>
 
         {/* Import Section */}
-        <div className="border-t border-gray-200 pt-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-3">שחזור מגיבוי</h3>
-          <p className="text-sm text-gray-600 mb-4">
+        <div className="border-t border-border pt-6">
+          <h3 className="text-lg font-medium text-foreground mb-3">שחזור מגיבוי</h3>
+          <p className="text-sm text-muted-foreground mb-4">
             שחזר נתונים מקובץ גיבוי שנוצר קודם לכן. אתה יכול לבחור למזג עם הנתונים הקיימים או להחליף את כל הנתונים.
           </p>
 
           {/* Import Mode Selection */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               מצב ייבוא
             </label>
             <div className="flex gap-4">
@@ -327,8 +327,8 @@ export function ImportContent({
                 onClick={() => setImportMode("merge")}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   importMode === "merge"
-                    ? "bg-orange-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "bg-primary text-white"
+                    : "bg-muted text-foreground hover:bg-muted"
                 }`}
               >
                 מיזוג
@@ -338,15 +338,15 @@ export function ImportContent({
                 onClick={() => setImportMode("replace")}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   importMode === "replace"
-                    ? "bg-orange-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "bg-primary text-white"
+                    : "bg-muted text-foreground hover:bg-muted"
                 }`}
               >
                 החלפה
                 <span className="block text-xs font-normal opacity-80">מחק הכל והחלף</span>
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-muted-foreground mt-2">
               {importMode === "merge"
                 ? "מיזוג: נתונים חדשים יתווספו, נתונים קיימים עם אותו שם לא יוחלפו"
                 : "החלפה: כל הנתונים הקיימים יימחקו לפני הייבוא"}
@@ -377,7 +377,7 @@ export function ImportContent({
             <button
               onClick={() => backupInputRef.current?.click()}
               disabled={backupLoading}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <svg
                 className="w-4 h-4"
@@ -395,7 +395,7 @@ export function ImportContent({
               בחר קובץ גיבוי
             </button>
             {backupFile && (
-              <span className="me-4 text-sm text-gray-600">{backupFile.name}</span>
+              <span className="me-4 text-sm text-muted-foreground">{backupFile.name}</span>
             )}
           </div>
 
@@ -404,7 +404,7 @@ export function ImportContent({
             <button
               onClick={handleImportBackup}
               disabled={backupLoading}
-              className="px-6 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-6 py-2 bg-success text-white font-medium rounded-lg hover:bg-success/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {backupLoading ? (
                 <span className="flex items-center gap-2">
@@ -419,51 +419,51 @@ export function ImportContent({
 
           {/* Import Results */}
           {backupImportResults && (
-            <div className="mt-6 border border-gray-200 rounded-lg p-4 bg-gray-50">
-              <h4 className="font-semibold text-gray-900 mb-3">תוצאות השחזור</h4>
+            <div className="mt-6 border border-border rounded-lg p-4 bg-muted/50">
+              <h4 className="font-semibold text-foreground mb-3">תוצאות השחזור</h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-green-600">{backupImportResults.profile}</p>
-                  <p className="text-xs text-gray-600">פרופיל</p>
+                  <p className="text-2xl font-bold text-success">{backupImportResults.profile}</p>
+                  <p className="text-xs text-muted-foreground">פרופיל</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-green-600">{backupImportResults.clients}</p>
-                  <p className="text-xs text-gray-600">לקוחות</p>
+                  <p className="text-2xl font-bold text-success">{backupImportResults.clients}</p>
+                  <p className="text-xs text-muted-foreground">לקוחות</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-green-600">{backupImportResults.projects}</p>
-                  <p className="text-xs text-gray-600">פרויקטים</p>
+                  <p className="text-2xl font-bold text-success">{backupImportResults.projects}</p>
+                  <p className="text-xs text-muted-foreground">פרויקטים</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-green-600">{backupImportResults.timeEntries}</p>
-                  <p className="text-xs text-gray-600">רשומות זמן</p>
+                  <p className="text-2xl font-bold text-success">{backupImportResults.timeEntries}</p>
+                  <p className="text-xs text-muted-foreground">רשומות זמן</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-green-600">{backupImportResults.customTags}</p>
-                  <p className="text-xs text-gray-600">תגיות</p>
+                  <p className="text-2xl font-bold text-success">{backupImportResults.customTags}</p>
+                  <p className="text-xs text-muted-foreground">תגיות</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-green-600">{backupImportResults.currencyRates}</p>
-                  <p className="text-xs text-gray-600">שערי מטבע</p>
+                  <p className="text-2xl font-bold text-success">{backupImportResults.currencyRates}</p>
+                  <p className="text-xs text-muted-foreground">שערי מטבע</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-green-600">{backupImportResults.rateOverrides}</p>
-                  <p className="text-xs text-gray-600">עדפות תעריף</p>
+                  <p className="text-2xl font-bold text-success">{backupImportResults.rateOverrides}</p>
+                  <p className="text-xs text-muted-foreground">עדפות תעריף</p>
                 </div>
               </div>
               {backupImportResults.errors.length > 0 && (
                 <div className="mt-3">
-                  <p className="text-sm font-medium text-red-700 mb-2">
+                  <p className="text-sm font-medium text-destructive mb-2">
                     ⚠️ {backupImportResults.errors.length} שגיאות:
                   </p>
                   <div className="max-h-40 overflow-y-auto">
                     {backupImportResults.errors.slice(0, 10).map((error, idx) => (
-                      <p key={idx} className="text-xs text-red-600">
+                      <p key={idx} className="text-xs text-destructive">
                         {error.entity}: {error.message}
                       </p>
                     ))}
                     {backupImportResults.errors.length > 10 && (
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="text-xs text-muted-foreground mt-2">
                         ...ועוד {backupImportResults.errors.length - 10} שגיאות
                       </p>
                     )}
@@ -476,29 +476,29 @@ export function ImportContent({
       </div>
 
       {/* CSV Import Section */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+      <div className="bg-card rounded-lg shadow p-6">
+        <h2 className="text-xl font-semibold text-foreground mb-4">
           ייבוא נתונים מ-CSV
         </h2>
-        <p className="text-sm text-gray-600 mb-6">
+        <p className="text-sm text-muted-foreground mb-6">
           ייבא לקוחות או רשומות זמן מקובץ CSV. הקובץ חייב להכיל שורת כותרת עם שמות השדות.
         </p>
 
         {importError && (
-          <div className="rounded-md bg-red-50 p-4 mb-4">
-            <p className="text-sm text-red-700">{importError}</p>
+          <div className="rounded-md bg-destructive/5 p-4 mb-4">
+            <p className="text-sm text-destructive">{importError}</p>
           </div>
         )}
 
         {importSuccess && (
-          <div className="rounded-md bg-green-50 p-4 mb-4">
-            <p className="text-sm text-green-700">{importSuccess}</p>
+          <div className="rounded-md bg-success/5 p-4 mb-4">
+            <p className="text-sm text-success">{importSuccess}</p>
           </div>
         )}
 
         {/* Import Type Selection */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-foreground mb-2">
             סוג הנתונים לייבוא
           </label>
           <div className="flex gap-4">
@@ -516,8 +516,8 @@ export function ImportContent({
               }}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 importType === "clients"
-                  ? "bg-orange-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-primary text-white"
+                  : "bg-muted text-foreground hover:bg-muted"
               }`}
             >
               לקוחות
@@ -536,8 +536,8 @@ export function ImportContent({
               }}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 importType === "entries"
-                  ? "bg-orange-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-primary text-white"
+                  : "bg-muted text-foreground hover:bg-muted"
               }`}
             >
               רשומות זמן
@@ -549,7 +549,7 @@ export function ImportContent({
           <>
             {/* File Upload */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 בחר קובץ CSV
               </label>
               <input
@@ -568,7 +568,7 @@ export function ImportContent({
                   }
                 }}
                 disabled={importLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <svg
                   className="w-4 h-4"
@@ -586,17 +586,17 @@ export function ImportContent({
                 בחר קובץ CSV
               </button>
               {importFile && (
-                <span className="me-4 text-sm text-gray-600">{importFile.name}</span>
+                <span className="me-4 text-sm text-muted-foreground">{importFile.name}</span>
               )}
             </div>
 
             {/* Help Text */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-blue-900 mb-2">
+            <div className="bg-secondary-light border border-secondary/20 rounded-lg p-4">
+              <h4 className="text-sm font-medium text-foreground mb-2">
                 פורמט הקובץ לייבוא {importType === "clients" ? "לקוחות" : "רשומות זמן"}
               </h4>
               {importType === "clients" ? (
-                <div className="text-xs text-blue-700 space-y-1">
+                <div className="text-xs text-muted-foreground space-y-1">
                   <p>הקובץ חייב להכיל לפחות את השדות הבאים:</p>
                   <ul className="list-disc list-inside mr-4">
                     <li>שם הלקוח (name)</li>
@@ -612,7 +612,7 @@ export function ImportContent({
                   </ul>
                 </div>
               ) : (
-                <div className="text-xs text-blue-700 space-y-1">
+                <div className="text-xs text-muted-foreground space-y-1">
                   <p>הקובץ חייב להכיל לפחות את השדות הבאים:</p>
                   <ul className="list-disc list-inside mr-4">
                     <li>שם הפרויקט (project_name)</li>
@@ -637,35 +637,35 @@ export function ImportContent({
             {/* Column Mapping */}
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <h3 className="text-lg font-semibold text-foreground mb-4">
                   מיפוי עמודות
                 </h3>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-muted-foreground mb-4">
                   מפה את עמודות הקובץ שלך לשדות המערכת. הערכנו את המיפוי האוטומטי, אך תוכל לשנות אותו.
                 </p>
 
                 {/* CSV Preview Table */}
                 <div className="mb-6 overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200 border border-gray-200">
-                    <thead className="bg-gray-50">
+                  <table className="min-w-full divide-y divide-border border border-border">
+                    <thead className="bg-muted/50">
                       <tr>
                         {csvHeaders.map((header) => (
                           <th
                             key={header}
-                            className="px-4 py-2 text-start text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-4 py-2 text-start text-xs font-medium text-muted-foreground uppercase tracking-wider"
                           >
                             {header}
                           </th>
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-card divide-y divide-border">
                       {csvPreview.map((row, idx) => (
                         <tr key={idx}>
                           {csvHeaders.map((header) => (
                             <td
                               key={header}
-                              className="px-4 py-2 whitespace-nowrap text-sm text-gray-900"
+                              className="px-4 py-2 whitespace-nowrap text-sm text-foreground"
                             >
                               {row[header]}
                             </td>
@@ -674,7 +674,7 @@ export function ImportContent({
                       ))}
                     </tbody>
                   </table>
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-muted-foreground mt-2">
                     הצגה מקדימה של 3 השורות הראשונות בקובץ
                   </p>
                 </div>
@@ -685,13 +685,13 @@ export function ImportContent({
                     <>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-foreground mb-1">
                             שם הלקוח * (שדה חובה)
                           </label>
                           <select
                             value={columnMapping.name || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, name: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -702,13 +702,13 @@ export function ImportContent({
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-foreground mb-1">
                             שם איש קשר
                           </label>
                           <select
                             value={columnMapping.contactName || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, contactName: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -719,13 +719,13 @@ export function ImportContent({
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-foreground mb-1">
                             אימייל
                           </label>
                           <select
                             value={columnMapping.email || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, email: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -736,13 +736,13 @@ export function ImportContent({
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-foreground mb-1">
                             טלפון
                           </label>
                           <select
                             value={columnMapping.phone || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, phone: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -753,13 +753,13 @@ export function ImportContent({
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-foreground mb-1">
                             כתובת
                           </label>
                           <select
                             value={columnMapping.address || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, address: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -770,13 +770,13 @@ export function ImportContent({
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-foreground mb-1">
                             שעור שעתי
                           </label>
                           <select
                             value={columnMapping.defaultRate || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, defaultRate: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -788,13 +788,13 @@ export function ImportContent({
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-foreground mb-1">
                           הערות
                         </label>
                         <select
                           value={columnMapping.notes || ""}
                           onChange={(e) => setColumnMapping({ ...columnMapping, notes: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                         >
                           <option value="">בחר עמודה</option>
                           {csvHeaders.map((header) => (
@@ -809,13 +809,13 @@ export function ImportContent({
                     <>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-foreground mb-1">
                             שם הפרויקט * (שדה חובה)
                           </label>
                           <select
                             value={columnMapping.projectName || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, projectName: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -826,13 +826,13 @@ export function ImportContent({
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-foreground mb-1">
                             תיאור * (שדה חובה)
                           </label>
                           <select
                             value={columnMapping.description || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, description: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -843,13 +843,13 @@ export function ImportContent({
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-foreground mb-1">
                             תאריך * (שדה חובה)
                           </label>
                           <select
                             value={columnMapping.date || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, date: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -860,13 +860,13 @@ export function ImportContent({
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-foreground mb-1">
                             משך זמן (דקות) או שעות התחלה/סיום
                           </label>
                           <select
                             value={columnMapping.duration || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, duration: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -877,13 +877,13 @@ export function ImportContent({
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-foreground mb-1">
                             שעת התחלה
                           </label>
                           <select
                             value={columnMapping.startTime || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, startTime: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -894,13 +894,13 @@ export function ImportContent({
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-foreground mb-1">
                             שעת סיום
                           </label>
                           <select
                             value={columnMapping.endTime || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, endTime: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -911,13 +911,13 @@ export function ImportContent({
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-foreground mb-1">
                             תגיות
                           </label>
                           <select
                             value={columnMapping.tags || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, tags: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -928,13 +928,13 @@ export function ImportContent({
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-foreground mb-1">
                             הערות
                           </label>
                           <select
                             value={columnMapping.notes || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, notes: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -945,13 +945,13 @@ export function ImportContent({
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-foreground mb-1">
                             ניתן לחיוב
                           </label>
                           <select
                             value={columnMapping.isBillable || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, isBillable: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -978,14 +978,14 @@ export function ImportContent({
                     setColumnMapping({});
                   }}
                   disabled={importLoading}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 text-foreground bg-muted rounded-lg hover:bg-muted disabled:opacity-50 transition-colors"
                 >
                   חזור
                 </button>
                 <button
                   onClick={handleImport}
                   disabled={importLoading}
-                  className="px-6 py-2 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {importLoading ? (
                     <span className="flex items-center gap-2">
@@ -1000,24 +1000,24 @@ export function ImportContent({
 
               {/* Import Results */}
               {importResults && (
-                <div className="mt-6 border border-gray-200 rounded-lg p-4 bg-gray-50">
-                  <h4 className="font-semibold text-gray-900 mb-2">תוצאות הייבוא</h4>
-                  <p className="text-sm text-gray-700">
+                <div className="mt-6 border border-border rounded-lg p-4 bg-muted/50">
+                  <h4 className="font-semibold text-foreground mb-2">תוצאות הייבוא</h4>
+                  <p className="text-sm text-foreground">
                     ✅ יובאו בהצלחה <strong>{importResults.imported}</strong> רשומות
                   </p>
                   {importResults.errors && importResults.errors.length > 0 && (
                     <div className="mt-3">
-                      <p className="text-sm font-medium text-red-700 mb-2">
+                      <p className="text-sm font-medium text-destructive mb-2">
                         ⚠️ {importResults.errors.length} שגיאות:
                       </p>
                       <div className="max-h-40 overflow-y-auto">
                         {importResults.errors.slice(0, 10).map((error, idx) => (
-                          <p key={idx} className="text-xs text-red-600">
+                          <p key={idx} className="text-xs text-destructive">
                             שורה {error.row}: {error.message}
                           </p>
                         ))}
                         {importResults.errors.length > 10 && (
-                          <p className="text-xs text-gray-500 mt-2">
+                          <p className="text-xs text-muted-foreground mt-2">
                             ...ועוד {importResults.errors.length - 10} שגיאות
                           </p>
                         )}

@@ -28,6 +28,18 @@ export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
    * Optional action button href (renders as Link instead of button)
    */
   actionHref?: string
+  /**
+   * Optional secondary action label
+   */
+  secondaryActionLabel?: string
+  /**
+   * Optional secondary action href
+   */
+  secondaryActionHref?: string
+  /**
+   * Optional secondary action click handler
+   */
+  onSecondaryAction?: () => void
 }
 
 const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
@@ -40,6 +52,9 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
       actionLabel,
       onAction,
       actionHref,
+      secondaryActionLabel,
+      secondaryActionHref,
+      onSecondaryAction,
       ...props
     },
     ref
@@ -52,26 +67,42 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
         {...props}
       >
         {Icon && (
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-orange-100">
-            <Icon className="h-8 w-8 text-orange-600" />
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-light">
+            <Icon className="h-8 w-8 text-primary" />
           </div>
         )}
-        <p className="text-lg font-medium text-gray-900 mb-2">{message}</p>
+        <p className="text-lg font-medium text-foreground mb-2">{message}</p>
         {description && (
-          <p className="text-sm text-gray-500 mb-4 max-w-md">{description}</p>
+          <p className="text-sm text-muted-foreground mb-4 max-w-md">{description}</p>
         )}
         {actionLabel && (onAction || actionHref) && (
           <div className="mt-2">
             {actionHref ? (
               <a
                 href={actionHref}
-                className="rounded-lg bg-orange-600 px-4 py-2 text-white hover:bg-orange-700 inline-block"
+                className="rounded-lg bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 inline-block"
               >
                 {actionLabel}
               </a>
             ) : (
-              <Button onClick={onAction} className="bg-orange-600 hover:bg-orange-700">
+              <Button onClick={onAction}>
                 {actionLabel}
+              </Button>
+            )}
+          </div>
+        )}
+        {secondaryActionLabel && (onSecondaryAction || secondaryActionHref) && (
+          <div className="mt-2">
+            {secondaryActionHref ? (
+              <a
+                href={secondaryActionHref}
+                className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-muted inline-block"
+              >
+                {secondaryActionLabel}
+              </a>
+            ) : (
+              <Button variant="outline" onClick={onSecondaryAction}>
+                {secondaryActionLabel}
               </Button>
             )}
           </div>

@@ -2,13 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import Link from "next/link";
+import { AppLayout } from "@/components/app-layout";
 import { Breadcrumb } from "@/components/breadcrumb";
-
-interface User {
-  id: string;
-  email: string;
-}
 
 interface Client {
   id: string;
@@ -28,8 +23,6 @@ export default function ClientDetailsPage() {
   const params = useParams();
   const clientId = params.id as string;
 
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
   const [client, setClient] = useState<Client | null>(null);
   const [clientLoading, setClientLoading] = useState(true);
   const [error, setError] = useState("");
@@ -46,30 +39,12 @@ export default function ClientDetailsPage() {
   });
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch("/api/auth/session");
-        const data = await response.json();
-        if (data.success && data.user) {
-          setUser(data.user);
-        } else {
-          router.push("/login");
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-        router.push("/login");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUser();
-  }, [router]);
+  const [clientProjects, setClientProjects] = useState<{id: string; name: string; status: string; pricingModel: string}[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(true);
 
   useEffect(() => {
     const fetchClient = async () => {
-      if (!user || !clientId) return;
+      if (!clientId) return;
       try {
         setClientLoading(true);
         const response = await fetch(`/api/clients/${clientId}`);
@@ -96,7 +71,26 @@ export default function ClientDetailsPage() {
       }
     };
     fetchClient();
-  }, [user, clientId]);
+  }, [clientId]);
+
+  useEffect(() => {
+    const fetchClientProjects = async () => {
+      if (!clientId) return;
+      try {
+        setProjectsLoading(true);
+        const response = await fetch(`/api/projects?clientId=${clientId}`);
+        const data = await response.json();
+        if (data.success) {
+          setClientProjects(data.projects || []);
+        }
+      } catch (error) {
+        console.error("Error fetching client projects:", error);
+      } finally {
+        setProjectsLoading(false);
+      }
+    };
+    fetchClientProjects();
+  }, [clientId]);
 
   const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -162,21 +156,11 @@ export default function ClientDetailsPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-zinc-50 flex items-center justify-center" dir="rtl">
-        <div className="text-gray-600">טוען...</div>
-      </div>
-    );
-  }
-
-  if (!user) return null;
-
   return (
-    <div className="min-h-screen bg-zinc-50" dir="rtl">
-      <header className="bg-white shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-          <div className="mb-4">
+    <AppLayout>
+      <div className="px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-6">
             <Breadcrumb
               items={[
                 { label: "לקוחות", href: "/clients" },
@@ -184,37 +168,33 @@ export default function ClientDetailsPage() {
               ]}
             />
           </div>
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">פרטי לקוח</h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">פרטי לקוח</h1>
             {client && client.isActive && (
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowEditForm(true)}
-                  className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                  className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted"
                 >
                   ערוך
                 </button>
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="rounded-lg border border-red-300 px-4 py-2 text-red-700 hover:bg-red-50"
+                  className="rounded-[14px] border border-destructive/30 px-4 py-2 text-destructive hover:bg-destructive/10"
                 >
                   מחק
                 </button>
               </div>
             )}
           </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         {showDeleteConfirm && (
-          <div className="mb-6 rounded-lg bg-red-50 p-6 shadow border border-red-200">
-            <h2 className="text-xl font-semibold text-red-900 mb-4">מחק לקוח</h2>
-            <p className="text-red-800 mb-4">
+          <div className="mb-6 rounded-[14px] bg-destructive/10 p-6 border border-border/50 shadow-sm border border-destructive/20">
+            <h2 className="text-xl font-semibold text-destructive mb-4">מחק לקוח</h2>
+            <p className="text-destructive mb-4">
               האם אתה בטוח שברצונך למחוק את הלקוח &quot;{client?.name}&quot;? לקוחות שנמחקים יועברו למצב &quot;לא פעיל&quot; ולא יוצגו ברשימה.
             </p>
             {formError && (
-              <div className="rounded-md bg-red-100 p-3 text-sm text-red-800 mb-4">
+              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive mb-4">
                 {formError}
               </div>
             )}
@@ -224,7 +204,7 @@ export default function ClientDetailsPage() {
                   setShowDeleteConfirm(false);
                   setFormError("");
                 }}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 bg-white"
+                className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted bg-card"
                 disabled={submitting}
               >
                 ביטול
@@ -232,7 +212,7 @@ export default function ClientDetailsPage() {
               <button
                 onClick={handleDelete}
                 disabled={submitting}
-                className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:opacity-50"
+                className="rounded-[14px] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
               >
                 {submitting ? "מוחק..." : "מחק לקוח"}
               </button>
@@ -241,18 +221,18 @@ export default function ClientDetailsPage() {
         )}
 
         {showEditForm && (
-          <div className="mb-6 rounded-lg bg-white p-6 shadow">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">ערוך לקוח</h2>
+          <div className="mb-6 rounded-[14px] bg-card p-6 border border-border/50 shadow-sm">
+            <h2 className="text-xl font-semibold text-foreground mb-4">ערוך לקוח</h2>
             <form onSubmit={handleEdit} className="space-y-4">
               {formError && (
-                <div className="rounded-md bg-red-50 p-4 text-sm text-red-800">
+                <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
                   {formError}
                 </div>
               )}
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="name" className="block text-sm font-medium text-foreground">
                     שם הלקוח *
                   </label>
                   <input
@@ -261,13 +241,13 @@ export default function ClientDetailsPage() {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    className="mt-1 block w-full rounded-md border border-border px-3 py-2 border border-border/50 border border-border/50 shadow-sm-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="contactName" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="contactName" className="block text-sm font-medium text-foreground">
                     איש קשר
                   </label>
                   <input
@@ -275,13 +255,13 @@ export default function ClientDetailsPage() {
                     id="contactName"
                     value={formData.contactName}
                     onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    className="mt-1 block w-full rounded-md border border-border px-3 py-2 border border-border/50 border border-border/50 shadow-sm-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="email" className="block text-sm font-medium text-foreground">
                     אימייל
                   </label>
                   <input
@@ -289,13 +269,13 @@ export default function ClientDetailsPage() {
                     id="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    className="mt-1 block w-full rounded-md border border-border px-3 py-2 border border-border/50 border border-border/50 shadow-sm-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="phone" className="block text-sm font-medium text-foreground">
                     טלפון
                   </label>
                   <input
@@ -303,13 +283,13 @@ export default function ClientDetailsPage() {
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    className="mt-1 block w-full rounded-md border border-border px-3 py-2 border border-border/50 border border-border/50 shadow-sm-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                   />
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="address" className="block text-sm font-medium text-foreground">
                     כתובת
                   </label>
                   <input
@@ -317,14 +297,14 @@ export default function ClientDetailsPage() {
                     id="address"
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    className="mt-1 block w-full rounded-md border border-border px-3 py-2 border border-border/50 border border-border/50 shadow-sm-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                     placeholder="רחוב, מספר, עיר"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="defaultRate" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="defaultRate" className="block text-sm font-medium text-foreground">
                     תעריף שעתי (₪)
                   </label>
                   <input
@@ -334,14 +314,14 @@ export default function ClientDetailsPage() {
                     step="0.01"
                     value={formData.defaultRate}
                     onChange={(e) => setFormData({ ...formData, defaultRate: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    className="mt-1 block w-full rounded-md border border-border px-3 py-2 border border-border/50 border border-border/50 shadow-sm-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="notes" className="block text-sm font-medium text-foreground">
                   הערות
                 </label>
                 <textarea
@@ -349,7 +329,7 @@ export default function ClientDetailsPage() {
                   rows={3}
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                  className="mt-1 block w-full rounded-md border border-border px-3 py-2 border border-border/50 border border-border/50 shadow-sm-sm focus:border-primary focus:outline-none focus:ring-primary"
                   disabled={submitting}
                 />
               </div>
@@ -372,7 +352,7 @@ export default function ClientDetailsPage() {
                       });
                     }
                   }}
-                  className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                  className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted"
                   disabled={submitting}
                 >
                   ביטול
@@ -380,7 +360,7 @@ export default function ClientDetailsPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-lg bg-orange-600 px-4 py-2 text-white hover:bg-orange-700 disabled:opacity-50"
+                  className="rounded-[14px] bg-primary px-4 py-2 text-white hover:bg-primary/90 disabled:opacity-50"
                 >
                   {submitting ? "שומר..." : "שמור שינויים"}
                 </button>
@@ -390,32 +370,32 @@ export default function ClientDetailsPage() {
         )}
 
         {clientLoading ? (
-          <div className="rounded-lg bg-white p-8 shadow text-center text-gray-600">
+          <div className="rounded-[14px] bg-card p-8 border border-border/50 shadow-sm text-center text-muted-foreground">
             טוען נתוני לקוח...
           </div>
         ) : error ? (
-          <div className="rounded-lg bg-white p-8 shadow">
-            <div className="rounded-md bg-red-50 p-4 text-red-800">{error}</div>
+          <div className="rounded-[14px] bg-card p-8 border border-border/50 shadow-sm">
+            <div className="rounded-md bg-destructive/10 p-4 text-destructive">{error}</div>
           </div>
         ) : !client ? (
-          <div className="rounded-lg bg-white p-8 shadow text-center text-gray-600">
+          <div className="rounded-[14px] bg-card p-8 border border-border/50 shadow-sm text-center text-muted-foreground">
             הלקוח לא נמצא
           </div>
         ) : (
-          <div className="rounded-lg bg-white p-6 shadow">
+          <div className="rounded-[14px] bg-card p-6 border border-border/50 shadow-sm">
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">{client.name}</h2>
+                <h2 className="text-2xl font-bold text-foreground">{client.name}</h2>
                 {client.contactName && (
-                  <p className="text-gray-600 mt-1">איש קשר: {client.contactName}</p>
+                  <p className="text-muted-foreground mt-1">איש קשר: {client.contactName}</p>
                 )}
               </div>
               {client.isActive ? (
-                <span className="inline-flex rounded-full bg-green-100 px-3 py-1 text-sm font-semibold leading-5 text-green-800">
+                <span className="inline-flex rounded-full bg-success/10 px-3 py-1 text-sm font-semibold leading-5 text-success">
                   פעיל
                 </span>
               ) : (
-                <span className="inline-flex rounded-full bg-gray-100 px-3 py-1 text-sm font-semibold leading-5 text-gray-800">
+                <span className="inline-flex rounded-full bg-muted px-3 py-1 text-sm font-semibold leading-5 text-foreground">
                   לא פעיל
                 </span>
               )}
@@ -423,48 +403,48 @@ export default function ClientDetailsPage() {
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-1">אימייל</h3>
-                <p className="text-gray-900">
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">אימייל</h3>
+                <p className="text-foreground">
                   {client.email ? (
-                    <a href={`mailto:${client.email}`} className="text-orange-600 hover:text-orange-900">
+                    <a href={`mailto:${client.email}`} className="text-primary hover:text-primary/90">
                       {client.email}
                     </a>
                   ) : (
-                    <span className="text-gray-400">לא צוין</span>
+                    <span className="text-muted-foreground">לא צוין</span>
                   )}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-1">טלפון</h3>
-                <p className="text-gray-900">
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">טלפון</h3>
+                <p className="text-foreground">
                   {client.phone ? (
-                    <a href={`tel:${client.phone}`} className="text-orange-600 hover:text-orange-900">
+                    <a href={`tel:${client.phone}`} className="text-primary hover:text-primary/90">
                       {client.phone}
                     </a>
                   ) : (
-                    <span className="text-gray-400">לא צוין</span>
+                    <span className="text-muted-foreground">לא צוין</span>
                   )}
                 </p>
               </div>
 
               <div className="md:col-span-2">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">כתובת</h3>
-                <p className="text-gray-900">
-                  {client.address || <span className="text-gray-400">לא צוינה</span>}
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">כתובת</h3>
+                <p className="text-foreground">
+                  {client.address || <span className="text-muted-foreground">לא צוינה</span>}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-1">תעריף שעתי</h3>
-                <p className="text-gray-900">
-                  {client.defaultRate ? `₪${client.defaultRate}/שעה` : <span className="text-gray-400">לא צוין</span>}
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">תעריף שעתי</h3>
+                <p className="text-foreground">
+                  {client.defaultRate ? `₪${client.defaultRate}/שעה` : <span className="text-muted-foreground">לא צוין</span>}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-1">נוצר בתאריך</h3>
-                <p className="text-gray-900">
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">נוצר בתאריך</h3>
+                <p className="text-foreground">
                   {new Date(client.createdAt).toLocaleDateString('he-IL')}
                 </p>
               </div>
@@ -472,15 +452,58 @@ export default function ClientDetailsPage() {
 
             {client.notes && (
               <div className="mt-6">
-                <h3 className="text-sm font-medium text-gray-500 mb-2">הערות</h3>
-                <div className="rounded-md bg-gray-50 p-3">
-                  <p className="text-gray-900 whitespace-pre-wrap">{client.notes}</p>
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">הערות</h3>
+                <div className="rounded-md bg-muted p-3">
+                  <p className="text-foreground whitespace-pre-wrap">{client.notes}</p>
                 </div>
               </div>
             )}
           </div>
         )}
-      </main>
-    </div>
+
+        {client && (
+          <div className="mt-6 rounded-[14px] bg-card p-6 border border-border/50 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display text-lg font-semibold text-foreground">פרויקטים</h3>
+              <a
+                href={`/projects?create=true&clientId=${clientId}`}
+                className="text-sm text-primary hover:text-primary/90 font-medium"
+              >
+                + הוסף פרויקט
+              </a>
+            </div>
+            {projectsLoading ? (
+              <p className="text-sm text-muted-foreground">טוען פרויקטים...</p>
+            ) : clientProjects.length === 0 ? (
+              <p className="text-sm text-muted-foreground">אין פרויקטים עדיין ללקוח זה</p>
+            ) : (
+              <div className="space-y-2">
+                {clientProjects.map((project) => (
+                  <a
+                    key={project.id}
+                    href={`/projects/${project.id}`}
+                    className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors"
+                  >
+                    <span className="text-sm font-medium text-foreground">{project.name}</span>
+                    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
+                      project.status === "active" ? "bg-success/10 text-success" :
+                      project.status === "completed" ? "bg-secondary-light text-secondary" :
+                      project.status === "paused" ? "bg-accent text-foreground" :
+                      "bg-muted text-foreground"
+                    }`}>
+                      {project.status === "active" ? "פעיל" :
+                       project.status === "completed" ? "הושלם" :
+                       project.status === "paused" ? "מושהה" :
+                       project.status === "archived" ? "בארכיון" : project.status}
+                    </span>
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        </div>
+      </div>
+    </AppLayout>
   );
 }

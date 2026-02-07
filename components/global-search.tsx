@@ -110,11 +110,11 @@ export function GlobalSearch() {
       {/* Search Trigger Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 w-full px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        className="flex items-center gap-2 w-full px-4 py-2 rounded-lg text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
       >
         <Search className="h-4 w-4" />
         <span>חיפוש...</span>
-        <kbd className="ms-auto hidden sm:inline-block px-2 py-0.5 text-xs font-semibold text-gray-400 bg-gray-100 border border-gray-200 rounded">
+        <kbd className="ms-auto hidden sm:inline-block px-2 py-0.5 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">
           ⌘K
         </kbd>
       </button>
@@ -128,29 +128,29 @@ export function GlobalSearch() {
           {/* Search Modal */}
           <div
             ref={searchRef}
-            className="relative w-full max-w-2xl bg-white rounded-xl shadow-2xl overflow-hidden"
+            className="relative w-full max-w-2xl bg-card rounded-xl shadow-2xl overflow-hidden"
             dir="rtl"
           >
             {/* Search Input */}
-            <div className="flex items-center gap-3 px-4 py-4 border-b border-gray-200">
-              <Search className="h-5 w-5 text-gray-400 flex-shrink-0" />
+            <div className="flex items-center gap-3 px-4 py-4 border-b border-border">
+              <Search className="h-5 w-5 text-muted-foreground flex-shrink-0" />
               <input
                 ref={inputRef}
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="חפש לקוחות, פרויקטים, רשומות זמן..."
-                className="flex-1 text-lg text-gray-900 placeholder-gray-400 focus:outline-none"
+                className="flex-1 text-lg text-foreground placeholder-muted-foreground/50 focus:outline-none"
               />
               {query && (
                 <button
                   onClick={() => setQuery("")}
-                  className="flex-shrink-0 p-1 text-gray-400 hover:text-gray-600"
+                  className="flex-shrink-0 p-1 text-muted-foreground hover:text-muted-foreground"
                 >
                   <X className="h-5 w-5" />
                 </button>
               )}
-              <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-gray-400 bg-gray-100 border border-gray-200 rounded">
+              <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">
                 ESC
               </kbd>
             </div>
@@ -158,19 +158,19 @@ export function GlobalSearch() {
             {/* Search Results */}
             <div className="max-h-[60vh] overflow-y-auto">
               {query.length < 2 ? (
-                <div className="px-4 py-12 text-center text-gray-500">
-                  <Search className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                <div className="px-4 py-12 text-center text-muted-foreground">
+                  <Search className="h-12 w-12 mx-auto mb-3 text-border" />
                   <p className="text-lg font-medium">התחל להקליד לחיפוש</p>
                   <p className="text-sm mt-1">חפש לקוחות, פרויקטים ורשומות זמן לפי שם</p>
                 </div>
               ) : loading ? (
-                <div className="px-4 py-12 text-center text-gray-500">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-3 border-gray-300 border-t-orange-600" />
+                <div className="px-4 py-12 text-center text-muted-foreground">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-3 border-border border-t-primary" />
                   <p className="mt-3">מחפש...</p>
                 </div>
               ) : results.length === 0 ? (
-                <div className="px-4 py-12 text-center text-gray-500">
-                  <Search className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                <div className="px-4 py-12 text-center text-muted-foreground">
+                  <Search className="h-12 w-12 mx-auto mb-3 text-border" />
                   <p className="text-lg font-medium">לא נמצאו תוצאות</p>
                   <p className="text-sm mt-1">נסה לחפש מילים אחרות</p>
                 </div>
@@ -179,7 +179,7 @@ export function GlobalSearch() {
                   {/* Clients Section */}
                   {results.filter((r) => r.type === "client").length > 0 && (
                     <div className="px-4 py-2">
-                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                         לקוחות
                       </p>
                       {results
@@ -188,13 +188,13 @@ export function GlobalSearch() {
                           <button
                             key={result.id}
                             onClick={() => handleResultClick(result)}
-                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-start"
+                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors text-start"
                           >
-                            <div className="flex-shrink-0 w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                              <Users className="h-5 w-5 text-orange-600" />
+                            <div className="flex-shrink-0 w-10 h-10 bg-primary-light rounded-lg flex items-center justify-center">
+                              <Users className="h-5 w-5 text-primary" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">
+                              <p className="text-sm font-medium text-foreground truncate">
                                 {result.name}
                               </p>
                             </div>
@@ -206,7 +206,7 @@ export function GlobalSearch() {
                   {/* Projects Section */}
                   {results.filter((r) => r.type === "project").length > 0 && (
                     <div className="px-4 py-2 mt-2">
-                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                         פרויקטים
                       </p>
                       {results
@@ -215,17 +215,17 @@ export function GlobalSearch() {
                           <button
                             key={result.id}
                             onClick={() => handleResultClick(result)}
-                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-start"
+                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors text-start"
                           >
-                            <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                              <FolderKanban className="h-5 w-5 text-blue-600" />
+                            <div className="flex-shrink-0 w-10 h-10 bg-secondary-light rounded-lg flex items-center justify-center">
+                              <FolderKanban className="h-5 w-5 text-secondary" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">
+                              <p className="text-sm font-medium text-foreground truncate">
                                 {result.name}
                               </p>
                               {result.clientName && (
-                                <p className="text-xs text-gray-500 truncate">
+                                <p className="text-xs text-muted-foreground truncate">
                                   {result.clientName}
                                 </p>
                               )}
@@ -238,7 +238,7 @@ export function GlobalSearch() {
                   {/* Time Entries Section */}
                   {results.filter((r) => r.type === "entry").length > 0 && (
                     <div className="px-4 py-2 mt-2">
-                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                         רשומות זמן
                       </p>
                       {results
@@ -247,16 +247,16 @@ export function GlobalSearch() {
                           <button
                             key={result.id}
                             onClick={() => handleResultClick(result)}
-                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-start"
+                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors text-start"
                           >
-                            <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                              <Clock className="h-5 w-5 text-green-600" />
+                            <div className="flex-shrink-0 w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center">
+                              <Clock className="h-5 w-5 text-success" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">
+                              <p className="text-sm font-medium text-foreground truncate">
                                 {result.name}
                               </p>
-                              <div className="flex items-center gap-2 text-xs text-gray-500">
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 {result.clientName && (
                                   <span className="truncate">{result.clientName}</span>
                                 )}
@@ -289,23 +289,23 @@ export function GlobalSearch() {
             </div>
 
             {/* Footer */}
-            <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
-              <div className="flex items-center justify-between text-xs text-gray-500">
+            <div className="px-4 py-3 border-t border-border bg-muted/50">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <div className="flex items-center gap-3">
                   <span className="flex items-center gap-1">
-                    <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded">
+                    <kbd className="px-1.5 py-0.5 bg-card border border-border rounded">
                       ↑↓
                     </kbd>
                     לנווט
                   </span>
                   <span className="flex items-center gap-1">
-                    <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded">
+                    <kbd className="px-1.5 py-0.5 bg-card border border-border rounded">
                       ↵
                     </kbd>
                     לבחור
                   </span>
                   <span className="flex items-center gap-1">
-                    <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded">
+                    <kbd className="px-1.5 py-0.5 bg-card border border-border rounded">
                       ESC
                     </kbd>
                     לסגור

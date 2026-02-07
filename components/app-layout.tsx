@@ -6,6 +6,9 @@ import { Sidebar } from "./sidebar";
 import { MobileNav } from "./mobile-nav";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { ErrorBoundary } from "./error-boundary";
+import { PersistentTimerBar } from "./persistent-timer-bar";
+import { TimerStartModal } from "./timer-start-modal";
+import { TimerStopModal } from "./timer-stop-modal";
 
 interface User {
   id: string;
@@ -21,6 +24,12 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [logoutLoading, setLogoutLoading] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("sidebar-collapsed") === "true";
+    }
+    return false;
+  });
 
   useEffect(() => {
     // Fetch current session
@@ -68,10 +77,18 @@ export function AppLayout({ children }: AppLayoutProps) {
     }
   };
 
+  const handleSidebarToggle = () => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem("sidebar-collapsed", String(next));
+      return next;
+    });
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
-        <div className="text-gray-600">טוען...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">טוען...</div>
       </div>
     );
   }
@@ -81,38 +98,47 @@ export function AppLayout({ children }: AppLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50">
+    <div className="min-h-screen bg-background">
       {/* Mobile Navigation */}
       <MobileNav userEmail={user.email} onLogout={handleLogout} />
 
       {/* Desktop Layout */}
       <div className="hidden lg:flex">
         {/* Sidebar - fixed on the right for RTL */}
-        <div className="fixed right-0 top-0 h-screen">
-          <Sidebar />
+        <div className="fixed right-0 top-0 h-screen z-30">
+          <Sidebar
+            isCollapsed={sidebarCollapsed}
+            onToggle={handleSidebarToggle}
+          />
         </div>
 
         {/* Main content - offset by sidebar width */}
-        <div className="mr-64 flex-1">
+        <div
+          className={`flex-1 transition-[margin] duration-200 ${
+            sidebarCollapsed ? "mr-16" : "mr-64"
+          }`}
+        >
+          <PersistentTimerBar />
           <main className="min-h-screen">
-            <ErrorBoundary>
-              {children}
-            </ErrorBoundary>
+            <ErrorBoundary>{children}</ErrorBoundary>
           </main>
         </div>
       </div>
 
       {/* Mobile Layout - full width */}
       <div className="lg:hidden pb-16">
+        <PersistentTimerBar />
         <main className="min-h-screen">
-          <ErrorBoundary>
-            {children}
-          </ErrorBoundary>
+          <ErrorBoundary>{children}</ErrorBoundary>
         </main>
 
         {/* Mobile Bottom Navigation */}
         <MobileBottomNav />
       </div>
+
+      {/* Timer Modals (rendered at layout level) */}
+      <TimerStartModal />
+      <TimerStopModal />
     </div>
   );
 }

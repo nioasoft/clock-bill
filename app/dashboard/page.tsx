@@ -1,15 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AppLayout } from "@/components/app-layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EarningsChart } from "@/components/earnings-chart";
 import { ProjectHoursChart } from "@/components/project-hours-chart";
-import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { useNotifications } from "@/hooks/use-notifications";
-import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
+import { useTimer } from "@/contexts/timer-context";
+import { Users, FolderOpen, Clock } from "lucide-react";
 
 interface DashboardStats {
   today: {
@@ -42,50 +41,31 @@ interface RecentEntry {
   projectId: string;
 }
 
-interface RunningTimer {
-  id: string;
-  projectId: string;
-  description: string | null;
-  startTime: string;
-  pausedAt: string | null;
-  elapsedMinutes: number;
-  elapsedSeconds: number;
-}
-
-interface Project {
-  id: string;
-  name: string;
-  clientId: string;
-}
-
 export default function DashboardPage() {
-  const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState(false);
   const [recentEntries, setRecentEntries] = useState<RecentEntry[]>([]);
-  const [runningTimer, setRunningTimer] = useState<RunningTimer | null>(null);
-  const [timerLoading, setTimerLoading] = useState(true);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [showTimerModal, setShowTimerModal] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<string>("");
-  const [timerDescription, setTimerDescription] = useState("");
-  const [startingTimer, setStartingTimer] = useState(false);
-  const [stoppingTimer, setStoppingTimer] = useState(false);
-  const [pausingTimer, setPausingTimer] = useState(false);
-  const [resumingTimer, setResumingTimer] = useState(false);
-  const [elapsedTime, setElapsedTime] = useState("0:00");
-  const [lastApiUpdate, setLastApiUpdate] = useState<Date>(new Date());
-  const [showStopTimerModal, setShowStopTimerModal] = useState(false);
-  const [stopTimerDescription, setStopTimerDescription] = useState("");
-  const [stopTimerHours, setStopTimerHours] = useState("");
-  const [stopTimerMinutes, setStopTimerMinutes] = useState("");
 
-  // Notifications hook
-  const { checkLongTimer, resetLongTimerNotification, checkDailyReminder } = useNotifications();
+  // Timer from global context
+  const {
+    runningTimer,
+    elapsedTime,
+    timerLoading,
+    pausingTimer,
+    resumingTimer,
+    stoppingTimer,
+    setShowTimerModal,
+    handlePauseTimer,
+    handleResumeTimer,
+    handleStopTimer,
+  } = useTimer();
 
+  // Daily reminder notification
+  const { checkDailyReminder } = useNotifications();
+
+  // Fetch dashboard stats
   useEffect(() => {
-    // Fetch dashboard stats
     const fetchStats = async () => {
       try {
         setStatsLoading(true);
@@ -107,407 +87,135 @@ export default function DashboardPage() {
     fetchStats();
   }, []);
 
-  useEffect(() => {
-    // Fetch running timer
-    const fetchRunningTimer = async () => {
-      try {
-        setTimerLoading(true);
-        const response = await fetch("/api/timer/running");
-        const data = await response.json();
-
-        if (data.success && data.running) {
-          setRunningTimer(data.running);
-          setLastApiUpdate(new Date());
-        } else {
-          setRunningTimer(null);
-        }
-      } catch (error) {
-        console.error("Error fetching running timer:", error);
-      } finally {
-        setTimerLoading(false);
-      }
-    };
-
-    fetchRunningTimer();
-
-    // Poll for timer updates every 30 seconds (client-side ticking handles smooth display)
-    const interval = setInterval(fetchRunningTimer, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Check for long timer notification
-  useEffect(() => {
-    if (runningTimer && !runningTimer.pausedAt) {
-      // Check if timer has exceeded threshold
-      checkLongTimer(runningTimer.elapsedMinutes);
-    } else {
-      // Reset notification flag when timer stops
-      resetLongTimerNotification();
-    }
-  }, [runningTimer, checkLongTimer, resetLongTimerNotification]);
-
   // Check for daily reminder every minute
   useEffect(() => {
     const checkDailyReminderInterval = setInterval(() => {
       if (stats) {
-        const todayHours = stats.today.hours;
-        checkDailyReminder(todayHours);
+        checkDailyReminder(stats.today.hours);
       }
-    }, 60000); // Check every minute
+    }, 60000);
 
-    // Also check on mount
     if (stats) {
-      const todayHours = stats.today.hours;
-      checkDailyReminder(todayHours);
+      checkDailyReminder(stats.today.hours);
     }
 
     return () => clearInterval(checkDailyReminderInterval);
   }, [stats, checkDailyReminder]);
 
-  useEffect(() => {
-    // Update elapsed time display with smooth real-time ticking
-    if (!runningTimer) {
-      setElapsedTime("0:00");
-      return;
-    }
-
-    const updateElapsed = () => {
-      // Base elapsed time from API (accounts for pauses)
-      const baseElapsedSeconds = runningTimer.elapsedMinutes * 60 + runningTimer.elapsedSeconds;
-
-      if (runningTimer.pausedAt) {
-        // Timer is paused - show static time
-        const minutes = runningTimer.elapsedMinutes;
-        const seconds = runningTimer.elapsedSeconds;
-        setElapsedTime(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-      } else {
-        // Timer is running - add time elapsed since last API update for smooth ticking
-        const now = new Date();
-        const timeSinceLastUpdate = Math.floor((now.getTime() - lastApiUpdate.getTime()) / 1000);
-        const totalSeconds = baseElapsedSeconds + timeSinceLastUpdate;
-        const minutes = Math.floor(totalSeconds / 60);
-        const seconds = totalSeconds % 60;
-        setElapsedTime(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-      }
-    };
-
-    updateElapsed();
-    const interval = setInterval(updateElapsed, 1000);
-    return () => clearInterval(interval);
-  }, [runningTimer, lastApiUpdate]);
-
-  useEffect(() => {
-    // Update browser tab title with timer
-    const originalTitle = document.title;
-
-    if (runningTimer) {
-      const updateTitle = () => {
-        let minutes: number;
-        let seconds: number;
-
-        if (runningTimer.pausedAt) {
-          // Timer is paused - show static time
-          minutes = runningTimer.elapsedMinutes;
-          seconds = runningTimer.elapsedSeconds;
-        } else {
-          // Timer is running - add time elapsed since last API update
-          const baseElapsedSeconds = runningTimer.elapsedMinutes * 60 + runningTimer.elapsedSeconds;
-          const now = new Date();
-          const timeSinceLastUpdate = Math.floor((now.getTime() - lastApiUpdate.getTime()) / 1000);
-          const totalSeconds = baseElapsedSeconds + timeSinceLastUpdate;
-          minutes = Math.floor(totalSeconds / 60);
-          seconds = totalSeconds % 60;
-        }
-
-        document.title = `${minutes}:${seconds.toString().padStart(2, '0')} - ${runningTimer.pausedAt ? 'מושהה - ' : ''}שעון`;
-      };
-
-      updateTitle();
-      const interval = setInterval(updateTitle, 1000);
-      return () => {
-        clearInterval(interval);
-        document.title = originalTitle;
-      };
-    } else {
-      // Restore original title when timer is not running
-      document.title = originalTitle;
-    }
-  }, [runningTimer, lastApiUpdate]);
-
-  useEffect(() => {
-    // Fetch projects for the timer modal
-    const fetchProjects = async () => {
-      try {
-        const response = await fetch("/api/projects");
-        const data = await response.json();
-
-        if (data.success) {
-          setProjects(data.projects || []);
-        }
-      } catch (error) {
-        console.error("Error fetching projects:", error);
-      }
-    };
-
-    fetchProjects();
-  }, []);
-
-  const handleStartTimer = async () => {
-    if (!selectedProject) {
-      showErrorToast("נא לבחור פרויקט");
-      return;
-    }
-
-    setStartingTimer(true);
-    try {
-      const response = await fetch("/api/timer/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          projectId: selectedProject,
-          description: timerDescription || null,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setShowTimerModal(false);
-        setSelectedProject("");
-        setTimerDescription("");
-        showSuccessToast("הטיימר הופעל בהצלחה");
-        // Refresh running timer
-        const timerResponse = await fetch("/api/timer/running");
-        const timerData = await timerResponse.json();
-        if (timerData.success && timerData.running) {
-          setRunningTimer(timerData.running);
-        }
-      } else {
-        showErrorToast(data.message || "שגיאה בהתחלת הטיימר");
-      }
-    } catch (error) {
-      console.error("Error starting timer:", error);
-      showErrorToast("שגיאה בהתחלת הטיימר");
-    } finally {
-      setStartingTimer(false);
-    }
-  };
-
-  const handleStopTimer = () => {
-    if (!runningTimer) return;
-
-    // Calculate current elapsed time in hours and minutes
-    const totalMinutes = runningTimer.elapsedMinutes;
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-
-    // Initialize modal with current values
-    setStopTimerDescription(runningTimer.description || "");
-    setStopTimerHours(hours.toString());
-    setStopTimerMinutes(minutes.toString());
-    setShowStopTimerModal(true);
-  };
-
-  const confirmStopTimer = async () => {
-    if (!runningTimer) return;
-
-    setStoppingTimer(true);
-    try {
-      // Calculate custom duration in minutes
-      const hours = parseInt(stopTimerHours) || 0;
-      const minutes = parseInt(stopTimerMinutes) || 0;
-      const totalDuration = hours * 60 + minutes;
-
-      const response = await fetch("/api/timer/stop", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          entryId: runningTimer.id,
-          description: stopTimerDescription || null,
-          duration: totalDuration,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setRunningTimer(null);
-        setShowStopTimerModal(false);
-        showSuccessToast("הטיימר נעצר ונשמר בהצלחה");
-        // Refresh stats to show the new entry
-        const statsResponse = await fetch("/api/dashboard/stats");
-        const statsData = await statsResponse.json();
-        if (statsData.success) {
-          setStats(statsData.stats);
-          setRecentEntries(statsData.recentEntries || []);
-        }
-      } else {
-        showErrorToast(data.message || "שגיאה בעצירת הטיימר");
-      }
-    } catch (error) {
-      console.error("Error stopping timer:", error);
-      showErrorToast("שגיאה בעצירת הטיימר");
-    } finally {
-      setStoppingTimer(false);
-    }
-  };
-
-  const cancelStopTimer = () => {
-    setShowStopTimerModal(false);
-    setStopTimerDescription("");
-    setStopTimerHours("");
-    setStopTimerMinutes("");
-  };
-
-  const handlePauseTimer = async () => {
-    if (!runningTimer) return;
-
-    setPausingTimer(true);
-    try {
-      const response = await fetch("/api/timer/pause", {
-        method: "POST",
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        showSuccessToast("הטיימר הושהה בהצלחה");
-        // Refresh running timer to get updated paused state
-        const timerResponse = await fetch("/api/timer/running");
-        const timerData = await timerResponse.json();
-        if (timerData.success && timerData.running) {
-          setRunningTimer(timerData.running);
-        }
-      } else {
-        showErrorToast(data.message || "שגיאה בהשהיית הטיימר");
-      }
-    } catch (error) {
-      console.error("Error pausing timer:", error);
-      showErrorToast("שגיאה בהשהיית הטיימר");
-    } finally {
-      setPausingTimer(false);
-    }
-  };
-
-  const handleResumeTimer = async () => {
-    if (!runningTimer) return;
-
-    setResumingTimer(true);
-    try {
-      const response = await fetch("/api/timer/resume", {
-        method: "POST",
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        showSuccessToast("הטיימר חודש בהצלחה");
-        // Refresh running timer to get updated state
-        const timerResponse = await fetch("/api/timer/running");
-        const timerData = await timerResponse.json();
-        if (timerData.success && timerData.running) {
-          setRunningTimer(timerData.running);
-        }
-      } else {
-        showErrorToast(data.message || "שגיאה בחידוש הטיימר");
-      }
-    } catch (error) {
-      console.error("Error resuming timer:", error);
-      showErrorToast("שגיאה בחידוש הטיימר");
-    } finally {
-      setResumingTimer(false);
-    }
-  };
-
-  // Handle keyboard shortcut for timer toggle
-  const handleTimerShortcut = () => {
-    if (runningTimer) {
-      // If timer is running, toggle pause/resume
-      if (runningTimer.pausedAt) {
-        // Timer is paused, resume it
-        handleResumeTimer();
-      } else {
-        // Timer is running, pause it
-        handlePauseTimer();
-      }
-    } else {
-      // No timer running, show start modal
-      setShowTimerModal(true);
-    }
-  };
-
-  // Keyboard shortcut: 't' key toggles timer
-  useKeyboardShortcut({
-    key: "t",
-    callback: handleTimerShortcut,
-  });
+  const isFirstTimeUser = stats &&
+    stats.clientsCount === 0 &&
+    stats.projectsCount === 0 &&
+    stats.today.hours === 0 &&
+    stats.month.hours === 0;
 
   return (
     <AppLayout>
-      <div className="px-4 py-8 sm:px-6 lg:px-8">
+      <div className="px-4 py-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">
+          <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">
             ברוך הבא!
           </h2>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-muted-foreground">
             זהו הדשבורד שלך. כאן תוכל לנהל את שעות העבודה והפרויקטים שלך.
           </p>
         </div>
 
+        {/* First-time user checklist */}
+        {!statsLoading && !statsError && isFirstTimeUser && (
+          <div className="mt-5 rounded-[14px] bg-card border border-border/50 p-6 shadow-sm">
+            <h3 className="font-display text-lg font-semibold text-foreground mb-4">בוא נתחיל!</h3>
+            <div className="space-y-3">
+              <Link
+                href="/clients?create=true"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-light">
+                  <Users className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-foreground">צור לקוח ראשון</p>
+                  <p className="text-xs text-muted-foreground">הוסף את הלקוח הראשון שלך</p>
+                </div>
+                <span className="text-primary text-sm">←</span>
+              </Link>
+              <Link
+                href="/projects?create=true"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary-light">
+                  <FolderOpen className="h-4 w-4 text-secondary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-foreground">צור פרויקט ראשון</p>
+                  <p className="text-xs text-muted-foreground">הגדר פרויקט עם מודל תמחור</p>
+                </div>
+                <span className="text-primary text-sm">←</span>
+              </Link>
+              <Link
+                href="/entries"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-success/10">
+                  <Clock className="h-4 w-4 text-success" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-foreground">רשום זמן או הפעל טיימר</p>
+                  <p className="text-xs text-muted-foreground">התחל לעקוב אחר שעות העבודה שלך</p>
+                </div>
+                <span className="text-primary text-sm">←</span>
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Stats Cards */}
         {statsLoading ? (
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="rounded-lg bg-white p-6 shadow">
+              <div key={i} className="bg-card border border-border/50 rounded-[14px] p-4 shadow-sm">
                 <Skeleton className="h-4 w-1/2 mb-2" />
                 <Skeleton className="h-8 w-3/4" />
               </div>
             ))}
           </div>
         ) : statsError ? (
-          <div className="mt-8 rounded-lg bg-red-50 p-6 text-center">
-            <p className="text-red-700">שגיאה בטעינת הנתונים. נסה לרענן את הדף.</p>
+          <div className="mt-5 rounded-[14px] bg-destructive/10 p-6 text-center">
+            <p className="text-destructive">שגיאה בטעינת הנתונים. נסה לרענן את הדף.</p>
           </div>
-        ) : stats ? (
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {/* Today's Hours */}
-            <div className="rounded-lg bg-white p-6 shadow">
-              <p className="text-sm font-medium text-gray-600">שעות היום</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">{stats.today.formatted}</p>
+        ) : stats && !isFirstTimeUser ? (
+          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="bg-card border border-border/50 border-t-2 border-t-primary rounded-[14px] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all">
+              <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">שעות היום</p>
+              <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">{stats.today.formatted}</p>
             </div>
 
-            {/* Week's Hours */}
-            <div className="rounded-lg bg-white p-6 shadow">
-              <p className="text-sm font-medium text-gray-600">שעות השבוע</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">{stats.week.formatted}</p>
+            <div className="bg-card border border-border/50 border-t-2 border-t-primary rounded-[14px] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all">
+              <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">שעות השבוע</p>
+              <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">{stats.week.formatted}</p>
             </div>
 
-            {/* Month's Hours */}
-            <div className="rounded-lg bg-white p-6 shadow">
-              <p className="text-sm font-medium text-gray-600">שעות החודש</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">{stats.month.formatted}</p>
+            <div className="bg-card border border-border/50 border-t-2 border-t-primary rounded-[14px] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all">
+              <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">שעות החודש</p>
+              <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">{stats.month.formatted}</p>
             </div>
 
-            {/* Total Earnings This Month */}
-            <div className="rounded-lg bg-white p-6 shadow">
-              <p className="text-sm font-medium text-gray-600">הכנסות החודש</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
+            <div className="bg-card border border-border/50 border-t-2 border-t-accent rounded-[14px] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all">
+              <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">הכנסות החודש</p>
+              <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">
                 {stats.earnings.formatted}
               </p>
             </div>
 
-            {/* Active Projects Count */}
-            <div className="rounded-lg bg-white p-6 shadow">
-              <p className="text-sm font-medium text-gray-600">פרויקטים פעילים</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
+            <div className="bg-card border border-border/50 border-t-2 border-t-secondary rounded-[14px] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all">
+              <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">פרויקטים פעילים</p>
+              <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">
                 {stats.projectsCount}
               </p>
             </div>
 
-            {/* Clients Count */}
-            <div className="rounded-lg bg-white p-6 shadow">
-              <p className="text-sm font-medium text-gray-600">לקוחות</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
+            <div className="bg-card border border-border/50 border-t-2 border-t-secondary rounded-[14px] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all">
+              <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">לקוחות</p>
+              <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">
                 {stats.clientsCount}
               </p>
             </div>
@@ -515,19 +223,19 @@ export default function DashboardPage() {
         ) : null}
 
         {/* Quick Actions */}
-        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {/* Quick Timer Widget */}
-          <div className="rounded-lg bg-white p-6 shadow">
+          <div className="bg-card border border-border/50 rounded-[14px] p-4 shadow-sm">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium text-gray-900">טיימר מהיר</h3>
-              <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-gray-600 bg-gray-100 border border-gray-300 rounded">T</kbd>
+              <h3 className="font-display text-lg font-semibold text-foreground">טיימר מהיר</h3>
+              <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">T</kbd>
             </div>
             {timerLoading ? (
-              <p className="mt-4 text-sm text-gray-600">טוען...</p>
+              <p className="mt-4 text-sm text-muted-foreground">טוען...</p>
             ) : runningTimer ? (
               <div className="mt-4">
-                <p className="text-3xl font-bold text-gray-900">{elapsedTime}</p>
-                <p className="mt-2 text-sm text-gray-600">
+                <p className="font-mono text-2xl font-bold tabular-nums text-foreground">{elapsedTime}</p>
+                <p className="mt-2 text-sm text-muted-foreground">
                   {runningTimer.pausedAt ? "טיימר מושהה" : "טיימר פעיל"}
                 </p>
                 <div className="mt-4 flex gap-2">
@@ -535,7 +243,7 @@ export default function DashboardPage() {
                     <button
                       onClick={handleResumeTimer}
                       disabled={resumingTimer}
-                      className="flex-1 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                      className="flex-1 rounded-md bg-success px-4 py-2 text-sm font-medium text-white hover:bg-success/90 disabled:opacity-50"
                     >
                       {resumingTimer ? "מחדש..." : "חדש טיימר"}
                     </button>
@@ -543,7 +251,7 @@ export default function DashboardPage() {
                     <button
                       onClick={handlePauseTimer}
                       disabled={pausingTimer}
-                      className="flex-1 rounded-md bg-yellow-600 px-4 py-2 text-sm font-medium text-white hover:bg-yellow-700 disabled:opacity-50"
+                      className="flex-1 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 disabled:opacity-50"
                     >
                       {pausingTimer ? "משהה..." : "השהה טיימר"}
                     </button>
@@ -551,7 +259,7 @@ export default function DashboardPage() {
                   <button
                     onClick={handleStopTimer}
                     disabled={stoppingTimer}
-                    className="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                    className="flex-1 rounded-md bg-destructive px-4 py-2 text-sm font-medium text-white hover:bg-destructive/90 disabled:opacity-50"
                   >
                     {stoppingTimer ? "עוצר..." : "עצור טיימר"}
                   </button>
@@ -561,7 +269,7 @@ export default function DashboardPage() {
               <div className="mt-4">
                 <button
                   onClick={() => setShowTimerModal(true)}
-                  className="w-full rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700"
+                  className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
                 >
                   התחל טיימר חדש
                 </button>
@@ -571,56 +279,58 @@ export default function DashboardPage() {
 
           <Link
             href="/entries"
-            className="rounded-lg bg-white p-6 shadow hover:shadow-md transition-shadow"
+            className="bg-card border border-border/50 rounded-[14px] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all"
           >
-            <h3 className="text-lg font-medium text-gray-900">רשומות זמן</h3>
-            <p className="mt-2 text-sm text-gray-600">
+            <h3 className="font-display text-lg font-semibold text-foreground">רשומות זמן</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
               צפה ונהל את רשומות הזמן שלך
             </p>
           </Link>
 
           <Link
             href="/clients"
-            className="rounded-lg bg-white p-6 shadow hover:shadow-md transition-shadow"
+            className="bg-card border border-border/50 rounded-[14px] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all"
           >
-            <h3 className="text-lg font-medium text-gray-900">לקוחות</h3>
-            <p className="mt-2 text-sm text-gray-600">
+            <h3 className="font-display text-lg font-semibold text-foreground">לקוחות</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
               נהל את הלקוחות שלך
             </p>
           </Link>
 
           <Link
             href="/reports"
-            className="rounded-lg bg-white p-6 shadow hover:shadow-md transition-shadow"
+            className="bg-card border border-border/50 rounded-[14px] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all"
           >
-            <h3 className="text-lg font-medium text-gray-900">דוחות</h3>
-            <p className="mt-2 text-sm text-gray-600">
+            <h3 className="font-display text-lg font-semibold text-foreground">דוחות</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
               צור דוחות PDF ו-Excel
             </p>
           </Link>
         </div>
 
         {/* Charts Grid */}
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <EarningsChart />
-          <ProjectHoursChart />
-        </div>
+        {!isFirstTimeUser && (
+          <div className="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <EarningsChart />
+            <ProjectHoursChart />
+          </div>
+        )}
 
         {/* Recent Entries */}
         {recentEntries.length > 0 && (
-          <div className="mt-8">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">רשומות אחרונות</h3>
-            <div className="rounded-lg bg-white shadow overflow-hidden">
-              <ul className="divide-y divide-gray-200">
+          <div className="mt-5">
+            <h3 className="font-display text-xl font-semibold text-foreground mb-4">רשומות אחרונות</h3>
+            <div className="bg-card border border-border/50 rounded-[14px] shadow-sm overflow-hidden">
+              <ul className="divide-y divide-border">
                 {recentEntries.map((entry) => (
-                  <li key={entry.id} className="px-6 py-4 hover:bg-gray-50">
+                  <li key={entry.id} className="px-6 py-4 hover:bg-muted transition-colors">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{entry.description}</p>
-                        <p className="text-sm text-gray-500">{entry.date}</p>
+                        <p className="text-sm font-medium text-foreground">{entry.description}</p>
+                        <p className="text-sm text-muted-foreground">{entry.date}</p>
                       </div>
                       <div className="text-end">
-                        <p className="text-sm font-medium text-gray-900">{entry.formattedDuration}</p>
+                        <p className="font-mono text-sm font-medium tabular-nums text-foreground">{entry.formattedDuration}</p>
                       </div>
                     </div>
                   </li>
@@ -630,158 +340,6 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
-
-      {/* Timer Start Modal */}
-      {showTimerModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">התחל טיימר חדש</h3>
-
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="project" className="block text-sm font-medium text-gray-700 mb-1">
-                  פרויקט *
-                </label>
-                <select
-                  id="project"
-                  value={selectedProject}
-                  onChange={(e) => setSelectedProject(e.target.value)}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-                  disabled={startingTimer}
-                >
-                  <option value="">בחר פרויקט</option>
-                  {projects.map((project) => (
-                    <option key={project.id} value={project.id}>
-                      {project.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                  תיאור
-                </label>
-                <input
-                  type="text"
-                  id="description"
-                  value={timerDescription}
-                  onChange={(e) => setTimerDescription(e.target.value)}
-                  placeholder="מה אתה עובד עליו?"
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-                  disabled={startingTimer}
-                />
-              </div>
-
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => {
-                    setShowTimerModal(false);
-                    setSelectedProject("");
-                    setTimerDescription("");
-                  }}
-                  disabled={startingTimer}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 disabled:opacity-50"
-                >
-                  ביטול
-                </button>
-                <button
-                  onClick={handleStartTimer}
-                  disabled={startingTimer || !selectedProject}
-                  className="px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 disabled:opacity-50"
-                >
-                  {startingTimer ? "מתחיל..." : "התחל טיימר"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Timer Stop Modal */}
-      {showStopTimerModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">עצור טיימר ושמור רשומה</h3>
-
-            <div className="space-y-4">
-              {/* Current elapsed time */}
-              <div className="bg-orange-50 rounded-lg p-3 mb-4">
-                <p className="text-sm text-gray-600 mb-1">זמן שעבר:</p>
-                <p className="text-2xl font-bold text-orange-600">{elapsedTime}</p>
-              </div>
-
-              {/* Description */}
-              <div>
-                <label htmlFor="stop-description" className="block text-sm font-medium text-gray-700 mb-1">
-                  תיאור
-                </label>
-                <input
-                  type="text"
-                  id="stop-description"
-                  value={stopTimerDescription}
-                  onChange={(e) => setStopTimerDescription(e.target.value)}
-                  placeholder="מה עשית?"
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-                  disabled={stoppingTimer}
-                />
-              </div>
-
-              {/* Duration adjustment */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  התאם את משך הזמן (אופציונלי)
-                </label>
-                <div className="flex gap-2 items-center">
-                  <div className="flex-1">
-                    <input
-                      type="number"
-                      min="0"
-                      value={stopTimerHours}
-                      onChange={(e) => setStopTimerHours(e.target.value)}
-                      placeholder="0"
-                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-                      disabled={stoppingTimer}
-                    />
-                    <p className="text-xs text-gray-500 mt-1">שעות</p>
-                  </div>
-                  <span className="text-gray-500 text-lg">:</span>
-                  <div className="flex-1">
-                    <input
-                      type="number"
-                      min="0"
-                      max="59"
-                      value={stopTimerMinutes}
-                      onChange={(e) => setStopTimerMinutes(e.target.value)}
-                      placeholder="00"
-                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-                      disabled={stoppingTimer}
-                    />
-                    <p className="text-xs text-gray-500 mt-1">דקות</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={cancelStopTimer}
-                  disabled={stoppingTimer}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 disabled:opacity-50"
-                >
-                  ביטול
-                </button>
-                <button
-                  onClick={confirmStopTimer}
-                  disabled={stoppingTimer}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50"
-                >
-                  {stoppingTimer ? "שומר..." : "עצור ושמור"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </AppLayout>
   );
 }

@@ -1,14 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { AppLayout } from "@/components/app-layout";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
-
-interface User {
-  id: string;
-  email: string;
-}
 
 interface UserProfile {
   businessName: string | null;
@@ -140,9 +134,6 @@ const PDF_TEMPLATES: { value: PdfTemplate; label: string; description: string }[
 ];
 
 export default function ReportsPage() {
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(true);
@@ -171,33 +162,7 @@ export default function ReportsPage() {
   const [currencyRates, setCurrencyRates] = useState<Record<string, Record<string, number>>>({});
 
   useEffect(() => {
-    // Fetch current session
-    const fetchUser = async () => {
-      try {
-        const response = await fetch("/api/auth/session");
-        const data = await response.json();
-
-        if (data.success && data.user) {
-          setUser(data.user);
-        } else {
-          // No session, redirect to login
-          router.push("/login");
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-        router.push("/login");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, [router]);
-
-  useEffect(() => {
-    // Fetch user profile when user is loaded
     const fetchUserProfile = async () => {
-      if (!user) return;
 
       try {
         const response = await fetch("/api/profile");
@@ -222,12 +187,10 @@ export default function ReportsPage() {
     };
 
     fetchUserProfile();
-  }, [user]);
+  }, []);
 
   useEffect(() => {
-    // Fetch clients when user is loaded
     const fetchClients = async () => {
-      if (!user) return;
 
       try {
         setClientsLoading(true);
@@ -245,12 +208,10 @@ export default function ReportsPage() {
     };
 
     fetchClients();
-  }, [user]);
+  }, []);
 
   useEffect(() => {
-    // Fetch projects when user is loaded
     const fetchProjects = async () => {
-      if (!user) return;
 
       try {
         setProjectsLoading(true);
@@ -268,12 +229,10 @@ export default function ReportsPage() {
     };
 
     fetchProjects();
-  }, [user]);
+  }, []);
 
   useEffect(() => {
-    // Fetch presets when user is loaded
     const fetchPresets = async () => {
-      if (!user) return;
 
       try {
         setPresetsLoading(true);
@@ -291,12 +250,10 @@ export default function ReportsPage() {
     };
 
     fetchPresets();
-  }, [user]);
+  }, []);
 
   useEffect(() => {
-    // Fetch currency rates when user is loaded
     const fetchCurrencyRates = async () => {
-      if (!user) return;
 
       try {
         const response = await fetch("/api/currency-rates");
@@ -319,12 +276,10 @@ export default function ReportsPage() {
     };
 
     fetchCurrencyRates();
-  }, [user]);
+  }, []);
 
   // Check for URL parameters on mount (for shared links)
   useEffect(() => {
-    if (!user) return;
-
     const params = new URLSearchParams(window.location.search);
     const clientId = params.get("clientId");
     const projectId = params.get("projectId");
@@ -347,11 +302,9 @@ export default function ReportsPage() {
         generateReport();
       }, 100);
     }
-  }, [user]);
+  }, []);
 
   const generateReport = async () => {
-    if (!user) return;
-
     setReportLoading(true);
     setError("");
 
@@ -380,7 +333,7 @@ export default function ReportsPage() {
   };
 
   const handleSavePreset = async () => {
-    if (!user || !presetName.trim()) {
+    if (!presetName.trim()) {
       showErrorToast("נא להזין שם לפריסט");
       return;
     }
@@ -710,49 +663,24 @@ export default function ReportsPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">טוען...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">דוחות</h1>
-            <Link
-              href="/"
-              className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              חזרה לדשבורד
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8">
+    <AppLayout>
+      <div className="px-4 py-4 sm:px-6 lg:px-8">
+        <h1 className="font-display text-2xl font-bold tracking-tight text-foreground mb-6">דוחות</h1>
         {/* Filters Section */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">פילטרים</h2>
+            <h2 className="font-display text-lg font-semibold">פילטרים</h2>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="min-h-[44px] min-w-[44px] px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
+              className="min-h-[44px] min-w-[44px] px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-[14px] transition-colors"
             >
               {showFilters ? "הסתר" : "הצג"}
             </button>
           </div>
 
           {showFilters && (
-            <div className="bg-card border rounded-lg p-6 space-y-4">
+            <div className="bg-card border border-border/50 rounded-[14px] p-6 space-y-4 shadow-sm">
               {/* Date Range */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -763,7 +691,7 @@ export default function ReportsPage() {
                     onChange={(e) =>
                       setFilters({ ...filters, startDate: e.target.value })
                     }
-                    className="w-full px-3 py-2 border rounded-md bg-background"
+                    className="w-full px-3 py-2 border rounded-[14px] bg-background"
                   />
                 </div>
                 <div>
@@ -774,7 +702,7 @@ export default function ReportsPage() {
                     onChange={(e) =>
                       setFilters({ ...filters, endDate: e.target.value })
                     }
-                    className="w-full px-3 py-2 border rounded-md bg-background"
+                    className="w-full px-3 py-2 border rounded-[14px] bg-background"
                   />
                 </div>
               </div>
@@ -785,7 +713,7 @@ export default function ReportsPage() {
                 <select
                   value={filters.clientId}
                   onChange={(e) => handleClientChange(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md bg-background"
+                  className="w-full px-3 py-2 border rounded-[14px] bg-background"
                   disabled={clientsLoading}
                 >
                   <option value="">כל הלקוחות</option>
@@ -805,7 +733,7 @@ export default function ReportsPage() {
                   onChange={(e) =>
                     setFilters({ ...filters, projectId: e.target.value })
                   }
-                  className="w-full px-3 py-2 border rounded-md bg-background"
+                  className="w-full px-3 py-2 border rounded-[14px] bg-background"
                   disabled={projectsLoading || !filters.clientId}
                 >
                   <option value="">כל הפרויקטים</option>
@@ -823,7 +751,7 @@ export default function ReportsPage() {
                 <select
                   value={displayCurrency}
                   onChange={(e) => setDisplayCurrency(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md bg-background"
+                  className="w-full px-3 py-2 border rounded-[14px] bg-background"
                 >
                   <option value="original">מטבע מקורי (מרובה)</option>
                   <option value="ILS">₪ - שקל ישראלי (ILS)</option>
@@ -844,14 +772,14 @@ export default function ReportsPage() {
                 <button
                   onClick={() => setShowLoadPresetDialog(true)}
                   disabled={presetsLoading || presets.length === 0}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-secondary text-white rounded-[14px] hover:bg-secondary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title={presets.length === 0 ? "אין פריסטים שמורים" : "טען פריסט"}
                 >
                   📂 טען פריסט
                 </button>
                 <button
                   onClick={() => setShowSavePresetDialog(true)}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                  className="px-4 py-2 bg-accent text-white rounded-[14px] hover:bg-accent/90 transition-colors"
                   title="שמור פריסט"
                 >
                   💾 שמור פריסט
@@ -859,7 +787,7 @@ export default function ReportsPage() {
                 <button
                   onClick={generateReport}
                   disabled={reportLoading}
-                  className="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-2 bg-primary text-primary-foreground rounded-[14px] hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {reportLoading ? "יוצר דוח..." : "צור דוח"}
                 </button>
@@ -878,7 +806,7 @@ export default function ReportsPage() {
                       endDate: new Date().toISOString().split("T")[0],
                     })
                   }
-                  className="px-6 py-2 border border-border rounded-md hover:bg-accent transition-colors"
+                  className="px-6 py-2 border border-border rounded-[14px] hover:bg-accent transition-colors"
                 >
                   נקה פילטרים
                 </button>
@@ -889,7 +817,7 @@ export default function ReportsPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-destructive/10 border border-destructive rounded-md">
+          <div className="mb-6 p-4 bg-destructive/10 border border-destructive rounded-[14px]">
             <p className="text-destructive">{error}</p>
           </div>
         )}
@@ -901,7 +829,7 @@ export default function ReportsPage() {
             <div className="flex justify-end gap-3 no-print">
               <button
                 onClick={handleShareReport}
-                className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-md"
+                className="flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-[14px] hover:bg-accent/90 transition-colors shadow-md"
                 title="העתק קישור לדוח"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -911,7 +839,7 @@ export default function ReportsPage() {
               </button>
               <button
                 onClick={handleExportExcel}
-                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-md"
+                className="flex items-center gap-2 px-6 py-3 bg-success text-white rounded-[14px] hover:bg-success/90 transition-colors shadow-md"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -920,7 +848,7 @@ export default function ReportsPage() {
               </button>
               <button
                 onClick={handleExportPdf}
-                className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors shadow-md"
+                className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-[14px] hover:bg-primary/90 transition-colors shadow-md"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -1124,23 +1052,23 @@ export default function ReportsPage() {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-card border rounded-lg p-6">
+              <div className="bg-card border border-border/50 rounded-[14px] p-6 border-t-2 border-t-accent shadow-sm">
                 <h3 className="text-sm font-medium text-muted-foreground mb-2">
                   סה״כ שעות
                 </h3>
-                <p className="text-3xl font-bold">
+                <p className="font-mono text-3xl font-bold tabular-nums">
                   {reportData.summary.totalHours.toFixed(1)} שע׳
                 </p>
               </div>
-              <div className="bg-card border rounded-lg p-6">
+              <div className="bg-card border border-border/50 rounded-[14px] p-6 border-t-2 border-t-secondary shadow-sm">
                 <h3 className="text-sm font-medium text-muted-foreground mb-2">
                   סה״כ רשומות
                 </h3>
-                <p className="text-3xl font-bold">
+                <p className="font-mono text-3xl font-bold tabular-nums">
                   {reportData.summary.totalEntries}
                 </p>
               </div>
-              <div className="bg-card border rounded-lg p-6">
+              <div className="bg-card border border-border/50 rounded-[14px] p-6 border-t-2 border-t-primary shadow-sm">
                 <h3 className="text-sm font-medium text-muted-foreground mb-2">
                   סה״כ סכום {displayCurrency !== "original" && `(${displayCurrency})`}
                 </h3>
@@ -1151,7 +1079,7 @@ export default function ReportsPage() {
                         ([currency, amount]) => (
                           <p
                             key={currency}
-                            className="text-2xl font-bold"
+                            className="font-mono text-2xl font-bold tabular-nums"
                           >
                             {formatCurrency(amount, currency)}
                           </p>
@@ -1159,7 +1087,7 @@ export default function ReportsPage() {
                       )}
                     </div>
                   ) : (
-                    <p className="text-3xl font-bold">
+                    <p className="font-mono text-3xl font-bold tabular-nums">
                       {formatCurrency(
                         convertAmounts(reportData.summary.totalAmounts, displayCurrency),
                         displayCurrency
@@ -1170,7 +1098,7 @@ export default function ReportsPage() {
                   <p className="text-lg text-muted-foreground">לא זמין</p>
                 )}
               </div>
-              <div className="bg-card border rounded-lg p-6">
+              <div className="bg-card border border-border/50 rounded-[14px] p-6 border-t-2 border-t-success shadow-sm">
                 <h3 className="text-sm font-medium text-muted-foreground mb-2">
                   תקופה
                 </h3>
@@ -1182,13 +1110,13 @@ export default function ReportsPage() {
 
             {/* By Client Summary */}
             {reportData.byClient.length > 0 && (
-              <div className="bg-card border rounded-lg p-6">
-                <h3 className="text-lg font-semibold mb-4">סיכום לפי לקוח</h3>
+              <div className="bg-card border border-border/50 rounded-[14px] p-6 shadow-sm">
+                <h3 className="font-display text-lg font-semibold mb-4">סיכום לפי לקוח</h3>
                 <div className="space-y-3">
                   {reportData.byClient.map((client) => (
                     <div
                       key={client.clientId}
-                      className="flex items-center justify-between p-3 bg-accent rounded-md"
+                      className="flex items-center justify-between p-3 bg-accent rounded-[14px] border border-border/30"
                     >
                       <div className="flex-1">
                         <p className="font-medium">{client.clientName}</p>
@@ -1223,13 +1151,13 @@ export default function ReportsPage() {
 
             {/* By Project Summary */}
             {reportData.byProject.length > 0 && (
-              <div className="bg-card border rounded-lg p-6">
-                <h3 className="text-lg font-semibold mb-4">סיכום לפי פרויקט</h3>
+              <div className="bg-card border border-border/50 rounded-[14px] p-6 shadow-sm">
+                <h3 className="font-display text-lg font-semibold mb-4">סיכום לפי פרויקט</h3>
                 <div className="space-y-3">
                   {reportData.byProject.map((project) => (
                     <div
                       key={project.projectId}
-                      className="flex items-center justify-between p-3 bg-accent rounded-md"
+                      className="flex items-center justify-between p-3 bg-accent rounded-[14px] border border-border/30"
                     >
                       <div className="flex-1">
                         <p className="font-medium">{project.projectName}</p>
@@ -1264,13 +1192,13 @@ export default function ReportsPage() {
 
             {/* By Date Summary (Daily Breakdown) */}
             {reportData.byDate && reportData.byDate.length > 0 && (
-              <div className="bg-card border rounded-lg p-6">
-                <h3 className="text-lg font-semibold mb-4">סיכום לפי תאריך (יומי)</h3>
+              <div className="bg-card border border-border/50 rounded-[14px] p-6 shadow-sm">
+                <h3 className="font-display text-lg font-semibold mb-4">סיכום לפי תאריך (יומי)</h3>
                 <div className="space-y-2">
                   {reportData.byDate.map((dateSummary) => (
                     <div
                       key={dateSummary.date}
-                      className="flex items-center justify-between p-3 bg-accent rounded-md"
+                      className="flex items-center justify-between p-3 bg-accent rounded-[14px] border border-border/30"
                     >
                       <div className="flex-1">
                         <p className="font-medium">{dateSummary.date}</p>
@@ -1305,13 +1233,13 @@ export default function ReportsPage() {
 
             {/* By Week Summary (Weekly Breakdown) */}
             {reportData.byWeek && reportData.byWeek.length > 0 && (
-              <div className="bg-card border rounded-lg p-6">
-                <h3 className="text-lg font-semibold mb-4">סיכום לפי שבוע</h3>
+              <div className="bg-card border border-border/50 rounded-[14px] p-6 shadow-sm">
+                <h3 className="font-display text-lg font-semibold mb-4">סיכום לפי שבוע</h3>
                 <div className="space-y-2">
                   {reportData.byWeek.map((weekSummary) => (
                     <div
                       key={weekSummary.weekStart}
-                      className="flex items-center justify-between p-3 bg-accent rounded-md"
+                      className="flex items-center justify-between p-3 bg-accent rounded-[14px] border border-border/30"
                     >
                       <div className="flex-1">
                         <p className="font-medium">
@@ -1348,9 +1276,9 @@ export default function ReportsPage() {
 
             {/* Detailed Entries Table */}
             {reportData.entries.length > 0 && (
-              <div className="bg-card border rounded-lg overflow-hidden">
-                <div className="p-6 border-b">
-                  <h3 className="text-lg font-semibold">רשומות מפורטות</h3>
+              <div className="bg-card border border-border/50 rounded-[14px] overflow-hidden shadow-sm">
+                <div className="p-6 border-b border-border">
+                  <h3 className="font-display text-lg font-semibold">רשומות מפורטות</h3>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -1375,7 +1303,7 @@ export default function ReportsPage() {
                     </thead>
                     <tbody className="divide-y divide-border">
                       {reportData.entries.map((entry) => (
-                        <tr key={entry.id} className="hover:bg-accent/50">
+                        <tr key={entry.id} className="hover:bg-accent transition-all">
                           <td className="px-6 py-4 text-sm">{entry.date}</td>
                           <td className="px-6 py-4 text-sm">
                             {entry.clientName}
@@ -1399,10 +1327,18 @@ export default function ReportsPage() {
 
             {/* No Data Message */}
             {reportData.entries.length === 0 && (
-              <div className="bg-card border rounded-lg p-12 text-center">
-                <p className="text-muted-foreground text-lg">
-                  לא נמצאו רשומות בטווח התאריכים הנבחר
+              <div className="bg-card border rounded-[14px] p-12 text-center">
+                <p className="text-muted-foreground text-lg mb-4">
+                  לא נמצאו רשומות לתקופה שנבחרה
                 </p>
+                <div className="flex gap-3 justify-center">
+                  <a
+                    href="/entries"
+                    className="rounded-lg bg-primary px-4 py-2 text-sm text-white hover:bg-primary/90"
+                  >
+                    רשום זמן עכשיו
+                  </a>
+                </div>
               </div>
             )}
           </div>
@@ -1410,21 +1346,21 @@ export default function ReportsPage() {
 
         {/* No Report Generated Yet */}
         {!reportData && !reportLoading && (
-          <div className="bg-card border rounded-lg p-12 text-center">
+          <div className="bg-card border rounded-[14px] p-12 text-center">
             <p className="text-muted-foreground text-lg mb-4">
               בחר פילטרים ולחץ על &quot;צור דוח&quot; להצגת הדוח
             </p>
           </div>
         )}
-      </main>
+      </div>
 
       {/* Template Selection Dialog */}
       {showExportDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+          <div className="bg-card rounded-[14px] shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div className="sticky top-0 bg-card border-b p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">בחר תבנית PDF</h2>
+                <h2 className="font-mono text-2xl font-bold tabular-nums">בחר תבנית PDF</h2>
                 <button
                   onClick={() => setShowExportDialog(false)}
                   className="text-muted-foreground hover:text-foreground transition-colors"
@@ -1445,7 +1381,7 @@ export default function ReportsPage() {
                   key={template.value}
                   onClick={() => confirmExportPdf(template.value)}
                   className={`
-                    border-2 rounded-lg p-6 text-start transition-all hover:shadow-lg
+                    border-2 rounded-[14px] p-6 text-start transition-all hover:shadow-lg
                     ${
                       selectedTemplate === template.value
                         ? "border-primary bg-primary/5"
@@ -1503,10 +1439,10 @@ export default function ReportsPage() {
       {/* Save Preset Dialog */}
       {showSavePresetDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-lg shadow-xl max-w-md w-full">
+          <div className="bg-card rounded-[14px] shadow-xl max-w-md w-full">
             <div className="border-b p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">שמור פריסט</h2>
+                <h2 className="font-mono text-2xl font-bold tabular-nums">שמור פריסט</h2>
                 <button
                   onClick={() => {
                     setShowSavePresetDialog(false);
@@ -1532,7 +1468,7 @@ export default function ReportsPage() {
                   value={presetName}
                   onChange={(e) => setPresetName(e.target.value)}
                   placeholder="לדוגמה: דוח חודשי - לקוח הייטק"
-                  className="w-full px-3 py-2 border rounded-md bg-background"
+                  className="w-full px-3 py-2 border rounded-[14px] bg-background"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && presetName.trim()) {
@@ -1542,7 +1478,7 @@ export default function ReportsPage() {
                 />
               </div>
 
-              <div className="bg-muted/50 rounded-md p-4 space-y-2 text-sm">
+              <div className="bg-muted/50 rounded-[14px] p-4 space-y-2 text-sm">
                 <p className="font-medium">הגדרות הפילטר:</p>
                 <div className="grid grid-cols-2 gap-2 text-muted-foreground">
                   <div>תאריך התחלה:</div>
@@ -1569,7 +1505,7 @@ export default function ReportsPage() {
               <button
                 onClick={handleSavePreset}
                 disabled={!presetName.trim()}
-                className="flex-1 px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-6 py-2 bg-primary text-primary-foreground rounded-[14px] hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 שמור
               </button>
@@ -1578,7 +1514,7 @@ export default function ReportsPage() {
                   setShowSavePresetDialog(false);
                   setPresetName("");
                 }}
-                className="px-6 py-2 border border-border rounded-md hover:bg-accent transition-colors"
+                className="px-6 py-2 border border-border rounded-[14px] hover:bg-accent transition-colors"
               >
                 ביטול
               </button>
@@ -1590,10 +1526,10 @@ export default function ReportsPage() {
       {/* Load Preset Dialog */}
       {showLoadPresetDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+          <div className="bg-card rounded-[14px] shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div className="sticky top-0 bg-card border-b p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">טען פריסט</h2>
+                <h2 className="font-mono text-2xl font-bold tabular-nums">טען פריסט</h2>
                 <button
                   onClick={() => setShowLoadPresetDialog(false)}
                   className="text-muted-foreground hover:text-foreground transition-colors"
@@ -1619,7 +1555,7 @@ export default function ReportsPage() {
                   {presets.map((preset) => (
                     <div
                       key={preset.id}
-                      className="border rounded-lg p-4 hover:border-primary/50 transition-colors"
+                      className="border rounded-[14px] p-4 hover:border-primary/50 transition-colors"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -1646,13 +1582,13 @@ export default function ReportsPage() {
                         <div className="flex gap-2 mr-4">
                           <button
                             onClick={() => handleLoadPreset(preset)}
-                            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm"
+                            className="px-4 py-2 bg-primary text-primary-foreground rounded-[14px] hover:bg-primary/90 transition-colors text-sm"
                           >
                             טען
                           </button>
                           <button
                             onClick={() => handleDeletePreset(preset.id)}
-                            className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 transition-colors text-sm"
+                            className="px-4 py-2 bg-destructive text-destructive-foreground rounded-[14px] hover:bg-destructive/90 transition-colors text-sm"
                           >
                             מחק
                           </button>
@@ -1667,7 +1603,7 @@ export default function ReportsPage() {
             <div className="sticky bottom-0 bg-card border-t p-6">
               <button
                 onClick={() => setShowLoadPresetDialog(false)}
-                className="w-full px-6 py-2 border border-border rounded-md hover:bg-accent transition-colors"
+                className="w-full px-6 py-2 border border-border rounded-[14px] hover:bg-accent transition-colors"
               >
                 סגור
               </button>
@@ -1675,6 +1611,6 @@ export default function ReportsPage() {
           </div>
         </div>
       )}
-    </div>
+    </AppLayout>
   );
 }

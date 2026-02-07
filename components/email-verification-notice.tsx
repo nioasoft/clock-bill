@@ -98,8 +98,8 @@ export function EmailVerificationNotice() {
               <div
                 className={`mt-3 flex items-center gap-2 text-sm ${
                   message.type === "success"
-                    ? "text-green-700"
-                    : "text-red-700"
+                    ? "text-success"
+                    : "text-destructive"
                 }`}
               >
                 {message.type === "success" ? (

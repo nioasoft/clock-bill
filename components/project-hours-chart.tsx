@@ -40,10 +40,10 @@ export function ProjectHoursChart() {
 
   if (loading) {
     return (
-      <div className="rounded-lg bg-white p-6 shadow">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">שעות לפי פרויקט - החודש</h3>
-        <div className="h-64 flex items-center justify-center">
-          <div className="animate-pulse text-gray-400">טוען נתונים...</div>
+      <div className="rounded-[14px] bg-card border border-border/50 p-6 shadow-sm">
+        <h3 className="font-display text-lg font-semibold text-foreground mb-4">שעות לפי פרויקט - החודש</h3>
+        <div className="h-48 flex items-center justify-center">
+          <div className="animate-pulse text-muted-foreground">טוען נתונים...</div>
         </div>
       </div>
     );
@@ -51,10 +51,10 @@ export function ProjectHoursChart() {
 
   if (error) {
     return (
-      <div className="rounded-lg bg-white p-6 shadow">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">שעות לפי פרויקט - החודש</h3>
-        <div className="h-64 flex items-center justify-center">
-          <p className="text-gray-500">{error}</p>
+      <div className="rounded-[14px] bg-card border border-border/50 p-6 shadow-sm">
+        <h3 className="font-display text-lg font-semibold text-foreground mb-4">שעות לפי פרויקט - החודש</h3>
+        <div className="h-48 flex items-center justify-center">
+          <p className="text-muted-foreground">{error}</p>
         </div>
       </div>
     );
@@ -62,10 +62,10 @@ export function ProjectHoursChart() {
 
   if (projectHours.length === 0) {
     return (
-      <div className="rounded-lg bg-white p-6 shadow">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">שעות לפי פרויקט - החודש</h3>
-        <div className="h-64 flex items-center justify-center">
-          <p className="text-gray-500">אין נתוני שעות זמינים</p>
+      <div className="rounded-[14px] bg-card border border-border/50 p-6 shadow-sm">
+        <h3 className="font-display text-lg font-semibold text-foreground mb-4">שעות לפי פרויקט - החודש</h3>
+        <div className="h-48 flex items-center justify-center">
+          <p className="text-muted-foreground">אין נתוני שעות זמינים</p>
         </div>
       </div>
     );
@@ -73,29 +73,29 @@ export function ProjectHoursChart() {
 
   // Calculate chart dimensions
   const maxHours = Math.max(...projectHours.map(p => p.totalHours));
-  const chartHeight = 200;
+  const chartHeight = 150;
   const barHeight = 40;
   const gap = 15;
   const chartWidth = 300; // Fixed width for horizontal bars
 
-  // Generate colors for different projects
+  // Generate colors for different projects - theme-based
   const getBarColor = (index: number) => {
     const colors = [
-      'bg-orange-500',
-      'bg-blue-500',
-      'bg-green-500',
-      'bg-purple-500',
-      'bg-pink-500',
-      'bg-indigo-500',
-      'bg-teal-500',
-      'bg-yellow-500'
+      'text-primary',
+      'text-secondary',
+      'text-accent',
+      'text-success',
+      'text-primary/70',
+      'text-secondary/70',
+      'text-accent/70',
+      'text-success/70'
     ];
     return colors[index % colors.length];
   };
 
   return (
-    <div className="rounded-lg bg-white p-6 shadow">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">שעות לפי פרויקט - החודש</h3>
+    <div className="rounded-[14px] bg-card border border-border/50 p-6 shadow-sm">
+      <h3 className="font-display text-lg font-semibold text-foreground mb-4">שעות לפי פרויקט - החודש</h3>
 
       <div className="overflow-x-auto">
         <svg
@@ -113,7 +113,7 @@ export function ProjectHoursChart() {
                 <text
                   x={0}
                   y={y + barHeight / 2 + 5}
-                  className="fill-gray-700 text-xs font-medium"
+                  className="fill-foreground text-xs font-medium"
                   textAnchor="start"
                 >
                   {project.projectName.length > 20
@@ -127,7 +127,7 @@ export function ProjectHoursChart() {
                   y={y}
                   width={chartWidth}
                   height={barHeight}
-                  fill="#f3f4f6"
+                  className="fill-muted"
                   rx={4}
                 />
 
@@ -146,7 +146,7 @@ export function ProjectHoursChart() {
                 <text
                   x={120 + barWidth + 10}
                   y={y + barHeight / 2 + 5}
-                  className="fill-gray-700 text-xs font-medium"
+                  className="fill-foreground text-xs font-medium"
                   textAnchor="start"
                 >
                   {project.formatted}
@@ -158,14 +158,14 @@ export function ProjectHoursChart() {
       </div>
 
       {/* Legend */}
-      <div className="mt-4 flex flex-wrap gap-4 text-xs text-gray-600">
+      <div className="mt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-orange-500 rounded"></div>
+          <div className="w-3 h-3 bg-primary rounded"></div>
           <span>פרויקט 1</span>
         </div>
         {projectHours.length > 1 && (
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-blue-500 rounded"></div>
+            <div className="w-3 h-3 bg-secondary rounded"></div>
             <span>פרויקט 2</span>
           </div>
         )}

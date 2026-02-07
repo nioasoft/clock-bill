@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { AppLayout } from "@/components/app-layout";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Users } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
@@ -12,11 +13,6 @@ import {
   validatePhone,
   validateNumber,
 } from "@/lib/validation";
-
-interface User {
-  id: string;
-  email: string;
-}
 
 interface Client {
   id: string;
@@ -34,9 +30,15 @@ interface Client {
 }
 
 export default function ClientsPage() {
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  return (
+    <Suspense>
+      <ClientsPageContent />
+    </Suspense>
+  );
+}
+
+function ClientsPageContent() {
+  const searchParams = useSearchParams();
   const [clients, setClients] = useState<Client[]>([]);
   const [clientsLoading, setClientsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -63,35 +65,15 @@ export default function ClientsPage() {
     defaultRate?: string;
   }>({});
 
+  // Auto-open create form via URL params
   useEffect(() => {
-    // Fetch current session
-    const fetchUser = async () => {
-      try {
-        const response = await fetch("/api/auth/session");
-        const data = await response.json();
-
-        if (data.success && data.user) {
-          setUser(data.user);
-        } else {
-          // No session, redirect to login
-          router.push("/login");
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-        router.push("/login");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, [router]);
+    if (searchParams.get("create") === "true") {
+      setShowForm(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
-    // Fetch clients when user is loaded
     const fetchClients = async () => {
-      if (!user) return;
-
       try {
         setClientsLoading(true);
         const response = await fetch("/api/clients");
@@ -108,7 +90,7 @@ export default function ClientsPage() {
     };
 
     fetchClients();
-  }, [user]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -293,56 +275,34 @@ export default function ClientsPage() {
     setClientToDelete(null);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
-        <div className="text-gray-600">טוען...</div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null; // Will redirect
-  }
-
   return (
-    <div className="min-h-screen bg-zinc-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">
-              ← חזור לדשבורד
-            </Link>
-            <h1 className="text-2xl font-bold text-gray-900">לקוחות</h1>
-          </div>
+    <AppLayout>
+      <div className="px-4 py-8 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-foreground">לקוחות</h1>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="rounded-lg bg-orange-600 px-4 py-2 text-white hover:bg-orange-700"
+            className="rounded-[14px] bg-primary px-4 py-2 text-white hover:bg-primary/90"
           >
             {showForm ? "ביטול" : "+ לקוח חדש"}
           </button>
         </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Add/Edit Client Form */}
         {showForm && (
-          <div className="mb-8 rounded-lg bg-white p-6 shadow">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          <div className="mb-8 rounded-[14px] bg-card p-6 shadow">
+            <h2 className="text-xl font-semibold text-foreground mb-4">
               {editingClient ? "ערוך לקוח" : "הוסף לקוח חדש"}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               {formError && (
-                <div className="rounded-md bg-red-50 p-4 text-sm text-red-800">
+                <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
                   {formError}
                 </div>
               )}
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="name" className="block text-sm font-medium text-foreground">
                     שם הלקוח *
                   </label>
                   <input
@@ -354,18 +314,18 @@ export default function ClientsPage() {
                       setFormData({ ...formData, name: e.target.value });
                       setFieldErrors({ ...fieldErrors, name: undefined });
                     }}
-                    className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-orange-500 disabled:opacity-50 ${
+                    className={`mt-1 block w-full rounded-md px-3 py-2 border border-border/50 shadow-sm focus:outline-none focus:ring-primary disabled:opacity-50 ${
                       fieldErrors.name
-                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                        : "border-gray-300 focus:border-orange-500"
+                        ? "border-destructive/30 focus:border-destructive focus:ring-destructive/20"
+                        : "border-border focus:border-primary"
                     }`}
                     disabled={submitting}
                   />
-                  {fieldErrors.name && <p className="mt-1 text-sm text-red-600">{fieldErrors.name}</p>}
+                  {fieldErrors.name && <p className="mt-1 text-sm text-destructive">{fieldErrors.name}</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="contactName" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="contactName" className="block text-sm font-medium text-foreground">
                     איש קשר
                   </label>
                   <input
@@ -373,13 +333,13 @@ export default function ClientsPage() {
                     id="contactName"
                     value={formData.contactName}
                     onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500 disabled:opacity-50"
+                    className="mt-1 block w-full rounded-md border border-border px-3 py-2 border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary disabled:opacity-50"
                     disabled={submitting}
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="email" className="block text-sm font-medium text-foreground">
                     אימייל
                   </label>
                   <input
@@ -390,18 +350,18 @@ export default function ClientsPage() {
                       setFormData({ ...formData, email: e.target.value });
                       setFieldErrors({ ...fieldErrors, email: undefined });
                     }}
-                    className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-orange-500 disabled:opacity-50 ${
+                    className={`mt-1 block w-full rounded-md px-3 py-2 border border-border/50 shadow-sm focus:outline-none focus:ring-primary disabled:opacity-50 ${
                       fieldErrors.email
-                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                        : "border-gray-300 focus:border-orange-500"
+                        ? "border-destructive/30 focus:border-destructive focus:ring-destructive/20"
+                        : "border-border focus:border-primary"
                     }`}
                     disabled={submitting}
                   />
-                  {fieldErrors.email && <p className="mt-1 text-sm text-red-600">{fieldErrors.email}</p>}
+                  {fieldErrors.email && <p className="mt-1 text-sm text-destructive">{fieldErrors.email}</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="phone" className="block text-sm font-medium text-foreground">
                     טלפון
                   </label>
                   <input
@@ -412,18 +372,18 @@ export default function ClientsPage() {
                       setFormData({ ...formData, phone: e.target.value });
                       setFieldErrors({ ...fieldErrors, phone: undefined });
                     }}
-                    className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-orange-500 disabled:opacity-50 ${
+                    className={`mt-1 block w-full rounded-md px-3 py-2 border border-border/50 shadow-sm focus:outline-none focus:ring-primary disabled:opacity-50 ${
                       fieldErrors.phone
-                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                        : "border-gray-300 focus:border-orange-500"
+                        ? "border-destructive/30 focus:border-destructive focus:ring-destructive/20"
+                        : "border-border focus:border-primary"
                     }`}
                     disabled={submitting}
                   />
-                  {fieldErrors.phone && <p className="mt-1 text-sm text-red-600">{fieldErrors.phone}</p>}
+                  {fieldErrors.phone && <p className="mt-1 text-sm text-destructive">{fieldErrors.phone}</p>}
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="address" className="block text-sm font-medium text-foreground">
                     כתובת
                   </label>
                   <input
@@ -431,14 +391,14 @@ export default function ClientsPage() {
                     id="address"
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    className="mt-1 block w-full rounded-md border border-border px-3 py-2 border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                     placeholder="רחוב, מספר, עיר"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="defaultRate" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="defaultRate" className="block text-sm font-medium text-foreground">
                     תעריף שעתי (₪)
                   </label>
                   <input
@@ -451,21 +411,21 @@ export default function ClientsPage() {
                       setFormData({ ...formData, defaultRate: e.target.value });
                       setFieldErrors({ ...fieldErrors, defaultRate: undefined });
                     }}
-                    className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-orange-500 disabled:opacity-50 ${
+                    className={`mt-1 block w-full rounded-md px-3 py-2 border border-border/50 shadow-sm focus:outline-none focus:ring-primary disabled:opacity-50 ${
                       fieldErrors.defaultRate
-                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                        : "border-gray-300 focus:border-orange-500"
+                        ? "border-destructive/30 focus:border-destructive focus:ring-destructive/20"
+                        : "border-border focus:border-primary"
                     }`}
                     disabled={submitting}
                   />
                   {fieldErrors.defaultRate && (
-                    <p className="mt-1 text-sm text-red-600">{fieldErrors.defaultRate}</p>
+                    <p className="mt-1 text-sm text-destructive">{fieldErrors.defaultRate}</p>
                   )}
                 </div>
               </div>
 
               <div>
-                <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="notes" className="block text-sm font-medium text-foreground">
                   הערות
                 </label>
                 <textarea
@@ -473,7 +433,7 @@ export default function ClientsPage() {
                   rows={3}
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                  className="mt-1 block w-full rounded-md border border-border px-3 py-2 border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                   disabled={submitting}
                 />
               </div>
@@ -482,7 +442,7 @@ export default function ClientsPage() {
                 <button
                   type="button"
                   onClick={handleCancelEdit}
-                  className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                  className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted"
                   disabled={submitting}
                 >
                   ביטול
@@ -490,7 +450,7 @@ export default function ClientsPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-lg bg-orange-600 px-4 py-2 text-white hover:bg-orange-700 disabled:opacity-50"
+                  className="rounded-[14px] bg-primary px-4 py-2 text-white hover:bg-primary/90 disabled:opacity-50"
                 >
                   {submitting ? "שומר..." : editingClient ? "עדכן" : "שמור"}
                 </button>
@@ -500,9 +460,9 @@ export default function ClientsPage() {
         )}
 
         {/* Clients List */}
-        <div className="rounded-lg bg-white shadow">
+        <div className="rounded-[14px] bg-card shadow">
           {clientsLoading ? (
-            <div className="p-8 text-center text-gray-600">טוען לקוחות...</div>
+            <div className="p-8 text-center text-muted-foreground">טוען לקוחות...</div>
           ) : clients.length === 0 ? (
             <EmptyState
               icon={Users}
@@ -513,86 +473,86 @@ export default function ClientsPage() {
             />
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-border">
+                <thead className="bg-muted">
                   <tr>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       שם
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       איש קשר
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       אימייל
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       טלפון
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       כתובת
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       תעריף שעתי
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       סך חויב
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       שעות
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       סטטוס
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       פעולות
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
+                <tbody className="divide-y divide-border bg-card">
                   {clients.map((client) => (
-                    <tr key={client.id} className="hover:bg-gray-50">
+                    <tr key={client.id} className="hover:bg-muted">
                       <td className="whitespace-nowrap px-6 py-4">
                         <Link
                           href={`/clients/${client.id}`}
-                          className="text-sm font-medium text-orange-600 hover:text-orange-900"
+                          className="text-sm font-medium text-primary hover:text-primary/90"
                         >
                           {client.name}
                         </Link>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm text-gray-900">{client.contactName || "-"}</div>
+                        <div className="text-sm text-foreground">{client.contactName || "-"}</div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm text-gray-900">{client.email || "-"}</div>
+                        <div className="text-sm text-foreground">{client.email || "-"}</div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm text-gray-900">{client.phone || "-"}</div>
+                        <div className="text-sm text-foreground">{client.phone || "-"}</div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900 max-w-xs truncate">{client.address || "-"}</div>
+                        <div className="text-sm text-foreground max-w-xs truncate">{client.address || "-"}</div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm text-gray-900">
+                        <div className="text-sm text-foreground">
                           {client.defaultRate ? `₪${client.defaultRate}/שעה` : "-"}
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-foreground">
                           {client.totalBilled > 0 ? `₪${client.totalBilled.toFixed(2)}` : "₪0"}
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm text-gray-900">
+                        <div className="text-sm text-foreground">
                           {client.totalHours > 0 ? `${client.totalHours.toFixed(1)} שעות` : "0 שעות"}
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         {client.isActive ? (
-                          <span className="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800">
+                          <span className="inline-flex rounded-full bg-success/10 px-2 text-xs font-semibold leading-5 text-success">
                             פעיל
                           </span>
                         ) : (
-                          <span className="inline-flex rounded-full bg-gray-100 px-2 text-xs font-semibold leading-5 text-gray-800">
+                          <span className="inline-flex rounded-full bg-muted px-2 text-xs font-semibold leading-5 text-foreground">
                             לא פעיל
                           </span>
                         )}
@@ -600,21 +560,21 @@ export default function ClientsPage() {
                       <td className="whitespace-nowrap px-6 py-4 text-sm">
                         <button
                           onClick={() => handleEdit(client)}
-                          className="text-orange-600 hover:text-orange-900 font-medium ms-2"
+                          className="text-primary hover:text-primary/90 font-medium ms-2"
                         >
                           ערוך
                         </button>
                         {client.isActive ? (
                           <button
                             onClick={() => handleDelete(client)}
-                            className="text-red-600 hover:text-red-900 font-medium ms-2"
+                            className="text-destructive hover:text-destructive/90 font-medium ms-2"
                           >
                             ארכב
                           </button>
                         ) : (
                           <button
                             onClick={() => handleRestore(client)}
-                            className="text-green-600 hover:text-green-900 font-medium ms-2"
+                            className="text-success hover:text-success/90 font-medium ms-2"
                           >
                             שחזר
                           </button>
@@ -627,28 +587,27 @@ export default function ClientsPage() {
             </div>
           )}
         </div>
-      </main>
-
+      </div>
       {/* Delete Confirmation Dialog */}
       {clientToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="rounded-lg bg-white p-6 shadow-xl max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">ארכב לקוח</h3>
-            <p className="text-gray-600 mb-6">
+          <div className="rounded-[14px] bg-card p-6 shadow-xl max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-foreground mb-2">ארכב לקוח</h3>
+            <p className="text-muted-foreground mb-6">
               האם לארכב את הלקוח "{clientToDelete.name}"? הלקוח יוסתר מהרשימה אך יישמר במערכת.
             </p>
             <div className="flex justify-end gap-2">
               <button
                 onClick={cancelDelete}
                 disabled={deleting}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted disabled:opacity-50"
               >
                 ביטול
               </button>
               <button
                 onClick={confirmDelete}
                 disabled={deleting}
-                className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:opacity-50"
+                className="rounded-[14px] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
               >
                 {deleting ? "מארכב..." : "ארכב"}
               </button>
@@ -656,6 +615,6 @@ export default function ClientsPage() {
           </div>
         </div>
       )}
-    </div>
+    </AppLayout>
   );
 }
