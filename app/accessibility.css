@@ -1,278 +1,11 @@
 /**
  * Accessibility Improvements
  * WCAG 2.1 AA Compliance
+ * Only genuine a11y rules — Tailwind handles all utility classes
  */
 
 /* ============================================================================
-   TAILWIND-LIKE UTILITY CLASSES
-   For components using Tailwind class names
-   ============================================================================ */
-
-/* Ring utilities for focus indicators */
-.ring-2 {
-  box-shadow: 0 0 0 2px rgba(194, 65, 12, 0.5);
-}
-
-.ring-orange-500 {
-  box-shadow: 0 0 0 2px #f97316;
-}
-
-.ring-offset-2 {
-  box-shadow: 0 0 0 2px var(--tw-ring-offset-color, white), 0 0 0 calc(2px + 2px) rgba(194, 65, 12, 0.5);
-}
-
-/* Background colors */
-.bg-orange-500 {
-  background-color: #f97316;
-}
-
-.bg-orange-600 {
-  background-color: #c2410c; /* Improved WCAG AA contrast (4.8:1) */
-}
-
-.bg-orange-700 {
-  background-color: #9a3412; /* Improved WCAG AA contrast (6.1:1) */
-}
-
-.bg-gray-50 {
-  background-color: #f9fafb;
-}
-
-.bg-gray-100 {
-  background-color: #f3f4f6;
-}
-
-.bg-gray-200 {
-  background-color: #e5e7eb;
-}
-
-.bg-gray-300 {
-  background-color: #d1d5db;
-}
-
-.bg-red-600 {
-  background-color: #dc2626;
-}
-
-.bg-red-700 {
-  background-color: #b91c1c;
-}
-
-/* Text colors */
-.text-orange-500 {
-  color: #f97316;
-}
-
-.text-gray-400 {
-  color: #9ca3af;
-}
-
-.text-red-600 {
-  color: #dc2626;
-}
-
-/* Border utilities */
-.border-gray-300 {
-  border-color: #d1d5db;
-}
-
-/* Focus-visible utilities */
-.focus-visible\:outline-none:focus-visible {
-  outline: none;
-}
-
-.focus-visible\:ring-2:focus-visible {
-  box-shadow: 0 0 0 2px #c2410c;
-}
-
-.focus-visible\:ring-orange-500:focus-visible {
-  box-shadow: 0 0 0 2px #f97316;
-}
-
-.focus-visible\:ring-offset-2:focus-visible {
-  box-shadow: 0 0 0 2px white, 0 0 0 4px #c2410c;
-}
-
-/* Hover utilities */
-.hover\:bg-orange-700:hover {
-  background-color: #9a3412;
-}
-
-.hover\:bg-gray-50:hover {
-  background-color: #f9fafb;
-}
-
-.hover\:bg-gray-100:hover {
-  background-color: #f3f4f6;
-}
-
-.hover\:bg-gray-200:hover {
-  background-color: #e5e7eb;
-}
-
-.hover\:bg-gray-300:hover {
-  background-color: #d1d5db;
-}
-
-.hover\:bg-red-700:hover {
-  background-color: #b91c1c;
-}
-
-.hover\:underline:hover {
-  text-decoration: underline;
-}
-
-/* Disabled utilities */
-.disabled\:pointer-events-none:disabled {
-  pointer-events: none;
-}
-
-.disabled\:opacity-50:disabled {
-  opacity: 0.5;
-}
-
-/* Underline offset */
-.underline-offset-4 {
-  text-underline-offset: 4px;
-}
-
-/* Spacing utilities */
-.px-3 {
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
-}
-
-.py-2 {
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-}
-
-.h-9 {
-  height: 2.25rem;
-}
-
-.h-10 {
-  height: 2.5rem;
-}
-
-.h-11 {
-  height: 2.75rem;
-}
-
-.w-10 {
-  width: 2.5rem;
-}
-
-.text-xs {
-  font-size: 0.75rem;
-}
-
-.text-sm {
-  font-size: 0.875rem;
-}
-
-.rounded-md {
-  border-radius: 0.375rem;
-}
-
-.shadow-sm {
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-}
-
-/* Placeholder utilities */
-.placeholder\:text-gray-400::placeholder {
-  color: #9ca3af;
-}
-
-/* Border utilities for input */
-.border {
-  border-width: 1px;
-  border-style: solid;
-}
-
-.block {
-  display: block;
-}
-
-.inline-flex {
-  display: inline-flex;
-}
-
-.items-center {
-  align-items: center;
-}
-
-.justify-center {
-  justify-content: center;
-}
-
-.transition-colors {
-  transition-property: color, background-color, border-color;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
-
-.mt-1 {
-  margin-top: 0.25rem;
-}
-
-/* ============================================================================
-   COLOR CONTRAST IMPROVEMENTS (Feature #191)
-   WCAG AA requires at least 4.5:1 for normal text, 3:1 for large text
-   ============================================================================ */
-
-/* Improve text contrast for better readability */
-.text-gray-600 {
-  color: #4b5563; /* 4.5:1 on white - meets AA */
-}
-
-.text-gray-700 {
-  color: #374151; /* 7.1:1 on white - exceeds AA */
-}
-
-/* Ensure orange text meets contrast requirements */
-.text-orange-600 {
-  color: #c2410c; /* Darker orange for better contrast (4.8:1) */
-}
-
-/* Improve button contrast */
-.btn-primary {
-  background-color: #c2410c; /* Darker orange (4.8:1) */
-  color: #ffffff;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background-color: #9a3412; /* Even darker for hover (6.1:1) */
-}
-
-.bg-orange-600 {
-  background-color: #c2410c; /* Darker orange */
-}
-
-.hover\:bg-orange-700:hover {
-  background-color: #9a3412; /* Darker hover */
-}
-
-.hover\:text-orange-500:hover {
-  color: #ea580c; /* Lighter for hover effect */
-}
-
-/* Link improvements */
-a.text-orange-600 {
-  color: #c2410c; /* Better contrast */
-}
-
-a.text-orange-600:hover {
-  color: #ea580c; /* Lighter on hover */
-}
-
-/* Border improvements for better visibility */
-.border-gray-300 {
-  border-color: #d1d5db; /* 1.9:1 - decorative, acceptable */
-}
-
-/* ============================================================================
-   FOCUS INDICATORS (Feature #192)
+   FOCUS INDICATORS
    Visible focus rings for keyboard navigation
    ============================================================================ */
 
@@ -299,7 +32,7 @@ textarea:focus,
 select:focus {
   outline: none;
   border-color: #c2410c;
-  box-shadow: 0 0 0 3px rgba(194, 65, 12, 0.25); /* Increased opacity */
+  box-shadow: 0 0 0 3px rgba(194, 65, 12, 0.25);
 }
 
 /* Button focus styles */
@@ -343,6 +76,10 @@ a:focus-visible {
   }
 }
 
+/* ============================================================================
+   SKIP NAVIGATION & SCREEN READER
+   ============================================================================ */
+
 /* Skip to main content link for keyboard users */
 .skip-to-main {
   position: absolute;
@@ -358,39 +95,43 @@ a:focus-visible {
 .skip-to-main:focus {
   left: 0;
   top: 0;
-}
-
-/* Ensure visible focus on skip link */
-.skip-to-main:focus {
   outline: 3px solid #9a3412;
   outline-offset: 2px;
 }
 
+/* Screen reader only class */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Not visually hidden but available to screen readers */
+.sr-only-focusable:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
 /* ============================================================================
-   ADDITIONAL ACCESSIBILITY IMPROVEMENTS
+   FORM ACCESSIBILITY
    ============================================================================ */
-
-/* Ensure text can be resized up to 200% without breaking layout */
-@media (max-width: 640px) {
-  html {
-    font-size: 100%; /* Allow user zoom */
-  }
-}
-
-/* Improve link visibility */
-a:not(.btn-primary):not([class*="text-"]) {
-  color: #c2410c;
-  text-decoration: underline;
-}
-
-a:not(.btn-primary):hover {
-  text-decoration-thickness: 2px;
-}
 
 /* Ensure form labels are associated with inputs */
 label {
   font-weight: 500;
-  color: #374151; /* High contrast */
+  color: #374151;
   margin-bottom: 0.25rem;
   display: block;
 }
@@ -419,30 +160,23 @@ select:disabled {
   cursor: not-allowed;
 }
 
-/* Screen reader only class */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
+/* Checkbox and radio button accessibility */
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible {
+  outline: 2px solid #c2410c;
+  outline-offset: 2px;
 }
 
-/* Not visually hidden but available to screen readers */
-.sr-only-focusable:focus {
-  position: static;
-  width: auto;
-  height: auto;
-  padding: inherit;
-  margin: inherit;
-  overflow: visible;
-  clip: auto;
-  white-space: normal;
+/* Ensure custom checkboxes have visible focus */
+.custom-checkbox:focus-visible,
+.custom-radio:focus-visible {
+  outline: 2px solid #c2410c;
+  outline-offset: 2px;
 }
+
+/* ============================================================================
+   TABLE ACCESSIBILITY
+   ============================================================================ */
 
 /* Ensure table headers are visible for screen readers */
 th {
@@ -458,6 +192,10 @@ td {
   padding: 0.75rem;
   border-bottom: 1px solid #e5e7eb;
 }
+
+/* ============================================================================
+   ARIA ROLE STYLES
+   ============================================================================ */
 
 /* Toast notification accessibility */
 [role="alert"] {
@@ -483,7 +221,6 @@ td {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
-/* Ensure modal has focus trap */
 [role="dialog"][aria-modal="true"] {
   z-index: 50;
 }
@@ -538,35 +275,52 @@ td {
   border-radius: 0.25rem;
 }
 
-/* Ensure form error messages are associated */
+/* Form error messages */
 [role="alert"].error-message {
   color: #dc2626;
   font-size: 0.875rem;
   margin-top: 0.25rem;
 }
 
-/* Ensure form hints are visible */
+/* Form hints */
 [role="note"] {
   font-size: 0.875rem;
   color: #6b7280;
   margin-top: 0.25rem;
 }
 
-/* Checkbox and radio button accessibility */
-input[type="checkbox"]:focus-visible,
-input[type="radio"]:focus-visible {
-  outline: 2px solid #c2410c;
-  outline-offset: 2px;
+/* Tooltip accessibility */
+[role="tooltip"] {
+  background-color: #1f2937;
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  max-width: 20rem;
+  z-index: 100;
 }
 
-/* Ensure custom checkboxes have visible focus */
-.custom-checkbox:focus-visible,
-.custom-radio:focus-visible {
-  outline: 2px solid #c2410c;
-  outline-offset: 2px;
+/* Carousel slide accessibility */
+[role="group"][aria-roledescription="slide"] {
+  outline: none;
 }
 
-/* Progress bar accessibility */
+[role="group"][aria-roledescription="slide"]:focus-visible {
+  outline: 2px solid #c2410c;
+  outline-offset: 4px;
+}
+
+/* Pagination link accessibility */
+.pagination-link:focus-visible {
+  outline: 2px solid #c2410c;
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+/* ============================================================================
+   PROGRESS BAR
+   ============================================================================ */
+
 progress {
   display: inline-block;
   vertical-align: baseline;
@@ -587,35 +341,10 @@ progress::-moz-progress-bar {
   border-radius: 9999px;
 }
 
-/* Ensure tooltips are accessible */
-[role="tooltip"] {
-  background-color: #1f2937;
-  color: white;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  max-width: 20rem;
-  z-index: 100;
-}
+/* ============================================================================
+   RTL FOCUS ADJUSTMENTS
+   ============================================================================ */
 
-/* Ensure carousel slides are accessible */
-[role="group"][aria-roledescription="slide"] {
-  outline: none;
-}
-
-[role="group"][aria-roledescription="slide"]:focus-visible {
-  outline: 2px solid #c2410c;
-  outline-offset: 4px;
-}
-
-/* Ensure pagination links are accessible */
-.pagination-link:focus-visible {
-  outline: 2px solid #c2410c;
-  outline-offset: 2px;
-  border-radius: 0.25rem;
-}
-
-/* RTL-specific focus adjustments */
 [dir="rtl"] :focus-visible {
   outline-offset: 2px;
 }
@@ -624,4 +353,25 @@ progress::-moz-progress-bar {
 [dir="rtl"] textarea:focus,
 [dir="rtl"] select:focus {
   box-shadow: 0 0 0 3px rgba(194, 65, 12, 0.25);
+}
+
+/* ============================================================================
+   ADDITIONAL ACCESSIBILITY
+   ============================================================================ */
+
+/* Ensure text can be resized up to 200% without breaking layout */
+@media (max-width: 640px) {
+  html {
+    font-size: 100%;
+  }
+}
+
+/* Improve link visibility */
+a:not(.btn-primary):not([class*="text-"]) {
+  color: #c2410c;
+  text-decoration: underline;
+}
+
+a:not(.btn-primary):hover {
+  text-decoration-thickness: 2px;
 }
