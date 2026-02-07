@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AppLayout } from "@/components/app-layout";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Clock, Timer } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
@@ -546,19 +548,16 @@ export default function EntriesPage() {
 
   return (
     <AppLayout>
-      <div className="mx-auto max-w-7xl">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-foreground">רישום זמן</h1>
-          <div className="flex items-center gap-3">
-            <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">N</kbd>
-            <button
-              onClick={() => setShowForm(!showForm)}
-              className="rounded-[14px] bg-primary px-4 py-2 text-white hover:bg-primary/90"
-            >
-              {showForm ? "ביטול" : "+ רשום זמן"}
-            </button>
-          </div>
-        </div>
+      <PageContainer>
+        <PageHeader title="רישום זמן">
+          <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">N</kbd>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="rounded-[14px] bg-primary px-4 py-2 text-white hover:bg-primary/90"
+          >
+            {showForm ? "ביטול" : "+ רשום זמן"}
+          </button>
+        </PageHeader>
 
         {/* Filters Section */}
         <div className="mb-6 rounded-[14px] bg-card p-4 shadow">
@@ -1114,7 +1113,7 @@ export default function EntriesPage() {
           </>
         )}
         </div>
-      </div>
+      </PageContainer>
 
       {/* Delete Confirmation Dialog */}
       {entryToDelete && (

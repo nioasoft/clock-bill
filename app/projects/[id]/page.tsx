@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { AppLayout } from "@/components/app-layout";
+import { PageContainer } from "@/components/page-container";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { validateRequired, validateNumber, validateDate, validateDateRange } from "@/lib/validation";
 
@@ -695,8 +696,7 @@ export default function ProjectDetailsPage() {
 
   return (
     <AppLayout>
-      <div className="px-4 py-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
+      <PageContainer>
           <div className="mb-4">
             <Breadcrumb
               items={[
@@ -1334,8 +1334,7 @@ export default function ProjectDetailsPage() {
             )}
           </div>
         </div>
-        </div>
-      </div>
+      </PageContainer>
     </AppLayout>
   );
 }

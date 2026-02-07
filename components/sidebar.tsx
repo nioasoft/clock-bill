@@ -63,13 +63,13 @@ export function Sidebar({
 
   return (
     <aside
-      className={`flex flex-col bg-sidebar text-sidebar-foreground min-h-screen transition-all duration-200 ${
+      className={`flex flex-col bg-sidebar text-sidebar-foreground h-full transition-all duration-200 ${
         isCollapsed ? "w-16" : "w-64"
       } ${className}`}
       dir="rtl"
     >
       {/* Logo/Brand */}
-      <div className={`border-b border-white/10 ${isCollapsed ? "p-3" : "p-6"}`}>
+      <div className={`border-b border-white/10 ${isCollapsed ? "p-3" : "p-4"}`}>
         <Link href="/" className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-accent to-accent/80 rounded-lg flex items-center justify-center shrink-0">
             <Clock className="h-6 w-6 text-sidebar" />
@@ -100,7 +100,7 @@ export function Sidebar({
               title={isCollapsed ? item.name : undefined}
               className={`
                 flex items-center gap-3 rounded-lg text-sm font-medium transition-colors
-                ${isCollapsed ? "justify-center px-2 py-3" : "px-4 py-3"}
+                ${isCollapsed ? "justify-center px-2 py-2.5" : "px-4 py-2.5"}
                 ${
                   isActive
                     ? "bg-white/12 text-white border-e-2 border-primary"
@@ -121,7 +121,7 @@ export function Sidebar({
           <button
             onClick={onToggle}
             className={`flex items-center gap-3 rounded-lg text-sm font-medium text-white/40 hover:bg-white/8 hover:text-white transition-colors w-full ${
-              isCollapsed ? "justify-center px-2 py-3" : "px-4 py-3"
+              isCollapsed ? "justify-center px-2 py-2.5" : "px-4 py-2.5"
             }`}
             title={isCollapsed ? "הרחב סרגל צד" : "כווץ סרגל צד"}
           >
@@ -143,7 +143,7 @@ export function Sidebar({
           href="/settings"
           title={isCollapsed ? "הפרופיל שלי" : undefined}
           className={`flex items-center gap-3 rounded-lg text-sm font-medium text-white/60 hover:bg-white/8 hover:text-white transition-colors ${
-            isCollapsed ? "justify-center px-2 py-3" : "px-4 py-3"
+            isCollapsed ? "justify-center px-2 py-2.5" : "px-4 py-2.5"
           }`}
         >
           <div className="w-8 h-8 bg-white/12 rounded-full flex items-center justify-center shrink-0">
@@ -156,7 +156,7 @@ export function Sidebar({
           disabled={logoutLoading}
           title={isCollapsed ? "התנתק" : undefined}
           className={`flex items-center gap-3 rounded-lg text-sm font-medium text-destructive/80 hover:bg-destructive/10 transition-colors w-full disabled:opacity-50 disabled:cursor-not-allowed ${
-            isCollapsed ? "justify-center px-2 py-3" : "px-4 py-3"
+            isCollapsed ? "justify-center px-2 py-2.5" : "px-4 py-2.5"
           }`}
         >
           {logoutLoading ? (

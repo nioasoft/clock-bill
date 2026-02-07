@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ImportContent } from "@/components/import-content";
+import { AppLayout } from "@/components/app-layout";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
 
 interface Session {
   id: string;
@@ -766,32 +768,9 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
-      {/* Header */}
-      <header className="bg-card shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/dashboard"
-              className="text-2xl font-bold text-foreground hover:text-primary"
-            >
-              שעון
-            </Link>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/dashboard"
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              חזרה לדשבורד
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-foreground mb-8">הגדרות</h1>
+    <AppLayout>
+      <PageContainer>
+        <PageHeader title="הגדרות" />
 
         {/* Tabs */}
         <div className="border-b border-border mb-8">
@@ -2328,7 +2307,7 @@ export default function SettingsPage() {
             handleImportBackup={handleImportBackup}
           />
         )}
-      </main>
+      </PageContainer>
 
       {/* Confirmation Dialog */}
       {showConfirmDialog && (
@@ -2413,6 +2392,6 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
-    </div>
+    </AppLayout>
   );
 }

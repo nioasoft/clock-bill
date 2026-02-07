@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AppLayout } from "@/components/app-layout";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EarningsChart } from "@/components/earnings-chart";
 import { ProjectHoursChart } from "@/components/project-hours-chart";
@@ -110,15 +112,11 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="px-4 py-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">
-            ברוך הבא!
-          </h2>
-          <p className="mt-2 text-muted-foreground">
-            זהו הדשבורד שלך. כאן תוכל לנהל את שעות העבודה והפרויקטים שלך.
-          </p>
-        </div>
+      <PageContainer>
+        <PageHeader
+          title="ברוך הבא!"
+          subtitle="זהו הדשבורד שלך. כאן תוכל לנהל את שעות העבודה והפרויקטים שלך."
+        />
 
         {/* First-time user checklist */}
         {!statsLoading && !statsError && isFirstTimeUser && (
@@ -339,7 +337,7 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
-      </div>
+      </PageContainer>
     </AppLayout>
   );
 }

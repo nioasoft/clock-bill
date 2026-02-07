@@ -114,21 +114,21 @@ export function AppLayout({ children }: AppLayoutProps) {
 
         {/* Main content - offset by sidebar width */}
         <div
-          className={`flex-1 transition-[margin] duration-200 ${
+          className={`flex-1 min-h-screen flex flex-col transition-[margin] duration-200 ${
             sidebarCollapsed ? "mr-16" : "mr-64"
           }`}
         >
           <PersistentTimerBar />
-          <main className="min-h-screen">
+          <main className="flex-1 overflow-x-hidden">
             <ErrorBoundary>{children}</ErrorBoundary>
           </main>
         </div>
       </div>
 
       {/* Mobile Layout - full width */}
-      <div className="lg:hidden pb-16">
+      <div className="lg:hidden pb-16 min-h-screen flex flex-col">
         <PersistentTimerBar />
-        <main className="min-h-screen">
+        <main className="flex-1 overflow-x-hidden">
           <ErrorBoundary>{children}</ErrorBoundary>
         </main>
 

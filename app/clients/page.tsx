@@ -4,6 +4,8 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AppLayout } from "@/components/app-layout";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Users } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
@@ -277,16 +279,15 @@ function ClientsPageContent() {
 
   return (
     <AppLayout>
-      <div className="px-4 py-8 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-foreground">לקוחות</h1>
+      <PageContainer>
+        <PageHeader title="לקוחות">
           <button
             onClick={() => setShowForm(!showForm)}
             className="rounded-[14px] bg-primary px-4 py-2 text-white hover:bg-primary/90"
           >
             {showForm ? "ביטול" : "+ לקוח חדש"}
           </button>
-        </div>
+        </PageHeader>
         {/* Add/Edit Client Form */}
         {showForm && (
           <div className="mb-8 rounded-[14px] bg-card p-6 shadow">
@@ -587,7 +588,7 @@ function ClientsPageContent() {
             </div>
           )}
         </div>
-      </div>
+      </PageContainer>
       {/* Delete Confirmation Dialog */}
       {clientToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">

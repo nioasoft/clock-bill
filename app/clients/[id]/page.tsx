@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { AppLayout } from "@/components/app-layout";
+import { PageContainer } from "@/components/page-container";
 import { Breadcrumb } from "@/components/breadcrumb";
 
 interface Client {
@@ -158,8 +159,7 @@ export default function ClientDetailsPage() {
 
   return (
     <AppLayout>
-      <div className="px-4 py-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl">
+      <PageContainer maxWidth="max-w-5xl">
           <div className="mb-6">
             <Breadcrumb
               items={[
@@ -502,8 +502,7 @@ export default function ClientDetailsPage() {
             )}
           </div>
         )}
-        </div>
-      </div>
+      </PageContainer>
     </AppLayout>
   );
 }

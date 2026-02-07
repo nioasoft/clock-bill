@@ -22,7 +22,7 @@ export function PersistentTimerBar() {
   if (!runningTimer) {
     return (
       <div className="border-b border-border bg-muted/30">
-        <div className="flex items-center justify-between px-4 py-2 sm:px-6">
+        <div className="flex items-center justify-between px-4 py-2 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Timer className="h-4 w-4" />
             <span>אין טיימר פעיל</span>
@@ -48,7 +48,7 @@ export function PersistentTimerBar() {
         isPaused ? "bg-amber-500/10" : "bg-emerald-500/10"
       }`}
     >
-      <div className="flex items-center justify-between px-4 py-2 sm:px-6">
+      <div className="flex items-center justify-between px-4 py-2 sm:px-6 lg:px-8">
         {/* Left: Project info + status */}
         <div className="flex items-center gap-3 min-w-0">
           {/* Pulsing dot or paused badge */}

@@ -4,6 +4,8 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AppLayout } from "@/components/app-layout";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FolderOpen } from "lucide-react";
 import { validateRequired, validateNumber, validateDate, validateDateRange } from "@/lib/validation";
@@ -419,9 +421,8 @@ function ProjectsPageContent() {
 
   return (
     <AppLayout>
-      <div className="px-4 py-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">פרויקטים</h1>
+      <PageContainer>
+        <PageHeader title="פרויקטים">
           {statusFilter === "active" && (
             <button
               onClick={() => setShowForm(!showForm)}
@@ -430,7 +431,7 @@ function ProjectsPageContent() {
               {showForm ? "ביטול" : "+ פרויקט חדש"}
             </button>
           )}
-        </div>
+        </PageHeader>
 
         {/* Status Filter Tabs */}
         <div className="flex gap-2 border-b border-border mb-6">
@@ -987,7 +988,7 @@ function ProjectsPageContent() {
             </div>
           )}
         </div>
-      </div>
+      </PageContainer>
     </AppLayout>
   );
 }

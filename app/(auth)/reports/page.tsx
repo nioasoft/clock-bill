@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/app-layout";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 
 interface UserProfile {
@@ -665,8 +667,8 @@ export default function ReportsPage() {
 
   return (
     <AppLayout>
-      <div className="px-4 py-4 sm:px-6 lg:px-8">
-        <h1 className="font-display text-2xl font-bold tracking-tight text-foreground mb-6">דוחות</h1>
+      <PageContainer>
+        <PageHeader title="דוחות" />
         {/* Filters Section */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -1352,7 +1354,7 @@ export default function ReportsPage() {
             </p>
           </div>
         )}
-      </div>
+      </PageContainer>
 
       {/* Template Selection Dialog */}
       {showExportDialog && (
