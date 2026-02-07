@@ -8,8 +8,6 @@ import { createLogger } from "./logger";
 
 const logger = createLogger("db");
 
-const DATABASE_URL = getDatabaseUrl();
-
 let pool: Pool | null = null;
 
 /**
@@ -18,7 +16,7 @@ let pool: Pool | null = null;
 export function getPool(): Pool {
   if (!pool) {
     pool = new Pool({
-      connectionString: DATABASE_URL,
+      connectionString: getDatabaseUrl(),
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,

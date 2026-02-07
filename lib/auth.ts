@@ -10,8 +10,14 @@ const scryptAsync = promisify(scrypt);
 // Import env validation and getters
 import { getAuthSecret, isProduction } from "./env";
 
-// JWT secret from environment (validated)
-const JWT_SECRET = getAuthSecret();
+// JWT secret from environment (lazy-loaded to avoid build-time errors)
+let _jwtSecret: string | null = null;
+function getJwtSecret(): string {
+  if (!_jwtSecret) {
+    _jwtSecret = getAuthSecret();
+  }
+  return _jwtSecret;
+}
 
 // Token expiration time (7 days)
 const TOKEN_EXPIRY = 60 * 60 * 24 * 7;
@@ -61,7 +67,7 @@ export async function signJWT(payload: Omit<JWTPayload, "iat" | "exp">): Promise
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
-    encoder.encode(JWT_SECRET),
+    encoder.encode(getJwtSecret()),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"]
@@ -95,7 +101,7 @@ export async function verifyJWT(token: string): Promise<JWTPayload | null> {
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey(
       "raw",
-      encoder.encode(JWT_SECRET),
+      encoder.encode(getJwtSecret()),
       { name: "HMAC", hash: "SHA-256" },
       false,
       ["verify"]
