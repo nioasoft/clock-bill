@@ -2,12 +2,13 @@ import pg from 'pg';
 
 const { Pool } = pg;
 
+if (!process.env.DATABASE_URL) {
+  console.error('ERROR: DATABASE_URL environment variable is required');
+  process.exit(1);
+}
+
 const pool = new Pool({
-  user: 'clockbill',
-  host: 'localhost',
-  database: 'clockbill',
-  password: 'clockbill_dev',
-  port: 5432,
+  connectionString: process.env.DATABASE_URL,
 });
 
 async function migrateCurrencyRates() {
@@ -27,16 +28,10 @@ async function migrateCurrencyRates() {
       )
     `);
 
-    console.log('✅ currency_rates table created successfully');
-
-    await pool.query(`
-      GRANT ALL PRIVILEGES ON TABLE currency_rates TO clockbill
-    `);
-
-    console.log('✅ Privileges granted');
+    console.log('currency_rates table created successfully');
 
   } catch (error) {
-    console.error('❌ Migration failed:', error);
+    console.error('Migration failed:', error);
     process.exit(1);
   } finally {
     await pool.end();
@@ -45,10 +40,10 @@ async function migrateCurrencyRates() {
 
 migrateCurrencyRates()
   .then(() => {
-    console.log('\n✅ Migration completed successfully');
+    console.log('\nMigration completed successfully');
     process.exit(0);
   })
   .catch((error) => {
-    console.error('\n❌ Migration failed:', error);
+    console.error('\nMigration failed:', error);
     process.exit(1);
   });

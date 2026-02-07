@@ -52,6 +52,9 @@ next-env.d.ts
 *.png
 *.jpg
 *.jpeg
+*.bak
+*.log
+*.pid
 test-*.html
 test-*.js
 *.session-notes.txt
@@ -59,3 +62,19 @@ FEATURE-*.md
 BLOCKING-*.md
 CRITICAL-*.md
 ACTION-REQUIRED-*.md
+
+# user uploads
+public/uploads/
+
+# autoforge artifacts
+.autoforge/screenshots/
+.autoforge/logs/
+.autoforge/scratch/
+
+# playwright artifacts
+.playwright-mcp/*.png
+
+# SQLite databases
+*.db
+*.sqlite
+data/

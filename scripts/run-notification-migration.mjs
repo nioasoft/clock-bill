@@ -13,13 +13,13 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Create a new pool instance
+if (!process.env.DATABASE_URL) {
+  console.error('ERROR: DATABASE_URL environment variable is required');
+  process.exit(1);
+}
+
 const pool = new Pool({
-  host: 'localhost',
-  port: 5432,
-  database: 'clockbill',
-  user: 'clockbill',
-  password: 'clockbill_dev',
+  connectionString: process.env.DATABASE_URL,
 });
 
 async function runMigration() {
@@ -34,15 +34,10 @@ async function runMigration() {
     // Execute the migration
     await client.query(sql);
 
-    console.log('✓ Migration completed successfully!');
+    console.log('Migration completed successfully!');
     console.log('  - Added bank details columns');
     console.log('  - Added PDF color columns');
     console.log('  - Added notification settings columns');
-    console.log('  - long_timer_enabled: BOOLEAN DEFAULT TRUE');
-    console.log('  - long_timer_threshold: INTEGER DEFAULT 120 (minutes)');
-    console.log('  - daily_reminder_enabled: BOOLEAN DEFAULT FALSE');
-    console.log('  - daily_reminder_time: TEXT DEFAULT 09:00');
-    console.log('  - last_reminder_date: DATE');
   } catch (error) {
     console.error('Migration failed:', error);
     process.exit(1);

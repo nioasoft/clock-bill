@@ -1,18 +1,23 @@
-import { scrypt } from 'crypto';
+import { scrypt, randomBytes } from 'crypto';
 import { promisify } from 'util';
 import { Pool } from 'pg';
 
 const scryptAsync = promisify(scrypt);
 
 async function hashPassword(password) {
-  const salt = Buffer.from('test-salt-16-bytes-').toString('base64');
+  const salt = randomBytes(16).toString('base64');
   const derivedKey = await scryptAsync(password, salt, 64);
   return `${salt}:${derivedKey.toString('base64')}`;
 }
 
 async function main() {
+  if (!process.env.DATABASE_URL) {
+    console.error('ERROR: DATABASE_URL environment variable is required');
+    process.exit(1);
+  }
+
   const pool = new Pool({
-    connectionString: 'postgresql://clockbill:clockbill_dev@localhost:5432/clockbill'
+    connectionString: process.env.DATABASE_URL
   });
 
   const email = 'regression@test.com';
@@ -24,7 +29,7 @@ async function main() {
     ['regression-test-id', email, hashedPassword]
   );
 
-  console.log(`✓ Created test user: ${email} / ${password}`);
+  console.log(`Created test user: ${email} / ${password}`);
   await pool.end();
 }
 
