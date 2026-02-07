@@ -1,16 +1,4 @@
 {
-  "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
   "framework": "nextjs",
-  "regions": ["iad1"],
-  "env": {
-    "DATABASE_URL": "@database-url",
-    "BETTER_AUTH_SECRET": "@better-auth-secret",
-    "BETTER_AUTH_URL": "@better-auth-url",
-    "NEXT_PUBLIC_APP_URL": "@next-public-app-url",
-    "BLOB_READ_WRITE_TOKEN": "@blob-read-write-token"
-  },
-  "build": {},
-  "crons": []
+  "regions": ["iad1"]
 }
