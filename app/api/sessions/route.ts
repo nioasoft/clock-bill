@@ -3,7 +3,7 @@
  * Returns all active sessions for the current user
  */
 import { NextResponse } from "next/server";
-import { query } from "../../../lib/db";
+import { query } from "@/lib/db";
 import { cookies } from "next/headers";
 
 export interface Session {

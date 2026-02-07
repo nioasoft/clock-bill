@@ -16,18 +16,18 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
 
   // Validation errors
-  const [emailError, setEmailError] = useState<string | null>(null);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | undefined>(undefined);
+  const [passwordError, setPasswordError] = useState<string | undefined>(undefined);
+  const [confirmPasswordError, setConfirmPasswordError] = useState<string | undefined>(undefined);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     // Clear previous errors
-    setEmailError(null);
-    setPasswordError(null);
-    setConfirmPasswordError(null);
+    setEmailError(undefined);
+    setPasswordError(undefined);
+    setConfirmPasswordError(undefined);
 
     // Validate email
     const emailValidation = validateEmail(email);
@@ -75,7 +75,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4" dir="rtl">
+    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">
@@ -100,7 +100,7 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
-                  setEmailError(null);
+                  setEmailError(undefined);
                 }}
                 className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-orange-500 ${
                   emailError
@@ -139,7 +139,7 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
-                  setPasswordError(null);
+                  setPasswordError(undefined);
                 }}
                 className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-orange-500 ${
                   passwordError
@@ -164,7 +164,7 @@ export default function RegisterPage() {
                 value={confirmPassword}
                 onChange={(e) => {
                   setConfirmPassword(e.target.value);
-                  setConfirmPasswordError(null);
+                  setConfirmPasswordError(undefined);
                 }}
                 className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-orange-500 ${
                   confirmPasswordError

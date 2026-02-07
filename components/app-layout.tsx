@@ -70,7 +70,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-50 flex items-center justify-center" dir="rtl">
+      <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
         <div className="text-gray-600">טוען...</div>
       </div>
     );
@@ -81,7 +81,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50" dir="rtl">
+    <div className="min-h-screen bg-zinc-50">
       {/* Mobile Navigation */}
       <MobileNav userEmail={user.email} onLogout={handleLogout} />
 

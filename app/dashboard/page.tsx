@@ -62,6 +62,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState(false);
   const [recentEntries, setRecentEntries] = useState<RecentEntry[]>([]);
   const [runningTimer, setRunningTimer] = useState<RunningTimer | null>(null);
   const [timerLoading, setTimerLoading] = useState(true);
@@ -97,6 +98,7 @@ export default function DashboardPage() {
         }
       } catch (error) {
         console.error("Error fetching stats:", error);
+        setStatsError(true);
       } finally {
         setStatsLoading(false);
       }
@@ -128,8 +130,8 @@ export default function DashboardPage() {
 
     fetchRunningTimer();
 
-    // Poll for timer updates every second
-    const interval = setInterval(fetchRunningTimer, 1000);
+    // Poll for timer updates every 30 seconds (client-side ticking handles smooth display)
+    const interval = setInterval(fetchRunningTimer, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -462,6 +464,10 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
+        ) : statsError ? (
+          <div className="mt-8 rounded-lg bg-red-50 p-6 text-center">
+            <p className="text-red-700">שגיאה בטעינת הנתונים. נסה לרענן את הדף.</p>
+          </div>
         ) : stats ? (
           <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {/* Today's Hours */}
@@ -613,7 +619,7 @@ export default function DashboardPage() {
                         <p className="text-sm font-medium text-gray-900">{entry.description}</p>
                         <p className="text-sm text-gray-500">{entry.date}</p>
                       </div>
-                      <div className="text-left">
+                      <div className="text-end">
                         <p className="text-sm font-medium text-gray-900">{entry.formattedDuration}</p>
                       </div>
                     </div>
@@ -627,7 +633,7 @@ export default function DashboardPage() {
 
       {/* Timer Start Modal */}
       {showTimerModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" dir="rtl">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-medium text-gray-900 mb-4">התחל טיימר חדש</h3>
 
@@ -694,7 +700,7 @@ export default function DashboardPage() {
 
       {/* Timer Stop Modal */}
       {showStopTimerModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" dir="rtl">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-medium text-gray-900 mb-4">עצור טיימר ושמור רשומה</h3>
 

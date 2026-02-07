@@ -561,6 +561,18 @@ export async function initSchema(): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_report_presets_user_id ON report_presets(user_id)
   `);
 
+  // Currency rates table
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS currency_rates (
+      id TEXT PRIMARY KEY,
+      base_currency TEXT NOT NULL,
+      target_currency TEXT NOT NULL,
+      rate REAL NOT NULL,
+      updated_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(base_currency, target_currency)
+    )
+  `);
+
   // Insert default tags if they don't exist
   const defaultTags = [
     { name: "פיתוח", color: "#3b82f6" },

@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
       JOIN clients c ON p.client_id = c.id
       WHERE te.user_id = $1
     `;
-    const queryParams: any[] = [user.id];
+    const queryParams: (string | number | boolean | null)[] = [user.id];
     let paramIndex = 2;
 
     if (clientId) {

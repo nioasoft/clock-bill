@@ -436,7 +436,7 @@ export default function ProjectsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-50 flex items-center justify-center" dir="rtl">
+      <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
         <div className="text-gray-600">טוען...</div>
       </div>
     );
@@ -447,7 +447,7 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50" dir="rtl">
+    <div className="min-h-screen bg-zinc-50">
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
@@ -914,26 +914,26 @@ export default function ProjectsPage() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
                       שם
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
                       לקוח
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
                       מודל תמחור
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
                       פירוט תמחור
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
                       סטטוס
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
                       תאריכים
                     </th>
                     {statusFilter === "archived" && (
-                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
                         פעולות
                       </th>
                     )}

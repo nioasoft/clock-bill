@@ -3,7 +3,7 @@
  * Verifies email using a token from the verification link
  */
 import { NextResponse } from "next/server";
-import { query, initSchema } from "@/lib/db";
+import { query } from "@/lib/db";
 
 export interface VerifyEmailResponse {
   success: boolean;
@@ -26,8 +26,6 @@ export async function GET(
         { status: 400 }
       );
     }
-
-    await initSchema();
 
     // Find valid token
     const tokenResult = await query<{

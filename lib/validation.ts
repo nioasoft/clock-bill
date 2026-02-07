@@ -98,7 +98,7 @@ export interface ValidationRule {
 
 export interface ValidationResult {
   isValid: boolean;
-  error: string | null;
+  error: string | undefined;
 }
 
 /**
@@ -127,7 +127,7 @@ export function validateField(rule: ValidationRule): ValidationResult {
 
   // Skip other validations if field is empty and not required
   if (!value || value.trim() === "") {
-    return { isValid: true, error: null };
+    return { isValid: true, error: undefined };
   }
 
   // Check minimum length
@@ -165,7 +165,7 @@ export function validateField(rule: ValidationRule): ValidationResult {
     }
   }
 
-  return { isValid: true, error: null };
+  return { isValid: true, error: undefined };
 }
 
 /**
@@ -192,7 +192,7 @@ export function validatePhone(value: string, required = false): ValidationResult
   if (!value || value.trim() === "") {
     return required
       ? { isValid: false, error: "שדה חובה" }
-      : { isValid: true, error: null };
+      : { isValid: true, error: undefined };
   }
 
   // Remove spaces and dashes for validation
@@ -205,7 +205,7 @@ export function validatePhone(value: string, required = false): ValidationResult
     };
   }
 
-  return { isValid: true, error: null };
+  return { isValid: true, error: undefined };
 }
 
 /**
@@ -244,7 +244,7 @@ export function validatePasswordConfirm(password: string, confirmPassword: strin
     };
   }
 
-  return { isValid: true, error: null };
+  return { isValid: true, error: undefined };
 }
 
 /**
@@ -254,7 +254,7 @@ export function validateNumber(value: string, required = false, min = 0): Valida
   if (!value || value.trim() === "") {
     return required
       ? { isValid: false, error: "שדה חובה" }
-      : { isValid: true, error: null };
+      : { isValid: true, error: undefined };
   }
 
   const num = parseFloat(value);
@@ -273,7 +273,7 @@ export function validateNumber(value: string, required = false, min = 0): Valida
     };
   }
 
-  return { isValid: true, error: null };
+  return { isValid: true, error: undefined };
 }
 
 /**
@@ -287,7 +287,7 @@ export function validateRequired(value: string, fieldName?: string): ValidationR
     };
   }
 
-  return { isValid: true, error: null };
+  return { isValid: true, error: undefined };
 }
 
 /**
@@ -297,12 +297,12 @@ export function validateUrl(value: string, required = false): ValidationResult {
   if (!value || value.trim() === "") {
     return required
       ? { isValid: false, error: "שדה חובה" }
-      : { isValid: true, error: null };
+      : { isValid: true, error: undefined };
   }
 
   try {
     new URL(value.startsWith("http") ? value : `https://${value}`);
-    return { isValid: true, error: null };
+    return { isValid: true, error: undefined };
   } catch {
     return {
       isValid: false,
@@ -315,7 +315,7 @@ export function validateUrl(value: string, required = false): ValidationResult {
  * Validate a form object with multiple fields
  */
 export interface FormErrors {
-  [key: string]: string | null;
+  [key: string]: string | undefined;
 }
 
 export function validateForm(
@@ -344,7 +344,7 @@ export function validateDate(value: string, required = false): ValidationResult 
   if (!value || value.trim() === "") {
     return required
       ? { isValid: false, error: "שדה חובה" }
-      : { isValid: true, error: null };
+      : { isValid: true, error: undefined };
   }
 
   // Check if it matches YYYY-MM-DD format
@@ -381,7 +381,7 @@ export function validateDate(value: string, required = false): ValidationResult 
     };
   }
 
-  return { isValid: true, error: null };
+  return { isValid: true, error: undefined };
 }
 
 /**
@@ -390,7 +390,7 @@ export function validateDate(value: string, required = false): ValidationResult 
 export function validateDateRange(startDate: string, endDate: string, required = false): ValidationResult {
   // If not required and either field is empty, skip validation
   if (!required && (!startDate || !endDate)) {
-    return { isValid: true, error: null };
+    return { isValid: true, error: undefined };
   }
 
   // Validate individual dates first
@@ -417,7 +417,7 @@ export function validateDateRange(startDate: string, endDate: string, required =
     }
   }
 
-  return { isValid: true, error: null };
+  return { isValid: true, error: undefined };
 }
 
 /**
@@ -427,7 +427,7 @@ export function validatePastDate(value: string, required = false): ValidationRes
   if (!value || value.trim() === "") {
     return required
       ? { isValid: false, error: "שדה חובה" }
-      : { isValid: true, error: null };
+      : { isValid: true, error: undefined };
   }
 
   // First validate it's a proper date
@@ -448,7 +448,7 @@ export function validatePastDate(value: string, required = false): ValidationRes
     };
   }
 
-  return { isValid: true, error: null };
+  return { isValid: true, error: undefined };
 }
 
 /**
@@ -458,7 +458,7 @@ export function validateFutureDate(value: string, required = false): ValidationR
   if (!value || value.trim() === "") {
     return required
       ? { isValid: false, error: "שדה חובה" }
-      : { isValid: true, error: null };
+      : { isValid: true, error: undefined };
   }
 
   // First validate it's a proper date
@@ -479,5 +479,5 @@ export function validateFutureDate(value: string, required = false): ValidationR
     };
   }
 
-  return { isValid: true, error: null };
+  return { isValid: true, error: undefined };
 }

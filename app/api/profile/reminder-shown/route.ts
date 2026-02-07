@@ -17,7 +17,7 @@ export async function POST() {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "Unauthorized" },
+        { success: false, message: "לא מחובר" },
         { status: 401 }
       );
     }

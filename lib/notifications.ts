@@ -6,8 +6,8 @@
  * Check if browser notifications are supported and permitted
  */
 export function checkNotificationPermission(): NotificationPermission | null {
-  if (!("Notification" in window)) {
-    return null; // Not supported
+  if (typeof window === "undefined" || !("Notification" in window)) {
+    return null; // Not supported or SSR
   }
   return Notification.permission;
 }

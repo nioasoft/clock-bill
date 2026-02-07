@@ -8,9 +8,9 @@
  * - Production: Vercel Blob (if BLOB_READ_WRITE_TOKEN is set)
  */
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "../../../../lib/db";
-import { getUser } from "../../../../lib/auth";
-import { uploadFile, deleteFile } from "../../../../lib/storage";
+import { query } from "@/lib/db";
+import { getUser } from "@/lib/auth";
+import { uploadFile, deleteFile } from "@/lib/storage";
 
 // Maximum file size: 5MB
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "Unauthorized" },
+        { success: false, message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         // Ignore cleanup errors
       }
       return NextResponse.json(
-        { success: false, message: "Profile not found" },
+        { success: false, message: "פרופיל לא נמצא" },
         { status: 404 }
       );
     }
@@ -127,7 +127,7 @@ export async function DELETE(): Promise<NextResponse> {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "Unauthorized" },
+        { success: false, message: "לא מחובר" },
         { status: 401 }
       );
     }

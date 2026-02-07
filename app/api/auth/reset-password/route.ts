@@ -3,8 +3,8 @@
  * Validates token and updates user password
  */
 import { NextResponse } from "next/server";
-import { query } from "../../../../lib/db";
-import { hashPassword } from "../../../../lib/auth";
+import { query } from "@/lib/db";
+import { hashPassword } from "@/lib/auth";
 
 export interface ResetPasswordResponse {
   success: boolean;

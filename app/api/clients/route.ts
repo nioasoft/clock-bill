@@ -37,11 +37,11 @@ export async function GET(request: NextRequest) {
               COALESCE(SUM(
                 CASE
                   WHEN te.is_billable = TRUE THEN
-                    COALESCE(p.hourly_rate, c.default_rate, 0) * (te.duration / 3600000.0)
+                    COALESCE(p.hourly_rate, c.default_rate, 0) * (te.duration / 60.0)
                   ELSE 0
                 END
               ), 0) as total_billed,
-              COALESCE(SUM(te.duration), 0) / 3600000.0 as total_hours
+              COALESCE(SUM(te.duration), 0) / 60.0 as total_hours
        FROM clients c
        LEFT JOIN projects p ON p.client_id = c.id
        LEFT JOIN time_entries te ON te.project_id = p.id

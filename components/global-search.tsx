@@ -188,7 +188,7 @@ export function GlobalSearch() {
                           <button
                             key={result.id}
                             onClick={() => handleResultClick(result)}
-                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-right"
+                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-start"
                           >
                             <div className="flex-shrink-0 w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
                               <Users className="h-5 w-5 text-orange-600" />
@@ -215,7 +215,7 @@ export function GlobalSearch() {
                           <button
                             key={result.id}
                             onClick={() => handleResultClick(result)}
-                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-right"
+                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-start"
                           >
                             <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                               <FolderKanban className="h-5 w-5 text-blue-600" />
@@ -247,7 +247,7 @@ export function GlobalSearch() {
                           <button
                             key={result.id}
                             onClick={() => handleResultClick(result)}
-                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-right"
+                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-start"
                           >
                             <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                               <Clock className="h-5 w-5 text-green-600" />

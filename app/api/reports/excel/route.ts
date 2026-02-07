@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
       JOIN clients c ON p.client_id = c.id
       WHERE te.user_id = $1
     `;
-    const queryParams: any[] = [user.id];
+    const queryParams: (string | number | boolean | null)[] = [user.id];
     let paramIndex = 2;
 
     if (clientId) {
@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
       pattern: "solid",
       fgColor: { argb: "FFE85D04" },
     };
-    headerRow.alignment = { vertical: "middle", horizontal: "center", rightToLeft: true };
+    headerRow.alignment = { vertical: "middle", horizontal: "center", readingOrder: "rtl" };
     headerRow.height = 25;
 
     // Add data rows
@@ -178,8 +178,8 @@ export async function GET(request: NextRequest) {
     });
 
     // Set right-to-left direction for all cells
-    worksheet.eachRow((row: any) => {
-      row.alignment = { rightToLeft: true };
+    worksheet.eachRow((row: ExcelJS.Row) => {
+      row.alignment = { readingOrder: "rtl" };
     });
 
     // Add summary sheet
@@ -198,7 +198,7 @@ export async function GET(request: NextRequest) {
       pattern: "solid",
       fgColor: { argb: "FF4A5568" },
     };
-    summaryHeaderRow.alignment = { vertical: "middle", horizontal: "center", rightToLeft: true };
+    summaryHeaderRow.alignment = { vertical: "middle", horizontal: "center", readingOrder: "rtl" };
     summaryHeaderRow.height = 25;
 
     // Add summary data
@@ -227,8 +227,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Set right-to-left for summary sheet
-    summarySheet.eachRow((row: any) => {
-      row.alignment = { rightToLeft: true };
+    summarySheet.eachRow((row: ExcelJS.Row) => {
+      row.alignment = { readingOrder: "rtl" };
     });
 
     // Add client summary sheet
@@ -248,7 +248,7 @@ export async function GET(request: NextRequest) {
       pattern: "solid",
       fgColor: { argb: "FF059669" },
     };
-    clientHeaderRow.alignment = { vertical: "middle", horizontal: "center", rightToLeft: true };
+    clientHeaderRow.alignment = { vertical: "middle", horizontal: "center", readingOrder: "rtl" };
     clientHeaderRow.height = 25;
 
     // Group by client
@@ -273,8 +273,8 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    clientSummarySheet.eachRow((row: any) => {
-      row.alignment = { rightToLeft: true };
+    clientSummarySheet.eachRow((row: ExcelJS.Row) => {
+      row.alignment = { readingOrder: "rtl" };
     });
 
     // Generate buffer

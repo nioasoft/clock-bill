@@ -3,10 +3,9 @@
  * Generates a verification token and logs it to console (development mode)
  */
 import { NextResponse } from "next/server";
-import { query, initSchema } from "../../../../lib/db";
-import { generateToken } from "../../../../lib/auth";
+import { query } from "@/lib/db";
+import { generateToken, getUser } from "@/lib/auth";
 import { randomUUID } from "crypto";
-import { getUser } from "../../../../lib/auth";
 
 export interface SendVerificationRequest {
   email?: string; // Optional: if provided, resend to that email
@@ -28,12 +27,10 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "Unauthorized" },
+        { success: false, message: "לא מחובר" },
         { status: 401 }
       );
     }
-
-    await initSchema();
 
     // Check if email is already verified
     const userResult = await query<{ email_verified: boolean }>(

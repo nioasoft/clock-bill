@@ -1031,7 +1031,7 @@ export default function ReportsPage() {
                             {client.entries.length} רשומות
                           </div>
                         </div>
-                        <div style={{ textAlign: "left" }}>
+                        <div style={{ textAlign: "end" }}>
                           <div style={{ fontWeight: "600", fontSize: "20px" }}>
                             {formatDuration(client.totalMinutes)}
                           </div>
@@ -1058,19 +1058,19 @@ export default function ReportsPage() {
                   <table className="pdf-table" style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead style={{ backgroundColor: "#f1f5f9" }}>
                       <tr>
-                        <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: "600", fontSize: "13px", color: "#475569" }}>תאריך</th>
-                        <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: "600", fontSize: "13px", color: "#475569" }}>משך</th>
-                        <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: "600", fontSize: "13px", color: "#475569" }}>רשומות</th>
-                        <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: "600", fontSize: "13px", color: "#475569" }}>סכום</th>
+                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>תאריך</th>
+                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>משך</th>
+                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>רשומות</th>
+                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>סכום</th>
                       </tr>
                     </thead>
                     <tbody>
                       {reportData.byDate.map((dateSummary, index) => (
                         <tr key={dateSummary.date} style={{ borderBottom: "1px solid #f1f5f9", backgroundColor: index % 2 === 0 ? "transparent" : "#f8fafc" }}>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px" }}>{dateSummary.date}</td>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px", fontWeight: "500" }}>{formatDuration(dateSummary.totalMinutes)}</td>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px" }}>{dateSummary.entryCount}</td>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px" }}>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{dateSummary.date}</td>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px", fontWeight: "500" }}>{formatDuration(dateSummary.totalMinutes)}</td>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{dateSummary.entryCount}</td>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>
                             {Object.keys(dateSummary.totalAmounts).length > 0
                               ? Object.entries(dateSummary.totalAmounts)
                                   .map(([currency, amount]) => formatCurrency(amount, currency))
@@ -1091,21 +1091,21 @@ export default function ReportsPage() {
                   <table className="pdf-table" style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead style={{ backgroundColor: "#f1f5f9" }}>
                       <tr>
-                        <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: "600", fontSize: "13px", color: "#475569" }}>תאריך</th>
-                        <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: "600", fontSize: "13px", color: "#475569" }}>לקוח</th>
-                        <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: "600", fontSize: "13px", color: "#475569" }}>פרויקט</th>
-                        <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: "600", fontSize: "13px", color: "#475569" }}>תיאור</th>
-                        <th style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: "600", fontSize: "13px", color: "#475569" }}>משך</th>
+                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>תאריך</th>
+                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>לקוח</th>
+                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>פרויקט</th>
+                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>תיאור</th>
+                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>משך</th>
                       </tr>
                     </thead>
                     <tbody>
                       {reportData.entries.map((entry, index) => (
                         <tr key={entry.id} style={{ borderBottom: "1px solid #f1f5f9", backgroundColor: index % 2 === 0 ? "transparent" : "#f8fafc" }}>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px" }}>{entry.date}</td>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px" }}>{entry.clientName}</td>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px" }}>{entry.projectName}</td>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px" }}>{entry.description}</td>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontSize: "13px", fontWeight: "500" }}>{formatDuration(entry.duration)}</td>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{entry.date}</td>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{entry.clientName}</td>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{entry.projectName}</td>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{entry.description}</td>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px", fontWeight: "500" }}>{formatDuration(entry.duration)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1196,7 +1196,7 @@ export default function ReportsPage() {
                           {client.entries.length} רשומות
                         </p>
                       </div>
-                      <div className="text-left">
+                      <div className="text-end">
                         <p className="text-lg font-semibold">
                           {formatDuration(client.totalMinutes)}
                         </p>
@@ -1243,7 +1243,7 @@ export default function ReportsPage() {
                           </p>
                         )}
                       </div>
-                      <div className="text-left">
+                      <div className="text-end">
                         <p className="text-lg font-semibold">
                           {formatDuration(project.totalMinutes)}
                         </p>
@@ -1278,7 +1278,7 @@ export default function ReportsPage() {
                           {dateSummary.entryCount} רשומות
                         </p>
                       </div>
-                      <div className="text-left">
+                      <div className="text-end">
                         <p className="text-lg font-semibold">
                           {formatDuration(dateSummary.totalMinutes)}
                         </p>
@@ -1321,7 +1321,7 @@ export default function ReportsPage() {
                           {weekSummary.entryCount} רשומות
                         </p>
                       </div>
-                      <div className="text-left">
+                      <div className="text-end">
                         <p className="text-lg font-semibold">
                           {formatDuration(weekSummary.totalMinutes)}
                         </p>
@@ -1356,19 +1356,19 @@ export default function ReportsPage() {
                   <table className="w-full">
                     <thead className="bg-accent">
                       <tr>
-                        <th className="px-6 py-3 text-right text-sm font-medium">
+                        <th className="px-6 py-3 text-start text-sm font-medium">
                           תאריך
                         </th>
-                        <th className="px-6 py-3 text-right text-sm font-medium">
+                        <th className="px-6 py-3 text-start text-sm font-medium">
                           לקוח
                         </th>
-                        <th className="px-6 py-3 text-right text-sm font-medium">
+                        <th className="px-6 py-3 text-start text-sm font-medium">
                           פרויקט
                         </th>
-                        <th className="px-6 py-3 text-right text-sm font-medium">
+                        <th className="px-6 py-3 text-start text-sm font-medium">
                           תיאור
                         </th>
-                        <th className="px-6 py-3 text-right text-sm font-medium">
+                        <th className="px-6 py-3 text-start text-sm font-medium">
                           משך
                         </th>
                       </tr>
@@ -1445,7 +1445,7 @@ export default function ReportsPage() {
                   key={template.value}
                   onClick={() => confirmExportPdf(template.value)}
                   className={`
-                    border-2 rounded-lg p-6 text-right transition-all hover:shadow-lg
+                    border-2 rounded-lg p-6 text-start transition-all hover:shadow-lg
                     ${
                       selectedTemplate === template.value
                         ? "border-primary bg-primary/5"
@@ -1546,17 +1546,17 @@ export default function ReportsPage() {
                 <p className="font-medium">הגדרות הפילטר:</p>
                 <div className="grid grid-cols-2 gap-2 text-muted-foreground">
                   <div>תאריך התחלה:</div>
-                  <div className="text-left">{filters.startDate || "לא נבחר"}</div>
+                  <div className="text-end">{filters.startDate || "לא נבחר"}</div>
                   <div>תאריך סיום:</div>
-                  <div className="text-left">{filters.endDate || "לא נבחר"}</div>
+                  <div className="text-end">{filters.endDate || "לא נבחר"}</div>
                   <div>לקוח:</div>
-                  <div className="text-left">
+                  <div className="text-end">
                     {filters.clientId
                       ? clients.find((c) => c.id === filters.clientId)?.name || "לא נבחר"
                       : "כל הלקוחות"}
                   </div>
                   <div>פרויקט:</div>
-                  <div className="text-left">
+                  <div className="text-end">
                     {filters.projectId
                       ? projects.find((p) => p.id === filters.projectId)?.name || "לא נבחר"
                       : "כל הפרויקטים"}
@@ -1626,17 +1626,17 @@ export default function ReportsPage() {
                           <h3 className="font-semibold text-lg mb-2">{preset.name}</h3>
                           <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
                             <div>תאריך התחלה:</div>
-                            <div className="text-left">{preset.startDate || "לא נבחר"}</div>
+                            <div className="text-end">{preset.startDate || "לא נבחר"}</div>
                             <div>תאריך סיום:</div>
-                            <div className="text-left">{preset.endDate || "לא נבחר"}</div>
+                            <div className="text-end">{preset.endDate || "לא נבחר"}</div>
                             <div>לקוח:</div>
-                            <div className="text-left">
+                            <div className="text-end">
                               {preset.clientId
                                 ? clients.find((c) => c.id === preset.clientId)?.name || "לא נבחר"
                                 : "כל הלקוחות"}
                             </div>
                             <div>פרויקט:</div>
-                            <div className="text-left">
+                            <div className="text-end">
                               {preset.projectId
                                 ? projects.find((p) => p.id === preset.projectId)?.name || "לא נבחר"
                                 : "כל הפרויקטים"}

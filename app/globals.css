@@ -1,3 +1,6 @@
+/* Import accessibility improvements (WCAG AA compliance, focus indicators) */
+@import './accessibility.css';
+
 /* Simple CSS without Tailwind for now */
 * {
   box-sizing: border-box;
@@ -11,9 +14,6 @@ body {
   color: #1f2937;
   background-color: #f9fafb;
 }
-
-/* Import accessibility improvements (WCAG AA compliance, focus indicators) */
-@import './accessibility.css';
 
 /* Utility classes */
 .min-h-screen {

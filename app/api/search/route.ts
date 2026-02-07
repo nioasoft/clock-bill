@@ -15,19 +15,29 @@ export async function GET(request: NextRequest) {
 
     const user = await getUser();
     if (!user) {
-      return NextResponse.json({
-        success: true,
-        results: [],
-      });
+      return NextResponse.json(
+        { success: false, message: "לא מחובר" },
+        { status: 401 }
+      );
     }
 
     const searchTerm = `%${q.trim()}%`;
-    const results: any[] = [];
+    interface SearchResult {
+      id: string;
+      type: "client" | "project" | "entry";
+      name: string;
+      url: string;
+      clientName?: string;
+      date?: string;
+      duration?: number;
+      projectName?: string;
+    }
+    const results: SearchResult[] = [];
 
     const { query } = await import("@/lib/db");
 
     // Search clients
-    const clientsResult = await query(
+    const clientsResult = await query<{ id: string; name: string }>(
       `SELECT id, name
        FROM clients
        WHERE user_id = $1
@@ -48,7 +58,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Search projects (with client name)
-    const projectsResult = await query(
+    const projectsResult = await query<{ id: string; name: string; client_name: string }>(
       `SELECT p.id, p.name, c.name as client_name
        FROM projects p
        JOIN clients c ON p.client_id = c.id
@@ -71,7 +81,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Search time entries (by description, notes, and tags)
-    const entriesResult = await query(
+    const entriesResult = await query<{ id: string; description: string; date: string; duration: number; project_name: string; client_name: string }>(
       `SELECT e.id, e.description, e.date, e.duration, p.name as project_name, c.name as client_name
        FROM time_entries e
        JOIN projects p ON e.project_id = p.id

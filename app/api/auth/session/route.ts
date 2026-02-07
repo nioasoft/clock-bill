@@ -3,7 +3,7 @@
  * Returns the current user session if valid
  */
 import { NextResponse } from "next/server";
-import { query } from "../../../../lib/db";
+import { query } from "@/lib/db";
 import { cookies } from "next/headers";
 
 export interface SessionResponse {
@@ -26,7 +26,7 @@ export async function GET(): Promise<NextResponse> {
 
     if (!sessionToken) {
       return NextResponse.json(
-        { success: false, message: "No session found" },
+        { success: false, message: "לא נמצאה הפעלה" },
         { status: 401 }
       );
     }
@@ -44,7 +44,7 @@ export async function GET(): Promise<NextResponse> {
 
     if (!session) {
       return NextResponse.json(
-        { success: false, message: "Invalid session" },
+        { success: false, message: "הפעלה לא תקינה" },
         { status: 401 }
       );
     }
@@ -55,7 +55,7 @@ export async function GET(): Promise<NextResponse> {
       // Delete expired session
       await query("DELETE FROM sessions WHERE token = $1", [sessionToken]);
       return NextResponse.json(
-        { success: false, message: "Session expired" },
+        { success: false, message: "ההפעלה פגה תוקף" },
         { status: 401 }
       );
     }

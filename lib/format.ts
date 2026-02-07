@@ -153,30 +153,3 @@ export function formatDuration(minutes: number, locale: string = "he-IL"): strin
   return `${hours} שע׳ ${remainingMinutes} דק׳`;
 }
 
-/**
- * Get user's format preferences from profile
- * This helper fetches the user's preferences from the server
- * @returns Promise with format options
- */
-export async function getUserFormatPreferences(): Promise<FormatOptions> {
-  try {
-    const response = await fetch("/api/profile");
-    if (response.ok) {
-      const data = await response.json();
-      if (data.success && data.profile) {
-        return {
-          dateFormat: data.profile.dateFormat || "DD/MM/YYYY",
-          timeFormat: data.profile.timeFormat || "24h",
-        };
-      }
-    }
-  } catch (error) {
-    console.error("Failed to fetch user format preferences:", error);
-  }
-
-  // Return defaults if request fails
-  return {
-    dateFormat: "DD/MM/YYYY",
-    timeFormat: "24h",
-  };
-}

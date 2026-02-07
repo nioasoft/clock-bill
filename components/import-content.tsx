@@ -23,8 +23,8 @@ interface ImportContentProps {
   setColumnMapping: (mapping: Record<string, string>) => void;
   showMappingStep: boolean;
   setShowMappingStep: (show: boolean) => void;
-  importClientsRef: React.RefObject<HTMLInputElement>;
-  importEntriesRef: React.RefObject<HTMLInputElement>;
+  importClientsRef: React.RefObject<HTMLInputElement | null>;
+  importEntriesRef: React.RefObject<HTMLInputElement | null>;
   // JSON Backup props
   backupFile: File | null;
   setBackupFile: (file: File | null) => void;
@@ -58,7 +58,7 @@ interface ImportContentProps {
   setImportMode: (mode: "merge" | "replace") => void;
   showImportConfirm: boolean;
   setShowImportConfirm: (show: boolean) => void;
-  backupInputRef: React.RefObject<HTMLInputElement>;
+  backupInputRef: React.RefObject<HTMLInputElement | null>;
   handleExportBackup: () => Promise<void>;
   handleImportBackup: () => Promise<void>;
 }
@@ -652,7 +652,7 @@ export function ImportContent({
                         {csvHeaders.map((header) => (
                           <th
                             key={header}
-                            className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-4 py-2 text-start text-xs font-medium text-gray-500 uppercase tracking-wider"
                           >
                             {header}
                           </th>

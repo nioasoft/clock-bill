@@ -584,7 +584,7 @@ export default function EntriesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-50 flex items-center justify-center" dir="rtl">
+      <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
         <div className="text-gray-600">טוען...</div>
       </div>
     );
@@ -595,7 +595,7 @@ export default function EntriesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50" dir="rtl">
+    <div className="min-h-screen bg-zinc-50">
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
@@ -967,7 +967,7 @@ export default function EntriesPage() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 w-12">
+                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500 w-12">
                         <input
                           type="checkbox"
                           checked={selectedEntries.size === entries.length && entries.length > 0}
@@ -975,22 +975,22 @@ export default function EntriesPage() {
                           className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
                         />
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
                         תאריך
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
                         תיאור
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
                         לקוח
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
                         פרויקט
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
                         משך זמן
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500">
                         פעולות
                       </th>
                     </tr>

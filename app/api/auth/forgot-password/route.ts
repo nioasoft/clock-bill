@@ -3,7 +3,7 @@
  * Generates a password reset token and sends reset email (logs to console in dev)
  */
 import { NextResponse } from "next/server";
-import { query } from "../../../../lib/db";
+import { query } from "@/lib/db";
 import crypto from "crypto";
 
 export interface ForgotPasswordResponse {

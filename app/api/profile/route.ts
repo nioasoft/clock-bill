@@ -4,9 +4,9 @@
  * PATCH: Update user profile
  */
 import { NextResponse } from "next/server";
-import { query } from "../../../lib/db";
-import { getUser } from "../../../lib/auth";
-import { createLogger } from "../../../lib/logger";
+import { query } from "@/lib/db";
+import { getUser } from "@/lib/auth";
+import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("api:profile");
 
@@ -90,7 +90,7 @@ export async function GET(): Promise<NextResponse> {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "Unauthorized" },
+        { success: false, message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -120,7 +120,7 @@ export async function GET(): Promise<NextResponse> {
 
     if (result.rows.length === 0) {
       return NextResponse.json(
-        { success: false, message: "Profile not found" },
+        { success: false, message: "פרופיל לא נמצא" },
         { status: 404 }
       );
     }
@@ -149,7 +149,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "Unauthorized" },
+        { success: false, message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -324,7 +324,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
 
     if (result.rows.length === 0) {
       return NextResponse.json(
-        { success: false, message: "Profile not found" },
+        { success: false, message: "פרופיל לא נמצא" },
         { status: 404 }
       );
     }

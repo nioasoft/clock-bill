@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
     // Build WHERE clause based on status filter
     let whereClause = "";
-    const params: any[] = [user.id];
+    const params: (string | number | boolean | null)[] = [user.id];
 
     if (statusFilter === "archived") {
       whereClause = "AND p.status = 'archived'";

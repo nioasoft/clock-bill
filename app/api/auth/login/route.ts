@@ -3,11 +3,11 @@
  * Authenticates user with email and password
  */
 import { NextResponse } from "next/server";
-import { query, initSchema } from "../../../../lib/db";
-import { verifyPassword, generateSessionToken, COOKIE_OPTIONS } from "../../../../lib/auth";
+import { query } from "@/lib/db";
+import { verifyPassword, generateSessionToken, COOKIE_OPTIONS } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
-import { createLogger } from "../../../../lib/logger";
+import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("auth:login");
 
@@ -43,8 +43,6 @@ export async function POST(request: Request): Promise<NextResponse> {
         { status: 400 }
       );
     }
-
-    await initSchema();
 
     // Find user by email
     const userResult = await query<{ id: string; email: string; password_hash: string; email_verified: boolean }>(

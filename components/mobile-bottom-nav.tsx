@@ -3,21 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Clock, Users, FolderKanban, FileText, Settings } from "lucide-react";
+import { navItemDefs } from "@/lib/nav-items";
 
-interface NavItem {
-  name: string;
-  href: string;
-  icon: React.ReactNode;
-}
+const iconMap = { Home, Clock, Users, FolderKanban, FileText, Settings } as const;
 
-const navItems: NavItem[] = [
-  { name: "דשבורד", href: "/", icon: <Home className="h-5 w-5" /> },
-  { name: "רשומות זמן", href: "/entries", icon: <Clock className="h-5 w-5" /> },
-  { name: "לקוחות", href: "/clients", icon: <Users className="h-5 w-5" /> },
-  { name: "פרויקטים", href: "/projects", icon: <FolderKanban className="h-5 w-5" /> },
-  { name: "דוחות", href: "/reports", icon: <FileText className="h-5 w-5" /> },
-  { name: "הגדרות", href: "/settings", icon: <Settings className="h-5 w-5" /> },
-];
+const navItems = navItemDefs.map((item) => {
+  const Icon = iconMap[item.iconName];
+  return { name: item.name, href: item.href, icon: <Icon className="h-5 w-5" /> };
+});
 
 export function MobileBottomNav() {
   const pathname = usePathname();

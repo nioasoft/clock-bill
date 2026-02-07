@@ -11,7 +11,7 @@ export interface ErrorContext {
   action?: string;
   route?: string;
   method?: string;
-  [key: string]: any;
+  [key: string]: string | number | boolean | undefined | null;
 }
 
 export interface ErrorLog {
@@ -70,67 +70,7 @@ export function logReactError(error: Error, errorInfo: React.ErrorInfo, context?
   }
 }
 
-export function logApiError(
-  error: Error | string,
-  endpoint: string,
-  method: string,
-  context?: ErrorContext
-): void {
-  logError(error, {
-    ...context,
-    action: 'api_request',
-    route: endpoint,
-    method,
-  });
-}
-
-export function logDatabaseError(
-  error: Error | string,
-  query: string,
-  context?: ErrorContext
-): void {
-  logError(error, {
-    ...context,
-    action: 'database_query',
-    query: query.substring(0, 100),
-  });
-}
-
 function sendToErrorService(errorLog: ErrorLog): void {
   // TODO: Implement with actual error reporting service
-  // Examples:
-  // - Sentry: Sentry.captureException(error)
-  // - LogRocket: logRocket.captureException(error)
-  // - Bugsnag: Bugsnag.notify(error)
-
-  // For now, just log to console
   console.error('Error logged:', errorLog);
-}
-
-export function useErrorReporter(context?: ErrorContext) {
-  return {
-    reportError: (error: Error | string, additionalContext?: ErrorContext) => {
-      logError(error, { ...context, ...additionalContext });
-    },
-    reportWarning: (error: Error | string, additionalContext?: ErrorContext) => {
-      logError(error, { ...context, ...additionalContext }, 'warning');
-    },
-    reportInfo: (message: string, additionalContext?: ErrorContext) => {
-      logError(message, { ...context, ...additionalContext }, 'info');
-    },
-  };
-}
-
-export function withErrorLogging<T extends (...args: any[]) => Promise<any>>(
-  fn: T,
-  context?: ErrorContext
-): T {
-  return (async (...args: any[]) => {
-    try {
-      return await fn(...args);
-    } catch (error) {
-      logError(error as Error, context);
-      throw error;
-    }
-  }) as T;
 }

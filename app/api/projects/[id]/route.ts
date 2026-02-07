@@ -72,8 +72,8 @@ export async function GET(
       [projectId, user.id]
     );
 
-    const totalDurationMs = statsResult.rows[0].total_duration || 0;
-    const totalHours = totalDurationMs / 3600000; // Convert milliseconds to hours
+    const totalDuration = statsResult.rows[0].total_duration || 0;
+    const totalHours = totalDuration / 60; // Convert minutes to hours
 
     // Calculate total amount based on pricing model
     let totalAmount = 0;

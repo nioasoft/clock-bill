@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     // Get authenticated user
     const user = await getUser();
     if (!user) {
-      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
     }
 
     userId = user.id;
