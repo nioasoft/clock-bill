@@ -3,22 +3,18 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Home, Clock, Users, FolderKanban, FileText, Settings } from "lucide-react";
+import { Menu, X, Home, Clock, Users, FolderKanban, FileText, Settings, Shield } from "lucide-react";
 import { navItemDefs } from "@/lib/nav-items";
 
-const iconMap = { Home, Clock, Users, FolderKanban, FileText, Settings } as const;
-
-const navItems = navItemDefs.map((item) => {
-  const Icon = iconMap[item.iconName];
-  return { name: item.name, href: item.href, icon: <Icon className="h-5 w-5" /> };
-});
+const iconMap = { Home, Clock, Users, FolderKanban, FileText, Settings, Shield } as const;
 
 interface MobileNavProps {
   userEmail?: string;
   onLogout?: () => void;
+  userRole?: string;
 }
 
-export function MobileNav({ userEmail, onLogout }: MobileNavProps) {
+export function MobileNav({ userEmail, onLogout, userRole }: MobileNavProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
@@ -100,8 +96,11 @@ export function MobileNav({ userEmail, onLogout }: MobileNavProps) {
 
             {/* Navigation links */}
             <nav className="p-4 space-y-1 overflow-y-auto flex-1">
-              {navItems.map((item) => {
-                const isActive = pathname === item.href;
+              {navItemDefs
+                .filter((item) => !item.adminOnly || userRole === "admin")
+                .map((item) => {
+                const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+                const Icon = iconMap[item.iconName];
 
                 return (
                   <Link
@@ -117,7 +116,7 @@ export function MobileNav({ userEmail, onLogout }: MobileNavProps) {
                       }
                     `}
                   >
-                    {item.icon}
+                    <Icon className="h-5 w-5" />
                     <span>{item.name}</span>
                   </Link>
                 );

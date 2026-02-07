@@ -9,6 +9,7 @@ import {
   FolderKanban,
   FileText,
   Settings,
+  Shield,
   LogOut,
   PanelRightClose,
   PanelRightOpen,
@@ -17,23 +18,20 @@ import { useState } from "react";
 import { GlobalSearch } from "./global-search";
 import { navItemDefs } from "@/lib/nav-items";
 
-const iconMap = { Home, Clock, Users, FolderKanban, FileText, Settings } as const;
-
-const navItems = navItemDefs.map((item) => {
-  const Icon = iconMap[item.iconName];
-  return { name: item.name, href: item.href, icon: Icon };
-});
+const iconMap = { Home, Clock, Users, FolderKanban, FileText, Settings, Shield } as const;
 
 interface SidebarProps {
   className?: string;
   isCollapsed?: boolean;
   onToggle?: () => void;
+  userRole?: string;
 }
 
 export function Sidebar({
   className = "",
   isCollapsed = false,
   onToggle,
+  userRole,
 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -89,9 +87,11 @@ export function Sidebar({
 
       {/* Navigation */}
       <nav className={`flex-1 pb-4 space-y-1 ${isCollapsed ? "px-1.5" : "px-3"}`}>
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
-          const Icon = item.icon;
+        {navItemDefs
+          .filter((item) => !item.adminOnly || userRole === "admin")
+          .map((item) => {
+          const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+          const Icon = iconMap[item.iconName];
 
           return (
             <Link

@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Clock, Users, FolderKanban, FileText, Settings } from "lucide-react";
+import { Home, Clock, Users, FolderKanban, FileText, Settings, Shield } from "lucide-react";
 import { navItemDefs } from "@/lib/nav-items";
 
-const iconMap = { Home, Clock, Users, FolderKanban, FileText, Settings } as const;
+const iconMap = { Home, Clock, Users, FolderKanban, FileText, Settings, Shield } as const;
 
-const navItems = navItemDefs.map((item) => {
-  const Icon = iconMap[item.iconName];
-  return { name: item.name, href: item.href, icon: <Icon className="h-5 w-5" /> };
-});
+const navItems = navItemDefs
+  .filter((item) => !item.adminOnly)
+  .map((item) => {
+    const Icon = iconMap[item.iconName];
+    return { name: item.name, href: item.href, icon: <Icon className="h-5 w-5" /> };
+  });
 
 export function MobileBottomNav() {
   const pathname = usePathname();

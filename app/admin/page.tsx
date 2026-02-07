@@ -1,0 +1,222 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { AppLayout } from "@/components/app-layout";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Users, FileText, Activity, UserPlus, FolderKanban, BarChart3 } from "lucide-react";
+
+interface AdminStats {
+  totalUsers: number;
+  newToday: number;
+  totalEntries: number;
+  entriesToday: number;
+  activeTimers: number;
+  newThisWeek: number;
+  newThisMonth: number;
+  totalProjects: number;
+  registrationTrend: { day: string; count: number }[];
+}
+
+export default function AdminDashboardPage() {
+  const router = useRouter();
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        // Check admin access
+        const sessionRes = await fetch("/api/auth/session");
+        const sessionData = await sessionRes.json();
+        if (!sessionData.success || sessionData.user?.role !== "admin") {
+          router.push("/dashboard");
+          return;
+        }
+
+        const response = await fetch("/api/admin/stats");
+        const data = await response.json();
+
+        if (data.success) {
+          setStats(data.stats);
+        } else {
+          setError(true);
+        }
+      } catch (err) {
+        console.error("Error fetching admin stats:", err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [router]);
+
+  const maxTrend = stats
+    ? Math.max(...stats.registrationTrend.map((d) => d.count), 1)
+    : 1;
+
+  return (
+    <AppLayout>
+      <PageContainer>
+        <PageHeader
+          title="ניהול מערכת"
+          subtitle="סקירה כללית של המערכת"
+        />
+
+        {/* Stat Cards */}
+        {loading ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="bg-card border border-border/50 rounded-[14px] p-4 shadow-sm">
+                <Skeleton className="h-4 w-1/2 mb-2" />
+                <Skeleton className="h-8 w-3/4" />
+              </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="rounded-[14px] bg-destructive/10 p-6 text-center">
+            <p className="text-destructive">שגיאה בטעינת הנתונים</p>
+          </div>
+        ) : stats ? (
+          <>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="bg-card border border-border/50 border-t-2 border-t-primary rounded-[14px] p-4 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    סה&quot;כ משתמשים
+                  </p>
+                </div>
+                <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">{stats.totalUsers}</p>
+                {stats.newToday > 0 && (
+                  <p className="mt-1 text-xs text-success">+{stats.newToday} היום</p>
+                )}
+              </div>
+
+              <div className="bg-card border border-border/50 border-t-2 border-t-primary rounded-[14px] p-4 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    רשומות זמן
+                  </p>
+                </div>
+                <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">{stats.totalEntries}</p>
+                {stats.entriesToday > 0 && (
+                  <p className="mt-1 text-xs text-success">+{stats.entriesToday} היום</p>
+                )}
+              </div>
+
+              <div className="bg-card border border-border/50 border-t-2 border-t-accent rounded-[14px] p-4 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-muted-foreground" />
+                  <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    טיימרים פעילים
+                  </p>
+                </div>
+                <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">{stats.activeTimers}</p>
+              </div>
+
+              <div className="bg-card border border-border/50 border-t-2 border-t-secondary rounded-[14px] p-4 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4 text-muted-foreground" />
+                  <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    חדשים השבוע
+                  </p>
+                </div>
+                <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">{stats.newThisWeek}</p>
+              </div>
+
+              <div className="bg-card border border-border/50 border-t-2 border-t-secondary rounded-[14px] p-4 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4 text-muted-foreground" />
+                  <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    חדשים החודש
+                  </p>
+                </div>
+                <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">{stats.newThisMonth}</p>
+              </div>
+
+              <div className="bg-card border border-border/50 border-t-2 border-t-accent rounded-[14px] p-4 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <FolderKanban className="h-4 w-4 text-muted-foreground" />
+                  <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    סה&quot;כ פרויקטים
+                  </p>
+                </div>
+                <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">{stats.totalProjects}</p>
+              </div>
+            </div>
+
+            {/* Registration Trend Chart */}
+            {stats.registrationTrend.length > 0 && (
+              <div className="mt-6 rounded-[14px] bg-card border border-border/50 p-6 shadow-sm">
+                <h3 className="font-display text-lg font-semibold text-foreground mb-4">
+                  הרשמות - 30 ימים אחרונים
+                </h3>
+                <div className="h-48 flex items-end gap-1">
+                  {stats.registrationTrend.map((d) => {
+                    const height = (d.count / maxTrend) * 100;
+                    const dateStr = new Date(d.day).toLocaleDateString("he-IL", {
+                      day: "numeric",
+                      month: "numeric",
+                    });
+                    return (
+                      <div
+                        key={d.day}
+                        className="flex-1 flex flex-col items-center gap-1"
+                        title={`${dateStr}: ${d.count} הרשמות`}
+                      >
+                        <span className="text-[10px] text-muted-foreground">{d.count}</span>
+                        <div
+                          className="w-full bg-primary/80 rounded-t-sm min-h-[2px] transition-all"
+                          style={{ height: `${Math.max(height, 2)}%` }}
+                        />
+                        <span className="text-[9px] text-muted-foreground rotate-[-45deg] origin-top-right whitespace-nowrap">
+                          {dateStr}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Quick Links */}
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Link
+                href="/admin/users"
+                className="bg-card border border-border/50 rounded-[14px] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <Users className="h-5 w-5 text-primary" />
+                  <div>
+                    <h3 className="font-display text-lg font-semibold text-foreground">ניהול משתמשים</h3>
+                    <p className="text-sm text-muted-foreground">צפה וניהל את כל המשתמשים</p>
+                  </div>
+                </div>
+              </Link>
+              <Link
+                href="/admin/stats"
+                className="bg-card border border-border/50 rounded-[14px] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <BarChart3 className="h-5 w-5 text-accent" />
+                  <div>
+                    <h3 className="font-display text-lg font-semibold text-foreground">סטטיסטיקות</h3>
+                    <p className="text-sm text-muted-foreground">ניתוח מעמיק של המערכת</p>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          </>
+        ) : null}
+      </PageContainer>
+    </AppLayout>
+  );
+}

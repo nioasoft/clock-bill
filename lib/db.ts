@@ -48,8 +48,9 @@ export async function closeDb(): Promise<void> {
 }
 
 /**
- * Initialize database schema
- * Creates all required tables if they don't exist
+ * @deprecated Schema is now managed by Drizzle ORM (src/db/schema.ts).
+ * Use `drizzle-kit push` or `drizzle-kit migrate` for schema changes.
+ * This function is kept for backward compatibility but should not be used.
  */
 export async function initSchema(): Promise<void> {
   const client = getPool();
@@ -65,6 +66,15 @@ export async function initSchema(): Promise<void> {
       updated_at TIMESTAMP DEFAULT NOW()
     )
   `);
+
+  // Add role column if it doesn't exist
+  try {
+    await client.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'user'
+    `);
+  } catch (error) {
+    logger.debug("role column migration check complete");
+  }
 
   // Sessions table for session management
   await client.query(`

@@ -155,6 +155,7 @@ export interface User {
   id: string;
   email: string;
   emailVerified?: boolean;
+  role: string;
 }
 
 /**
@@ -175,8 +176,8 @@ export async function getUser(): Promise<User | null> {
     const { query } = await import("./db");
 
     // Get user from session
-    const result = await query<{ user_id: string; email: string; email_verified: boolean }>(
-      `SELECT s.user_id, u.email, u.email_verified
+    const result = await query<{ user_id: string; email: string; email_verified: boolean; role: string }>(
+      `SELECT s.user_id, u.email, u.email_verified, u.role
        FROM sessions s
        JOIN users u ON s.user_id = u.id
        WHERE s.token = $1 AND s.expires_at > NOW()`,
@@ -191,6 +192,7 @@ export async function getUser(): Promise<User | null> {
       id: result.rows[0].user_id,
       email: result.rows[0].email,
       emailVerified: result.rows[0].email_verified,
+      role: result.rows[0].role ?? "user",
     };
   } catch {
     return null;

@@ -1,0 +1,215 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { AppLayout } from "@/components/app-layout";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
+import { Skeleton } from "@/components/ui/skeleton";
+import { BarChart3, Coins, Image, TrendingUp } from "lucide-react";
+
+interface SystemStats {
+  topUsers: { userId: string; email: string; entryCount: number }[];
+  pricingModels: { model: string; count: number }[];
+  currencies: { currency: string; count: number }[];
+  avgEntriesPerUser: number;
+  totalLogos: number;
+}
+
+const pricingModelLabels: Record<string, string> = {
+  hourly: "שעתי",
+  package: "חבילה",
+  mixed: "משולב",
+  fixed: "קבוע",
+  retainer: "ריטיינר",
+};
+
+export default function AdminStatsPage() {
+  const router = useRouter();
+  const [stats, setStats] = useState<SystemStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch("/api/admin/system-stats");
+
+        if (response.status === 403) {
+          router.push("/dashboard");
+          return;
+        }
+
+        const data = await response.json();
+        if (data.success) {
+          setStats(data.stats);
+        } else {
+          setError(true);
+        }
+      } catch (err) {
+        console.error("Error fetching system stats:", err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [router]);
+
+  return (
+    <AppLayout>
+      <PageContainer>
+        <PageHeader title="סטטיסטיקות מערכת" subtitle="ניתוח מעמיק של השימוש במערכת" />
+
+        {loading ? (
+          <div className="space-y-6">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-48 w-full rounded-[14px]" />
+            ))}
+          </div>
+        ) : error ? (
+          <div className="rounded-[14px] bg-destructive/10 p-6 text-center">
+            <p className="text-destructive">שגיאה בטעינת הנתונים</p>
+          </div>
+        ) : stats ? (
+          <div className="space-y-6">
+            {/* Summary cards */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="bg-card border border-border/50 border-t-2 border-t-primary rounded-[14px] p-4 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    ממוצע רשומות למשתמש
+                  </p>
+                </div>
+                <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">
+                  {stats.avgEntriesPerUser}
+                </p>
+              </div>
+
+              <div className="bg-card border border-border/50 border-t-2 border-t-accent rounded-[14px] p-4 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <Image className="h-4 w-4 text-muted-foreground" />
+                  <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    לוגואים שהועלו
+                  </p>
+                </div>
+                <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">
+                  {stats.totalLogos}
+                </p>
+              </div>
+            </div>
+
+            {/* Top 10 Users */}
+            <div className="rounded-[14px] bg-card border border-border/50 p-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <BarChart3 className="h-5 w-5 text-primary" />
+                <h3 className="font-display text-lg font-semibold text-foreground">
+                  10 המשתמשים הפעילים ביותר
+                </h3>
+              </div>
+              <div className="space-y-3">
+                {stats.topUsers.map((user, idx) => {
+                  const maxEntries = stats.topUsers[0]?.entryCount || 1;
+                  const width = (user.entryCount / maxEntries) * 100;
+                  return (
+                    <div key={user.userId} className="flex items-center gap-3">
+                      <span className="text-sm font-mono text-muted-foreground w-6 text-center">
+                        {idx + 1}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium text-foreground truncate">
+                            {user.email}
+                          </span>
+                          <span className="text-sm font-mono tabular-nums text-muted-foreground ms-2">
+                            {user.entryCount}
+                          </span>
+                        </div>
+                        <div className="h-2 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-primary/70 rounded-full transition-all"
+                            style={{ width: `${width}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {stats.topUsers.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">אין נתונים</p>
+                )}
+              </div>
+            </div>
+
+            {/* Pricing Model & Currency Distribution */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              {/* Pricing Models */}
+              <div className="rounded-[14px] bg-card border border-border/50 p-6 shadow-sm">
+                <div className="flex items-center gap-2 mb-4">
+                  <BarChart3 className="h-5 w-5 text-secondary" />
+                  <h3 className="font-display text-lg font-semibold text-foreground">
+                    התפלגות מודלי תמחור
+                  </h3>
+                </div>
+                <div className="space-y-3">
+                  {stats.pricingModels.map((pm) => {
+                    const total = stats.pricingModels.reduce((s, p) => s + p.count, 0);
+                    const pct = total > 0 ? ((pm.count / total) * 100).toFixed(0) : "0";
+                    return (
+                      <div key={pm.model} className="flex items-center justify-between">
+                        <span className="text-sm text-foreground">
+                          {pricingModelLabels[pm.model] || pm.model}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-mono tabular-nums text-muted-foreground">
+                            {pm.count}
+                          </span>
+                          <span className="text-xs text-muted-foreground">({pct}%)</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {stats.pricingModels.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">אין נתונים</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Currencies */}
+              <div className="rounded-[14px] bg-card border border-border/50 p-6 shadow-sm">
+                <div className="flex items-center gap-2 mb-4">
+                  <Coins className="h-5 w-5 text-accent" />
+                  <h3 className="font-display text-lg font-semibold text-foreground">
+                    התפלגות מטבעות
+                  </h3>
+                </div>
+                <div className="space-y-3">
+                  {stats.currencies.map((c) => {
+                    const total = stats.currencies.reduce((s, cur) => s + cur.count, 0);
+                    const pct = total > 0 ? ((c.count / total) * 100).toFixed(0) : "0";
+                    return (
+                      <div key={c.currency} className="flex items-center justify-between">
+                        <span className="text-sm text-foreground">{c.currency}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-mono tabular-nums text-muted-foreground">
+                            {c.count}
+                          </span>
+                          <span className="text-xs text-muted-foreground">({pct}%)</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {stats.currencies.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">אין נתונים</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </PageContainer>
+    </AppLayout>
+  );
+}

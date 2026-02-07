@@ -13,6 +13,7 @@ import { TimerStopModal } from "./timer-stop-modal";
 interface User {
   id: string;
   email: string;
+  role?: string;
 }
 
 interface AppLayoutProps {
@@ -100,7 +101,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Mobile Navigation */}
-      <MobileNav userEmail={user.email} onLogout={handleLogout} />
+      <MobileNav userEmail={user.email} onLogout={handleLogout} userRole={user.role} />
 
       {/* Desktop Layout */}
       <div className="hidden lg:flex">
@@ -109,6 +110,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <Sidebar
             isCollapsed={sidebarCollapsed}
             onToggle={handleSidebarToggle}
+            userRole={user.role}
           />
         </div>
 

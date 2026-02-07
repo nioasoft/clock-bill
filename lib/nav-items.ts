@@ -5,7 +5,8 @@
 export interface NavItemDef {
   name: string;
   href: string;
-  iconName: "Home" | "Clock" | "Users" | "FolderKanban" | "FileText" | "Settings";
+  iconName: "Home" | "Clock" | "Users" | "FolderKanban" | "FileText" | "Settings" | "Shield";
+  adminOnly?: boolean;
 }
 
 export const navItemDefs: NavItemDef[] = [
@@ -15,4 +16,5 @@ export const navItemDefs: NavItemDef[] = [
   { name: "פרויקטים", href: "/projects", iconName: "FolderKanban" },
   { name: "דוחות", href: "/reports", iconName: "FileText" },
   { name: "הגדרות", href: "/settings", iconName: "Settings" },
+  { name: "ניהול", href: "/admin", iconName: "Shield", adminOnly: true },
 ];

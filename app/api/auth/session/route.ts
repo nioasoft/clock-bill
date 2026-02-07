@@ -12,6 +12,7 @@ export interface SessionResponse {
     id: string;
     email: string;
     emailVerified: boolean;
+    role: string;
   };
   message?: string;
 }
@@ -32,8 +33,8 @@ export async function GET(): Promise<NextResponse> {
     }
 
     // Find session and check if it's valid
-    const sessionResult = await query<{ user_id: string; expires_at: string; email: string; email_verified: boolean }>(
-      `SELECT s.user_id, s.expires_at, u.email, u.email_verified
+    const sessionResult = await query<{ user_id: string; expires_at: string; email: string; email_verified: boolean; role: string }>(
+      `SELECT s.user_id, s.expires_at, u.email, u.email_verified, u.role
        FROM sessions s
        JOIN users u ON s.user_id = u.id
        WHERE s.token = $1`,
@@ -66,6 +67,7 @@ export async function GET(): Promise<NextResponse> {
         id: session.user_id,
         email: session.email,
         emailVerified: session.email_verified,
+        role: session.role ?? "user",
       },
     });
   } catch (error) {
