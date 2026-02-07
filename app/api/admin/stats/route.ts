@@ -74,6 +74,10 @@ export async function GET(): Promise<NextResponse> {
           count: parseInt(r.count),
         })),
       },
+    }, {
+      headers: {
+        'Cache-Control': 'private, max-age=15, stale-while-revalidate=30'
+      }
     });
   } catch (error) {
     console.error("Admin stats error:", error);

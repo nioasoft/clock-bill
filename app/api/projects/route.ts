@@ -273,21 +273,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate UUID for new project
-    const projectIdResult = await query<{ id: string }>(
-      `SELECT gen_random_uuid()::text as id`
-    );
-    const projectId = projectIdResult.rows[0].id;
-
-    // Insert project
-    await query(
+    // Insert project with inline UUID and return with client info
+    const insertResult = await query<{ id: string }>(
       `INSERT INTO projects (id, user_id, client_id, name, pricing_model, hourly_rate,
                              package_price, package_hours, overage_rate, fixed_budget,
                              retainer_monthly_fee, retainer_hours, currency, status,
                              start_date, end_date, notes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
+       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+       RETURNING id`,
       [
-        projectId,
         user.id,
         clientId,
         name.trim(),
@@ -307,7 +301,9 @@ export async function POST(request: NextRequest) {
       ]
     );
 
-    // Fetch the created project with client info
+    const projectId = insertResult.rows[0].id;
+
+    // Fetch the created project with client info (need JOIN for client_name)
     const projectResult = await query<{
       id: string;
       name: string;

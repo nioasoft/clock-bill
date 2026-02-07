@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
-import { query } from "@/lib/db";
+import { query, withTransaction } from "@/lib/db";
 import { parseCSVWithHeaders } from "@/lib/csv-parser";
 
 // POST /api/import/entries - Import time entries from CSV
@@ -72,145 +72,118 @@ export async function POST(request: NextRequest) {
       projectMap.set(project.name as string, project.id as string);
     }
 
-    // Process and insert entries
-    const importedEntries = [];
-    const errors = [];
+    // Process and insert entries inside a transaction
+    const { importedEntries, errors } = await withTransaction(async (txClient) => {
+      const imported: Array<{ id: string; projectName: string; description: string; date: string; duration: number }> = [];
+      const errs: Array<{ row: number; message: string }> = [];
 
-    for (let i = 0; i < records.length; i++) {
-      const record = records[i] as Record<string, string>;
+      for (let i = 0; i < records.length; i++) {
+        const record = records[i] as Record<string, string>;
 
-      try {
-        // Extract data from CSV record using column mapping
-        const projectName = record[fieldMapping.projectName]?.trim();
-        const description = record[fieldMapping.description]?.trim();
-        const dateStr = record[fieldMapping.date]?.trim();
-        const durationStr = record[fieldMapping.duration]?.trim();
-        const startTimeStr = record[fieldMapping.startTime]?.trim();
-        const endTimeStr = record[fieldMapping.endTime]?.trim();
-        const tagsStr = record[fieldMapping.tags]?.trim();
-        const notes = record[fieldMapping.notes]?.trim() || null;
-        const isBillableStr = record[fieldMapping.isBillable]?.trim();
+        try {
+          const projectName = record[fieldMapping.projectName]?.trim();
+          const description = record[fieldMapping.description]?.trim();
+          const dateStr = record[fieldMapping.date]?.trim();
+          const durationStr = record[fieldMapping.duration]?.trim();
+          const startTimeStr = record[fieldMapping.startTime]?.trim();
+          const endTimeStr = record[fieldMapping.endTime]?.trim();
+          const tagsStr = record[fieldMapping.tags]?.trim();
+          const notes = record[fieldMapping.notes]?.trim() || null;
+          const isBillableStr = record[fieldMapping.isBillable]?.trim();
 
-        // Validate required fields
-        if (!projectName) {
-          errors.push({ row: i + 1, message: "שם הפרויקט חסר" });
-          continue;
-        }
-
-        if (!description) {
-          errors.push({ row: i + 1, message: "התיאור חסר" });
-          continue;
-        }
-
-        if (!dateStr) {
-          errors.push({ row: i + 1, message: "התאריך חסר" });
-          continue;
-        }
-
-        // Find project ID
-        const projectId = projectMap.get(projectName);
-        if (!projectId) {
-          errors.push({ row: i + 1, message: `הפרויקט '${projectName}' לא נמצא` });
-          continue;
-        }
-
-        // Parse date
-        const entryDate = new Date(dateStr);
-        if (isNaN(entryDate.getTime())) {
-          errors.push({ row: i + 1, message: "תאריך לא תקין" });
-          continue;
-        }
-
-        // Parse duration or start/end times
-        let duration = 0;
-        let startTime: Date | null = null;
-        let endTime: Date | null = null;
-
-        if (durationStr) {
-          // Duration is provided (in minutes or hours)
-          duration = parseFloat(durationStr);
-          if (isNaN(duration)) {
-            errors.push({ row: i + 1, message: "משך זמן לא תקין" });
+          if (!projectName) {
+            errs.push({ row: i + 1, message: "שם הפרויקט חסר" });
             continue;
           }
 
-          // If duration looks like it's in hours (e.g., "2.5" or "2:30"), convert to minutes
-          if (durationStr.includes(":")) {
-            const parts = durationStr.split(":");
-            if (parts.length === 2) {
-              const hours = parseInt(parts[0], 10);
-              const minutes = parseInt(parts[1], 10);
-              duration = hours * 60 + minutes;
+          if (!description) {
+            errs.push({ row: i + 1, message: "התיאור חסר" });
+            continue;
+          }
+
+          if (!dateStr) {
+            errs.push({ row: i + 1, message: "התאריך חסר" });
+            continue;
+          }
+
+          const projectId = projectMap.get(projectName);
+          if (!projectId) {
+            errs.push({ row: i + 1, message: `הפרויקט '${projectName}' לא נמצא` });
+            continue;
+          }
+
+          const entryDate = new Date(dateStr);
+          if (isNaN(entryDate.getTime())) {
+            errs.push({ row: i + 1, message: "תאריך לא תקין" });
+            continue;
+          }
+
+          let duration = 0;
+          let startTime: Date | null = null;
+          let endTime: Date | null = null;
+
+          if (durationStr) {
+            duration = parseFloat(durationStr);
+            if (isNaN(duration)) {
+              errs.push({ row: i + 1, message: "משך זמן לא תקין" });
+              continue;
             }
-          } else if (duration < 1000) {
-            // Assume it's in hours, convert to minutes
-            duration = duration * 60;
-          }
-        } else if (startTimeStr && endTimeStr) {
-          // Start and end times are provided
-          startTime = new Date(`${dateStr}T${startTimeStr}`);
-          endTime = new Date(`${dateStr}T${endTimeStr}`);
 
-          if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
-            errors.push({ row: i + 1, message: "שעות התחלה/סיום לא תקינות" });
+            if (durationStr.includes(":")) {
+              const parts = durationStr.split(":");
+              if (parts.length === 2) {
+                const hours = parseInt(parts[0], 10);
+                const minutes = parseInt(parts[1], 10);
+                duration = hours * 60 + minutes;
+              }
+            } else if (duration < 1000) {
+              duration = duration * 60;
+            }
+          } else if (startTimeStr && endTimeStr) {
+            startTime = new Date(`${dateStr}T${startTimeStr}`);
+            endTime = new Date(`${dateStr}T${endTimeStr}`);
+
+            if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+              errs.push({ row: i + 1, message: "שעות התחלה/סיום לא תקינות" });
+              continue;
+            }
+
+            duration = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
+          } else {
+            errs.push({ row: i + 1, message: "יש לספק משך זמן או שעות התחלה/סיום" });
             continue;
           }
 
-          // Calculate duration in minutes
-          duration = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
-        } else {
-          errors.push({ row: i + 1, message: "יש לספק משך זמן או שעות התחלה/סיום" });
-          continue;
+          let tags: string[] = [];
+          if (tagsStr) {
+            tags = tagsStr.split(",").map((t) => t.trim()).filter(Boolean);
+          }
+
+          let isBillable = true;
+          if (isBillableStr) {
+            isBillable = isBillableStr.toLowerCase() === "true" ||
+                          isBillableStr.toLowerCase() === "yes" ||
+                          isBillableStr === "1" ||
+                          isBillableStr.toLowerCase() === "כן";
+          }
+
+          const id = `entry_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+          await txClient.query(
+            `INSERT INTO time_entries (id, user_id, project_id, description, start_time, end_time, duration, date, tags, notes, is_billable, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())`,
+            [id, userId, projectId, description, startTime, endTime, Math.round(duration), entryDate, JSON.stringify(tags), notes, isBillable]
+          );
+
+          imported.push({ id, projectName, description, date: dateStr, duration: Math.round(duration) });
+        } catch (error) {
+          console.error(`Error importing entry at row ${i + 1}:`, error);
+          errs.push({ row: i + 1, message: "שגיאה בייבוא הרשומה" });
         }
-
-        // Parse tags
-        let tags: string[] = [];
-        if (tagsStr) {
-          tags = tagsStr.split(",").map((t) => t.trim()).filter(Boolean);
-        }
-
-        // Parse isBillable
-        let isBillable = true;
-        if (isBillableStr) {
-          isBillable = isBillableStr.toLowerCase() === "true" ||
-                        isBillableStr.toLowerCase() === "yes" ||
-                        isBillableStr === "1" ||
-                        isBillableStr.toLowerCase() === "כן";
-        }
-
-        // Generate ID and insert
-        const id = `entry_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-
-        await query(
-          `INSERT INTO time_entries (id, user_id, project_id, description, start_time, end_time, duration, date, tags, notes, is_billable, created_at, updated_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())`,
-          [
-            id,
-            userId,
-            projectId,
-            description,
-            startTime,
-            endTime,
-            Math.round(duration),
-            entryDate,
-            JSON.stringify(tags),
-            notes,
-            isBillable,
-          ]
-        );
-
-        importedEntries.push({
-          id,
-          projectName,
-          description,
-          date: dateStr,
-          duration: Math.round(duration),
-        });
-      } catch (error) {
-        console.error(`Error importing entry at row ${i + 1}:`, error);
-        errors.push({ row: i + 1, message: "שגיאה בייבוא הרשומה" });
       }
-    }
+
+      return { importedEntries: imported, errors: errs };
+    });
 
     return NextResponse.json({
       success: true,

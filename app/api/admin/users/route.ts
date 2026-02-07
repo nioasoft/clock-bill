@@ -53,11 +53,19 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
          u.role,
          u.created_at,
          up.business_name,
-         (SELECT COUNT(*) FROM time_entries te WHERE te.user_id = u.id) as entry_count,
-         (SELECT COUNT(*) FROM projects p WHERE p.user_id = u.id) as project_count,
-         (SELECT MAX(date) FROM time_entries te WHERE te.user_id = u.id) as last_entry_date
+         COALESCE(te_stats.entry_count, 0) as entry_count,
+         COALESCE(p_stats.project_count, 0) as project_count,
+         te_stats.last_entry_date
        FROM users u
        LEFT JOIN user_profiles up ON u.id = up.user_id
+       LEFT JOIN (
+         SELECT user_id, COUNT(*) as entry_count, MAX(date) as last_entry_date
+         FROM time_entries GROUP BY user_id
+       ) te_stats ON u.id = te_stats.user_id
+       LEFT JOIN (
+         SELECT user_id, COUNT(*) as project_count
+         FROM projects GROUP BY user_id
+       ) p_stats ON u.id = p_stats.user_id
        ${whereClause}
        ORDER BY u.created_at DESC
        LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,

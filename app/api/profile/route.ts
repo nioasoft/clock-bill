@@ -128,6 +128,10 @@ export async function GET(): Promise<NextResponse> {
     return NextResponse.json({
       success: true,
       profile: result.rows[0],
+    }, {
+      headers: {
+        'Cache-Control': 'private, max-age=120, stale-while-revalidate=300'
+      }
     });
   } catch (error) {
     logger.error("Failed to get profile", error, userId ? { userId } : undefined);

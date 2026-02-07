@@ -70,6 +70,10 @@ export async function GET(request: NextRequest) {
         elapsedMinutes,
         elapsedSeconds: Math.floor((elapsedMs / 1000) % 60)
       }
+    }, {
+      headers: {
+        'Cache-Control': 'no-store'
+      }
     });
   } catch (error) {
     console.error("Error fetching running timer:", error);

@@ -47,30 +47,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if there's already a running timer
-    const runningTimer = await query<{ id: string }>(
-      `SELECT id FROM time_entries WHERE user_id = $1 AND start_time IS NOT NULL AND end_time IS NULL`,
-      [userId]
-    );
-
-    if (runningTimer.rows.length > 0) {
-      logger.warn("Timer start attempted while another timer is running", { userId });
-      return NextResponse.json(
-        { success: false, message: "יש טיימר פעיל כבר. עצור אותו תחילה." },
-        { status: 400 }
-      );
-    }
-
-    // Create new time entry with start_time
+    // Create new time entry with start_time.
+    // The partial unique index idx_one_running_timer_per_user prevents
+    // concurrent running timers per user at the DB level.
     const now = new Date();
     const today = now.toISOString().split('T')[0];
 
-    const result = await query<{ id: string }>(
-      `INSERT INTO time_entries (id, user_id, project_id, description, start_time, date, duration, is_billable)
-       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, 0, TRUE)
-       RETURNING id`,
-      [userId, projectId, description || '', now.toISOString(), today]
-    );
+    let result;
+    try {
+      result = await query<{ id: string }>(
+        `INSERT INTO time_entries (id, user_id, project_id, description, start_time, date, duration, is_billable)
+         VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, 0, TRUE)
+         RETURNING id`,
+        [userId, projectId, description || '', now.toISOString(), today]
+      );
+    } catch (insertError: unknown) {
+      // Unique constraint violation from idx_one_running_timer_per_user
+      if (insertError && typeof insertError === 'object' && 'code' in insertError && (insertError as { code: string }).code === '23505') {
+        logger.warn("Timer start attempted while another timer is running", { userId });
+        return NextResponse.json(
+          { success: false, message: "יש טיימר פעיל כבר. עצור אותו תחילה." },
+          { status: 400 }
+        );
+      }
+      throw insertError;
+    }
 
     const newEntry = result.rows[0];
 

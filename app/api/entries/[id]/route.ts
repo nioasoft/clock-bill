@@ -89,6 +89,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
         isBillable: entry.is_billable,
         createdAt: entry.created_at,
       },
+    }, {
+      headers: {
+        'Cache-Control': 'private, max-age=30, stale-while-revalidate=60'
+      }
     });
   } catch (error) {
     console.error("Error fetching entry:", error);

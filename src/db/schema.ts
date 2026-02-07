@@ -107,7 +107,10 @@ export const clients = pgTable(
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
-  (table) => [index("idx_clients_user_id").on(table.userId)]
+  (table) => [
+    index("idx_clients_user_id").on(table.userId),
+    index("idx_clients_user_id_is_active").on(table.userId, table.isActive),
+  ]
 );
 
 // ─── Projects ───────────────────────────────────────────────────────
@@ -140,6 +143,7 @@ export const projects = pgTable(
   (table) => [
     index("idx_projects_user_id").on(table.userId),
     index("idx_projects_client_id").on(table.clientId),
+    index("idx_projects_user_id_status").on(table.userId, table.status),
     check(
       "projects_pricing_model_check",
       sql`${table.pricingModel} IN ('hourly', 'package', 'mixed', 'fixed', 'retainer')`
@@ -178,6 +182,7 @@ export const timeEntries = pgTable(
     index("idx_time_entries_user_id").on(table.userId),
     index("idx_time_entries_project_id").on(table.projectId),
     index("idx_time_entries_date").on(table.date),
+    index("idx_time_entries_user_id_date").on(table.userId, table.date),
   ]
 );
 

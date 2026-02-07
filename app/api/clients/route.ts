@@ -148,30 +148,7 @@ export async function POST(request: NextRequest) {
 
     const { query } = await import("@/lib/db");
 
-    // Generate UUID for new client
-    const clientIdResult = await query<{ id: string }>(
-      `SELECT gen_random_uuid()::text as id`
-    );
-    const clientId = clientIdResult.rows[0].id;
-
-    // Insert client
-    await query(
-      `INSERT INTO clients (id, user_id, name, contact_name, email, phone, address, default_rate, notes, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE)`,
-      [
-        clientId,
-        user.id,
-        name.trim(),
-        contactName?.trim() || null,
-        email?.trim() || null,
-        phone?.trim() || null,
-        address?.trim() || null,
-        defaultRate || null,
-        notes?.trim() || null,
-      ]
-    );
-
-    // Fetch the created client
+    // Insert client with inline UUID, returning all fields
     const clientResult = await query<{
       id: string;
       name: string;
@@ -184,10 +161,19 @@ export async function POST(request: NextRequest) {
       is_active: boolean;
       created_at: string;
     }>(
-      `SELECT id, name, contact_name, email, phone, address, default_rate, notes, is_active, created_at
-       FROM clients
-       WHERE id = $1`,
-      [clientId]
+      `INSERT INTO clients (id, user_id, name, contact_name, email, phone, address, default_rate, notes, is_active)
+       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, TRUE)
+       RETURNING id, name, contact_name, email, phone, address, default_rate, notes, is_active, created_at`,
+      [
+        user.id,
+        name.trim(),
+        contactName?.trim() || null,
+        email?.trim() || null,
+        phone?.trim() || null,
+        address?.trim() || null,
+        defaultRate || null,
+        notes?.trim() || null,
+      ]
     );
 
     const client = clientResult.rows[0];

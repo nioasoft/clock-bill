@@ -110,6 +110,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       results,
+    }, {
+      headers: {
+        'Cache-Control': 'private, max-age=10, stale-while-revalidate=30'
+      }
     });
   } catch (error) {
     console.error("Search API error:", error);

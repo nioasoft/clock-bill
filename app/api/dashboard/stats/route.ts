@@ -25,51 +25,104 @@ export async function GET(request: NextRequest) {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfMonthStr = startOfMonth.toISOString().split('T')[0];
 
-    // Get total hours for today
-    const todayResult = await query<{ total: string }>(
-      `SELECT COALESCE(SUM(duration), 0) as total
-       FROM time_entries
-       WHERE user_id = $1 AND date = $2`,
-      [userId, today]
-    );
+    // Get upcoming deadlines date range
+    const thirtyDaysFromNow = new Date(now);
+    thirtyDaysFromNow.setDate(now.getDate() + 30);
+    const thirtyDaysStr = thirtyDaysFromNow.toISOString().split('T')[0];
 
-    // Get total hours for this week
-    const weekResult = await query<{ total: string }>(
-      `SELECT COALESCE(SUM(duration), 0) as total
-       FROM time_entries
-       WHERE user_id = $1 AND date >= $2`,
-      [userId, startOfWeekStr]
-    );
+    // Run all independent queries in parallel
+    const [
+      todayResult,
+      weekResult,
+      monthResult,
+      clientsResult,
+      projectsResult,
+      currencyResult,
+      earningsResult,
+      recentEntriesResult,
+      upcomingDeadlinesResult,
+    ] = await Promise.all([
+      query<{ total: string }>(
+        `SELECT COALESCE(SUM(duration), 0) as total
+         FROM time_entries
+         WHERE user_id = $1 AND date = $2`,
+        [userId, today]
+      ),
+      query<{ total: string }>(
+        `SELECT COALESCE(SUM(duration), 0) as total
+         FROM time_entries
+         WHERE user_id = $1 AND date >= $2`,
+        [userId, startOfWeekStr]
+      ),
+      query<{ total: string }>(
+        `SELECT COALESCE(SUM(duration), 0) as total
+         FROM time_entries
+         WHERE user_id = $1 AND date >= $2`,
+        [userId, startOfMonthStr]
+      ),
+      query<{ count: string }>(
+        `SELECT COUNT(*) as count
+         FROM clients
+         WHERE user_id = $1 AND is_active = TRUE`,
+        [userId]
+      ),
+      query<{ count: string }>(
+        `SELECT COUNT(*) as count
+         FROM projects
+         WHERE user_id = $1 AND status = 'active'`,
+        [userId]
+      ),
+      query<{ default_currency: string }>(
+        `SELECT default_currency FROM user_profiles WHERE user_id = $1`,
+        [userId]
+      ),
+      query<{ total: string }>(
+        `SELECT COALESCE(SUM(
+             (te.duration / 60.0) * COALESCE(p.hourly_rate, 0)
+           ), 0) as total
+         FROM time_entries te
+         JOIN projects p ON te.project_id = p.id
+         WHERE te.user_id = $1
+           AND te.date >= $2
+           AND te.is_billable = TRUE`,
+        [userId, startOfMonthStr]
+      ),
+      query<{
+        id: string;
+        description: string;
+        date: string;
+        duration: number;
+        project_id: string;
+      }>(
+        `SELECT id, description, date, duration, project_id
+         FROM time_entries
+         WHERE user_id = $1
+         ORDER BY date DESC, created_at DESC
+         LIMIT 5`,
+        [userId]
+      ),
+      query<{
+        id: string;
+        name: string;
+        end_date: string;
+        client_id: string;
+        client_name: string;
+        status: string;
+      }>(
+        `SELECT p.id, p.name, p.end_date, p.client_id, c.name as client_name, p.status
+         FROM projects p
+         JOIN clients c ON p.client_id = c.id
+         WHERE p.user_id = $1
+           AND p.end_date IS NOT NULL
+           AND p.end_date >= $2
+           AND p.end_date <= $3
+           AND p.status != 'completed'
+         ORDER BY p.end_date ASC
+         LIMIT 10`,
+        [userId, today, thirtyDaysStr]
+      ),
+    ]);
 
-    // Get total hours for this month
-    const monthResult = await query<{ total: string }>(
-      `SELECT COALESCE(SUM(duration), 0) as total
-       FROM time_entries
-       WHERE user_id = $1 AND date >= $2`,
-      [userId, startOfMonthStr]
-    );
-
-    // Get total clients count
-    const clientsResult = await query<{ count: string }>(
-      `SELECT COUNT(*) as count
-       FROM clients
-       WHERE user_id = $1 AND is_active = TRUE`,
-      [userId]
-    );
-
-    // Get total projects count
-    const projectsResult = await query<{ count: string }>(
-      `SELECT COUNT(*) as count
-       FROM projects
-       WHERE user_id = $1 AND status = 'active'`,
-      [userId]
-    );
-
-    // Get user's default currency
-    const currencyResult = await query<{ default_currency: string }>(
-      `SELECT default_currency FROM user_profiles WHERE user_id = $1`,
-      [userId]
-    );
     const userCurrency = currencyResult.rows[0]?.default_currency || 'ILS';
 
     // Get currency symbol
@@ -83,61 +136,6 @@ export async function GET(request: NextRequest) {
       };
       return symbols[currency] || currency;
     };
-
-    // Get total earnings for this month
-    const earningsResult = await query<{ total: string }>(
-      `SELECT COALESCE(SUM(
-           (te.duration / 60.0) * COALESCE(p.hourly_rate, 0)
-         ), 0) as total
-       FROM time_entries te
-       JOIN projects p ON te.project_id = p.id
-       WHERE te.user_id = $1
-         AND te.date >= $2
-         AND te.is_billable = TRUE`,
-      [userId, startOfMonthStr]
-    );
-
-    // Get recent time entries (last 5)
-    const recentEntriesResult = await query<{
-      id: string;
-      description: string;
-      date: string;
-      duration: number;
-      project_id: string;
-    }>(
-      `SELECT id, description, date, duration, project_id
-       FROM time_entries
-       WHERE user_id = $1
-       ORDER BY date DESC, created_at DESC
-       LIMIT 5`,
-      [userId]
-    );
-
-    // Get upcoming deadlines (projects with end dates in the next 30 days)
-    const thirtyDaysFromNow = new Date(now);
-    thirtyDaysFromNow.setDate(now.getDate() + 30);
-    const thirtyDaysStr = thirtyDaysFromNow.toISOString().split('T')[0];
-
-    const upcomingDeadlinesResult = await query<{
-      id: string;
-      name: string;
-      end_date: string;
-      client_id: string;
-      client_name: string;
-      status: string;
-    }>(
-      `SELECT p.id, p.name, p.end_date, p.client_id, c.name as client_name, p.status
-       FROM projects p
-       JOIN clients c ON p.client_id = c.id
-       WHERE p.user_id = $1
-         AND p.end_date IS NOT NULL
-         AND p.end_date >= $2
-         AND p.end_date <= $3
-         AND p.status != 'completed'
-       ORDER BY p.end_date ASC
-       LIMIT 10`,
-      [userId, today, thirtyDaysStr]
-    );
 
     // Format duration as hours (convert from minutes)
     const formatHours = (minutes: number) => {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
-import { query } from "@/lib/db";
+import { withTransaction } from "@/lib/db";
 import { parseCSVWithHeaders } from "@/lib/csv-parser";
 
 // POST /api/import/clients - Import clients from CSV
@@ -59,71 +59,54 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Process and insert clients
-    const importedClients = [];
-    const errors = [];
+    // Process and insert clients inside a transaction
+    const { importedClients, errors } = await withTransaction(async (client) => {
+      const imported: Array<{ id: string; name: string; contactName: string | null; email: string | null; phone: string | null }> = [];
+      const errs: Array<{ row: number; message: string }> = [];
 
-    for (let i = 0; i < records.length; i++) {
-      const record = records[i] as Record<string, string>;
+      for (let i = 0; i < records.length; i++) {
+        const record = records[i] as Record<string, string>;
 
-      try {
-        // Extract data from CSV record using column mapping
-        const name = record[fieldMapping.name]?.trim();
-        const contactName = record[fieldMapping.contactName]?.trim() || null;
-        const email = record[fieldMapping.email]?.trim() || null;
-        const phone = record[fieldMapping.phone]?.trim() || null;
-        const address = record[fieldMapping.address]?.trim() || null;
-        const defaultRate = record[fieldMapping.defaultRate]?.trim() || null;
-        const notes = record[fieldMapping.notes]?.trim() || null;
+        try {
+          const name = record[fieldMapping.name]?.trim();
+          const contactName = record[fieldMapping.contactName]?.trim() || null;
+          const email = record[fieldMapping.email]?.trim() || null;
+          const phone = record[fieldMapping.phone]?.trim() || null;
+          const address = record[fieldMapping.address]?.trim() || null;
+          const defaultRate = record[fieldMapping.defaultRate]?.trim() || null;
+          const notes = record[fieldMapping.notes]?.trim() || null;
 
-        // Validate required fields
-        if (!name) {
-          errors.push({ row: i + 1, message: "שם הלקוח חסר" });
-          continue;
-        }
-
-        // Parse rate if provided
-        let parsedRate: number | null = null;
-        if (defaultRate) {
-          parsedRate = parseFloat(defaultRate);
-          if (isNaN(parsedRate)) {
-            errors.push({ row: i + 1, message: "שעור שעהי לא תקין" });
+          if (!name) {
+            errs.push({ row: i + 1, message: "שם הלקוח חסר" });
             continue;
           }
+
+          let parsedRate: number | null = null;
+          if (defaultRate) {
+            parsedRate = parseFloat(defaultRate);
+            if (isNaN(parsedRate)) {
+              errs.push({ row: i + 1, message: "שעור שעהי לא תקין" });
+              continue;
+            }
+          }
+
+          const id = `client_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+          await client.query(
+            `INSERT INTO clients (id, user_id, name, contact_name, email, phone, address, default_rate, notes, is_active, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
+            [id, userId, name, contactName, email, phone, address, parsedRate, notes, true]
+          );
+
+          imported.push({ id, name, contactName, email, phone });
+        } catch (error) {
+          console.error(`Error importing client at row ${i + 1}:`, error);
+          errs.push({ row: i + 1, message: "שגיאה בייבוא הלקוח" });
         }
-
-        // Generate ID and insert
-        const id = `client_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-
-        await query(
-          `INSERT INTO clients (id, user_id, name, contact_name, email, phone, address, default_rate, notes, is_active, created_at, updated_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
-          [
-            id,
-            userId,
-            name,
-            contactName,
-            email,
-            phone,
-            address,
-            parsedRate,
-            notes,
-            true,
-          ]
-        );
-
-        importedClients.push({
-          id,
-          name,
-          contactName,
-          email,
-          phone,
-        });
-      } catch (error) {
-        console.error(`Error importing client at row ${i + 1}:`, error);
-        errors.push({ row: i + 1, message: "שגיאה בייבוא הלקוח" });
       }
-    }
+
+      return { importedClients: imported, errors: errs };
+    });
 
     return NextResponse.json({
       success: true,

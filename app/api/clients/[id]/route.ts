@@ -64,6 +64,10 @@ export async function GET(
         isActive: client.is_active,
         createdAt: client.created_at,
       },
+    }, {
+      headers: {
+        'Cache-Control': 'private, max-age=60, stale-while-revalidate=120'
+      }
     });
   } catch (error) {
     console.error("Error fetching client:", error);

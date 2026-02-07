@@ -325,6 +325,10 @@ export async function GET(request: NextRequest) {
         byDate: Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date)),
         byWeek: Object.values(byWeek).sort((a, b) => a.weekStart.localeCompare(b.weekStart)),
       },
+    }, {
+      headers: {
+        'Cache-Control': 'private, max-age=30, stale-while-revalidate=60'
+      }
     });
   } catch (error) {
     console.error("Error generating report:", error);

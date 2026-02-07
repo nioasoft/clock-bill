@@ -119,6 +119,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       entries,
+    }, {
+      headers: {
+        'Cache-Control': 'private, max-age=10, stale-while-revalidate=30'
+      }
     });
   } catch (error) {
     console.error("Error fetching entries:", error);
