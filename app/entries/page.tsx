@@ -17,6 +17,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { HourglassSVG } from "@/components/ui/thematic-elements";
 
 interface Project {
   id: string;
@@ -567,9 +568,16 @@ export default function EntriesPage() {
         </PageHeader>
 
         {/* Filters Section */}
-        <div className="mb-6 rounded-[14px] bg-card p-4 shadow">
+        <div className="mb-6 rounded-[14px] border-secondary/30 bg-secondary/5 p-4 shadow">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">סינון</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-foreground">סינון</h2>
+              {(filters.clientId || filters.projectId || filters.startDate || filters.endDate) && (
+                <span className="bg-secondary text-secondary-foreground rounded-full text-xs px-2 py-0.5 font-semibold">
+                  {[filters.clientId, filters.projectId, filters.startDate, filters.endDate].filter(Boolean).length}
+                </span>
+              )}
+            </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="min-h-[44px] min-w-[44px] px-4 py-2 text-sm font-medium text-primary hover:bg-primary-light rounded-[14px] transition-colors"
@@ -717,7 +725,7 @@ export default function EntriesPage() {
 
         {/* Add/Edit Entry Form */}
         {showForm && (
-          <div className="mb-8 rounded-[14px] bg-card p-6 shadow">
+          <div className="mb-8 rounded-[14px] bg-surface p-6 shadow motion-safe:animate-scale-in">
             <h2 className="text-xl font-semibold text-foreground mb-4">
               {editingEntry ? "ערוך רישום זמן" : "רשום זמן חדש"}
             </h2>
@@ -880,40 +888,47 @@ export default function EntriesPage() {
           {entriesLoading ? (
             <div className="p-8 text-center text-muted-foreground">טוען רישומי זמן...</div>
           ) : entries.length === 0 ? (
-            <EmptyState
-              icon={Clock}
-              message="אין רישומי זמן עדיין"
-              description="התחל לעקוב אחר זמני העבודה שלך על ידי רישום זמן ראשון"
-              actionLabel="רשום זמן ראשון"
-              onAction={() => setShowForm(true)}
-            />
+            <div className="relative">
+              <EmptyState
+                icon={Clock}
+                message="אין רישומי זמן עדיין"
+                description="התחל לעקוב אחר זמני העבודה שלך על ידי רישום זמן ראשון"
+                actionLabel="רשום זמן ראשון"
+                onAction={() => setShowForm(true)}
+              />
+              <div className="absolute top-8 start-1/2 -translate-x-1/2 opacity-10 pointer-events-none">
+                <HourglassSVG className="w-32 h-32 text-primary" />
+              </div>
+            </div>
           ) : (
             <>
               {/* Bulk Action Bar */}
               {selectedEntries.size > 0 && (
-                <div className="mb-4 rounded-[14px] bg-primary-light p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm font-medium text-primary">
+                <div className="fixed bottom-0 inset-x-0 md:sticky md:bottom-4 bg-primary text-primary-foreground rounded-lg shadow-lg motion-safe:animate-fade-up p-4 z-30 mb-4">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <span className="text-sm font-medium">
                       נבחרו {selectedEntries.size} רשומות
                     </span>
-                    <button
-                      onClick={handleBulkEdit}
-                      className="rounded-[14px] bg-primary px-4 py-2 text-sm text-white hover:bg-primary/90"
-                    >
-                      ערוך נבחרים
-                    </button>
-                    <button
-                      onClick={() => setShowBulkDeleteConfirm(true)}
-                      className="rounded-[14px] bg-destructive px-4 py-2 text-sm text-white hover:bg-destructive/90"
-                    >
-                      מחק נבחרים
-                    </button>
-                    <button
-                      onClick={() => setSelectedEntries(new Set())}
-                      className="rounded-[14px] border border-border px-4 py-2 text-sm text-foreground hover:bg-muted"
-                    >
-                      בטל בחירה
-                    </button>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        onClick={handleBulkEdit}
+                        className="rounded-[14px] bg-accent text-accent-foreground px-4 py-2 text-sm hover:bg-accent/90"
+                      >
+                        ערוך נבחרים
+                      </button>
+                      <button
+                        onClick={() => setShowBulkDeleteConfirm(true)}
+                        className="rounded-[14px] bg-destructive px-4 py-2 text-sm text-white hover:bg-destructive/90"
+                      >
+                        מחק נבחרים
+                      </button>
+                      <button
+                        onClick={() => setSelectedEntries(new Set())}
+                        className="rounded-[14px] border border-primary-foreground/20 px-4 py-2 text-sm hover:bg-primary-foreground/10"
+                      >
+                        בטל בחירה
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -921,9 +936,9 @@ export default function EntriesPage() {
               {/* Desktop Table View */}
               <div className="hidden md:block overflow-x-auto">
                 <table className="min-w-full divide-y divide-border">
-                  <thead className="bg-muted">
+                  <thead className="bg-surface">
                     <tr>
-                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground w-12">
+                      <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-muted-foreground w-12">
                         <input
                           type="checkbox"
                           checked={selectedEntries.size === entries.length && entries.length > 0}
@@ -932,29 +947,29 @@ export default function EntriesPage() {
                           aria-label="בחר הכל"
                         />
                       </th>
-                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         תאריך
                       </th>
-                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         תיאור
                       </th>
-                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         לקוח
                       </th>
-                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         פרויקט
                       </th>
-                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         משך זמן
                       </th>
-                      <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         פעולות
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border bg-card">
                     {entries.map((entry) => (
-                      <tr key={entry.id} className={`hover:bg-muted ${selectedEntries.has(entry.id) ? "bg-primary-light" : ""}`}>
+                      <tr key={entry.id} className={`hover:bg-surface even:bg-surface/50 ${selectedEntries.has(entry.id) ? "bg-primary-light" : ""}`}>
                         <td className="whitespace-nowrap px-6 py-4">
                           <input
                             type="checkbox"
@@ -1000,9 +1015,9 @@ export default function EntriesPage() {
                         </Link>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm text-foreground">{formatDuration(entry.duration)}</div>
+                        <div className="text-sm font-mono font-semibold text-foreground">{formatDuration(entry.duration)}</div>
                         {entry.isBillable && (
-                          <span className="inline-flex rounded-full bg-success/10 px-2 text-xs font-semibold leading-5 text-success me-2">
+                          <span className="inline-flex rounded-full bg-accent/20 text-accent px-2 py-0.5 text-xs font-semibold leading-5 me-2">
                             לחיוב
                           </span>
                         )}
@@ -1036,7 +1051,7 @@ export default function EntriesPage() {
             {/* Mobile Card View */}
             <div className="md:hidden space-y-4">
               {entries.map((entry) => (
-                <div key={entry.id} className={`bg-card rounded-[14px] shadow p-4 ${selectedEntries.has(entry.id) ? "ring-2 ring-primary" : ""}`}>
+                <div key={entry.id} className={`bg-card rounded-[14px] shadow p-4 border-s-4 border-primary ${selectedEntries.has(entry.id) ? "ring-2 ring-primary" : ""}`}>
                   <div className="flex items-start gap-3">
                     {/* Large touch-friendly checkbox */}
                     <div className="pt-1">
@@ -1051,7 +1066,7 @@ export default function EntriesPage() {
                     <div className="flex-1 min-w-0">
                       {/* Header with date and status */}
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-foreground">
+                        <span className="text-sm text-muted-foreground">
                           {new Date(entry.date).toLocaleDateString("he-IL")}
                         </span>
                         {isEntryRunning(entry) && (
@@ -1066,6 +1081,13 @@ export default function EntriesPage() {
                         )}
                       </div>
 
+                      {/* Project name prominent */}
+                      <div className="flex items-center gap-2 text-sm font-semibold text-foreground mb-2">
+                        <Link href={`/projects/${entry.projectId}`} className="hover:text-primary hover:underline">{entry.projectName}</Link>
+                        <span className="text-muted-foreground">•</span>
+                        <Link href={`/clients/${entry.clientId}`} className="text-muted-foreground hover:text-primary hover:underline">{entry.clientName}</Link>
+                      </div>
+
                       {/* Description */}
                       <div className="text-sm text-foreground mb-1">
                         {entry.description}
@@ -1074,20 +1096,13 @@ export default function EntriesPage() {
                         <div className="text-xs text-muted-foreground mb-2">{entry.notes}</div>
                       )}
 
-                      {/* Client and Project */}
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                        <Link href={`/clients/${entry.clientId}`} className="hover:text-primary hover:underline">{entry.clientName}</Link>
-                        <span>•</span>
-                        <Link href={`/projects/${entry.projectId}`} className="hover:text-primary hover:underline">{entry.projectName}</Link>
-                      </div>
-
                       {/* Duration and billable status */}
                       <div className="flex items-center gap-2 mb-3">
-                        <span className="text-sm font-medium text-foreground">
+                        <span className="text-lg font-mono font-bold text-primary">
                           {formatDuration(entry.duration)}
                         </span>
                         {entry.isBillable && (
-                          <span className="inline-flex rounded-full bg-success/10 px-2 py-1 text-xs font-semibold leading-5 text-success">
+                          <span className="inline-flex rounded-full bg-accent/20 text-accent px-2 py-0.5 text-xs font-semibold leading-5">
                             לחיוב
                           </span>
                         )}
@@ -1126,7 +1141,7 @@ export default function EntriesPage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!entryToDelete} onOpenChange={(open) => { if (!open) cancelDelete(); }}>
-        <DialogContent showCloseButton={false}>
+        <DialogContent showCloseButton={false} className="border-destructive/20">
           <DialogHeader>
             <DialogTitle>מחק רישום זמן</DialogTitle>
             <DialogDescription>
@@ -1249,7 +1264,7 @@ export default function EntriesPage() {
 
       {/* Bulk Delete Confirmation Modal */}
       <Dialog open={showBulkDeleteConfirm} onOpenChange={(open) => { if (!open) setShowBulkDeleteConfirm(false); }}>
-        <DialogContent showCloseButton={false}>
+        <DialogContent showCloseButton={false} className="border-destructive/20">
           <DialogHeader>
             <DialogTitle>מחק {selectedEntries.size} רשומות</DialogTitle>
             <DialogDescription>

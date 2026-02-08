@@ -680,20 +680,20 @@ export default function ReportsPage() {
         {/* Filters Section */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display text-lg font-semibold">פילטרים</h2>
+            <h2 className="font-display font-bold text-lg">פילטרים</h2>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="min-h-[44px] min-w-[44px] px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-[14px] transition-colors"
+              className="min-h-[44px] min-w-[44px] px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-[0.625rem] transition-colors"
             >
               {showFilters ? "הסתר" : "הצג"}
             </button>
           </div>
 
           {showFilters && (
-            <div className="bg-card border border-border/50 rounded-[14px] p-6 space-y-4 shadow-sm">
+            <div className="bg-surface border border-border/50 rounded-[0.875rem] p-6 space-y-4 shadow-sm">
               {/* Date Range */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
                   <label className="block text-sm font-medium mb-2">תאריך התחלה</label>
                   <input
                     type="date"
@@ -701,10 +701,10 @@ export default function ReportsPage() {
                     onChange={(e) =>
                       setFilters({ ...filters, startDate: e.target.value })
                     }
-                    className="w-full px-3 py-2 border rounded-[14px] bg-background"
+                    className="w-full px-3 py-2 border rounded-[0.625rem] bg-background"
                   />
                 </div>
-                <div>
+                <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
                   <label className="block text-sm font-medium mb-2">תאריך סיום</label>
                   <input
                     type="date"
@@ -712,18 +712,18 @@ export default function ReportsPage() {
                     onChange={(e) =>
                       setFilters({ ...filters, endDate: e.target.value })
                     }
-                    className="w-full px-3 py-2 border rounded-[14px] bg-background"
+                    className="w-full px-3 py-2 border rounded-[0.625rem] bg-background"
                   />
                 </div>
               </div>
 
               {/* Client Filter */}
-              <div>
+              <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
                 <label className="block text-sm font-medium mb-2">לקוח</label>
                 <select
                   value={filters.clientId}
                   onChange={(e) => handleClientChange(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-[14px] bg-background"
+                  className="w-full px-3 py-2 border rounded-[0.625rem] bg-background"
                   disabled={clientsLoading}
                 >
                   <option value="">כל הלקוחות</option>
@@ -736,14 +736,14 @@ export default function ReportsPage() {
               </div>
 
               {/* Project Filter */}
-              <div>
+              <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
                 <label className="block text-sm font-medium mb-2">פרויקט</label>
                 <select
                   value={filters.projectId}
                   onChange={(e) =>
                     setFilters({ ...filters, projectId: e.target.value })
                   }
-                  className="w-full px-3 py-2 border rounded-[14px] bg-background"
+                  className="w-full px-3 py-2 border rounded-[0.625rem] bg-background"
                   disabled={projectsLoading || !filters.clientId}
                 >
                   <option value="">כל הפרויקטים</option>
@@ -756,12 +756,12 @@ export default function ReportsPage() {
               </div>
 
               {/* Display Currency Filter */}
-              <div>
+              <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
                 <label className="block text-sm font-medium mb-2">הצג סכומים במטבע</label>
                 <select
                   value={displayCurrency}
                   onChange={(e) => setDisplayCurrency(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-[14px] bg-background"
+                  className="w-full px-3 py-2 border rounded-[0.625rem] bg-background"
                 >
                   <option value="original">מטבע מקורי (מרובה)</option>
                   <option value="ILS">₪ - שקל ישראלי (ILS)</option>
@@ -782,14 +782,14 @@ export default function ReportsPage() {
                 <button
                   onClick={() => setShowLoadPresetDialog(true)}
                   disabled={presetsLoading || presets.length === 0}
-                  className="px-4 py-2 bg-secondary text-white rounded-[14px] hover:bg-secondary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-secondary text-white rounded-full hover:bg-secondary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title={presets.length === 0 ? "אין פריסטים שמורים" : "טען פריסט"}
                 >
                   📂 טען פריסט
                 </button>
                 <button
                   onClick={() => setShowSavePresetDialog(true)}
-                  className="px-4 py-2 bg-accent text-white rounded-[14px] hover:bg-accent/90 transition-colors"
+                  className="px-4 py-2 bg-accent text-white rounded-full hover:bg-accent/90 transition-colors"
                   title="שמור פריסט"
                 >
                   💾 שמור פריסט
@@ -797,7 +797,7 @@ export default function ReportsPage() {
                 <button
                   onClick={generateReport}
                   disabled={reportLoading}
-                  className="px-6 py-2 bg-primary text-primary-foreground rounded-[14px] hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-2 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {reportLoading ? "יוצר דוח..." : "צור דוח"}
                 </button>
@@ -816,7 +816,7 @@ export default function ReportsPage() {
                       endDate: new Date().toISOString().split("T")[0],
                     })
                   }
-                  className="px-6 py-2 border border-border rounded-[14px] hover:bg-accent transition-colors"
+                  className="px-6 py-2 border border-border rounded-full hover:bg-accent transition-colors"
                 >
                   נקה פילטרים
                 </button>
@@ -827,7 +827,7 @@ export default function ReportsPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-destructive/10 border border-destructive rounded-[14px]">
+          <div className="mb-6 p-4 bg-destructive/10 border border-destructive rounded-[0.875rem]">
             <p className="text-destructive">{error}</p>
           </div>
         )}
@@ -839,7 +839,7 @@ export default function ReportsPage() {
             <div className="flex justify-end gap-3 no-print">
               <button
                 onClick={handleShareReport}
-                className="flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-[14px] hover:bg-accent/90 transition-colors shadow-md"
+                className="flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-full hover:bg-accent/90 transition-colors shadow-md"
                 title="העתק קישור לדוח"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -849,7 +849,7 @@ export default function ReportsPage() {
               </button>
               <button
                 onClick={handleExportExcel}
-                className="flex items-center gap-2 px-6 py-3 bg-success text-white rounded-[14px] hover:bg-success/90 transition-colors shadow-md"
+                className="flex items-center gap-2 px-6 py-3 bg-success text-white rounded-full hover:bg-success/90 transition-colors shadow-md"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -858,7 +858,7 @@ export default function ReportsPage() {
               </button>
               <button
                 onClick={handleExportPdf}
-                className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-[14px] hover:bg-primary/90 transition-colors shadow-md"
+                className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors shadow-md"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -1062,24 +1062,24 @@ export default function ReportsPage() {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-card border border-border/50 rounded-[14px] p-6 border-t-2 border-t-accent shadow-sm">
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">
+              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-accent shadow-sm">
+                <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
                   סה״כ שעות
                 </h3>
-                <p className="font-mono text-3xl font-bold tabular-nums">
+                <p className="font-mono text-2xl font-bold tabular-nums">
                   {reportData.summary.totalHours.toFixed(1)} שע׳
                 </p>
               </div>
-              <div className="bg-card border border-border/50 rounded-[14px] p-6 border-t-2 border-t-secondary shadow-sm">
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">
+              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-secondary shadow-sm">
+                <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
                   סה״כ רשומות
                 </h3>
-                <p className="font-mono text-3xl font-bold tabular-nums">
+                <p className="font-mono text-2xl font-bold tabular-nums">
                   {reportData.summary.totalEntries}
                 </p>
               </div>
-              <div className="bg-card border border-border/50 rounded-[14px] p-6 border-t-2 border-t-primary shadow-sm">
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">
+              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-primary shadow-sm">
+                <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
                   סה״כ סכום {displayCurrency !== "original" && `(${displayCurrency})`}
                 </h3>
                 {Object.keys(reportData.summary.totalAmounts).length > 0 ? (
@@ -1097,7 +1097,7 @@ export default function ReportsPage() {
                       )}
                     </div>
                   ) : (
-                    <p className="font-mono text-3xl font-bold tabular-nums">
+                    <p className="font-mono text-2xl font-bold tabular-nums">
                       {formatCurrency(
                         convertAmounts(reportData.summary.totalAmounts, displayCurrency),
                         displayCurrency
@@ -1108,8 +1108,8 @@ export default function ReportsPage() {
                   <p className="text-lg text-muted-foreground">לא זמין</p>
                 )}
               </div>
-              <div className="bg-card border border-border/50 rounded-[14px] p-6 border-t-2 border-t-success shadow-sm">
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">
+              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-success shadow-sm">
+                <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
                   תקופה
                 </h3>
                 <p className="text-lg font-semibold">
@@ -1120,13 +1120,13 @@ export default function ReportsPage() {
 
             {/* By Client Summary */}
             {reportData.byClient.length > 0 && (
-              <div className="bg-card border border-border/50 rounded-[14px] p-6 shadow-sm">
-                <h3 className="font-display text-lg font-semibold mb-4">סיכום לפי לקוח</h3>
+              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 shadow-sm">
+                <h3 className="font-display text-lg font-bold mb-4">סיכום לפי לקוח</h3>
                 <div className="space-y-3">
                   {reportData.byClient.map((client) => (
                     <div
                       key={client.clientId}
-                      className="flex items-center justify-between p-3 bg-accent rounded-[14px] border border-border/30"
+                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[0.625rem] border border-border/30 transition-colors"
                     >
                       <div className="flex-1">
                         <p className="font-medium">{client.clientName}</p>
@@ -1135,7 +1135,7 @@ export default function ReportsPage() {
                         </p>
                       </div>
                       <div className="text-end">
-                        <p className="text-lg font-semibold">
+                        <p className="font-mono text-lg font-semibold">
                           {formatDuration(client.totalMinutes)}
                         </p>
                         {Object.keys(client.totalAmounts).length > 0 && (
@@ -1161,13 +1161,13 @@ export default function ReportsPage() {
 
             {/* By Project Summary */}
             {reportData.byProject.length > 0 && (
-              <div className="bg-card border border-border/50 rounded-[14px] p-6 shadow-sm">
-                <h3 className="font-display text-lg font-semibold mb-4">סיכום לפי פרויקט</h3>
+              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 shadow-sm">
+                <h3 className="font-display text-lg font-bold mb-4">סיכום לפי פרויקט</h3>
                 <div className="space-y-3">
                   {reportData.byProject.map((project) => (
                     <div
                       key={project.projectId}
-                      className="flex items-center justify-between p-3 bg-accent rounded-[14px] border border-border/30"
+                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[0.625rem] border border-border/30 transition-colors"
                     >
                       <div className="flex-1">
                         <p className="font-medium">{project.projectName}</p>
@@ -1182,7 +1182,7 @@ export default function ReportsPage() {
                         )}
                       </div>
                       <div className="text-end">
-                        <p className="text-lg font-semibold">
+                        <p className="font-mono text-lg font-semibold">
                           {formatDuration(project.totalMinutes)}
                         </p>
                         <p className="text-sm text-muted-foreground">
@@ -1202,13 +1202,13 @@ export default function ReportsPage() {
 
             {/* By Date Summary (Daily Breakdown) */}
             {reportData.byDate && reportData.byDate.length > 0 && (
-              <div className="bg-card border border-border/50 rounded-[14px] p-6 shadow-sm">
-                <h3 className="font-display text-lg font-semibold mb-4">סיכום לפי תאריך (יומי)</h3>
+              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 shadow-sm">
+                <h3 className="font-display text-lg font-bold mb-4">סיכום לפי תאריך (יומי)</h3>
                 <div className="space-y-2">
                   {reportData.byDate.map((dateSummary) => (
                     <div
                       key={dateSummary.date}
-                      className="flex items-center justify-between p-3 bg-accent rounded-[14px] border border-border/30"
+                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[0.625rem] border border-border/30 transition-colors"
                     >
                       <div className="flex-1">
                         <p className="font-medium">{dateSummary.date}</p>
@@ -1217,7 +1217,7 @@ export default function ReportsPage() {
                         </p>
                       </div>
                       <div className="text-end">
-                        <p className="text-lg font-semibold">
+                        <p className="font-mono text-lg font-semibold">
                           {formatDuration(dateSummary.totalMinutes)}
                         </p>
                         {Object.keys(dateSummary.totalAmounts).length > 0 && (
@@ -1243,13 +1243,13 @@ export default function ReportsPage() {
 
             {/* By Week Summary (Weekly Breakdown) */}
             {reportData.byWeek && reportData.byWeek.length > 0 && (
-              <div className="bg-card border border-border/50 rounded-[14px] p-6 shadow-sm">
-                <h3 className="font-display text-lg font-semibold mb-4">סיכום לפי שבוע</h3>
+              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 shadow-sm">
+                <h3 className="font-display text-lg font-bold mb-4">סיכום לפי שבוע</h3>
                 <div className="space-y-2">
                   {reportData.byWeek.map((weekSummary) => (
                     <div
                       key={weekSummary.weekStart}
-                      className="flex items-center justify-between p-3 bg-accent rounded-[14px] border border-border/30"
+                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[0.625rem] border border-border/30 transition-colors"
                     >
                       <div className="flex-1">
                         <p className="font-medium">
@@ -1260,7 +1260,7 @@ export default function ReportsPage() {
                         </p>
                       </div>
                       <div className="text-end">
-                        <p className="text-lg font-semibold">
+                        <p className="font-mono text-lg font-semibold">
                           {formatDuration(weekSummary.totalMinutes)}
                         </p>
                         {Object.keys(weekSummary.totalAmounts).length > 0 && (
@@ -1286,34 +1286,34 @@ export default function ReportsPage() {
 
             {/* Detailed Entries Table */}
             {reportData.entries.length > 0 && (
-              <div className="bg-card border border-border/50 rounded-[14px] overflow-hidden shadow-sm">
+              <div className="bg-card border border-border/50 rounded-[0.875rem] overflow-hidden shadow-sm">
                 <div className="p-6 border-b border-border">
-                  <h3 className="font-display text-lg font-semibold">רשומות מפורטות</h3>
+                  <h3 className="font-display text-lg font-bold">רשומות מפורטות</h3>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-accent">
+                    <thead className="bg-surface">
                       <tr>
-                        <th className="px-6 py-3 text-start text-sm font-medium">
+                        <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-muted-foreground">
                           תאריך
                         </th>
-                        <th className="px-6 py-3 text-start text-sm font-medium">
+                        <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-muted-foreground">
                           לקוח
                         </th>
-                        <th className="px-6 py-3 text-start text-sm font-medium">
+                        <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-muted-foreground">
                           פרויקט
                         </th>
-                        <th className="px-6 py-3 text-start text-sm font-medium">
+                        <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-muted-foreground">
                           תיאור
                         </th>
-                        <th className="px-6 py-3 text-start text-sm font-medium">
+                        <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-muted-foreground">
                           משך
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border">
-                      {reportData.entries.map((entry) => (
-                        <tr key={entry.id} className="hover:bg-accent transition-all">
+                    <tbody>
+                      {reportData.entries.map((entry, index) => (
+                        <tr key={entry.id} className={`hover:bg-surface transition-colors ${index % 2 === 0 ? '' : 'even:bg-surface/50'}`}>
                           <td className="px-6 py-4 text-sm">{entry.date}</td>
                           <td className="px-6 py-4 text-sm">
                             {entry.clientName}
@@ -1324,7 +1324,7 @@ export default function ReportsPage() {
                           <td className="px-6 py-4 text-sm">
                             {entry.description}
                           </td>
-                          <td className="px-6 py-4 text-sm font-medium">
+                          <td className="px-6 py-4 text-sm font-mono font-semibold">
                             {formatDuration(entry.duration)}
                           </td>
                         </tr>
@@ -1337,14 +1337,14 @@ export default function ReportsPage() {
 
             {/* No Data Message */}
             {reportData.entries.length === 0 && (
-              <div className="bg-card border rounded-[14px] p-12 text-center">
+              <div className="bg-card border rounded-[0.875rem] p-12 text-center">
                 <p className="text-muted-foreground text-lg mb-4">
                   לא נמצאו רשומות לתקופה שנבחרה
                 </p>
                 <div className="flex gap-3 justify-center">
                   <a
                     href="/entries"
-                    className="rounded-lg bg-primary px-4 py-2 text-sm text-white hover:bg-primary/90"
+                    className="rounded-full bg-primary px-4 py-2 text-sm text-white hover:bg-primary/90"
                   >
                     רשום זמן עכשיו
                   </a>
@@ -1356,7 +1356,7 @@ export default function ReportsPage() {
 
         {/* No Report Generated Yet */}
         {!reportData && !reportLoading && (
-          <div className="bg-card border rounded-[14px] p-12 text-center">
+          <div className="bg-card border rounded-[0.875rem] p-12 text-center">
             <p className="text-muted-foreground text-lg mb-4">
               בחר פילטרים ולחץ על &quot;צור דוח&quot; להצגת הדוח
             </p>
@@ -1382,7 +1382,7 @@ export default function ReportsPage() {
                 key={template.value}
                 onClick={() => confirmExportPdf(template.value)}
                 className={`
-                  border-2 rounded-[14px] p-6 text-start transition-all hover:shadow-lg
+                  border-2 rounded-[0.875rem] p-6 text-start transition-all hover:shadow-md hover:-translate-y-0.5
                   ${
                     selectedTemplate === template.value
                       ? "border-primary bg-primary/5"
@@ -1456,7 +1456,7 @@ export default function ReportsPage() {
                 value={presetName}
                 onChange={(e) => setPresetName(e.target.value)}
                 placeholder="לדוגמה: דוח חודשי - לקוח הייטק"
-                className="w-full px-3 py-2 border rounded-[14px] bg-background"
+                className="w-full px-3 py-2 border rounded-[0.625rem] bg-background"
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && presetName.trim()) {
@@ -1466,7 +1466,7 @@ export default function ReportsPage() {
               />
             </div>
 
-            <div className="bg-muted/50 rounded-[14px] p-4 space-y-2 text-sm">
+            <div className="bg-muted/50 rounded-[0.625rem] p-4 space-y-2 text-sm">
               <p className="font-medium">הגדרות הפילטר:</p>
               <div className="grid grid-cols-2 gap-2 text-muted-foreground">
                 <div>תאריך התחלה:</div>
@@ -1493,13 +1493,13 @@ export default function ReportsPage() {
             <button
               onClick={handleSavePreset}
               disabled={!presetName.trim()}
-              className="flex-1 px-6 py-2 bg-primary text-primary-foreground rounded-[14px] hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-2 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               שמור
             </button>
             <DialogClose asChild>
               <button
-                className="px-6 py-2 border border-border rounded-[14px] hover:bg-accent transition-colors"
+                className="px-6 py-2 border border-border rounded-full hover:bg-accent transition-colors"
               >
                 ביטול
               </button>
@@ -1531,7 +1531,7 @@ export default function ReportsPage() {
                 {presets.map((preset) => (
                   <div
                     key={preset.id}
-                    className="border rounded-[14px] p-4 hover:border-primary/50 transition-colors"
+                    className="border rounded-[0.875rem] p-4 hover:border-primary/50 hover:shadow-sm transition-all"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -1558,13 +1558,13 @@ export default function ReportsPage() {
                       <div className="flex gap-2 me-4">
                         <button
                           onClick={() => handleLoadPreset(preset)}
-                          className="px-4 py-2 bg-primary text-primary-foreground rounded-[14px] hover:bg-primary/90 transition-colors text-sm"
+                          className="px-4 py-2 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors text-sm"
                         >
                           טען
                         </button>
                         <button
                           onClick={() => handleDeletePreset(preset.id)}
-                          className="px-4 py-2 bg-destructive text-destructive-foreground rounded-[14px] hover:bg-destructive/90 transition-colors text-sm"
+                          className="px-4 py-2 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90 transition-colors text-sm"
                         >
                           מחק
                         </button>
@@ -1579,7 +1579,7 @@ export default function ReportsPage() {
           <div className="sticky bottom-0 bg-card border-t p-6">
             <DialogClose asChild>
               <button
-                className="w-full px-6 py-2 border border-border rounded-[14px] hover:bg-accent transition-colors"
+                className="w-full px-6 py-2 border border-border rounded-full hover:bg-accent transition-colors"
               >
                 סגור
               </button>

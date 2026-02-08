@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Gauge } from "lucide-react";
 import { Sidebar } from "./sidebar";
 import { MobileNav } from "./mobile-nav";
 import { MobileBottomNav } from "./mobile-bottom-nav";
@@ -9,6 +10,7 @@ import { ErrorBoundary } from "./error-boundary";
 import { PersistentTimerBar } from "./persistent-timer-bar";
 import { TimerStartModal } from "./timer-start-modal";
 import { TimerStopModal } from "./timer-stop-modal";
+import { BRAND } from "@/lib/brand";
 
 interface User {
   id: string;
@@ -33,7 +35,6 @@ export function AppLayout({ children }: AppLayoutProps) {
   });
 
   useEffect(() => {
-    // Fetch current session
     const fetchUser = async () => {
       try {
         const response = await fetch("/api/auth/session");
@@ -42,11 +43,12 @@ export function AppLayout({ children }: AppLayoutProps) {
         if (data.success && data.user) {
           setUser(data.user);
         } else {
-          // No session, redirect to login
+          document.cookie = "session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
           router.push("/login");
         }
       } catch (error) {
         console.error("Error fetching user:", error);
+        document.cookie = "session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
         router.push("/login");
       } finally {
         setLoading(false);
@@ -59,10 +61,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const handleLogout = async () => {
     setLogoutLoading(true);
     try {
-      const response = await fetch("/api/auth/logout", {
-        method: "POST",
-      });
-
+      const response = await fetch("/api/auth/logout", { method: "POST" });
       const data = await response.json();
 
       if (data.success) {
@@ -89,23 +88,30 @@ export function AppLayout({ children }: AppLayoutProps) {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-muted-foreground">טוען...</div>
+        <div role="status" aria-live="polite" className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-16 h-16 bg-gradient-to-br from-accent to-accent/80 rounded-2xl flex items-center justify-center animate-pulse">
+              <Gauge className="h-8 w-8 text-sidebar" />
+            </div>
+            <div className="absolute -inset-2 border-2 border-accent/20 rounded-2xl animate-ping" />
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <h2 className="text-xl font-display font-bold text-foreground">{BRAND.name}</h2>
+            <p className="text-sm text-muted-foreground">טוען...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!user) {
-    return null; // Will redirect
+    return null;
   }
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Mobile Navigation */}
       <MobileNav userEmail={user.email} onLogout={handleLogout} userRole={user.role} />
-
-      {/* Desktop Layout */}
       <div className="hidden lg:flex">
-        {/* Sidebar - fixed on the right for RTL */}
         <div className="fixed right-0 top-0 h-screen z-30">
           <Sidebar
             isCollapsed={sidebarCollapsed}
@@ -113,32 +119,24 @@ export function AppLayout({ children }: AppLayoutProps) {
             userRole={user.role}
           />
         </div>
-
-        {/* Main content - offset by sidebar width */}
         <div
           className={`flex-1 min-h-screen flex flex-col transition-[margin] duration-200 ${
             sidebarCollapsed ? "mr-16" : "mr-64"
           }`}
         >
           <PersistentTimerBar />
-          <main className="flex-1 overflow-x-hidden">
+          <main className="flex-1 overflow-x-hidden motion-safe:animate-fade-in">
             <ErrorBoundary>{children}</ErrorBoundary>
           </main>
         </div>
       </div>
-
-      {/* Mobile Layout - full width */}
       <div className="lg:hidden pb-16 min-h-screen flex flex-col">
         <PersistentTimerBar />
-        <main className="flex-1 overflow-x-hidden">
+        <main className="flex-1 overflow-x-hidden motion-safe:animate-fade-in">
           <ErrorBoundary>{children}</ErrorBoundary>
         </main>
-
-        {/* Mobile Bottom Navigation */}
         <MobileBottomNav />
       </div>
-
-      {/* Timer Modals (rendered at layout level) */}
       <TimerStartModal />
       <TimerStopModal />
     </div>

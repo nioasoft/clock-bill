@@ -233,7 +233,7 @@ export default function AdminUserDetailPage({
 
         {/* Tabs */}
         <div className="border-b border-border mb-6 overflow-x-auto">
-          <div className="flex gap-0 min-w-max">
+          <div className="flex gap-0 min-w-max" role="tablist">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -243,6 +243,8 @@ export default function AdminUserDetailPage({
                     ? "border-primary text-primary"
                     : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
+                role="tab"
+                aria-selected={activeTab === tab.id}
               >
                 {tab.label}
               </button>

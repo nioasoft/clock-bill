@@ -297,7 +297,7 @@ function ClientsPageContent() {
         </PageHeader>
         {/* Add/Edit Client Form */}
         {showForm && (
-          <div className="mb-8 rounded-[14px] bg-card p-6 shadow">
+          <div className="mb-8 rounded-[14px] bg-surface p-6 shadow motion-safe:animate-scale-in">
             <h2 className="text-xl font-semibold text-foreground mb-4">
               {editingClient ? "ערוך לקוח" : "הוסף לקוח חדש"}
             </h2>
@@ -322,7 +322,7 @@ function ClientsPageContent() {
                       setFormData({ ...formData, name: e.target.value });
                       setFieldErrors({ ...fieldErrors, name: undefined });
                     }}
-                    className={`mt-1 block w-full rounded-md px-3 py-2 border border-border/50 shadow-sm focus:outline-none focus:ring-primary disabled:opacity-50 ${
+                    className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 shadow-sm focus:outline-none focus:ring-primary disabled:opacity-50 ${
                       fieldErrors.name
                         ? "border-destructive/30 focus:border-destructive focus:ring-destructive/20"
                         : "border-border focus:border-primary"
@@ -341,7 +341,7 @@ function ClientsPageContent() {
                     id="contactName"
                     value={formData.contactName}
                     onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-border px-3 py-2 border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary disabled:opacity-50"
+                    className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary disabled:opacity-50"
                     disabled={submitting}
                   />
                 </div>
@@ -358,7 +358,7 @@ function ClientsPageContent() {
                       setFormData({ ...formData, email: e.target.value });
                       setFieldErrors({ ...fieldErrors, email: undefined });
                     }}
-                    className={`mt-1 block w-full rounded-md px-3 py-2 border border-border/50 shadow-sm focus:outline-none focus:ring-primary disabled:opacity-50 ${
+                    className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 shadow-sm focus:outline-none focus:ring-primary disabled:opacity-50 ${
                       fieldErrors.email
                         ? "border-destructive/30 focus:border-destructive focus:ring-destructive/20"
                         : "border-border focus:border-primary"
@@ -380,7 +380,7 @@ function ClientsPageContent() {
                       setFormData({ ...formData, phone: e.target.value });
                       setFieldErrors({ ...fieldErrors, phone: undefined });
                     }}
-                    className={`mt-1 block w-full rounded-md px-3 py-2 border border-border/50 shadow-sm focus:outline-none focus:ring-primary disabled:opacity-50 ${
+                    className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 shadow-sm focus:outline-none focus:ring-primary disabled:opacity-50 ${
                       fieldErrors.phone
                         ? "border-destructive/30 focus:border-destructive focus:ring-destructive/20"
                         : "border-border focus:border-primary"
@@ -399,7 +399,7 @@ function ClientsPageContent() {
                     id="address"
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-border/50 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                     placeholder="רחוב, מספר, עיר"
                   />
@@ -419,7 +419,7 @@ function ClientsPageContent() {
                       setFormData({ ...formData, defaultRate: e.target.value });
                       setFieldErrors({ ...fieldErrors, defaultRate: undefined });
                     }}
-                    className={`mt-1 block w-full rounded-md px-3 py-2 border border-border/50 shadow-sm focus:outline-none focus:ring-primary disabled:opacity-50 ${
+                    className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 shadow-sm focus:outline-none focus:ring-primary disabled:opacity-50 ${
                       fieldErrors.defaultRate
                         ? "border-destructive/30 focus:border-destructive focus:ring-destructive/20"
                         : "border-border focus:border-primary"
@@ -441,7 +441,7 @@ function ClientsPageContent() {
                   rows={3}
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-border px-3 py-2 border border-border/50 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                  className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                   disabled={submitting}
                 />
               </div>
@@ -482,43 +482,43 @@ function ClientsPageContent() {
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-border">
-                <thead className="bg-muted">
+                <thead className="bg-surface">
                   <tr>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
                       שם
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
                       איש קשר
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
                       אימייל
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
                       טלפון
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
                       כתובת
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
                       תעריף שעתי
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
                       סך חויב
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
                       שעות
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
                       סטטוס
                     </th>
-                    <th className="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
                       פעולות
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-card">
                   {clients.map((client) => (
-                    <tr key={client.id} className="hover:bg-muted">
+                    <tr key={client.id} className="even:bg-surface/50 hover:bg-surface">
                       <td className="whitespace-nowrap px-6 py-4">
                         <Link
                           href={`/clients/${client.id}`}
@@ -556,11 +556,11 @@ function ClientsPageContent() {
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         {client.isActive ? (
-                          <span className="inline-flex rounded-full bg-success/10 px-2 text-xs font-semibold leading-5 text-success">
+                          <span className="inline-flex rounded-full bg-success/10 text-success px-3 py-0.5 text-xs font-semibold">
                             פעיל
                           </span>
                         ) : (
-                          <span className="inline-flex rounded-full bg-muted px-2 text-xs font-semibold leading-5 text-foreground">
+                          <span className="inline-flex rounded-full bg-muted text-muted-foreground px-3 py-0.5 text-xs font-semibold">
                             לא פעיל
                           </span>
                         )}
@@ -598,7 +598,7 @@ function ClientsPageContent() {
       </PageContainer>
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!clientToDelete} onOpenChange={(open) => { if (!open) cancelDelete(); }}>
-        <DialogContent showCloseButton={false}>
+        <DialogContent showCloseButton={false} className="motion-safe:animate-scale-in border-destructive/20">
           <DialogHeader>
             <DialogTitle>ארכב לקוח</DialogTitle>
             <DialogDescription>

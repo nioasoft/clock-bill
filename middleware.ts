@@ -12,6 +12,11 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const sessionCookie = request.cookies.get("session")?.value;
 
+  // Landing page "/" is handled by the page itself (server component checks session)
+  if (pathname === "/") {
+    return NextResponse.next();
+  }
+
   // Check if the route is public
   const isPublicRoute = publicRoutes.some((route) =>
     pathname.startsWith(route)
@@ -40,6 +45,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.svg$).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.svg$|site\\.webmanifest).*)",
   ],
 };

@@ -44,10 +44,12 @@ export async function GET(): Promise<NextResponse> {
     const session = sessionResult.rows[0];
 
     if (!session) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { success: false, message: "הפעלה לא תקינה" },
         { status: 401 }
       );
+      response.cookies.delete("session");
+      return response;
     }
 
     // Check if session is expired
@@ -55,10 +57,12 @@ export async function GET(): Promise<NextResponse> {
     if (expiresAt < new Date()) {
       // Delete expired session
       await query("DELETE FROM sessions WHERE token = $1", [sessionToken]);
-      return NextResponse.json(
+      const response = NextResponse.json(
         { success: false, message: "ההפעלה פגה תוקף" },
         { status: 401 }
       );
+      response.cookies.delete("session");
+      return response;
     }
 
     return NextResponse.json({

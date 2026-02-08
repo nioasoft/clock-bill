@@ -16,7 +16,7 @@ interface BreadcrumbProps {
 export function Breadcrumb({ items, className = "" }: BreadcrumbProps) {
   return (
     <nav
-      aria-label="Breadcrumb"
+      aria-label="ניווט מיקום"
       className={`flex items-center gap-2 text-sm ${className}`}
       dir="rtl"
     >

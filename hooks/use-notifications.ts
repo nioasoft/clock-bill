@@ -3,6 +3,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import {
   checkNotificationPermission,
   requestNotificationPermission,
@@ -13,6 +14,8 @@ import {
   isReminderTime,
 } from "@/lib/notifications";
 
+const PUBLIC_ROUTES = ["/", "/login", "/register", "/forgot-password", "/reset-password"];
+
 export interface NotificationSettings {
   longTimerEnabled: boolean;
   longTimerThreshold: number;
@@ -22,6 +25,10 @@ export interface NotificationSettings {
 }
 
 export function useNotifications() {
+  const pathname = usePathname();
+  const isPublicRoute = PUBLIC_ROUTES.some((route) =>
+    route === "/" ? pathname === "/" : pathname.startsWith(route)
+  );
   const [permission, setPermission] = useState<NotificationPermission | null>(() =>
     checkNotificationPermission()
   );
@@ -135,8 +142,10 @@ export function useNotifications() {
     }
   }, []);
 
-  // Load settings on mount
+  // Load settings on mount (skip on public routes)
   useEffect(() => {
+    if (isPublicRoute) return;
+
     let cancelled = false;
 
     async function fetchSettings() {
@@ -163,7 +172,7 @@ export function useNotifications() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isPublicRoute]);
 
   return {
     permission,

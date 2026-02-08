@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { HourglassSVG } from "@/components/ui/thematic-elements";
 
 interface ProjectHours {
   projectId: string;
@@ -40,7 +41,7 @@ export function ProjectHoursChart() {
 
   if (loading) {
     return (
-      <div className="rounded-[14px] bg-card border border-border/50 p-6 shadow-sm">
+      <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
         <h3 className="font-display text-lg font-semibold text-foreground mb-4">שעות לפי פרויקט - החודש</h3>
         <div className="h-48 flex items-center justify-center">
           <div className="animate-pulse text-muted-foreground">טוען נתונים...</div>
@@ -49,23 +50,15 @@ export function ProjectHoursChart() {
     );
   }
 
-  if (error) {
+  if (error || projectHours.length === 0) {
     return (
-      <div className="rounded-[14px] bg-card border border-border/50 p-6 shadow-sm">
+      <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
         <h3 className="font-display text-lg font-semibold text-foreground mb-4">שעות לפי פרויקט - החודש</h3>
-        <div className="h-48 flex items-center justify-center">
-          <p className="text-muted-foreground">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (projectHours.length === 0) {
-    return (
-      <div className="rounded-[14px] bg-card border border-border/50 p-6 shadow-sm">
-        <h3 className="font-display text-lg font-semibold text-foreground mb-4">שעות לפי פרויקט - החודש</h3>
-        <div className="h-48 flex items-center justify-center">
-          <p className="text-muted-foreground">אין נתוני שעות זמינים</p>
+        <div className="h-48 flex flex-col items-center justify-center gap-3">
+          <HourglassSVG size={64} className="text-muted-foreground/30" />
+          <p className="text-sm text-muted-foreground text-center">
+            {error || "אין נתוני שעות זמינים עדיין"}
+          </p>
         </div>
       </div>
     );
@@ -94,7 +87,7 @@ export function ProjectHoursChart() {
   };
 
   return (
-    <div className="rounded-[14px] bg-card border border-border/50 p-6 shadow-sm">
+    <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
       <h3 className="font-display text-lg font-semibold text-foreground mb-4">שעות לפי פרויקט - החודש</h3>
 
       <div className="overflow-x-auto">
@@ -102,13 +95,15 @@ export function ProjectHoursChart() {
           width={chartWidth + 150}
           height={projectHours.length * (barHeight + gap)}
           className="mx-auto"
+          role="img"
+          aria-label="תרשים שעות לפי פרויקט"
         >
           {projectHours.map((project, index) => {
             const barWidth = (project.totalHours / maxHours) * chartWidth;
             const y = index * (barHeight + gap);
 
             return (
-              <g key={project.projectId}>
+              <g key={project.projectId} className="group cursor-pointer">
                 {/* Project name */}
                 <text
                   x={0}
@@ -127,8 +122,8 @@ export function ProjectHoursChart() {
                   y={y}
                   width={chartWidth}
                   height={barHeight}
-                  className="fill-muted"
-                  rx={4}
+                  className="fill-muted opacity-50"
+                  rx={6}
                 />
 
                 {/* Bar */}
@@ -138,8 +133,8 @@ export function ProjectHoursChart() {
                   width={barWidth}
                   height={barHeight}
                   fill="currentColor"
-                  className={`${getBarColor(index)} hover:opacity-80 transition-opacity`}
-                  rx={4}
+                  className={`${getBarColor(index)} group-hover:opacity-80 transition-opacity`}
+                  rx={6}
                 />
 
                 {/* Hours label */}

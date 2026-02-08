@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Clock } from "lucide-react";
+import { Gauge, UserPlus } from "lucide-react";
 import { validateEmail, validatePassword, validatePasswordConfirm } from "@/lib/validation";
 import { PasswordStrengthIndicator } from "@/components/password-strength-indicator";
+import { ClockFaceMarks, RadialLines, GrainOverlay } from "@/components/ui/thematic-elements";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -77,67 +78,63 @@ export default function RegisterPage() {
 
   return (
     <div className="flex min-h-screen" dir="rtl">
-      {/* Brand Panel - Right side (RTL) */}
-      <div className="hidden lg:flex lg:w-[60%] bg-gradient-to-br from-primary to-primary/80 relative overflow-hidden">
+      {/* Brand Panel */}
+      <div className="hidden lg:flex lg:w-[60%] bg-gradient-to-br from-sidebar via-sidebar/95 to-primary/20 relative overflow-hidden">
+        <GrainOverlay />
         <div className="relative z-10 flex flex-col justify-center px-16 text-white">
-          {/* Logo */}
           <div className="flex items-center gap-3 mb-12">
-            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-              <Clock className="h-7 w-7 text-white" />
+            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm relative">
+              <ClockFaceMarks size={56} color="rgba(212,160,74,0.3)" className="absolute inset-0 m-auto" />
+              <Gauge className="h-7 w-7 text-white relative z-10" />
             </div>
-            <h1 className="text-3xl font-display font-bold">שעון</h1>
+            <span className="text-3xl font-display font-bold">מוניט</span>
           </div>
 
-          {/* Tagline */}
           <h2 className="text-4xl font-display font-bold leading-tight mb-4">
             התחל לנהל את הזמן שלך
             <br />
-            בצורה מקצועית
+            כמו מקצוען
           </h2>
           <p className="text-lg text-white/80 mb-12 max-w-md">
-            הצטרף למערכת ניהול שעות העבודה המקצועית לפרילנסרים
+            בשלושה צעדים פשוטים תהיה בדרך
           </p>
 
-          {/* Feature highlights */}
           <div className="space-y-4">
             {[
-              "הרשמה מהירה ופשוטה",
-              "התחל לעבוד תוך דקות",
-              "ללא כרטיס אשראי נדרש",
+              "30 שניות להרשמה",
+              "התחל לעקוב מיד",
+              "בחינם לנצח",
             ].map((feature, i) => (
               <div key={i} className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
+                <div className="w-2 h-2 rounded-full bg-accent flex-shrink-0" />
                 <span className="text-white/90">{feature}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Decorative elements */}
         <div className="absolute top-0 left-0 w-full h-full">
           <div className="absolute top-20 left-10 w-72 h-72 bg-white/5 rounded-full blur-3xl" />
           <div className="absolute bottom-20 right-10 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
         </div>
+        <RadialLines count={24} size={200} className="absolute bottom-8 left-8 text-white opacity-[0.04] hidden lg:block" />
       </div>
 
-      {/* Form Panel - Left side (RTL) */}
+      {/* Form Panel */}
       <div className="flex-1 flex items-center justify-center bg-background px-4 lg:px-16">
         <div className="w-full max-w-md space-y-8">
-          {/* Mobile logo - shown only on small screens */}
           <div className="lg:hidden text-center mb-8">
             <div className="inline-flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <Clock className="h-6 w-6 text-primary-foreground" />
+              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center relative">
+                <ClockFaceMarks size={32} color="rgba(168,98,45,0.2)" className="absolute inset-0 m-auto" />
+                <Gauge className="h-6 w-6 text-primary-foreground relative z-10" />
               </div>
-              <h1 className="text-2xl font-display font-bold text-foreground">שעון</h1>
+              <span className="text-2xl font-display font-bold text-foreground">מוניט</span>
             </div>
           </div>
 
           <div className="text-center lg:text-start">
+            <div className="w-12 h-1 bg-accent rounded-full mb-6 mx-auto lg:mx-0" />
             <h1 className="text-3xl font-display font-bold tracking-tight text-foreground">
               צור חשבון חדש
             </h1>
@@ -162,12 +159,12 @@ export default function RegisterPage() {
                     setEmail(e.target.value);
                     setEmailError(undefined);
                   }}
-                  className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2 focus:outline-none focus:ring-2 transition-colors ${
+                  className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 focus:outline-none focus:ring-2 transition-colors ${
                     emailError
                       ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                      : "border-border focus:border-primary focus:ring-primary/20"
+                      : "border-border focus:border-primary focus:ring-primary/50"
                   }`}
-                  placeholder="your@email.com"
+                  placeholder="הכנס כתובת אימייל"
                 />
                 {emailError && <p className="mt-1 text-sm text-destructive">{emailError}</p>}
               </div>
@@ -182,7 +179,7 @@ export default function RegisterPage() {
                   type="text"
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
-                  className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
+                  className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
                   placeholder="שם העסק שלך"
                 />
               </div>
@@ -201,10 +198,10 @@ export default function RegisterPage() {
                     setPassword(e.target.value);
                     setPasswordError(undefined);
                   }}
-                  className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2 focus:outline-none focus:ring-2 transition-colors ${
+                  className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 focus:outline-none focus:ring-2 transition-colors ${
                     passwordError
                       ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                      : "border-border focus:border-primary focus:ring-primary/20"
+                      : "border-border focus:border-primary focus:ring-primary/50"
                   }`}
                   placeholder="לפחות 8 תווים"
                 />
@@ -226,10 +223,10 @@ export default function RegisterPage() {
                     setConfirmPassword(e.target.value);
                     setConfirmPasswordError(undefined);
                   }}
-                  className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2 focus:outline-none focus:ring-2 transition-colors ${
+                  className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 focus:outline-none focus:ring-2 transition-colors ${
                     confirmPasswordError
                       ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                      : "border-border focus:border-primary focus:ring-primary/20"
+                      : "border-border focus:border-primary focus:ring-primary/50"
                   }`}
                   placeholder="הקלד את הסיסמה שוב"
                 />
@@ -240,7 +237,7 @@ export default function RegisterPage() {
             </div>
 
             {error && (
-              <div className="rounded-[var(--radius)] bg-destructive/10 p-4">
+              <div className="rounded-[var(--radius)] bg-destructive/10 p-4" role="alert">
                 <p className="text-sm text-destructive">{error}</p>
               </div>
             )}
@@ -249,8 +246,9 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="group relative flex w-full justify-center rounded-[var(--radius)] border border-transparent bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+                className="group relative flex w-full items-center justify-center gap-2 rounded-[var(--radius)] border border-transparent bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
               >
+                <UserPlus className="h-4 w-4" />
                 {loading ? "נרשם..." : "הרשם"}
               </button>
             </div>

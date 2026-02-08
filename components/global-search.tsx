@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Search, Users, FolderKanban, Clock, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { HourglassSVG } from "@/components/ui/thematic-elements";
 
 interface SearchResult {
   id: string;
@@ -110,11 +111,11 @@ export function GlobalSearch() {
         >
           {/* Search Modal */}
           <div
-            className="relative w-full max-w-2xl bg-card rounded-xl shadow-2xl overflow-hidden"
+            className="relative w-full max-w-2xl bg-card rounded-[var(--radius-card)] shadow-2xl overflow-hidden motion-safe:animate-scale-in border border-border/50"
             dir="rtl"
           >
             {/* Search Input */}
-            <div className="flex items-center gap-3 px-4 py-4 border-b border-border">
+            <div className="flex items-center gap-3 px-4 py-4 border-b border-border/50">
               <Search className="h-5 w-5 text-muted-foreground flex-shrink-0" />
               <input
                 ref={inputRef}
@@ -143,7 +144,7 @@ export function GlobalSearch() {
             <div className="max-h-[60vh] overflow-y-auto">
               {query.length < 2 ? (
                 <div className="px-4 py-12 text-center text-muted-foreground">
-                  <Search className="h-12 w-12 mx-auto mb-3 text-border" />
+                  <HourglassSVG size={48} className="mx-auto mb-3 text-muted-foreground/30" />
                   <p className="text-lg font-medium">התחל להקליד לחיפוש</p>
                   <p className="text-sm mt-1">חפש לקוחות, פרויקטים ורשומות זמן לפי שם</p>
                 </div>
@@ -154,7 +155,7 @@ export function GlobalSearch() {
                 </div>
               ) : results.length === 0 ? (
                 <div className="px-4 py-12 text-center text-muted-foreground">
-                  <Search className="h-12 w-12 mx-auto mb-3 text-border" />
+                  <HourglassSVG size={48} className="mx-auto mb-3 text-muted-foreground/30" />
                   <p className="text-lg font-medium">לא נמצאו תוצאות</p>
                   <p className="text-sm mt-1">נסה לחפש מילים אחרות</p>
                 </div>
@@ -172,7 +173,7 @@ export function GlobalSearch() {
                           <button
                             key={result.id}
                             onClick={() => handleResultClick(result)}
-                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors text-start"
+                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface transition-colors text-start"
                           >
                             <div className="flex-shrink-0 w-10 h-10 bg-primary-light rounded-lg flex items-center justify-center">
                               <Users className="h-5 w-5 text-primary" />
@@ -199,7 +200,7 @@ export function GlobalSearch() {
                           <button
                             key={result.id}
                             onClick={() => handleResultClick(result)}
-                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors text-start"
+                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface transition-colors text-start"
                           >
                             <div className="flex-shrink-0 w-10 h-10 bg-secondary-light rounded-lg flex items-center justify-center">
                               <FolderKanban className="h-5 w-5 text-secondary" />
@@ -231,10 +232,10 @@ export function GlobalSearch() {
                           <button
                             key={result.id}
                             onClick={() => handleResultClick(result)}
-                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors text-start"
+                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface transition-colors text-start"
                           >
-                            <div className="flex-shrink-0 w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center">
-                              <Clock className="h-5 w-5 text-success" />
+                            <div className="flex-shrink-0 w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
+                              <Clock className="h-5 w-5 text-accent" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-foreground truncate">
@@ -259,7 +260,7 @@ export function GlobalSearch() {
                                 {result.duration && (
                                   <>
                                     <span>•</span>
-                                    <span>{Math.floor(result.duration / 60)}:{(result.duration % 60).toString().padStart(2, '0')}</span>
+                                    <span className="font-mono">{Math.floor(result.duration / 60)}:{(result.duration % 60).toString().padStart(2, '0')}</span>
                                   </>
                                 )}
                               </div>
@@ -273,7 +274,7 @@ export function GlobalSearch() {
             </div>
 
             {/* Footer */}
-            <div className="px-4 py-3 border-t border-border bg-muted/50">
+            <div className="px-4 py-3 border-t border-border bg-surface/50">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <div className="flex items-center gap-3">
                   <span className="flex items-center gap-1">

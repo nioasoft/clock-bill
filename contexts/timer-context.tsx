@@ -9,6 +9,7 @@ import {
   useRef,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
 import React from "react";
@@ -108,7 +109,13 @@ interface TimerProviderProps {
   children: ReactNode;
 }
 
+const PUBLIC_ROUTES = ["/", "/login", "/register", "/forgot-password", "/reset-password"];
+
 export function TimerProvider({ children }: TimerProviderProps) {
+  const pathname = usePathname();
+  const isPublicRoute = PUBLIC_ROUTES.some((route) =>
+    route === "/" ? pathname === "/" : pathname.startsWith(route)
+  );
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
 
@@ -134,8 +141,13 @@ export function TimerProvider({ children }: TimerProviderProps) {
 
   const { checkLongTimer, resetLongTimerNotification } = useNotifications();
 
-  // Check auth once
+  // Check auth once (skip on public routes like login/register)
   useEffect(() => {
+    if (isPublicRoute) {
+      setIsAuthenticated(false);
+      setAuthChecked(true);
+      return;
+    }
     const checkAuth = async () => {
       try {
         const response = await fetch("/api/auth/session");
@@ -148,7 +160,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
       }
     };
     checkAuth();
-  }, []);
+  }, [isPublicRoute]);
 
   // Fetch running timer
   const fetchRunningTimer = useCallback(async () => {
@@ -265,7 +277,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
         seconds = totalSeconds % 60;
       }
 
-      document.title = `${minutes}:${seconds.toString().padStart(2, "0")} - ${runningTimer.pausedAt ? "מושהה - " : ""}שעון`;
+      document.title = `${minutes}:${seconds.toString().padStart(2, "0")} - ${runningTimer.pausedAt ? "מושהה - " : ""}מוניט`;
     };
 
     updateTitle();

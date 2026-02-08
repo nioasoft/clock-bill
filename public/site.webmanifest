@@ -1,6 +1,6 @@
 {
-  "name": "שעון",
-  "short_name": "שעון",
+  "name": "מוניט",
+  "short_name": "מוניט",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",

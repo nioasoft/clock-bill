@@ -86,6 +86,7 @@ export default function AdminUsersPage() {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="חיפוש לפי אימייל או שם עסק..."
               className="w-full rounded-lg border border-border bg-card pe-10 ps-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              aria-label="חיפוש משתמשים"
             />
           </div>
         </form>
@@ -119,6 +120,9 @@ export default function AdminUsersPage() {
                       key={user.id}
                       className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer"
                       onClick={() => router.push(`/admin/users/${user.id}`)}
+                      tabIndex={0}
+                      role="link"
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push(`/admin/users/${user.id}`); }}
                     >
                       <td className="px-4 py-3 font-medium text-foreground">{user.email}</td>
                       <td className="px-4 py-3 text-muted-foreground">{user.businessName || "—"}</td>

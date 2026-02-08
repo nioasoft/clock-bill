@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
 
     // Create Excel workbook
     const workbook = new ExcelJS.Workbook();
-    workbook.creator = "שעון - מערכת למעקב שעות";
+    workbook.creator = "מוניט - מערכת למעקב שעות";
     workbook.created = new Date();
 
     // Create main worksheet with entries

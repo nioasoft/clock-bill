@@ -74,7 +74,7 @@ export function UpcomingDeadlines({ userId }: UpcomingDeadlinesProps) {
   const getUrgencyColor = (days: number) => {
     if (days <= 3) return "text-destructive bg-destructive/5";
     if (days <= 7) return "text-primary bg-primary-light";
-    if (days <= 14) return "text-yellow-600 bg-yellow-50";
+    if (days <= 14) return "text-yellow-800 bg-yellow-50";
     return "text-success bg-success/5";
   };
 

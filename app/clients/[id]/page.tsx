@@ -241,7 +241,7 @@ export default function ClientDetailsPage() {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-border px-3 py-2 border border-border/50 border border-border/50 shadow-sm-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className="mt-1 block w-full rounded-md border border-border/50 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                   />
                 </div>
@@ -255,7 +255,7 @@ export default function ClientDetailsPage() {
                     id="contactName"
                     value={formData.contactName}
                     onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-border px-3 py-2 border border-border/50 border border-border/50 shadow-sm-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className="mt-1 block w-full rounded-md border border-border/50 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                   />
                 </div>
@@ -269,7 +269,7 @@ export default function ClientDetailsPage() {
                     id="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-border px-3 py-2 border border-border/50 border border-border/50 shadow-sm-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className="mt-1 block w-full rounded-md border border-border/50 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                   />
                 </div>
@@ -283,7 +283,7 @@ export default function ClientDetailsPage() {
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-border px-3 py-2 border border-border/50 border border-border/50 shadow-sm-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className="mt-1 block w-full rounded-md border border-border/50 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                   />
                 </div>
@@ -297,7 +297,7 @@ export default function ClientDetailsPage() {
                     id="address"
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-border px-3 py-2 border border-border/50 border border-border/50 shadow-sm-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className="mt-1 block w-full rounded-md border border-border/50 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                     placeholder="רחוב, מספר, עיר"
                   />
@@ -314,7 +314,7 @@ export default function ClientDetailsPage() {
                     step="0.01"
                     value={formData.defaultRate}
                     onChange={(e) => setFormData({ ...formData, defaultRate: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-border px-3 py-2 border border-border/50 border border-border/50 shadow-sm-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className="mt-1 block w-full rounded-md border border-border/50 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                   />
                 </div>

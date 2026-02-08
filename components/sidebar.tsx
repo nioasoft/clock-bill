@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
-  Clock,
+  Gauge,
   Users,
   FolderKanban,
   FileText,
@@ -17,8 +17,10 @@ import {
 import { useState } from "react";
 import { GlobalSearch } from "./global-search";
 import { navItemDefs } from "@/lib/nav-items";
+import { ClockFaceMarks } from "@/components/ui/thematic-elements";
+import { BRAND } from "@/lib/brand";
 
-const iconMap = { Home, Clock, Users, FolderKanban, FileText, Settings, Shield } as const;
+const iconMap = { Home, Clock: Gauge, Users, FolderKanban, FileText, Settings, Shield } as const;
 
 interface SidebarProps {
   className?: string;
@@ -61,24 +63,28 @@ export function Sidebar({
 
   return (
     <aside
+      aria-label="סרגל צד"
       className={`flex flex-col bg-sidebar text-sidebar-foreground h-full transition-all duration-200 ${
         isCollapsed ? "w-16" : "w-64"
       } ${className}`}
       dir="rtl"
     >
-      {/* Logo/Brand */}
-      <div className={`border-b border-white/10 ${isCollapsed ? "p-3" : "p-4"}`}>
+      {/* Logo/Brand with gradient */}
+      <div className={`border-b border-white/10 bg-gradient-to-b from-white/5 to-transparent ${isCollapsed ? "p-3" : "p-4"}`}>
         <Link href="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-accent to-accent/80 rounded-lg flex items-center justify-center shrink-0">
-            <Clock className="h-6 w-6 text-sidebar" />
+          <div className="w-12 h-12 relative flex items-center justify-center shrink-0">
+            <ClockFaceMarks size={40} color="#D4A04A" className="absolute inset-0 m-auto" />
+            <div className="w-10 h-10 bg-gradient-to-br from-accent to-accent/80 rounded-lg flex items-center justify-center relative z-10">
+              <Gauge className="h-6 w-6 text-sidebar" />
+            </div>
           </div>
           {!isCollapsed && (
-            <h1 className="text-2xl font-display font-bold text-white">שעון</h1>
+            <h1 className="text-2xl font-display font-bold text-white">{BRAND.name}</h1>
           )}
         </Link>
       </div>
 
-      {/* Global Search - hidden when collapsed */}
+      {/* Global Search */}
       {!isCollapsed && (
         <div className="p-4">
           <GlobalSearch />
@@ -98,16 +104,20 @@ export function Sidebar({
               key={item.href}
               href={item.href}
               title={isCollapsed ? item.name : undefined}
+              aria-label={isCollapsed ? item.name : undefined}
               className={`
-                flex items-center gap-3 rounded-lg text-sm font-medium transition-colors
+                flex items-center gap-3 rounded-lg text-sm font-medium transition-colors relative
                 ${isCollapsed ? "justify-center px-2 py-2.5" : "px-4 py-2.5"}
                 ${
                   isActive
-                    ? "bg-white/12 text-white border-e-2 border-primary"
-                    : "text-white/60 hover:bg-white/8 hover:text-white"
+                    ? "bg-white/8 text-white"
+                    : "text-white/60 hover:bg-white/6 hover:text-white"
                 }
               `}
             >
+              {isActive && (
+                <span className="absolute start-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-accent" aria-hidden="true" />
+              )}
               <Icon className="h-5 w-5 shrink-0" />
               {!isCollapsed && <span>{item.name}</span>}
             </Link>
@@ -120,7 +130,7 @@ export function Sidebar({
         <div className={`px-3 pb-2 ${isCollapsed ? "px-1.5" : ""}`}>
           <button
             onClick={onToggle}
-            className={`flex items-center gap-3 rounded-lg text-sm font-medium text-white/40 hover:bg-white/8 hover:text-white transition-colors w-full ${
+            className={`flex items-center gap-3 rounded-lg text-sm font-medium text-white/40 hover:bg-white/6 hover:text-white transition-colors w-full ${
               isCollapsed ? "justify-center px-2 py-2.5" : "px-4 py-2.5"
             }`}
             title={isCollapsed ? "הרחב סרגל צד" : "כווץ סרגל צד"}
@@ -137,17 +147,18 @@ export function Sidebar({
         </div>
       )}
 
-      {/* User info section at bottom */}
+      {/* User info section */}
       <div className={`border-t border-white/10 space-y-1 ${isCollapsed ? "p-1.5" : "p-4"}`}>
         <Link
           href="/settings"
           title={isCollapsed ? "הפרופיל שלי" : undefined}
-          className={`flex items-center gap-3 rounded-lg text-sm font-medium text-white/60 hover:bg-white/8 hover:text-white transition-colors ${
+          aria-label={isCollapsed ? "הפרופיל שלי" : undefined}
+          className={`flex items-center gap-3 rounded-lg text-sm font-medium text-white/60 hover:bg-white/6 hover:text-white transition-colors ${
             isCollapsed ? "justify-center px-2 py-2.5" : "px-4 py-2.5"
           }`}
         >
-          <div className="w-8 h-8 bg-white/12 rounded-full flex items-center justify-center shrink-0">
-            <Users className="h-4 w-4 text-white/60" />
+          <div className="w-8 h-8 bg-accent text-sidebar rounded-full flex items-center justify-center shrink-0 font-bold text-sm">
+            א
           </div>
           {!isCollapsed && <span>הפרופיל שלי</span>}
         </Link>
@@ -155,6 +166,7 @@ export function Sidebar({
           onClick={handleLogout}
           disabled={logoutLoading}
           title={isCollapsed ? "התנתק" : undefined}
+          aria-label={isCollapsed ? (logoutLoading ? "מתנתק..." : "התנתק") : undefined}
           className={`flex items-center gap-3 rounded-lg text-sm font-medium text-destructive/80 hover:bg-destructive/10 transition-colors w-full disabled:opacity-50 disabled:cursor-not-allowed ${
             isCollapsed ? "justify-center px-2 py-2.5" : "px-4 py-2.5"
           }`}

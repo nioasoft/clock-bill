@@ -1,5 +1,5 @@
 {
-  "name": "clock-bill",
+  "name": "monit",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,6 +9,7 @@
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "test": "node --import tsx tests/run-tests.ts",
     "test:format": "node --import tsx tests/unit/format.test.ts",

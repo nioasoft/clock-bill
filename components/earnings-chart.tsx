@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { HourglassSVG } from "@/components/ui/thematic-elements";
 
 interface MonthlyEarnings {
   month: string;
@@ -49,10 +50,13 @@ export function EarningsChart() {
 
   if (error || earningsData.length === 0) {
     return (
-      <div className="rounded-[14px] bg-card border border-border/50 p-6 shadow-sm">
+      <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
         <h3 className="font-display text-lg font-semibold text-foreground mb-4">הכנסות חודשיות</h3>
-        <div className="h-48 flex items-center justify-center">
-          <p className="text-muted-foreground">{error || "אין נתוני הכנסות זמינים"}</p>
+        <div className="h-48 flex flex-col items-center justify-center gap-3">
+          <HourglassSVG size={64} className="text-muted-foreground/30" />
+          <p className="text-sm text-muted-foreground text-center">
+            {error || "התחל לעקוב אחרי הזמן שלך כדי לראות הכנסות"}
+          </p>
         </div>
       </div>
     );
@@ -78,7 +82,7 @@ export function EarningsChart() {
   };
 
   return (
-    <div className="rounded-[14px] bg-card border border-border/50 p-6 shadow-sm">
+    <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
       <h3 className="font-display text-lg font-semibold text-foreground mb-4">הכנסות חודשיות</h3>
 
       <div className="h-48 overflow-x-auto">
@@ -86,6 +90,8 @@ export function EarningsChart() {
           width={Math.max(chartWidth, 400)}
           height={chartHeight + 40}
           className="mx-auto"
+          role="img"
+          aria-label="תרשים הכנסות"
         >
           {/* Grid lines */}
           {[0, 0.25, 0.5, 0.75, 1].map((fraction) => {
@@ -97,7 +103,7 @@ export function EarningsChart() {
                 y1={y}
                 x2={chartWidth}
                 y2={y}
-                stroke="#e5e7eb"
+                className="stroke-border opacity-50"
                 strokeWidth={1}
                 strokeDasharray="4 4"
               />
@@ -111,7 +117,7 @@ export function EarningsChart() {
             const y = chartHeight - barHeight;
 
             return (
-              <g key={data.month}>
+              <g key={data.month} className="group cursor-pointer">
                 {/* Bar */}
                 <rect
                   x={x}
@@ -119,8 +125,8 @@ export function EarningsChart() {
                   width={barWidth}
                   height={barHeight}
                   fill="currentColor"
-                  className="text-primary hover:text-primary/90 transition-colors"
-                  rx={4}
+                  className="text-primary group-hover:opacity-80 transition-opacity"
+                  rx={6}
                 />
 
                 {/* Amount label on top of bar */}

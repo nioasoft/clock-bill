@@ -1,6 +1,7 @@
 "use client";
 
 import { useTimer } from "@/contexts/timer-context";
+import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import {
   Dialog,
   DialogContent,
@@ -26,15 +27,19 @@ export function TimerStopModal() {
   return (
     <Dialog open={showStopTimerModal} onOpenChange={(open) => { if (!open) cancelStopTimer(); }}>
       <DialogContent showCloseButton={false}>
-        <DialogHeader>
+        <DialogHeader className="relative">
+          <ClockFaceMarks
+            size={32}
+            className="absolute top-0 end-0 opacity-10 text-foreground"
+          />
           <DialogTitle className="font-display">עצור טיימר ושמור רשומה</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* Current elapsed time */}
-          <div className="bg-primary/10 rounded-lg p-3">
+          <div className="bg-accent/10 rounded-[var(--radius-card)] border border-accent/20 p-3">
             <p className="text-sm text-muted-foreground mb-1">זמן שעבר:</p>
-            <p className="font-mono text-2xl font-bold text-primary">
+            <p className="font-mono text-2xl font-bold text-accent">
               {elapsedTime}
             </p>
           </div>
@@ -53,7 +58,7 @@ export function TimerStopModal() {
               value={stopTimerDescription}
               onChange={(e) => setStopTimerDescription(e.target.value)}
               placeholder="מה עשית?"
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
+              className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
               disabled={stoppingTimer}
             />
           </div>
@@ -71,7 +76,7 @@ export function TimerStopModal() {
                   value={stopTimerHours}
                   onChange={(e) => setStopTimerHours(e.target.value)}
                   placeholder="0"
-                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
+                  className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary font-mono"
                   disabled={stoppingTimer}
                 />
                 <p className="text-xs text-muted-foreground mt-1">שעות</p>
@@ -85,7 +90,7 @@ export function TimerStopModal() {
                   value={stopTimerMinutes}
                   onChange={(e) => setStopTimerMinutes(e.target.value)}
                   placeholder="00"
-                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
+                  className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary font-mono"
                   disabled={stoppingTimer}
                 />
                 <p className="text-xs text-muted-foreground mt-1">דקות</p>
@@ -97,14 +102,14 @@ export function TimerStopModal() {
             <button
               onClick={cancelStopTimer}
               disabled={stoppingTimer}
-              className="px-4 py-2 text-sm font-medium text-muted-foreground bg-muted rounded-md hover:bg-muted/80 disabled:opacity-50"
+              className="px-4 py-2.5 text-sm font-medium text-muted-foreground bg-muted rounded-[var(--radius)] hover:bg-muted/80 disabled:opacity-50 min-h-[44px]"
             >
               ביטול
             </button>
             <button
               onClick={confirmStopTimer}
               disabled={stoppingTimer}
-              className="px-4 py-2 text-sm font-medium text-white bg-destructive rounded-md hover:bg-destructive/90 disabled:opacity-50"
+              className="px-4 py-2.5 text-sm font-medium text-white bg-destructive rounded-[var(--radius)] hover:bg-destructive/90 disabled:opacity-50 min-h-[44px]"
             >
               {stoppingTimer ? "שומר..." : "עצור ושמור"}
             </button>

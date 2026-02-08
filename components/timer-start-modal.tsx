@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useTimer } from "@/contexts/timer-context";
+import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import {
   Dialog,
   DialogContent,
@@ -33,7 +34,11 @@ export function TimerStartModal() {
   return (
     <Dialog open={showTimerModal} onOpenChange={(open) => { if (!open) handleClose(); }}>
       <DialogContent showCloseButton={false}>
-        <DialogHeader>
+        <DialogHeader className="relative">
+          <ClockFaceMarks
+            size={32}
+            className="absolute top-0 end-0 opacity-10 text-foreground"
+          />
           <DialogTitle className="font-display">התחל טיימר חדש</DialogTitle>
         </DialogHeader>
 
@@ -51,7 +56,7 @@ export function TimerStartModal() {
                   id="timer-project"
                   value={selectedProject}
                   onChange={(e) => setSelectedProject(e.target.value)}
-                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
+                  className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
                   disabled={startingTimer}
                 >
                   <option value="">בחר פרויקט</option>
@@ -76,7 +81,7 @@ export function TimerStartModal() {
                   value={timerDescription}
                   onChange={(e) => setTimerDescription(e.target.value)}
                   placeholder="מה אתה עובד עליו?"
-                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
+                  className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
                   disabled={startingTimer}
                 />
               </div>
@@ -85,14 +90,14 @@ export function TimerStartModal() {
                 <button
                   onClick={handleClose}
                   disabled={startingTimer}
-                  className="px-4 py-2 text-sm font-medium text-muted-foreground bg-muted rounded-md hover:bg-muted/80 disabled:opacity-50"
+                  className="px-4 py-2.5 text-sm font-medium text-muted-foreground bg-muted rounded-[var(--radius)] hover:bg-muted/80 disabled:opacity-50 min-h-[44px]"
                 >
                   ביטול
                 </button>
                 <button
                   onClick={handleStartTimer}
                   disabled={startingTimer || !selectedProject}
-                  className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90 disabled:opacity-50"
+                  className="px-4 py-2.5 text-sm font-medium text-white bg-primary rounded-[var(--radius)] hover:bg-primary/90 disabled:opacity-50 min-h-[44px]"
                 >
                   {startingTimer ? "מתחיל..." : "התחל טיימר"}
                 </button>
@@ -108,14 +113,14 @@ export function TimerStartModal() {
                 <Link
                   href="/projects?create=true"
                   onClick={() => setShowTimerModal(false)}
-                  className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90"
+                  className="inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white bg-primary rounded-[var(--radius)] hover:bg-primary/90 min-h-[44px]"
                 >
                   + צור פרויקט חדש
                 </Link>
                 <Link
                   href="/clients?create=true"
                   onClick={() => setShowTimerModal(false)}
-                  className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-muted-foreground bg-muted rounded-md hover:bg-muted/80"
+                  className="inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-muted-foreground bg-muted rounded-[var(--radius)] hover:bg-muted/80 min-h-[44px]"
                 >
                   + צור לקוח חדש
                 </Link>

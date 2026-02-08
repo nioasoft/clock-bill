@@ -858,11 +858,12 @@ export default function ProjectDetailsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground">
+                  <label htmlFor="clientName" className="block text-sm font-medium text-muted-foreground">
                     לקוח
                   </label>
                   <input
                     type="text"
+                    id="clientName"
                     value={project.clientName}
                     disabled
                     className="mt-1 block w-full rounded-[14px] border border-border bg-muted px-3 py-2 text-muted-foreground"
