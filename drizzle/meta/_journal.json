@@ -22,6 +22,13 @@
       "when": 1770577200000,
       "tag": "0002_add_performance_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1770577200001,
+      "tag": "0003_green_wildside",
+      "breakpoints": true
     }
   ]
 }
