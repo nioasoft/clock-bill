@@ -78,10 +78,11 @@ export async function GET(request: NextRequest) {
       ),
       query<{ total: string }>(
         `SELECT COALESCE(SUM(
-             (te.duration / 60.0) * COALESCE(p.hourly_rate, 0)
+             (te.duration / 60.0) * COALESCE(c.default_rate, 0)
            ), 0) as total
          FROM time_entries te
          JOIN projects p ON te.project_id = p.id
+         JOIN clients c ON p.client_id = c.id
          WHERE te.user_id = $1
            AND te.date >= $2
            AND te.is_billable = TRUE`,

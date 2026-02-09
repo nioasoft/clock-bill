@@ -31,6 +31,11 @@ interface Client {
   name: string;
 }
 
+interface TaskOption {
+  id: string;
+  name: string;
+}
+
 interface TimeEntry {
   id: string;
   projectId: string;
@@ -48,6 +53,8 @@ interface TimeEntry {
   createdAt: string;
   pausedAt: string | null;
   totalPausedTime: number | null;
+  taskId: string | null;
+  taskName: string | null;
 }
 
 interface GroupedProjects {
@@ -68,12 +75,14 @@ export default function EntriesPage() {
   const [editingEntry, setEditingEntry] = useState<TimeEntry | null>(null);
   const [formData, setFormData] = useState({
     projectId: "",
+    taskId: "",
     date: new Date().toISOString().split("T")[0],
     duration: "",
     description: "",
     notes: "",
     isBillable: true,
   });
+  const [formTasks, setFormTasks] = useState<TaskOption[]>([]);
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState<TimeEntry | null>(null);
@@ -209,6 +218,30 @@ export default function EntriesPage() {
     fetchEntries();
   }, [filters]);
 
+  // Fetch tasks when project changes in form
+  useEffect(() => {
+    if (!formData.projectId) {
+      setFormTasks([]);
+      return;
+    }
+    const fetchTasks = async () => {
+      try {
+        const response = await fetch(`/api/projects/${formData.projectId}/tasks`);
+        const data = await response.json();
+        if (data.success) {
+          setFormTasks(
+            (data.tasks || [])
+              .filter((t: { status: string }) => t.status !== "done")
+              .map((t: { id: string; name: string }) => ({ id: t.id, name: t.name }))
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+      }
+    };
+    fetchTasks();
+  }, [formData.projectId]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
@@ -261,6 +294,7 @@ export default function EntriesPage() {
         },
         body: JSON.stringify({
           projectId: formData.projectId,
+          taskId: formData.taskId || null,
           date: formData.date,
           duration: parseInt(formData.duration, 10),
           description: formData.description,
@@ -283,6 +317,7 @@ export default function EntriesPage() {
         // Reset form and close
         setFormData({
           projectId: "",
+          taskId: "",
           date: new Date().toISOString().split("T")[0],
           duration: "",
           description: "",
@@ -307,6 +342,7 @@ export default function EntriesPage() {
     setEditingEntry(entry);
     setFormData({
       projectId: entry.projectId,
+      taskId: entry.taskId || "",
       date: entry.date,
       duration: entry.duration.toString(),
       description: entry.description,
@@ -320,6 +356,7 @@ export default function EntriesPage() {
     setEditingEntry(null);
     setFormData({
       projectId: "",
+      taskId: "",
       date: new Date().toISOString().split("T")[0],
       duration: "",
       description: "",
@@ -745,7 +782,7 @@ export default function EntriesPage() {
                     id="projectId"
                     required
                     value={formData.projectId}
-                    onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, projectId: e.target.value, taskId: "" })}
                     className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.projectId ? "border border-destructive" : "border border-border/50"}`}
                     disabled={submitting || projectsLoading}
                   >
@@ -772,6 +809,28 @@ export default function EntriesPage() {
                     </Link>
                   )}
                 </div>
+
+                {formData.projectId && formTasks.length > 0 && (
+                  <div>
+                    <label htmlFor="taskId" className="block text-sm font-medium text-foreground">
+                      משימה
+                    </label>
+                    <select
+                      id="taskId"
+                      value={formData.taskId}
+                      onChange={(e) => setFormData({ ...formData, taskId: e.target.value })}
+                      className="mt-1 block w-full rounded-md border border-border/50 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                      disabled={submitting}
+                    >
+                      <option value="">ללא משימה</option>
+                      {formTasks.map((task) => (
+                        <option key={task.id} value={task.id}>
+                          {task.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div>
                   <label htmlFor="date" className="block text-sm font-medium text-foreground">

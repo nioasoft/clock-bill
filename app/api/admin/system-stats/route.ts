@@ -15,8 +15,7 @@ export async function GET(): Promise<NextResponse> {
 
     const [
       topUsersResult,
-      pricingModelResult,
-      currencyResult,
+      statusResult,
       avgEntriesResult,
       logosResult,
     ] = await Promise.all([
@@ -29,18 +28,11 @@ export async function GET(): Promise<NextResponse> {
          ORDER BY entry_count DESC
          LIMIT 10`
       ),
-      // Pricing model distribution
-      query<{ pricing_model: string; count: string }>(
-        `SELECT pricing_model, COUNT(*) as count
+      // Status distribution
+      query<{ status: string; count: string }>(
+        `SELECT status, COUNT(*) as count
          FROM projects
-         GROUP BY pricing_model
-         ORDER BY count DESC`
-      ),
-      // Currency distribution
-      query<{ currency: string; count: string }>(
-        `SELECT currency, COUNT(*) as count
-         FROM projects
-         GROUP BY currency
+         GROUP BY status
          ORDER BY count DESC`
       ),
       // Average entries per user
@@ -66,12 +58,8 @@ export async function GET(): Promise<NextResponse> {
           email: r.email,
           entryCount: parseInt(r.entry_count),
         })),
-        pricingModels: pricingModelResult.rows.map((r) => ({
-          model: r.pricing_model,
-          count: parseInt(r.count),
-        })),
-        currencies: currencyResult.rows.map((r) => ({
-          currency: r.currency,
+        projectStatuses: statusResult.rows.map((r) => ({
+          status: r.status,
           count: parseInt(r.count),
         })),
         avgEntriesPerUser: parseFloat(parseFloat(avgEntriesResult.rows[0]?.avg || "0").toFixed(1)),

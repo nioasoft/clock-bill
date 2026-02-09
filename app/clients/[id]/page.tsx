@@ -40,7 +40,7 @@ export default function ClientDetailsPage() {
   });
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [clientProjects, setClientProjects] = useState<{id: string; name: string; status: string; pricingModel: string}[]>([]);
+  const [clientProjects, setClientProjects] = useState<{id: string; name: string; status: string}[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(true);
 
   useEffect(() => {

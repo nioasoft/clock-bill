@@ -41,9 +41,8 @@ export async function GET(request: NextRequest) {
         te.is_billable,
         te.created_at,
         p.name as project_name,
-        p.pricing_model,
-        p.hourly_rate,
-        p.currency,
+        c.default_rate as hourly_rate,
+        c.currency,
         c.name as client_name,
         c.id as client_id,
         c.contact_name as client_contact_name,
@@ -97,7 +96,6 @@ export async function GET(request: NextRequest) {
       is_billable: boolean;
       created_at: string;
       project_name: string;
-      pricing_model: string;
       hourly_rate: number | null;
       currency: string;
       client_name: string;

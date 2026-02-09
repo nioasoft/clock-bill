@@ -41,12 +41,15 @@ export async function GET(request: NextRequest) {
         te.created_at,
         te.paused_at,
         te.total_paused_time,
+        te.task_id,
         p.name as project_name,
         c.name as client_name,
-        c.id as client_id
+        c.id as client_id,
+        tk.name as task_name
       FROM time_entries te
       JOIN projects p ON te.project_id = p.id
       JOIN clients c ON p.client_id = c.id
+      LEFT JOIN tasks tk ON te.task_id = tk.id
       WHERE te.user_id = $1
     `;
     const queryParams: (string | number | boolean | null)[] = [user.id];
@@ -92,9 +95,11 @@ export async function GET(request: NextRequest) {
       created_at: string;
       paused_at: string | null;
       total_paused_time: number | null;
+      task_id: string | null;
       project_name: string;
       client_name: string;
       client_id: string;
+      task_name: string | null;
     }>(queryText, queryParams);
 
     const entries = result.rows.map((entry) => ({
@@ -114,6 +119,8 @@ export async function GET(request: NextRequest) {
       createdAt: entry.created_at,
       pausedAt: entry.paused_at,
       totalPausedTime: entry.total_paused_time,
+      taskId: entry.task_id,
+      taskName: entry.task_name,
     }));
 
     return NextResponse.json({
@@ -149,7 +156,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { projectId, date, duration, description, notes, isBillable, tags } = body;
+    const { projectId, taskId, date, duration, description, notes, isBillable, tags } = body;
 
     // Validation
     if (!projectId) {
@@ -205,12 +212,13 @@ export async function POST(request: NextRequest) {
 
     // Insert time entry (manual entry has no start/end time)
     await query(
-      `INSERT INTO time_entries (id, user_id, project_id, description, duration, date, tags, notes, is_billable)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      `INSERT INTO time_entries (id, user_id, project_id, task_id, description, duration, date, tags, notes, is_billable)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
       [
         entryId,
         user.id,
         projectId,
+        taskId || null,
         description.trim(),
         duration,
         date,
@@ -235,9 +243,11 @@ export async function POST(request: NextRequest) {
       created_at: string;
       paused_at: string | null;
       total_paused_time: number | null;
+      task_id: string | null;
       project_name: string;
       client_name: string;
       client_id: string;
+      task_name: string | null;
     }>(
       `SELECT
         te.id,
@@ -253,12 +263,15 @@ export async function POST(request: NextRequest) {
         te.created_at,
         te.paused_at,
         te.total_paused_time,
+        te.task_id,
         p.name as project_name,
         c.name as client_name,
-        c.id as client_id
+        c.id as client_id,
+        tk.name as task_name
       FROM time_entries te
       JOIN projects p ON te.project_id = p.id
       JOIN clients c ON p.client_id = c.id
+      LEFT JOIN tasks tk ON te.task_id = tk.id
       WHERE te.id = $1`,
       [entryId]
     );
@@ -284,6 +297,8 @@ export async function POST(request: NextRequest) {
         createdAt: entry.created_at,
         pausedAt: entry.paused_at,
         totalPausedTime: entry.total_paused_time,
+        taskId: entry.task_id,
+        taskName: entry.task_name,
       },
     });
   } catch (error) {

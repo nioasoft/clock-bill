@@ -27,17 +27,24 @@ export async function GET(request: NextRequest) {
       phone: string | null;
       address: string | null;
       default_rate: number | null;
+      currency: string | null;
+      is_retainer: boolean | null;
+      retainer_hours: number | null;
+      retainer_monthly_fee: number | null;
+      overage_rate: number | null;
       notes: string | null;
       is_active: boolean;
       created_at: string;
       total_billed: string | null;
       total_hours: number | null;
     }>(
-      `SELECT c.id, c.name, c.contact_name, c.email, c.phone, c.address, c.default_rate, c.notes, c.is_active, c.created_at,
+      `SELECT c.id, c.name, c.contact_name, c.email, c.phone, c.address, c.default_rate,
+              c.currency, c.is_retainer, c.retainer_hours, c.retainer_monthly_fee, c.overage_rate,
+              c.notes, c.is_active, c.created_at,
               COALESCE(SUM(
                 CASE
                   WHEN te.is_billable = TRUE THEN
-                    COALESCE(p.hourly_rate, c.default_rate, 0) * (te.duration / 60.0)
+                    COALESCE(c.default_rate, 0) * (te.duration / 60.0)
                   ELSE 0
                 END
               ), 0) as total_billed,
@@ -46,7 +53,9 @@ export async function GET(request: NextRequest) {
        LEFT JOIN projects p ON p.client_id = c.id
        LEFT JOIN time_entries te ON te.project_id = p.id
        WHERE c.user_id = $1
-       GROUP BY c.id, c.name, c.contact_name, c.email, c.phone, c.address, c.default_rate, c.notes, c.is_active, c.created_at
+       GROUP BY c.id, c.name, c.contact_name, c.email, c.phone, c.address, c.default_rate,
+              c.currency, c.is_retainer, c.retainer_hours, c.retainer_monthly_fee, c.overage_rate,
+              c.notes, c.is_active, c.created_at
        ORDER BY c.created_at DESC`,
       [user.id]
     );
@@ -59,6 +68,11 @@ export async function GET(request: NextRequest) {
       phone: client.phone,
       address: client.address,
       defaultRate: client.default_rate,
+      currency: client.currency || "ILS",
+      isRetainer: client.is_retainer ?? false,
+      retainerHours: client.retainer_hours,
+      retainerMonthlyFee: client.retainer_monthly_fee,
+      overageRate: client.overage_rate,
       notes: client.notes,
       isActive: client.is_active,
       createdAt: client.created_at,
@@ -101,7 +115,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, contactName, email, phone, address, defaultRate, notes } = body;
+    const { name, contactName, email, phone, address, defaultRate, currency, isRetainer, retainerHours, retainerMonthlyFee, overageRate, notes } = body;
 
     // Validation
     if (!name || name.trim().length === 0) {
@@ -157,13 +171,18 @@ export async function POST(request: NextRequest) {
       phone: string | null;
       address: string | null;
       default_rate: number | null;
+      currency: string | null;
+      is_retainer: boolean | null;
+      retainer_hours: number | null;
+      retainer_monthly_fee: number | null;
+      overage_rate: number | null;
       notes: string | null;
       is_active: boolean;
       created_at: string;
     }>(
-      `INSERT INTO clients (id, user_id, name, contact_name, email, phone, address, default_rate, notes, is_active)
-       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, TRUE)
-       RETURNING id, name, contact_name, email, phone, address, default_rate, notes, is_active, created_at`,
+      `INSERT INTO clients (id, user_id, name, contact_name, email, phone, address, default_rate, currency, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate, notes, is_active)
+       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, TRUE)
+       RETURNING id, name, contact_name, email, phone, address, default_rate, currency, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate, notes, is_active, created_at`,
       [
         user.id,
         name.trim(),
@@ -172,6 +191,11 @@ export async function POST(request: NextRequest) {
         phone?.trim() || null,
         address?.trim() || null,
         defaultRate || null,
+        currency || "ILS",
+        isRetainer ?? false,
+        retainerHours || null,
+        retainerMonthlyFee || null,
+        overageRate || null,
         notes?.trim() || null,
       ]
     );
@@ -188,6 +212,11 @@ export async function POST(request: NextRequest) {
         phone: client.phone,
         address: client.address,
         defaultRate: client.default_rate,
+        currency: client.currency || "ILS",
+        isRetainer: client.is_retainer ?? false,
+        retainerHours: client.retainer_hours,
+        retainerMonthlyFee: client.retainer_monthly_fee,
+        overageRate: client.overage_rate,
         notes: client.notes,
         isActive: client.is_active,
         createdAt: client.created_at,

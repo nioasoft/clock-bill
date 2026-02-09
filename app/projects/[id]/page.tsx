@@ -6,22 +6,13 @@ import Link from "next/link";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { Breadcrumb } from "@/components/breadcrumb";
-import { validateRequired, validateNumber, validateDate, validateDateRange } from "@/lib/validation";
+import { validateRequired, validateDateRange } from "@/lib/validation";
 
 interface Project {
   id: string;
   name: string;
   clientId: string;
   clientName: string;
-  pricingModel: string;
-  hourlyRate: number | null;
-  packagePrice: number | null;
-  packageHours: number | null;
-  overageRate: number | null;
-  fixedBudget: number | null;
-  retainerMonthlyFee: number | null;
-  retainerHours: number | null;
-  currency: string;
   status: string;
   startDate: string | null;
   endDate: string | null;
@@ -54,17 +45,23 @@ export default function ProjectDetailsPage() {
     duration: number;
   }[]>([]);
   const [entriesLoading, setEntriesLoading] = useState(true);
+
+  // Tasks state
+  interface Task {
+    id: string;
+    projectId: string;
+    name: string;
+    description: string | null;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+  }
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(true);
+  const [newTaskName, setNewTaskName] = useState("");
+  const [creatingTask, setCreatingTask] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    pricingModel: "hourly",
-    hourlyRate: "",
-    packagePrice: "",
-    packageHours: "",
-    overageRate: "",
-    fixedBudget: "",
-    retainerMonthlyFee: "",
-    retainerHours: "",
-    currency: "ILS",
     status: "active",
     startDate: "",
     endDate: "",
@@ -76,13 +73,6 @@ export default function ProjectDetailsPage() {
   // Field validation errors
   const [fieldErrors, setFieldErrors] = useState<{
     name?: string;
-    hourlyRate?: string;
-    packagePrice?: string;
-    packageHours?: string;
-    overageRate?: string;
-    fixedBudget?: string;
-    retainerMonthlyFee?: string;
-    retainerHours?: string;
     startDate?: string;
     endDate?: string;
   }>({});
@@ -101,15 +91,6 @@ export default function ProjectDetailsPage() {
           // Initialize form data with project data
           setFormData({
             name: data.project.name,
-            pricingModel: data.project.pricingModel,
-            hourlyRate: data.project.hourlyRate?.toString() || "",
-            packagePrice: data.project.packagePrice?.toString() || "",
-            packageHours: data.project.packageHours?.toString() || "",
-            overageRate: data.project.overageRate?.toString() || "",
-            fixedBudget: data.project.fixedBudget?.toString() || "",
-            retainerMonthlyFee: data.project.retainerMonthlyFee?.toString() || "",
-            retainerHours: data.project.retainerHours?.toString() || "",
-            currency: data.project.currency,
             status: data.project.status,
             startDate: data.project.startDate || "",
             endDate: data.project.endDate || "",
@@ -174,6 +155,79 @@ export default function ProjectDetailsPage() {
     fetchProjectEntries();
   }, [projectId]);
 
+  // Fetch tasks
+  useEffect(() => {
+    const fetchTasks = async () => {
+      if (!projectId) return;
+      try {
+        setTasksLoading(true);
+        const response = await fetch(`/api/projects/${projectId}/tasks`);
+        const data = await response.json();
+        if (data.success) {
+          setTasks(data.tasks || []);
+        }
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+      } finally {
+        setTasksLoading(false);
+      }
+    };
+    fetchTasks();
+  }, [projectId]);
+
+  const handleCreateTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTaskName.trim()) return;
+    setCreatingTask(true);
+    try {
+      const response = await fetch(`/api/projects/${projectId}/tasks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newTaskName.trim() }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setTasks([data.task, ...tasks]);
+        setNewTaskName("");
+      }
+    } catch (error) {
+      console.error("Error creating task:", error);
+    } finally {
+      setCreatingTask(false);
+    }
+  };
+
+  const handleToggleTaskStatus = async (task: Task) => {
+    const nextStatus = task.status === "todo" ? "in_progress" : task.status === "in_progress" ? "done" : "todo";
+    try {
+      const response = await fetch(`/api/projects/${projectId}/tasks/${task.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setTasks(tasks.map((t) => (t.id === task.id ? data.task : t)));
+      }
+    } catch (error) {
+      console.error("Error updating task:", error);
+    }
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      const response = await fetch(`/api/projects/${projectId}/tasks/${taskId}`, {
+        method: "DELETE",
+      });
+      const data = await response.json();
+      if (data.success) {
+        setTasks(tasks.filter((t) => t.id !== taskId));
+      }
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
+  };
+
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
@@ -186,86 +240,6 @@ export default function ProjectDetailsPage() {
     const nameValidation = validateRequired(formData.name, "שם הפרויקט");
     if (!nameValidation.isValid) {
       errors.name = nameValidation.error;
-    }
-
-    // Validate pricing fields based on pricing model
-    if (formData.pricingModel === "hourly") {
-      if (formData.hourlyRate && formData.hourlyRate.trim()) {
-        const rateValidation = validateNumber(formData.hourlyRate, true, 0);
-        if (!rateValidation.isValid) {
-          errors.hourlyRate = rateValidation.error;
-        }
-      } else {
-        errors.hourlyRate = "שדה חובה עבור מודל תמחור שעתי";
-      }
-    } else if (formData.pricingModel === "package") {
-      if (formData.packagePrice && formData.packagePrice.trim()) {
-        const priceValidation = validateNumber(formData.packagePrice, true, 0);
-        if (!priceValidation.isValid) {
-          errors.packagePrice = priceValidation.error;
-        }
-      } else {
-        errors.packagePrice = "שדה חובה עבור מודל תמחור חבילה";
-      }
-      if (formData.packageHours && formData.packageHours.trim()) {
-        const hoursValidation = validateNumber(formData.packageHours, true, 0);
-        if (!hoursValidation.isValid) {
-          errors.packageHours = hoursValidation.error;
-        }
-      } else {
-        errors.packageHours = "שדה חובה עבור מודל תמחור חבילה";
-      }
-    } else if (formData.pricingModel === "mixed") {
-      if (formData.packagePrice && formData.packagePrice.trim()) {
-        const priceValidation = validateNumber(formData.packagePrice, true, 0);
-        if (!priceValidation.isValid) {
-          errors.packagePrice = priceValidation.error;
-        }
-      } else {
-        errors.packagePrice = "שדה חובה עבור מודל תמחור משולב";
-      }
-      if (formData.packageHours && formData.packageHours.trim()) {
-        const hoursValidation = validateNumber(formData.packageHours, true, 0);
-        if (!hoursValidation.isValid) {
-          errors.packageHours = hoursValidation.error;
-        }
-      } else {
-        errors.packageHours = "שדה חובה עבור מודל תמחור משולב";
-      }
-      if (formData.overageRate && formData.overageRate.trim()) {
-        const overageValidation = validateNumber(formData.overageRate, true, 0);
-        if (!overageValidation.isValid) {
-          errors.overageRate = overageValidation.error;
-        }
-      } else {
-        errors.overageRate = "שדה חובה עבור מודל תמחור משולב";
-      }
-    } else if (formData.pricingModel === "fixed") {
-      if (formData.fixedBudget && formData.fixedBudget.trim()) {
-        const budgetValidation = validateNumber(formData.fixedBudget, true, 0);
-        if (!budgetValidation.isValid) {
-          errors.fixedBudget = budgetValidation.error;
-        }
-      } else {
-        errors.fixedBudget = "שדה חובה עבור מודל תמחור קבוע";
-      }
-    } else if (formData.pricingModel === "retainer") {
-      if (formData.retainerMonthlyFee && formData.retainerMonthlyFee.trim()) {
-        const feeValidation = validateNumber(formData.retainerMonthlyFee, true, 0);
-        if (!feeValidation.isValid) {
-          errors.retainerMonthlyFee = feeValidation.error;
-        }
-      } else {
-        errors.retainerMonthlyFee = "שדה חובה עבור מודל תמחור ריטיינר";
-      }
-      if (formData.retainerHours && formData.retainerHours.trim()) {
-        const hoursValidation = validateNumber(formData.retainerHours, true, 0);
-        if (!hoursValidation.isValid) {
-          errors.retainerHours = hoursValidation.error;
-        }
-      } else {
-        errors.retainerHours = "שדה חובה עבור מודל תמחור ריטיינר";
-      }
     }
 
     // Validate date fields (optional but must be valid if provided)
@@ -286,41 +260,18 @@ export default function ProjectDetailsPage() {
     setSubmitting(true);
 
     try {
-      // Only send the pricing fields that are relevant to the current pricing model
-      const pricingData: Record<string, string | number | null> = {
-        name: formData.name,
-        pricingModel: formData.pricingModel,
-        currency: formData.currency,
-        status: formData.status,
-        startDate: formData.startDate || null,
-        endDate: formData.endDate || null,
-        notes: formData.notes || null,
-      };
-
-      // Add pricing fields based on the selected model
-      if (formData.pricingModel === "hourly") {
-        pricingData.hourlyRate = formData.hourlyRate ? parseFloat(formData.hourlyRate) : null;
-      } else if (formData.pricingModel === "package") {
-        pricingData.packagePrice = formData.packagePrice ? parseFloat(formData.packagePrice) : null;
-        pricingData.packageHours = formData.packageHours ? parseFloat(formData.packageHours) : null;
-      } else if (formData.pricingModel === "mixed") {
-        pricingData.hourlyRate = formData.hourlyRate ? parseFloat(formData.hourlyRate) : null;
-        pricingData.packagePrice = formData.packagePrice ? parseFloat(formData.packagePrice) : null;
-        pricingData.packageHours = formData.packageHours ? parseFloat(formData.packageHours) : null;
-        pricingData.overageRate = formData.overageRate ? parseFloat(formData.overageRate) : null;
-      } else if (formData.pricingModel === "fixed") {
-        pricingData.fixedBudget = formData.fixedBudget ? parseFloat(formData.fixedBudget) : null;
-      } else if (formData.pricingModel === "retainer") {
-        pricingData.retainerMonthlyFee = formData.retainerMonthlyFee ? parseFloat(formData.retainerMonthlyFee) : null;
-        pricingData.retainerHours = formData.retainerHours ? parseFloat(formData.retainerHours) : null;
-      }
-
       const response = await fetch(`/api/projects/${projectId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(pricingData),
+        body: JSON.stringify({
+          name: formData.name,
+          status: formData.status,
+          startDate: formData.startDate || null,
+          endDate: formData.endDate || null,
+          notes: formData.notes || null,
+        }),
       });
 
       const data = await response.json();
@@ -381,20 +332,7 @@ export default function ProjectDetailsPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name: project.name,
-          pricingModel: project.pricingModel,
-          hourlyRate: project.hourlyRate,
-          packagePrice: project.packagePrice,
-          packageHours: project.packageHours,
-          overageRate: project.overageRate,
-          fixedBudget: project.fixedBudget,
-          retainerMonthlyFee: project.retainerMonthlyFee,
-          retainerHours: project.retainerHours,
-          currency: project.currency,
           status: "archived",
-          startDate: project.startDate,
-          endDate: project.endDate,
-          notes: project.notes,
         }),
       });
 
@@ -429,20 +367,7 @@ export default function ProjectDetailsPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name: project.name,
-          pricingModel: project.pricingModel,
-          hourlyRate: project.hourlyRate,
-          packagePrice: project.packagePrice,
-          packageHours: project.packageHours,
-          overageRate: project.overageRate,
-          fixedBudget: project.fixedBudget,
-          retainerMonthlyFee: project.retainerMonthlyFee,
-          retainerHours: project.retainerHours,
-          currency: project.currency,
           status: "active",
-          startDate: project.startDate,
-          endDate: project.endDate,
-          notes: project.notes,
         }),
       });
 
@@ -489,23 +414,6 @@ export default function ProjectDetailsPage() {
     }
   };
 
-  const getPricingModelLabel = (model: string) => {
-    switch (model) {
-      case "hourly":
-        return "שעתי";
-      case "package":
-        return "חבילה";
-      case "mixed":
-        return "משולב";
-      case "fixed":
-        return "תקציב קבוע";
-      case "retainer":
-        return "רטיינר";
-      default:
-        return model;
-    }
-  };
-
   const getStatusLabel = (status: string) => {
     switch (status) {
       case "active":
@@ -530,142 +438,6 @@ export default function ProjectDetailsPage() {
       default:
         return "bg-muted text-foreground";
     }
-  };
-
-  const getCurrencySymbol = (currency: string) => {
-    switch (currency) {
-      case "ILS":
-        return "₪";
-      case "USD":
-        return "$";
-      case "USDT":
-        return "₮";
-      case "BTC":
-        return "₿";
-      case "ETH":
-        return "Ξ";
-      default:
-        return currency;
-    }
-  };
-
-  const formatPricingDetails = (project: Project) => {
-    const symbol = getCurrencySymbol(project.currency);
-
-    if (project.pricingModel === "hourly") {
-      return `${symbol}${project.hourlyRate}/שעה`;
-    } else if (project.pricingModel === "package") {
-      return `${symbol}${project.packagePrice} עבור ${project.packageHours} שעות`;
-    } else if (project.pricingModel === "mixed") {
-      return `${symbol}${project.packagePrice} עבור ${project.packageHours} שעות, אז ${symbol}${project.overageRate}/שעה`;
-    } else if (project.pricingModel === "fixed") {
-      return `${symbol}${project.fixedBudget} (תקציב קבוע)`;
-    } else if (project.pricingModel === "retainer") {
-      return `${symbol}${project.retainerMonthlyFee}/חודש עבור ${project.retainerHours} שעות`;
-    }
-    return "-";
-  };
-
-  const getBudgetProgress = () => {
-    if (!projectStats || !project) return null;
-
-    const { totalHours } = projectStats;
-    const { pricingModel, packageHours, retainerHours, fixedBudget, hourlyRate } = project;
-
-    // For package, mixed, and retainer models: show hours used vs included hours
-    if (pricingModel === "package" && packageHours) {
-      const percentage = Math.min((totalHours / packageHours) * 100, 100);
-      const isOverBudget = totalHours > packageHours;
-      return {
-        type: "hours",
-        current: totalHours.toFixed(1),
-        total: packageHours.toFixed(1),
-        percentage: isOverBudget ? 100 : percentage,
-        isOverBudget,
-        label: "שימוש בשעות החבילה",
-      };
-    }
-
-    if (pricingModel === "mixed" && packageHours) {
-      const percentage = Math.min((totalHours / packageHours) * 100, 100);
-      const isOverBudget = totalHours > packageHours;
-      return {
-        type: "hours",
-        current: totalHours.toFixed(1),
-        total: packageHours.toFixed(1),
-        percentage: isOverBudget ? 100 : percentage,
-        isOverBudget,
-        label: "שימוש בשעות החבילה",
-      };
-    }
-
-    if (pricingModel === "retainer" && retainerHours) {
-      const percentage = Math.min((totalHours / retainerHours) * 100, 100);
-      const isOverBudget = totalHours > retainerHours;
-      return {
-        type: "hours",
-        current: totalHours.toFixed(1),
-        total: retainerHours.toFixed(1),
-        percentage: isOverBudget ? 100 : percentage,
-        isOverBudget,
-        label: "שימוש בשעות הריטיינר",
-      };
-    }
-
-    // For fixed budget model: show actual cost vs budget
-    if (pricingModel === "fixed" && fixedBudget && hourlyRate) {
-      const actualCost = totalHours * hourlyRate;
-      const percentage = Math.min((actualCost / fixedBudget) * 100, 100);
-      const isOverBudget = actualCost > fixedBudget;
-      const symbol = getCurrencySymbol(project.currency);
-      return {
-        type: "currency",
-        current: `${symbol}${actualCost.toFixed(2)}`,
-        total: `${symbol}${fixedBudget.toFixed(2)}`,
-        percentage: isOverBudget ? 100 : percentage,
-        isOverBudget,
-        label: "צריכה מול התקציב",
-      };
-    }
-
-    return null;
-  };
-
-  const renderProgressBar = (progress: ReturnType<typeof getBudgetProgress>) => {
-    if (!progress) return null;
-
-    const { percentage, isOverBudget, current, total, label } = progress;
-    const barColor = isOverBudget
-      ? "bg-destructive/100"
-      : percentage >= 80
-      ? "bg-accent"
-      : "bg-success/100";
-
-    return (
-      <div className="sm:col-span-2">
-        <dt className="text-sm font-medium text-muted-foreground mb-2">{label}</dt>
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">
-              {current} / {total}
-              {progress.type === "hours" ? " שעות" : ""}
-            </span>
-            <span className={`font-semibold ${isOverBudget ? "text-destructive" : percentage >= 80 ? "text-foreground" : "text-success"}`}>
-              {percentage.toFixed(0)}%
-            </span>
-          </div>
-          <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
-            <div
-              className={`${barColor} h-full rounded-full transition-all duration-300`}
-              style={{ width: `${percentage}%` }}
-            />
-          </div>
-          {isOverBudget && (
-            <p className="text-xs text-destructive">חריגה מההיקף המוגדר</p>
-          )}
-        </div>
-      </div>
-    );
   };
 
   const formatDuration = (minutes: number): string => {
@@ -871,231 +643,6 @@ export default function ProjectDetailsPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="pricingModel" className="block text-sm font-medium text-muted-foreground">
-                    מודל תמחור *
-                  </label>
-                  <select
-                    id="pricingModel"
-                    required
-                    value={formData.pricingModel}
-                    onChange={(e) => setFormData({ ...formData, pricingModel: e.target.value })}
-                    className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                    disabled={submitting}
-                  >
-                    <option value="hourly">שעתי</option>
-                    <option value="package">חבילה</option>
-                    <option value="mixed">משולב</option>
-                    <option value="fixed">תקציב קבוע</option>
-                    <option value="retainer">רטיינר</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="currency" className="block text-sm font-medium text-muted-foreground">
-                    מטבע
-                  </label>
-                  <select
-                    id="currency"
-                    value={formData.currency}
-                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                    className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                    disabled={submitting}
-                  >
-                    <option value="ILS">₪ - שקל ישראלי</option>
-                    <option value="USD">$ - דולר אמריקאי</option>
-                    <option value="USDT">₮ - טתר</option>
-                    <option value="BTC">₿ - ביטקוין</option>
-                    <option value="ETH">Ξ - אתריום</option>
-                  </select>
-                </div>
-
-                {formData.pricingModel === "hourly" && (
-                  <div>
-                    <label htmlFor="hourlyRate" className="block text-sm font-medium text-muted-foreground">
-                      תעריף שעתי *
-                    </label>
-                    <input
-                      type="number"
-                      id="hourlyRate"
-                      required
-                      min="0"
-                      step="0.01"
-                      value={formData.hourlyRate}
-                      onChange={(e) => setFormData({ ...formData, hourlyRate: e.target.value })}
-                      className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                      disabled={submitting}
-                    />
-                  </div>
-                )}
-
-                {formData.pricingModel === "package" && (
-                  <>
-                    <div>
-                      <label htmlFor="packagePrice" className="block text-sm font-medium text-muted-foreground">
-                        מחיר חבילה *
-                      </label>
-                      <input
-                        type="number"
-                        id="packagePrice"
-                        required
-                        min="0"
-                        step="0.01"
-                        value={formData.packagePrice}
-                        onChange={(e) => setFormData({ ...formData, packagePrice: e.target.value })}
-                        className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                        disabled={submitting}
-                      />
-                    </div>
-
-                    <div>
-                      <label htmlFor="packageHours" className="block text-sm font-medium text-muted-foreground">
-                        שעות בחבילה *
-                      </label>
-                      <input
-                        type="number"
-                        id="packageHours"
-                        required
-                        min="0"
-                        step="0.5"
-                        value={formData.packageHours}
-                        onChange={(e) => setFormData({ ...formData, packageHours: e.target.value })}
-                        className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                        disabled={submitting}
-                      />
-                    </div>
-                  </>
-                )}
-
-                {formData.pricingModel === "mixed" && (
-                  <>
-                    <div>
-                      <label htmlFor="packagePrice" className="block text-sm font-medium text-muted-foreground">
-                        מחיר חבילה *
-                      </label>
-                      <input
-                        type="number"
-                        id="packagePrice"
-                        required
-                        min="0"
-                        step="0.01"
-                        value={formData.packagePrice}
-                        onChange={(e) => setFormData({ ...formData, packagePrice: e.target.value })}
-                        className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                        disabled={submitting}
-                      />
-                    </div>
-
-                    <div>
-                      <label htmlFor="packageHours" className="block text-sm font-medium text-muted-foreground">
-                        שעות בחבילה *
-                      </label>
-                      <input
-                        type="number"
-                        id="packageHours"
-                        required
-                        min="0"
-                        step="0.5"
-                        value={formData.packageHours}
-                        onChange={(e) => setFormData({ ...formData, packageHours: e.target.value })}
-                        className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                        disabled={submitting}
-                      />
-                    </div>
-
-                    <div>
-                      <label htmlFor="hourlyRate" className="block text-sm font-medium text-muted-foreground">
-                        תעריף שעתי בחבילה *
-                      </label>
-                      <input
-                        type="number"
-                        id="hourlyRate"
-                        required
-                        min="0"
-                        step="0.01"
-                        value={formData.hourlyRate}
-                        onChange={(e) => setFormData({ ...formData, hourlyRate: e.target.value })}
-                        className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                        disabled={submitting}
-                      />
-                    </div>
-
-                    <div>
-                      <label htmlFor="overageRate" className="block text-sm font-medium text-muted-foreground">
-                        תעריף מעל החבילה *
-                      </label>
-                      <input
-                        type="number"
-                        id="overageRate"
-                        required
-                        min="0"
-                        step="0.01"
-                        value={formData.overageRate}
-                        onChange={(e) => setFormData({ ...formData, overageRate: e.target.value })}
-                        className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                        disabled={submitting}
-                      />
-                    </div>
-                  </>
-                )}
-
-                {formData.pricingModel === "fixed" && (
-                  <div>
-                    <label htmlFor="fixedBudget" className="block text-sm font-medium text-muted-foreground">
-                      תקציב כולל *
-                    </label>
-                    <input
-                      type="number"
-                      id="fixedBudget"
-                      required
-                      min="0"
-                      step="0.01"
-                      value={formData.fixedBudget}
-                      onChange={(e) => setFormData({ ...formData, fixedBudget: e.target.value })}
-                      className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                      disabled={submitting}
-                    />
-                  </div>
-                )}
-
-                {formData.pricingModel === "retainer" && (
-                  <>
-                    <div>
-                      <label htmlFor="retainerMonthlyFee" className="block text-sm font-medium text-muted-foreground">
-                        תשלום חודשי *
-                      </label>
-                      <input
-                        type="number"
-                        id="retainerMonthlyFee"
-                        required
-                        min="0"
-                        step="0.01"
-                        value={formData.retainerMonthlyFee}
-                        onChange={(e) => setFormData({ ...formData, retainerMonthlyFee: e.target.value })}
-                        className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                        disabled={submitting}
-                      />
-                    </div>
-
-                    <div>
-                      <label htmlFor="retainerHours" className="block text-sm font-medium text-muted-foreground">
-                        שעות בחבילה *
-                      </label>
-                      <input
-                        type="number"
-                        id="retainerHours"
-                        required
-                        min="0"
-                        step="0.5"
-                        value={formData.retainerHours}
-                        onChange={(e) => setFormData({ ...formData, retainerHours: e.target.value })}
-                        className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                        disabled={submitting}
-                      />
-                    </div>
-                  </>
-                )}
-
-                <div>
                   <label htmlFor="status" className="block text-sm font-medium text-muted-foreground">
                     סטטוס
                   </label>
@@ -1164,15 +711,6 @@ export default function ProjectDetailsPage() {
                     // Reset form to current project data
                     setFormData({
                       name: project.name,
-                      pricingModel: project.pricingModel,
-                      hourlyRate: project.hourlyRate?.toString() || "",
-                      packagePrice: project.packagePrice?.toString() || "",
-                      packageHours: project.packageHours?.toString() || "",
-                      overageRate: project.overageRate?.toString() || "",
-                      fixedBudget: project.fixedBudget?.toString() || "",
-                      retainerMonthlyFee: project.retainerMonthlyFee?.toString() || "",
-                      retainerHours: project.retainerHours?.toString() || "",
-                      currency: project.currency,
                       status: project.status,
                       startDate: project.startDate || "",
                       endDate: project.endDate || "",
@@ -1214,35 +752,11 @@ export default function ProjectDetailsPage() {
               </div>
 
               <div>
-                <dt className="text-sm font-medium text-muted-foreground">מודל תמחור</dt>
-                <dd className="mt-1 text-sm text-foreground">
-                  {getPricingModelLabel(project.pricingModel)}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-sm font-medium text-muted-foreground">פירוט תמחור</dt>
-                <dd className="mt-1 text-sm text-foreground">
-                  {formatPricingDetails(project)}
-                </dd>
-              </div>
-
-              {/* Budget Progress Bar */}
-              {!statsLoading && renderProgressBar(getBudgetProgress())}
-
-              <div>
                 <dt className="text-sm font-medium text-muted-foreground">סטטוס</dt>
                 <dd className="mt-1">
                   <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${getStatusColor(project.status)}`}>
                     {getStatusLabel(project.status)}
                   </span>
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-sm font-medium text-muted-foreground">מטבע</dt>
-                <dd className="mt-1 text-sm text-foreground">
-                  {getCurrencySymbol(project.currency)} - {project.currency}
                 </dd>
               </div>
 
@@ -1293,6 +807,96 @@ export default function ProjectDetailsPage() {
                 <dt className="mt-2 text-xs text-success">כמות רשומות זמן בפרויקט</dt>
               </div>
             </dl>
+          </div>
+        </div>
+
+        {/* Tasks */}
+        <div className="mt-6 rounded-[14px] bg-card border border-border/50 shadow-sm">
+          <div className="border-b border-border px-6 py-4">
+            <h2 className="font-display text-lg font-semibold text-foreground">משימות</h2>
+          </div>
+          <div className="px-6 py-4">
+            {/* Create Task Form */}
+            {project.status !== "archived" && (
+              <form onSubmit={handleCreateTask} className="mb-4 flex gap-2">
+                <input
+                  type="text"
+                  value={newTaskName}
+                  onChange={(e) => setNewTaskName(e.target.value)}
+                  placeholder="שם משימה חדשה..."
+                  className="flex-1 rounded-[14px] border border-border px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                  disabled={creatingTask}
+                />
+                <button
+                  type="submit"
+                  disabled={creatingTask || !newTaskName.trim()}
+                  className="rounded-[14px] bg-primary px-4 py-2 text-sm text-white hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {creatingTask ? "מוסיף..." : "הוסף"}
+                </button>
+              </form>
+            )}
+
+            {/* Task List */}
+            {tasksLoading ? (
+              <p className="text-sm text-muted-foreground">טוען משימות...</p>
+            ) : tasks.length === 0 ? (
+              <p className="text-sm text-muted-foreground">אין משימות עדיין</p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {tasks.map((task) => (
+                  <li key={task.id} className="py-3 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <button
+                        onClick={() => handleToggleTaskStatus(task)}
+                        title={task.status === "todo" ? "לביצוע" : task.status === "in_progress" ? "בתהליך" : "הושלם"}
+                        className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                          task.status === "done"
+                            ? "border-success bg-success text-white"
+                            : task.status === "in_progress"
+                            ? "border-primary bg-primary/10"
+                            : "border-border bg-transparent"
+                        }`}
+                      >
+                        {task.status === "done" && (
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                        {task.status === "in_progress" && (
+                          <div className="w-2 h-2 rounded-full bg-primary" />
+                        )}
+                      </button>
+                      <span className={`text-sm truncate ${task.status === "done" ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                        {task.name}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={`text-xs rounded-full px-2 py-0.5 ${
+                        task.status === "done"
+                          ? "bg-success/10 text-success"
+                          : task.status === "in_progress"
+                          ? "bg-primary-light text-primary"
+                          : "bg-muted text-muted-foreground"
+                      }`}>
+                        {task.status === "todo" ? "לביצוע" : task.status === "in_progress" ? "בתהליך" : "הושלם"}
+                      </span>
+                      {project.status !== "archived" && (
+                        <button
+                          onClick={() => handleDeleteTask(task.id)}
+                          className="text-muted-foreground hover:text-destructive transition-colors"
+                          title="מחק משימה"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
 

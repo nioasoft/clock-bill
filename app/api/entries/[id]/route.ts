@@ -36,9 +36,11 @@ export async function GET(request: NextRequest, context: RouteContext) {
       notes: string | null;
       is_billable: boolean;
       created_at: string;
+      task_id: string | null;
       project_name: string;
       client_name: string;
       client_id: string;
+      task_name: string | null;
     }>(
       `SELECT
         te.id,
@@ -52,12 +54,15 @@ export async function GET(request: NextRequest, context: RouteContext) {
         te.notes,
         te.is_billable,
         te.created_at,
+        te.task_id,
         p.name as project_name,
         c.name as client_name,
-        c.id as client_id
+        c.id as client_id,
+        tk.name as task_name
       FROM time_entries te
       JOIN projects p ON te.project_id = p.id
       JOIN clients c ON p.client_id = c.id
+      LEFT JOIN tasks tk ON te.task_id = tk.id
       WHERE te.id = $1 AND te.user_id = $2`,
       [id, user.id]
     );
@@ -88,6 +93,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
         notes: entry.notes,
         isBillable: entry.is_billable,
         createdAt: entry.created_at,
+        taskId: entry.task_id,
+        taskName: entry.task_name,
       },
     }, {
       headers: {
@@ -120,7 +127,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
     const { id } = await context.params;
     const body = await request.json();
-    const { projectId, date, duration, description, notes, isBillable, tags } = body;
+    const { projectId, taskId, date, duration, description, notes, isBillable, tags } = body;
 
     // Validation
     if (!projectId) {
@@ -184,11 +191,12 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     // Update time entry
     await query(
       `UPDATE time_entries
-       SET project_id = $1, description = $2, duration = $3, date = $4,
-           tags = $5, notes = $6, is_billable = $7, updated_at = NOW()
-       WHERE id = $8`,
+       SET project_id = $1, task_id = $2, description = $3, duration = $4, date = $5,
+           tags = $6, notes = $7, is_billable = $8, updated_at = NOW()
+       WHERE id = $9`,
       [
         projectId,
+        taskId || null,
         description.trim(),
         duration,
         date,
@@ -212,9 +220,11 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       notes: string | null;
       is_billable: boolean;
       created_at: string;
+      task_id: string | null;
       project_name: string;
       client_name: string;
       client_id: string;
+      task_name: string | null;
     }>(
       `SELECT
         te.id,
@@ -228,12 +238,15 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         te.notes,
         te.is_billable,
         te.created_at,
+        te.task_id,
         p.name as project_name,
         c.name as client_name,
-        c.id as client_id
+        c.id as client_id,
+        tk.name as task_name
       FROM time_entries te
       JOIN projects p ON te.project_id = p.id
       JOIN clients c ON p.client_id = c.id
+      LEFT JOIN tasks tk ON te.task_id = tk.id
       WHERE te.id = $1`,
       [id]
     );
@@ -257,6 +270,8 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         notes: entry.notes,
         isBillable: entry.is_billable,
         createdAt: entry.created_at,
+        taskId: entry.task_id,
+        taskName: entry.task_name,
       },
     });
   } catch (error) {

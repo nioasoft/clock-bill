@@ -65,12 +65,10 @@ export async function GET(
         id: string;
         name: string;
         client_id: string;
-        pricing_model: string;
-        currency: string;
         status: string;
         created_at: string;
       }>(
-        `SELECT p.id, p.name, p.client_id, p.pricing_model, p.currency, p.status, p.created_at
+        `SELECT p.id, p.name, p.client_id, p.status, p.created_at
          FROM projects p WHERE p.user_id = $1 ORDER BY p.created_at DESC`,
         [userId]
       ),

@@ -41,7 +41,7 @@ interface ImportContentProps {
     timeEntries: number;
     customTags: number;
     currencyRates: number;
-    rateOverrides: number;
+    tasks: number;
     errors: Array<{ entity: string; message: string }>;
   } | null;
   setBackupImportResults: (results: {
@@ -51,7 +51,7 @@ interface ImportContentProps {
     timeEntries: number;
     customTags: number;
     currencyRates: number;
-    rateOverrides: number;
+    tasks: number;
     errors: Array<{ entity: string; message: string }>;
   } | null) => void;
   importMode: "merge" | "replace";
@@ -449,8 +449,8 @@ export function ImportContent({
                   <p className="text-xs text-muted-foreground">שערי מטבע</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-success">{backupImportResults.rateOverrides}</p>
-                  <p className="text-xs text-muted-foreground">עדפות תעריף</p>
+                  <p className="text-2xl font-bold text-success">{backupImportResults.tasks}</p>
+                  <p className="text-xs text-muted-foreground">משימות</p>
                 </div>
               </div>
               {backupImportResults.errors.length > 0 && (

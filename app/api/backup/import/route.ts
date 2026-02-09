@@ -42,14 +42,14 @@ export async function POST(request: NextRequest) {
         timeEntries: 0,
         customTags: 0,
         currencyRates: 0,
-        rateOverrides: 0,
+        tasks: 0,
         errors: [] as Array<{ entity: string; message: string }>,
       };
 
       // If in replace mode, delete existing data first
       if (mode === "replace") {
         // Delete in order to respect foreign key constraints
-        await client.query(`DELETE FROM rate_overrides WHERE project_id IN (SELECT id FROM projects WHERE user_id = $1)`, [userId]);
+        await client.query(`DELETE FROM tasks WHERE user_id = $1`, [userId]);
         await client.query(`DELETE FROM time_entries WHERE user_id = $1`, [userId]);
         await client.query(`DELETE FROM projects WHERE user_id = $1`, [userId]);
         await client.query(`DELETE FROM clients WHERE user_id = $1`, [userId]);
@@ -224,25 +224,14 @@ export async function POST(request: NextRequest) {
               newProjectId = generateId("project");
               await client.query(
                 `INSERT INTO projects (
-                  id, user_id, client_id, name, pricing_model, hourly_rate,
-                  package_price, package_hours, overage_rate, fixed_budget,
-                  retainer_monthly_fee, retainer_hours, currency, status,
+                  id, user_id, client_id, name, status,
                   start_date, end_date, notes, created_at, updated_at
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`,
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
                 [
                   newProjectId,
                   userId,
                   newClientId,
                   project.name as string,
-                  project.pricingModel as string,
-                  project.hourlyRate as number || null,
-                  project.packagePrice as number || null,
-                  project.packageHours as number || null,
-                  project.overageRate as number || null,
-                  project.fixedBudget as number || null,
-                  project.retainerMonthlyFee as number || null,
-                  project.retainerHours as number || null,
-                  project.currency as string || "ILS",
                   project.status as string || "active",
                   project.startDate as string || null,
                   project.endDate as string || null,
@@ -261,6 +250,44 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Build a map of old task IDs to new task IDs
+      const taskIdMap = new Map<string, string>();
+
+      // Import Tasks
+      if (backup.tasks && Array.isArray(backup.tasks)) {
+        for (const task of backup.tasks) {
+          try {
+            const newProjectId = projectIdMap.get(task.projectId);
+            if (!newProjectId) {
+              stats.errors.push({ entity: "task", message: `${task.name}: פרויקט לא נמצא` });
+              continue;
+            }
+
+            const newTaskId = generateId("task");
+            await client.query(
+              `INSERT INTO tasks (
+                id, project_id, user_id, name, description, status, created_at, updated_at
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+              [
+                newTaskId,
+                newProjectId,
+                userId,
+                task.name as string,
+                task.description as string || null,
+                task.status as string || "active",
+                task.createdAt || new Date().toISOString(),
+                task.updatedAt || new Date().toISOString(),
+              ]
+            );
+            stats.tasks++;
+            taskIdMap.set(task.id as string, newTaskId);
+          } catch (error) {
+            console.error("Error importing task:", error);
+            stats.errors.push({ entity: "task", message: `${task.name}: שגיאה בייבוא` });
+          }
+        }
+      }
+
       // Import Time Entries
       if (backup.timeEntries && Array.isArray(backup.timeEntries)) {
         for (const entry of backup.timeEntries) {
@@ -272,15 +299,17 @@ export async function POST(request: NextRequest) {
             }
 
             const newEntryId = generateId("entry");
+            const newTaskId = entry.taskId ? taskIdMap.get(entry.taskId) || null : null;
             await client.query(
               `INSERT INTO time_entries (
-                id, user_id, project_id, description, start_time, end_time,
+                id, user_id, project_id, task_id, description, start_time, end_time,
                 duration, date, tags, notes, is_billable, created_at, updated_at
-              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
               [
                 newEntryId,
                 userId,
                 newProjectId,
+                newTaskId,
                 entry.description,
                 entry.startTime || null,
                 entry.endTime || null,
@@ -370,46 +399,6 @@ export async function POST(request: NextRequest) {
               entity: "rate",
               message: `${rate.fromCurrency}-${rate.toCurrency}: שגיאה בייבוא`,
             });
-          }
-        }
-      }
-
-      // Import Rate Overrides
-      if (backup.rateOverrides && Array.isArray(backup.rateOverrides)) {
-        for (const override of backup.rateOverrides) {
-          try {
-            const newProjectId = projectIdMap.get(override.projectId);
-            if (!newProjectId) {
-              stats.errors.push({ entity: "override", message: `override: פרויקט לא נמצא` });
-              continue;
-            }
-
-            const existing = await client.query(
-              `SELECT id FROM rate_overrides WHERE project_id = $1 AND tag = $2`,
-              [newProjectId, override.tag]
-            );
-
-            if (existing.rows.length > 0 && mode === "merge") {
-              continue;
-            }
-
-            const newOverrideId = generateId("override");
-            await client.query(
-              `INSERT INTO rate_overrides (id, project_id, tag, rate, created_at, updated_at)
-               VALUES ($1, $2, $3, $4, $5, $6)`,
-              [
-                newOverrideId,
-                newProjectId,
-                override.tag,
-                override.rate,
-                override.createdAt || new Date().toISOString(),
-                override.updatedAt || new Date().toISOString(),
-              ]
-            );
-            stats.rateOverrides++;
-          } catch (error) {
-            console.error("Error importing rate override:", error);
-            stats.errors.push({ entity: "override", message: `${override.tag}: שגיאה בייבוא` });
           }
         }
       }

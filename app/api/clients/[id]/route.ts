@@ -31,11 +31,18 @@ export async function GET(
       phone: string | null;
       address: string | null;
       default_rate: number | null;
+      currency: string | null;
+      is_retainer: boolean | null;
+      retainer_hours: number | null;
+      retainer_monthly_fee: number | null;
+      overage_rate: number | null;
       notes: string | null;
       is_active: boolean;
       created_at: string;
     }>(
-      `SELECT id, name, contact_name, email, phone, address, default_rate, notes, is_active, created_at
+      `SELECT id, name, contact_name, email, phone, address, default_rate,
+              currency, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate,
+              notes, is_active, created_at
        FROM clients
        WHERE id = $1 AND user_id = $2`,
       [clientId, user.id]
@@ -60,6 +67,11 @@ export async function GET(
         phone: client.phone,
         address: client.address,
         defaultRate: client.default_rate,
+        currency: client.currency || "ILS",
+        isRetainer: client.is_retainer ?? false,
+        retainerHours: client.retainer_hours,
+        retainerMonthlyFee: client.retainer_monthly_fee,
+        overageRate: client.overage_rate,
         notes: client.notes,
         isActive: client.is_active,
         createdAt: client.created_at,
@@ -97,7 +109,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, contactName, email, phone, address, defaultRate, notes } = body;
+    const { name, contactName, email, phone, address, defaultRate, currency, isRetainer, retainerHours, retainerMonthlyFee, overageRate, notes } = body;
     const { id: clientId } = await params;
 
     // Validation
@@ -148,8 +160,10 @@ export async function PUT(
     // Verify ownership and update client
     await query(
       `UPDATE clients
-       SET name = $1, contact_name = $2, email = $3, phone = $4, address = $5, default_rate = $6, notes = $7
-       WHERE id = $8 AND user_id = $9`,
+       SET name = $1, contact_name = $2, email = $3, phone = $4, address = $5, default_rate = $6,
+           currency = $7, is_retainer = $8, retainer_hours = $9, retainer_monthly_fee = $10, overage_rate = $11,
+           notes = $12
+       WHERE id = $13 AND user_id = $14`,
       [
         name.trim(),
         contactName?.trim() || null,
@@ -157,6 +171,11 @@ export async function PUT(
         phone?.trim() || null,
         address?.trim() || null,
         defaultRate || null,
+        currency || "ILS",
+        isRetainer ?? false,
+        retainerHours || null,
+        retainerMonthlyFee || null,
+        overageRate || null,
         notes?.trim() || null,
         clientId,
         user.id,
@@ -185,11 +204,18 @@ export async function PUT(
       phone: string | null;
       address: string | null;
       default_rate: number | null;
+      currency: string | null;
+      is_retainer: boolean | null;
+      retainer_hours: number | null;
+      retainer_monthly_fee: number | null;
+      overage_rate: number | null;
       notes: string | null;
       is_active: boolean;
       created_at: string;
     }>(
-      `SELECT id, name, contact_name, email, phone, address, default_rate, notes, is_active, created_at
+      `SELECT id, name, contact_name, email, phone, address, default_rate,
+              currency, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate,
+              notes, is_active, created_at
        FROM clients
        WHERE id = $1`,
       [clientId]
@@ -207,6 +233,11 @@ export async function PUT(
         phone: client.phone,
         address: client.address,
         defaultRate: client.default_rate,
+        currency: client.currency || "ILS",
+        isRetainer: client.is_retainer ?? false,
+        retainerHours: client.retainer_hours,
+        retainerMonthlyFee: client.retainer_monthly_fee,
+        overageRate: client.overage_rate,
         notes: client.notes,
         isActive: client.is_active,
         createdAt: client.created_at,

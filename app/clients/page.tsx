@@ -31,12 +31,33 @@ interface Client {
   phone: string | null;
   address: string | null;
   defaultRate: number | null;
+  currency: string;
+  isRetainer: boolean;
+  retainerHours: number | null;
+  retainerMonthlyFee: number | null;
+  overageRate: number | null;
   notes: string | null;
   isActive: boolean;
   createdAt: string;
   totalBilled: number;
   totalHours: number;
 }
+
+const CURRENCIES = [
+  { value: "ILS", label: "₪ ILS" },
+  { value: "USD", label: "$ USD" },
+  { value: "USDT", label: "₮ USDT" },
+  { value: "BTC", label: "₿ BTC" },
+  { value: "ETH", label: "Ξ ETH" },
+] as const;
+
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  ILS: "₪",
+  USD: "$",
+  USDT: "₮",
+  BTC: "₿",
+  ETH: "Ξ",
+};
 
 export default function ClientsPage() {
   return (
@@ -59,6 +80,12 @@ function ClientsPageContent() {
     phone: "",
     address: "",
     defaultRate: "",
+    currency: "ILS",
+    isRetainer: false,
+    retainerHours: "",
+    retainerMonthlyFee: "",
+    hasOverageRate: false,
+    overageRate: "",
     notes: "",
   });
   const [formError, setFormError] = useState("");
@@ -162,7 +189,13 @@ function ClientsPageContent() {
           contactName: formData.contactName || undefined,
           email: formData.email || undefined,
           phone: formData.phone || undefined,
+          address: formData.address || undefined,
           defaultRate: formData.defaultRate ? parseFloat(formData.defaultRate) : undefined,
+          currency: formData.currency,
+          isRetainer: formData.isRetainer,
+          retainerHours: formData.isRetainer && formData.retainerHours ? parseFloat(formData.retainerHours) : undefined,
+          retainerMonthlyFee: formData.isRetainer && formData.retainerMonthlyFee ? parseFloat(formData.retainerMonthlyFee) : undefined,
+          overageRate: formData.isRetainer && formData.hasOverageRate && formData.overageRate ? parseFloat(formData.overageRate) : undefined,
           notes: formData.notes || undefined,
         }),
       });
@@ -185,6 +218,12 @@ function ClientsPageContent() {
           phone: "",
           address: "",
           defaultRate: "",
+          currency: "ILS",
+          isRetainer: false,
+          retainerHours: "",
+          retainerMonthlyFee: "",
+          hasOverageRate: false,
+          overageRate: "",
           notes: "",
         });
         setShowForm(false);
@@ -209,6 +248,12 @@ function ClientsPageContent() {
       phone: client.phone || "",
       address: client.address || "",
       defaultRate: client.defaultRate?.toString() || "",
+      currency: client.currency || "ILS",
+      isRetainer: client.isRetainer ?? false,
+      retainerHours: client.retainerHours?.toString() || "",
+      retainerMonthlyFee: client.retainerMonthlyFee?.toString() || "",
+      hasOverageRate: (client.overageRate ?? 0) > 0,
+      overageRate: client.overageRate?.toString() || "",
       notes: client.notes || "",
     });
     setShowForm(true);
@@ -223,6 +268,12 @@ function ClientsPageContent() {
       phone: "",
       address: "",
       defaultRate: "",
+      currency: "ILS",
+      isRetainer: false,
+      retainerHours: "",
+      retainerMonthlyFee: "",
+      hasOverageRate: false,
+      overageRate: "",
       notes: "",
     });
     setShowForm(false);
@@ -247,7 +298,10 @@ function ClientsPageContent() {
         // Update client in list (soft delete - sets isActive to false)
         setClients(clients.map((c) => (c.id === clientToDelete.id ? { ...c, isActive: false } : c)));
         setClientToDelete(null);
-        showSuccessToast("הלקוח נמחק בהצלחה");
+        // Close edit form if open
+        setShowForm(false);
+        setEditingClient(null);
+        showSuccessToast("הלקוח הועבר לארכיון");
       } else {
         showErrorToast(data.message || "שגיאה במחיקת הלקוח");
       }
@@ -270,6 +324,9 @@ function ClientsPageContent() {
       if (data.success) {
         // Update client in list (restore - sets isActive to true)
         setClients(clients.map((c) => (c.id === client.id ? { ...c, isActive: true } : c)));
+        // Close edit form if open
+        setShowForm(false);
+        setEditingClient(null);
         showSuccessToast("הלקוח שוחזר בהצלחה");
       } else {
         showErrorToast(data.message || "שגיאה בשחזור הלקוח");
@@ -405,31 +462,136 @@ function ClientsPageContent() {
                   />
                 </div>
 
-                <div>
-                  <label htmlFor="defaultRate" className="block text-sm font-medium text-foreground">
-                    תעריף שעתי (₪)
+                <div className="w-32">
+                  <label htmlFor="currency" className="block text-sm font-medium text-foreground">
+                    מטבע
                   </label>
-                  <input
-                    type="number"
-                    id="defaultRate"
-                    min="0"
-                    step="0.01"
-                    value={formData.defaultRate}
-                    onChange={(e) => {
-                      setFormData({ ...formData, defaultRate: e.target.value });
-                      setFieldErrors({ ...fieldErrors, defaultRate: undefined });
-                    }}
-                    className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 shadow-sm focus:outline-none focus:ring-primary disabled:opacity-50 ${
-                      fieldErrors.defaultRate
-                        ? "border-destructive/30 focus:border-destructive focus:ring-destructive/20"
-                        : "border-border focus:border-primary"
-                    }`}
+                  <select
+                    id="currency"
+                    value={formData.currency}
+                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                    className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary disabled:opacity-50"
                     disabled={submitting}
-                  />
-                  {fieldErrors.defaultRate && (
-                    <p className="mt-1 text-sm text-destructive">{fieldErrors.defaultRate}</p>
-                  )}
+                  >
+                    {CURRENCIES.map((c) => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
                 </div>
+
+                {/* Retainer toggle */}
+                <div className="sm:col-span-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.isRetainer}
+                      onChange={(e) => setFormData({ ...formData, isRetainer: e.target.checked })}
+                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                      disabled={submitting}
+                    />
+                    <span className="text-sm font-medium text-foreground">לקוח בריטיינר</span>
+                  </label>
+                </div>
+
+                {/* Hourly rate - shown only when NOT retainer */}
+                {!formData.isRetainer && (
+                  <div>
+                    <label htmlFor="defaultRate" className="block text-sm font-medium text-foreground">
+                      תעריף שעתי ({CURRENCY_SYMBOLS[formData.currency] || "₪"})
+                    </label>
+                    <input
+                      type="number"
+                      id="defaultRate"
+                      min="0"
+                      step="0.01"
+                      value={formData.defaultRate}
+                      onChange={(e) => {
+                        setFormData({ ...formData, defaultRate: e.target.value });
+                        setFieldErrors({ ...fieldErrors, defaultRate: undefined });
+                      }}
+                      className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 shadow-sm focus:outline-none focus:ring-primary disabled:opacity-50 ${
+                        fieldErrors.defaultRate
+                          ? "border-destructive/30 focus:border-destructive focus:ring-destructive/20"
+                          : "border-border focus:border-primary"
+                      }`}
+                      disabled={submitting}
+                    />
+                    {fieldErrors.defaultRate && (
+                      <p className="mt-1 text-sm text-destructive">{fieldErrors.defaultRate}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Retainer fields - shown only when isRetainer is true */}
+                {formData.isRetainer && (
+                  <>
+                    <div>
+                      <label htmlFor="retainerHours" className="block text-sm font-medium text-foreground">
+                        שעות בריטיינר
+                      </label>
+                      <input
+                        type="number"
+                        id="retainerHours"
+                        min="0"
+                        step="0.5"
+                        value={formData.retainerHours}
+                        onChange={(e) => setFormData({ ...formData, retainerHours: e.target.value })}
+                        className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary disabled:opacity-50"
+                        disabled={submitting}
+                        placeholder="למשל 40"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="retainerMonthlyFee" className="block text-sm font-medium text-foreground">
+                        סכום חודשי ({CURRENCY_SYMBOLS[formData.currency] || "₪"})
+                      </label>
+                      <input
+                        type="number"
+                        id="retainerMonthlyFee"
+                        min="0"
+                        step="0.01"
+                        value={formData.retainerMonthlyFee}
+                        onChange={(e) => setFormData({ ...formData, retainerMonthlyFee: e.target.value })}
+                        className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary disabled:opacity-50"
+                        disabled={submitting}
+                        placeholder="למשל 10000"
+                      />
+                    </div>
+
+                    {/* Overflow rate toggle */}
+                    <div className="sm:col-span-2">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.hasOverageRate}
+                          onChange={(e) => setFormData({ ...formData, hasOverageRate: e.target.checked })}
+                          className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                          disabled={submitting}
+                        />
+                        <span className="text-sm font-medium text-foreground">תעריף נפרד מעל הריטיינר</span>
+                      </label>
+                    </div>
+
+                    {/* Overflow rate field */}
+                    {formData.hasOverageRate && (
+                      <div>
+                        <label htmlFor="overageRate" className="block text-sm font-medium text-foreground">
+                          תעריף שעתי מעל הריטיינר ({CURRENCY_SYMBOLS[formData.currency] || "₪"})
+                        </label>
+                        <input
+                          type="number"
+                          id="overageRate"
+                          min="0"
+                          step="0.01"
+                          value={formData.overageRate}
+                          onChange={(e) => setFormData({ ...formData, overageRate: e.target.value })}
+                          className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary disabled:opacity-50"
+                          disabled={submitting}
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
               <div>
@@ -445,6 +607,40 @@ function ClientsPageContent() {
                   disabled={submitting}
                 />
               </div>
+
+              {editingClient && (
+                <div className="border-t border-border pt-4 mt-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        {editingClient.isActive ? "העבר לארכיון" : "שחזר מארכיון"}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {editingClient.isActive
+                          ? "הלקוח יוסתר מהרשימה אך יישמר במערכת"
+                          : "הלקוח יוחזר לרשימה הפעילה"}
+                      </p>
+                    </div>
+                    {editingClient.isActive ? (
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(editingClient)}
+                        className="rounded-[14px] border border-destructive/30 px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10"
+                      >
+                        ארכב לקוח
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleRestore(editingClient)}
+                        className="rounded-[14px] border border-success/30 px-3 py-1.5 text-sm text-success hover:bg-success/10"
+                      >
+                        שחזר לקוח
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="flex justify-end gap-2">
                 <button
@@ -541,7 +737,7 @@ function ClientsPageContent() {
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <div className="text-sm text-foreground">
-                          {client.defaultRate ? `₪${client.defaultRate}/שעה` : "-"}
+                          {client.defaultRate ? `${CURRENCY_SYMBOLS[client.currency] || "₪"}${client.defaultRate}/שעה` : "-"}
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
@@ -572,21 +768,6 @@ function ClientsPageContent() {
                         >
                           ערוך
                         </button>
-                        {client.isActive ? (
-                          <button
-                            onClick={() => handleDelete(client)}
-                            className="text-destructive hover:text-destructive/90 font-medium ms-2"
-                          >
-                            ארכב
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleRestore(client)}
-                            className="text-success hover:text-success/90 font-medium ms-2"
-                          >
-                            שחזר
-                          </button>
-                        )}
                       </td>
                     </tr>
                   ))}

@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     // Parse request body
     const body = await request.json();
     projectId = body.projectId;
-    const { description } = body;
+    const { description, taskId } = body;
 
     // Validate required fields
     if (!projectId) {
@@ -56,10 +56,10 @@ export async function POST(request: NextRequest) {
     let result;
     try {
       result = await query<{ id: string }>(
-        `INSERT INTO time_entries (id, user_id, project_id, description, start_time, date, duration, is_billable)
-         VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, 0, TRUE)
+        `INSERT INTO time_entries (id, user_id, project_id, task_id, description, start_time, date, duration, is_billable)
+         VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, 0, TRUE)
          RETURNING id`,
-        [userId, projectId, description || '', now.toISOString(), today]
+        [userId, projectId, taskId || null, description || '', now.toISOString(), today]
       );
     } catch (insertError: unknown) {
       // Unique constraint violation from idx_one_running_timer_per_user

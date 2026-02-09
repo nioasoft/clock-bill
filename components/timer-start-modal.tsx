@@ -17,6 +17,9 @@ export function TimerStartModal() {
     projects,
     selectedProject,
     setSelectedProject,
+    selectedTask,
+    setSelectedTask,
+    timerTasks,
     timerDescription,
     setTimerDescription,
     startingTimer,
@@ -28,6 +31,7 @@ export function TimerStartModal() {
   const handleClose = () => {
     setShowTimerModal(false);
     setSelectedProject("");
+    setSelectedTask("");
     setTimerDescription("");
   };
 
@@ -67,6 +71,31 @@ export function TimerStartModal() {
                   ))}
                 </select>
               </div>
+
+              {selectedProject && timerTasks.length > 0 && (
+                <div>
+                  <label
+                    htmlFor="timer-task"
+                    className="block text-sm font-medium text-foreground mb-1"
+                  >
+                    משימה
+                  </label>
+                  <select
+                    id="timer-task"
+                    value={selectedTask}
+                    onChange={(e) => setSelectedTask(e.target.value)}
+                    className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
+                    disabled={startingTimer}
+                  >
+                    <option value="">ללא משימה</option>
+                    {timerTasks.map((task) => (
+                      <option key={task.id} value={task.id}>
+                        {task.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div>
                 <label

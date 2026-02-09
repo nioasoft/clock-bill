@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       entriesResult,
       tagsResult,
       ratesResult,
-      overridesResult,
+      tasksResult,
     ] = await Promise.all([
       // User profile
       query(
@@ -48,12 +48,8 @@ export async function GET(request: NextRequest) {
       ),
       // Projects
       query(
-        `SELECT p.id, p.user_id as "userId", p.client_id as "clientId", p.name,
-         p.pricing_model as "pricingModel", p.hourly_rate as "hourlyRate",
-         p.package_price as "packagePrice", p.package_hours as "packageHours",
-         p.overage_rate as "overageRate", p.fixed_budget as "fixedBudget",
-         p.retainer_monthly_fee as "retainerMonthlyFee", p.retainer_hours as "retainerHours",
-         p.currency, p.status, p.start_date as "startDate", p.end_date as "endDate",
+        `SELECT p.id, p.client_id as "clientId", p.name,
+         p.status, p.start_date as "startDate", p.end_date as "endDate",
          p.notes, p.created_at as "createdAt", p.updated_at as "updatedAt",
          c.name as "clientName"
          FROM projects p
@@ -85,13 +81,11 @@ export async function GET(request: NextRequest) {
          FROM currency_rates WHERE user_id = $1 ORDER BY from_currency, to_currency`,
         [userId]
       ),
-      // Rate overrides (via projects)
+      // Tasks
       query(
-        `SELECT ro.id, ro.project_id as "projectId", ro.tag, ro.rate,
-         ro.created_at as "createdAt", ro.updated_at as "updatedAt"
-         FROM rate_overrides ro
-         JOIN projects p ON ro.project_id = p.id
-         WHERE p.user_id = $1`,
+        `SELECT id, project_id as "projectId", user_id as "userId", name, description,
+         status, created_at as "createdAt", updated_at as "updatedAt"
+         FROM tasks WHERE user_id = $1`,
         [userId]
       ),
     ]);
@@ -102,7 +96,7 @@ export async function GET(request: NextRequest) {
     const entries = entriesResult.rows;
     const tags = tagsResult.rows;
     const rates = ratesResult.rows;
-    const overrides = overridesResult.rows;
+    const tasks = tasksResult.rows;
 
     // Create backup object
     const backup = {
@@ -114,7 +108,7 @@ export async function GET(request: NextRequest) {
       timeEntries: entries,
       customTags: tags,
       currencyRates: rates,
-      rateOverrides: overrides,
+      tasks,
     };
 
     // Generate filename with date and business name

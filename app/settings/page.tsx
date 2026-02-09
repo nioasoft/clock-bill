@@ -123,7 +123,7 @@ export default function SettingsPage() {
     timeEntries: number;
     customTags: number;
     currencyRates: number;
-    rateOverrides: number;
+    tasks: number;
     errors: Array<{ entity: string; message: string }>;
   } | null>(null);
   const [importMode, setImportMode] = useState<"merge" | "replace">("merge");

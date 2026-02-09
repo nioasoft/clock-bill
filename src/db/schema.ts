@@ -102,6 +102,11 @@ export const clients = pgTable(
     phone: text("phone"),
     address: text("address"),
     defaultRate: real("default_rate"),
+    currency: text("currency").default("ILS"),
+    isRetainer: boolean("is_retainer").default(false),
+    retainerHours: real("retainer_hours"),
+    retainerMonthlyFee: real("retainer_monthly_fee"),
+    overageRate: real("overage_rate"),
     notes: text("notes"),
     isActive: boolean("is_active").default(true),
     createdAt: timestamp("created_at").defaultNow(),
@@ -124,15 +129,6 @@ export const projects = pgTable(
       .notNull()
       .references(() => clients.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
-    pricingModel: text("pricing_model").default("hourly"),
-    hourlyRate: real("hourly_rate"),
-    packagePrice: real("package_price"),
-    packageHours: real("package_hours"),
-    overageRate: real("overage_rate"),
-    fixedBudget: real("fixed_budget"),
-    retainerMonthlyFee: real("retainer_monthly_fee"),
-    retainerHours: real("retainer_hours"),
-    currency: text("currency").default("ILS"),
     status: text("status").default("active"),
     startDate: date("start_date"),
     endDate: date("end_date"),
@@ -145,12 +141,34 @@ export const projects = pgTable(
     index("idx_projects_client_id").on(table.clientId),
     index("idx_projects_user_id_status").on(table.userId, table.status),
     check(
-      "projects_pricing_model_check",
-      sql`${table.pricingModel} IN ('hourly', 'package', 'mixed', 'fixed', 'retainer')`
-    ),
-    check(
       "projects_status_check",
       sql`${table.status} IN ('active', 'completed', 'paused', 'archived')`
+    ),
+  ]
+);
+
+// ─── Tasks ──────────────────────────────────────────────────────────
+
+export const tasks = pgTable(
+  "tasks",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
+    name: text("name").notNull(),
+    description: text("description"),
+    status: text("status").default("todo"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_tasks_project_id").on(table.projectId),
+    index("idx_tasks_user_id").on(table.userId),
+    check(
+      "tasks_status_check",
+      sql`${table.status} IN ('todo', 'in_progress', 'done')`
     ),
   ]
 );
@@ -165,6 +183,9 @@ export const timeEntries = pgTable(
     projectId: text("project_id")
       .notNull()
       .references(() => projects.id, { onDelete: "cascade" }),
+    taskId: text("task_id").references(() => tasks.id, {
+      onDelete: "set null",
+    }),
     description: text("description").notNull(),
     startTime: timestamp("start_time"),
     endTime: timestamp("end_time"),
@@ -181,28 +202,9 @@ export const timeEntries = pgTable(
   (table) => [
     index("idx_time_entries_user_id").on(table.userId),
     index("idx_time_entries_project_id").on(table.projectId),
+    index("idx_time_entries_task_id").on(table.taskId),
     index("idx_time_entries_date").on(table.date),
     index("idx_time_entries_user_id_date").on(table.userId, table.date),
-  ]
-);
-
-// ─── Rate Overrides ─────────────────────────────────────────────────
-
-export const rateOverrides = pgTable(
-  "rate_overrides",
-  {
-    id: text("id").primaryKey(),
-    projectId: text("project_id")
-      .notNull()
-      .references(() => projects.id, { onDelete: "cascade" }),
-    tag: text("tag").notNull(),
-    rate: real("rate").notNull(),
-    createdAt: timestamp("created_at").defaultNow(),
-    updatedAt: timestamp("updated_at").defaultNow(),
-  },
-  (table) => [
-    unique().on(table.projectId, table.tag),
-    index("idx_rate_overrides_project_id").on(table.projectId),
   ]
 );
 

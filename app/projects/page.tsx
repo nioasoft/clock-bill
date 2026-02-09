@@ -8,7 +8,7 @@ import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FolderOpen } from "lucide-react";
-import { validateRequired, validateNumber, validateDate, validateDateRange } from "@/lib/validation";
+import { validateRequired, validateDateRange } from "@/lib/validation";
 
 interface Client {
   id: string;
@@ -21,15 +21,6 @@ interface Project {
   name: string;
   clientId: string;
   clientName: string;
-  pricingModel: string;
-  hourlyRate: number | null;
-  packagePrice: number | null;
-  packageHours: number | null;
-  overageRate: number | null;
-  fixedBudget: number | null;
-  retainerMonthlyFee: number | null;
-  retainerHours: number | null;
-  currency: string;
   status: string;
   startDate: string | null;
   endDate: string | null;
@@ -56,15 +47,6 @@ function ProjectsPageContent() {
   const [formData, setFormData] = useState({
     clientId: "",
     name: "",
-    pricingModel: "hourly",
-    hourlyRate: "",
-    packagePrice: "",
-    packageHours: "",
-    overageRate: "",
-    fixedBudget: "",
-    retainerMonthlyFee: "",
-    retainerHours: "",
-    currency: "ILS",
     status: "active",
     startDate: "",
     endDate: "",
@@ -77,13 +59,6 @@ function ProjectsPageContent() {
   const [fieldErrors, setFieldErrors] = useState<{
     clientId?: string;
     name?: string;
-    hourlyRate?: string;
-    packagePrice?: string;
-    packageHours?: string;
-    overageRate?: string;
-    fixedBudget?: string;
-    retainerMonthlyFee?: string;
-    retainerHours?: string;
     startDate?: string;
     endDate?: string;
   }>({});
@@ -158,86 +133,6 @@ function ProjectsPageContent() {
       errors.name = nameValidation.error;
     }
 
-    // Validate pricing fields based on pricing model
-    if (formData.pricingModel === "hourly") {
-      if (formData.hourlyRate && formData.hourlyRate.trim()) {
-        const rateValidation = validateNumber(formData.hourlyRate, true, 0);
-        if (!rateValidation.isValid) {
-          errors.hourlyRate = rateValidation.error;
-        }
-      } else {
-        errors.hourlyRate = "שדה חובה עבור מודל תמחור שעתי";
-      }
-    } else if (formData.pricingModel === "package") {
-      if (formData.packagePrice && formData.packagePrice.trim()) {
-        const priceValidation = validateNumber(formData.packagePrice, true, 0);
-        if (!priceValidation.isValid) {
-          errors.packagePrice = priceValidation.error;
-        }
-      } else {
-        errors.packagePrice = "שדה חובה עבור מודל תמחור חבילה";
-      }
-      if (formData.packageHours && formData.packageHours.trim()) {
-        const hoursValidation = validateNumber(formData.packageHours, true, 0);
-        if (!hoursValidation.isValid) {
-          errors.packageHours = hoursValidation.error;
-        }
-      } else {
-        errors.packageHours = "שדה חובה עבור מודל תמחור חבילה";
-      }
-    } else if (formData.pricingModel === "mixed") {
-      if (formData.packagePrice && formData.packagePrice.trim()) {
-        const priceValidation = validateNumber(formData.packagePrice, true, 0);
-        if (!priceValidation.isValid) {
-          errors.packagePrice = priceValidation.error;
-        }
-      } else {
-        errors.packagePrice = "שדה חובה עבור מודל תמחור משולב";
-      }
-      if (formData.packageHours && formData.packageHours.trim()) {
-        const hoursValidation = validateNumber(formData.packageHours, true, 0);
-        if (!hoursValidation.isValid) {
-          errors.packageHours = hoursValidation.error;
-        }
-      } else {
-        errors.packageHours = "שדה חובה עבור מודל תמחור משולב";
-      }
-      if (formData.overageRate && formData.overageRate.trim()) {
-        const overageValidation = validateNumber(formData.overageRate, true, 0);
-        if (!overageValidation.isValid) {
-          errors.overageRate = overageValidation.error;
-        }
-      } else {
-        errors.overageRate = "שדה חובה עבור מודל תמחור משולב";
-      }
-    } else if (formData.pricingModel === "fixed") {
-      if (formData.fixedBudget && formData.fixedBudget.trim()) {
-        const budgetValidation = validateNumber(formData.fixedBudget, true, 0);
-        if (!budgetValidation.isValid) {
-          errors.fixedBudget = budgetValidation.error;
-        }
-      } else {
-        errors.fixedBudget = "שדה חובה עבור מודל תמחור קבוע";
-      }
-    } else if (formData.pricingModel === "retainer") {
-      if (formData.retainerMonthlyFee && formData.retainerMonthlyFee.trim()) {
-        const feeValidation = validateNumber(formData.retainerMonthlyFee, true, 0);
-        if (!feeValidation.isValid) {
-          errors.retainerMonthlyFee = feeValidation.error;
-        }
-      } else {
-        errors.retainerMonthlyFee = "שדה חובה עבור מודל תמחור ריטיינר";
-      }
-      if (formData.retainerHours && formData.retainerHours.trim()) {
-        const hoursValidation = validateNumber(formData.retainerHours, true, 0);
-        if (!hoursValidation.isValid) {
-          errors.retainerHours = hoursValidation.error;
-        }
-      } else {
-        errors.retainerHours = "שדה חובה עבור מודל תמחור ריטיינר";
-      }
-    }
-
     // Validate date fields (optional but must be valid if provided)
     if (formData.startDate || formData.endDate) {
       const dateRangeValidation = validateDateRange(formData.startDate, formData.endDate, false);
@@ -256,42 +151,19 @@ function ProjectsPageContent() {
     setSubmitting(true);
 
     try {
-      // Only send the pricing fields that are relevant to the current pricing model
-      const pricingData: Record<string, string | number | undefined> = {
-        clientId: formData.clientId,
-        name: formData.name,
-        pricingModel: formData.pricingModel,
-        currency: formData.currency,
-        status: formData.status,
-        startDate: formData.startDate || undefined,
-        endDate: formData.endDate || undefined,
-        notes: formData.notes || undefined,
-      };
-
-      // Add pricing fields based on the selected model
-      if (formData.pricingModel === "hourly") {
-        pricingData.hourlyRate = formData.hourlyRate ? parseFloat(formData.hourlyRate) : undefined;
-      } else if (formData.pricingModel === "package") {
-        pricingData.packagePrice = formData.packagePrice ? parseFloat(formData.packagePrice) : undefined;
-        pricingData.packageHours = formData.packageHours ? parseFloat(formData.packageHours) : undefined;
-      } else if (formData.pricingModel === "mixed") {
-        pricingData.hourlyRate = formData.hourlyRate ? parseFloat(formData.hourlyRate) : undefined;
-        pricingData.packagePrice = formData.packagePrice ? parseFloat(formData.packagePrice) : undefined;
-        pricingData.packageHours = formData.packageHours ? parseFloat(formData.packageHours) : undefined;
-        pricingData.overageRate = formData.overageRate ? parseFloat(formData.overageRate) : undefined;
-      } else if (formData.pricingModel === "fixed") {
-        pricingData.fixedBudget = formData.fixedBudget ? parseFloat(formData.fixedBudget) : undefined;
-      } else if (formData.pricingModel === "retainer") {
-        pricingData.retainerMonthlyFee = formData.retainerMonthlyFee ? parseFloat(formData.retainerMonthlyFee) : undefined;
-        pricingData.retainerHours = formData.retainerHours ? parseFloat(formData.retainerHours) : undefined;
-      }
-
       const response = await fetch("/api/projects", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(pricingData),
+        body: JSON.stringify({
+          clientId: formData.clientId,
+          name: formData.name,
+          status: formData.status,
+          startDate: formData.startDate || undefined,
+          endDate: formData.endDate || undefined,
+          notes: formData.notes || undefined,
+        }),
       });
 
       const data = await response.json();
@@ -303,15 +175,6 @@ function ProjectsPageContent() {
         setFormData({
           clientId: "",
           name: "",
-          pricingModel: "hourly",
-          hourlyRate: "",
-          packagePrice: "",
-          packageHours: "",
-          overageRate: "",
-          fixedBudget: "",
-          retainerMonthlyFee: "",
-          retainerHours: "",
-          currency: "ILS",
           status: "active",
           startDate: "",
           endDate: "",
@@ -329,19 +192,6 @@ function ProjectsPageContent() {
     }
   };
 
-  const getPricingModelLabel = (model: string) => {
-    switch (model) {
-      case "hourly":
-        return "שעתי";
-      case "package":
-        return "חבילה";
-      case "mixed":
-        return "משולב";
-      default:
-        return model;
-    }
-  };
-
   const getStatusLabel = (status: string) => {
     switch (status) {
       case "active":
@@ -355,40 +205,6 @@ function ProjectsPageContent() {
       default:
         return status;
     }
-  };
-
-  const getCurrencySymbol = (currency: string) => {
-    switch (currency) {
-      case "ILS":
-        return "₪";
-      case "USD":
-        return "$";
-      case "USDT":
-        return "₮";
-      case "BTC":
-        return "₿";
-      case "ETH":
-        return "Ξ";
-      default:
-        return currency;
-    }
-  };
-
-  const formatPricingDetails = (project: Project) => {
-    const symbol = getCurrencySymbol(project.currency);
-
-    if (project.pricingModel === "hourly") {
-      return `${symbol}${project.hourlyRate}/שעה`;
-    } else if (project.pricingModel === "package") {
-      return `${symbol}${project.packagePrice} עבור ${project.packageHours} שעות`;
-    } else if (project.pricingModel === "mixed") {
-      return `${symbol}${project.packagePrice} עבור ${project.packageHours} שעות, אז ${symbol}${project.overageRate}/שעה`;
-    } else if (project.pricingModel === "fixed") {
-      return `${symbol}${project.fixedBudget} (תקציב קבוע)`;
-    } else if (project.pricingModel === "retainer") {
-      return `${symbol}${project.retainerMonthlyFee}/חודש עבור ${project.retainerHours} שעות`;
-    }
-    return "-";
   };
 
   const handleRestore = async (projectId: string, e: React.MouseEvent) => {
@@ -528,235 +344,6 @@ function ProjectsPageContent() {
                   {fieldErrors.name && <p className="mt-1 text-sm text-destructive">{fieldErrors.name}</p>}
                 </div>
 
-                <div className="sm:col-span-2 bg-surface/50 rounded-lg p-4 border border-border/30 space-y-4">
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
-                      <label htmlFor="pricingModel" className="block text-sm font-medium text-foreground">
-                        מודל תמחור *
-                      </label>
-                      <select
-                        id="pricingModel"
-                        required
-                        value={formData.pricingModel}
-                        onChange={(e) => setFormData({ ...formData, pricingModel: e.target.value })}
-                        className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                        disabled={submitting}
-                      >
-                        <option value="hourly">שעתי</option>
-                        <option value="package">חבילה</option>
-                        <option value="mixed">משולב</option>
-                        <option value="fixed">תקציב קבוע</option>
-                        <option value="retainer">רטיינר</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label htmlFor="currency" className="block text-sm font-medium text-foreground">
-                        מטבע
-                      </label>
-                      <select
-                        id="currency"
-                        value={formData.currency}
-                        onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                        className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                        disabled={submitting}
-                      >
-                        <option value="ILS">₪ - שקל ישראלי</option>
-                        <option value="USD">$ - דולר אמריקאי</option>
-                        <option value="USDT">₮ - טתר</option>
-                        <option value="BTC">₿ - ביטקוין</option>
-                        <option value="ETH">Ξ - אתריום</option>
-                      </select>
-                    </div>
-
-                    {formData.pricingModel === "hourly" && (
-                      <div>
-                        <label htmlFor="hourlyRate" className="block text-sm font-medium text-foreground">
-                          תעריף שעתי *
-                        </label>
-                        <input
-                          type="number"
-                          id="hourlyRate"
-                          required
-                          min="0"
-                          step="0.01"
-                          value={formData.hourlyRate}
-                          onChange={(e) => setFormData({ ...formData, hourlyRate: e.target.value })}
-                          className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary font-mono"
-                          disabled={submitting}
-                        />
-                      </div>
-                    )}
-
-                    {formData.pricingModel === "package" && (
-                      <>
-                        <div>
-                          <label htmlFor="packagePrice" className="block text-sm font-medium text-foreground">
-                            מחיר חבילה *
-                          </label>
-                          <input
-                            type="number"
-                            id="packagePrice"
-                            required
-                            min="0"
-                            step="0.01"
-                            value={formData.packagePrice}
-                            onChange={(e) => setFormData({ ...formData, packagePrice: e.target.value })}
-                            className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary font-mono"
-                            disabled={submitting}
-                          />
-                        </div>
-
-                        <div>
-                          <label htmlFor="packageHours" className="block text-sm font-medium text-foreground">
-                            שעות בחבילה *
-                          </label>
-                          <input
-                            type="number"
-                            id="packageHours"
-                            required
-                            min="0"
-                            step="0.5"
-                            value={formData.packageHours}
-                            onChange={(e) => setFormData({ ...formData, packageHours: e.target.value })}
-                            className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary font-mono"
-                            disabled={submitting}
-                          />
-                        </div>
-                      </>
-                    )}
-
-                    {formData.pricingModel === "mixed" && (
-                      <>
-                        <div>
-                          <label htmlFor="packagePrice" className="block text-sm font-medium text-foreground">
-                            מחיר חבילה *
-                          </label>
-                          <input
-                            type="number"
-                            id="packagePrice"
-                            required
-                            min="0"
-                            step="0.01"
-                            value={formData.packagePrice}
-                            onChange={(e) => setFormData({ ...formData, packagePrice: e.target.value })}
-                            className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary font-mono"
-                            disabled={submitting}
-                          />
-                        </div>
-
-                        <div>
-                          <label htmlFor="packageHours" className="block text-sm font-medium text-foreground">
-                            שעות בחבילה *
-                          </label>
-                          <input
-                            type="number"
-                            id="packageHours"
-                            required
-                            min="0"
-                            step="0.5"
-                            value={formData.packageHours}
-                            onChange={(e) => setFormData({ ...formData, packageHours: e.target.value })}
-                            className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary font-mono"
-                            disabled={submitting}
-                          />
-                        </div>
-
-                        <div>
-                          <label htmlFor="hourlyRate" className="block text-sm font-medium text-foreground">
-                            תעריף שעתי בחבילה *
-                          </label>
-                          <input
-                            type="number"
-                            id="hourlyRate"
-                            required
-                            min="0"
-                            step="0.01"
-                            value={formData.hourlyRate}
-                            onChange={(e) => setFormData({ ...formData, hourlyRate: e.target.value })}
-                            className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary font-mono"
-                            disabled={submitting}
-                          />
-                        </div>
-
-                        <div>
-                          <label htmlFor="overageRate" className="block text-sm font-medium text-foreground">
-                            תעריף מעל החבילה *
-                          </label>
-                          <input
-                            type="number"
-                            id="overageRate"
-                            required
-                            min="0"
-                            step="0.01"
-                            value={formData.overageRate}
-                            onChange={(e) => setFormData({ ...formData, overageRate: e.target.value })}
-                            className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary font-mono"
-                            disabled={submitting}
-                          />
-                        </div>
-                      </>
-                    )}
-
-                    {formData.pricingModel === "fixed" && (
-                      <div>
-                        <label htmlFor="fixedBudget" className="block text-sm font-medium text-foreground">
-                          תקציב כולל *
-                        </label>
-                        <input
-                          type="number"
-                          id="fixedBudget"
-                          required
-                          min="0"
-                          step="0.01"
-                          value={formData.fixedBudget}
-                          onChange={(e) => setFormData({ ...formData, fixedBudget: e.target.value })}
-                          className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary font-mono"
-                          disabled={submitting}
-                        />
-                      </div>
-                    )}
-
-                    {formData.pricingModel === "retainer" && (
-                      <>
-                        <div>
-                          <label htmlFor="retainerMonthlyFee" className="block text-sm font-medium text-foreground">
-                            תשלום חודשי *
-                          </label>
-                          <input
-                            type="number"
-                            id="retainerMonthlyFee"
-                            required
-                            min="0"
-                            step="0.01"
-                            value={formData.retainerMonthlyFee}
-                            onChange={(e) => setFormData({ ...formData, retainerMonthlyFee: e.target.value })}
-                            className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary font-mono"
-                            disabled={submitting}
-                          />
-                        </div>
-
-                        <div>
-                          <label htmlFor="retainerHours" className="block text-sm font-medium text-foreground">
-                            שעות בחבילה *
-                          </label>
-                          <input
-                            type="number"
-                            id="retainerHours"
-                            required
-                            min="0"
-                            step="0.5"
-                            value={formData.retainerHours}
-                            onChange={(e) => setFormData({ ...formData, retainerHours: e.target.value })}
-                            className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary font-mono"
-                            disabled={submitting}
-                          />
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-
                 <div>
                   <label htmlFor="status" className="block text-sm font-medium text-foreground">
                     סטטוס
@@ -831,15 +418,6 @@ function ProjectsPageContent() {
                     setFormData({
                       clientId: "",
                       name: "",
-                      pricingModel: "hourly",
-                      hourlyRate: "",
-                      packagePrice: "",
-                      packageHours: "",
-                      overageRate: "",
-                      fixedBudget: "",
-                      retainerMonthlyFee: "",
-                      retainerHours: "",
-                      currency: "ILS",
                       status: "active",
                       startDate: "",
                       endDate: "",
@@ -893,12 +471,6 @@ function ProjectsPageContent() {
                       לקוח
                     </th>
                     <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      מודל תמחור
-                    </th>
-                    <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      פירוט תמחור
-                    </th>
-                    <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
                       סטטוס
                     </th>
                     <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
@@ -934,26 +506,6 @@ function ProjectsPageContent() {
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push(`/projects/${project.id}`); }}
                       >
                         <div className="text-sm text-foreground">{project.clientName}</div>
-                      </td>
-                      <td
-                        className="whitespace-nowrap px-6 py-4 cursor-pointer"
-                        onClick={() => router.push(`/projects/${project.id}`)}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push(`/projects/${project.id}`); }}
-                      >
-                        <div className="text-sm text-foreground">
-                          {getPricingModelLabel(project.pricingModel)}
-                        </div>
-                      </td>
-                      <td
-                        className="px-6 py-4 cursor-pointer"
-                        onClick={() => router.push(`/projects/${project.id}`)}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push(`/projects/${project.id}`); }}
-                      >
-                        <div className="text-sm text-foreground font-mono">{formatPricingDetails(project)}</div>
                       </td>
                       <td
                         className="whitespace-nowrap px-6 py-4 cursor-pointer"

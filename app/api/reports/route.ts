@@ -40,9 +40,8 @@ export async function GET(request: NextRequest) {
         te.is_billable,
         te.created_at,
         p.name as project_name,
-        p.pricing_model,
-        p.hourly_rate,
-        p.currency,
+        c.default_rate as hourly_rate,
+        c.currency,
         c.name as client_name,
         c.id as client_id,
         c.contact_name as client_contact_name,
@@ -96,7 +95,6 @@ export async function GET(request: NextRequest) {
       is_billable: boolean;
       created_at: string;
       project_name: string;
-      pricing_model: string;
       hourly_rate: number | null;
       currency: string;
       client_name: string;
@@ -132,7 +130,6 @@ export async function GET(request: NextRequest) {
         tags: entry.tags || [],
         notes: entry.notes,
         isBillable: entry.is_billable,
-        pricingModel: entry.pricing_model,
         hourlyRate: entry.hourly_rate,
         currency: entry.currency,
         amount,
@@ -205,7 +202,6 @@ export async function GET(request: NextRequest) {
           projectName: entry.projectName,
           clientId: entry.clientId,
           clientName: entry.clientName,
-          pricingModel: entry.pricingModel,
           hourlyRate: entry.hourlyRate,
           currency: entry.currency,
           totalMinutes: 0,
@@ -224,7 +220,6 @@ export async function GET(request: NextRequest) {
       projectName: string;
       clientId: string;
       clientName: string;
-      pricingModel: string;
       hourlyRate: number | null;
       currency: string;
       totalMinutes: number;

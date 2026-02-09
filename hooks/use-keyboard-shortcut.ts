@@ -76,6 +76,21 @@ export function useKeyboardShortcut({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!event.key || !key) return;
 
+      // Skip single-key shortcuts (no modifiers) when user is typing in a form field
+      const hasModifier = metaKey || ctrlKey || shiftKey || altKey;
+      if (!hasModifier) {
+        const target = event.target as HTMLElement;
+        const tagName = target.tagName;
+        if (
+          tagName === "INPUT" ||
+          tagName === "TEXTAREA" ||
+          tagName === "SELECT" ||
+          target.isContentEditable
+        ) {
+          return;
+        }
+      }
+
       // Check if the key matches
       const keyMatches = event.key.toLowerCase() === key.toLowerCase();
 

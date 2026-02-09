@@ -40,15 +40,6 @@ export async function GET(request: NextRequest) {
       name: string;
       client_id: string;
       client_name: string;
-      pricing_model: string;
-      hourly_rate: number | null;
-      package_price: number | null;
-      package_hours: number | null;
-      overage_rate: number | null;
-      fixed_budget: number | null;
-      retainer_monthly_fee: number | null;
-      retainer_hours: number | null;
-      currency: string;
       status: string;
       start_date: string | null;
       end_date: string | null;
@@ -56,9 +47,7 @@ export async function GET(request: NextRequest) {
       created_at: string;
     }>(
       `SELECT p.id, p.name, p.client_id, c.name as client_name,
-              p.pricing_model, p.hourly_rate, p.package_price, p.package_hours, p.overage_rate,
-              p.fixed_budget, p.retainer_monthly_fee, p.retainer_hours,
-              p.currency, p.status, p.start_date, p.end_date, p.notes, p.created_at
+              p.status, p.start_date, p.end_date, p.notes, p.created_at
        FROM projects p
        JOIN clients c ON p.client_id = c.id
        WHERE p.user_id = $1 ${whereClause}
@@ -71,15 +60,6 @@ export async function GET(request: NextRequest) {
       name: project.name,
       clientId: project.client_id,
       clientName: project.client_name,
-      pricingModel: project.pricing_model,
-      hourlyRate: project.hourly_rate,
-      packagePrice: project.package_price,
-      packageHours: project.package_hours,
-      overageRate: project.overage_rate,
-      fixedBudget: project.fixed_budget,
-      retainerMonthlyFee: project.retainer_monthly_fee,
-      retainerHours: project.retainer_hours,
-      currency: project.currency,
       status: project.status,
       startDate: project.start_date,
       endDate: project.end_date,
@@ -87,8 +67,6 @@ export async function GET(request: NextRequest) {
       createdAt: project.created_at,
     }));
 
-    // Add cache headers for better performance
-    // Cache for 60 seconds since project list doesn't change that often
     return NextResponse.json({
       success: true,
       projects,
@@ -125,15 +103,6 @@ export async function POST(request: NextRequest) {
     const {
       clientId,
       name,
-      pricingModel,
-      hourlyRate,
-      packagePrice,
-      packageHours,
-      overageRate,
-      fixedBudget,
-      retainerMonthlyFee,
-      retainerHours,
-      currency,
       status,
       startDate,
       endDate,
@@ -155,98 +124,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!pricingModel || !["hourly", "package", "mixed", "fixed", "retainer"].includes(pricingModel)) {
-      // Note: 'archived' is a status, not a pricing model
-      return NextResponse.json(
-        { success: false, message: "יש לבחור מודל תמחור תקין" },
-        { status: 400 }
-      );
-    }
-
     if (name.length > 200) {
       return NextResponse.json(
         { success: false, message: "שם הפרויקט ארוך מדי (מקסימום 200 תווים)" },
-        { status: 400 }
-      );
-    }
-
-    // Validate pricing model fields
-    if (pricingModel === "hourly" && (!hourlyRate || hourlyRate < 0)) {
-      return NextResponse.json(
-        { success: false, message: "יש להזין תעריף שעתי תקין" },
-        { status: 400 }
-      );
-    }
-
-    if (pricingModel === "package") {
-      if (!packagePrice || packagePrice < 0) {
-        return NextResponse.json(
-          { success: false, message: "יש להזין מחיר חבילה תקין" },
-          { status: 400 }
-        );
-      }
-      if (!packageHours || packageHours < 0) {
-        return NextResponse.json(
-          { success: false, message: "יש להזין מספר שעות בחבילה" },
-          { status: 400 }
-        );
-      }
-    }
-
-    if (pricingModel === "mixed") {
-      if (!hourlyRate || hourlyRate < 0) {
-        return NextResponse.json(
-          { success: false, message: "יש להזין תעריף שעתי תקין" },
-          { status: 400 }
-        );
-      }
-      if (!packagePrice || packagePrice < 0) {
-        return NextResponse.json(
-          { success: false, message: "יש להזין מחיר חבילה תקין" },
-          { status: 400 }
-        );
-      }
-      if (!packageHours || packageHours < 0) {
-        return NextResponse.json(
-          { success: false, message: "יש להזין מספר שעות בחבילה" },
-          { status: 400 }
-        );
-      }
-      if (!overageRate || overageRate < 0) {
-        return NextResponse.json(
-          { success: false, message: "יש להזין תעריף גרוע מעל החבילה" },
-          { status: 400 }
-        );
-      }
-    }
-
-    if (pricingModel === "fixed") {
-      if (!fixedBudget || fixedBudget < 0) {
-        return NextResponse.json(
-          { success: false, message: "יש להזין תקציב כולל תקין" },
-          { status: 400 }
-        );
-      }
-    }
-
-    if (pricingModel === "retainer") {
-      if (!retainerMonthlyFee || retainerMonthlyFee < 0) {
-        return NextResponse.json(
-          { success: false, message: "יש להזין את התשלום החודשי" },
-          { status: 400 }
-        );
-      }
-      if (!retainerHours || retainerHours < 0) {
-        return NextResponse.json(
-          { success: false, message: "יש להזין מספר שעות בחבילה" },
-          { status: 400 }
-        );
-      }
-    }
-
-    if (currency && !["ILS", "USD", "USDT", "BTC", "ETH"].includes(currency)) {
-      return NextResponse.json(
-        { success: false, message: "מטבע לא חוקי" },
         { status: 400 }
       );
     }
@@ -273,27 +153,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Insert project with inline UUID and return with client info
+    // Insert project
     const insertResult = await query<{ id: string }>(
-      `INSERT INTO projects (id, user_id, client_id, name, pricing_model, hourly_rate,
-                             package_price, package_hours, overage_rate, fixed_budget,
-                             retainer_monthly_fee, retainer_hours, currency, status,
-                             start_date, end_date, notes)
-       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+      `INSERT INTO projects (id, user_id, client_id, name, status, start_date, end_date, notes)
+       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7)
        RETURNING id`,
       [
         user.id,
         clientId,
         name.trim(),
-        pricingModel,
-        hourlyRate || null,
-        packagePrice || null,
-        packageHours || null,
-        overageRate || null,
-        fixedBudget || null,
-        retainerMonthlyFee || null,
-        retainerHours || null,
-        currency || "ILS",
         status || "active",
         startDate || null,
         endDate || null,
@@ -303,21 +171,12 @@ export async function POST(request: NextRequest) {
 
     const projectId = insertResult.rows[0].id;
 
-    // Fetch the created project with client info (need JOIN for client_name)
+    // Fetch the created project with client info
     const projectResult = await query<{
       id: string;
       name: string;
       client_id: string;
       client_name: string;
-      pricing_model: string;
-      hourly_rate: number | null;
-      package_price: number | null;
-      package_hours: number | null;
-      overage_rate: number | null;
-      fixed_budget: number | null;
-      retainer_monthly_fee: number | null;
-      retainer_hours: number | null;
-      currency: string;
       status: string;
       start_date: string | null;
       end_date: string | null;
@@ -325,9 +184,7 @@ export async function POST(request: NextRequest) {
       created_at: string;
     }>(
       `SELECT p.id, p.name, p.client_id, c.name as client_name,
-              p.pricing_model, p.hourly_rate, p.package_price, p.package_hours, p.overage_rate,
-              p.fixed_budget, p.retainer_monthly_fee, p.retainer_hours,
-              p.currency, p.status, p.start_date, p.end_date, p.notes, p.created_at
+              p.status, p.start_date, p.end_date, p.notes, p.created_at
        FROM projects p
        JOIN clients c ON p.client_id = c.id
        WHERE p.id = $1`,
@@ -343,15 +200,6 @@ export async function POST(request: NextRequest) {
         name: project.name,
         clientId: project.client_id,
         clientName: project.client_name,
-        pricingModel: project.pricing_model,
-        hourlyRate: project.hourly_rate,
-        packagePrice: project.package_price,
-        packageHours: project.package_hours,
-        overageRate: project.overage_rate,
-        fixedBudget: project.fixed_budget,
-        retainerMonthlyFee: project.retainer_monthly_fee,
-        retainerHours: project.retainer_hours,
-        currency: project.currency,
         status: project.status,
         startDate: project.start_date,
         endDate: project.end_date,

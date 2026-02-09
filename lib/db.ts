@@ -375,22 +375,40 @@ export async function initSchema(): Promise<void> {
     logger.debug("Address column migration check complete");
   }
 
-  // Projects table
+  // Add retainer-related columns to clients
+  try {
+    await client.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'ILS'`);
+  } catch (error) {
+    logger.debug("clients.currency column migration check complete");
+  }
+  try {
+    await client.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS is_retainer BOOLEAN DEFAULT FALSE`);
+  } catch (error) {
+    logger.debug("clients.is_retainer column migration check complete");
+  }
+  try {
+    await client.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS retainer_hours REAL`);
+  } catch (error) {
+    logger.debug("clients.retainer_hours column migration check complete");
+  }
+  try {
+    await client.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS retainer_monthly_fee REAL`);
+  } catch (error) {
+    logger.debug("clients.retainer_monthly_fee column migration check complete");
+  }
+  try {
+    await client.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS overage_rate REAL`);
+  } catch (error) {
+    logger.debug("clients.overage_rate column migration check complete");
+  }
+
+  // Projects table (billing is determined by client, not project)
   await client.query(`
     CREATE TABLE IF NOT EXISTS projects (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
       client_id TEXT NOT NULL,
       name TEXT NOT NULL,
-      pricing_model TEXT DEFAULT 'hourly' CHECK (pricing_model IN ('hourly', 'package', 'mixed', 'fixed', 'retainer')),
-      hourly_rate REAL,
-      package_price REAL,
-      package_hours REAL,
-      overage_rate REAL,
-      fixed_budget REAL,
-      retainer_monthly_fee REAL,
-      retainer_hours REAL,
-      currency TEXT DEFAULT 'ILS',
       status TEXT DEFAULT 'active' CHECK (status IN ('active', 'completed', 'paused', 'archived')),
       start_date DATE,
       end_date DATE,
@@ -408,50 +426,27 @@ export async function initSchema(): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_projects_client_id ON projects(client_id)
   `);
 
-  // Add fixed_budget column if it doesn't exist (for migrations)
-  try {
-    await client.query(`
-      ALTER TABLE projects ADD COLUMN IF NOT EXISTS fixed_budget REAL
-    `);
-  } catch (error) {
-    // Column might already exist, ignore error
-    logger.debug("fixed_budget column migration check complete");
-  }
+  // Tasks table (sub-items within projects)
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS tasks (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      status TEXT DEFAULT 'todo' CHECK (status IN ('todo', 'in_progress', 'done')),
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW(),
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+    )
+  `);
 
-  // Add retainer_monthly_fee column if it doesn't exist (for migrations)
-  try {
-    await client.query(`
-      ALTER TABLE projects ADD COLUMN IF NOT EXISTS retainer_monthly_fee REAL
-    `);
-  } catch (error) {
-    // Column might already exist, ignore error
-    logger.debug("retainer_monthly_fee column migration check complete");
-  }
-
-  // Add retainer_hours column if it doesn't exist (for migrations)
-  try {
-    await client.query(`
-      ALTER TABLE projects ADD COLUMN IF NOT EXISTS retainer_hours REAL
-    `);
-  } catch (error) {
-    // Column might already exist, ignore error
-    logger.debug("retainer_hours column migration check complete");
-  }
-
-  // Add 'archived' to status CHECK constraint if it doesn't exist (for migrations)
-  try {
-    // Drop the old check constraint and add a new one with 'archived'
-    await client.query(`
-      ALTER TABLE projects DROP CONSTRAINT IF EXISTS projects_status_check
-    `);
-    await client.query(`
-      ALTER TABLE projects ADD CONSTRAINT projects_status_check
-      CHECK (status IN ('active', 'completed', 'paused', 'archived'))
-    `);
-  } catch (error) {
-    // Constraint might already exist or other issue
-    logger.debug("Status constraint migration check complete");
-  }
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_tasks_project_id ON tasks(project_id)
+  `);
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks(user_id)
+  `);
 
   // Time entries table
   await client.query(`
@@ -459,6 +454,7 @@ export async function initSchema(): Promise<void> {
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
       project_id TEXT NOT NULL,
+      task_id TEXT REFERENCES tasks(id) ON DELETE SET NULL,
       description TEXT NOT NULL,
       start_time TIMESTAMP,
       end_time TIMESTAMP,
@@ -467,6 +463,8 @@ export async function initSchema(): Promise<void> {
       tags JSONB DEFAULT '[]',
       notes TEXT,
       is_billable BOOLEAN DEFAULT TRUE,
+      paused_at TIMESTAMP,
+      total_paused_time INTEGER DEFAULT 0,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW(),
       FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
@@ -480,44 +478,20 @@ export async function initSchema(): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_time_entries_project_id ON time_entries(project_id)
   `);
   await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_time_entries_task_id ON time_entries(task_id)
+  `);
+  await client.query(`
     CREATE INDEX IF NOT EXISTS idx_time_entries_date ON time_entries(date)
   `);
 
-  // Add paused_at column if it doesn't exist (for pause functionality)
+  // Add task_id column if it doesn't exist (for migrations)
   try {
     await client.query(`
-      ALTER TABLE time_entries ADD COLUMN IF NOT EXISTS paused_at TIMESTAMP
+      ALTER TABLE time_entries ADD COLUMN IF NOT EXISTS task_id TEXT REFERENCES tasks(id) ON DELETE SET NULL
     `);
   } catch (error) {
-    logger.debug("paused_at column migration check complete");
+    logger.debug("task_id column migration check complete");
   }
-
-  // Add total_paused_time column if it doesn't exist (accumulated paused milliseconds)
-  try {
-    await client.query(`
-      ALTER TABLE time_entries ADD COLUMN IF NOT EXISTS total_paused_time INTEGER DEFAULT 0
-    `);
-  } catch (error) {
-    logger.debug("total_paused_time column migration check complete");
-  }
-
-  // Rate overrides table
-  await client.query(`
-    CREATE TABLE IF NOT EXISTS rate_overrides (
-      id TEXT PRIMARY KEY,
-      project_id TEXT NOT NULL,
-      tag TEXT NOT NULL,
-      rate REAL NOT NULL,
-      created_at TIMESTAMP DEFAULT NOW(),
-      updated_at TIMESTAMP DEFAULT NOW(),
-      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
-      UNIQUE(project_id, tag)
-    )
-  `);
-
-  await client.query(`
-    CREATE INDEX IF NOT EXISTS idx_rate_overrides_project_id ON rate_overrides(project_id)
-  `);
 
   // Custom tags table
   await client.query(`

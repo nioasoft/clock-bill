@@ -28,15 +28,8 @@ export async function GET(
       name: string;
       client_id: string;
       client_name: string;
-      pricing_model: string;
-      hourly_rate: number | null;
-      package_price: number | null;
-      package_hours: number | null;
-      overage_rate: number | null;
-      fixed_budget: number | null;
-      retainer_monthly_fee: number | null;
-      retainer_hours: number | null;
-      currency: string;
+      default_rate: number | null;
+      currency: string | null;
       status: string;
       start_date: string | null;
       end_date: string | null;
@@ -44,9 +37,8 @@ export async function GET(
       created_at: string;
     }>(
       `SELECT p.id, p.name, p.client_id, c.name as client_name,
-              p.pricing_model, p.hourly_rate, p.package_price, p.package_hours, p.overage_rate,
-              p.fixed_budget, p.retainer_monthly_fee, p.retainer_hours,
-              p.currency, p.status, p.start_date, p.end_date, p.notes, p.created_at
+              c.default_rate, c.currency,
+              p.status, p.start_date, p.end_date, p.notes, p.created_at
        FROM projects p
        JOIN clients c ON p.client_id = c.id
        WHERE p.id = $1 AND p.user_id = $2`,
@@ -73,29 +65,10 @@ export async function GET(
     );
 
     const totalDuration = statsResult.rows[0].total_duration || 0;
-    const totalHours = totalDuration / 60; // Convert minutes to hours
+    const totalHours = totalDuration / 60;
 
-    // Calculate total amount based on pricing model
-    let totalAmount = 0;
-    const pricingModel = project.pricing_model;
-
-    if (pricingModel === "hourly" && project.hourly_rate) {
-      totalAmount = totalHours * project.hourly_rate;
-    } else if (pricingModel === "package") {
-      // For package model, amount is the package price
-      totalAmount = project.package_price || 0;
-    } else if (pricingModel === "mixed") {
-      // For mixed model: package price + overage hours * overage rate
-      const packageHours = project.package_hours || 0;
-      const overageHours = Math.max(0, totalHours - packageHours);
-      totalAmount = (project.package_price || 0) + (overageHours * (project.overage_rate || 0));
-    } else if (pricingModel === "fixed") {
-      // For fixed budget, amount is the fixed budget
-      totalAmount = project.fixed_budget || 0;
-    } else if (pricingModel === "retainer") {
-      // For retainer, amount is monthly fee
-      totalAmount = project.retainer_monthly_fee || 0;
-    }
+    // Billing is determined by client rate
+    const totalAmount = totalHours * (project.default_rate || 0);
 
     return NextResponse.json({
       success: true,
@@ -104,15 +77,6 @@ export async function GET(
         name: project.name,
         clientId: project.client_id,
         clientName: project.client_name,
-        pricingModel: project.pricing_model,
-        hourlyRate: project.hourly_rate,
-        packagePrice: project.package_price,
-        packageHours: project.package_hours,
-        overageRate: project.overage_rate,
-        fixedBudget: project.fixed_budget,
-        retainerMonthlyFee: project.retainer_monthly_fee,
-        retainerHours: project.retainer_hours,
-        currency: project.currency,
         status: project.status,
         startDate: project.start_date,
         endDate: project.end_date,
@@ -120,6 +84,7 @@ export async function GET(
         createdAt: project.created_at,
         totalHours,
         totalAmount,
+        currency: project.currency || "ILS",
       },
     });
   } catch (error) {
@@ -152,15 +117,6 @@ export async function PUT(
     const body = await request.json();
     const {
       name,
-      pricingModel,
-      hourlyRate,
-      packagePrice,
-      packageHours,
-      overageRate,
-      fixedBudget,
-      retainerMonthlyFee,
-      retainerHours,
-      currency,
       status,
       startDate,
       endDate,
@@ -179,95 +135,6 @@ export async function PUT(
     if (name.length > 200) {
       return NextResponse.json(
         { success: false, message: "שם הפרויקט ארוך מדי (מקסימום 200 תווים)" },
-        { status: 400 }
-      );
-    }
-
-    if (!pricingModel || !["hourly", "package", "mixed", "fixed", "retainer"].includes(pricingModel)) {
-      // Note: 'archived' is a status, not a pricing model
-      return NextResponse.json(
-        { success: false, message: "יש לבחור מודל תמחור תקין" },
-        { status: 400 }
-      );
-    }
-
-    // Validate pricing model fields
-    if (pricingModel === "hourly" && (hourlyRate === undefined || hourlyRate === null || hourlyRate < 0)) {
-      return NextResponse.json(
-        { success: false, message: "יש להזין תעריף שעתי תקין" },
-        { status: 400 }
-      );
-    }
-
-    if (pricingModel === "package") {
-      if (packagePrice === undefined || packagePrice === null || packagePrice < 0) {
-        return NextResponse.json(
-          { success: false, message: "יש להזין מחיר חבילה תקין" },
-          { status: 400 }
-        );
-      }
-      if (packageHours === undefined || packageHours === null || packageHours < 0) {
-        return NextResponse.json(
-          { success: false, message: "יש להזין מספר שעות בחבילה" },
-          { status: 400 }
-        );
-      }
-    }
-
-    if (pricingModel === "mixed") {
-      if (hourlyRate === undefined || hourlyRate === null || hourlyRate < 0) {
-        return NextResponse.json(
-          { success: false, message: "יש להזין תעריף שעתי תקין" },
-          { status: 400 }
-        );
-      }
-      if (packagePrice === undefined || packagePrice === null || packagePrice < 0) {
-        return NextResponse.json(
-          { success: false, message: "יש להזין מחיר חבילה תקין" },
-          { status: 400 }
-        );
-      }
-      if (packageHours === undefined || packageHours === null || packageHours < 0) {
-        return NextResponse.json(
-          { success: false, message: "יש להזין מספר שעות בחבילה" },
-          { status: 400 }
-        );
-      }
-      if (overageRate === undefined || overageRate === null || overageRate < 0) {
-        return NextResponse.json(
-          { success: false, message: "יש להזין תעריף גרוע מעל החבילה" },
-          { status: 400 }
-        );
-      }
-    }
-
-    if (pricingModel === "fixed") {
-      if (fixedBudget === undefined || fixedBudget === null || fixedBudget < 0) {
-        return NextResponse.json(
-          { success: false, message: "יש להזין תקציב כולל תקין" },
-          { status: 400 }
-        );
-      }
-    }
-
-    if (pricingModel === "retainer") {
-      if (retainerMonthlyFee === undefined || retainerMonthlyFee === null || retainerMonthlyFee < 0) {
-        return NextResponse.json(
-          { success: false, message: "יש להזין את התשלום החודשי" },
-          { status: 400 }
-        );
-      }
-      if (retainerHours === undefined || retainerHours === null || retainerHours < 0) {
-        return NextResponse.json(
-          { success: false, message: "יש להזין מספר שעות בחבילה" },
-          { status: 400 }
-        );
-      }
-    }
-
-    if (currency && !["ILS", "USD", "USDT", "BTC", "ETH"].includes(currency)) {
-      return NextResponse.json(
-        { success: false, message: "מטבע לא חוקי" },
         { status: 400 }
       );
     }
@@ -297,22 +164,10 @@ export async function PUT(
     // Update project
     await query(
       `UPDATE projects
-       SET name = $1, pricing_model = $2, hourly_rate = $3, package_price = $4,
-           package_hours = $5, overage_rate = $6, fixed_budget = $7,
-           retainer_monthly_fee = $8, retainer_hours = $9, currency = $10, status = $11,
-           start_date = $12, end_date = $13, notes = $14
-       WHERE id = $15 AND user_id = $16`,
+       SET name = $1, status = $2, start_date = $3, end_date = $4, notes = $5, updated_at = NOW()
+       WHERE id = $6 AND user_id = $7`,
       [
         name.trim(),
-        pricingModel,
-        hourlyRate !== undefined && hourlyRate !== null ? hourlyRate : null,
-        packagePrice !== undefined && packagePrice !== null ? packagePrice : null,
-        packageHours !== undefined && packageHours !== null ? packageHours : null,
-        overageRate !== undefined && overageRate !== null ? overageRate : null,
-        fixedBudget !== undefined && fixedBudget !== null ? fixedBudget : null,
-        retainerMonthlyFee !== undefined && retainerMonthlyFee !== null ? retainerMonthlyFee : null,
-        retainerHours !== undefined && retainerHours !== null ? retainerHours : null,
-        currency || "ILS",
         status || "active",
         startDate || null,
         endDate || null,
@@ -328,15 +183,6 @@ export async function PUT(
       name: string;
       client_id: string;
       client_name: string;
-      pricing_model: string;
-      hourly_rate: number | null;
-      package_price: number | null;
-      package_hours: number | null;
-      overage_rate: number | null;
-      fixed_budget: number | null;
-      retainer_monthly_fee: number | null;
-      retainer_hours: number | null;
-      currency: string;
       status: string;
       start_date: string | null;
       end_date: string | null;
@@ -344,9 +190,7 @@ export async function PUT(
       created_at: string;
     }>(
       `SELECT p.id, p.name, p.client_id, c.name as client_name,
-              p.pricing_model, p.hourly_rate, p.package_price, p.package_hours, p.overage_rate,
-              p.fixed_budget, p.retainer_monthly_fee, p.retainer_hours,
-              p.currency, p.status, p.start_date, p.end_date, p.notes, p.created_at
+              p.status, p.start_date, p.end_date, p.notes, p.created_at
        FROM projects p
        JOIN clients c ON p.client_id = c.id
        WHERE p.id = $1`,
@@ -362,15 +206,6 @@ export async function PUT(
         name: project.name,
         clientId: project.client_id,
         clientName: project.client_name,
-        pricingModel: project.pricing_model,
-        hourlyRate: project.hourly_rate,
-        packagePrice: project.package_price,
-        packageHours: project.package_hours,
-        overageRate: project.overage_rate,
-        fixedBudget: project.fixed_budget,
-        retainerMonthlyFee: project.retainer_monthly_fee,
-        retainerHours: project.retainer_hours,
-        currency: project.currency,
         status: project.status,
         startDate: project.start_date,
         endDate: project.end_date,

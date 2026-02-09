@@ -27,23 +27,12 @@ export async function POST(
       id: string;
       name: string;
       client_id: string;
-      pricing_model: string;
-      hourly_rate: number | null;
-      package_price: number | null;
-      package_hours: number | null;
-      overage_rate: number | null;
-      fixed_budget: number | null;
-      retainer_monthly_fee: number | null;
-      retainer_hours: number | null;
-      currency: string;
       status: string;
       start_date: string | null;
       end_date: string | null;
       notes: string | null;
     }>(
-      `SELECT id, name, client_id, pricing_model, hourly_rate, package_price, package_hours,
-              overage_rate, fixed_budget, retainer_monthly_fee, retainer_hours,
-              currency, status, start_date, end_date, notes
+      `SELECT id, name, client_id, status, start_date, end_date, notes
        FROM projects
        WHERE id = $1 AND user_id = $2`,
       [projectId, user.id]
@@ -78,39 +67,23 @@ export async function POST(
       }
     }
 
-    // Generate UUID for new project
-    const newProjectIdResult = await query<{ id: string }>(
-      `SELECT gen_random_uuid()::text as id`
-    );
-    const newProjectId = newProjectIdResult.rows[0].id;
-
     // Insert the duplicated project (with active status and cleared dates)
-    await query(
-      `INSERT INTO projects (id, user_id, client_id, name, pricing_model, hourly_rate,
-                             package_price, package_hours, overage_rate, fixed_budget,
-                             retainer_monthly_fee, retainer_hours, currency, status,
-                             start_date, end_date, notes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
+    const insertResult = await query<{ id: string }>(
+      `INSERT INTO projects (id, user_id, client_id, name, status, start_date, end_date, notes)
+       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7)
+       RETURNING id`,
       [
-        newProjectId,
         user.id,
         original.client_id,
         newName,
-        original.pricing_model,
-        original.hourly_rate,
-        original.package_price,
-        original.package_hours,
-        original.overage_rate,
-        original.fixed_budget,
-        original.retainer_monthly_fee,
-        original.retainer_hours,
-        original.currency,
-        "active", // Always set duplicated projects to active
-        null, // Clear start date
-        null, // Clear end date
+        "active",
+        null,
+        null,
         original.notes,
       ]
     );
+
+    const newProjectId = insertResult.rows[0].id;
 
     // Fetch the created project with client info
     const projectResult = await query<{
@@ -118,15 +91,6 @@ export async function POST(
       name: string;
       client_id: string;
       client_name: string;
-      pricing_model: string;
-      hourly_rate: number | null;
-      package_price: number | null;
-      package_hours: number | null;
-      overage_rate: number | null;
-      fixed_budget: number | null;
-      retainer_monthly_fee: number | null;
-      retainer_hours: number | null;
-      currency: string;
       status: string;
       start_date: string | null;
       end_date: string | null;
@@ -134,9 +98,7 @@ export async function POST(
       created_at: string;
     }>(
       `SELECT p.id, p.name, p.client_id, c.name as client_name,
-              p.pricing_model, p.hourly_rate, p.package_price, p.package_hours, p.overage_rate,
-              p.fixed_budget, p.retainer_monthly_fee, p.retainer_hours,
-              p.currency, p.status, p.start_date, p.end_date, p.notes, p.created_at
+              p.status, p.start_date, p.end_date, p.notes, p.created_at
        FROM projects p
        JOIN clients c ON p.client_id = c.id
        WHERE p.id = $1`,
@@ -152,15 +114,6 @@ export async function POST(
         name: project.name,
         clientId: project.client_id,
         clientName: project.client_name,
-        pricingModel: project.pricing_model,
-        hourlyRate: project.hourly_rate,
-        packagePrice: project.package_price,
-        packageHours: project.package_hours,
-        overageRate: project.overage_rate,
-        fixedBudget: project.fixed_budget,
-        retainerMonthlyFee: project.retainer_monthly_fee,
-        retainerHours: project.retainer_hours,
-        currency: project.currency,
         status: project.status,
         startDate: project.start_date,
         endDate: project.end_date,

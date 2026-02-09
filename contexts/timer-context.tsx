@@ -32,6 +32,11 @@ interface Project {
   clientId: string;
 }
 
+interface TaskOption {
+  id: string;
+  name: string;
+}
+
 interface TimerContextValue {
   runningTimer: RunningTimer | null;
   elapsedTime: string;
@@ -44,6 +49,8 @@ interface TimerContextValue {
   showTimerModal: boolean;
   showStopTimerModal: boolean;
   selectedProject: string;
+  selectedTask: string;
+  timerTasks: TaskOption[];
   timerDescription: string;
   stopTimerDescription: string;
   stopTimerHours: string;
@@ -51,6 +58,7 @@ interface TimerContextValue {
   setShowTimerModal: (show: boolean) => void;
   setShowStopTimerModal: (show: boolean) => void;
   setSelectedProject: (id: string) => void;
+  setSelectedTask: (id: string) => void;
   setTimerDescription: (desc: string) => void;
   setStopTimerDescription: (desc: string) => void;
   setStopTimerHours: (hours: string) => void;
@@ -79,6 +87,8 @@ const defaultTimerValue: TimerContextValue = {
   showTimerModal: false,
   showStopTimerModal: false,
   selectedProject: "",
+  selectedTask: "",
+  timerTasks: [],
   timerDescription: "",
   stopTimerDescription: "",
   stopTimerHours: "",
@@ -86,6 +96,7 @@ const defaultTimerValue: TimerContextValue = {
   setShowTimerModal: noop,
   setShowStopTimerModal: noop,
   setSelectedProject: noop,
+  setSelectedTask: noop,
   setTimerDescription: noop,
   setStopTimerDescription: noop,
   setStopTimerHours: noop,
@@ -124,6 +135,8 @@ export function TimerProvider({ children }: TimerProviderProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [showTimerModal, setShowTimerModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState("");
+  const [selectedTask, setSelectedTask] = useState("");
+  const [timerTasks, setTimerTasks] = useState<TaskOption[]>([]);
   const [timerDescription, setTimerDescription] = useState("");
   const [startingTimer, setStartingTimer] = useState(false);
   const [stoppingTimer, setStoppingTimer] = useState(false);
@@ -211,6 +224,32 @@ export function TimerProvider({ children }: TimerProviderProps) {
 
     fetchProjects();
   }, [isAuthenticated]);
+
+  // Fetch tasks when project changes (for timer start modal)
+  useEffect(() => {
+    if (!selectedProject) {
+      setTimerTasks([]);
+      setSelectedTask("");
+      return;
+    }
+    const fetchTasks = async () => {
+      try {
+        const response = await fetch(`/api/projects/${selectedProject}/tasks`);
+        const data = await response.json();
+        if (data.success) {
+          // Only show todo/in_progress tasks
+          setTimerTasks(
+            (data.tasks || [])
+              .filter((t: { status: string }) => t.status !== "done")
+              .map((t: { id: string; name: string }) => ({ id: t.id, name: t.name }))
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching tasks for timer:", error);
+      }
+    };
+    fetchTasks();
+  }, [selectedProject]);
 
   // Long timer notification check
   useEffect(() => {
@@ -301,6 +340,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           projectId: selectedProject,
+          taskId: selectedTask || null,
           description: timerDescription || null,
         }),
       });
@@ -310,6 +350,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
       if (data.success) {
         setShowTimerModal(false);
         setSelectedProject("");
+        setSelectedTask("");
         setTimerDescription("");
         showSuccessToast("הטיימר הופעל בהצלחה");
         // Refresh running timer
@@ -328,7 +369,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
     } finally {
       setStartingTimer(false);
     }
-  }, [selectedProject, timerDescription]);
+  }, [selectedProject, selectedTask, timerDescription]);
 
   const handleStopTimer = useCallback(() => {
     if (!runningTimer) return;
@@ -487,6 +528,8 @@ export function TimerProvider({ children }: TimerProviderProps) {
     showTimerModal,
     showStopTimerModal,
     selectedProject,
+    selectedTask,
+    timerTasks,
     timerDescription,
     stopTimerDescription,
     stopTimerHours,
@@ -494,6 +537,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
     setShowTimerModal,
     setShowStopTimerModal,
     setSelectedProject,
+    setSelectedTask,
     setTimerDescription,
     setStopTimerDescription,
     setStopTimerHours,

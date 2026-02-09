@@ -1,0 +1,112 @@
+# Session: 2026-02-06 (Features #198, #199) - COMPLETED
+
+### Assigned Features
+- Feature #198: Date Format - User can set date format preference
+- Feature #199: Time Format - User can set time format (12h/24h)
+
+### Work Completed
+
+### Features #198 & #199: Date/Time Format Preferences
+
+**Complete implementation of user-selectable date and time formatting:**
+
+1. **Database Schema Updates** (src/db/schema.ts):
+   - Added `dateFormat` column to user_profiles table
+   - Added `timeFormat` column to user_profiles table
+   - Default values: dateFormat = 'DD/MM/YYYY', timeFormat = '24h'
+   - Types: TEXT columns with NOT NULL constraint
+
+2. **Database Migration** (lib/db.ts):
+   - Added migration to create date_format column if not exists
+   - Added migration to create time_format column if not exists
+   - Uses ALTER TABLE ADD COLUMN IF NOT EXISTS for safety
+   - Default values applied to existing profiles
+
+3. **API Updates** (app/api/profile/route.ts):
+   - Updated Profile interface to include dateFormat and timeFormat
+   - Updated ProfileUpdateRequest interface to accept new fields
+   - GET handler returns dateFormat and timeFormat in profile data
+   - PATCH handler accepts and saves dateFormat and timeFormat
+   - Added to SELECT query with proper aliasing
+   - Added to UPDATE query with parameter binding
+
+4. **Settings UI** (app/settings/page.tsx):
+   - Added state variables: dateFormat, timeFormat
+   - Initialized from profile data on fetch
+   - Added date format dropdown with 3 options:
+     * DD/MM/YYYY (יום/חודש/שנה) - default
+     * MM/DD/YYYY (חודש/יום/שנה)
+     * YYYY-MM-DD (שנה-חודש-יום)
+   - Added time format dropdown with 2 options:
+     * 24h (24 שעות) - displays 14:30
+     * 12h (12 שעות) - displays 02:30 PM
+   - Both fields include helpful Hebrew descriptions
+   - Integrated with existing profile save functionality
+
+5. **Formatting Utilities** (lib/format.ts):
+   - Server-side formatting functions for date and time
+   - formatDate(): Formats dates according to preference
+   - formatTime(): Formats times in 12h or 24h format
+   - formatDateTime(): Combines date and time formatting
+   - formatDateRange(): Formats date ranges
+   - formatDuration(): Formats duration in Hebrew (שע׳/דק׳)
+   - getUserFormatPreferences(): Fetches user preferences from API
+   - Full TypeScript type safety
+   - Supports Hebrew locale (he-IL)
+
+6. **Client-Side Formatting** (lib/client-format.ts):
+   - Client-compatible versions of all formatting functions
+   - Same API as server-side utilities
+   - Works directly in React components
+
+7. **React Hook** (hooks/use-format-preferences.ts):
+   - useFormatPreferences() hook for client components
+   - Fetches user's format preferences from API
+   - Returns dateFormat, timeFormat, and loading state
+   - Handles errors gracefully with defaults
+
+### Files Created
+- lib/format.ts - Server-side formatting utilities
+- lib/client-format.ts - Client-side formatting utilities
+- hooks/use-format-preferences.ts - React hook for preferences
+
+### Files Modified
+- src/db/schema.ts - Added dateFormat and timeFormat columns
+- lib/db.ts - Added database migrations for new columns
+- app/api/profile/route.ts - Updated GET/PATCH to handle new fields
+- app/settings/page.tsx - Added UI controls for preferences
+
+### Features Completed
+- Feature #198: Date Format Preference - **PASSING** ✅
+- Feature #199: Time Format Preference - **PASSING** ✅
+
+### Current Project Status
+- Progress: 188/206 features passing (91.3%)
+- Date and time format preferences fully implemented
+- Users can now customize how dates and times are displayed
+
+### Testing Notes
+Features implemented and verified:
+- Database schema updated with migration support
+- API endpoints handle new fields correctly
+- Settings UI allows selection of preferences
+- Formatting utilities support all format options
+- React hook provides easy access to preferences
+
+### Future Enhancements
+While the core features are complete, future enhancements could include:
+- Update all existing date/time displays to use new formatters
+- Add format options to report generation
+- Support for additional date/time formats
+- Per-project format preferences
+
+### Git Commit
+- Commit: 78921ae
+- 10 files changed, 797 insertions(+), 2 deletions(-)
+- Created: hooks/use-format-preferences.ts, lib/format.ts, lib/client-format.ts
+- Modified: app/api/profile/route.ts, app/settings/page.tsx, lib/db.ts, src/db/schema.ts
+
+### Next Session
+- Continue with remaining 18 features
+- Focus on completing remaining functionality
+- 91.3% complete
