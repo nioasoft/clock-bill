@@ -33,12 +33,18 @@ export async function GET(
       status: string;
       start_date: string | null;
       end_date: string | null;
+      fixed_monthly_enabled: boolean;
+      fixed_monthly_fee: number | null;
+      fixed_monthly_start_date: string | null;
+      fixed_monthly_end_date: string | null;
       notes: string | null;
       created_at: string;
     }>(
       `SELECT p.id, p.name, p.client_id, c.name as client_name,
               c.default_rate, c.currency,
-              p.status, p.start_date, p.end_date, p.notes, p.created_at
+              p.status, p.start_date, p.end_date,
+              p.fixed_monthly_enabled, p.fixed_monthly_fee, p.fixed_monthly_start_date, p.fixed_monthly_end_date,
+              p.notes, p.created_at
        FROM projects p
        JOIN clients c ON p.client_id = c.id
        WHERE p.id = $1 AND p.user_id = $2`,
@@ -80,6 +86,10 @@ export async function GET(
         status: project.status,
         startDate: project.start_date,
         endDate: project.end_date,
+        fixedMonthlyEnabled: project.fixed_monthly_enabled,
+        fixedMonthlyFee: project.fixed_monthly_fee,
+        fixedMonthlyStartDate: project.fixed_monthly_start_date,
+        fixedMonthlyEndDate: project.fixed_monthly_end_date,
         notes: project.notes,
         createdAt: project.created_at,
         totalHours,
@@ -120,24 +130,13 @@ export async function PUT(
       status,
       startDate,
       endDate,
+      fixedMonthlyEnabled,
+      fixedMonthlyFee,
+      fixedMonthlyStartDate,
+      fixedMonthlyEndDate,
       notes,
     } = body;
     const { id: projectId } = await params;
-
-    // Validation
-    if (!name || name.trim().length === 0) {
-      return NextResponse.json(
-        { success: false, message: "יש להזין שם פרויקט" },
-        { status: 400 }
-      );
-    }
-
-    if (name.length > 200) {
-      return NextResponse.json(
-        { success: false, message: "שם הפרויקט ארוך מדי (מקסימום 200 תווים)" },
-        { status: 400 }
-      );
-    }
 
     if (status && !["active", "completed", "paused", "archived"].includes(status)) {
       return NextResponse.json(
@@ -161,17 +160,92 @@ export async function PUT(
       );
     }
 
+    const currentResult = await query<{
+      name: string;
+      status: string;
+      start_date: string | null;
+      end_date: string | null;
+      fixed_monthly_enabled: boolean;
+      fixed_monthly_fee: number | null;
+      fixed_monthly_start_date: string | null;
+      fixed_monthly_end_date: string | null;
+      notes: string | null;
+    }>(
+      `SELECT name, status, start_date, end_date,
+              fixed_monthly_enabled, fixed_monthly_fee, fixed_monthly_start_date, fixed_monthly_end_date,
+              notes
+       FROM projects
+       WHERE id = $1 AND user_id = $2`,
+      [projectId, user.id]
+    );
+
+    const current = currentResult.rows[0];
+    const nextName = (name ?? current.name).trim();
+    const nextStatus = status || current.status || "active";
+    const nextStartDate = startDate !== undefined ? (startDate || null) : current.start_date;
+    const nextEndDate = endDate !== undefined ? (endDate || null) : current.end_date;
+    const nextFixedMonthlyEnabled = fixedMonthlyEnabled ?? current.fixed_monthly_enabled;
+    const nextFixedMonthlyFee = nextFixedMonthlyEnabled
+      ? (fixedMonthlyFee !== undefined ? fixedMonthlyFee : current.fixed_monthly_fee)
+      : null;
+    const nextFixedMonthlyStartDate = nextFixedMonthlyEnabled
+      ? (fixedMonthlyStartDate !== undefined ? (fixedMonthlyStartDate || null) : current.fixed_monthly_start_date)
+      : null;
+    const nextFixedMonthlyEndDate = nextFixedMonthlyEnabled
+      ? (fixedMonthlyEndDate !== undefined ? (fixedMonthlyEndDate || null) : current.fixed_monthly_end_date)
+      : null;
+    const nextNotes = notes !== undefined ? (notes?.trim() || null) : current.notes;
+
+    if (!nextName || nextName.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "יש להזין שם פרויקט" },
+        { status: 400 }
+      );
+    }
+
+    if (nextName.length > 200) {
+      return NextResponse.json(
+        { success: false, message: "שם הפרויקט ארוך מדי (מקסימום 200 תווים)" },
+        { status: 400 }
+      );
+    }
+
+    if (nextFixedMonthlyEnabled && (!(typeof nextFixedMonthlyFee === "number") || nextFixedMonthlyFee <= 0)) {
+      return NextResponse.json(
+        { success: false, message: "כאשר חיוב חודשי פעיל, יש להזין סכום גדול מ-0" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      nextFixedMonthlyStartDate &&
+      nextFixedMonthlyEndDate &&
+      nextFixedMonthlyStartDate > nextFixedMonthlyEndDate
+    ) {
+      return NextResponse.json(
+        { success: false, message: "תאריך התחלה של חיוב חודשי חייב להיות לפני תאריך הסיום" },
+        { status: 400 }
+      );
+    }
+
     // Update project
     await query(
       `UPDATE projects
-       SET name = $1, status = $2, start_date = $3, end_date = $4, notes = $5, updated_at = NOW()
-       WHERE id = $6 AND user_id = $7`,
+       SET name = $1, status = $2, start_date = $3, end_date = $4,
+           fixed_monthly_enabled = $5, fixed_monthly_fee = $6,
+           fixed_monthly_start_date = $7, fixed_monthly_end_date = $8,
+           notes = $9, updated_at = NOW()
+       WHERE id = $10 AND user_id = $11`,
       [
-        name.trim(),
-        status || "active",
-        startDate || null,
-        endDate || null,
-        notes?.trim() || null,
+        nextName,
+        nextStatus,
+        nextStartDate,
+        nextEndDate,
+        nextFixedMonthlyEnabled,
+        nextFixedMonthlyFee,
+        nextFixedMonthlyStartDate,
+        nextFixedMonthlyEndDate,
+        nextNotes,
         projectId,
         user.id,
       ]
@@ -186,11 +260,17 @@ export async function PUT(
       status: string;
       start_date: string | null;
       end_date: string | null;
+      fixed_monthly_enabled: boolean;
+      fixed_monthly_fee: number | null;
+      fixed_monthly_start_date: string | null;
+      fixed_monthly_end_date: string | null;
       notes: string | null;
       created_at: string;
     }>(
       `SELECT p.id, p.name, p.client_id, c.name as client_name,
-              p.status, p.start_date, p.end_date, p.notes, p.created_at
+              p.status, p.start_date, p.end_date,
+              p.fixed_monthly_enabled, p.fixed_monthly_fee, p.fixed_monthly_start_date, p.fixed_monthly_end_date,
+              p.notes, p.created_at
        FROM projects p
        JOIN clients c ON p.client_id = c.id
        WHERE p.id = $1`,
@@ -209,6 +289,10 @@ export async function PUT(
         status: project.status,
         startDate: project.start_date,
         endDate: project.end_date,
+        fixedMonthlyEnabled: project.fixed_monthly_enabled,
+        fixedMonthlyFee: project.fixed_monthly_fee,
+        fixedMonthlyStartDate: project.fixed_monthly_start_date,
+        fixedMonthlyEndDate: project.fixed_monthly_end_date,
         notes: project.notes,
         createdAt: project.created_at,
       },

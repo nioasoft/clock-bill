@@ -24,6 +24,10 @@ interface Project {
   status: string;
   startDate: string | null;
   endDate: string | null;
+  fixedMonthlyEnabled: boolean;
+  fixedMonthlyFee: number | null;
+  fixedMonthlyStartDate: string | null;
+  fixedMonthlyEndDate: string | null;
   notes: string | null;
   createdAt: string;
 }
@@ -50,6 +54,10 @@ function ProjectsPageContent() {
     status: "active",
     startDate: "",
     endDate: "",
+    fixedMonthlyEnabled: false,
+    fixedMonthlyFee: "",
+    fixedMonthlyStartDate: "",
+    fixedMonthlyEndDate: "",
     notes: "",
   });
   const [formError, setFormError] = useState("");
@@ -61,6 +69,9 @@ function ProjectsPageContent() {
     name?: string;
     startDate?: string;
     endDate?: string;
+    fixedMonthlyFee?: string;
+    fixedMonthlyStartDate?: string;
+    fixedMonthlyEndDate?: string;
   }>({});
 
   // Auto-open create form via URL params
@@ -142,6 +153,25 @@ function ProjectsPageContent() {
       }
     }
 
+    if (formData.fixedMonthlyEnabled) {
+      const fee = parseFloat(formData.fixedMonthlyFee);
+      if (!formData.fixedMonthlyFee || Number.isNaN(fee) || fee <= 0) {
+        errors.fixedMonthlyFee = "יש להזין סכום חודשי גדול מ-0";
+      }
+
+      if (formData.fixedMonthlyStartDate && formData.fixedMonthlyEndDate) {
+        const fixedDateValidation = validateDateRange(
+          formData.fixedMonthlyStartDate,
+          formData.fixedMonthlyEndDate,
+          false
+        );
+        if (!fixedDateValidation.isValid) {
+          errors.fixedMonthlyStartDate = fixedDateValidation.error;
+          errors.fixedMonthlyEndDate = fixedDateValidation.error;
+        }
+      }
+    }
+
     // If there are errors, display them and don't submit
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -162,6 +192,10 @@ function ProjectsPageContent() {
           status: formData.status,
           startDate: formData.startDate || undefined,
           endDate: formData.endDate || undefined,
+          fixedMonthlyEnabled: formData.fixedMonthlyEnabled,
+          fixedMonthlyFee: formData.fixedMonthlyEnabled ? parseFloat(formData.fixedMonthlyFee) : undefined,
+          fixedMonthlyStartDate: formData.fixedMonthlyEnabled ? (formData.fixedMonthlyStartDate || undefined) : undefined,
+          fixedMonthlyEndDate: formData.fixedMonthlyEnabled ? (formData.fixedMonthlyEndDate || undefined) : undefined,
           notes: formData.notes || undefined,
         }),
       });
@@ -178,6 +212,10 @@ function ProjectsPageContent() {
           status: "active",
           startDate: "",
           endDate: "",
+          fixedMonthlyEnabled: false,
+          fixedMonthlyFee: "",
+          fixedMonthlyStartDate: "",
+          fixedMonthlyEndDate: "",
           notes: "",
         });
         setShowForm(false);
@@ -396,6 +434,94 @@ function ProjectsPageContent() {
                 </div>
 
                 <div className="sm:col-span-2">
+                  <div className="rounded-[var(--radius)] border border-border p-4">
+                    <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                      <input
+                        type="checkbox"
+                        checked={formData.fixedMonthlyEnabled}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            fixedMonthlyEnabled: e.target.checked,
+                            ...(e.target.checked ? {} : {
+                              fixedMonthlyFee: "",
+                              fixedMonthlyStartDate: "",
+                              fixedMonthlyEndDate: "",
+                            }),
+                          })
+                        }
+                        className="h-4 w-4 rounded border-border"
+                        disabled={submitting}
+                      />
+                      חיוב קבוע חודשי
+                    </label>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      החיוב הקבוע מתווסף לחיוב לפי שעות בדוחות.
+                    </p>
+
+                    {formData.fixedMonthlyEnabled && (
+                      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        <div>
+                          <label htmlFor="fixedMonthlyFee" className="block text-sm font-medium text-foreground">
+                            סכום חודשי *
+                          </label>
+                          <input
+                            type="number"
+                            id="fixedMonthlyFee"
+                            min="0"
+                            step="0.01"
+                            value={formData.fixedMonthlyFee}
+                            onChange={(e) => {
+                              setFormData({ ...formData, fixedMonthlyFee: e.target.value });
+                              setFieldErrors({ ...fieldErrors, fixedMonthlyFee: undefined });
+                            }}
+                            className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 shadow-sm ${
+                              fieldErrors.fixedMonthlyFee ? "border-destructive" : "border-border"
+                            }`}
+                            disabled={submitting}
+                          />
+                          {fieldErrors.fixedMonthlyFee && <p className="mt-1 text-xs text-destructive">{fieldErrors.fixedMonthlyFee}</p>}
+                        </div>
+
+                        <div>
+                          <label htmlFor="fixedMonthlyStartDate" className="block text-sm font-medium text-foreground">
+                            תוקף מ-
+                          </label>
+                          <input
+                            type="date"
+                            id="fixedMonthlyStartDate"
+                            value={formData.fixedMonthlyStartDate}
+                            onChange={(e) => setFormData({ ...formData, fixedMonthlyStartDate: e.target.value })}
+                            className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 shadow-sm ${
+                              fieldErrors.fixedMonthlyStartDate ? "border-destructive" : "border-border"
+                            }`}
+                            disabled={submitting}
+                          />
+                          {fieldErrors.fixedMonthlyStartDate && <p className="mt-1 text-xs text-destructive">{fieldErrors.fixedMonthlyStartDate}</p>}
+                        </div>
+
+                        <div>
+                          <label htmlFor="fixedMonthlyEndDate" className="block text-sm font-medium text-foreground">
+                            תוקף עד
+                          </label>
+                          <input
+                            type="date"
+                            id="fixedMonthlyEndDate"
+                            value={formData.fixedMonthlyEndDate}
+                            onChange={(e) => setFormData({ ...formData, fixedMonthlyEndDate: e.target.value })}
+                            className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 shadow-sm ${
+                              fieldErrors.fixedMonthlyEndDate ? "border-destructive" : "border-border"
+                            }`}
+                            disabled={submitting}
+                          />
+                          {fieldErrors.fixedMonthlyEndDate && <p className="mt-1 text-xs text-destructive">{fieldErrors.fixedMonthlyEndDate}</p>}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="sm:col-span-2">
                   <label htmlFor="notes" className="block text-sm font-medium text-foreground">
                     הערות
                   </label>
@@ -421,6 +547,10 @@ function ProjectsPageContent() {
                       status: "active",
                       startDate: "",
                       endDate: "",
+                      fixedMonthlyEnabled: false,
+                      fixedMonthlyFee: "",
+                      fixedMonthlyStartDate: "",
+                      fixedMonthlyEndDate: "",
                       notes: "",
                     });
                   }}

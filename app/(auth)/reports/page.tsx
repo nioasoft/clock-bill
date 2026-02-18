@@ -63,7 +63,19 @@ interface ReportSummary {
   totalMinutes: number;
   totalHours: number;
   totalEntries: number;
+  fixedAmounts: Record<string, number>;
   totalAmounts: Record<string, number>;
+}
+
+interface FixedChargeEntry {
+  projectId: string;
+  projectName: string;
+  clientId: string;
+  clientName: string;
+  month: string;
+  amount: number;
+  currency: string;
+  type: "fixed_monthly";
 }
 
 interface ClientSummary {
@@ -114,6 +126,7 @@ interface WeekSummary {
 
 interface ReportData {
   entries: ReportEntry[];
+  fixedCharges: FixedChargeEntry[];
   summary: ReportSummary;
   byClient: ClientSummary[];
   byProject: ProjectSummary[];
@@ -166,6 +179,7 @@ export default function ReportsPage() {
       .toISOString()
       .split("T")[0], // First day of current month
     endDate: new Date().toISOString().split("T")[0], // Today
+    includeFixedCharges: true,
   });
   const [error, setError] = useState("");
   const [displayCurrency, setDisplayCurrency] = useState<string>("original");
@@ -295,6 +309,7 @@ export default function ReportsPage() {
     const projectId = params.get("projectId");
     const startDate = params.get("startDate");
     const endDate = params.get("endDate");
+    const includeFixedCharges = params.get("includeFixedCharges");
 
     // If any filter parameters exist in URL, update filters and generate report
     if (clientId || projectId || startDate || endDate) {
@@ -305,6 +320,7 @@ export default function ReportsPage() {
           .toISOString()
           .split("T")[0],
         endDate: endDate || new Date().toISOString().split("T")[0],
+        includeFixedCharges: includeFixedCharges !== "0",
       });
 
       // Auto-generate report after a short delay to ensure filters are set
@@ -325,6 +341,7 @@ export default function ReportsPage() {
       if (filters.projectId) params.append("projectId", filters.projectId);
       if (filters.startDate) params.append("startDate", filters.startDate);
       if (filters.endDate) params.append("endDate", filters.endDate);
+      params.append("includeFixedCharges", filters.includeFixedCharges ? "1" : "0");
 
       const response = await fetch(`/api/reports?${params.toString()}`);
       const data = await response.json();
@@ -391,6 +408,7 @@ export default function ReportsPage() {
         .toISOString()
         .split("T")[0],
       endDate: preset.endDate || new Date().toISOString().split("T")[0],
+      includeFixedCharges: true,
     });
     setShowLoadPresetDialog(false);
     showSuccessToast("הפריסט נטען בהצלחה");
@@ -613,6 +631,7 @@ export default function ReportsPage() {
       if (filters.projectId) params.append("projectId", filters.projectId);
       if (filters.startDate) params.append("startDate", filters.startDate);
       if (filters.endDate) params.append("endDate", filters.endDate);
+      params.append("includeFixedCharges", filters.includeFixedCharges ? "1" : "0");
 
       // Fetch Excel file from API
       const response = await fetch(`/api/reports/excel?${params.toString()}`);
@@ -657,6 +676,7 @@ export default function ReportsPage() {
       if (filters.projectId) params.append("projectId", filters.projectId);
       if (filters.startDate) params.append("startDate", filters.startDate);
       if (filters.endDate) params.append("endDate", filters.endDate);
+      params.append("includeFixedCharges", filters.includeFixedCharges ? "1" : "0");
 
       const baseUrl = window.location.origin + "/reports";
       const shareUrl = `${baseUrl}?${params.toString()}`;
@@ -757,6 +777,23 @@ export default function ReportsPage() {
 
               {/* Display Currency Filter */}
               <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
+                <label className="flex items-center gap-2 text-sm font-medium mb-2">
+                  <input
+                    type="checkbox"
+                    checked={filters.includeFixedCharges}
+                    onChange={(e) =>
+                      setFilters({ ...filters, includeFixedCharges: e.target.checked })
+                    }
+                    className="h-4 w-4 rounded border-border"
+                  />
+                  לכלול חיובים קבועים
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  מוסיף לדוח רכיבי חיוב חודשי קבועים ברמת פרויקט.
+                </p>
+              </div>
+
+              <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
                 <label className="block text-sm font-medium mb-2">הצג סכומים במטבע</label>
                 <select
                   value={displayCurrency}
@@ -814,6 +851,7 @@ export default function ReportsPage() {
                         .toISOString()
                         .split("T")[0],
                       endDate: new Date().toISOString().split("T")[0],
+                      includeFixedCharges: true,
                     })
                   }
                   className="px-6 py-2 border border-border rounded-full hover:bg-accent transition-colors"
@@ -926,6 +964,16 @@ export default function ReportsPage() {
                       {reportData.summary.totalEntries}
                     </div>
                   </div>
+                  {Object.keys(reportData.summary.fixedAmounts || {}).length > 0 && (
+                    <div className="pdf-summary-card" style={{ padding: "1rem", backgroundColor: "#f8fafc", borderRadius: "8px" }}>
+                      <div className="pdf-summary-label" style={{ fontSize: "12px", color: "#64748b", marginBottom: "0.25rem" }}>חיובים קבועים</div>
+                      <div className="pdf-summary-value" style={{ fontSize: "24px", fontWeight: "bold", color: "#2563EB" }}>
+                        {Object.entries(reportData.summary.fixedAmounts).map(
+                          ([currency, amount]) => formatCurrency(amount, currency)
+                        ).join(" + ")}
+                      </div>
+                    </div>
+                  )}
                   {Object.keys(reportData.summary.totalAmounts).length > 0 && (
                     <div className="pdf-summary-card" style={{ padding: "1rem", backgroundColor: "#f8fafc", borderRadius: "8px", gridColumn: "span 2" }}>
                       <div className="pdf-summary-label" style={{ fontSize: "12px", color: "#64748b", marginBottom: "0.25rem" }}>סה״כ סכום</div>
@@ -986,6 +1034,36 @@ export default function ReportsPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {reportData.fixedCharges && reportData.fixedCharges.length > 0 && (
+                <div className="pdf-section" style={{ marginBottom: "1.5rem", padding: "1.5rem" }}>
+                  <h2 className="pdf-section-title" style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "1rem" }}>
+                    חיובים קבועים
+                  </h2>
+                  <table className="pdf-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead style={{ backgroundColor: "#f1f5f9" }}>
+                      <tr>
+                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>חודש</th>
+                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>לקוח</th>
+                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>פרויקט</th>
+                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>סכום</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportData.fixedCharges.map((line, index) => (
+                        <tr key={`${line.projectId}-${line.month}-${index}`} style={{ borderBottom: "1px solid #f1f5f9", backgroundColor: index % 2 === 0 ? "transparent" : "#f8fafc" }}>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{line.month}</td>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{line.clientName}</td>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{line.projectName}</td>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px", fontWeight: "500" }}>
+                            {formatCurrency(line.amount, line.currency)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
 
@@ -1061,7 +1139,7 @@ export default function ReportsPage() {
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-accent shadow-sm">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
                   סה״כ שעות
@@ -1106,6 +1184,36 @@ export default function ReportsPage() {
                   )
                 ) : (
                   <p className="text-lg text-muted-foreground">לא זמין</p>
+                )}
+              </div>
+              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-accent shadow-sm">
+                <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
+                  חיובים קבועים {displayCurrency !== "original" && `(${displayCurrency})`}
+                </h3>
+                {Object.keys(reportData.summary.fixedAmounts || {}).length > 0 ? (
+                  displayCurrency === "original" ? (
+                    <div className="space-y-1">
+                      {Object.entries(reportData.summary.fixedAmounts).map(
+                        ([currency, amount]) => (
+                          <p
+                            key={currency}
+                            className="font-mono text-2xl font-bold tabular-nums"
+                          >
+                            {formatCurrency(amount, currency)}
+                          </p>
+                        )
+                      )}
+                    </div>
+                  ) : (
+                    <p className="font-mono text-2xl font-bold tabular-nums">
+                      {formatCurrency(
+                        convertAmounts(reportData.summary.fixedAmounts, displayCurrency),
+                        displayCurrency
+                      )}
+                    </p>
+                  )
+                ) : (
+                  <p className="text-lg text-muted-foreground">0.00</p>
                 )}
               </div>
               <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-success shadow-sm">
@@ -1193,6 +1301,33 @@ export default function ReportsPage() {
                             {formatCurrency(project.totalAmount, project.currency)}
                           </p>
                         )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {reportData.fixedCharges && reportData.fixedCharges.length > 0 && (
+              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 shadow-sm">
+                <h3 className="font-display text-lg font-bold mb-4">חיובים קבועים</h3>
+                <div className="space-y-3">
+                  {reportData.fixedCharges.map((line, index) => (
+                    <div
+                      key={`${line.projectId}-${line.month}-${index}`}
+                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[0.625rem] border border-border/30 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium">{line.projectName}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {line.clientName} • {line.month}
+                        </p>
+                      </div>
+                      <div className="text-end">
+                        <p className="font-mono text-lg font-semibold">
+                          {formatCurrency(line.amount, line.currency)}
+                        </p>
+                        <p className="text-sm text-muted-foreground">חיוב חודשי קבוע</p>
                       </div>
                     </div>
                   ))}
@@ -1336,7 +1471,7 @@ export default function ReportsPage() {
             )}
 
             {/* No Data Message */}
-            {reportData.entries.length === 0 && (
+            {reportData.entries.length === 0 && (!reportData.fixedCharges || reportData.fixedCharges.length === 0) && (
               <div className="bg-card border rounded-[0.875rem] p-12 text-center">
                 <p className="text-muted-foreground text-lg mb-4">
                   לא נמצאו רשומות לתקופה שנבחרה

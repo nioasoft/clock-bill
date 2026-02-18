@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
+import { calculateFixedMonthlyCharges } from "@/lib/fixed-charges";
 import ExcelJS from "exceljs";
 
 /**
@@ -19,14 +20,13 @@ export async function GET(request: NextRequest) {
 
     const { query } = await import("@/lib/db");
 
-    // Get query parameters for filtering
     const { searchParams } = new URL(request.url);
     const clientId = searchParams.get("clientId");
     const projectId = searchParams.get("projectId");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
+    const includeFixedCharges = searchParams.get("includeFixedCharges") !== "0";
 
-    // Build query with filters
     let queryText = `
       SELECT
         te.id,
@@ -106,15 +106,11 @@ export async function GET(request: NextRequest) {
       client_address: string | null;
     }>(queryText, queryParams);
 
-    // Create Excel workbook
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "מוניט - מערכת למעקב שעות";
     workbook.created = new Date();
 
-    // Create main worksheet with entries
     const worksheet = workbook.addWorksheet("רשומות זמן");
-
-    // Define columns
     worksheet.columns = [
       { header: "תאריך", key: "date", width: 15 },
       { header: "לקוח", key: "clientName", width: 20 },
@@ -130,7 +126,6 @@ export async function GET(request: NextRequest) {
       { header: "הערות", key: "notes", width: 30 },
     ];
 
-    // Style header row
     const headerRow = worksheet.getRow(1);
     headerRow.font = { bold: true, size: 12 };
     headerRow.fill = {
@@ -141,9 +136,8 @@ export async function GET(request: NextRequest) {
     headerRow.alignment = { vertical: "middle", horizontal: "center", readingOrder: "rtl" };
     headerRow.height = 25;
 
-    // Add data rows
     let totalMinutes = 0;
-    const totalAmounts: Record<string, number> = {};
+    const timeAmounts: Record<string, number> = {};
 
     result.rows.forEach((entry) => {
       const durationMinutes = entry.duration;
@@ -153,11 +147,10 @@ export async function GET(request: NextRequest) {
       const currency = entry.currency || "ILS";
 
       totalMinutes += durationMinutes;
-
-      if (!totalAmounts[currency]) {
-        totalAmounts[currency] = 0;
+      if (!timeAmounts[currency]) {
+        timeAmounts[currency] = 0;
       }
-      totalAmounts[currency] += amount;
+      timeAmounts[currency] += amount;
 
       worksheet.addRow({
         date: entry.date,
@@ -175,20 +168,122 @@ export async function GET(request: NextRequest) {
       });
     });
 
-    // Set right-to-left direction for all cells
     worksheet.eachRow((row: ExcelJS.Row) => {
       row.alignment = { readingOrder: "rtl" };
     });
 
-    // Add summary sheet
-    const summarySheet = workbook.addWorksheet("סיכום");
+    let fixedCharges: ReturnType<typeof calculateFixedMonthlyCharges> = [];
+    const fixedAmounts: Record<string, number> = {};
 
+    if (includeFixedCharges && startDate && endDate) {
+      let fixedProjectsQuery = `
+        SELECT
+          p.id as project_id,
+          p.name as project_name,
+          c.id as client_id,
+          c.name as client_name,
+          c.currency,
+          p.fixed_monthly_fee,
+          p.fixed_monthly_start_date,
+          p.fixed_monthly_end_date
+        FROM projects p
+        JOIN clients c ON p.client_id = c.id
+        WHERE p.user_id = $1
+          AND p.fixed_monthly_enabled = TRUE
+          AND COALESCE(p.fixed_monthly_fee, 0) > 0
+      `;
+      const fixedProjectsParams: (string | number | boolean | null)[] = [user.id];
+      let fixedParamIndex = 2;
+
+      if (clientId) {
+        fixedProjectsQuery += ` AND c.id = $${fixedParamIndex}`;
+        fixedProjectsParams.push(clientId);
+        fixedParamIndex++;
+      }
+
+      if (projectId) {
+        fixedProjectsQuery += ` AND p.id = $${fixedParamIndex}`;
+        fixedProjectsParams.push(projectId);
+        fixedParamIndex++;
+      }
+
+      const fixedProjects = await query<{
+        project_id: string;
+        project_name: string;
+        client_id: string;
+        client_name: string;
+        currency: string;
+        fixed_monthly_fee: number;
+        fixed_monthly_start_date: string | null;
+        fixed_monthly_end_date: string | null;
+      }>(fixedProjectsQuery, fixedProjectsParams);
+
+      fixedCharges = calculateFixedMonthlyCharges(
+        fixedProjects.rows.map((p) => ({
+          projectId: p.project_id,
+          projectName: p.project_name,
+          clientId: p.client_id,
+          clientName: p.client_name,
+          currency: p.currency || "ILS",
+          fixedMonthlyFee: p.fixed_monthly_fee,
+          fixedMonthlyStartDate: p.fixed_monthly_start_date,
+          fixedMonthlyEndDate: p.fixed_monthly_end_date,
+        })),
+        startDate,
+        endDate
+      );
+
+      fixedCharges.forEach((line) => {
+        if (!fixedAmounts[line.currency]) {
+          fixedAmounts[line.currency] = 0;
+        }
+        fixedAmounts[line.currency] += line.amount;
+      });
+    }
+
+    if (fixedCharges.length > 0) {
+      const fixedSheet = workbook.addWorksheet("חיובים קבועים");
+      fixedSheet.columns = [
+        { header: "חודש", key: "month", width: 15 },
+        { header: "לקוח", key: "clientName", width: 20 },
+        { header: "פרויקט", key: "projectName", width: 20 },
+        { header: "סוג", key: "type", width: 18 },
+        { header: "מטבע", key: "currency", width: 10 },
+        { header: "סכום", key: "amount", width: 15 },
+      ];
+
+      const fixedHeader = fixedSheet.getRow(1);
+      fixedHeader.font = { bold: true, size: 12 };
+      fixedHeader.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF2563EB" },
+      };
+      fixedHeader.alignment = { vertical: "middle", horizontal: "center", readingOrder: "rtl" };
+      fixedHeader.height = 25;
+
+      fixedCharges.forEach((line) => {
+        fixedSheet.addRow({
+          month: line.month,
+          clientName: line.clientName,
+          projectName: line.projectName,
+          type: "חיוב קבוע חודשי",
+          currency: line.currency,
+          amount: line.amount.toFixed(2),
+        });
+      });
+
+      fixedSheet.eachRow((row: ExcelJS.Row) => {
+        row.alignment = { readingOrder: "rtl" };
+      });
+    }
+
+    const summarySheet = workbook.addWorksheet("סיכום");
     summarySheet.columns = [
       { header: "תיאור", key: "description", width: 30 },
       { header: "ערך", key: "value", width: 20 },
     ];
 
-    // Style summary header
     const summaryHeaderRow = summarySheet.getRow(1);
     summaryHeaderRow.font = { bold: true, size: 12 };
     summaryHeaderRow.fill = {
@@ -199,20 +294,33 @@ export async function GET(request: NextRequest) {
     summaryHeaderRow.alignment = { vertical: "middle", horizontal: "center", readingOrder: "rtl" };
     summaryHeaderRow.height = 25;
 
-    // Add summary data
     summarySheet.addRow({ description: "סה״כ רשומות", value: result.rows.length });
     summarySheet.addRow({ description: "סה״כ שעות", value: (totalMinutes / 60).toFixed(2) });
     summarySheet.addRow({ description: "סה״כ דקות", value: totalMinutes });
 
-    // Add totals by currency
-    Object.entries(totalAmounts).forEach(([currency, amount]) => {
+    Object.entries(timeAmounts).forEach(([currency, amount]) => {
       summarySheet.addRow({
-        description: `סה״כ סכום (${currency})`,
+        description: `סה״כ שעות (${currency})`,
         value: amount.toFixed(2),
       });
     });
 
-    // Add filter period if specified
+    Object.entries(fixedAmounts).forEach(([currency, amount]) => {
+      summarySheet.addRow({
+        description: `סה״כ חיובים קבועים (${currency})`,
+        value: amount.toFixed(2),
+      });
+    });
+
+    const allCurrencies = new Set([...Object.keys(timeAmounts), ...Object.keys(fixedAmounts)]);
+    allCurrencies.forEach((currency) => {
+      const total = (timeAmounts[currency] || 0) + (fixedAmounts[currency] || 0);
+      summarySheet.addRow({
+        description: `סה״כ כולל (${currency})`,
+        value: total.toFixed(2),
+      });
+    });
+
     if (startDate || endDate) {
       summarySheet.addRow({});
       summarySheet.addRow({ description: "תקופת הדוח", value: "" });
@@ -224,21 +332,17 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Set right-to-left for summary sheet
     summarySheet.eachRow((row: ExcelJS.Row) => {
       row.alignment = { readingOrder: "rtl" };
     });
 
-    // Add client summary sheet
     const clientSummarySheet = workbook.addWorksheet("סיכום לפי לקוח");
-
     clientSummarySheet.columns = [
       { header: "לקוח", key: "clientName", width: 30 },
       { header: "סה״כ שעות", key: "totalHours", width: 15 },
       { header: "סה״כ רשומות", key: "totalEntries", width: 15 },
     ];
 
-    // Style client summary header
     const clientHeaderRow = clientSummarySheet.getRow(1);
     clientHeaderRow.font = { bold: true, size: 12 };
     clientHeaderRow.fill = {
@@ -249,7 +353,6 @@ export async function GET(request: NextRequest) {
     clientHeaderRow.alignment = { vertical: "middle", horizontal: "center", readingOrder: "rtl" };
     clientHeaderRow.height = 25;
 
-    // Group by client
     const byClient: Record<string, { totalMinutes: number; entries: number }> = {};
     result.rows.forEach((entry) => {
       const key = entry.client_id;
@@ -260,8 +363,8 @@ export async function GET(request: NextRequest) {
       byClient[key].entries++;
     });
 
-    Object.entries(byClient).forEach(([clientId, data]) => {
-      const client = result.rows.find((r) => r.client_id === clientId);
+    Object.entries(byClient).forEach(([clientIdKey, data]) => {
+      const client = result.rows.find((r) => r.client_id === clientIdKey);
       if (client) {
         clientSummarySheet.addRow({
           clientName: client.client_name,
@@ -275,10 +378,8 @@ export async function GET(request: NextRequest) {
       row.alignment = { readingOrder: "rtl" };
     });
 
-    // Generate buffer
     const buffer = await workbook.xlsx.writeBuffer();
 
-    // Generate filename with date range
     let filename = "report";
     if (startDate && endDate) {
       filename = `report_${startDate}_to_${endDate}`;
@@ -292,7 +393,6 @@ export async function GET(request: NextRequest) {
     }
     filename += ".xlsx";
 
-    // Return Excel file
     return new NextResponse(Buffer.from(buffer) as unknown as BodyInit, {
       headers: {
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

@@ -30,9 +30,15 @@ export async function POST(
       status: string;
       start_date: string | null;
       end_date: string | null;
+      fixed_monthly_enabled: boolean;
+      fixed_monthly_fee: number | null;
+      fixed_monthly_start_date: string | null;
+      fixed_monthly_end_date: string | null;
       notes: string | null;
     }>(
-      `SELECT id, name, client_id, status, start_date, end_date, notes
+      `SELECT id, name, client_id, status, start_date, end_date,
+              fixed_monthly_enabled, fixed_monthly_fee, fixed_monthly_start_date, fixed_monthly_end_date,
+              notes
        FROM projects
        WHERE id = $1 AND user_id = $2`,
       [projectId, user.id]
@@ -69,8 +75,12 @@ export async function POST(
 
     // Insert the duplicated project (with active status and cleared dates)
     const insertResult = await query<{ id: string }>(
-      `INSERT INTO projects (id, user_id, client_id, name, status, start_date, end_date, notes)
-       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO projects (
+        id, user_id, client_id, name, status, start_date, end_date,
+        fixed_monthly_enabled, fixed_monthly_fee, fixed_monthly_start_date, fixed_monthly_end_date,
+        notes
+      )
+       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING id`,
       [
         user.id,
@@ -79,6 +89,10 @@ export async function POST(
         "active",
         null,
         null,
+        original.fixed_monthly_enabled,
+        original.fixed_monthly_fee,
+        original.fixed_monthly_start_date,
+        original.fixed_monthly_end_date,
         original.notes,
       ]
     );
@@ -94,11 +108,17 @@ export async function POST(
       status: string;
       start_date: string | null;
       end_date: string | null;
+      fixed_monthly_enabled: boolean;
+      fixed_monthly_fee: number | null;
+      fixed_monthly_start_date: string | null;
+      fixed_monthly_end_date: string | null;
       notes: string | null;
       created_at: string;
     }>(
       `SELECT p.id, p.name, p.client_id, c.name as client_name,
-              p.status, p.start_date, p.end_date, p.notes, p.created_at
+              p.status, p.start_date, p.end_date,
+              p.fixed_monthly_enabled, p.fixed_monthly_fee, p.fixed_monthly_start_date, p.fixed_monthly_end_date,
+              p.notes, p.created_at
        FROM projects p
        JOIN clients c ON p.client_id = c.id
        WHERE p.id = $1`,
@@ -117,6 +137,10 @@ export async function POST(
         status: project.status,
         startDate: project.start_date,
         endDate: project.end_date,
+        fixedMonthlyEnabled: project.fixed_monthly_enabled,
+        fixedMonthlyFee: project.fixed_monthly_fee,
+        fixedMonthlyStartDate: project.fixed_monthly_start_date,
+        fixedMonthlyEndDate: project.fixed_monthly_end_date,
         notes: project.notes,
         createdAt: project.created_at,
       },

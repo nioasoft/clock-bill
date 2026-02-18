@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { getUser } from "@/lib/auth";
+import { calculateFixedMonthlyCharges } from "@/lib/fixed-charges";
 
 /**
  * GET /api/dashboard/stats
@@ -24,6 +25,8 @@ export async function GET(request: NextRequest) {
     const startOfWeekStr = startOfWeek.toISOString().split('T')[0];
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfMonthStr = startOfMonth.toISOString().split('T')[0];
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const endOfMonthStr = endOfMonth.toISOString().split('T')[0];
 
     // Get upcoming deadlines date range
     const thirtyDaysFromNow = new Date(now);
@@ -41,6 +44,7 @@ export async function GET(request: NextRequest) {
       earningsResult,
       recentEntriesResult,
       upcomingDeadlinesResult,
+      fixedProjectsResult,
     ] = await Promise.all([
       query<{ total: string }>(
         `SELECT COALESCE(SUM(duration), 0) as total
@@ -122,7 +126,56 @@ export async function GET(request: NextRequest) {
          LIMIT 10`,
         [userId, today, thirtyDaysStr]
       ),
+      query<{
+        project_id: string;
+        project_name: string;
+        client_id: string;
+        client_name: string;
+        currency: string;
+        fixed_monthly_fee: number;
+        fixed_monthly_start_date: string | null;
+        fixed_monthly_end_date: string | null;
+      }>(
+        `SELECT
+          p.id as project_id,
+          p.name as project_name,
+          c.id as client_id,
+          c.name as client_name,
+          c.currency,
+          p.fixed_monthly_fee,
+          p.fixed_monthly_start_date,
+          p.fixed_monthly_end_date
+         FROM projects p
+         JOIN clients c ON p.client_id = c.id
+         WHERE p.user_id = $1
+           AND p.fixed_monthly_enabled = TRUE
+           AND COALESCE(p.fixed_monthly_fee, 0) > 0`,
+        [userId]
+      ),
     ]);
+
+    const fixedCharges = calculateFixedMonthlyCharges(
+      fixedProjectsResult.rows.map((p) => ({
+        projectId: p.project_id,
+        projectName: p.project_name,
+        clientId: p.client_id,
+        clientName: p.client_name,
+        currency: p.currency || "ILS",
+        fixedMonthlyFee: p.fixed_monthly_fee,
+        fixedMonthlyStartDate: p.fixed_monthly_start_date,
+        fixedMonthlyEndDate: p.fixed_monthly_end_date,
+      })),
+      startOfMonthStr,
+      endOfMonthStr
+    );
+
+    const fixedEarningsByCurrency = fixedCharges.reduce((acc, line) => {
+      if (!acc[line.currency]) {
+        acc[line.currency] = 0;
+      }
+      acc[line.currency] += line.amount;
+      return acc;
+    }, {} as Record<string, number>);
 
     const userCurrency = currencyResult.rows[0]?.default_currency || 'ILS';
 
@@ -145,6 +198,10 @@ export async function GET(request: NextRequest) {
       return `${hours}:${mins.toString().padStart(2, '0')}`;
     };
 
+    const timeEarnings = parseFloat(earningsResult.rows[0]?.total || '0');
+    const fixedEarnings = fixedEarningsByCurrency[userCurrency] || 0;
+    const totalEarnings = timeEarnings + fixedEarnings;
+
     // Add cache headers for better performance
     // Cache for 30 seconds since this is real-time data that changes frequently
     return NextResponse.json({
@@ -165,8 +222,8 @@ export async function GET(request: NextRequest) {
         clientsCount: parseInt(clientsResult.rows[0]?.count || '0'),
         projectsCount: parseInt(projectsResult.rows[0]?.count || '0'),
         earnings: {
-          amount: parseFloat(earningsResult.rows[0]?.total || '0'),
-          formatted: `${getCurrencySymbol(userCurrency)}${parseFloat(earningsResult.rows[0]?.total || '0').toFixed(2)}`,
+          amount: totalEarnings,
+          formatted: `${getCurrencySymbol(userCurrency)}${totalEarnings.toFixed(2)}`,
           currency: userCurrency
         }
       },

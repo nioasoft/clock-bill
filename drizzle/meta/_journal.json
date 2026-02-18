@@ -36,6 +36,13 @@
       "when": 1770538362696,
       "tag": "0004_yielding_shriek",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1770672000000,
+      "tag": "0005_add_project_fixed_monthly",
+      "breakpoints": true
     }
   ]
 }

@@ -412,6 +412,10 @@ export async function initSchema(): Promise<void> {
       status TEXT DEFAULT 'active' CHECK (status IN ('active', 'completed', 'paused', 'archived')),
       start_date DATE,
       end_date DATE,
+      fixed_monthly_enabled BOOLEAN DEFAULT FALSE,
+      fixed_monthly_fee REAL,
+      fixed_monthly_start_date DATE,
+      fixed_monthly_end_date DATE,
       notes TEXT,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW(),
@@ -425,6 +429,26 @@ export async function initSchema(): Promise<void> {
   await client.query(`
     CREATE INDEX IF NOT EXISTS idx_projects_client_id ON projects(client_id)
   `);
+  try {
+    await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS fixed_monthly_enabled BOOLEAN DEFAULT FALSE`);
+  } catch (error) {
+    logger.debug("projects.fixed_monthly_enabled column migration check complete");
+  }
+  try {
+    await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS fixed_monthly_fee REAL`);
+  } catch (error) {
+    logger.debug("projects.fixed_monthly_fee column migration check complete");
+  }
+  try {
+    await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS fixed_monthly_start_date DATE`);
+  } catch (error) {
+    logger.debug("projects.fixed_monthly_start_date column migration check complete");
+  }
+  try {
+    await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS fixed_monthly_end_date DATE`);
+  } catch (error) {
+    logger.debug("projects.fixed_monthly_end_date column migration check complete");
+  }
 
   // Tasks table (sub-items within projects)
   await client.query(`

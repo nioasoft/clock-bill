@@ -43,11 +43,17 @@ export async function GET(request: NextRequest) {
       status: string;
       start_date: string | null;
       end_date: string | null;
+      fixed_monthly_enabled: boolean;
+      fixed_monthly_fee: number | null;
+      fixed_monthly_start_date: string | null;
+      fixed_monthly_end_date: string | null;
       notes: string | null;
       created_at: string;
     }>(
       `SELECT p.id, p.name, p.client_id, c.name as client_name,
-              p.status, p.start_date, p.end_date, p.notes, p.created_at
+              p.status, p.start_date, p.end_date,
+              p.fixed_monthly_enabled, p.fixed_monthly_fee, p.fixed_monthly_start_date, p.fixed_monthly_end_date,
+              p.notes, p.created_at
        FROM projects p
        JOIN clients c ON p.client_id = c.id
        WHERE p.user_id = $1 ${whereClause}
@@ -63,6 +69,10 @@ export async function GET(request: NextRequest) {
       status: project.status,
       startDate: project.start_date,
       endDate: project.end_date,
+      fixedMonthlyEnabled: project.fixed_monthly_enabled,
+      fixedMonthlyFee: project.fixed_monthly_fee,
+      fixedMonthlyStartDate: project.fixed_monthly_start_date,
+      fixedMonthlyEndDate: project.fixed_monthly_end_date,
       notes: project.notes,
       createdAt: project.created_at,
     }));
@@ -106,6 +116,10 @@ export async function POST(request: NextRequest) {
       status,
       startDate,
       endDate,
+      fixedMonthlyEnabled,
+      fixedMonthlyFee,
+      fixedMonthlyStartDate,
+      fixedMonthlyEndDate,
       notes,
     } = body;
 
@@ -138,6 +152,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (fixedMonthlyEnabled && (!(typeof fixedMonthlyFee === "number") || fixedMonthlyFee <= 0)) {
+      return NextResponse.json(
+        { success: false, message: "כאשר חיוב חודשי פעיל, יש להזין סכום גדול מ-0" },
+        { status: 400 }
+      );
+    }
+
+    if (fixedMonthlyStartDate && fixedMonthlyEndDate && fixedMonthlyStartDate > fixedMonthlyEndDate) {
+      return NextResponse.json(
+        { success: false, message: "תאריך התחלה של חיוב חודשי חייב להיות לפני תאריך הסיום" },
+        { status: 400 }
+      );
+    }
+
     const { query } = await import("@/lib/db");
 
     // Verify the client belongs to this user
@@ -155,8 +183,12 @@ export async function POST(request: NextRequest) {
 
     // Insert project
     const insertResult = await query<{ id: string }>(
-      `INSERT INTO projects (id, user_id, client_id, name, status, start_date, end_date, notes)
-       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO projects (
+        id, user_id, client_id, name, status, start_date, end_date,
+        fixed_monthly_enabled, fixed_monthly_fee, fixed_monthly_start_date, fixed_monthly_end_date,
+        notes
+      )
+       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING id`,
       [
         user.id,
@@ -165,6 +197,10 @@ export async function POST(request: NextRequest) {
         status || "active",
         startDate || null,
         endDate || null,
+        fixedMonthlyEnabled ?? false,
+        fixedMonthlyEnabled ? fixedMonthlyFee : null,
+        fixedMonthlyEnabled ? (fixedMonthlyStartDate || null) : null,
+        fixedMonthlyEnabled ? (fixedMonthlyEndDate || null) : null,
         notes?.trim() || null,
       ]
     );
@@ -180,11 +216,17 @@ export async function POST(request: NextRequest) {
       status: string;
       start_date: string | null;
       end_date: string | null;
+      fixed_monthly_enabled: boolean;
+      fixed_monthly_fee: number | null;
+      fixed_monthly_start_date: string | null;
+      fixed_monthly_end_date: string | null;
       notes: string | null;
       created_at: string;
     }>(
       `SELECT p.id, p.name, p.client_id, c.name as client_name,
-              p.status, p.start_date, p.end_date, p.notes, p.created_at
+              p.status, p.start_date, p.end_date,
+              p.fixed_monthly_enabled, p.fixed_monthly_fee, p.fixed_monthly_start_date, p.fixed_monthly_end_date,
+              p.notes, p.created_at
        FROM projects p
        JOIN clients c ON p.client_id = c.id
        WHERE p.id = $1`,
@@ -203,6 +245,10 @@ export async function POST(request: NextRequest) {
         status: project.status,
         startDate: project.start_date,
         endDate: project.end_date,
+        fixedMonthlyEnabled: project.fixed_monthly_enabled,
+        fixedMonthlyFee: project.fixed_monthly_fee,
+        fixedMonthlyStartDate: project.fixed_monthly_start_date,
+        fixedMonthlyEndDate: project.fixed_monthly_end_date,
         notes: project.notes,
         createdAt: project.created_at,
       },

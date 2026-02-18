@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
+import { calculateFixedMonthlyCharges } from "@/lib/fixed-charges";
 
 /**
  * GET /api/reports
@@ -24,6 +25,7 @@ export async function GET(request: NextRequest) {
     const projectId = searchParams.get("projectId");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
+    const includeFixedCharges = searchParams.get("includeFixedCharges") !== "0";
 
     // Build query with filters
     let queryText = `
@@ -105,9 +107,7 @@ export async function GET(request: NextRequest) {
       client_address: string | null;
     }>(queryText, queryParams);
 
-    // Group entries by client and project for summary
     const entries = result.rows.map((entry) => {
-      // Calculate amount for this entry: (duration in minutes / 60) * hourly_rate
       const amount = entry.hourly_rate
         ? (entry.duration / 60) * entry.hourly_rate
         : 0;
@@ -130,6 +130,7 @@ export async function GET(request: NextRequest) {
         tags: entry.tags || [],
         notes: entry.notes,
         isBillable: entry.is_billable,
+        pricingModel: "hourly",
         hourlyRate: entry.hourly_rate,
         currency: entry.currency,
         amount,
@@ -137,12 +138,10 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Calculate summaries
     const totalMinutes = entries.reduce((sum, entry) => sum + entry.duration, 0);
     const totalHours = totalMinutes / 60;
 
-    // Calculate total amount (sum of all entry amounts, grouped by currency)
-    const totalAmountsByCurrency = entries.reduce((acc, entry) => {
+    const timeAmountsByCurrency = entries.reduce((acc, entry) => {
       const currency = entry.currency || "ILS";
       if (!acc[currency]) {
         acc[currency] = 0;
@@ -151,7 +150,6 @@ export async function GET(request: NextRequest) {
       return acc;
     }, {} as Record<string, number>);
 
-    // Group by client
     const byClient = entries.reduce((acc, entry) => {
       const key = entry.clientId;
       if (!acc[key]) {
@@ -171,7 +169,6 @@ export async function GET(request: NextRequest) {
       acc[key].totalMinutes += entry.duration;
       acc[key].totalHours = acc[key].totalMinutes / 60;
 
-      // Group amounts by currency
       const currency = entry.currency || "ILS";
       if (!acc[key].totalAmounts[currency]) {
         acc[key].totalAmounts[currency] = 0;
@@ -193,7 +190,6 @@ export async function GET(request: NextRequest) {
       entries: typeof entries;
     }>);
 
-    // Group by project
     const byProject = entries.reduce((acc, entry) => {
       const key = entry.projectId;
       if (!acc[key]) {
@@ -202,6 +198,7 @@ export async function GET(request: NextRequest) {
           projectName: entry.projectName,
           clientId: entry.clientId,
           clientName: entry.clientName,
+          pricingModel: "hourly",
           hourlyRate: entry.hourlyRate,
           currency: entry.currency,
           totalMinutes: 0,
@@ -220,6 +217,7 @@ export async function GET(request: NextRequest) {
       projectName: string;
       clientId: string;
       clientName: string;
+      pricingModel: string;
       hourlyRate: number | null;
       currency: string;
       totalMinutes: number;
@@ -228,7 +226,6 @@ export async function GET(request: NextRequest) {
       entries: typeof entries;
     }>);
 
-    // Group by date (daily breakdown)
     const byDate = entries.reduce((acc, entry) => {
       const key = entry.date;
       if (!acc[key]) {
@@ -245,7 +242,6 @@ export async function GET(request: NextRequest) {
       acc[key].totalHours = acc[key].totalMinutes / 60;
       acc[key].entryCount += 1;
 
-      // Group amounts by currency
       const currency = entry.currency || "ILS";
       if (!acc[key].totalAmounts[currency]) {
         acc[key].totalAmounts[currency] = 0;
@@ -263,18 +259,16 @@ export async function GET(request: NextRequest) {
       entries: typeof entries;
     }>);
 
-    // Group by week (weekly breakdown)
     const byWeek = entries.reduce((acc, entry) => {
       const entryDate = new Date(entry.date);
-      // Get ISO week number
       const weekStart = new Date(entryDate);
-      weekStart.setDate(entryDate.getDate() - entryDate.getDay()); // Start of week (Sunday)
-      const weekKey = weekStart.toISOString().split('T')[0];
+      weekStart.setDate(entryDate.getDate() - entryDate.getDay());
+      const weekKey = weekStart.toISOString().split("T")[0];
 
       if (!acc[weekKey]) {
         acc[weekKey] = {
           weekStart: weekKey,
-          weekEnd: new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          weekEnd: new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
           totalMinutes: 0,
           totalHours: 0,
           totalAmounts: {} as Record<string, number>,
@@ -286,7 +280,6 @@ export async function GET(request: NextRequest) {
       acc[weekKey].totalHours = acc[weekKey].totalMinutes / 60;
       acc[weekKey].entryCount += 1;
 
-      // Group amounts by currency
       const currency = entry.currency || "ILS";
       if (!acc[weekKey].totalAmounts[currency]) {
         acc[weekKey].totalAmounts[currency] = 0;
@@ -305,14 +298,129 @@ export async function GET(request: NextRequest) {
       entries: typeof entries;
     }>);
 
+    let fixedCharges: ReturnType<typeof calculateFixedMonthlyCharges> = [];
+    const fixedAmountsByCurrency: Record<string, number> = {};
+
+    if (includeFixedCharges && startDate && endDate) {
+      let fixedProjectsQuery = `
+        SELECT
+          p.id as project_id,
+          p.name as project_name,
+          c.id as client_id,
+          c.name as client_name,
+          c.currency,
+          p.fixed_monthly_fee,
+          p.fixed_monthly_start_date,
+          p.fixed_monthly_end_date
+        FROM projects p
+        JOIN clients c ON p.client_id = c.id
+        WHERE p.user_id = $1
+          AND p.fixed_monthly_enabled = TRUE
+          AND COALESCE(p.fixed_monthly_fee, 0) > 0
+      `;
+      const fixedProjectsParams: (string | number | boolean | null)[] = [user.id];
+      let fixedParamIndex = 2;
+
+      if (clientId) {
+        fixedProjectsQuery += ` AND c.id = $${fixedParamIndex}`;
+        fixedProjectsParams.push(clientId);
+        fixedParamIndex++;
+      }
+
+      if (projectId) {
+        fixedProjectsQuery += ` AND p.id = $${fixedParamIndex}`;
+        fixedProjectsParams.push(projectId);
+        fixedParamIndex++;
+      }
+
+      const fixedProjects = await query<{
+        project_id: string;
+        project_name: string;
+        client_id: string;
+        client_name: string;
+        currency: string;
+        fixed_monthly_fee: number;
+        fixed_monthly_start_date: string | null;
+        fixed_monthly_end_date: string | null;
+      }>(fixedProjectsQuery, fixedProjectsParams);
+
+      fixedCharges = calculateFixedMonthlyCharges(
+        fixedProjects.rows.map((p) => ({
+          projectId: p.project_id,
+          projectName: p.project_name,
+          clientId: p.client_id,
+          clientName: p.client_name,
+          currency: p.currency || "ILS",
+          fixedMonthlyFee: p.fixed_monthly_fee,
+          fixedMonthlyStartDate: p.fixed_monthly_start_date,
+          fixedMonthlyEndDate: p.fixed_monthly_end_date,
+        })),
+        startDate,
+        endDate
+      );
+
+      for (const line of fixedCharges) {
+        if (!fixedAmountsByCurrency[line.currency]) {
+          fixedAmountsByCurrency[line.currency] = 0;
+        }
+        fixedAmountsByCurrency[line.currency] += line.amount;
+
+        if (!byClient[line.clientId]) {
+          byClient[line.clientId] = {
+            clientId: line.clientId,
+            clientName: line.clientName,
+            clientContactName: null,
+            clientEmail: null,
+            clientPhone: null,
+            clientAddress: null,
+            totalMinutes: 0,
+            totalHours: 0,
+            totalAmounts: {},
+            entries: [],
+          };
+        }
+        if (!byClient[line.clientId].totalAmounts[line.currency]) {
+          byClient[line.clientId].totalAmounts[line.currency] = 0;
+        }
+        byClient[line.clientId].totalAmounts[line.currency] += line.amount;
+
+        if (!byProject[line.projectId]) {
+          byProject[line.projectId] = {
+            projectId: line.projectId,
+            projectName: line.projectName,
+            clientId: line.clientId,
+            clientName: line.clientName,
+            pricingModel: "fixed_monthly",
+            hourlyRate: null,
+            currency: line.currency,
+            totalMinutes: 0,
+            totalHours: 0,
+            totalAmount: 0,
+            entries: [],
+          };
+        }
+        byProject[line.projectId].totalAmount += line.amount;
+      }
+    }
+
+    const totalAmountsByCurrency = { ...timeAmountsByCurrency };
+    for (const [currency, amount] of Object.entries(fixedAmountsByCurrency)) {
+      if (!totalAmountsByCurrency[currency]) {
+        totalAmountsByCurrency[currency] = 0;
+      }
+      totalAmountsByCurrency[currency] += amount;
+    }
+
     return NextResponse.json({
       success: true,
       report: {
         entries,
+        fixedCharges,
         summary: {
           totalMinutes,
           totalHours,
           totalEntries: entries.length,
+          fixedAmounts: fixedAmountsByCurrency,
           totalAmounts: totalAmountsByCurrency,
         },
         byClient: Object.values(byClient),
@@ -322,7 +430,7 @@ export async function GET(request: NextRequest) {
       },
     }, {
       headers: {
-        'Cache-Control': 'private, max-age=30, stale-while-revalidate=60'
+        "Cache-Control": "private, max-age=30, stale-while-revalidate=60"
       }
     });
   } catch (error) {
