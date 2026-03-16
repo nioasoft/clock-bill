@@ -30,10 +30,13 @@ export async function GET(request: NextRequest) {
          preferred_pdf_template as "preferredPdfTemplate", invoice_prefix as "invoicePrefix",
          next_invoice_number as "nextInvoiceNumber", payment_terms as "paymentTerms",
          bank_name as "bankName", bank_account_number as "bankAccountNumber",
-         bank_branch as "bankBranch", bank_swift as "bankSwift",
+         bank_branch as "bankBranch", bank_swift as "bankSwift", signature_url as "signatureUrl",
          pdf_primary_color as "pdfPrimaryColor", pdf_accent_color as "pdfAccentColor",
+         working_hours as "workingHours",
          long_timer_enabled as "longTimerEnabled", long_timer_threshold as "longTimerThreshold",
          daily_reminder_enabled as "dailyReminderEnabled", daily_reminder_time as "dailyReminderTime",
+         last_reminder_date as "lastReminderDate",
+         date_format as "dateFormat", time_format as "timeFormat", first_day_of_week as "firstDayOfWeek",
          created_at as "createdAt", updated_at as "updatedAt"
          FROM user_profiles WHERE user_id = $1`,
         [userId]
@@ -41,8 +44,10 @@ export async function GET(request: NextRequest) {
       // Clients
       query(
         `SELECT id, user_id as "userId", name, contact_name as "contactName",
-         email, phone, address, default_rate as "defaultRate", notes,
-         is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"
+         email, phone, address, default_rate as "defaultRate",
+         currency, is_retainer as "isRetainer", retainer_hours as "retainerHours",
+         retainer_monthly_fee as "retainerMonthlyFee", overage_rate as "overageRate",
+         notes, is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"
          FROM clients WHERE user_id = $1 ORDER BY created_at DESC`,
         [userId]
       ),
@@ -50,6 +55,10 @@ export async function GET(request: NextRequest) {
       query(
         `SELECT p.id, p.client_id as "clientId", p.name,
          p.status, p.start_date as "startDate", p.end_date as "endDate",
+         p.fixed_monthly_enabled as "fixedMonthlyEnabled",
+         p.fixed_monthly_fee as "fixedMonthlyFee",
+         p.fixed_monthly_start_date as "fixedMonthlyStartDate",
+         p.fixed_monthly_end_date as "fixedMonthlyEndDate",
          p.notes, p.created_at as "createdAt", p.updated_at as "updatedAt",
          c.name as "clientName"
          FROM projects p
@@ -59,9 +68,10 @@ export async function GET(request: NextRequest) {
       ),
       // Time entries
       query(
-        `SELECT id, user_id as "userId", project_id as "projectId", description,
-         start_time as "startTime", end_time as "endTime", duration,
+        `SELECT id, user_id as "userId", project_id as "projectId", task_id as "taskId",
+         description, start_time as "startTime", end_time as "endTime", duration,
          date, tags, notes, is_billable as "isBillable",
+         paused_at as "pausedAt", total_paused_time as "totalPausedTime",
          created_at as "createdAt", updated_at as "updatedAt"
          FROM time_entries WHERE user_id = $1 ORDER BY date DESC, created_at DESC`,
         [userId]
@@ -73,13 +83,13 @@ export async function GET(request: NextRequest) {
          FROM custom_tags WHERE user_id = $1 ORDER BY name`,
         [userId]
       ),
-      // Currency rates
+      // Currency rates (global table, not per-user)
       query(
-        `SELECT id, user_id as "userId", from_currency as "fromCurrency",
-         to_currency as "toCurrency", rate,
-         created_at as "createdAt", updated_at as "updatedAt"
-         FROM currency_rates WHERE user_id = $1 ORDER BY from_currency, to_currency`,
-        [userId]
+        `SELECT id, base_currency as "baseCurrency",
+         target_currency as "targetCurrency", rate,
+         updated_at as "updatedAt"
+         FROM currency_rates ORDER BY base_currency, target_currency`,
+        []
       ),
       // Tasks
       query(

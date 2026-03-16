@@ -14,6 +14,11 @@ interface Client {
   phone: string | null;
   address: string | null;
   defaultRate: number | null;
+  currency: string;
+  isRetainer: boolean;
+  retainerHours: number | null;
+  retainerMonthlyFee: number | null;
+  overageRate: number | null;
   notes: string | null;
   isActive: boolean;
   createdAt: string;
@@ -112,6 +117,12 @@ export default function ClientDetailsPage() {
           address: formData.address || undefined,
           defaultRate: formData.defaultRate ? parseFloat(formData.defaultRate) : undefined,
           notes: formData.notes || undefined,
+          // Preserve retainer fields not shown in this form
+          currency: client?.currency,
+          isRetainer: client?.isRetainer,
+          retainerHours: client?.retainerHours,
+          retainerMonthlyFee: client?.retainerMonthlyFee,
+          overageRate: client?.overageRate,
         }),
       });
 

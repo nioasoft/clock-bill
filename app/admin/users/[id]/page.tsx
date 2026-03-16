@@ -51,8 +51,6 @@ interface Project {
   id: string;
   name: string;
   client_id: string;
-  pricing_model: string;
-  currency: string;
   status: string;
   created_at: string;
 }
@@ -360,8 +358,6 @@ export default function AdminUserDetailPage({
                 <thead>
                   <tr className="border-b border-border bg-muted/50">
                     <th className="text-start px-4 py-3 font-medium text-muted-foreground">שם</th>
-                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">מודל תמחור</th>
-                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">מטבע</th>
                     <th className="text-center px-4 py-3 font-medium text-muted-foreground">סטטוס</th>
                   </tr>
                 </thead>
@@ -369,8 +365,6 @@ export default function AdminUserDetailPage({
                   {projects.map((p) => (
                     <tr key={p.id} className="border-b border-border/50">
                       <td className="px-4 py-3 font-medium text-foreground">{p.name}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{p.pricing_model}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{p.currency}</td>
                       <td className="px-4 py-3 text-center">
                         <span className={`text-xs px-2 py-0.5 rounded-full ${
                           p.status === "active" ? "bg-success/10 text-success" :

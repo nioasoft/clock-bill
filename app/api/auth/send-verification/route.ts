@@ -67,7 +67,8 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     // In development, log the verification link to console
     // In production, this would send a real email
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const { getAppUrl } = await import("@/lib/env");
+    const baseUrl = getAppUrl();
     const verificationLink = `${baseUrl}/api/auth/verify-email/${token}`;
 
     console.log("=".repeat(60));

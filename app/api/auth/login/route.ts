@@ -8,6 +8,7 @@ import { verifyPassword, generateSessionToken, COOKIE_OPTIONS } from "@/lib/auth
 import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
 import { createLogger } from "@/lib/logger";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const logger = createLogger("auth:login");
 
@@ -30,6 +31,15 @@ export interface LoginResponse {
  * POST handler - login user
  */
 export async function POST(request: Request): Promise<NextResponse> {
+  const ip = getClientIp(request);
+  const rateCheck = checkRateLimit(ip);
+  if (!rateCheck.allowed) {
+    return NextResponse.json(
+      { success: false, message: "יותר מדי ניסיונות. נסה שוב מאוחר יותר." },
+      { status: 429 }
+    );
+  }
+
   let email: string | undefined;
   try {
     const body: LoginRequest = await request.json();
@@ -81,6 +91,11 @@ export async function POST(request: Request): Promise<NextResponse> {
        VALUES ($1, $2, $3, $4, $5)`,
       [sessionId, user.id, sessionToken, expiresAt.toISOString(), now]
     );
+
+    // Cleanup expired sessions (non-blocking, best-effort)
+    query("DELETE FROM sessions WHERE expires_at < NOW()").catch((err) => {
+      logger.error("Failed to cleanup expired sessions", err);
+    });
 
     // Set session cookie
     const cookieStore = await cookies();

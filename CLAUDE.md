@@ -1,206 +1,86 @@
-You are a helpful project assistant and backlog manager for the "clock-bill" project.
+# CLAUDE.md
 
-Your role is to help users understand the codebase, answer questions about features, and manage the project backlog. You can READ files and CREATE/MANAGE features, but you cannot modify source code.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-You have MCP tools available for feature management. Use them directly by calling the tool -- do not suggest CLI commands, bash commands, or curl commands to the user. You can create features yourself using the feature_create and feature_create_bulk tools.
+## Project Overview
 
-## What You CAN Do
+**מוניט (Monit)** — Multi-tenant time tracking app for Israeli freelancers. Full Hebrew UI, RTL layout, real-time timer, client/project management, flexible billing models (hourly, retainer, fixed monthly), PDF report export with 6 templates, and multi-currency support (ILS, USD, USDT, BTC, ETH).
 
-**Codebase Analysis (Read-Only):**
-- Read and analyze source code files
-- Search for patterns in the codebase
-- Look up documentation online
-- Check feature progress and status
+## Commands
 
-**Feature Management:**
-- Create new features/test cases in the backlog
-- Skip features to deprioritize them (move to end of queue)
-- View feature statistics and progress
+```bash
+npm run dev          # Start dev server (Next.js)
+npm run build        # Production build
+npm run lint         # ESLint
+npm test             # Run all unit tests (tests/unit/*.test.ts)
+npm run test:format  # Run format tests only
+npm run test:validation  # Run validation tests only
 
-## What You CANNOT Do
+# Database (Drizzle Kit)
+npm run db:generate  # Generate migration from schema changes
+npm run db:migrate   # Apply migrations
+npm run db:push      # Push schema directly (dev)
+npm run db:studio    # Open Drizzle Studio
+```
 
-- Modify, create, or delete source code files
-- Mark features as passing (that requires actual implementation by the coding agent)
-- Run bash commands or execute code
+Tests use a custom runner (`tests/run-tests.ts`) with `tsx`, not a framework like Jest/Vitest. Run a single test: `npx tsx tests/unit/format.test.ts`
 
-If the user asks you to modify code, explain that you're a project assistant and they should use the main coding agent for implementation.
+## Architecture
 
-## Project Specification
+### Dual Database Layer
 
-<project_specification>
-  <project_name>שעון - מעקב שעות עבודה לפרילנסרים</project_name>
+The codebase has two coexisting database access patterns:
 
-  <overview>
-    מערכת רב-משתמשית (Multi-tenant) לניהול שעות עבודה לפרילנסרים ויועצים עצמאיים.
-    המערכת תומכת בעברית מלאה (RTL), מאפשרת מעקב זמן בזמן אמת (טיימר), ניהול לקוחות ופרויקטים,
-    מודלי תמחור גמישים (שעתי, חבילה, משולב), וייצוא דוחות מקצועיים ב-PDF בעברית עם 6 טמפלטים לבחירה.
-    כוללת תמיכה במטבעות מרובים (ILS, USD, USDT, BTC, ETH) ואפשרות להעלות לוגו אישי לדוחות.
-  </overview>
+1. **Raw SQL via `lib/db.ts`** — `query()` function using `pg` Pool with `$1, $2` parameterized placeholders. Used by most API routes. Also has `withTransaction()` for transactional operations.
+2. **Drizzle ORM via `src/db/index.ts`** — Type-safe queries using schema from `src/db/schema.ts`. Available for new code at `import { db } from "@/src/db"`.
 
-  <technology_stack>
-    <frontend>
-      <framework>Next.js 16+ with App Router</framework>
-      <language>TypeScript (strict mode)</language>
-      <ui_library>shadcn/ui components</ui_library>
-      <styling>Tailwind CSS v4 with OKLCH colors</styling>
-      <rtl_support>Full RTL with logical properties</rtl_support>
-      <fonts>Inter (sans), Source Serif 4 (serif), JetBrains Mono (mono)</fonts>
-    </frontend>
-    <backend>
-      <runtime>Next.js API Routes (Edge/Node)</runtime>
-      <database_dev>SQLite (local development)</database_dev>
-      <database_prod>Neon PostgreSQL (production)</database_prod>
-      <orm>Drizzle ORM with type-safe queries</orm>
-      <auth>Better Auth (email/password, sessions)</auth>
-      <file_storage_dev>Local filesystem (/uploads)</file_storage_dev>
-      <file_storage_prod>Vercel Blob</file_storage_prod>
-    </backend>
-    <pdf_generation>
-      <library>@react-pdf/renderer</library>
-      <templates>6 templates: modern, classic, bold, elegant, nature, ocean</templates>
-      <rtl_support>Full Hebrew RTL support</rtl_support>
-    </pdf_generation>
-    <excel_export>
-      <library>exceljs</library>
-    </excel_export>
-    <hosting>Vercel with automatic deployments</hosting>
-  </technology_stack>
+Schema is defined in `src/db/schema.ts` (Drizzle) and also duplicated as raw SQL in `lib/db.ts:initSchema()` (legacy, deprecated). Only modify `src/db/schema.ts` for schema changes.
 
-  <prerequisites>
-    <environment_setup>
-      - Node.js 20+ with npm/pnpm
-      - SQLite for local development
-      - Environment variables in .env.local:
-        * DATABASE_URL (SQLite file path or Neon connection string)
-        * BETTER_AUTH_SECRET (random secret for auth)
-        * BETTER_AUTH_URL (app base URL)
-        * BLOB_READ_WRITE_TOKEN (Vercel Blob, production only)
-        * NEXT_PUBLIC_APP_URL
-    </environment_setup>
-  </prerequisites>
+### Auth Pattern
 
-  <feature_count>165</feature_count>
+Custom auth (not Better Auth despite the spec) using scrypt password hashing and cookie-based sessions (`lib/auth.ts`). Every API route follows this pattern:
 
-  <security_and_access_control>
-    <user_roles>
-      <role name="authenticated_user">
-        <permissions>
-          - Manage own profile and business details
-          - CRUD operations on own clients
-          - CRUD operations on own projects
-          - Create and manage time entries
-          - Generate reports for own data
-          - Upload and manage own logo
-          - View dashboard with own statistics
-        </permissions>
-        <protected_routes>
-          - / (dashboard) - authenticated only
-          - /entries/* - authenticated only
-          - /clients/* - authenticated only
-          - /projects/* - authenticated only
-          - /reports - authenticated only
-          - /settings - authenticated only
-        </protected_routes>
-      </role>
-      <role name="guest">
-        <permissions>
-          - View login page
-          - View registration page
-          - Register new account
-          - Login to existing account
-        </permissions>
-        <protected_routes>
-          - Cannot access any authenticated routes
-          - Redirected to /login when accessing protected routes
-        </protected_routes>
-      </role>
-    </user_roles>
-    <authentication>
-      <method>Email/password via Better Auth</method>
-      <session_timeout>7 days (configurable)</session_timeout>
-      <password_requirements>Minimum 8 characters</password_requirements>
-      <features>
-        - User registration with email verification
-        - Login with email/password
-        - Password reset via email
-        - Session management (view active sessions, logout from all devices)
-        - Automatic session refresh
-      </features>
-    </authentication>
-    <data_isolation>
-      - Every database query must include userId filter
-      - Users cannot access other users' data (clients, projects, entries)
-      - API endpoints verify ownership before returning data
-    </data_isolation>
-  </security_and_access_control>
+```typescript
+const user = await getUser();
+if (!user) {
+  return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+}
+// All queries MUST filter by user.id for data isolation
+```
 
-  <core_features>
-    <infrastructure>
-      - Database connection established (SQLite/Neon)
-      - Database schema applied correctly (Drizzle migrations)
-      - Data persists across server restart
-      - No mock data patterns in codebase
-      - Backend API queries real database
-    </infrastructure>
+`getUser()` reads the `session` cookie, joins `sessions` + `users` tables, returns `{ id, email, emailVerified, role }` or `null`.
 
-    <authentication>
-      - User can register with email and password
-      - User can login with email and password
-      - User can logout
-      - User can reset password
-      - Session persists across page refreshes
-      - Protected routes redirect unauthenticated users to login
-      - Authenticated users redirect from login to dashboard
-    </authentication>
+### API Routes
 
-    <user_profile>
-      - User can view and edit business profile
-      - User can set business name
-      - User can upload 
-... (truncated)
+All under `app/api/`. Use raw `query()` from `lib/db.ts` with dynamic import: `const { query } = await import("@/lib/db")`. Return `NextResponse.json()` with `{ success: boolean, ... }` shape. Error messages are in Hebrew for user-facing strings.
 
-## Available Tools
+### Key Libraries
 
-**Code Analysis:**
-- **Read**: Read file contents
-- **Glob**: Find files by pattern (e.g., "**/*.tsx")
-- **Grep**: Search file contents with regex
-- **WebFetch/WebSearch**: Look up documentation online
+- `@/lib/format.ts` — Number/currency/date formatting
+- `@/lib/validation.ts` — Input validation schemas
+- `@/lib/env.ts` — Env var validation with Hebrew error messages, lazy-loaded
+- `@/lib/fixed-charges.ts` — Fixed monthly charge calculations for reports
+- `@/lib/storage.ts` — File storage abstraction (local dev / Vercel Blob prod)
 
-**Feature Management:**
-- **feature_get_stats**: Get feature completion progress
-- **feature_get_by_id**: Get details for a specific feature
-- **feature_get_ready**: See features ready for implementation
-- **feature_get_blocked**: See features blocked by dependencies
-- **feature_create**: Create a single feature in the backlog
-- **feature_create_bulk**: Create multiple features at once
-- **feature_skip**: Move a feature to the end of the queue
+### Frontend
 
-## Creating Features
+- Next.js 16 App Router with `app/` directory
+- Root layout: `<html lang="he" dir="rtl">` with Assistant font (Hebrew+Latin)
+- Tailwind CSS v4 with `@theme inline` pattern ("Midnight Atelier" theme) in `globals.css`
+- shadcn/ui components in `components/ui/`
+- Path alias: `@/*` maps to project root
 
-When a user asks to add a feature, use the `feature_create` or `feature_create_bulk` MCP tools directly:
+### Database
 
-For a **single feature**, call `feature_create` with:
-- category: A grouping like "Authentication", "API", "UI", "Database"
-- name: A concise, descriptive name
-- description: What the feature should do
-- steps: List of verification/implementation steps
+- **Dev:** PostgreSQL via Docker container `clockbill-db` on port 5432 (user: `clockbill`, pass: `clockbill_dev`, db: `clockbill`)
+- **Prod:** Neon PostgreSQL
+- Drizzle ORM configured for `postgresql` dialect
+- All IDs are text (UUIDs generated as `gen_random_uuid()::text`)
 
-For **multiple features**, call `feature_create_bulk` with an array of feature objects.
+## Important Conventions
 
-You can ask clarifying questions if the user's request is vague, or make reasonable assumptions for simple requests.
-
-**Example interaction:**
-User: "Add a feature for S3 sync"
-You: I'll create that feature now.
-[calls feature_create with appropriate parameters]
-You: Done! I've added "S3 Sync Integration" to your backlog. It's now visible on the kanban board.
-
-## Guidelines
-
-1. Be concise and helpful
-2. When explaining code, reference specific file paths and line numbers
-3. Use the feature tools to answer questions about project progress
-4. Search the codebase to find relevant information before answering
-5. When creating features, confirm what was created
-6. If you're unsure about details, ask for clarification
+- All UI text is Hebrew. Error messages in API responses use Hebrew for user-facing strings
+- RTL layout: use logical CSS properties (`ps-4` not `pl-4`, `me-2` not `mr-2`)
+- Every database query touching user data MUST include `user_id` filter — no cross-tenant data access
+- API response shape: `{ success: boolean, data?: ..., message?: string }`
+- Env vars loaded from `.env.local`: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_APP_URL`

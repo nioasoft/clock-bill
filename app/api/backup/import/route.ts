@@ -225,8 +225,10 @@ export async function POST(request: NextRequest) {
               await client.query(
                 `INSERT INTO projects (
                   id, user_id, client_id, name, status,
-                  start_date, end_date, notes, created_at, updated_at
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+                  start_date, end_date,
+                  fixed_monthly_enabled, fixed_monthly_fee, fixed_monthly_start_date, fixed_monthly_end_date,
+                  notes, created_at, updated_at
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
                 [
                   newProjectId,
                   userId,
@@ -235,6 +237,10 @@ export async function POST(request: NextRequest) {
                   project.status as string || "active",
                   project.startDate as string || null,
                   project.endDate as string || null,
+                  (project.fixedMonthlyEnabled as boolean) ?? false,
+                  (project.fixedMonthlyFee as number) || null,
+                  (project.fixedMonthlyStartDate as string) || null,
+                  (project.fixedMonthlyEndDate as string) || null,
                   project.notes as string || null,
                   project.createdAt as string || new Date().toISOString(),
                   project.updatedAt as string || new Date().toISOString(),

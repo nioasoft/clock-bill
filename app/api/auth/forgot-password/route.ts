@@ -5,6 +5,7 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import crypto from "crypto";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export interface ForgotPasswordResponse {
   success: boolean;
@@ -15,6 +16,15 @@ export interface ForgotPasswordResponse {
  * POST handler - request password reset
  */
 export async function POST(request: Request): Promise<NextResponse> {
+  const ip = getClientIp(request);
+  const rateCheck = checkRateLimit(ip);
+  if (!rateCheck.allowed) {
+    return NextResponse.json(
+      { success: false, message: "יותר מדי ניסיונות. נסה שוב מאוחר יותר." },
+      { status: 429 }
+    );
+  }
+
   try {
     const { email } = await request.json();
 
@@ -58,7 +68,8 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
 
       // Generate reset URL
-      const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/reset-password?token=${token}`;
+      const { getAppUrl } = await import("@/lib/env");
+      const resetUrl = `${getAppUrl()}/reset-password?token=${token}`;
 
       // Log to console in development (since we can't send real emails)
       console.log("\n" + "=".repeat(60));
