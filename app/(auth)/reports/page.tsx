@@ -515,16 +515,24 @@ export default function ReportsPage() {
 
       const baseStyles = `
         @media print {
-          /* Hide everything except the print container which is a direct child of body */
           body > *:not(#pdf-content) { display: none !important; }
-          #pdf-content { display: block !important; direction: rtl !important; }
-          @page { size: A4; margin: 15mm; }
+          #pdf-content {
+            display: block !important;
+            direction: rtl !important;
+            font-family: -apple-system, 'Segoe UI', Arial, sans-serif;
+            font-size: 13px;
+            color: #1a1a1a;
+            line-height: 1.5;
+          }
+          @page { size: A4; margin: 18mm 15mm; }
           body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-          .pdf-header { padding: 2rem; margin-bottom: 2rem; }
-          .pdf-section { margin-bottom: 1.5rem; padding: 1.5rem; }
+          .pdf-header { margin-bottom: 1.5rem; }
+          .pdf-section { margin-bottom: 1.25rem; }
           .pdf-table { width: 100%; border-collapse: collapse; }
-          .pdf-table th, .pdf-table td { padding: 0.75rem 1rem; text-align: right; }
-          .pdf-summary-card { padding: 1rem; margin-bottom: 0.5rem; }
+          .pdf-table th { padding: 8px 10px; text-align: right; font-size: 11px; font-weight: 600; }
+          .pdf-table td { padding: 7px 10px; text-align: right; font-size: 12px; }
+          .pdf-table tfoot td { font-weight: 600; }
+          .pdf-section-title { font-size: 14px; font-weight: 700; margin: 0; }
         }
       `;
 
@@ -532,61 +540,69 @@ export default function ReportsPage() {
         modern: `
           ${baseStyles}
           @media print {
-            .pdf-header { background: ${primaryColor} !important; color: white !important; border-radius: 12px; }
-            .pdf-section { background: #f8fafc !important; border-radius: 12px; }
-            .pdf-table thead { background: #f1f5f9 !important; }
-            .pdf-table th { color: #475569; font-weight: 600; }
-            .pdf-summary-value { color: ${primaryColor} !important; }
+            .pdf-header { border-bottom: 3px solid ${primaryColor}; padding-bottom: 1.25rem; }
+            .pdf-business-name { color: ${primaryColor}; font-size: 20px; }
+            .pdf-section-title { color: ${primaryColor}; border-bottom: 1px solid #e5e5e5; padding-bottom: 6px; margin-bottom: 8px; }
+            .pdf-table th { background: #f5f5f0 !important; color: #555; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid ${primaryColor}; }
+            .pdf-table td { border-bottom: 1px solid #eee; }
+            .pdf-table tfoot td { border-top: 2px solid ${primaryColor}; background: #faf9f7 !important; }
           }
         `,
         classic: `
           ${baseStyles}
           @media print {
-            .pdf-header { border-bottom: 3px solid ${primaryColor}; padding-bottom: 1.5rem; }
-            .pdf-business-name { color: ${primaryColor}; font-weight: 700; font-family: Georgia, serif; }
-            .pdf-section { border: 1px solid #ddd; }
-            .pdf-section-title { background: #f5f5f5; padding: 0.75rem 1rem; border-bottom: 1px solid ${accentColor}; font-weight: 700; }
-            .pdf-table th { font-family: Georgia, serif; text-transform: uppercase; font-size: 11px; }
+            .pdf-header { border-bottom: 1px solid #333; padding-bottom: 1.25rem; }
+            .pdf-business-name { font-size: 22px; font-weight: 700; font-family: Georgia, 'Times New Roman', serif; }
+            .pdf-section-title { font-family: Georgia, serif; border-bottom: 1px double #999; padding-bottom: 4px; margin-bottom: 8px; }
+            .pdf-table th { background: #f8f8f8 !important; color: #333; border-bottom: 2px solid #333; font-family: Georgia, serif; }
+            .pdf-table td { border-bottom: 1px solid #ddd; }
+            .pdf-table tfoot td { border-top: 2px solid #333; }
           }
         `,
         bold: `
           ${baseStyles}
           @media print {
-            .pdf-header { background: ${primaryColor} !important; color: white !important; padding: 2.5rem 2rem; }
-            .pdf-business-name { font-size: 32px; font-weight: 900; text-transform: uppercase; }
-            .pdf-section { border-left: 6px solid ${accentColor}; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
-            .pdf-table thead { background: ${primaryColor} !important; color: white !important; }
-            .pdf-table th { color: white; font-weight: 700; text-transform: uppercase; }
+            .pdf-header { border-right: 5px solid ${primaryColor}; padding-right: 1rem; padding-bottom: 1rem; }
+            .pdf-business-name { font-size: 24px; font-weight: 900; color: ${primaryColor}; }
+            .pdf-section-title { color: #1a1a1a; background: #f0ebe4 !important; padding: 6px 10px; margin-bottom: 0; }
+            .pdf-table th { background: ${primaryColor} !important; color: white !important; text-transform: uppercase; letter-spacing: 0.5px; }
+            .pdf-table td { border-bottom: 1px solid #e8e4de; }
+            .pdf-table tfoot td { background: #f0ebe4 !important; border-top: 3px solid ${primaryColor}; }
           }
         `,
         elegant: `
           ${baseStyles}
           @media print {
-            .pdf-header { background: ${primaryColor} !important; color: #e2e8f0; padding: 2rem; }
-            .pdf-section { border: 1px solid #e2e8f0; }
-            .pdf-section-title { color: ${primaryColor}; padding: 1rem 1.5rem; background: #f7fafc; border-bottom: 1px solid ${accentColor}; }
-            .pdf-table th { color: ${primaryColor}; font-weight: 600; font-size: 12px; letter-spacing: 0.5px; }
+            .pdf-header { border-bottom: 1px solid #d4c5b0; padding-bottom: 1.25rem; }
+            .pdf-business-name { font-size: 20px; font-weight: 400; letter-spacing: 1px; color: #4a3728; }
+            .pdf-section-title { color: #4a3728; font-weight: 400; letter-spacing: 0.5px; border-bottom: 1px solid #e8dfd4; padding-bottom: 4px; margin-bottom: 8px; }
+            .pdf-table th { color: #8a7560; font-weight: 400; text-transform: uppercase; letter-spacing: 0.8px; font-size: 10px; border-bottom: 1px solid #d4c5b0; }
+            .pdf-table td { border-bottom: 1px solid #f0ebe4; }
+            .pdf-table tfoot td { border-top: 1px solid #d4c5b0; }
           }
         `,
         nature: `
           ${baseStyles}
           @media print {
-            .pdf-header { background: ${accentColor} !important; color: white !important; border-radius: 16px; }
-            .pdf-section { background: linear-gradient(to bottom, #ECFDF5 0%, #D1FAE5 100%); border-radius: 16px; border: 1px solid #A7F3D0; }
-            .pdf-table thead { background: ${accentColor} !important; color: white !important; }
-            .pdf-table th { color: white; font-weight: 600; }
-            .pdf-table tbody tr:nth-child(even) td { background: #F0FDFA !important; }
+            .pdf-header { border-bottom: 3px solid ${accentColor}; padding-bottom: 1.25rem; }
+            .pdf-business-name { color: ${accentColor}; font-size: 20px; }
+            .pdf-section-title { color: ${accentColor}; border-bottom: 1px solid #c8e6d5; padding-bottom: 6px; margin-bottom: 8px; }
+            .pdf-table th { background: #eef7f1 !important; color: #2d5a3e; border-bottom: 2px solid ${accentColor}; }
+            .pdf-table td { border-bottom: 1px solid #e8f4ec; }
+            .pdf-table tbody tr:nth-child(even) td { background: #f7fbf9 !important; }
+            .pdf-table tfoot td { border-top: 2px solid ${accentColor}; background: #eef7f1 !important; }
           }
         `,
         ocean: `
           ${baseStyles}
           @media print {
-            .pdf-header { background: linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%) !important; color: white !important; border-radius: 12px; }
-            .pdf-section { background: white; border-radius: 12px; border: 1px solid #CFFAFE; }
-            .pdf-section-title { color: ${accentColor}; padding-bottom: 0.75rem; border-bottom: 2px solid ${primaryColor}; }
-            .pdf-table thead { background: ${primaryColor} !important; color: white !important; }
-            .pdf-table th { color: white; font-weight: 600; }
-            .pdf-table tbody tr:nth-child(even) { background: #ECFEFF !important; }
+            .pdf-header { border-bottom: 3px solid #2563EB; padding-bottom: 1.25rem; }
+            .pdf-business-name { color: #1e40af; font-size: 20px; }
+            .pdf-section-title { color: #1e40af; border-bottom: 1px solid #dbeafe; padding-bottom: 6px; margin-bottom: 8px; }
+            .pdf-table th { background: #eff6ff !important; color: #1e40af; border-bottom: 2px solid #2563EB; }
+            .pdf-table td { border-bottom: 1px solid #e8f0fe; }
+            .pdf-table tbody tr:nth-child(even) td { background: #f8fbff !important; }
+            .pdf-table tfoot td { border-top: 2px solid #2563EB; background: #eff6ff !important; }
           }
         `
       };
