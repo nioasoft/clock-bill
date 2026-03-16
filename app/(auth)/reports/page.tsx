@@ -515,10 +515,9 @@ export default function ReportsPage() {
 
       const baseStyles = `
         @media print {
-          /* Hide everything, then reveal #pdf-content and its ancestor chain */
-          body * { visibility: hidden !important; }
-          #pdf-content, #pdf-content * { visibility: visible !important; }
-          #pdf-content { position: absolute !important; left: 0; top: 0; width: 100%; display: block !important; direction: rtl !important; }
+          /* Hide everything except the print container which is a direct child of body */
+          body > *:not(#pdf-content) { display: none !important; }
+          #pdf-content { display: block !important; direction: rtl !important; }
           @page { size: A4; margin: 15mm; }
           body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           .pdf-header { padding: 2rem; margin-bottom: 2rem; }
@@ -595,22 +594,34 @@ export default function ReportsPage() {
       return templateStyles[t] || templateStyles.modern;
     };
 
-    styleEl.innerHTML = getTemplateStyles(template);
+    styleEl.textContent = getTemplateStyles(template);
 
-    // Set generation date on body element for @page margin boxes
-    const generatedDate = new Date().toLocaleDateString('he-IL');
-    document.body.setAttribute('data-generated-date', generatedDate);
+    // Clone #pdf-content and append directly to body so print CSS works reliably
+    // (the original is nested deep in the React tree and gets hidden by ancestor rules)
+    const pdfContent = document.getElementById('pdf-content');
+    if (!pdfContent) return;
+
+    const printContainer = pdfContent.cloneNode(true) as HTMLElement;
+    printContainer.id = 'pdf-print-container';
+    printContainer.setAttribute('dir', 'rtl');
+    printContainer.style.display = 'none';
+    document.body.appendChild(printContainer);
+
+    // Update print styles to target the body-level clone
+    styleEl.textContent = (styleEl.textContent || '')
+      .replace(/#pdf-content/g, '#pdf-print-container');
 
     // Trigger browser print (which allows "Save as PDF")
     setTimeout(() => {
+      printContainer.style.display = 'block';
       window.print();
-      // Clean up styles, restore title, and remove data attribute after print
+      // Clean up after print
       setTimeout(() => {
+        printContainer.remove();
         if (styleEl && styleEl.parentNode) {
           styleEl.parentNode.removeChild(styleEl);
         }
         document.title = originalTitle;
-        document.body.removeAttribute('data-generated-date');
       }, 1000);
     }, 100);
   };
