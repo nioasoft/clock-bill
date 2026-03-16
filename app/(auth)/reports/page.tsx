@@ -908,79 +908,142 @@ export default function ReportsPage() {
               </button>
             </div>
 
-            {/* PDF Content (for printing) - hidden on screen, visible in print */}
-            <div id="pdf-content" className="print-only" dir="rtl" data-generated-date={new Date().toLocaleDateString('he-IL')}>
-              <div className="pdf-header" style={{ marginBottom: "1rem" }}>
-                {userProfile?.logoUrl && (
-                  <img
-                    src={userProfile.logoUrl}
-                    alt="Logo"
-                    className="pdf-logo"
-                    style={{ maxHeight: "60px", marginBottom: "15px" }}
-                  />
-                )}
-                <h1 className="pdf-business-name" style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "0.5rem" }}>
-                  {userProfile?.businessName || "דוח שעות עבודה"}
-                </h1>
-                <p className="pdf-subtitle" style={{ fontSize: "14px", opacity: 0.8, marginBottom: "0.75rem" }}>
-                  {filters.startDate} עד {filters.endDate}
-                </p>
-
-                {/* Business Contact Details */}
-                <div style={{ fontSize: "13px", opacity: 0.9, marginTop: "1rem" }}>
-                  {userProfile?.address && (
-                    <div style={{ marginBottom: "0.25rem" }}>
-                      📍 {userProfile.address}
+            {/* PDF Content (for printing) - hidden on screen, cloned to body before print */}
+            <div id="pdf-content" className="print-only" dir="rtl">
+              {/* ── Header: Business → Client ── */}
+              <div className="pdf-header" style={{ marginBottom: "2rem", paddingBottom: "1.5rem", borderBottom: "2px solid #e2e8f0" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  {/* Business info (right side in RTL) */}
+                  <div style={{ flex: 1 }}>
+                    {userProfile?.logoUrl && (
+                      <img src={userProfile.logoUrl} alt="Logo" style={{ maxHeight: "50px", marginBottom: "10px" }} />
+                    )}
+                    <h1 className="pdf-business-name" style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "0.25rem" }}>
+                      {userProfile?.businessName || "דוח שעות עבודה"}
+                    </h1>
+                    <div style={{ fontSize: "12px", color: "#64748b", lineHeight: 1.6 }}>
+                      {userProfile?.taxId && <div>ע.מ / ח.פ: {userProfile.taxId}</div>}
+                      {userProfile?.address && <div>{userProfile.address}</div>}
+                      {userProfile?.phone && <div>{userProfile.phone}</div>}
+                      {userProfile?.email && <div>{userProfile.email}</div>}
                     </div>
-                  )}
-                  {userProfile?.phone && (
-                    <div style={{ marginBottom: "0.25rem" }}>
-                      📞 {userProfile.phone}
+                  </div>
+                  {/* Report title + date range (left side in RTL) */}
+                  <div style={{ textAlign: "start" }}>
+                    <h2 style={{ fontSize: "26px", fontWeight: "bold", marginBottom: "0.5rem" }}>דוח עבודה</h2>
+                    <div style={{ fontSize: "13px", color: "#64748b" }}>
+                      <div>מתאריך: {new Date(filters.startDate).toLocaleDateString('he-IL')}</div>
+                      <div>עד תאריך: {new Date(filters.endDate).toLocaleDateString('he-IL')}</div>
+                      <div style={{ marginTop: "0.5rem" }}>תאריך הפקה: {new Date().toLocaleDateString('he-IL')}</div>
                     </div>
-                  )}
-                  {userProfile?.email && (
-                    <div style={{ marginBottom: "0.25rem" }}>
-                      ✉️ {userProfile.email}
-                    </div>
-                  )}
-                  {userProfile?.taxId && (
-                    <div style={{ marginBottom: "0.25rem" }}>
-                      🆔 עוסק: {userProfile.taxId}
-                    </div>
-                  )}
+                  </div>
                 </div>
+
+                {/* Client details (if filtered to specific client) */}
+                {reportData.byClient.length === 1 && (
+                  <div style={{ marginTop: "1.5rem", padding: "1rem", backgroundColor: "#f8fafc", borderRadius: "8px" }}>
+                    <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "0.25rem", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>עבור</div>
+                    <div style={{ fontWeight: "600", fontSize: "16px" }}>{reportData.byClient[0].clientName}</div>
+                    <div style={{ fontSize: "12px", color: "#64748b", lineHeight: 1.6 }}>
+                      {reportData.byClient[0].clientContactName && <span>{reportData.byClient[0].clientContactName} &middot; </span>}
+                      {reportData.byClient[0].clientEmail && <span>{reportData.byClient[0].clientEmail} &middot; </span>}
+                      {reportData.byClient[0].clientPhone && <span>{reportData.byClient[0].clientPhone}</span>}
+                      {reportData.byClient[0].clientAddress && <div>{reportData.byClient[0].clientAddress}</div>}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Summary Section */}
-              <div className="pdf-section" style={{ marginBottom: "1.5rem", padding: "1.5rem" }}>
-                <h2 className="pdf-section-title" style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "1rem" }}>סיכום כללי</h2>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem" }}>
-                  <div className="pdf-summary-card" style={{ padding: "1rem", backgroundColor: "#f8fafc", borderRadius: "8px" }}>
-                    <div className="pdf-summary-label" style={{ fontSize: "12px", color: "#64748b", marginBottom: "0.25rem" }}>סה״כ שעות</div>
-                    <div className="pdf-summary-value" style={{ fontSize: "24px", fontWeight: "bold", color: userProfile?.pdfPrimaryColor || "#A8622D" }}>
-                      {reportData.summary.totalHours.toFixed(1)}
+              {/* ── Per-project work breakdown ── */}
+              {reportData.byProject.map((project) => (
+                <div key={project.projectId} className="pdf-section" style={{ marginBottom: "1.5rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "0.75rem", borderBottom: "1px solid #e2e8f0", paddingBottom: "0.5rem" }}>
+                    <h2 className="pdf-section-title" style={{ fontSize: "16px", fontWeight: "bold", margin: 0 }}>
+                      {project.projectName}
+                      {reportData.byClient.length > 1 && (
+                        <span style={{ fontWeight: "normal", fontSize: "13px", color: "#64748b" }}> — {project.clientName}</span>
+                      )}
+                    </h2>
+                    <div style={{ fontSize: "13px", color: "#64748b" }}>
+                      {project.hourlyRate ? `${formatCurrency(project.hourlyRate, project.currency)}/שעה` : ""}
                     </div>
                   </div>
-                  <div className="pdf-summary-card" style={{ padding: "1rem", backgroundColor: "#f8fafc", borderRadius: "8px" }}>
-                    <div className="pdf-summary-label" style={{ fontSize: "12px", color: "#64748b", marginBottom: "0.25rem" }}>סה״כ רשומות</div>
-                    <div className="pdf-summary-value" style={{ fontSize: "24px", fontWeight: "bold", color: userProfile?.pdfPrimaryColor || "#A8622D" }}>
-                      {reportData.summary.totalEntries}
-                    </div>
+
+                  <table className="pdf-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ backgroundColor: "#f8fafc" }}>
+                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>תאריך</th>
+                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>תיאור עבודה</th>
+                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>משך</th>
+                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>סכום</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {project.entries.map((entry, i) => (
+                        <tr key={entry.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>{new Date(entry.date).toLocaleDateString('he-IL')}</td>
+                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>{entry.description}{entry.notes ? ` (${entry.notes})` : ""}</td>
+                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>{formatDuration(entry.duration)}</td>
+                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>
+                            {entry.isBillable && entry.hourlyRate
+                              ? formatCurrency((entry.duration / 60) * entry.hourlyRate, entry.currency)
+                              : entry.isBillable ? "-" : "לא לחיוב"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr style={{ borderTop: "2px solid #e2e8f0", fontWeight: "600" }}>
+                        <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}></td>
+                        <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>סה״כ {project.projectName}</td>
+                        <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>{formatDuration(project.totalMinutes)}</td>
+                        <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>
+                          {project.totalAmount > 0 ? formatCurrency(project.totalAmount, project.currency) : "-"}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              ))}
+
+              {/* ── Fixed monthly charges ── */}
+              {reportData.fixedCharges && reportData.fixedCharges.length > 0 && (
+                <div className="pdf-section" style={{ marginBottom: "1.5rem" }}>
+                  <h2 className="pdf-section-title" style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "0.75rem", borderBottom: "1px solid #e2e8f0", paddingBottom: "0.5rem" }}>
+                    חיובים קבועים
+                  </h2>
+                  <table className="pdf-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ backgroundColor: "#f8fafc" }}>
+                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b" }}>חודש</th>
+                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b" }}>פרויקט</th>
+                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b" }}>סכום</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportData.fixedCharges.map((line, i) => (
+                        <tr key={`${line.projectId}-${line.month}-${i}`} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>{line.month}</td>
+                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>{line.projectName}</td>
+                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", fontWeight: "500" }}>{formatCurrency(line.amount, line.currency)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* ── Grand total ── */}
+              <div style={{ marginTop: "1.5rem", padding: "1.25rem", backgroundColor: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontSize: "13px", color: "#64748b" }}>סה״כ שעות</div>
+                    <div style={{ fontSize: "20px", fontWeight: "bold" }}>{reportData.summary.totalHours.toFixed(1)} שע׳</div>
                   </div>
-                  {Object.keys(reportData.summary.fixedAmounts || {}).length > 0 && (
-                    <div className="pdf-summary-card" style={{ padding: "1rem", backgroundColor: "#f8fafc", borderRadius: "8px" }}>
-                      <div className="pdf-summary-label" style={{ fontSize: "12px", color: "#64748b", marginBottom: "0.25rem" }}>חיובים קבועים</div>
-                      <div className="pdf-summary-value" style={{ fontSize: "24px", fontWeight: "bold", color: userProfile?.pdfPrimaryColor || "#A8622D" }}>
-                        {Object.entries(reportData.summary.fixedAmounts).map(
-                          ([currency, amount]) => formatCurrency(amount, currency)
-                        ).join(" + ")}
-                      </div>
-                    </div>
-                  )}
                   {Object.keys(reportData.summary.totalAmounts).length > 0 && (
-                    <div className="pdf-summary-card" style={{ padding: "1rem", backgroundColor: "#f8fafc", borderRadius: "8px", gridColumn: "span 2" }}>
-                      <div className="pdf-summary-label" style={{ fontSize: "12px", color: "#64748b", marginBottom: "0.25rem" }}>סה״כ סכום</div>
-                      <div className="pdf-summary-value" style={{ fontSize: "24px", fontWeight: "bold", color: userProfile?.pdfPrimaryColor || "#A8622D" }}>
+                    <div style={{ textAlign: "start" }}>
+                      <div style={{ fontSize: "13px", color: "#64748b" }}>סה״כ לתשלום</div>
+                      <div style={{ fontSize: "24px", fontWeight: "bold" }}>
                         {Object.entries(reportData.summary.totalAmounts).map(
                           ([currency, amount]) => formatCurrency(amount, currency)
                         ).join(" + ")}
@@ -990,154 +1053,9 @@ export default function ReportsPage() {
                 </div>
               </div>
 
-              {/* By Client Section */}
-              {reportData.byClient.length > 0 && (
-                <div className="pdf-section" style={{ marginBottom: "1.5rem", padding: "1.5rem" }}>
-                  <h2 className="pdf-section-title" style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "1rem" }}>סיכום לפי לקוח</h2>
-                  {reportData.byClient.map((client) => (
-                    <div key={client.clientId} className="pdf-summary-card" style={{ padding: "1rem", backgroundColor: "#f8fafc", borderRadius: "8px", marginBottom: "0.75rem" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: "600", fontSize: "18px", marginBottom: "0.25rem" }}>{client.clientName}</div>
-                          {/* Client Contact Details */}
-                          {(client.clientContactName || client.clientEmail || client.clientPhone || client.clientAddress) && (
-                            <div style={{ fontSize: "12px", opacity: 0.8, marginBottom: "0.5rem" }}>
-                              {client.clientContactName && (
-                                <div style={{ marginBottom: "0.15rem" }}>👤 איש קשר: {client.clientContactName}</div>
-                              )}
-                              {client.clientEmail && (
-                                <div style={{ marginBottom: "0.15rem" }}>✉️ {client.clientEmail}</div>
-                              )}
-                              {client.clientPhone && (
-                                <div style={{ marginBottom: "0.15rem" }}>📞 {client.clientPhone}</div>
-                              )}
-                              {client.clientAddress && (
-                                <div style={{ marginBottom: "0.15rem" }}>📍 {client.clientAddress}</div>
-                              )}
-                            </div>
-                          )}
-                          <div style={{ fontSize: "14px", opacity: 0.7 }}>
-                            {client.entries.length} רשומות
-                          </div>
-                        </div>
-                        <div style={{ textAlign: "end" }}>
-                          <div style={{ fontWeight: "600", fontSize: "20px" }}>
-                            {formatDuration(client.totalMinutes)}
-                          </div>
-                          {Object.keys(client.totalAmounts).length > 0 && (
-                            <div style={{ fontSize: "14px", opacity: 0.7 }}>
-                              {Object.entries(client.totalAmounts)
-                                .map(([currency, amount]) =>
-                                  formatCurrency(amount, currency)
-                                )
-                                .join(" + ")}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {reportData.fixedCharges && reportData.fixedCharges.length > 0 && (
-                <div className="pdf-section" style={{ marginBottom: "1.5rem", padding: "1.5rem" }}>
-                  <h2 className="pdf-section-title" style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "1rem" }}>
-                    חיובים קבועים
-                  </h2>
-                  <table className="pdf-table" style={{ width: "100%", borderCollapse: "collapse" }}>
-                    <thead style={{ backgroundColor: "#f1f5f9" }}>
-                      <tr>
-                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>חודש</th>
-                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>לקוח</th>
-                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>פרויקט</th>
-                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>סכום</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {reportData.fixedCharges.map((line, index) => (
-                        <tr key={`${line.projectId}-${line.month}-${index}`} style={{ borderBottom: "1px solid #f1f5f9", backgroundColor: index % 2 === 0 ? "transparent" : "#f8fafc" }}>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{line.month}</td>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{line.clientName}</td>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{line.projectName}</td>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px", fontWeight: "500" }}>
-                            {formatCurrency(line.amount, line.currency)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* By Date Summary in PDF */}
-              {reportData.byDate && reportData.byDate.length > 0 && (
-                <div className="pdf-section" style={{ marginBottom: "1.5rem", padding: "1.5rem" }}>
-                  <h2 className="pdf-section-title" style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "1rem" }}>סיכום לפי תאריך (יומי)</h2>
-                  <table className="pdf-table" style={{ width: "100%", borderCollapse: "collapse" }}>
-                    <thead style={{ backgroundColor: "#f1f5f9" }}>
-                      <tr>
-                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>תאריך</th>
-                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>משך</th>
-                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>רשומות</th>
-                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>סכום</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {reportData.byDate.map((dateSummary, index) => (
-                        <tr key={dateSummary.date} style={{ borderBottom: "1px solid #f1f5f9", backgroundColor: index % 2 === 0 ? "transparent" : "#f8fafc" }}>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{new Date(dateSummary.date).toLocaleDateString('he-IL')}</td>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px", fontWeight: "500" }}>{formatDuration(dateSummary.totalMinutes)}</td>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{dateSummary.entryCount}</td>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>
-                            {Object.keys(dateSummary.totalAmounts).length > 0
-                              ? Object.entries(dateSummary.totalAmounts)
-                                  .map(([currency, amount]) => formatCurrency(amount, currency))
-                                  .join(" + ")
-                              : "-"}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* Detailed Entries Table */}
-              {reportData.entries.length > 0 && (
-                <div className="pdf-section" style={{ marginBottom: "1.5rem", padding: "1.5rem" }}>
-                  <h2 className="pdf-section-title" style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "1rem" }}>רשומות מפורטות</h2>
-                  <table className="pdf-table" style={{ width: "100%", borderCollapse: "collapse" }}>
-                    <thead style={{ backgroundColor: "#f1f5f9" }}>
-                      <tr>
-                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>תאריך</th>
-                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>לקוח</th>
-                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>פרויקט</th>
-                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>תיאור</th>
-                        <th style={{ padding: "0.75rem 1rem", textAlign: "start", fontWeight: "600", fontSize: "13px", color: "#475569" }}>משך</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {reportData.entries.map((entry, index) => (
-                        <tr key={entry.id} style={{ borderBottom: "1px solid #f1f5f9", backgroundColor: index % 2 === 0 ? "transparent" : "#f8fafc" }}>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{new Date(entry.date).toLocaleDateString('he-IL')}</td>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{entry.clientName}</td>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{entry.projectName}</td>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{entry.description}</td>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px", fontWeight: "500" }}>{formatDuration(entry.duration)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* PDF Footer with generation date and page numbers */}
-              <div className="pdf-footer" style={{ marginTop: "2rem", paddingTop: "1rem", borderTop: "1px solid #e2e8f0", textAlign: "center", fontSize: "11px", color: "#64748b" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>נוצר בתאריך: {new Date().toLocaleDateString('he-IL')}</div>
-                  <div>עמוד <span className="page-number">1</span></div>
-                </div>
+              {/* ── Footer ── */}
+              <div style={{ marginTop: "2rem", paddingTop: "1rem", borderTop: "1px solid #e2e8f0", fontSize: "11px", color: "#94a3b8", textAlign: "center" }}>
+                {userProfile?.businessName || "מוניט"} &middot; נוצר בתאריך {new Date().toLocaleDateString('he-IL')}
               </div>
             </div>
 
