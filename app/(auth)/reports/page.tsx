@@ -52,6 +52,8 @@ interface ReportEntry {
   description: string;
   duration: number;
   date: string;
+  startTime: string | null;
+  endTime: string | null;
   tags: string[];
   notes: string | null;
   isBillable: boolean;
@@ -173,6 +175,7 @@ export default function ReportsPage() {
     includeFixedCharges: true,
   });
   const [error, setError] = useState("");
+  const [showWorkTimes, setShowWorkTimes] = useState(false);
   const [displayCurrency, setDisplayCurrency] = useState<string>("original");
   const [currencyRates, setCurrencyRates] = useState<Record<string, Record<string, number>>>({});
 
@@ -813,6 +816,21 @@ export default function ReportsPage() {
               </div>
 
               <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
+                <label className="flex items-center gap-2 text-sm font-medium mb-2">
+                  <input
+                    type="checkbox"
+                    checked={showWorkTimes}
+                    onChange={(e) => setShowWorkTimes(e.target.checked)}
+                    className="h-4 w-4 rounded border-border"
+                  />
+                  הצג שעות עבודה (ממתי עד מתי)
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  מוסיף לדוח את שעת ההתחלה והסיום של כל רשומת עבודה.
+                </p>
+              </div>
+
+              <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
                 <label className="block text-sm font-medium mb-2">הצג סכומים במטבע</label>
                 <select
                   value={displayCurrency}
@@ -989,15 +1007,27 @@ export default function ReportsPage() {
                     <thead>
                       <tr style={{ backgroundColor: "#f8fafc" }}>
                         <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>תאריך</th>
+                        {showWorkTimes && (
+                          <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>שעות</th>
+                        )}
                         <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>תיאור עבודה</th>
                         <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>משך</th>
                         <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>סכום</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {project.entries.map((entry, i) => (
+                      {project.entries.map((entry) => (
                         <tr key={entry.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                           <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>{new Date(entry.date).toLocaleDateString('he-IL')}</td>
+                          {showWorkTimes && (
+                            <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>
+                              {entry.startTime && entry.endTime
+                                ? `${new Date(entry.startTime).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })} - ${new Date(entry.endTime).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}`
+                                : entry.startTime
+                                  ? `${new Date(entry.startTime).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })} -`
+                                  : "-"}
+                            </td>
+                          )}
                           <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>{entry.description}{entry.notes ? ` (${entry.notes})` : ""}</td>
                           <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>{formatDuration(entry.duration)}</td>
                           <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>
@@ -1011,6 +1041,7 @@ export default function ReportsPage() {
                     <tfoot>
                       <tr style={{ borderTop: "2px solid #e2e8f0", fontWeight: "600" }}>
                         <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}></td>
+                        {showWorkTimes && <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}></td>}
                         <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>סה״כ {project.projectName}</td>
                         <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>{formatDuration(project.totalMinutes)}</td>
                         <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>
