@@ -210,16 +210,22 @@ export async function POST(request: NextRequest) {
     );
     const entryId = entryIdResult.rows[0].id;
 
-    // Insert time entry (manual entry has no start/end time)
+    // Calculate start/end times for manual entries
+    // startTime = now, endTime = now + duration minutes
+    const now = new Date();
+    const endTime = new Date(now.getTime() + duration * 60 * 1000);
+
     await query(
-      `INSERT INTO time_entries (id, user_id, project_id, task_id, description, duration, date, tags, notes, is_billable)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      `INSERT INTO time_entries (id, user_id, project_id, task_id, description, start_time, end_time, duration, date, tags, notes, is_billable)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
       [
         entryId,
         user.id,
         projectId,
         taskId || null,
         description.trim(),
+        now.toISOString(),
+        endTime.toISOString(),
         duration,
         date,
         JSON.stringify(tags || []),
