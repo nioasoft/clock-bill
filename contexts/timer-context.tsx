@@ -206,9 +206,10 @@ export function TimerProvider({ children }: TimerProviderProps) {
     return () => clearInterval(interval);
   }, [isAuthenticated, fetchRunningTimer]);
 
-  // Fetch projects for start modal
+  // Fetch projects for start modal — refetch when modal opens to catch newly created projects
   useEffect(() => {
     if (!isAuthenticated) return;
+    if (!showTimerModal && projects.length > 0) return;
 
     const fetchProjects = async () => {
       try {
@@ -223,7 +224,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
     };
 
     fetchProjects();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, showTimerModal]);
 
   // Fetch tasks when project changes (for timer start modal)
   useEffect(() => {
