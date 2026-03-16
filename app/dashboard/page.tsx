@@ -347,7 +347,7 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <p className="text-sm font-medium text-foreground">{entry.description}</p>
-                        <p className="text-sm text-muted-foreground">{entry.date}</p>
+                        <p className="text-sm text-muted-foreground">{new Date(entry.date).toLocaleDateString('he-IL')}</p>
                       </div>
                       <div className="text-end">
                         <p className="font-mono text-sm font-medium tabular-nums text-foreground">{entry.formattedDuration}</p>

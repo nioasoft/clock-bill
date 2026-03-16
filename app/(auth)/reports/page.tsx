@@ -193,8 +193,8 @@ export default function ReportsPage() {
             taxId: data.profile.taxId,
             defaultCurrency: data.profile.defaultCurrency,
             preferredPdfTemplate: data.profile.preferredPdfTemplate || "modern",
-            pdfPrimaryColor: data.profile.pdfPrimaryColor || "#2563EB",
-            pdfAccentColor: data.profile.pdfAccentColor || "#059669",
+            pdfPrimaryColor: data.profile.pdfPrimaryColor || "#A8622D",
+            pdfAccentColor: data.profile.pdfAccentColor || "#347B52",
           });
         }
       } catch (error) {
@@ -510,8 +510,8 @@ export default function ReportsPage() {
     // Define print styles for the selected template
     const getTemplateStyles = (t: PdfTemplate) => {
       // Get custom colors from user profile, with fallback defaults
-      const primaryColor = userProfile?.pdfPrimaryColor || '#2563EB';
-      const accentColor = userProfile?.pdfAccentColor || '#059669';
+      const primaryColor = userProfile?.pdfPrimaryColor || '#A8622D';
+      const accentColor = userProfile?.pdfAccentColor || '#347B52';
 
       const baseStyles = `
         @media print {
@@ -879,7 +879,7 @@ export default function ReportsPage() {
               </button>
               <button
                 onClick={handleExportExcel}
-                className="flex items-center gap-2 px-6 py-3 bg-success text-white rounded-full hover:bg-success/90 transition-colors shadow-md"
+                className="flex items-center gap-2 px-6 py-3 bg-secondary text-secondary-foreground rounded-full hover:bg-secondary/80 transition-colors shadow-md"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -946,20 +946,20 @@ export default function ReportsPage() {
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem" }}>
                   <div className="pdf-summary-card" style={{ padding: "1rem", backgroundColor: "#f8fafc", borderRadius: "8px" }}>
                     <div className="pdf-summary-label" style={{ fontSize: "12px", color: "#64748b", marginBottom: "0.25rem" }}>סה״כ שעות</div>
-                    <div className="pdf-summary-value" style={{ fontSize: "24px", fontWeight: "bold", color: "#2563EB" }}>
+                    <div className="pdf-summary-value" style={{ fontSize: "24px", fontWeight: "bold", color: userProfile?.pdfPrimaryColor || "#A8622D" }}>
                       {reportData.summary.totalHours.toFixed(1)}
                     </div>
                   </div>
                   <div className="pdf-summary-card" style={{ padding: "1rem", backgroundColor: "#f8fafc", borderRadius: "8px" }}>
                     <div className="pdf-summary-label" style={{ fontSize: "12px", color: "#64748b", marginBottom: "0.25rem" }}>סה״כ רשומות</div>
-                    <div className="pdf-summary-value" style={{ fontSize: "24px", fontWeight: "bold", color: "#2563EB" }}>
+                    <div className="pdf-summary-value" style={{ fontSize: "24px", fontWeight: "bold", color: userProfile?.pdfPrimaryColor || "#A8622D" }}>
                       {reportData.summary.totalEntries}
                     </div>
                   </div>
                   {Object.keys(reportData.summary.fixedAmounts || {}).length > 0 && (
                     <div className="pdf-summary-card" style={{ padding: "1rem", backgroundColor: "#f8fafc", borderRadius: "8px" }}>
                       <div className="pdf-summary-label" style={{ fontSize: "12px", color: "#64748b", marginBottom: "0.25rem" }}>חיובים קבועים</div>
-                      <div className="pdf-summary-value" style={{ fontSize: "24px", fontWeight: "bold", color: "#2563EB" }}>
+                      <div className="pdf-summary-value" style={{ fontSize: "24px", fontWeight: "bold", color: userProfile?.pdfPrimaryColor || "#A8622D" }}>
                         {Object.entries(reportData.summary.fixedAmounts).map(
                           ([currency, amount]) => formatCurrency(amount, currency)
                         ).join(" + ")}
@@ -969,7 +969,7 @@ export default function ReportsPage() {
                   {Object.keys(reportData.summary.totalAmounts).length > 0 && (
                     <div className="pdf-summary-card" style={{ padding: "1rem", backgroundColor: "#f8fafc", borderRadius: "8px", gridColumn: "span 2" }}>
                       <div className="pdf-summary-label" style={{ fontSize: "12px", color: "#64748b", marginBottom: "0.25rem" }}>סה״כ סכום</div>
-                      <div className="pdf-summary-value" style={{ fontSize: "24px", fontWeight: "bold", color: "#2563EB" }}>
+                      <div className="pdf-summary-value" style={{ fontSize: "24px", fontWeight: "bold", color: userProfile?.pdfPrimaryColor || "#A8622D" }}>
                         {Object.entries(reportData.summary.totalAmounts).map(
                           ([currency, amount]) => formatCurrency(amount, currency)
                         ).join(" + ")}
@@ -1075,7 +1075,7 @@ export default function ReportsPage() {
                     <tbody>
                       {reportData.byDate.map((dateSummary, index) => (
                         <tr key={dateSummary.date} style={{ borderBottom: "1px solid #f1f5f9", backgroundColor: index % 2 === 0 ? "transparent" : "#f8fafc" }}>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{dateSummary.date}</td>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{new Date(dateSummary.date).toLocaleDateString('he-IL')}</td>
                           <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px", fontWeight: "500" }}>{formatDuration(dateSummary.totalMinutes)}</td>
                           <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{dateSummary.entryCount}</td>
                           <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>
@@ -1109,7 +1109,7 @@ export default function ReportsPage() {
                     <tbody>
                       {reportData.entries.map((entry, index) => (
                         <tr key={entry.id} style={{ borderBottom: "1px solid #f1f5f9", backgroundColor: index % 2 === 0 ? "transparent" : "#f8fafc" }}>
-                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{entry.date}</td>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{new Date(entry.date).toLocaleDateString('he-IL')}</td>
                           <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{entry.clientName}</td>
                           <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{entry.projectName}</td>
                           <td style={{ padding: "0.75rem 1rem", textAlign: "start", fontSize: "13px" }}>{entry.description}</td>
@@ -1338,7 +1338,7 @@ export default function ReportsPage() {
                       className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[0.625rem] border border-border/30 transition-colors"
                     >
                       <div className="flex-1">
-                        <p className="font-medium">{dateSummary.date}</p>
+                        <p className="font-medium">{new Date(dateSummary.date).toLocaleDateString('he-IL')}</p>
                         <p className="text-sm text-muted-foreground">
                           {dateSummary.entryCount} רשומות
                         </p>
@@ -1441,7 +1441,7 @@ export default function ReportsPage() {
                     <tbody>
                       {reportData.entries.map((entry, index) => (
                         <tr key={entry.id} className={`hover:bg-surface transition-colors ${index % 2 === 0 ? '' : 'even:bg-surface/50'}`}>
-                          <td className="px-6 py-4 text-sm">{entry.date}</td>
+                          <td className="px-6 py-4 text-sm">{new Date(entry.date).toLocaleDateString('he-IL')}</td>
                           <td className="px-6 py-4 text-sm">
                             {entry.clientName}
                           </td>

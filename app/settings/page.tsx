@@ -146,8 +146,8 @@ export default function SettingsPage() {
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [bankBranch, setBankBranch] = useState("");
   const [bankSwift, setBankSwift] = useState("");
-  const [pdfPrimaryColor, setPdfPrimaryColor] = useState("#2563EB");
-  const [pdfAccentColor, setPdfAccentColor] = useState("#059669");
+  const [pdfPrimaryColor, setPdfPrimaryColor] = useState("#A8622D");
+  const [pdfAccentColor, setPdfAccentColor] = useState("#347B52");
   const [dateFormat, setDateFormat] = useState("DD/MM/YYYY");
   const [timeFormat, setTimeFormat] = useState("24h");
 
@@ -218,8 +218,8 @@ export default function SettingsPage() {
         setBankAccountNumber(data.profile.bankAccountNumber || "");
         setBankBranch(data.profile.bankBranch || "");
         setBankSwift(data.profile.bankSwift || "");
-        setPdfPrimaryColor(data.profile.pdfPrimaryColor || "#2563EB");
-        setPdfAccentColor(data.profile.pdfAccentColor || "#059669");
+        setPdfPrimaryColor(data.profile.pdfPrimaryColor || "#A8622D");
+        setPdfAccentColor(data.profile.pdfAccentColor || "#347B52");
         // Initialize notification settings
         setLongTimerEnabled(data.profile.longTimerEnabled ?? true);
         setLongTimerThreshold((data.profile.longTimerThreshold ?? 120).toString());
@@ -328,8 +328,8 @@ export default function SettingsPage() {
           bankAccountNumber: bankAccountNumber || null,
           bankBranch: bankBranch || null,
           bankSwift: bankSwift || null,
-          pdfPrimaryColor: pdfPrimaryColor || "#2563EB",
-          pdfAccentColor: pdfAccentColor || "#059669",
+          pdfPrimaryColor: pdfPrimaryColor || "#A8622D",
+          pdfAccentColor: pdfAccentColor || "#347B52",
           dateFormat: dateFormat || "DD/MM/YYYY",
           timeFormat: timeFormat || "24h",
         }),
@@ -2015,7 +2015,7 @@ export default function SettingsPage() {
                           type="text"
                           value={pdfPrimaryColor}
                           onChange={(e) => setPdfPrimaryColor(e.target.value)}
-                          placeholder="#2563EB"
+                          placeholder="#A8622D"
                           className="flex-1 px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary font-mono text-sm"
                           pattern="^#[0-9A-Fa-f]{6}$"
                           maxLength={7}
@@ -2046,7 +2046,7 @@ export default function SettingsPage() {
                           type="text"
                           value={pdfAccentColor}
                           onChange={(e) => setPdfAccentColor(e.target.value)}
-                          placeholder="#059669"
+                          placeholder="#347B52"
                           className="flex-1 px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary font-mono text-sm"
                           pattern="^#[0-9A-Fa-f]{6}$"
                           maxLength={7}
