@@ -742,12 +742,12 @@ function ClientsPageContent() {
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <div className="text-sm font-medium text-foreground">
-                          {client.totalBilled > 0 ? `₪${client.totalBilled.toFixed(2)}` : "₪0"}
+                          {Number(client.totalBilled) > 0 ? `₪${Number(client.totalBilled).toFixed(2)}` : "₪0"}
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <div className="text-sm text-foreground">
-                          {client.totalHours > 0 ? `${client.totalHours.toFixed(1)} שעות` : "0 שעות"}
+                          {Number(client.totalHours) > 0 ? `${Number(client.totalHours).toFixed(1)} שעות` : "0 שעות"}
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">

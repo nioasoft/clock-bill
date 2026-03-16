@@ -22,6 +22,7 @@ interface UserProfile {
   address: string | null;
   taxId: string | null;
   defaultCurrency: string;
+  preferredPdfTemplate: string;
   pdfPrimaryColor: string;
   pdfAccentColor: string;
 }
@@ -147,14 +148,6 @@ interface ReportPreset {
   updatedAt: string;
 }
 
-const PDF_TEMPLATES: { value: PdfTemplate; label: string; description: string }[] = [
-  { value: "modern", label: "מודרני", description: "עיצוב נקי ומינימליסטי" },
-  { value: "classic", label: "קלאסי", description: "עיצוב מסורתי ומכובד" },
-  { value: "bold", label: "בולט", description: "עיצוב עם כותרות גדולות ובולטות" },
-  { value: "elegant", label: "אלגנטי", description: "עיצוב עדין ויוקרתי" },
-  { value: "nature", label: "טבע", description: "עיצוב בגווני ירוק וטבעי" },
-  { value: "ocean", label: "אוקיינוס", description: "עיצוב בגווני כחול" },
-];
 
 export default function ReportsPage() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -165,8 +158,6 @@ export default function ReportsPage() {
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
-  const [selectedTemplate, setSelectedTemplate] = useState<PdfTemplate>("modern");
-  const [showExportDialog, setShowExportDialog] = useState(false);
   const [showSavePresetDialog, setShowSavePresetDialog] = useState(false);
   const [showLoadPresetDialog, setShowLoadPresetDialog] = useState(false);
   const [presets, setPresets] = useState<ReportPreset[]>([]);
@@ -201,6 +192,7 @@ export default function ReportsPage() {
             address: data.profile.address,
             taxId: data.profile.taxId,
             defaultCurrency: data.profile.defaultCurrency,
+            preferredPdfTemplate: data.profile.preferredPdfTemplate || "modern",
             pdfPrimaryColor: data.profile.pdfPrimaryColor || "#2563EB",
             pdfAccentColor: data.profile.pdfAccentColor || "#059669",
           });
@@ -491,13 +483,11 @@ export default function ReportsPage() {
   };
 
   const handleExportPdf = () => {
-    setShowExportDialog(true);
+    const template = (userProfile?.preferredPdfTemplate || "modern") as PdfTemplate;
+    confirmExportPdf(template);
   };
 
   const confirmExportPdf = (template: PdfTemplate) => {
-    setSelectedTemplate(template);
-    setShowExportDialog(false);
-
     // Set document title for PDF filename (date + client name)
     const originalTitle = document.title;
     const clientName = filters.clientId
@@ -525,8 +515,10 @@ export default function ReportsPage() {
 
       const baseStyles = `
         @media print {
-          body > *:not(#pdf-content) { display: none !important; }
-          #pdf-content { display: block !important; direction: rtl !important; }
+          /* Hide everything, then reveal #pdf-content and its ancestor chain */
+          body * { visibility: hidden !important; }
+          #pdf-content, #pdf-content * { visibility: visible !important; }
+          #pdf-content { position: absolute !important; left: 0; top: 0; width: 100%; display: block !important; direction: rtl !important; }
           @page { size: A4; margin: 15mm; }
           body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           .pdf-header { padding: 2rem; margin-bottom: 2rem; }
@@ -1498,78 +1490,6 @@ export default function ReportsPage() {
           </div>
         )}
       </PageContainer>
-
-      {/* Template Selection Dialog */}
-      <Dialog open={showExportDialog} onOpenChange={(open) => { if (!open) setShowExportDialog(false); }}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto p-0">
-          <div className="sticky top-0 bg-card border-b p-6 z-10">
-            <DialogHeader>
-              <DialogTitle className="font-mono text-2xl font-bold tabular-nums">בחר תבנית PDF</DialogTitle>
-              <DialogDescription>
-                בחר את העיצוב המועדף עליך לדוח ה-PDF
-              </DialogDescription>
-            </DialogHeader>
-          </div>
-
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            {PDF_TEMPLATES.map((template) => (
-              <button
-                key={template.value}
-                onClick={() => confirmExportPdf(template.value)}
-                className={`
-                  border-2 rounded-[0.875rem] p-6 text-start transition-all hover:shadow-md hover:-translate-y-0.5
-                  ${
-                    selectedTemplate === template.value
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50"
-                  }
-                `}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <h3 className="text-lg font-semibold">{template.label}</h3>
-                  <div
-                    className={`
-                    w-6 h-6 rounded-full border-2 flex items-center justify-center
-                    ${
-                      selectedTemplate === template.value
-                        ? "border-primary bg-primary"
-                        : "border-muted-foreground"
-                    }
-                  `}
-                  >
-                    {selectedTemplate === template.value && (
-                      <svg className="w-4 h-4 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    )}
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground">{template.description}</p>
-                {/* Preview box with template style */}
-                <div
-                  className={`
-                  mt-4 p-3 rounded border text-sm
-                  pdf-preview-${template.value}
-                `}
-                >
-                  <div className="font-semibold">תצוגה מקדימה</div>
-                  <div className="text-xs mt-1 opacity-70">הטקסט הזה יוצג בסגנון הנבחר</div>
-                </div>
-              </button>
-            ))}
-          </div>
-
-          <div className="sticky bottom-0 bg-card border-t p-6">
-            <p className="text-sm text-muted-foreground text-center">
-              לחץ על התבנית הרצויה לפתיחת חלון הדפסה - בחר &quot;שמור כ-PDF&quot; כדי להוריד את הדוח
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Save Preset Dialog */}
       <Dialog open={showSavePresetDialog} onOpenChange={(open) => { if (!open) { setShowSavePresetDialog(false); setPresetName(""); } }}>
