@@ -343,7 +343,7 @@ export default function EntriesPage() {
     setFormData({
       projectId: entry.projectId,
       taskId: entry.taskId || "",
-      date: entry.date,
+      date: entry.date.includes("T") ? entry.date.split("T")[0] : entry.date,
       duration: entry.duration.toString(),
       description: entry.description,
       notes: entry.notes || "",
