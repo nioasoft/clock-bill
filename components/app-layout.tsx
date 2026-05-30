@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Gauge } from "lucide-react";
 import { Sidebar } from "./sidebar";
@@ -10,6 +10,7 @@ import { ErrorBoundary } from "./error-boundary";
 import { PersistentTimerBar } from "./persistent-timer-bar";
 import { TimerStartModal } from "./timer-start-modal";
 import { TimerStopModal } from "./timer-stop-modal";
+import { TimerFab } from "./timer-fab";
 import { BRAND } from "@/lib/brand";
 
 interface User {
@@ -139,6 +140,9 @@ export function AppLayout({ children }: AppLayoutProps) {
       </div>
       <TimerStartModal />
       <TimerStopModal />
+      <Suspense fallback={null}>
+        <TimerFab />
+      </Suspense>
     </div>
   );
 }

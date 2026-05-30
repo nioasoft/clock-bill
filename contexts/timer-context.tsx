@@ -15,6 +15,7 @@ import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
 import React from "react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { ToastAction, type ToastActionElement } from "@/components/ui/toast";
+import { haptic } from "@/lib/haptics";
 
 interface RunningTimer {
   id: string;
@@ -353,6 +354,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
         setSelectedProject("");
         setSelectedTask("");
         setTimerDescription("");
+        haptic("success");
         showSuccessToast("הטיימר הופעל בהצלחה");
         // Refresh running timer
         const timerResponse = await fetch("/api/timer/running");
@@ -409,6 +411,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
       if (data.success) {
         setRunningTimer(null);
         setShowStopTimerModal(false);
+        haptic("success");
         showSuccessToast(
           "הטיימר נעצר ונשמר בהצלחה",
           React.createElement(
@@ -449,6 +452,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
       const data = await response.json();
 
       if (data.success) {
+        haptic("light");
         showSuccessToast("הטיימר הושהה בהצלחה");
         const timerResponse = await fetch("/api/timer/running");
         const timerData = await timerResponse.json();
@@ -476,6 +480,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
       const data = await response.json();
 
       if (data.success) {
+        haptic("light");
         showSuccessToast("הטיימר חודש בהצלחה");
         const timerResponse = await fetch("/api/timer/running");
         const timerData = await timerResponse.json();
