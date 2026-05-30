@@ -13,7 +13,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { db } from "@/src/db";
 import * as schema from "@/src/db/schema";
-import { query } from "@/lib/db";
+import { query, setUserContext } from "@/lib/db";
 import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("auth");
@@ -64,6 +64,8 @@ export const auth = betterAuth({
           // Seed a profile row so app code that reads user_profiles can assume
           // it exists. Best-effort: never fail signup because of this.
           try {
+            // Bind the tenant context so the INSERT satisfies RLS once enforced.
+            setUserContext(createdUser.id);
             await query(
               `INSERT INTO user_profiles (id, user_id, default_currency, preferred_pdf_template, created_at, updated_at)
                VALUES (gen_random_uuid()::text, $1, 'ILS', 'modern', NOW(), NOW())

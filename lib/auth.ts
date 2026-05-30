@@ -183,6 +183,11 @@ export async function getUser(): Promise<User | null> {
       role?: string | null;
     };
 
+    // Bind the request's tenant context for Row-Level Security. Done here
+    // because getUser() runs at the top of every authed route before queries.
+    const { setUserContext } = await import("./db");
+    setUserContext(sessionUser.id);
+
     return {
       id: sessionUser.id,
       email: sessionUser.email,

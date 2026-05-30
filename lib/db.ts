@@ -2,6 +2,7 @@
  * Database connection module using pg (PostgreSQL)
  * Connects to PostgreSQL via connection pool for concurrent request handling
  */
+import { AsyncLocalStorage } from "async_hooks";
 import { Pool, PoolClient, QueryResult } from "pg";
 import { getDatabaseUrl } from "./env";
 import { createLogger } from "./logger";
@@ -9,6 +10,29 @@ import { createLogger } from "./logger";
 const logger = createLogger("db");
 
 let pool: Pool | null = null;
+
+/**
+ * Request-scoped tenant context for Row-Level Security.
+ *
+ * `getUser()` calls `setUserContext(userId)` (via enterWith) at the start of a
+ * request; `query()` / `withTransaction()` then run authed queries inside a
+ * transaction that sets `app.current_user_id`, which the RLS policies read via
+ * `current_setting('app.current_user_id', true)`.
+ *
+ * This is a no-op for RLS enforcement until the app connects with a DB role
+ * that lacks BYPASSRLS (the GUC is still set harmlessly before then).
+ */
+const userContext = new AsyncLocalStorage<{ userId: string }>();
+
+/** Establish the current request's user id for RLS. Safe to call repeatedly. */
+export function setUserContext(userId: string): void {
+  userContext.enterWith({ userId });
+}
+
+/** The current request's user id, or null when unauthenticated/out of context. */
+export function getCurrentUserId(): string | null {
+  return userContext.getStore()?.userId || null;
+}
 
 /**
  * Get or create the connection pool
@@ -25,28 +49,59 @@ export function getPool(): Pool {
   return pool;
 }
 
+// SQL to bind the tenant id to the transaction-local RLS GUC.
+const SET_RLS_GUC = "SELECT set_config('app.current_user_id', $1, true)";
+
 /**
- * Execute a parameterized query against the database
- * Uses $1, $2, etc. for placeholders
+ * Execute a parameterized query against the database (placeholders $1, $2, ...).
+ *
+ * When a tenant context is set (authed request), the query runs inside a short
+ * transaction that first sets `app.current_user_id` so RLS policies apply. With
+ * no context (auth/public queries), it runs directly on a pooled connection.
  */
 export async function query<T extends Record<string, unknown> = Record<string, unknown>>(
   text: string,
   params?: unknown[]
 ): Promise<QueryResult<T>> {
-  const client = getPool();
-  return client.query<T>(text, params);
+  const userId = getCurrentUserId();
+  if (!userId) {
+    return getPool().query<T>(text, params);
+  }
+
+  const client = await getPool().connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(SET_RLS_GUC, [userId]);
+    const result = await client.query<T>(text, params);
+    await client.query("COMMIT");
+    return result;
+  } catch (error) {
+    try {
+      await client.query("ROLLBACK");
+    } catch {
+      // ignore rollback failure
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 /**
  * Execute a callback within a database transaction.
- * Automatically handles BEGIN/COMMIT/ROLLBACK.
+ * Automatically handles BEGIN/COMMIT/ROLLBACK and binds the RLS GUC when a
+ * tenant context is set.
  */
 export async function withTransaction<T>(
   callback: (client: PoolClient) => Promise<T>
 ): Promise<T> {
+  const userId = getCurrentUserId();
   const client = await getPool().connect();
   try {
     await client.query("BEGIN");
+    if (userId) {
+      await client.query(SET_RLS_GUC, [userId]);
+    }
     const result = await callback(client);
     await client.query("COMMIT");
     return result;
