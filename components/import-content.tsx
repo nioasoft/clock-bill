@@ -406,7 +406,7 @@ export function ImportContent({
             <button
               onClick={handleImportBackup}
               disabled={backupLoading}
-              className="px-6 py-2 bg-success text-white font-medium rounded-lg hover:bg-success/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-6 py-2 bg-success text-success-foreground font-medium rounded-lg hover:bg-success/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {backupLoading ? (
                 <span className="flex items-center gap-2">

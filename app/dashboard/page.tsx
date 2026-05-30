@@ -251,7 +251,7 @@ export default function DashboardPage() {
               <p className="mt-4 text-sm text-muted-foreground">טוען...</p>
             ) : runningTimer ? (
               <div className="mt-4">
-                <p className="font-mono text-3xl font-bold tabular-nums text-foreground">{elapsedTime}</p>
+                <p className="font-mono timer-display font-bold text-primary">{elapsedTime}</p>
                 <p className="mt-2 text-sm text-muted-foreground">
                   {runningTimer.pausedAt ? "טיימר מושהה" : "טיימר פעיל"}
                 </p>
@@ -260,7 +260,7 @@ export default function DashboardPage() {
                     <button
                       onClick={handleResumeTimer}
                       disabled={resumingTimer}
-                      className="flex-1 rounded-md bg-success px-4 py-2 text-sm font-medium text-white hover:bg-success/90 disabled:opacity-50 transition-colors"
+                      className="flex-1 rounded-md bg-success px-4 py-2 text-sm font-medium text-success-foreground hover:bg-success/90 disabled:opacity-50 transition-colors"
                     >
                       {resumingTimer ? "מחדש..." : "חדש טיימר"}
                     </button>
@@ -268,7 +268,7 @@ export default function DashboardPage() {
                     <button
                       onClick={handlePauseTimer}
                       disabled={pausingTimer}
-                      className="flex-1 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 disabled:opacity-50 transition-colors"
+                      className="flex-1 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent/90 disabled:opacity-50 transition-colors"
                     >
                       {pausingTimer ? "משהה..." : "השהה טיימר"}
                     </button>

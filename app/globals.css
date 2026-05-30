@@ -97,6 +97,25 @@ body {
   color: var(--color-primary-foreground);
 }
 
+/* Mobile: inputs must be >=16px or iOS Safari zooms in on focus (jarring).
+   Applies only on small screens so desktop text-sm inputs are unaffected. */
+@media (max-width: 640px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+/* Fluid timer display — large and legible on phones, capped on desktop.
+   Use on the running-timer digits for a ClickHouse-style stat hero. */
+.timer-display {
+  font-size: clamp(2.25rem, 11vw, 3.5rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Custom utility classes */
 .font-display {
   font-family: var(--font-display);

@@ -563,7 +563,7 @@ export default function ProjectDetailsPage() {
                   </button>
                   <button
                     onClick={() => handleUnarchive()}
-                    className="rounded-[var(--radius-card)] bg-success px-4 py-2 text-white hover:bg-success/90"
+                    className="rounded-[var(--radius-card)] bg-success px-4 py-2 text-success-foreground hover:bg-success/90"
                     disabled={submitting}
                   >
                     {submitting ? "משחזר..." : "שחזר פרויקט"}
@@ -1008,7 +1008,7 @@ export default function ProjectDetailsPage() {
                         title={task.status === "todo" ? "לביצוע" : task.status === "in_progress" ? "בתהליך" : "הושלם"}
                         className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
                           task.status === "done"
-                            ? "border-success bg-success text-white"
+                            ? "border-success bg-success text-success-foreground"
                             : task.status === "in_progress"
                             ? "border-primary bg-primary/10"
                             : "border-border bg-transparent"
