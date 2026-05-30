@@ -17,10 +17,12 @@
     "verify:deployment": "node --import tsx scripts/verify-deployment.ts"
   },
   "dependencies": {
+    "better-auth": "^1.6.12",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "drizzle-orm": "^0.39.2",
+    "drizzle-orm": "^0.45.2",
     "exceljs": "^4.4.0",
+    "kysely": "^0.28.17",
     "lucide-react": "^0.563.0",
     "next": "16.1.6",
     "pg": "^8.18.0",
@@ -38,7 +40,7 @@
     "@types/pg": "^8.16.0",
     "@types/react": "19.2.13",
     "@types/react-dom": "^19",
-    "drizzle-kit": "^0.30.4",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",

@@ -159,40 +159,35 @@ export interface User {
 }
 
 /**
- * Get the current authenticated user from session cookie
- * Returns null if not authenticated
+ * Get the current authenticated user from the Better Auth session.
+ * Returns null if not authenticated.
+ *
+ * This is the single source of identity for every API route's tenant-isolation
+ * filter (`WHERE user_id = $`). Keep the returned shape stable.
  */
 export async function getUser(): Promise<User | null> {
   try {
-    const { cookies } = await import("next/headers");
-    const cookieStore = await cookies();
-    const sessionToken = cookieStore.get("session")?.value;
+    const { headers } = await import("next/headers");
+    const { auth } = await import("./auth/better-auth");
 
-    if (!sessionToken) {
+    const session = await auth.api.getSession({ headers: await headers() });
+
+    if (!session?.user) {
       return null;
     }
 
-    // Import query here to avoid circular dependency issues
-    const { query } = await import("./db");
-
-    // Get user from session
-    const result = await query<{ user_id: string; email: string; email_verified: boolean; role: string }>(
-      `SELECT s.user_id, u.email, u.email_verified, u.role
-       FROM sessions s
-       JOIN users u ON s.user_id = u.id
-       WHERE s.token = $1 AND s.expires_at > NOW()`,
-      [sessionToken]
-    );
-
-    if (result.rows.length === 0) {
-      return null;
-    }
+    const sessionUser = session.user as {
+      id: string;
+      email: string;
+      emailVerified?: boolean;
+      role?: string | null;
+    };
 
     return {
-      id: result.rows[0].user_id,
-      email: result.rows[0].email,
-      emailVerified: result.rows[0].email_verified,
-      role: result.rows[0].role ?? "user",
+      id: sessionUser.id,
+      email: sessionUser.email,
+      emailVerified: sessionUser.emailVerified,
+      role: sessionUser.role ?? "user",
     };
   } catch {
     return null;

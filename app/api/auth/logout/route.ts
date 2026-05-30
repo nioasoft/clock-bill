@@ -1,10 +1,11 @@
 /**
- * User logout API endpoint
- * Clears the session cookie and removes session from database
+ * User logout API endpoint (frontend-facing).
+ * Thin wrapper over Better Auth sign-out so existing client code that POSTs to
+ * /api/auth/logout keeps working unchanged.
  */
 import { NextResponse } from "next/server";
-import { query } from "@/lib/db";
-import { cookies } from "next/headers";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth/better-auth";
 
 export interface LogoutResponse {
   success: boolean;
@@ -16,16 +17,7 @@ export interface LogoutResponse {
  */
 export async function POST(): Promise<NextResponse> {
   try {
-    const cookieStore = await cookies();
-    const sessionToken = cookieStore.get("session")?.value;
-
-    if (sessionToken) {
-      // Remove session from database
-      await query("DELETE FROM sessions WHERE token = $1", [sessionToken]);
-
-      // Clear cookie
-      cookieStore.delete("session");
-    }
+    await auth.api.signOut({ headers: await headers() });
 
     return NextResponse.json({
       success: true,

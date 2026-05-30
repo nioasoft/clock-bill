@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Gauge, CheckCircle2 } from "lucide-react";
+import { authClient } from "@/lib/auth/client";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 
 function ResetPasswordForm() {
@@ -42,18 +43,15 @@ function ResetPasswordForm() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password }),
+      const { error: authError } = await authClient.resetPassword({
+        newPassword: password,
+        token: token ?? "",
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        setSuccess(true);
+      if (authError) {
+        setError(authError.message || "שגיאה באיפוס הסיסמה");
       } else {
-        setError(data.message || "שגיאה באיפוס הסיסמה");
+        setSuccess(true);
       }
     } catch {
       setError("שגיאת תקשורת. אנא נסה שוב.");

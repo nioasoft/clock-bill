@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Gauge, CheckCircle2 } from "lucide-react";
+import { authClient } from "@/lib/auth/client";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 
 export default function ForgotPasswordPage() {
@@ -18,18 +19,15 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+      const { error: authError } = await authClient.requestPasswordReset({
+        email,
+        redirectTo: "/reset-password",
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        setSuccess(true);
+      if (authError) {
+        setError(authError.message || "שגיאה בשליחת בקשת איפוס הסיסמה");
       } else {
-        setError(data.message || "שגיאה בשליחת בקשת איפוס הסיסמה");
+        setSuccess(true);
       }
     } catch {
       setError("שגיאת תקשורת. אנא נסה שוב.");

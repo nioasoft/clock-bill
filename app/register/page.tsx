@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Gauge, UserPlus } from "lucide-react";
 import { validateEmail, validatePassword, validatePasswordConfirm } from "@/lib/validation";
+import { authClient } from "@/lib/auth/client";
 import { PasswordStrengthIndicator } from "@/components/password-strength-indicator";
+import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { ClockFaceMarks, RadialLines, GrainOverlay } from "@/components/ui/thematic-elements";
 
 export default function RegisterPage() {
@@ -55,19 +57,29 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, businessName }),
+      const { error: authError } = await authClient.signUp.email({
+        email,
+        password,
+        name: businessName || email.split("@")[0],
       });
 
-      const data = await response.json();
-
-      if (data.success) {
+      if (authError) {
+        setError(authError.message || "שגיאה בהרשמה");
+      } else {
+        // Persist the business name on the user's profile if provided.
+        if (businessName.trim()) {
+          try {
+            await fetch("/api/profile", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ businessName: businessName.trim() }),
+            });
+          } catch {
+            // Non-fatal: profile can be edited later in settings.
+          }
+        }
         router.push("/dashboard");
         router.refresh();
-      } else {
-        setError(data.message || "שגיאה בהרשמה");
       }
     } catch {
       setError("שגיאת תקשורת. אנא נסה שוב.");
@@ -252,6 +264,17 @@ export default function RegisterPage() {
                 {loading ? "נרשם..." : "הרשם"}
               </button>
             </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                <div className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-background px-3 text-muted-foreground">או</span>
+              </div>
+            </div>
+
+            <GoogleSignInButton label="הירשם עם Google" />
 
             <div className="text-center">
               <p className="text-sm text-muted-foreground">

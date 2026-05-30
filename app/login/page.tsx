@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Gauge, LogIn } from "lucide-react";
 import { validateEmail, validateRequired } from "@/lib/validation";
+import { authClient } from "@/lib/auth/client";
 import { ClockFaceMarks, HourglassSVG, GrainOverlay } from "@/components/ui/thematic-elements";
+import { GoogleSignInButton } from "@/components/google-sign-in-button";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -43,19 +45,16 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      const { error: authError } = await authClient.signIn.email({
+        email,
+        password,
       });
 
-      const data = await response.json();
-
-      if (data.success) {
+      if (authError) {
+        setError(authError.message || "שגיאה בהתחברות");
+      } else {
         router.push("/dashboard");
         router.refresh();
-      } else {
-        setError(data.message || "שגיאה בהתחברות");
       }
     } catch {
       setError("שגיאת תקשורת. אנא נסה שוב.");
@@ -180,6 +179,17 @@ export default function LoginPage() {
                 {loading ? "מתחבר..." : "התחבר"}
               </button>
             </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                <div className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-background px-3 text-muted-foreground">או</span>
+              </div>
+            </div>
+
+            <GoogleSignInButton label="התחבר עם Google" />
 
             <div className="text-center space-y-2">
               <p className="text-sm text-muted-foreground">
