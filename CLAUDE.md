@@ -48,7 +48,9 @@ if (!user) {
 // All queries MUST filter by user.id for data isolation
 ```
 
-`getUser()` returns `{ id, email, emailVerified, role }` or `null`. Tenant isolation is app-level (`WHERE user_id = $`); **RLS is deferred** until a non-BYPASSRLS DB role is provisioned (the Neon `neondb_owner` role bypasses RLS). Google login needs `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`.
+`getUser()` returns `{ id, email, emailVerified, role }` or `null`. Google login needs `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`.
+
+**Row-Level Security is ENABLED.** The app connects as the restricted role `clockbill_app` (`DATABASE_URL`); migrations use the privileged `DATABASE_URL_ADMIN`. `lib/db.ts` sets `app.current_user_id` (transaction-local) per authed query — resolved from an explicit in-frame context (`setUserContext`, signup hook) or the BA session (`getSessionUserId`, cached; needed because `enterWith` from `getUser()` doesn't reach the Next route frame). Policies live in Neon (`drizzle/rls-policies.sql`), FORCE-d on user_profiles/clients/projects/tasks/time_entries/report_presets/custom_tags. Keep the app-level `WHERE user_id = $` filter too (defense in depth). **Prod TODO:** set Vercel `DATABASE_URL`=clockbill_app + `DATABASE_URL_ADMIN`=neondb_owner.
 
 ### API Routes
 
