@@ -22,7 +22,7 @@ export async function GET(): Promise<NextResponse> {
       // Top 10 most active users by entry count
       query<{ user_id: string; email: string; entry_count: string }>(
         `SELECT u.id as user_id, u.email, COUNT(te.id) as entry_count
-         FROM users u
+         FROM "user" u
          LEFT JOIN time_entries te ON u.id = te.user_id
          GROUP BY u.id, u.email
          ORDER BY entry_count DESC

@@ -1,11 +1,16 @@
 /**
  * POST /api/admin/users/[id]/actions
- * Perform admin actions on a user (reset password, verify email, delete sessions, toggle role)
+ * Perform admin actions on a user (reset password, verify email, delete
+ * sessions, toggle role, delete user).
+ *
+ * Identity is backed by Better Auth: the `user`, `session` and `account`
+ * tables (singular). Passwords live in `account` (provider_id='credential'),
+ * managed by Better Auth — see the `reset_password` case for why a raw reset
+ * is not supported here.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { getAdminUser } from "@/lib/admin";
-import { hashPassword, generateToken } from "@/lib/auth";
 
 interface ActionBody {
   action: "reset_password" | "verify_email" | "delete_sessions" | "toggle_role" | "delete_user";
@@ -24,9 +29,9 @@ export async function POST(
     const { id: userId } = await params;
     const body = (await request.json()) as ActionBody;
 
-    // Verify user exists
+    // Verify user exists (Better Auth `user` table — "user" is a reserved word).
     const userResult = await query<{ id: string; email: string; role: string }>(
-      "SELECT id, email, role FROM users WHERE id = $1",
+      'SELECT id, email, role FROM "user" WHERE id = $1',
       [userId]
     );
 
@@ -46,25 +51,28 @@ export async function POST(
 
     switch (body.action) {
       case "reset_password": {
-        const tempPassword = generateToken(8);
-        const passwordHash = await hashPassword(tempPassword);
-        await query("UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2", [passwordHash, userId]);
-        // Delete all sessions to force re-login
-        await query("DELETE FROM sessions WHERE user_id = $1", [userId]);
-        return NextResponse.json({
-          success: true,
-          message: "הסיסמה אופסה בהצלחה",
-          tempPassword,
-        });
+        // Better Auth stores credential passwords in the `account` table using
+        // its own hashing scheme. The admin plugin (auth.api.setUserPassword)
+        // is not enabled on this instance, so we cannot safely set a new
+        // password without corrupting the account. Disable this action and
+        // direct admins to the self-service "forgot password" flow instead.
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "איפוס סיסמה ידני אינו נתמך. יש להפנות את המשתמש לתהליך 'שכחתי סיסמה'.",
+          },
+          { status: 400 }
+        );
       }
 
       case "verify_email": {
-        await query("UPDATE users SET email_verified = TRUE, updated_at = NOW() WHERE id = $1", [userId]);
+        await query('UPDATE "user" SET email_verified = TRUE, updated_at = NOW() WHERE id = $1', [userId]);
         return NextResponse.json({ success: true, message: "האימייל אומת בהצלחה" });
       }
 
       case "delete_sessions": {
-        const deleteResult = await query("DELETE FROM sessions WHERE user_id = $1", [userId]);
+        const deleteResult = await query('DELETE FROM "session" WHERE user_id = $1', [userId]);
         return NextResponse.json({
           success: true,
           message: `נמחקו ${deleteResult.rowCount} הפעלות`,
@@ -73,7 +81,7 @@ export async function POST(
 
       case "toggle_role": {
         const newRole = targetUser.role === "admin" ? "user" : "admin";
-        await query("UPDATE users SET role = $1, updated_at = NOW() WHERE id = $2", [newRole, userId]);
+        await query('UPDATE "user" SET role = $1, updated_at = NOW() WHERE id = $2', [newRole, userId]);
         return NextResponse.json({
           success: true,
           message: `התפקיד שונה ל-${newRole}`,
@@ -82,17 +90,17 @@ export async function POST(
       }
 
       case "delete_user": {
-        // Delete in order: sessions, profiles, entries, projects, clients, user
-        await query("DELETE FROM sessions WHERE user_id = $1", [userId]);
+        // Delete Better Auth identity rows (account, session) and all app data,
+        // then the user. App data tables key off the loose `user_id` text column.
+        await query('DELETE FROM "session" WHERE user_id = $1', [userId]);
+        await query('DELETE FROM "account" WHERE user_id = $1', [userId]);
         await query("DELETE FROM user_profiles WHERE user_id = $1", [userId]);
         await query("DELETE FROM time_entries WHERE user_id = $1", [userId]);
         await query("DELETE FROM projects WHERE user_id = $1", [userId]);
         await query("DELETE FROM clients WHERE user_id = $1", [userId]);
         await query("DELETE FROM custom_tags WHERE user_id = $1", [userId]);
         await query("DELETE FROM report_presets WHERE user_id = $1", [userId]);
-        await query("DELETE FROM password_reset_tokens WHERE user_id = $1", [userId]);
-        await query("DELETE FROM email_verification_tokens WHERE user_id = $1", [userId]);
-        await query("DELETE FROM users WHERE id = $1", [userId]);
+        await query('DELETE FROM "user" WHERE id = $1', [userId]);
         return NextResponse.json({ success: true, message: "המשתמש נמחק בהצלחה" });
       }
 

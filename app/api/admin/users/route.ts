@@ -29,7 +29,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     const countResult = await query<{ count: string }>(
       `SELECT COUNT(*) as count
-       FROM users u
+       FROM "user" u
        LEFT JOIN user_profiles up ON u.id = up.user_id
        ${whereClause}`,
       params
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
          COALESCE(te_stats.entry_count, 0) as entry_count,
          COALESCE(p_stats.project_count, 0) as project_count,
          te_stats.last_entry_date
-       FROM users u
+       FROM "user" u
        LEFT JOIN user_profiles up ON u.id = up.user_id
        LEFT JOIN (
          SELECT user_id, COUNT(*) as entry_count, MAX(date) as last_entry_date

@@ -25,7 +25,7 @@ export async function GET(
       email_verified: boolean;
       role: string;
       created_at: string;
-    }>("SELECT id, email, email_verified, role, created_at FROM users WHERE id = $1", [userId]);
+    }>('SELECT id, email, email_verified, role, created_at FROM "user" WHERE id = $1', [userId]);
 
     if (userResult.rows.length === 0) {
       return NextResponse.json({ success: false, message: "משתמש לא נמצא" }, { status: 404 });
@@ -89,7 +89,7 @@ export async function GET(
         id: string;
         created_at: string;
         expires_at: string;
-      }>("SELECT id, created_at, expires_at FROM sessions WHERE user_id = $1 ORDER BY created_at DESC", [userId]),
+      }>('SELECT id, created_at, expires_at FROM "session" WHERE user_id = $1 ORDER BY created_at DESC', [userId]),
     ]);
 
     return NextResponse.json({

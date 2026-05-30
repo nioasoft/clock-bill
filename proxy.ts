@@ -1,16 +1,25 @@
 /**
- * Next.js middleware for authentication
- * Protects routes that require authentication
+ * Next.js proxy (formerly "middleware" — renamed in Next.js 16) for
+ * authentication gating.
+ *
+ * Auth state is detected via Better Auth's session cookie using
+ * `getSessionCookie` rather than a hardcoded cookie name, so it stays correct
+ * across cookie-name/prefix changes (e.g. secure-prefix in production).
+ *
+ * Note: this is an optimistic check — it only verifies a session cookie is
+ * present, not that it is valid. Full validation happens server-side via
+ * `getUser()` in the protected routes/pages.
  */
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getSessionCookie } from "better-auth/cookies";
 
 // Routes that don't require authentication
 const publicRoutes = ["/login", "/register", "/forgot-password", "/reset-password"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const sessionCookie = request.cookies.get("session")?.value;
+  const sessionCookie = getSessionCookie(request);
 
   // Landing page "/" is handled by the page itself (server component checks session)
   if (pathname === "/") {
@@ -18,9 +27,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Check if the route is public
-  const isPublicRoute = publicRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
+  const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
 
   // If user is authenticated and trying to access public routes, redirect to dashboard
   if (sessionCookie && isPublicRoute) {
