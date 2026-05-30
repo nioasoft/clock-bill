@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Gauge, LogIn } from "lucide-react";
@@ -19,6 +19,14 @@ export default function LoginPage() {
   // Validation errors
   const [emailError, setEmailError] = useState<string | undefined>(undefined);
   const [passwordError, setPasswordError] = useState<string | undefined>(undefined);
+
+  // If already signed in (valid session, not just a stale cookie), skip the form.
+  const { data: session } = authClient.useSession();
+  useEffect(() => {
+    if (session?.user) {
+      router.replace("/dashboard");
+    }
+  }, [session, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

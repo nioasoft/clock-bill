@@ -29,16 +29,16 @@ export function proxy(request: NextRequest) {
   // Check if the route is public
   const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
 
-  // If user is authenticated and trying to access public routes, redirect to dashboard
-  if (sessionCookie && isPublicRoute) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
-  // If user is not authenticated and trying to access protected routes, redirect to login
+  // If user is not authenticated and trying to access protected routes, redirect to login.
   if (!sessionCookie && !isPublicRoute) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
+  // NOTE: we intentionally do NOT redirect authenticated users away from public
+  // routes here. `getSessionCookie` only confirms a cookie is PRESENT, not valid;
+  // doing so caused a redirect loop (login -> dashboard -> client-check-fails ->
+  // login -> ...) for stale/expired cookies. The login page does its own valid-
+  // session check client-side and redirects to /dashboard when truly signed in.
   return NextResponse.next();
 }
 
