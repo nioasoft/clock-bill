@@ -33,14 +33,16 @@ export function PwaProvider() {
     return () => window.removeEventListener("load", onLoad);
   }, []);
 
-  // Capture the install prompt.
+  // Capture the install prompt. Only surface the banner on mobile — on desktop
+  // it's noise (the user asked to keep it mobile-only).
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (localStorage.getItem(DISMISS_KEY) === "1") return;
     const handler = (e: Event) => {
       e.preventDefault();
       setInstallEvent(e as BeforeInstallPromptEvent);
-      setVisible(true);
+      const isMobile = window.matchMedia("(max-width: 1023px)").matches;
+      if (isMobile) setVisible(true);
     };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
@@ -75,12 +77,12 @@ export function PwaProvider() {
     >
       <button
         onClick={dismiss}
-        className="absolute top-2 start-2 rounded-md p-1 text-muted-foreground hover:bg-muted"
+        className="absolute top-2 end-2 z-10 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
         aria-label="סגור"
       >
         <X className="h-4 w-4" />
       </button>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 pe-7">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius)] bg-primary text-primary-foreground">
           <Download className="h-5 w-5" />
         </div>

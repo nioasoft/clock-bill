@@ -162,10 +162,15 @@ body {
   background-color: #8A4E20;
 }
 
-/* Link defaults */
-a {
-  color: inherit;
-  text-decoration: none;
+/* Link defaults — MUST be in @layer base so Tailwind text-* utilities
+   (e.g. text-primary-foreground) override them. An unlayered `a { color: inherit }`
+   beats layered utilities in Tailwind v4's cascade, which made yellow <Link>
+   buttons inherit the white parent text. */
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 }
 
 /* Print utility */
