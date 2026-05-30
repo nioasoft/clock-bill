@@ -6,7 +6,7 @@
  *  - API requests (/api/*): always network (never cache user/tenant data).
  * Bump CACHE_VERSION to invalidate old caches on deploy.
  */
-const CACHE_VERSION = "monit-v1";
+const CACHE_VERSION = "monit-v2";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const PAGE_CACHE = `${CACHE_VERSION}-pages`;
 const OFFLINE_URL = "/offline";
