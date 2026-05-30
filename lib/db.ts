@@ -29,9 +29,26 @@ export function setUserContext(userId: string): void {
   userContext.enterWith({ userId });
 }
 
-/** The current request's user id, or null when unauthenticated/out of context. */
+/** The explicit in-frame tenant context, if set (e.g. by the signup hook). */
 export function getCurrentUserId(): string | null {
   return userContext.getStore()?.userId || null;
+}
+
+/**
+ * Resolve the tenant user id for RLS: prefer an explicitly-set in-frame context
+ * (reliable, used by the signup hook), otherwise fall back to the Better Auth
+ * session. The fallback is needed because AsyncLocalStorage.enterWith set inside
+ * getUser() does NOT propagate back to the Next route handler frame.
+ */
+async function resolveTenantUserId(): Promise<string | null> {
+  const ctx = getCurrentUserId();
+  if (ctx) return ctx;
+  try {
+    const { getSessionUserId } = await import("@/lib/auth");
+    return await getSessionUserId();
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -63,7 +80,7 @@ export async function query<T extends Record<string, unknown> = Record<string, u
   text: string,
   params?: unknown[]
 ): Promise<QueryResult<T>> {
-  const userId = getCurrentUserId();
+  const userId = await resolveTenantUserId();
   if (!userId) {
     return getPool().query<T>(text, params);
   }
@@ -95,7 +112,7 @@ export async function query<T extends Record<string, unknown> = Record<string, u
 export async function withTransaction<T>(
   callback: (client: PoolClient) => Promise<T>
 ): Promise<T> {
-  const userId = getCurrentUserId();
+  const userId = await resolveTenantUserId();
   const client = await getPool().connect();
   try {
     await client.query("BEGIN");

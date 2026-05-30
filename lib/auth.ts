@@ -183,17 +183,55 @@ export async function getUser(): Promise<User | null> {
       role?: string | null;
     };
 
-    // Bind the request's tenant context for Row-Level Security. Done here
-    // because getUser() runs at the top of every authed route before queries.
-    const { setUserContext } = await import("./db");
-    setUserContext(sessionUser.id);
-
     return {
       id: sessionUser.id,
       email: sessionUser.email,
       emailVerified: sessionUser.emailVerified,
       role: sessionUser.role ?? "user",
     };
+  } catch {
+    return null;
+  }
+}
+
+// Short-lived per-token cache so the many query() calls in one request don't
+// each re-resolve the session. Better Auth's cookieCache makes getSession cheap,
+// and this avoids redundant work within a request.
+const sessionIdCache = new Map<string, { id: string; exp: number }>();
+
+/**
+ * Resolve just the current user's id from the Better Auth session, for RLS
+ * binding inside the DB layer. Returns null when unauthenticated. Cached briefly
+ * by session token. Safe outside a request context (returns null, never throws).
+ */
+export async function getSessionUserId(): Promise<string | null> {
+  try {
+    const { cookies, headers } = await import("next/headers");
+    const cookieStore = await cookies();
+    const token =
+      cookieStore.get("better-auth.session_token")?.value ??
+      cookieStore.get("__Secure-better-auth.session_token")?.value ??
+      null;
+
+    if (!token) return null;
+
+    const now = Date.now();
+    const cached = sessionIdCache.get(token);
+    if (cached && cached.exp > now) return cached.id;
+
+    const { auth } = await import("./auth/better-auth");
+    const session = await auth.api.getSession({ headers: await headers() });
+    const id = session?.user?.id ?? null;
+    if (id) {
+      sessionIdCache.set(token, { id, exp: now + 5000 });
+      if (sessionIdCache.size > 1000) {
+        for (const k of sessionIdCache.keys()) {
+          sessionIdCache.delete(k);
+          if (sessionIdCache.size <= 500) break;
+        }
+      }
+    }
+    return id;
   } catch {
     return null;
   }

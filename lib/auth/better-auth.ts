@@ -51,6 +51,11 @@ export const auth = betterAuth({
         },
       }
     : {},
+  session: {
+    // Cache session data in a signed cookie so getSession() (called by the RLS
+    // tenant resolver on each query) is cheap — no DB hit for ~5 minutes.
+    cookieCache: { enabled: true, maxAge: 300 },
+  },
   user: {
     additionalFields: {
       // Not settable by the client during signup; managed server-side.
