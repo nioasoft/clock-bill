@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { calculateFixedMonthlyCharges } from "@/lib/fixed-charges";
+import { addDays, appDateBoundaries } from "@/lib/dates";
 
 /**
  * GET /api/dashboard/stats
@@ -17,21 +18,18 @@ export async function GET(request: NextRequest) {
 
     const userId = user.id;
 
-    // Get current date info
+    // Get current date info — all boundaries computed in the app timezone
+    // (Asia/Jerusalem) so "today"/"week"/"month" match the user's calendar.
     const now = new Date();
-    const today = now.toISOString().split('T')[0];
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay()); // Start of week (Sunday)
-    const startOfWeekStr = startOfWeek.toISOString().split('T')[0];
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfMonthStr = startOfMonth.toISOString().split('T')[0];
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    const endOfMonthStr = endOfMonth.toISOString().split('T')[0];
+    const {
+      today,
+      startOfWeek: startOfWeekStr,
+      startOfMonth: startOfMonthStr,
+      endOfMonth: endOfMonthStr,
+    } = appDateBoundaries(now);
 
     // Get upcoming deadlines date range
-    const thirtyDaysFromNow = new Date(now);
-    thirtyDaysFromNow.setDate(now.getDate() + 30);
-    const thirtyDaysStr = thirtyDaysFromNow.toISOString().split('T')[0];
+    const thirtyDaysStr = addDays(today, 30);
 
     // Run all independent queries in parallel
     const [

@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 
+/** Default and maximum page size for the entries list to bound query cost. */
+const DEFAULT_LIMIT = 500;
+const MAX_LIMIT = 1000;
+
 /**
  * GET /api/entries
- * List all time entries for the authenticated user
+ * List time entries for the authenticated user (paginated).
+ * Accepts optional ?limit & ?offset; returns pagination metadata so the client
+ * can tell when more rows exist instead of silently truncating.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -24,6 +30,52 @@ export async function GET(request: NextRequest) {
     const projectId = searchParams.get("projectId");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
+
+    // Pagination params (bounded to protect the DB from unbounded scans)
+    const limit = Math.min(
+      Math.max(parseInt(searchParams.get("limit") || `${DEFAULT_LIMIT}`, 10) || DEFAULT_LIMIT, 1),
+      MAX_LIMIT
+    );
+    const offset = Math.max(parseInt(searchParams.get("offset") || "0", 10) || 0, 0);
+
+    // Build shared WHERE clause + params for both the count and the page query
+    let whereClause = ` WHERE te.user_id = $1`;
+    const filterParams: (string | number | boolean | null)[] = [user.id];
+    let filterIndex = 2;
+
+    if (clientId) {
+      whereClause += ` AND c.id = $${filterIndex}`;
+      filterParams.push(clientId);
+      filterIndex++;
+    }
+
+    if (projectId) {
+      whereClause += ` AND p.id = $${filterIndex}`;
+      filterParams.push(projectId);
+      filterIndex++;
+    }
+
+    if (startDate) {
+      whereClause += ` AND te.date >= $${filterIndex}`;
+      filterParams.push(startDate);
+      filterIndex++;
+    }
+
+    if (endDate) {
+      whereClause += ` AND te.date <= $${filterIndex}`;
+      filterParams.push(endDate);
+      filterIndex++;
+    }
+
+    // Total count for pagination metadata
+    const countResult = await query<{ total: string }>(
+      `SELECT COUNT(*) as total
+       FROM time_entries te
+       JOIN projects p ON te.project_id = p.id
+       JOIN clients c ON p.client_id = c.id${whereClause}`,
+      filterParams
+    );
+    const total = parseInt(countResult.rows[0]?.total || "0", 10);
 
     // Build query with filters
     let queryText = `
@@ -49,37 +101,12 @@ export async function GET(request: NextRequest) {
       FROM time_entries te
       JOIN projects p ON te.project_id = p.id
       JOIN clients c ON p.client_id = c.id
-      LEFT JOIN tasks tk ON te.task_id = tk.id
-      WHERE te.user_id = $1
-    `;
-    const queryParams: (string | number | boolean | null)[] = [user.id];
-    let paramIndex = 2;
-
-    if (clientId) {
-      queryText += ` AND c.id = $${paramIndex}`;
-      queryParams.push(clientId);
-      paramIndex++;
-    }
-
-    if (projectId) {
-      queryText += ` AND p.id = $${paramIndex}`;
-      queryParams.push(projectId);
-      paramIndex++;
-    }
-
-    if (startDate) {
-      queryText += ` AND te.date >= $${paramIndex}`;
-      queryParams.push(startDate);
-      paramIndex++;
-    }
-
-    if (endDate) {
-      queryText += ` AND te.date <= $${paramIndex}`;
-      queryParams.push(endDate);
-      paramIndex++;
-    }
+      LEFT JOIN tasks tk ON te.task_id = tk.id${whereClause}`;
+    const queryParams: (string | number | boolean | null)[] = [...filterParams];
 
     queryText += ` ORDER BY te.date DESC, te.created_at DESC`;
+    queryText += ` LIMIT $${filterIndex} OFFSET $${filterIndex + 1}`;
+    queryParams.push(limit, offset);
 
     const result = await query<{
       id: string;
@@ -126,6 +153,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       entries,
+      pagination: {
+        total,
+        limit,
+        offset,
+        hasMore: offset + entries.length < total,
+      },
     }, {
       headers: {
         'Cache-Control': 'private, max-age=10, stale-while-revalidate=30'
@@ -278,8 +311,8 @@ export async function POST(request: NextRequest) {
       JOIN projects p ON te.project_id = p.id
       JOIN clients c ON p.client_id = c.id
       LEFT JOIN tasks tk ON te.task_id = tk.id
-      WHERE te.id = $1`,
-      [entryId]
+      WHERE te.id = $1 AND te.user_id = $2`,
+      [entryId, user.id]
     );
 
     const entry = entryResult.rows[0];

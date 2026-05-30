@@ -157,7 +157,20 @@ export async function PUT(
 
     const { query } = await import("@/lib/db");
 
-    // Verify ownership and update client
+    // Verify ownership BEFORE mutating
+    const ownershipCheck = await query<{ exists: boolean }>(
+      `SELECT EXISTS(SELECT 1 FROM clients WHERE id = $1 AND user_id = $2) as exists`,
+      [clientId, user.id]
+    );
+
+    if (!ownershipCheck.rows[0].exists) {
+      return NextResponse.json(
+        { success: false, message: "הלקוח לא נמצא" },
+        { status: 404 }
+      );
+    }
+
+    // Update client (still scoped by user_id as defense in depth)
     await query(
       `UPDATE clients
        SET name = $1, contact_name = $2, email = $3, phone = $4, address = $5, default_rate = $6,
@@ -182,20 +195,7 @@ export async function PUT(
       ]
     );
 
-    // Check if client exists and belongs to user
-    const checkResult = await query<{ exists: boolean }>(
-      `SELECT EXISTS(SELECT 1 FROM clients WHERE id = $1 AND user_id = $2) as exists`,
-      [clientId, user.id]
-    );
-
-    if (!checkResult.rows[0].exists) {
-      return NextResponse.json(
-        { success: false, message: "הלקוח לא נמצא" },
-        { status: 404 }
-      );
-    }
-
-    // Fetch the updated client
+    // Fetch the updated client (scoped by user_id)
     const clientResult = await query<{
       id: string;
       name: string;
@@ -217,8 +217,8 @@ export async function PUT(
               currency, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate,
               notes, is_active, created_at
        FROM clients
-       WHERE id = $1`,
-      [clientId]
+       WHERE id = $1 AND user_id = $2`,
+      [clientId, user.id]
     );
 
     const client = clientResult.rows[0];

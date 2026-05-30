@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { calculateFixedMonthlyCharges } from "@/lib/fixed-charges";
+import { addMoney, calcHourlyAmount } from "@/lib/money";
 
 /**
  * GET /api/reports
@@ -108,9 +109,7 @@ export async function GET(request: NextRequest) {
     }>(queryText, queryParams);
 
     const entries = result.rows.map((entry) => {
-      const amount = entry.hourly_rate
-        ? (entry.duration / 60) * entry.hourly_rate
-        : 0;
+      const amount = calcHourlyAmount(entry.duration, entry.hourly_rate);
 
       return {
         id: entry.id,
@@ -146,7 +145,7 @@ export async function GET(request: NextRequest) {
       if (!acc[currency]) {
         acc[currency] = 0;
       }
-      acc[currency] += entry.amount || 0;
+      acc[currency] = addMoney(acc[currency], entry.amount || 0);
       return acc;
     }, {} as Record<string, number>);
 
@@ -173,7 +172,7 @@ export async function GET(request: NextRequest) {
       if (!acc[key].totalAmounts[currency]) {
         acc[key].totalAmounts[currency] = 0;
       }
-      acc[key].totalAmounts[currency] += entry.amount || 0;
+      acc[key].totalAmounts[currency] = addMoney(acc[key].totalAmounts[currency], entry.amount || 0);
 
       acc[key].entries.push(entry);
       return acc;
@@ -209,7 +208,7 @@ export async function GET(request: NextRequest) {
       }
       acc[key].totalMinutes += entry.duration;
       acc[key].totalHours = acc[key].totalMinutes / 60;
-      acc[key].totalAmount += entry.amount || 0;
+      acc[key].totalAmount = addMoney(acc[key].totalAmount, entry.amount || 0);
       acc[key].entries.push(entry);
       return acc;
     }, {} as Record<string, {
@@ -246,7 +245,7 @@ export async function GET(request: NextRequest) {
       if (!acc[key].totalAmounts[currency]) {
         acc[key].totalAmounts[currency] = 0;
       }
-      acc[key].totalAmounts[currency] += entry.amount || 0;
+      acc[key].totalAmounts[currency] = addMoney(acc[key].totalAmounts[currency], entry.amount || 0);
 
       acc[key].entries.push(entry);
       return acc;
@@ -284,7 +283,7 @@ export async function GET(request: NextRequest) {
       if (!acc[weekKey].totalAmounts[currency]) {
         acc[weekKey].totalAmounts[currency] = 0;
       }
-      acc[weekKey].totalAmounts[currency] += entry.amount || 0;
+      acc[weekKey].totalAmounts[currency] = addMoney(acc[weekKey].totalAmounts[currency], entry.amount || 0);
 
       acc[weekKey].entries.push(entry);
       return acc;
@@ -363,7 +362,7 @@ export async function GET(request: NextRequest) {
         if (!fixedAmountsByCurrency[line.currency]) {
           fixedAmountsByCurrency[line.currency] = 0;
         }
-        fixedAmountsByCurrency[line.currency] += line.amount;
+        fixedAmountsByCurrency[line.currency] = addMoney(fixedAmountsByCurrency[line.currency], line.amount);
 
         if (!byClient[line.clientId]) {
           byClient[line.clientId] = {
@@ -382,7 +381,10 @@ export async function GET(request: NextRequest) {
         if (!byClient[line.clientId].totalAmounts[line.currency]) {
           byClient[line.clientId].totalAmounts[line.currency] = 0;
         }
-        byClient[line.clientId].totalAmounts[line.currency] += line.amount;
+        byClient[line.clientId].totalAmounts[line.currency] = addMoney(
+          byClient[line.clientId].totalAmounts[line.currency],
+          line.amount
+        );
 
         if (!byProject[line.projectId]) {
           byProject[line.projectId] = {
@@ -399,7 +401,7 @@ export async function GET(request: NextRequest) {
             entries: [],
           };
         }
-        byProject[line.projectId].totalAmount += line.amount;
+        byProject[line.projectId].totalAmount = addMoney(byProject[line.projectId].totalAmount, line.amount);
       }
     }
 
@@ -408,7 +410,7 @@ export async function GET(request: NextRequest) {
       if (!totalAmountsByCurrency[currency]) {
         totalAmountsByCurrency[currency] = 0;
       }
-      totalAmountsByCurrency[currency] += amount;
+      totalAmountsByCurrency[currency] = addMoney(totalAmountsByCurrency[currency], amount);
     }
 
     return NextResponse.json({

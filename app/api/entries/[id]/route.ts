@@ -247,8 +247,8 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       JOIN projects p ON te.project_id = p.id
       JOIN clients c ON p.client_id = c.id
       LEFT JOIN tasks tk ON te.task_id = tk.id
-      WHERE te.id = $1`,
-      [id]
+      WHERE te.id = $1 AND te.user_id = $2`,
+      [id, user.id]
     );
 
     const entry = entryResult.rows[0];

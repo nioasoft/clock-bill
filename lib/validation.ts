@@ -107,9 +107,10 @@ export interface ValidationResult {
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
- * Israeli phone number pattern (allows various formats)
+ * Israeli phone number pattern (allows various formats).
+ * Second digit covers landline area codes (2,3,4,8,9), mobile (05X) and VoIP (07X).
  */
-const PHONE_PATTERN = /^(\+972|0)?[23489]\d{7,8}$/;
+const PHONE_PATTERN = /^(\+972|0)?[2-9]\d{7,8}$/;
 
 /**
  * Validate a single field
@@ -172,10 +173,11 @@ export function validateField(rule: ValidationRule): ValidationResult {
  * Validate email field
  */
 export function validateEmail(value: string, required = true): ValidationResult {
+  // Note: no `pattern` here — the custom validator already checks EMAIL_PATTERN
+  // and returns an email-specific message instead of the generic format error.
   return validateField({
     value,
     required,
-    pattern: EMAIL_PATTERN,
     custom: (v) => {
       if (!EMAIL_PATTERN.test(v)) {
         return "כתובת אימייל לא תקינה";

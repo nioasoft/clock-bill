@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { calculateFixedMonthlyCharges } from "@/lib/fixed-charges";
+import { addMoney, calcHourlyAmount } from "@/lib/money";
 import ExcelJS from "exceljs";
 
 /**
@@ -143,14 +144,14 @@ export async function GET(request: NextRequest) {
       const durationMinutes = entry.duration;
       const durationHours = durationMinutes / 60;
       const hourlyRate = entry.hourly_rate || 0;
-      const amount = hourlyRate > 0 ? durationHours * hourlyRate : 0;
+      const amount = calcHourlyAmount(durationMinutes, entry.hourly_rate);
       const currency = entry.currency || "ILS";
 
       totalMinutes += durationMinutes;
       if (!timeAmounts[currency]) {
         timeAmounts[currency] = 0;
       }
-      timeAmounts[currency] += amount;
+      timeAmounts[currency] = addMoney(timeAmounts[currency], amount);
 
       worksheet.addRow({
         date: entry.date,
@@ -237,7 +238,7 @@ export async function GET(request: NextRequest) {
         if (!fixedAmounts[line.currency]) {
           fixedAmounts[line.currency] = 0;
         }
-        fixedAmounts[line.currency] += line.amount;
+        fixedAmounts[line.currency] = addMoney(fixedAmounts[line.currency], line.amount);
       });
     }
 

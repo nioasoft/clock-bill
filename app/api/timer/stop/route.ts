@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@/lib/db";
+import { withTransaction } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 
 /**
  * POST /api/timer/stop
- * Stops a running timer by setting end_time and calculating duration
+ * Stops a running timer by setting end_time and calculating duration.
+ * Runs inside a transaction with a row lock (SELECT ... FOR UPDATE) so two
+ * concurrent stop requests can't both compute/write a duration for the same timer.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -20,68 +22,78 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { entryId, description, duration: customDuration } = body;
 
-    // Get the running entry
-    const entryResult = await query<{
-      id: string;
-      start_time: string;
-      description: string;
-      total_paused_time: number;
-      paused_at: string | null;
-    }>(
-      `SELECT id, start_time, description, total_paused_time, paused_at
-       FROM time_entries
-       WHERE id = $1 AND user_id = $2 AND start_time IS NOT NULL AND end_time IS NULL`,
-      [entryId, userId]
-    );
+    const result = await withTransaction(async (client) => {
+      // Lock the running entry for the duration of the transaction so a
+      // concurrent stop can't race between the read and the write.
+      const entryResult = await client.query<{
+        id: string;
+        start_time: string;
+        description: string;
+        total_paused_time: number;
+        paused_at: string | null;
+      }>(
+        `SELECT id, start_time, description, total_paused_time, paused_at
+         FROM time_entries
+         WHERE id = $1 AND user_id = $2 AND start_time IS NOT NULL AND end_time IS NULL
+         FOR UPDATE`,
+        [entryId, userId]
+      );
 
-    if (entryResult.rows.length === 0) {
+      if (entryResult.rows.length === 0) {
+        return null;
+      }
+
+      const entry = entryResult.rows[0];
+      const endTime = new Date();
+
+      let durationMinutes: number;
+
+      // If custom duration is provided, use it; otherwise calculate from start time
+      if (customDuration !== undefined && customDuration !== null) {
+        durationMinutes = customDuration;
+      } else {
+        const startTime = new Date(entry.start_time);
+        let durationMs = endTime.getTime() - startTime.getTime();
+
+        // Subtract total paused time if exists
+        if (entry.total_paused_time) {
+          durationMs -= entry.total_paused_time;
+        }
+
+        // If currently paused, subtract the current pause duration
+        if (entry.paused_at) {
+          const pausedAt = new Date(entry.paused_at);
+          const currentPauseMs = endTime.getTime() - pausedAt.getTime();
+          durationMs -= currentPauseMs;
+        }
+
+        durationMinutes = Math.floor(durationMs / 1000 / 60);
+      }
+
+      // Update the entry with end_time, duration, and optionally description
+      await client.query(
+        `UPDATE time_entries
+         SET end_time = $1, duration = $2, description = COALESCE($3, description), paused_at = NULL, updated_at = NOW()
+         WHERE id = $4`,
+        [endTime.toISOString(), durationMinutes, description || null, entryId]
+      );
+
+      return { durationMinutes, endTime };
+    });
+
+    if (!result) {
       return NextResponse.json(
         { success: false, message: "הטיימר לא נמצא או כבר הופסק" },
         { status: 404 }
       );
     }
 
-    const entry = entryResult.rows[0];
-    const endTime = new Date();
-
-    let durationMinutes: number;
-
-    // If custom duration is provided, use it; otherwise calculate from start time
-    if (customDuration !== undefined && customDuration !== null) {
-      durationMinutes = customDuration;
-    } else {
-      const startTime = new Date(entry.start_time);
-      let durationMs = endTime.getTime() - startTime.getTime();
-
-      // Subtract total paused time if exists
-      if (entry.total_paused_time) {
-        durationMs -= entry.total_paused_time;
-      }
-
-      // If currently paused, subtract the current pause duration
-      if (entry.paused_at) {
-        const pausedAt = new Date(entry.paused_at);
-        const currentPauseMs = endTime.getTime() - pausedAt.getTime();
-        durationMs -= currentPauseMs;
-      }
-
-      durationMinutes = Math.floor(durationMs / 1000 / 60);
-    }
-
-    // Update the entry with end_time, duration, and optionally description
-    await query(
-      `UPDATE time_entries
-       SET end_time = $1, duration = $2, description = COALESCE($3, description), paused_at = NULL, updated_at = NOW()
-       WHERE id = $4`,
-      [endTime.toISOString(), durationMinutes, description || null, entryId]
-    );
-
     return NextResponse.json({
       success: true,
       entry: {
         id: entryId,
-        duration: durationMinutes,
-        endTime: endTime.toISOString()
+        duration: result.durationMinutes,
+        endTime: result.endTime.toISOString()
       }
     });
   } catch (error) {

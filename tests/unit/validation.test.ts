@@ -89,10 +89,11 @@ runner.test('calculatePasswordStrength: fair password', () => {
   assertTrue(result.score >= 40 && result.score < 60);
 });
 
-runner.test('calculatePasswordStrength: good password', () => {
+runner.test('calculatePasswordStrength: fair password (no special char)', () => {
+  // 8 chars, upper+lower+number, no special: 20 + 12 + 12 + 12 = 56 -> FAIR
   const result = calculatePasswordStrength('Abc12345');
-  assertEqual(result.strength, PasswordStrength.GOOD);
-  assertTrue(result.score >= 60 && result.score < 80);
+  assertEqual(result.strength, PasswordStrength.FAIR);
+  assertTrue(result.score >= 40 && result.score < 60);
 });
 
 runner.test('calculatePasswordStrength: strong password', () => {
@@ -104,7 +105,7 @@ runner.test('calculatePasswordStrength: strong password', () => {
 runner.test('calculatePasswordStrength: checks length', () => {
   const result = calculatePasswordStrength('Abc123!@#');
   assertTrue(result.checks.length);
-  assertFalse(result.checks.lowercase);
+  assertTrue(result.checks.lowercase); // 'Abc123!@#' contains lowercase b, c
   assertTrue(result.checks.uppercase);
   assertTrue(result.checks.number);
   assertTrue(result.checks.special);
@@ -123,7 +124,7 @@ runner.test('calculatePasswordStrength: checks all criteria', () => {
 runner.test('validateField: required field pass', () => {
   const result = validateField({ value: 'test', required: true });
   assertTrue(result.isValid);
-  assertEqual(result.error, null);
+  assertEqual(result.error, undefined);
 });
 
 runner.test('validateField: required field fail', () => {
@@ -461,8 +462,8 @@ runner.test('validateForm: multiple fields all valid', () => {
     }
   );
   assertTrue(result.isValid);
-  assertEqual(result.errors.name, null);
-  assertEqual(result.errors.email, null);
+  assertEqual(result.errors.name, undefined);
+  assertEqual(result.errors.email, undefined);
 });
 
 runner.test('validateForm: multiple fields one invalid', () => {
@@ -474,7 +475,7 @@ runner.test('validateForm: multiple fields one invalid', () => {
     }
   );
   assertFalse(result.isValid);
-  assertEqual(result.errors.name, null);
+  assertEqual(result.errors.name, undefined);
   assertTrue(result.errors.email!.length > 0);
 });
 

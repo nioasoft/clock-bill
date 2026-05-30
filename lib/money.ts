@@ -1,0 +1,50 @@
+/**
+ * Money utilities — avoid floating-point drift in financial calculations.
+ *
+ * All monetary values are handled at 2-decimal (agorot/cents) precision: every
+ * value is snapped to whole cents before and after arithmetic, so repeated
+ * additions across many time entries don't accumulate binary-float error
+ * (e.g. summing 0.1 + 0.2 should be 0.3, not 0.30000000000000004).
+ */
+
+/** Convert a money value to integer cents (whole agorot). */
+export function toCents(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  // The EPSILON nudge guards against representations like 1.005 rounding down.
+  return Math.round((value + Number.EPSILON) * 100);
+}
+
+/** Convert integer cents back to a money value. */
+export function fromCents(cents: number): number {
+  return cents / 100;
+}
+
+/** Round a monetary value to whole cents (2 decimals). */
+export function roundMoney(value: number): number {
+  return fromCents(toCents(value));
+}
+
+/** Add two money values, returning a clean 2-decimal result. */
+export function addMoney(a: number, b: number): number {
+  return fromCents(toCents(a) + toCents(b));
+}
+
+/** Sum a list of money values precisely via integer-cents accumulation. */
+export function sumMoney(values: number[]): number {
+  return fromCents(values.reduce((cents, v) => cents + toCents(v), 0));
+}
+
+/**
+ * Bill an hourly line: minutes worked × hourly rate, rounded to whole cents.
+ * Returns 0 when no rate is set.
+ *
+ * @param durationMinutes - Minutes worked on the entry
+ * @param hourlyRate - Client/project hourly rate, or null/undefined when unset
+ */
+export function calcHourlyAmount(
+  durationMinutes: number,
+  hourlyRate: number | null | undefined
+): number {
+  if (!hourlyRate || !Number.isFinite(hourlyRate)) return 0;
+  return roundMoney((durationMinutes / 60) * hourlyRate);
+}

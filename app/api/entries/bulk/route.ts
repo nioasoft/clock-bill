@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 
+/** Maximum number of entry IDs accepted in a single bulk operation. */
+const MAX_BULK_ENTRIES = 1000;
+
 /**
  * PATCH /api/entries/bulk
  * Bulk update multiple time entries
@@ -23,6 +26,13 @@ export async function PATCH(request: NextRequest) {
     if (!entryIds || !Array.isArray(entryIds) || entryIds.length === 0) {
       return NextResponse.json(
         { success: false, message: "יש לבחור לפחות רשומה אחת" },
+        { status: 400 }
+      );
+    }
+
+    if (entryIds.length > MAX_BULK_ENTRIES) {
+      return NextResponse.json(
+        { success: false, message: `ניתן לעדכן עד ${MAX_BULK_ENTRIES} רשומות בבת אחת` },
         { status: 400 }
       );
     }
@@ -126,6 +136,13 @@ export async function DELETE(request: NextRequest) {
     if (!entryIds || !Array.isArray(entryIds) || entryIds.length === 0) {
       return NextResponse.json(
         { success: false, message: "יש לבחור לפחות רשומה אחת" },
+        { status: 400 }
+      );
+    }
+
+    if (entryIds.length > MAX_BULK_ENTRIES) {
+      return NextResponse.json(
+        { success: false, message: `ניתן למחוק עד ${MAX_BULK_ENTRIES} רשומות בבת אחת` },
         { status: 400 }
       );
     }
