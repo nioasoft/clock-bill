@@ -126,7 +126,7 @@ export function TimerStartModal() {
                 <button
                   onClick={handleStartTimer}
                   disabled={startingTimer || !selectedProject}
-                  className="px-4 py-2.5 text-sm font-medium text-white bg-primary rounded-[var(--radius)] hover:bg-primary/90 disabled:opacity-50 min-h-[44px]"
+                  className="px-4 py-2.5 text-sm font-medium text-primary-foreground bg-primary rounded-[var(--radius)] hover:bg-primary/90 disabled:opacity-50 min-h-[44px]"
                 >
                   {startingTimer ? "מתחיל..." : "התחל טיימר"}
                 </button>
@@ -142,7 +142,7 @@ export function TimerStartModal() {
                 <Link
                   href="/projects?create=true"
                   onClick={() => setShowTimerModal(false)}
-                  className="inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white bg-primary rounded-[var(--radius)] hover:bg-primary/90 min-h-[44px]"
+                  className="inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-primary-foreground bg-primary rounded-[var(--radius)] hover:bg-primary/90 min-h-[44px]"
                 >
                   + צור פרויקט חדש
                 </Link>

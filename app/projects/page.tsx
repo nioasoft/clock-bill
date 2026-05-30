@@ -280,7 +280,7 @@ function ProjectsPageContent() {
           {statusFilter === "active" && (
             <button
               onClick={() => setShowForm(!showForm)}
-              className="rounded-[14px] bg-primary px-4 py-2 text-white hover:bg-primary/90"
+              className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
             >
               {showForm ? "ביטול" : "+ פרויקט חדש"}
             </button>
@@ -312,11 +312,11 @@ function ProjectsPageContent() {
         </div>
         {/* Add Project Form */}
         {showForm && (
-          <div className="mb-8 rounded-[14px] bg-surface p-6 shadow motion-safe:animate-scale-in">
+          <div className="mb-8 rounded-[var(--radius-card)] bg-surface p-6 shadow motion-safe:animate-scale-in">
             <h2 className="text-xl font-semibold text-foreground mb-4">הוסף פרויקט חדש</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               {formError && (
-                <div className="rounded-[14px] bg-destructive/10 p-4 text-sm text-destructive">
+                <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 text-sm text-destructive">
                   {formError}
                 </div>
               )}
@@ -554,7 +554,7 @@ function ProjectsPageContent() {
                       notes: "",
                     });
                   }}
-                  className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted"
+                  className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted"
                   disabled={submitting}
                 >
                   ביטול
@@ -562,7 +562,7 @@ function ProjectsPageContent() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-[14px] bg-primary px-4 py-2 text-white hover:bg-primary/90 disabled:opacity-50"
+                  className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                 >
                   {submitting ? "שומר..." : "שמור"}
                 </button>
@@ -572,7 +572,7 @@ function ProjectsPageContent() {
         )}
 
         {/* Projects List */}
-        <div className="rounded-[14px] bg-card shadow">
+        <div className="rounded-[var(--radius-card)] bg-card shadow">
           {projectsLoading ? (
             <div className="p-8 text-center text-muted-foreground">טוען פרויקטים...</div>
           ) : projects.length === 0 ? (

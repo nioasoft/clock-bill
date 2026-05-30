@@ -328,7 +328,7 @@ export function ImportContent({
                 onClick={() => setImportMode("merge")}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   importMode === "merge"
-                    ? "bg-primary text-white"
+                    ? "bg-primary text-primary-foreground"
                     : "bg-muted text-foreground hover:bg-muted"
                 }`}
               >
@@ -339,7 +339,7 @@ export function ImportContent({
                 onClick={() => setImportMode("replace")}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   importMode === "replace"
-                    ? "bg-primary text-white"
+                    ? "bg-primary text-primary-foreground"
                     : "bg-muted text-foreground hover:bg-muted"
                 }`}
               >
@@ -378,7 +378,7 @@ export function ImportContent({
             <button
               onClick={() => backupInputRef.current?.click()}
               disabled={backupLoading}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <svg
                 className="w-4 h-4"
@@ -518,7 +518,7 @@ export function ImportContent({
               }}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 importType === "clients"
-                  ? "bg-primary text-white"
+                  ? "bg-primary text-primary-foreground"
                   : "bg-muted text-foreground hover:bg-muted"
               }`}
             >
@@ -538,7 +538,7 @@ export function ImportContent({
               }}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 importType === "entries"
-                  ? "bg-primary text-white"
+                  ? "bg-primary text-primary-foreground"
                   : "bg-muted text-foreground hover:bg-muted"
               }`}
             >
@@ -570,7 +570,7 @@ export function ImportContent({
                   }
                 }}
                 disabled={importLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <svg
                   className="w-4 h-4"
@@ -988,7 +988,7 @@ export function ImportContent({
                 <button
                   onClick={handleImport}
                   disabled={importLoading}
-                  className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-6 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {importLoading ? (
                     <span className="flex items-center gap-2">

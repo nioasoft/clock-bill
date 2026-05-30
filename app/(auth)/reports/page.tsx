@@ -1447,7 +1447,7 @@ export default function ReportsPage() {
                 <div className="flex gap-3 justify-center">
                   <a
                     href="/entries"
-                    className="rounded-full bg-primary px-4 py-2 text-sm text-white hover:bg-primary/90"
+                    className="rounded-full bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90"
                   >
                     רשום זמן עכשיו
                   </a>

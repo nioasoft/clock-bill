@@ -2,44 +2,48 @@
 @import "tw-animate-css";
 @import './accessibility.css';
 
-/* Theme: Midnight Atelier */
+/* Theme: ClickHouse — near-black canvas, electric-yellow accent, white type.
+   Token names are kept stable so every existing component re-themes in place. */
 @theme inline {
   /* Core palette */
-  --color-background: #FAFAF7;
-  --color-foreground: #1B1915;
-  --color-primary: #A8622D;
-  --color-primary-foreground: #ffffff;
-  --color-primary-light: #F5E3D2;
-  --color-secondary: #5E6E78;
+  --color-background: #0a0a0a;
+  --color-foreground: #ffffff;
+  --color-primary: #faff69;            /* electric yellow — CTAs, stats, active */
+  --color-primary-foreground: #0a0a0a; /* black text on yellow */
+  --color-primary-light: #26260f;      /* dark yellow-tinted surface */
+  --color-primary-active: #e6eb52;
+  --color-secondary: #5a5a5a;
   --color-secondary-foreground: #ffffff;
-  --color-secondary-light: #E4E8EC;
-  --color-accent: #D4A04A;
-  --color-accent-foreground: #1B1915;
-  --color-muted: #E8E5E0;
-  --color-muted-foreground: #71706A;
-  --color-destructive: #C43E3E;
+  --color-secondary-light: #1a1a1a;
+  --color-accent: #faff69;             /* single accent: the yellow */
+  --color-accent-foreground: #0a0a0a;
+  --color-muted: #1a1a1a;
+  --color-muted-foreground: #888888;
+  --color-destructive: #ef4444;
   --color-destructive-foreground: #ffffff;
-  --color-success: #347B52;
-  --color-success-foreground: #ffffff;
-  --color-border: #DBD7D0;
-  --color-input: #DBD7D0;
-  --color-ring: #A8622D;
-  --color-popover: #ffffff;
-  --color-popover-foreground: #1B1915;
-  --color-card: #ffffff;
-  --color-card-foreground: #1B1915;
-  --color-sidebar: #1B1915;
+  --color-success: #22c55e;
+  --color-success-foreground: #0a0a0a;
+  --color-border: #2a2a2a;             /* hairline */
+  --color-border-strong: #3a3a3a;
+  --color-input: #2a2a2a;
+  --color-ring: #faff69;
+  --color-popover: #1a1a1a;
+  --color-popover-foreground: #ffffff;
+  --color-card: #1a1a1a;
+  --color-card-foreground: #ffffff;
+  --color-card-elevated: #242424;
+  --color-sidebar: #000000;
   --color-sidebar-foreground: #ffffff;
-  --color-surface: #ECEAE5;
+  --color-surface: #121212;
 
-  /* Radius */
-  --radius: 0.625rem;
-  --radius-card: 0.875rem;
+  /* Radius — ClickHouse: 8px controls, 12px cards */
+  --radius: 0.5rem;
+  --radius-card: 0.75rem;
 
-  /* Fonts */
-  --font-sans: 'Assistant', system-ui, sans-serif;
-  --font-display: 'Assistant', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  /* Fonts — Heebo (Hebrew companion to Inter) for the engineered feel */
+  --font-sans: 'Heebo', system-ui, sans-serif;
+  --font-display: 'Heebo', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
   /* Transitions */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -77,6 +81,20 @@
 @keyframes shimmer {
   0% { background-position: -200% center; }
   100% { background-position: 200% center; }
+}
+
+/* Dark base — ensure the near-black canvas everywhere, even outside wrappers */
+html {
+  color-scheme: dark;
+  background-color: var(--color-background);
+}
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+::selection {
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
 }
 
 /* Custom utility classes */

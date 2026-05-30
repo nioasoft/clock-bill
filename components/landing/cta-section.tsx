@@ -38,7 +38,7 @@ export function CTASection() {
         <div className="mt-10">
           <Link
             href="/register"
-            className="inline-flex items-center justify-center rounded-full bg-white text-primary px-10 py-4 text-base font-bold hover:scale-105 transition-transform shadow-lg"
+            className="inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground px-10 py-4 text-base font-bold hover:scale-105 transition-transform"
           >
             צור חשבון בחינם
           </Link>

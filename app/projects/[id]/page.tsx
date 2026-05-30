@@ -516,7 +516,7 @@ export default function ProjectDetailsPage() {
             />
           </div>
           {formError && !showEditForm && !showDeleteConfirm && !showArchiveConfirm && (
-            <div className="mb-4 rounded-[14px] bg-destructive/10 p-4 text-sm text-destructive">
+            <div className="mb-4 rounded-[var(--radius-card)] bg-destructive/10 p-4 text-sm text-destructive">
               {formError}
             </div>
           )}
@@ -527,26 +527,26 @@ export default function ProjectDetailsPage() {
                 <>
                   <button
                     onClick={() => setShowEditForm(!showEditForm)}
-                    className="rounded-[14px] border border-border px-4 py-2 text-muted-foreground hover:bg-muted"
+                    className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-muted-foreground hover:bg-muted"
                   >
                     ערוך
                   </button>
                   <button
                     onClick={handleDuplicate}
                     disabled={duplicating}
-                    className="rounded-[14px] border border-secondary bg-secondary-light px-4 py-2 text-secondary hover:bg-secondary-light disabled:opacity-50"
+                    className="rounded-[var(--radius-card)] border border-secondary bg-secondary-light px-4 py-2 text-secondary hover:bg-secondary-light disabled:opacity-50"
                   >
                     {duplicating ? "מעתיק..." : "שכפל"}
                   </button>
                   <button
                     onClick={() => setShowArchiveConfirm(true)}
-                    className="rounded-[14px] bg-foreground/70 px-4 py-2 text-white hover:bg-foreground/80"
+                    className="rounded-[var(--radius-card)] bg-foreground/70 px-4 py-2 text-white hover:bg-foreground/80"
                   >
                     ארכב
                   </button>
                   <button
                     onClick={() => setShowDeleteConfirm(true)}
-                    className="rounded-[14px] bg-destructive px-4 py-2 text-white hover:bg-destructive/90"
+                    className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-white hover:bg-destructive/90"
                   >
                     מחק
                   </button>
@@ -557,13 +557,13 @@ export default function ProjectDetailsPage() {
                   <button
                     onClick={handleDuplicate}
                     disabled={duplicating}
-                    className="rounded-[14px] border border-secondary bg-secondary-light px-4 py-2 text-secondary hover:bg-secondary-light disabled:opacity-50"
+                    className="rounded-[var(--radius-card)] border border-secondary bg-secondary-light px-4 py-2 text-secondary hover:bg-secondary-light disabled:opacity-50"
                   >
                     {duplicating ? "מעתיק..." : "שכפל"}
                   </button>
                   <button
                     onClick={() => handleUnarchive()}
-                    className="rounded-[14px] bg-success px-4 py-2 text-white hover:bg-success/90"
+                    className="rounded-[var(--radius-card)] bg-success px-4 py-2 text-white hover:bg-success/90"
                     disabled={submitting}
                   >
                     {submitting ? "משחזר..." : "שחזר פרויקט"}
@@ -574,13 +574,13 @@ export default function ProjectDetailsPage() {
           </div>
         {/* Delete Confirmation Dialog */}
         {showDeleteConfirm && (
-          <div className="mb-8 rounded-[14px] bg-card p-6 shadow border-2 border-destructive/30">
+          <div className="mb-8 rounded-[var(--radius-card)] bg-card p-6 shadow border-2 border-destructive/30">
             <h2 className="text-xl font-semibold text-destructive mb-4">מחיקת פרויקט</h2>
             <p className="text-muted-foreground mb-4">
               האם למחוק את הפרויקט &quot;{project.name}&quot;? פעולה זו אינה הפיכה.
             </p>
             {formError && (
-              <div className="rounded-[14px] bg-destructive/10 p-4 text-sm text-destructive mb-4">
+              <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 text-sm text-destructive mb-4">
                 {formError}
               </div>
             )}
@@ -590,7 +590,7 @@ export default function ProjectDetailsPage() {
                   setShowDeleteConfirm(false);
                   setFormError("");
                 }}
-                className="rounded-[14px] border border-border px-4 py-2 text-muted-foreground hover:bg-muted"
+                className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-muted-foreground hover:bg-muted"
                 disabled={submitting}
               >
                 ביטול
@@ -598,7 +598,7 @@ export default function ProjectDetailsPage() {
               <button
                 onClick={handleDelete}
                 disabled={submitting}
-                className="rounded-[14px] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
+                className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
               >
                 {submitting ? "מוחק..." : "מחק פרויקט"}
               </button>
@@ -608,13 +608,13 @@ export default function ProjectDetailsPage() {
 
         {/* Archive Confirmation Dialog */}
         {showArchiveConfirm && (
-          <div className="mb-8 rounded-[14px] bg-card p-6 shadow border-2 border-border/50">
+          <div className="mb-8 rounded-[var(--radius-card)] bg-card p-6 shadow border-2 border-border/50">
             <h2 className="text-xl font-semibold text-foreground mb-4">ארכוב פרויקט</h2>
             <p className="text-muted-foreground mb-4">
               האם לארכב את הפרויקט &quot;{project.name}&quot;? הפרויקט יוסתר מרשימת הפרויקטים אך ניתן יהיה לשחזר אותו.
             </p>
             {formError && (
-              <div className="rounded-[14px] bg-destructive/10 p-4 text-sm text-destructive mb-4">
+              <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 text-sm text-destructive mb-4">
                 {formError}
               </div>
             )}
@@ -624,7 +624,7 @@ export default function ProjectDetailsPage() {
                   setShowArchiveConfirm(false);
                   setFormError("");
                 }}
-                className="rounded-[14px] border border-border px-4 py-2 text-muted-foreground hover:bg-muted"
+                className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-muted-foreground hover:bg-muted"
                 disabled={submitting}
               >
                 ביטול
@@ -632,7 +632,7 @@ export default function ProjectDetailsPage() {
               <button
                 onClick={handleArchive}
                 disabled={submitting}
-                className="rounded-[14px] bg-foreground/70 px-4 py-2 text-white hover:bg-foreground/80 disabled:opacity-50"
+                className="rounded-[var(--radius-card)] bg-foreground/70 px-4 py-2 text-white hover:bg-foreground/80 disabled:opacity-50"
               >
                 {submitting ? "מארכב..." : "ארכב פרויקט"}
               </button>
@@ -642,11 +642,11 @@ export default function ProjectDetailsPage() {
 
         {/* Edit Form */}
         {showEditForm && (
-          <div className="mb-8 rounded-[14px] bg-card border border-border/50 p-6 shadow-sm">
+          <div className="mb-8 rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
             <h2 className="font-display text-lg font-semibold text-foreground mb-4">ערוך פרויקט</h2>
             <form onSubmit={handleUpdate} className="space-y-4">
               {formError && (
-                <div className="rounded-[14px] bg-destructive/10 p-4 text-sm text-destructive">
+                <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 text-sm text-destructive">
                   {formError}
                 </div>
               )}
@@ -662,7 +662,7 @@ export default function ProjectDetailsPage() {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className="mt-1 block w-full rounded-[var(--radius-card)] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                   />
                 </div>
@@ -676,7 +676,7 @@ export default function ProjectDetailsPage() {
                     id="clientName"
                     value={project.clientName}
                     disabled
-                    className="mt-1 block w-full rounded-[14px] border border-border bg-muted px-3 py-2 text-muted-foreground"
+                    className="mt-1 block w-full rounded-[var(--radius-card)] border border-border bg-muted px-3 py-2 text-muted-foreground"
                   />
                 </div>
 
@@ -688,7 +688,7 @@ export default function ProjectDetailsPage() {
                     id="status"
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className="mt-1 block w-full rounded-[var(--radius-card)] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                   >
                     <option value="active">פעיל</option>
@@ -706,7 +706,7 @@ export default function ProjectDetailsPage() {
                     id="startDate"
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className="mt-1 block w-full rounded-[var(--radius-card)] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                   />
                   {fieldErrors.startDate && <p className="mt-1 text-xs text-destructive">{fieldErrors.startDate}</p>}
@@ -721,14 +721,14 @@ export default function ProjectDetailsPage() {
                     id="endDate"
                     value={formData.endDate}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className="mt-1 block w-full rounded-[var(--radius-card)] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                   />
                   {fieldErrors.endDate && <p className="mt-1 text-xs text-destructive">{fieldErrors.endDate}</p>}
                 </div>
 
                 <div className="sm:col-span-2">
-                  <div className="rounded-[14px] border border-border p-4">
+                  <div className="rounded-[var(--radius-card)] border border-border p-4">
                     <label className="flex items-center gap-2 text-sm font-medium text-foreground">
                       <input
                         type="checkbox"
@@ -769,7 +769,7 @@ export default function ProjectDetailsPage() {
                               setFormData({ ...formData, fixedMonthlyFee: e.target.value });
                               setFieldErrors({ ...fieldErrors, fixedMonthlyFee: undefined });
                             }}
-                            className={`mt-1 block w-full rounded-[14px] border px-3 py-2 shadow-sm ${
+                            className={`mt-1 block w-full rounded-[var(--radius-card)] border px-3 py-2 shadow-sm ${
                               fieldErrors.fixedMonthlyFee ? "border-destructive" : "border-border"
                             }`}
                             disabled={submitting}
@@ -789,7 +789,7 @@ export default function ProjectDetailsPage() {
                               setFormData({ ...formData, fixedMonthlyStartDate: e.target.value });
                               setFieldErrors({ ...fieldErrors, fixedMonthlyStartDate: undefined });
                             }}
-                            className={`mt-1 block w-full rounded-[14px] border px-3 py-2 shadow-sm ${
+                            className={`mt-1 block w-full rounded-[var(--radius-card)] border px-3 py-2 shadow-sm ${
                               fieldErrors.fixedMonthlyStartDate ? "border-destructive" : "border-border"
                             }`}
                             disabled={submitting}
@@ -809,7 +809,7 @@ export default function ProjectDetailsPage() {
                               setFormData({ ...formData, fixedMonthlyEndDate: e.target.value });
                               setFieldErrors({ ...fieldErrors, fixedMonthlyEndDate: undefined });
                             }}
-                            className={`mt-1 block w-full rounded-[14px] border px-3 py-2 shadow-sm ${
+                            className={`mt-1 block w-full rounded-[var(--radius-card)] border px-3 py-2 shadow-sm ${
                               fieldErrors.fixedMonthlyEndDate ? "border-destructive" : "border-border"
                             }`}
                             disabled={submitting}
@@ -830,7 +830,7 @@ export default function ProjectDetailsPage() {
                     rows={3}
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    className="mt-1 block w-full rounded-[14px] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className="mt-1 block w-full rounded-[var(--radius-card)] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
                   />
                 </div>
@@ -855,7 +855,7 @@ export default function ProjectDetailsPage() {
                       notes: project.notes || "",
                     });
                   }}
-                  className="rounded-[14px] border border-border px-4 py-2 text-muted-foreground hover:bg-muted"
+                  className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-muted-foreground hover:bg-muted"
                   disabled={submitting}
                 >
                   ביטול
@@ -863,7 +863,7 @@ export default function ProjectDetailsPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-[14px] bg-primary px-4 py-2 text-white hover:bg-primary/90 disabled:opacity-50"
+                  className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                 >
                   {submitting ? "שומר..." : "שמור שינויים"}
                 </button>
@@ -873,7 +873,7 @@ export default function ProjectDetailsPage() {
         )}
 
         {/* Project Details Card */}
-        <div className="rounded-[14px] bg-card border border-border/50 shadow-sm">
+        <div className="rounded-[var(--radius-card)] bg-card border border-border/50 shadow-sm">
           <div className="border-b border-border px-6 py-4">
             <h2 className="font-display text-lg font-semibold text-foreground">פרטי פרויקט</h2>
           </div>
@@ -941,13 +941,13 @@ export default function ProjectDetailsPage() {
         </div>
 
         {/* Project Totals Card */}
-        <div className="mt-6 rounded-[14px] bg-card border border-border/50 shadow-sm">
+        <div className="mt-6 rounded-[var(--radius-card)] bg-card border border-border/50 shadow-sm">
           <div className="border-b border-border px-6 py-4">
             <h2 className="font-display text-lg font-semibold text-foreground">סיכום פרויקט</h2>
           </div>
           <div className="px-6 py-4">
             <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <div className="rounded-[14px] bg-primary-light p-4 border-t-2 border-t-primary">
+              <div className="rounded-[var(--radius-card)] bg-primary-light p-4 border-t-2 border-t-primary">
                 <dt className="text-sm font-medium text-primary">סה״כ שעות</dt>
                 <dd className="mt-2 font-mono text-3xl font-bold tabular-nums text-primary">
                   {statsLoading ? "..." : projectStats?.totalHours?.toFixed(1) || "0.0"}
@@ -955,7 +955,7 @@ export default function ProjectDetailsPage() {
                 <dt className="mt-2 text-xs text-primary">שעות רשומות בפרויקט</dt>
               </div>
 
-              <div className="rounded-[14px] bg-success/10 p-4 border-t-2 border-t-success">
+              <div className="rounded-[var(--radius-card)] bg-success/10 p-4 border-t-2 border-t-success">
                 <dt className="text-sm font-medium text-success">מספר רשומות</dt>
                 <dd className="mt-2 font-mono text-3xl font-bold tabular-nums text-success">
                   {statsLoading ? "..." : projectStats?.entryCount || 0}
@@ -967,7 +967,7 @@ export default function ProjectDetailsPage() {
         </div>
 
         {/* Tasks */}
-        <div className="mt-6 rounded-[14px] bg-card border border-border/50 shadow-sm">
+        <div className="mt-6 rounded-[var(--radius-card)] bg-card border border-border/50 shadow-sm">
           <div className="border-b border-border px-6 py-4">
             <h2 className="font-display text-lg font-semibold text-foreground">משימות</h2>
           </div>
@@ -980,13 +980,13 @@ export default function ProjectDetailsPage() {
                   value={newTaskName}
                   onChange={(e) => setNewTaskName(e.target.value)}
                   placeholder="שם משימה חדשה..."
-                  className="flex-1 rounded-[14px] border border-border px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                  className="flex-1 rounded-[var(--radius-card)] border border-border px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                   disabled={creatingTask}
                 />
                 <button
                   type="submit"
                   disabled={creatingTask || !newTaskName.trim()}
-                  className="rounded-[14px] bg-primary px-4 py-2 text-sm text-white hover:bg-primary/90 disabled:opacity-50"
+                  className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                 >
                   {creatingTask ? "מוסיף..." : "הוסף"}
                 </button>
@@ -1057,7 +1057,7 @@ export default function ProjectDetailsPage() {
         </div>
 
         {/* Recent Entries */}
-        <div className="mt-6 rounded-[14px] bg-card border border-border/50 shadow-sm">
+        <div className="mt-6 rounded-[var(--radius-card)] bg-card border border-border/50 shadow-sm">
           <div className="border-b border-border px-6 py-4">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-lg font-semibold text-foreground">רשומות אחרונות</h2>

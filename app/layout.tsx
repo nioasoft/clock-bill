@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Assistant, JetBrains_Mono } from "next/font/google";
+import { Heebo, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Providers } from "@/components/providers";
@@ -7,7 +7,7 @@ import { Providers } from "@/components/providers";
 // Validate environment variables on server startup
 import "@/lib/env";
 
-const assistant = Assistant({
+const heebo = Heebo({
   subsets: ["hebrew", "latin"],
   weight: ["400", "500", "600", "700", "800"],
   variable: "--font-sans",
@@ -24,6 +24,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  themeColor: "#0a0a0a",
 };
 
 export const metadata: Metadata = {
@@ -69,7 +70,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="he" dir="rtl">
-      <body className={`${assistant.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
+      <body className={`${heebo.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
         {/* Skip to main content link for keyboard users */}
         <a href="#main-content" className="skip-to-main">
           דלג לתוכן ראשי

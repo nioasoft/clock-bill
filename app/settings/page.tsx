@@ -851,13 +851,13 @@ export default function SettingsPage() {
               </p>
 
               {rateError && (
-                <div className="rounded-[14px] bg-destructive/10 p-4 mb-4">
+                <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 mb-4">
                   <p className="text-sm text-destructive">{rateError}</p>
                 </div>
               )}
 
               {rateSuccess && (
-                <div className="rounded-[14px] bg-success/10 p-4 mb-4">
+                <div className="rounded-[var(--radius-card)] bg-success/10 p-4 mb-4">
                   <p className="text-sm text-success">{rateSuccess}</p>
                 </div>
               )}
@@ -876,7 +876,7 @@ export default function SettingsPage() {
                       id="fromCurrency"
                       value={fromCurrency}
                       onChange={(e) => setFromCurrency(e.target.value)}
-                      className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                      className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                       disabled={rateSaving}
                     >
                       <option value="ILS">₪ - שקל ישראלי</option>
@@ -899,7 +899,7 @@ export default function SettingsPage() {
                       id="toCurrency"
                       value={toCurrency}
                       onChange={(e) => setToCurrency(e.target.value)}
-                      className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                      className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                       disabled={rateSaving}
                     >
                       <option value="ILS">₪ - שקל ישראלי</option>
@@ -927,7 +927,7 @@ export default function SettingsPage() {
                       step="0.00000001"
                       min="0"
                       required
-                      className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                      className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                       disabled={rateSaving}
                     />
                     <p className="text-xs text-muted-foreground mt-1">
@@ -940,7 +940,7 @@ export default function SettingsPage() {
                   <button
                     type="submit"
                     disabled={rateSaving || fromCurrency === toCurrency}
-                    className="px-6 py-2 bg-primary text-white font-medium rounded-[14px] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-6 py-2 bg-primary text-primary-foreground font-medium rounded-[var(--radius-card)] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {rateSaving ? "שומר..." : "שמור שער"}
                   </button>
@@ -968,7 +968,7 @@ export default function SettingsPage() {
                   {currencyRates.map((rate) => (
                     <div
                       key={rate.id}
-                      className="flex items-center justify-between p-4 rounded-[14px] border border-border bg-muted"
+                      className="flex items-center justify-between p-4 rounded-[var(--radius-card)] border border-border bg-muted"
                     >
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
@@ -1026,7 +1026,7 @@ export default function SettingsPage() {
                 כדי שהמערכת תוכל לשלוח לך התראות, עליך לאפשר התראות מהדפדפן.
               </p>
 
-              <div className="flex items-center justify-between p-4 rounded-[14px] border border-border bg-muted">
+              <div className="flex items-center justify-between p-4 rounded-[var(--radius-card)] border border-border bg-muted">
                 <div>
                   <p className="font-medium text-foreground">סטטוס הרשאה</p>
                   <p className="text-sm text-muted-foreground">
@@ -1040,7 +1040,7 @@ export default function SettingsPage() {
                   {notificationPermission !== "granted" && notificationPermission !== null && (
                     <button
                       onClick={requestNotificationPermission}
-                      className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-[14px] hover:bg-primary/90 transition-colors"
+                      className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-[var(--radius-card)] hover:bg-primary/90 transition-colors"
                     >
                       אפשר התראות
                     </button>
@@ -1048,7 +1048,7 @@ export default function SettingsPage() {
                   <button
                     onClick={handleTestNotification}
                     disabled={testingNotification || notificationPermission !== "granted"}
-                    className="px-4 py-2 bg-foreground/70 text-white text-sm font-medium rounded-[14px] hover:bg-foreground/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-4 py-2 bg-foreground/70 text-white text-sm font-medium rounded-[var(--radius-card)] hover:bg-foreground/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {testingNotification ? "שולח..." : "נסה התראה"}
                   </button>
@@ -1066,13 +1066,13 @@ export default function SettingsPage() {
               </p>
 
               {successMessage && activeTab === "notifications" && (
-                <div className="rounded-[14px] bg-success/10 p-4 mb-4">
+                <div className="rounded-[var(--radius-card)] bg-success/10 p-4 mb-4">
                   <p className="text-sm text-success">{successMessage}</p>
                 </div>
               )}
 
               {profileError && activeTab === "notifications" && (
-                <div className="rounded-[14px] bg-destructive/10 p-4 mb-4">
+                <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 mb-4">
                   <p className="text-sm text-destructive">{profileError}</p>
                 </div>
               )}
@@ -1108,7 +1108,7 @@ export default function SettingsPage() {
                       min="30"
                       max="480"
                       step="30"
-                      className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                      className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       התראה תישלח כאשר הטיימר רץ יותר מ-{parseInt(longTimerThreshold, 10)} דקות ({(parseInt(longTimerThreshold, 10) / 60).toFixed(1)} שעות)
@@ -1155,7 +1155,7 @@ export default function SettingsPage() {
                       type="time"
                       value={dailyReminderTime}
                       onChange={(e) => setDailyReminderTime(e.target.value)}
-                      className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                      className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       התזכורת תישלח ב-{dailyReminderTime} בכל יום שבו לא נרשמו שעות
@@ -1185,7 +1185,7 @@ export default function SettingsPage() {
                   min="1"
                   max="24"
                   step="0.5"
-                  className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                  className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   מספר השעות המלאות ליום עבודה: {workingHours} שעות
@@ -1209,7 +1209,7 @@ export default function SettingsPage() {
                 <select
                   value={firstDayOfWeek}
                   onChange={(e) => setFirstDayOfWeek(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                  className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                 >
                   <option value="sunday">ראשון (Sunday)</option>
                   <option value="monday">שני (Monday)</option>
@@ -1225,7 +1225,7 @@ export default function SettingsPage() {
               <button
                 onClick={handleSaveNotificationSettings}
                 disabled={profileLoading}
-                className="px-6 py-2 bg-primary text-white font-medium rounded-[14px] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-6 py-2 bg-primary text-primary-foreground font-medium rounded-[var(--radius-card)] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {profileLoading ? (
                   <span className="flex items-center gap-2">
@@ -1253,7 +1253,7 @@ export default function SettingsPage() {
                   <button
                     onClick={() => setShowConfirmDialog(true)}
                     disabled={logoutAllLoading}
-                    className="px-4 py-2 bg-destructive text-white text-sm font-medium rounded-[14px] hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-4 py-2 bg-destructive text-white text-sm font-medium rounded-[var(--radius-card)] hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {logoutAllLoading ? "מתנתק..." : "התנתק מכל המכשירים"}
                   </button>
@@ -1269,7 +1269,7 @@ export default function SettingsPage() {
                   <p className="mt-2 text-muted-foreground">טוען פעולות...</p>
                 </div>
               ) : error ? (
-                <div className="rounded-[14px] bg-destructive/10 p-4">
+                <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4">
                   <p className="text-sm text-destructive">{error}</p>
                 </div>
               ) : sessions.length === 0 ? (
@@ -1281,7 +1281,7 @@ export default function SettingsPage() {
                   {sessions.map((session) => (
                     <div
                       key={session.id}
-                      className={`flex items-center justify-between p-4 rounded-[14px] border ${
+                      className={`flex items-center justify-between p-4 rounded-[var(--radius-card)] border ${
                         session.is_current
                           ? "border-accent/30 bg-accent/5"
                           : "border-border bg-muted"
@@ -1341,7 +1341,7 @@ export default function SettingsPage() {
                 כדי לקבל התראות מהדפדפן, עליך לאפשר הרשאות התראות.
               </p>
 
-              <div className="flex items-center justify-between p-4 rounded-[14px] border border-border bg-muted">
+              <div className="flex items-center justify-between p-4 rounded-[var(--radius-card)] border border-border bg-muted">
                 <div className="flex items-center gap-3">
                   <div className={`w-3 h-3 rounded-full ${
                     notificationPermission === "granted"
@@ -1374,7 +1374,7 @@ export default function SettingsPage() {
                 {notificationPermission === "default" && (
                   <button
                     onClick={requestNotificationPermission}
-                    className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-[14px] hover:bg-primary/90 transition-colors"
+                    className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-[var(--radius-card)] hover:bg-primary/90 transition-colors"
                   >
                     אפשר התראות
                   </button>
@@ -1394,7 +1394,7 @@ export default function SettingsPage() {
               <button
                 onClick={handleTestNotification}
                 disabled={testingNotification || notificationPermission !== "granted"}
-                className="flex items-center gap-2 px-4 py-2 bg-secondary text-white text-sm font-medium rounded-[14px] hover:bg-secondary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-secondary text-white text-sm font-medium rounded-[var(--radius-card)] hover:bg-secondary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {testingNotification ? (
                   <>
@@ -1432,20 +1432,20 @@ export default function SettingsPage() {
               </p>
 
               {profileError && (
-                <div className="rounded-[14px] bg-destructive/10 p-4 mb-4">
+                <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 mb-4">
                   <p className="text-sm text-destructive">{profileError}</p>
                 </div>
               )}
 
               {successMessage && (
-                <div className="rounded-[14px] bg-success/10 p-4 mb-4">
+                <div className="rounded-[var(--radius-card)] bg-success/10 p-4 mb-4">
                   <p className="text-sm text-success">{successMessage}</p>
                 </div>
               )}
 
               <form onSubmit={handleSaveNotificationSettings} className="space-y-6">
                 {/* Long Timer Notification */}
-                <div className="flex items-center justify-between p-4 rounded-[14px] border border-border">
+                <div className="flex items-center justify-between p-4 rounded-[var(--radius-card)] border border-border">
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
                       <svg
@@ -1483,7 +1483,7 @@ export default function SettingsPage() {
                 </div>
 
                 {longTimerEnabled && (
-                  <div className="mr-9 p-4 rounded-[14px] border border-border bg-muted">
+                  <div className="mr-9 p-4 rounded-[var(--radius-card)] border border-border bg-muted">
                     <label className="block text-sm font-medium text-muted-foreground mb-2">
                       סף זמן (דקות)
                     </label>
@@ -1494,7 +1494,7 @@ export default function SettingsPage() {
                       min="30"
                       max="480"
                       step="10"
-                      className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                      className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       שלח התראה לאחר הזמן הזה (מינימום: 30 דקות, מקסימום: 480 דקות)
@@ -1503,7 +1503,7 @@ export default function SettingsPage() {
                 )}
 
                 {/* Daily Reminder Notification */}
-                <div className="flex items-center justify-between p-4 rounded-[14px] border border-border">
+                <div className="flex items-center justify-between p-4 rounded-[var(--radius-card)] border border-border">
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
                       <svg
@@ -1541,7 +1541,7 @@ export default function SettingsPage() {
                 </div>
 
                 {dailyReminderEnabled && (
-                  <div className="mr-9 p-4 rounded-[14px] border border-border bg-muted">
+                  <div className="mr-9 p-4 rounded-[var(--radius-card)] border border-border bg-muted">
                     <label className="block text-sm font-medium text-muted-foreground mb-2">
                       שעת התזכורת
                     </label>
@@ -1549,7 +1549,7 @@ export default function SettingsPage() {
                       type="time"
                       value={dailyReminderTime}
                       onChange={(e) => setDailyReminderTime(e.target.value)}
-                      className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                      className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       התזכורת תישלח בשעה זו בכל יום
@@ -1561,7 +1561,7 @@ export default function SettingsPage() {
                   <button
                     type="submit"
                     disabled={profileLoading}
-                    className="px-6 py-2 bg-primary text-white font-medium rounded-[14px] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-6 py-2 bg-primary text-primary-foreground font-medium rounded-[var(--radius-card)] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {profileLoading ? (
                       <span className="flex items-center gap-2">
@@ -1591,7 +1591,7 @@ export default function SettingsPage() {
               </p>
 
               {logoError && (
-                <div className="rounded-[14px] bg-destructive/10 p-4 mb-4">
+                <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 mb-4">
                   <p className="text-sm text-destructive">{logoError}</p>
                 </div>
               )}
@@ -1637,7 +1637,7 @@ export default function SettingsPage() {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={logoLoading}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-[14px] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-[var(--radius-card)] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {logoLoading ? (
                       <>
@@ -1668,7 +1668,7 @@ export default function SettingsPage() {
                     <button
                       onClick={handleRemoveLogo}
                       disabled={logoLoading}
-                      className="flex items-center gap-2 px-4 py-2 text-destructive text-sm font-medium rounded-[14px] hover:bg-destructive/10 disabled:opacity-50 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 text-destructive text-sm font-medium rounded-[var(--radius-card)] hover:bg-destructive/10 disabled:opacity-50 transition-colors"
                     >
                       <svg
                         className="w-4 h-4"
@@ -1704,14 +1704,14 @@ export default function SettingsPage() {
               </p>
 
               {signatureError && (
-                <div className="rounded-[14px] bg-destructive/10 p-4 mb-4">
+                <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 mb-4">
                   <p className="text-sm text-destructive">{signatureError}</p>
                 </div>
               )}
 
               <div className="flex items-center gap-6">
                 {/* Signature Preview */}
-                <div className="w-64 h-32 rounded-[14px] border-2 border-dashed border-border hover:border-primary/50 transition-colors flex items-center justify-center bg-muted overflow-hidden">
+                <div className="w-64 h-32 rounded-[var(--radius-card)] border-2 border-dashed border-border hover:border-primary/50 transition-colors flex items-center justify-center bg-muted overflow-hidden">
                   {profile?.signatureUrl ? (
                     <img
                       src={profile.signatureUrl}
@@ -1750,7 +1750,7 @@ export default function SettingsPage() {
                   <button
                     onClick={() => signatureInputRef.current?.click()}
                     disabled={signatureLoading}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-[14px] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-[var(--radius-card)] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {signatureLoading ? (
                       <>
@@ -1781,7 +1781,7 @@ export default function SettingsPage() {
                     <button
                       onClick={handleRemoveSignature}
                       disabled={signatureLoading}
-                      className="flex items-center gap-2 px-4 py-2 text-destructive text-sm font-medium rounded-[14px] hover:bg-destructive/10 disabled:opacity-50 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 text-destructive text-sm font-medium rounded-[var(--radius-card)] hover:bg-destructive/10 disabled:opacity-50 transition-colors"
                     >
                       <svg
                         className="w-4 h-4"
@@ -1817,13 +1817,13 @@ export default function SettingsPage() {
               </p>
 
               {profileError && (
-                <div className="rounded-[14px] bg-destructive/10 p-4 mb-4">
+                <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 mb-4">
                   <p className="text-sm text-destructive">{profileError}</p>
                 </div>
               )}
 
               {successMessage && (
-                <div className="rounded-[14px] bg-success/10 p-4 mb-4">
+                <div className="rounded-[var(--radius-card)] bg-success/10 p-4 mb-4">
                   <p className="text-sm text-success">{successMessage}</p>
                 </div>
               )}
@@ -1850,7 +1850,7 @@ export default function SettingsPage() {
                         value={businessName}
                         onChange={(e) => setBusinessName(e.target.value)}
                         placeholder="לדוגמה: חברת הייעוץ שלי"
-                        className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                        className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                       />
                     </div>
 
@@ -1868,7 +1868,7 @@ export default function SettingsPage() {
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="לדוגמה: 050-1234567"
-                        className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                        className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                       />
                     </div>
 
@@ -1886,7 +1886,7 @@ export default function SettingsPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="לדוגמה: info@example.com"
-                        className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                        className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                       />
                     </div>
 
@@ -1904,7 +1904,7 @@ export default function SettingsPage() {
                         value={taxId}
                         onChange={(e) => setTaxId(e.target.value)}
                         placeholder="לדוגמה: 123456789"
-                        className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                        className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                       />
                     </div>
 
@@ -1922,7 +1922,7 @@ export default function SettingsPage() {
                         value={website}
                         onChange={(e) => setWebsite(e.target.value)}
                         placeholder="לדוגמה: https://example.com"
-                        className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                        className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                       />
                     </div>
 
@@ -1940,7 +1940,7 @@ export default function SettingsPage() {
                         onChange={(e) => setAddress(e.target.value)}
                         placeholder="לדוגמה: רחוב הרצל 1, תל אביב"
                         rows={3}
-                        className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary resize-none"
+                        className="w-full px-3 py-2 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary resize-none"
                       />
                     </div>
 
@@ -1956,7 +1956,7 @@ export default function SettingsPage() {
                         id="defaultCurrency"
                         value={defaultCurrency}
                         onChange={(e) => setDefaultCurrency(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                        className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                       >
                         <option value="ILS">₪ - שקל ישראלי</option>
                         <option value="USD">$ - דולר אמריקאי</option>
@@ -1981,7 +1981,7 @@ export default function SettingsPage() {
                         id="preferredPdfTemplate"
                         value={preferredPdfTemplate}
                         onChange={(e) => setPreferredPdfTemplate(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                        className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                       >
                         <option value="modern">מודרני (Modern)</option>
                         <option value="classic">קלאסי (Classic)</option>
@@ -2009,14 +2009,14 @@ export default function SettingsPage() {
                           id="pdfPrimaryColor"
                           value={pdfPrimaryColor}
                           onChange={(e) => setPdfPrimaryColor(e.target.value)}
-                          className="h-10 w-20 border border-border rounded-[14px] cursor-pointer"
+                          className="h-10 w-20 border border-border rounded-[var(--radius-card)] cursor-pointer"
                         />
                         <input
                           type="text"
                           value={pdfPrimaryColor}
                           onChange={(e) => setPdfPrimaryColor(e.target.value)}
                           placeholder="#A8622D"
-                          className="flex-1 px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary font-mono text-sm"
+                          className="flex-1 px-3 py-2 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary font-mono text-sm"
                           pattern="^#[0-9A-Fa-f]{6}$"
                           maxLength={7}
                         />
@@ -2040,14 +2040,14 @@ export default function SettingsPage() {
                           id="pdfAccentColor"
                           value={pdfAccentColor}
                           onChange={(e) => setPdfAccentColor(e.target.value)}
-                          className="h-10 w-20 border border-border rounded-[14px] cursor-pointer"
+                          className="h-10 w-20 border border-border rounded-[var(--radius-card)] cursor-pointer"
                         />
                         <input
                           type="text"
                           value={pdfAccentColor}
                           onChange={(e) => setPdfAccentColor(e.target.value)}
                           placeholder="#347B52"
-                          className="flex-1 px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary font-mono text-sm"
+                          className="flex-1 px-3 py-2 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary font-mono text-sm"
                           pattern="^#[0-9A-Fa-f]{6}$"
                           maxLength={7}
                         />
@@ -2069,7 +2069,7 @@ export default function SettingsPage() {
                         id="dateFormat"
                         value={dateFormat}
                         onChange={(e) => setDateFormat(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                        className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                       >
                         <option value="DD/MM/YYYY">יום/חודש/שנה (DD/MM/YYYY)</option>
                         <option value="MM/DD/YYYY">חודש/יום/שנה (MM/DD/YYYY)</option>
@@ -2092,7 +2092,7 @@ export default function SettingsPage() {
                         id="timeFormat"
                         value={timeFormat}
                         onChange={(e) => setTimeFormat(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                        className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                       >
                         <option value="24h">24 שעות (14:30)</option>
                         <option value="12h">12 שעות (02:30 PM)</option>
@@ -2116,7 +2116,7 @@ export default function SettingsPage() {
                         value={invoicePrefix}
                         onChange={(e) => setInvoicePrefix(e.target.value)}
                         placeholder="לדוגמה: INV-"
-                        className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                        className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                       />
                       <p className="text-xs text-muted-foreground mt-1">
                         הקידומת תופיע לפני מספר החשבונית (לדוגמה: INV-001, INV-002)
@@ -2138,7 +2138,7 @@ export default function SettingsPage() {
                         onChange={(e) => setNextInvoiceNumber(e.target.value)}
                         placeholder="לדוגמה: 1"
                         min="1"
-                        className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                        className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                       />
                       <p className="text-xs text-muted-foreground mt-1">
                         מספר החשבונית הבא שיונפק. המספר יעלה אוטומטית לאחר כל חשבונית
@@ -2159,7 +2159,7 @@ export default function SettingsPage() {
                         onChange={(e) => setPaymentTerms(e.target.value)}
                         placeholder="לדוגמה: תשלום בתוך 30 יום מתאריך החשבונית"
                         rows={3}
-                        className="w-full px-3 py-2 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary resize-none"
+                        className="w-full px-3 py-2 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary resize-none"
                       />
                       <p className="text-xs text-muted-foreground mt-1">
                         תנאי התשלום יופיעו בחשבוניות ובדוחות
@@ -2189,7 +2189,7 @@ export default function SettingsPage() {
                           value={bankName}
                           onChange={(e) => setBankName(e.target.value)}
                           placeholder="לדוגמה: בנק הפועלים"
-                          className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                          className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                         />
                       </div>
 
@@ -2207,7 +2207,7 @@ export default function SettingsPage() {
                           value={bankBranch}
                           onChange={(e) => setBankBranch(e.target.value)}
                           placeholder="לדוגמה: 123"
-                          className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                          className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                         />
                       </div>
 
@@ -2225,7 +2225,7 @@ export default function SettingsPage() {
                           value={bankAccountNumber}
                           onChange={(e) => setBankAccountNumber(e.target.value)}
                           placeholder="לדוגמה: 123456"
-                          className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                          className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                         />
                       </div>
 
@@ -2243,7 +2243,7 @@ export default function SettingsPage() {
                           value={bankSwift}
                           onChange={(e) => setBankSwift(e.target.value)}
                           placeholder="לדוגמה: POHALILIT"
-                          className="w-full px-3 py-2.5 border border-border rounded-[14px] focus:ring-2 focus:ring-primary focus:border-primary"
+                          className="w-full px-3 py-2.5 border border-border rounded-[var(--radius-card)] focus:ring-2 focus:ring-primary focus:border-primary"
                         />
                         <p className="text-xs text-muted-foreground mt-1">
                           נדרש להעברות בינלאומיות בלבד
@@ -2256,7 +2256,7 @@ export default function SettingsPage() {
                     <button
                       type="submit"
                       disabled={profileLoading}
-                      className="px-6 py-2 bg-primary text-white font-medium rounded-[14px] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="px-6 py-2 bg-primary text-primary-foreground font-medium rounded-[var(--radius-card)] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       {profileLoading ? (
                         <span className="flex items-center gap-2">
@@ -2336,14 +2336,14 @@ export default function SettingsPage() {
               <button
                 onClick={() => setShowConfirmDialog(false)}
                 disabled={logoutAllLoading}
-                className="px-4 py-2 text-muted-foreground bg-muted rounded-[14px] hover:bg-muted disabled:opacity-50 transition-colors"
+                className="px-4 py-2 text-muted-foreground bg-muted rounded-[var(--radius-card)] hover:bg-muted disabled:opacity-50 transition-colors"
               >
                 ביטול
               </button>
               <button
                 onClick={handleLogoutAll}
                 disabled={logoutAllLoading}
-                className="px-4 py-2 bg-destructive text-white rounded-[14px] hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 bg-destructive text-white rounded-[var(--radius-card)] hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {logoutAllLoading ? "מתנתק..." : "התנתק מכל המכשירים"}
               </button>
@@ -2364,7 +2364,7 @@ export default function SettingsPage() {
                 אתה עומד לשחזר נתונים מקובץ הגיבוי:
               </p>
               <p className="text-sm font-medium text-foreground">{backupFile?.name}</p>
-              <div className={`p-3 rounded-[14px] ${
+              <div className={`p-3 rounded-[var(--radius-card)] ${
                 importMode === "replace"
                   ? "bg-destructive/10 border border-destructive/20"
                   : "bg-secondary-light border border-secondary/20"
@@ -2386,14 +2386,14 @@ export default function SettingsPage() {
                   setBackupLoading(false);
                 }}
                 disabled={backupLoading}
-                className="px-4 py-2 text-muted-foreground bg-muted rounded-[14px] hover:bg-muted disabled:opacity-50 transition-colors"
+                className="px-4 py-2 text-muted-foreground bg-muted rounded-[var(--radius-card)] hover:bg-muted disabled:opacity-50 transition-colors"
               >
                 ביטול
               </button>
               <button
                 onClick={() => handleImportBackup()}
                 disabled={backupLoading}
-                className={`px-4 py-2 text-white rounded-[14px] disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                className={`px-4 py-2 text-white rounded-[var(--radius-card)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
                   importMode === "replace"
                     ? "bg-destructive hover:bg-destructive/90"
                     : "bg-success hover:bg-success/90"

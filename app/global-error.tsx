@@ -60,7 +60,7 @@ export default function GlobalError({
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button
                   onClick={reset}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium shadow-sm"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium shadow-sm"
                 >
                   <RefreshCw className="w-5 h-5" />
                   נסה שוב

@@ -28,14 +28,14 @@ export default function NotFound() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium shadow-sm"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
             >
               <Home className="w-5 h-5" />
               חזרה לדשבורד
             </Link>
             <button
               onClick={() => window.history.back()}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-muted-foreground rounded-lg hover:bg-muted/50 transition-colors font-medium border border-border shadow-sm"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-card text-foreground rounded-lg hover:bg-muted transition-colors font-medium border border-border"
             >
               חזור אחורה
             </button>

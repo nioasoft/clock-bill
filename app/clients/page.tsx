@@ -347,14 +347,14 @@ function ClientsPageContent() {
         <PageHeader title="לקוחות">
           <button
             onClick={() => setShowForm(!showForm)}
-            className="rounded-[14px] bg-primary px-4 py-2 text-white hover:bg-primary/90"
+            className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
           >
             {showForm ? "ביטול" : "+ לקוח חדש"}
           </button>
         </PageHeader>
         {/* Add/Edit Client Form */}
         {showForm && (
-          <div className="mb-8 rounded-[14px] bg-surface p-6 shadow motion-safe:animate-scale-in">
+          <div className="mb-8 rounded-[var(--radius-card)] bg-surface p-6 shadow motion-safe:animate-scale-in">
             <h2 className="text-xl font-semibold text-foreground mb-4">
               {editingClient ? "ערוך לקוח" : "הוסף לקוח חדש"}
             </h2>
@@ -625,7 +625,7 @@ function ClientsPageContent() {
                       <button
                         type="button"
                         onClick={() => handleDelete(editingClient)}
-                        className="rounded-[14px] border border-destructive/30 px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10"
+                        className="rounded-[var(--radius-card)] border border-destructive/30 px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10"
                       >
                         ארכב לקוח
                       </button>
@@ -633,7 +633,7 @@ function ClientsPageContent() {
                       <button
                         type="button"
                         onClick={() => handleRestore(editingClient)}
-                        className="rounded-[14px] border border-success/30 px-3 py-1.5 text-sm text-success hover:bg-success/10"
+                        className="rounded-[var(--radius-card)] border border-success/30 px-3 py-1.5 text-sm text-success hover:bg-success/10"
                       >
                         שחזר לקוח
                       </button>
@@ -646,7 +646,7 @@ function ClientsPageContent() {
                 <button
                   type="button"
                   onClick={handleCancelEdit}
-                  className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted"
+                  className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted"
                   disabled={submitting}
                 >
                   ביטול
@@ -654,7 +654,7 @@ function ClientsPageContent() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-[14px] bg-primary px-4 py-2 text-white hover:bg-primary/90 disabled:opacity-50"
+                  className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                 >
                   {submitting ? "שומר..." : editingClient ? "עדכן" : "שמור"}
                 </button>
@@ -664,7 +664,7 @@ function ClientsPageContent() {
         )}
 
         {/* Clients List */}
-        <div className="rounded-[14px] bg-card shadow">
+        <div className="rounded-[var(--radius-card)] bg-card shadow">
           {clientsLoading ? (
             <div className="p-8 text-center text-muted-foreground">טוען לקוחות...</div>
           ) : clients.length === 0 ? (
@@ -790,14 +790,14 @@ function ClientsPageContent() {
             <button
               onClick={cancelDelete}
               disabled={deleting}
-              className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted disabled:opacity-50"
+              className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted disabled:opacity-50"
             >
               ביטול
             </button>
             <button
               onClick={confirmDelete}
               disabled={deleting}
-              className="rounded-[14px] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
+              className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
             >
               {deleting ? "מארכב..." : "ארכב"}
             </button>

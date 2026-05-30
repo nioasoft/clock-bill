@@ -187,7 +187,7 @@ export default function AdminUserDetailPage({
       <AppLayout>
         <PageContainer>
           <Skeleton className="h-8 w-48 mb-4" />
-          <Skeleton className="h-64 w-full rounded-[14px]" />
+          <Skeleton className="h-64 w-full rounded-[var(--radius-card)]" />
         </PageContainer>
       </AppLayout>
     );
@@ -252,7 +252,7 @@ export default function AdminUserDetailPage({
 
         {/* Tab content */}
         {activeTab === "profile" && (
-          <div className="rounded-[14px] bg-card border border-border/50 p-6 shadow-sm">
+          <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">אימייל</p>
@@ -317,7 +317,7 @@ export default function AdminUserDetailPage({
         )}
 
         {activeTab === "clients" && (
-          <div className="rounded-[14px] bg-card border border-border/50 shadow-sm overflow-hidden">
+          <div className="rounded-[var(--radius-card)] bg-card border border-border/50 shadow-sm overflow-hidden">
             {clients.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">אין לקוחות</div>
             ) : (
@@ -350,7 +350,7 @@ export default function AdminUserDetailPage({
         )}
 
         {activeTab === "projects" && (
-          <div className="rounded-[14px] bg-card border border-border/50 shadow-sm overflow-hidden">
+          <div className="rounded-[var(--radius-card)] bg-card border border-border/50 shadow-sm overflow-hidden">
             {projects.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">אין פרויקטים</div>
             ) : (
@@ -383,7 +383,7 @@ export default function AdminUserDetailPage({
         )}
 
         {activeTab === "entries" && (
-          <div className="rounded-[14px] bg-card border border-border/50 shadow-sm overflow-hidden">
+          <div className="rounded-[var(--radius-card)] bg-card border border-border/50 shadow-sm overflow-hidden">
             {entries.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">אין רשומות זמן</div>
             ) : (
@@ -415,7 +415,7 @@ export default function AdminUserDetailPage({
 
         {activeTab === "sessions" && (
           <div className="space-y-4">
-            <div className="rounded-[14px] bg-card border border-border/50 shadow-sm overflow-hidden">
+            <div className="rounded-[var(--radius-card)] bg-card border border-border/50 shadow-sm overflow-hidden">
               {sessions.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground">אין הפעלות</div>
               ) : (
@@ -497,7 +497,7 @@ export default function AdminUserDetailPage({
               </div>
             )}
 
-            <div className="rounded-[14px] bg-card border border-border/50 p-6 shadow-sm space-y-4">
+            <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm space-y-4">
               {/* Reset password */}
               <div className="flex items-center justify-between">
                 <div>

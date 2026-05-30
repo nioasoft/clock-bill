@@ -73,20 +73,20 @@ export default function AdminDashboardPage() {
         {loading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="bg-card border border-border/50 rounded-[14px] p-4 shadow-sm">
+              <div key={i} className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4 shadow-sm">
                 <Skeleton className="h-4 w-1/2 mb-2" />
                 <Skeleton className="h-8 w-3/4" />
               </div>
             ))}
           </div>
         ) : error ? (
-          <div className="rounded-[14px] bg-destructive/10 p-6 text-center">
+          <div className="rounded-[var(--radius-card)] bg-destructive/10 p-6 text-center">
             <p className="text-destructive">שגיאה בטעינת הנתונים</p>
           </div>
         ) : stats ? (
           <>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="bg-card border border-border/50 border-t-2 border-t-primary rounded-[14px] p-4 shadow-sm">
+              <div className="bg-card border border-border/50 border-t-2 border-t-primary rounded-[var(--radius-card)] p-4 shadow-sm">
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -99,7 +99,7 @@ export default function AdminDashboardPage() {
                 )}
               </div>
 
-              <div className="bg-card border border-border/50 border-t-2 border-t-primary rounded-[14px] p-4 shadow-sm">
+              <div className="bg-card border border-border/50 border-t-2 border-t-primary rounded-[var(--radius-card)] p-4 shadow-sm">
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -112,7 +112,7 @@ export default function AdminDashboardPage() {
                 )}
               </div>
 
-              <div className="bg-card border border-border/50 border-t-2 border-t-accent rounded-[14px] p-4 shadow-sm">
+              <div className="bg-card border border-border/50 border-t-2 border-t-accent rounded-[var(--radius-card)] p-4 shadow-sm">
                 <div className="flex items-center gap-2">
                   <Activity className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -122,7 +122,7 @@ export default function AdminDashboardPage() {
                 <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">{stats.activeTimers}</p>
               </div>
 
-              <div className="bg-card border border-border/50 border-t-2 border-t-secondary rounded-[14px] p-4 shadow-sm">
+              <div className="bg-card border border-border/50 border-t-2 border-t-secondary rounded-[var(--radius-card)] p-4 shadow-sm">
                 <div className="flex items-center gap-2">
                   <UserPlus className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -132,7 +132,7 @@ export default function AdminDashboardPage() {
                 <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">{stats.newThisWeek}</p>
               </div>
 
-              <div className="bg-card border border-border/50 border-t-2 border-t-secondary rounded-[14px] p-4 shadow-sm">
+              <div className="bg-card border border-border/50 border-t-2 border-t-secondary rounded-[var(--radius-card)] p-4 shadow-sm">
                 <div className="flex items-center gap-2">
                   <UserPlus className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -142,7 +142,7 @@ export default function AdminDashboardPage() {
                 <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">{stats.newThisMonth}</p>
               </div>
 
-              <div className="bg-card border border-border/50 border-t-2 border-t-accent rounded-[14px] p-4 shadow-sm">
+              <div className="bg-card border border-border/50 border-t-2 border-t-accent rounded-[var(--radius-card)] p-4 shadow-sm">
                 <div className="flex items-center gap-2">
                   <FolderKanban className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -155,7 +155,7 @@ export default function AdminDashboardPage() {
 
             {/* Registration Trend Chart */}
             {stats.registrationTrend.length > 0 && (
-              <div className="mt-6 rounded-[14px] bg-card border border-border/50 p-6 shadow-sm">
+              <div className="mt-6 rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
                 <h3 className="font-display text-lg font-semibold text-foreground mb-4">
                   הרשמות - 30 ימים אחרונים
                 </h3>
@@ -191,7 +191,7 @@ export default function AdminDashboardPage() {
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Link
                 href="/admin/users"
-                className="bg-card border border-border/50 rounded-[14px] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all"
+                className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all"
               >
                 <div className="flex items-center gap-3">
                   <Users className="h-5 w-5 text-primary" />
@@ -203,7 +203,7 @@ export default function AdminDashboardPage() {
               </Link>
               <Link
                 href="/admin/stats"
-                className="bg-card border border-border/50 rounded-[14px] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all"
+                className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all"
               >
                 <div className="flex items-center gap-3">
                   <BarChart3 className="h-5 w-5 text-accent" />

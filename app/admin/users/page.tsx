@@ -99,7 +99,7 @@ export default function AdminUsersPage() {
             ))}
           </div>
         ) : (
-          <div className="rounded-[14px] bg-card border border-border/50 shadow-sm overflow-hidden">
+          <div className="rounded-[var(--radius-card)] bg-card border border-border/50 shadow-sm overflow-hidden">
             {/* Desktop table */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">

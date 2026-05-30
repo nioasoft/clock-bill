@@ -185,13 +185,13 @@ export default function ClientDetailsPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowEditForm(true)}
-                  className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted"
+                  className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted"
                 >
                   ערוך
                 </button>
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="rounded-[14px] border border-destructive/30 px-4 py-2 text-destructive hover:bg-destructive/10"
+                  className="rounded-[var(--radius-card)] border border-destructive/30 px-4 py-2 text-destructive hover:bg-destructive/10"
                 >
                   מחק
                 </button>
@@ -199,7 +199,7 @@ export default function ClientDetailsPage() {
             )}
           </div>
         {showDeleteConfirm && (
-          <div className="mb-6 rounded-[14px] bg-destructive/10 p-6 border border-border/50 shadow-sm border border-destructive/20">
+          <div className="mb-6 rounded-[var(--radius-card)] bg-destructive/10 p-6 border border-border/50 shadow-sm border border-destructive/20">
             <h2 className="text-xl font-semibold text-destructive mb-4">מחק לקוח</h2>
             <p className="text-destructive mb-4">
               האם אתה בטוח שברצונך למחוק את הלקוח &quot;{client?.name}&quot;? לקוחות שנמחקים יועברו למצב &quot;לא פעיל&quot; ולא יוצגו ברשימה.
@@ -215,7 +215,7 @@ export default function ClientDetailsPage() {
                   setShowDeleteConfirm(false);
                   setFormError("");
                 }}
-                className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted bg-card"
+                className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted bg-card"
                 disabled={submitting}
               >
                 ביטול
@@ -223,7 +223,7 @@ export default function ClientDetailsPage() {
               <button
                 onClick={handleDelete}
                 disabled={submitting}
-                className="rounded-[14px] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
+                className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
               >
                 {submitting ? "מוחק..." : "מחק לקוח"}
               </button>
@@ -232,7 +232,7 @@ export default function ClientDetailsPage() {
         )}
 
         {showEditForm && (
-          <div className="mb-6 rounded-[14px] bg-card p-6 border border-border/50 shadow-sm">
+          <div className="mb-6 rounded-[var(--radius-card)] bg-card p-6 border border-border/50 shadow-sm">
             <h2 className="text-xl font-semibold text-foreground mb-4">ערוך לקוח</h2>
             <form onSubmit={handleEdit} className="space-y-4">
               {formError && (
@@ -363,7 +363,7 @@ export default function ClientDetailsPage() {
                       });
                     }
                   }}
-                  className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted"
+                  className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted"
                   disabled={submitting}
                 >
                   ביטול
@@ -371,7 +371,7 @@ export default function ClientDetailsPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-[14px] bg-primary px-4 py-2 text-white hover:bg-primary/90 disabled:opacity-50"
+                  className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                 >
                   {submitting ? "שומר..." : "שמור שינויים"}
                 </button>
@@ -381,19 +381,19 @@ export default function ClientDetailsPage() {
         )}
 
         {clientLoading ? (
-          <div className="rounded-[14px] bg-card p-8 border border-border/50 shadow-sm text-center text-muted-foreground">
+          <div className="rounded-[var(--radius-card)] bg-card p-8 border border-border/50 shadow-sm text-center text-muted-foreground">
             טוען נתוני לקוח...
           </div>
         ) : error ? (
-          <div className="rounded-[14px] bg-card p-8 border border-border/50 shadow-sm">
+          <div className="rounded-[var(--radius-card)] bg-card p-8 border border-border/50 shadow-sm">
             <div className="rounded-md bg-destructive/10 p-4 text-destructive">{error}</div>
           </div>
         ) : !client ? (
-          <div className="rounded-[14px] bg-card p-8 border border-border/50 shadow-sm text-center text-muted-foreground">
+          <div className="rounded-[var(--radius-card)] bg-card p-8 border border-border/50 shadow-sm text-center text-muted-foreground">
             הלקוח לא נמצא
           </div>
         ) : (
-          <div className="rounded-[14px] bg-card p-6 border border-border/50 shadow-sm">
+          <div className="rounded-[var(--radius-card)] bg-card p-6 border border-border/50 shadow-sm">
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-foreground">{client.name}</h2>
@@ -473,7 +473,7 @@ export default function ClientDetailsPage() {
         )}
 
         {client && (
-          <div className="mt-6 rounded-[14px] bg-card p-6 border border-border/50 shadow-sm">
+          <div className="mt-6 rounded-[var(--radius-card)] bg-card p-6 border border-border/50 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display text-lg font-semibold text-foreground">פרויקטים</h3>
               <a

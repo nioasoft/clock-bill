@@ -598,14 +598,14 @@ export default function EntriesPage() {
           <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">N</kbd>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="rounded-[14px] bg-primary px-4 py-2 text-white hover:bg-primary/90"
+            className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
           >
             {showForm ? "ביטול" : "+ רשום זמן"}
           </button>
         </PageHeader>
 
         {/* Filters Section */}
-        <div className="mb-6 rounded-[14px] border-secondary/30 bg-secondary/5 p-4 shadow">
+        <div className="mb-6 rounded-[var(--radius-card)] border-secondary/30 bg-secondary/5 p-4 shadow">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-semibold text-foreground">סינון</h2>
@@ -617,7 +617,7 @@ export default function EntriesPage() {
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="min-h-[44px] min-w-[44px] px-4 py-2 text-sm font-medium text-primary hover:bg-primary-light rounded-[14px] transition-colors"
+              className="min-h-[44px] min-w-[44px] px-4 py-2 text-sm font-medium text-primary hover:bg-primary-light rounded-[var(--radius-card)] transition-colors"
             >
               {showFilters ? "הסתר סינון" : "הצג סינון"}
             </button>
@@ -697,7 +697,7 @@ export default function EntriesPage() {
               <div className="sm:col-span-2 lg:col-span-4 flex justify-end">
                 <button
                   onClick={clearFilters}
-                  className="rounded-[14px] border border-border px-4 py-2 text-sm text-foreground hover:bg-muted"
+                  className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-sm text-foreground hover:bg-muted"
                 >
                   נקה סינון
                 </button>
@@ -762,7 +762,7 @@ export default function EntriesPage() {
 
         {/* Add/Edit Entry Form */}
         {showForm && (
-          <div className="mb-8 rounded-[14px] bg-surface p-6 shadow motion-safe:animate-scale-in">
+          <div className="mb-8 rounded-[var(--radius-card)] bg-surface p-6 shadow motion-safe:animate-scale-in">
             <h2 className="text-xl font-semibold text-foreground mb-4">
               {editingEntry ? "ערוך רישום זמן" : "רשום זמן חדש"}
             </h2>
@@ -925,7 +925,7 @@ export default function EntriesPage() {
                 <button
                   type="button"
                   onClick={handleCancelEdit}
-                  className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted"
+                  className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted"
                   disabled={submitting}
                 >
                   ביטול
@@ -933,7 +933,7 @@ export default function EntriesPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-[14px] bg-primary px-4 py-2 text-white hover:bg-primary/90 disabled:opacity-50"
+                  className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                 >
                   {submitting ? "שומר..." : editingEntry ? "עדכן" : "שמור"}
                 </button>
@@ -943,7 +943,7 @@ export default function EntriesPage() {
         )}
 
         {/* Entries List */}
-        <div className="rounded-[14px] bg-card shadow">
+        <div className="rounded-[var(--radius-card)] bg-card shadow">
           {entriesLoading ? (
             <div className="p-8 text-center text-muted-foreground">טוען רישומי זמן...</div>
           ) : entries.length === 0 ? (
@@ -971,19 +971,19 @@ export default function EntriesPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <button
                         onClick={handleBulkEdit}
-                        className="rounded-[14px] bg-accent text-accent-foreground px-4 py-2 text-sm hover:bg-accent/90"
+                        className="rounded-[var(--radius-card)] bg-accent text-accent-foreground px-4 py-2 text-sm hover:bg-accent/90"
                       >
                         ערוך נבחרים
                       </button>
                       <button
                         onClick={() => setShowBulkDeleteConfirm(true)}
-                        className="rounded-[14px] bg-destructive px-4 py-2 text-sm text-white hover:bg-destructive/90"
+                        className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-sm text-white hover:bg-destructive/90"
                       >
                         מחק נבחרים
                       </button>
                       <button
                         onClick={() => setSelectedEntries(new Set())}
-                        className="rounded-[14px] border border-primary-foreground/20 px-4 py-2 text-sm hover:bg-primary-foreground/10"
+                        className="rounded-[var(--radius-card)] border border-primary-foreground/20 px-4 py-2 text-sm hover:bg-primary-foreground/10"
                       >
                         בטל בחירה
                       </button>
@@ -1110,7 +1110,7 @@ export default function EntriesPage() {
             {/* Mobile Card View */}
             <div className="md:hidden space-y-4">
               {entries.map((entry) => (
-                <div key={entry.id} className={`bg-card rounded-[14px] shadow p-4 border-s-4 border-primary ${selectedEntries.has(entry.id) ? "ring-2 ring-primary" : ""}`}>
+                <div key={entry.id} className={`bg-card rounded-[var(--radius-card)] shadow p-4 border-s-4 border-primary ${selectedEntries.has(entry.id) ? "ring-2 ring-primary" : ""}`}>
                   <div className="flex items-start gap-3">
                     {/* Large touch-friendly checkbox */}
                     <div className="pt-1">
@@ -1171,19 +1171,19 @@ export default function EntriesPage() {
                       <div className="grid grid-cols-3 gap-2">
                         <button
                           onClick={() => handleDuplicate(entry)}
-                          className="min-h-[44px] flex items-center justify-center rounded-[14px] border border-secondary bg-secondary-light px-3 py-2 text-sm font-medium text-secondary hover:bg-secondary-light/80 active:bg-secondary-light/60 transition-colors"
+                          className="min-h-[44px] flex items-center justify-center rounded-[var(--radius-card)] border border-secondary bg-secondary-light px-3 py-2 text-sm font-medium text-secondary hover:bg-secondary-light/80 active:bg-secondary-light/60 transition-colors"
                         >
                           שכפל
                         </button>
                         <button
                           onClick={() => handleEdit(entry)}
-                          className="min-h-[44px] flex items-center justify-center rounded-[14px] bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-primary/90 active:bg-primary/80 transition-colors"
+                          className="min-h-[44px] flex items-center justify-center rounded-[var(--radius-card)] bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 active:bg-primary/80 transition-colors"
                         >
                           ערוך
                         </button>
                         <button
                           onClick={() => handleDeleteClick(entry)}
-                          className="min-h-[44px] flex items-center justify-center rounded-[14px] border border-destructive bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/20 active:bg-destructive/30 transition-colors"
+                          className="min-h-[44px] flex items-center justify-center rounded-[var(--radius-card)] border border-destructive bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/20 active:bg-destructive/30 transition-colors"
                         >
                           מחק
                         </button>
@@ -1211,14 +1211,14 @@ export default function EntriesPage() {
             <button
               onClick={cancelDelete}
               disabled={deleting}
-              className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted disabled:opacity-50"
+              className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted disabled:opacity-50"
             >
               ביטול
             </button>
             <button
               onClick={handleDeleteConfirm}
               disabled={deleting}
-              className="rounded-[14px] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
+              className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
             >
               {deleting ? "מוחק..." : "מחק"}
             </button>
@@ -1304,7 +1304,7 @@ export default function EntriesPage() {
               <button
                 type="button"
                 onClick={() => setShowBulkEdit(false)}
-                className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted"
+                className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted"
                 disabled={bulkEditSubmitting}
               >
                 ביטול
@@ -1312,7 +1312,7 @@ export default function EntriesPage() {
               <button
                 type="submit"
                 disabled={bulkEditSubmitting}
-                className="rounded-[14px] bg-primary px-4 py-2 text-white hover:bg-primary/90 disabled:opacity-50"
+                className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
                 {bulkEditSubmitting ? "מעדכן..." : "עדכן רשומות"}
               </button>
@@ -1334,14 +1334,14 @@ export default function EntriesPage() {
             <button
               onClick={() => setShowBulkDeleteConfirm(false)}
               disabled={bulkDeleteSubmitting}
-              className="rounded-[14px] border border-border px-4 py-2 text-foreground hover:bg-muted disabled:opacity-50"
+              className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted disabled:opacity-50"
             >
               ביטול
             </button>
             <button
               onClick={handleBulkDelete}
               disabled={bulkDeleteSubmitting}
-              className="rounded-[14px] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
+              className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
             >
               {bulkDeleteSubmitting ? "מוחק..." : "מחק"}
             </button>

@@ -39,7 +39,7 @@ export function EarningsChart() {
 
   if (loading) {
     return (
-      <div className="rounded-[14px] bg-card border border-border/50 p-6 shadow-sm">
+      <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
         <h3 className="font-display text-lg font-semibold text-foreground mb-4">הכנסות חודשיות</h3>
         <div className="h-48 flex items-center justify-center">
           <div className="animate-pulse text-muted-foreground">טוען נתונים...</div>

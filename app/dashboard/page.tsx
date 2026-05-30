@@ -121,7 +121,7 @@ export default function DashboardPage() {
 
         {/* First-time user checklist */}
         {!statsLoading && !statsError && isFirstTimeUser && (
-          <div className="mt-5 rounded-[14px] bg-accent/5 border border-accent/20 p-6 shadow-sm motion-safe:animate-fade-up">
+          <div className="mt-5 rounded-[var(--radius-card)] bg-accent/5 border border-accent/20 p-6 shadow-sm motion-safe:animate-fade-up">
             <h3 className="font-display text-lg font-semibold text-foreground mb-4">בוא נתחיל!</h3>
             <div className="space-y-3">
               <Link
@@ -171,19 +171,19 @@ export default function DashboardPage() {
         {statsLoading ? (
           <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="bg-card border border-border/50 rounded-[14px] p-4 shadow-sm">
+              <div key={i} className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4 shadow-sm">
                 <Skeleton className="h-4 w-1/2 mb-2" />
                 <Skeleton className="h-8 w-3/4" />
               </div>
             ))}
           </div>
         ) : statsError ? (
-          <div className="mt-5 rounded-[14px] bg-destructive/10 p-6 text-center">
+          <div className="mt-5 rounded-[var(--radius-card)] bg-destructive/10 p-6 text-center">
             <p className="text-destructive">שגיאה בטעינת הנתונים. נסה לרענן את הדף.</p>
           </div>
         ) : stats && !isFirstTimeUser ? (
           <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="relative bg-card border border-border/50 border-s-2 border-s-primary rounded-[14px] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all motion-safe:animate-fade-up stagger-1">
+            <div className="relative bg-card border border-border/50 border-s-2 border-s-primary rounded-[var(--radius-card)] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all motion-safe:animate-fade-up stagger-1">
               <div className="absolute top-2 start-2">
                 <CircularProgress value={Math.min((stats.today.hours / 8) * 100, 100)} size={24} strokeWidth={2} className="text-primary/20" />
               </div>
@@ -191,7 +191,7 @@ export default function DashboardPage() {
               <p className="mt-2 font-mono text-3xl font-bold tabular-nums text-foreground">{stats.today.formatted}</p>
             </div>
 
-            <div className="relative bg-card border border-border/50 border-s-2 border-s-primary rounded-[14px] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all motion-safe:animate-fade-up stagger-2">
+            <div className="relative bg-card border border-border/50 border-s-2 border-s-primary rounded-[var(--radius-card)] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all motion-safe:animate-fade-up stagger-2">
               <div className="absolute top-2 start-2">
                 <CircularProgress value={Math.min((stats.week.hours / 40) * 100, 100)} size={24} strokeWidth={2} className="text-primary/20" />
               </div>
@@ -199,7 +199,7 @@ export default function DashboardPage() {
               <p className="mt-2 font-mono text-3xl font-bold tabular-nums text-foreground">{stats.week.formatted}</p>
             </div>
 
-            <div className="relative bg-card border border-border/50 border-s-2 border-s-primary rounded-[14px] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all motion-safe:animate-fade-up stagger-3">
+            <div className="relative bg-card border border-border/50 border-s-2 border-s-primary rounded-[var(--radius-card)] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all motion-safe:animate-fade-up stagger-3">
               <div className="absolute top-2 start-2">
                 <CircularProgress value={Math.min((stats.month.hours / 160) * 100, 100)} size={24} strokeWidth={2} className="text-primary/20" />
               </div>
@@ -207,7 +207,7 @@ export default function DashboardPage() {
               <p className="mt-2 font-mono text-3xl font-bold tabular-nums text-foreground">{stats.month.formatted}</p>
             </div>
 
-            <div className="relative bg-card border border-border/50 border-s-2 border-s-accent rounded-[14px] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all motion-safe:animate-fade-up stagger-4">
+            <div className="relative bg-card border border-border/50 border-s-2 border-s-accent rounded-[var(--radius-card)] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all motion-safe:animate-fade-up stagger-4">
               <div className="absolute top-2 start-2">
                 <CircularProgress value={75} size={24} strokeWidth={2} className="text-accent/20" />
               </div>
@@ -217,7 +217,7 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            <div className="relative bg-card border border-border/50 border-s-2 border-s-secondary rounded-[14px] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all motion-safe:animate-fade-up stagger-5">
+            <div className="relative bg-card border border-border/50 border-s-2 border-s-secondary rounded-[var(--radius-card)] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all motion-safe:animate-fade-up stagger-5">
               <div className="absolute top-2 start-2">
                 <CircularProgress value={(stats.projectsCount / 10) * 100} size={24} strokeWidth={2} className="text-secondary/20" />
               </div>
@@ -227,7 +227,7 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            <div className="relative bg-card border border-border/50 border-s-2 border-s-secondary rounded-[14px] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all motion-safe:animate-fade-up stagger-5">
+            <div className="relative bg-card border border-border/50 border-s-2 border-s-secondary rounded-[var(--radius-card)] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all motion-safe:animate-fade-up stagger-5">
               <div className="absolute top-2 start-2">
                 <CircularProgress value={(stats.clientsCount / 10) * 100} size={24} strokeWidth={2} className="text-secondary/20" />
               </div>
@@ -242,7 +242,7 @@ export default function DashboardPage() {
         {/* Quick Actions */}
         <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {/* Quick Timer Widget */}
-          <div className="bg-card border border-border/50 rounded-[14px] p-4 shadow-sm relative overflow-hidden">
+          <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between">
               <h3 className="font-display text-lg font-semibold text-foreground">טיימר מהיר</h3>
               <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">T</kbd>
@@ -289,7 +289,7 @@ export default function DashboardPage() {
                 </div>
                 <button
                   onClick={() => setShowTimerModal(true)}
-                  className="relative w-full rounded-md bg-primary px-6 py-3 text-base font-medium text-white hover:bg-primary/90 transition-all hover:shadow-md"
+                  className="relative w-full rounded-md bg-primary px-6 py-3 text-base font-medium text-primary-foreground hover:bg-primary/90 transition-all hover:shadow-md"
                 >
                   התחל טיימר חדש
                 </button>
@@ -299,7 +299,7 @@ export default function DashboardPage() {
 
           <Link
             href="/entries"
-            className="bg-card border border-border/50 rounded-[14px] p-4 shadow-sm hover:-translate-y-1 hover:shadow-md transition-all duration-200"
+            className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4 shadow-sm hover:-translate-y-1 hover:shadow-md transition-all duration-200"
           >
             <h3 className="font-display text-lg font-semibold text-foreground">רשומות זמן</h3>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -309,7 +309,7 @@ export default function DashboardPage() {
 
           <Link
             href="/clients"
-            className="bg-card border border-border/50 rounded-[14px] p-4 shadow-sm hover:-translate-y-1 hover:shadow-md transition-all duration-200"
+            className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4 shadow-sm hover:-translate-y-1 hover:shadow-md transition-all duration-200"
           >
             <h3 className="font-display text-lg font-semibold text-foreground">לקוחות</h3>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -319,7 +319,7 @@ export default function DashboardPage() {
 
           <Link
             href="/reports"
-            className="bg-card border border-border/50 rounded-[14px] p-4 shadow-sm hover:-translate-y-1 hover:shadow-md transition-all duration-200"
+            className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4 shadow-sm hover:-translate-y-1 hover:shadow-md transition-all duration-200"
           >
             <h3 className="font-display text-lg font-semibold text-foreground">דוחות</h3>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -340,7 +340,7 @@ export default function DashboardPage() {
         {recentEntries.length > 0 && (
           <div className="mt-5">
             <h3 className="font-display text-xl font-semibold text-foreground mb-4">רשומות אחרונות</h3>
-            <div className="bg-card border border-border/50 rounded-[14px] shadow-sm overflow-hidden">
+            <div className="bg-card border border-border/50 rounded-[var(--radius-card)] shadow-sm overflow-hidden">
               <ul className="divide-y divide-border">
                 {recentEntries.map((entry) => (
                   <li key={entry.id} className="px-6 py-4 hover:bg-muted transition-colors">
