@@ -38,17 +38,17 @@ Schema is defined in `src/db/schema.ts` (Drizzle) and also duplicated as raw SQL
 
 ### Auth Pattern
 
-Custom auth (not Better Auth despite the spec) using scrypt password hashing and cookie-based sessions (`lib/auth.ts`). Every API route follows this pattern:
+**Better Auth** (email/password + Google), instance in `lib/auth/better-auth.ts`, Drizzle adapter, BA tables `user`/`session`/`account`/`verification`. Client: `lib/auth/client.ts`. Handler: `app/api/auth/[...all]/route.ts`. The legacy `users`/`sessions` tables are obsolete. Every API route follows this pattern:
 
 ```typescript
-const user = await getUser();
+const user = await getUser(); // lib/auth.ts — reads the Better Auth session
 if (!user) {
   return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
 }
 // All queries MUST filter by user.id for data isolation
 ```
 
-`getUser()` reads the `session` cookie, joins `sessions` + `users` tables, returns `{ id, email, emailVerified, role }` or `null`.
+`getUser()` returns `{ id, email, emailVerified, role }` or `null`. Tenant isolation is app-level (`WHERE user_id = $`); **RLS is deferred** until a non-BYPASSRLS DB role is provisioned (the Neon `neondb_owner` role bypasses RLS). Google login needs `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`.
 
 ### API Routes
 
@@ -65,10 +65,30 @@ All under `app/api/`. Use raw `query()` from `lib/db.ts` with dynamic import: `c
 ### Frontend
 
 - Next.js 16 App Router with `app/` directory
-- Root layout: `<html lang="he" dir="rtl">` with Assistant font (Hebrew+Latin)
-- Tailwind CSS v4 with `@theme inline` pattern ("Midnight Atelier" theme) in `globals.css`
+- Root layout: `<html lang="he" dir="rtl">` with **Heebo** font (Hebrew+Latin) + JetBrains Mono
+- Tailwind CSS v4 with `@theme inline` pattern in `globals.css`
 - shadcn/ui components in `components/ui/`
 - Path alias: `@/*` maps to project root
+
+## Design System — ClickHouse (dark)
+
+The app uses a **ClickHouse-inspired** dark theme: near-black canvas, electric-yellow
+accent, white type, hairline borders, **no drop shadows** (depth comes from
+canvas/surface contrast). All tokens live in `app/globals.css` under `@theme inline`.
+
+**🚫 NEVER hardcode design values. ALWAYS use the design tokens.**
+
+- **Colors** — use the semantic Tailwind token classes, never raw colors:
+  - Surfaces: `bg-background` (#0a0a0a), `bg-surface`, `bg-card` (#1a1a1a), `bg-card-elevated`.
+  - Text: `text-foreground` (white), `text-muted-foreground`.
+  - Accent: `bg-primary` / `bg-accent` = electric yellow (#faff69). **On a yellow background, text MUST be `text-primary-foreground` / `text-accent-foreground` (black) — never `text-white`** (low contrast).
+  - Borders: `border-border` (hairline #2a2a2a), `border-border-strong`. Focus ring: `ring-ring` (yellow).
+  - Semantic: `destructive` (red, white fg), `success` (green, `success-foreground`).
+  - ❌ No `bg-white`, `text-black`, `bg-gray-*`, or `bg-[#hex]` in app UI (PDF templates under `*pdf*` are the only exception — printed pages stay light).
+- **Radius** — `rounded-[var(--radius)]` (8px, controls) or `rounded-[var(--radius-card)]` (12px, cards). Never `rounded-[14px]` or other hardcoded px.
+- **Fonts** — `font-sans` (Heebo) for UI, `font-mono` (JetBrains Mono) for numbers/timers. Use `tabular-nums` for aligned figures; `.timer-display` for hero timer digits.
+- **To change the theme**, edit the token VALUES in `globals.css` `@theme` — do not touch components. Token names are stable so the whole app re-themes from one place.
+- **Mobile**: inputs are forced to 16px under 640px (prevents iOS zoom) — keep it. Tap targets ≥44px.
 
 ### Database
 
