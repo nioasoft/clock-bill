@@ -28,7 +28,7 @@ export function PersistentTimerBar() {
           </div>
           <button
             onClick={() => setShowTimerModal(true)}
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-l from-primary to-primary/90 px-4 py-1.5 text-xs font-medium text-white hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all"
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all"
           >
             <Play className="h-3.5 w-3.5" />
             התחל טיימר

@@ -499,7 +499,7 @@ export default function ClientDetailsPage() {
                     <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
                       project.status === "active" ? "bg-success/10 text-success" :
                       project.status === "completed" ? "bg-secondary-light text-secondary" :
-                      project.status === "paused" ? "bg-accent text-foreground" :
+                      project.status === "paused" ? "bg-accent text-accent-foreground" :
                       "bg-muted text-foreground"
                     }`}>
                       {project.status === "active" ? "פעיל" :

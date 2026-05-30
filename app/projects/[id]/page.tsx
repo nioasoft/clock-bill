@@ -472,7 +472,7 @@ export default function ProjectDetailsPage() {
       case "completed":
         return "bg-secondary-light text-secondary";
       case "paused":
-        return "bg-accent text-foreground";
+        return "bg-accent text-accent-foreground";
       default:
         return "bg-muted text-foreground";
     }
