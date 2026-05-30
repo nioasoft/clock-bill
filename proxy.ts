@@ -15,7 +15,7 @@ import type { NextRequest } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 
 // Routes that don't require authentication
-const publicRoutes = ["/login", "/register", "/forgot-password", "/reset-password"];
+const publicRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/offline"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -52,6 +52,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.svg$|site\\.webmanifest).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|sw\\.js|manifest\\.webmanifest|.*\\.png$|.*\\.svg$).*)",
   ],
 };
