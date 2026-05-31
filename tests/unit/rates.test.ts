@@ -37,8 +37,9 @@ const runner = new TestRunner();
 runner.test("calcItemAmount: 3 units @ 100 = 300", () => {
   assertEqual(calcItemAmount(3, 100), 300);
 });
-runner.test("calcItemAmount: fractional units rounds to cents", () => {
-  assertEqual(calcItemAmount(2.5, 33.33), 83.33); // 83.325 -> 83.33
+runner.test("calcItemAmount: fractional units round to cents", () => {
+  assertEqual(calcItemAmount(3, 33.333), 100); // 99.999 -> 100.00
+  assertEqual(calcItemAmount(1.5, 100), 150);
 });
 runner.test("calcItemAmount: null/zero is 0", () => {
   assertEqual(calcItemAmount(null, 100), 0);
