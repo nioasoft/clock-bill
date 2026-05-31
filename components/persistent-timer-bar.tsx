@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTimer } from "@/contexts/timer-context";
 import { Play, Pause, Square, Clock, StickyNote } from "lucide-react";
 
@@ -22,11 +22,24 @@ export function PersistentTimerBar() {
   const [notesEditorId, setNotesEditorId] = useState<string | null>(null);
   const [notesDraft, setNotesDraft] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
+  const notesTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const openNotesEditor = (id: string, current: string | null) => {
     setNotesEditorId((prev) => (prev === id ? null : id));
     setNotesDraft(current || "");
   };
+
+  // When the editor opens (or switches timers), focus the textarea and put the
+  // caret at the END of the existing text so the user can keep writing instead
+  // of landing at the start.
+  useEffect(() => {
+    if (!notesEditorId) return;
+    const el = notesTextareaRef.current;
+    if (!el) return;
+    el.focus();
+    const end = el.value.length;
+    el.setSelectionRange(end, end);
+  }, [notesEditorId]);
 
   const saveNotes = async (id: string) => {
     setSavingNotes(true);
@@ -113,18 +126,19 @@ export function PersistentTimerBar() {
                 {elapsedTimes[timer.id] ?? "0:00"}
               </span>
 
-              {/* Notes toggle — filled accent when notes exist */}
+              {/* Notes toggle — labelled so it's obvious; filled accent when notes exist */}
               <button
                 onClick={() => openNotesEditor(timer.id, timer.notes)}
                 aria-label={hasNotes ? "ערוך הערות" : "הוסף הערות"}
                 title={hasNotes ? "ערוך הערות" : "הוסף הערות"}
-                className={`inline-flex items-center justify-center h-8 w-8 rounded-full transition-all ${
+                className={`inline-flex items-center gap-1.5 h-8 ps-2.5 pe-3 rounded-full text-xs font-semibold transition-all ${
                   hasNotes || editingNotes
                     ? "bg-primary/20 text-primary hover:bg-primary/30"
                     : "bg-muted text-muted-foreground hover:bg-muted/70"
                 }`}
               >
-                <StickyNote className="h-4 w-4" />
+                <StickyNote className="h-4 w-4 shrink-0" />
+                <span>{hasNotes ? "הערה" : "הערות"}</span>
               </button>
 
               {isPaused ? (
@@ -177,13 +191,13 @@ export function PersistentTimerBar() {
           </label>
           <div className="flex items-start gap-2">
             <textarea
+              ref={notesTextareaRef}
               id="running-timer-notes"
               rows={2}
               value={notesDraft}
               onChange={(e) => setNotesDraft(e.target.value)}
               placeholder="מה נעשה עד עכשיו? אפשר לעדכן בכל רגע."
               className="flex-1 resize-y rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/50 focus:border-primary focus:ring-1 focus:ring-primary"
-              autoFocus
             />
             <div className="flex shrink-0 flex-col gap-2">
               <button

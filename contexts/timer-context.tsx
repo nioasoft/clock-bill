@@ -434,7 +434,10 @@ export function TimerProvider({ children }: TimerProviderProps) {
 
       setStopTimerTargetId(entryId);
       setStopTimerDescription(timer.description || "");
-      setStopTimerNotes("");
+      // Carry over notes written while the timer was running, so the stop modal
+      // shows them for editing/appending instead of an empty box that would
+      // overwrite them on save.
+      setStopTimerNotes(timer.notes || "");
       setStopTimerHours(hours.toString());
       setStopTimerMinutes(minutes.toString());
       setShowStopTimerModal(true);
@@ -458,7 +461,9 @@ export function TimerProvider({ children }: TimerProviderProps) {
         body: JSON.stringify({
           entryId,
           description: stopTimerDescription || null,
-          notes: stopTimerNotes || null,
+          // Send the field's exact value (the modal now reflects existing notes),
+          // so editing is authoritative: keep, append, or clear all behave as shown.
+          notes: stopTimerNotes,
           duration: totalDuration,
         }),
       });
