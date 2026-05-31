@@ -1,22 +1,15 @@
-/**
- * Health check endpoint
- * Returns 200 OK if the service is running
- * Can be used by load balancers, monitoring systems, etc.
- */
 import { NextResponse } from "next/server";
-import { getPool } from "@/lib/db";
+import { query } from "@/lib/db";
 
+/**
+ * Health check endpoint for monitoring and load balancers
+ * Returns 200 if the service and database are healthy
+ */
 export async function GET() {
   try {
-    // Check database connection
-    const pool = getPool();
-    const client = await pool.connect();
+    // Test database connectivity
+    await query("SELECT 1");
 
-    // Run a simple query to verify database is responsive
-    await client.query("SELECT 1");
-    client.release();
-
-    // Return healthy status
     return NextResponse.json(
       {
         status: "healthy",
@@ -32,9 +25,9 @@ export async function GET() {
         status: "unhealthy",
         timestamp: new Date().toISOString(),
         database: "disconnected",
-        error: "Database connection failed",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 503 }
+      { status: 500 }
     );
   }
 }
