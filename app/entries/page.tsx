@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Clock, Timer } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { validateRequired, validateDate, validatePastDate, validateNumber } from "@/lib/validation";
+import { pickDefaultHourlyRate, type ClientRate } from "@/lib/schemas/rates";
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
 import {
   Dialog,
@@ -55,6 +56,10 @@ interface TimeEntry {
   totalPausedTime: number | null;
   taskId: string | null;
   taskName: string | null;
+  billingKind?: "hourly" | "item";
+  rate?: number | null;
+  rateLabel?: string | null;
+  quantity?: number | null;
 }
 
 interface GroupedProjects {
@@ -81,8 +86,12 @@ export default function EntriesPage() {
     description: "",
     notes: "",
     isBillable: true,
+    billingKind: "hourly" as "hourly" | "item",
+    rateId: "",
+    quantity: "",
   });
   const [formTasks, setFormTasks] = useState<TaskOption[]>([]);
+  const [formRates, setFormRates] = useState<ClientRate[]>([]);
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState<TimeEntry | null>(null);
@@ -242,6 +251,45 @@ export default function EntriesPage() {
     fetchTasks();
   }, [formData.projectId]);
 
+  // Fetch the selected project's client rates (hourly + items) for the pickers.
+  useEffect(() => {
+    const clientId = projects.find((p) => p.id === formData.projectId)?.clientId;
+    if (!clientId) {
+      setFormRates([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/clients/${clientId}/rates`);
+        const data = await res.json();
+        if (cancelled || !data.success) return;
+        setFormRates(data.rates as ClientRate[]);
+      } catch (error) {
+        console.error("Error fetching rates for entry:", error);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [formData.projectId, projects]);
+
+  // Preselect a rate/item once rates load (or kind changes). When editing, match
+  // the entry's snapshotted label first; otherwise pick the default/first of the kind.
+  useEffect(() => {
+    if (formRates.length === 0) return;
+    setFormData((p) => {
+      const pool = formRates.filter((r) => r.kind === p.billingKind);
+      if (pool.some((r) => r.id === p.rateId)) return p; // keep a still-valid selection
+      if (editingEntry?.rateLabel) {
+        const match = pool.find((r) => r.name === editingEntry.rateLabel);
+        if (match) return { ...p, rateId: match.id };
+      }
+      const pick = p.billingKind === "hourly" ? pickDefaultHourlyRate(formRates)?.id : pool[0]?.id;
+      return { ...p, rateId: pick ?? "" };
+    });
+  }, [formRates, formData.billingKind, editingEntry]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
@@ -262,10 +310,19 @@ export default function EntriesPage() {
       errors.date = dateValidation.error;
     }
 
-    // Validate duration
-    const durationValidation = validateNumber(formData.duration, true, 1);
-    if (!durationValidation.isValid) {
-      errors.duration = durationValidation.error;
+    // Validate duration (hours) or quantity + item selection (item)
+    if (formData.billingKind === "item") {
+      const q = parseFloat(formData.quantity);
+      if (!formData.quantity || isNaN(q) || q <= 0) {
+        errors.duration = "נא להזין כמות תקינה";
+      } else if (!formData.rateId) {
+        errors.duration = "נא לבחור פריט";
+      }
+    } else {
+      const durationValidation = validateNumber(formData.duration, true, 1);
+      if (!durationValidation.isValid) {
+        errors.duration = durationValidation.error;
+      }
     }
 
     // Validate description
@@ -287,6 +344,9 @@ export default function EntriesPage() {
       const url = isEditing ? `/api/entries/${editingEntry.id}` : "/api/entries";
       const method = isEditing ? "PUT" : "POST";
 
+      const chosen = formRates.find((r) => r.id === formData.rateId);
+      const isItem = formData.billingKind === "item";
+
       const response = await fetch(url, {
         method,
         headers: {
@@ -296,7 +356,11 @@ export default function EntriesPage() {
           projectId: formData.projectId,
           taskId: formData.taskId || null,
           date: formData.date,
-          duration: parseInt(formData.duration, 10),
+          billingKind: formData.billingKind,
+          duration: isItem ? 0 : parseInt(formData.duration, 10),
+          quantity: isItem ? parseFloat(formData.quantity) || 0 : null,
+          rate: chosen?.rate ?? null,
+          rateLabel: chosen?.name ?? null,
           description: formData.description,
           notes: formData.notes || undefined,
           isBillable: formData.isBillable,
@@ -323,6 +387,9 @@ export default function EntriesPage() {
           description: "",
           notes: "",
           isBillable: true,
+          billingKind: "hourly",
+          rateId: "",
+          quantity: "",
         });
         setShowForm(false);
         setEditingEntry(null);
@@ -348,6 +415,9 @@ export default function EntriesPage() {
       description: entry.description,
       notes: entry.notes || "",
       isBillable: entry.isBillable,
+      billingKind: entry.billingKind ?? "hourly",
+      rateId: "", // resolved by the preselect effect (matches rateLabel)
+      quantity: entry.quantity?.toString() ?? "",
     });
     setShowForm(true);
   };
@@ -362,6 +432,9 @@ export default function EntriesPage() {
       description: "",
       notes: "",
       isBillable: true,
+      billingKind: "hourly",
+      rateId: "",
+      quantity: "",
     });
     setShowForm(false);
   };
@@ -850,27 +923,126 @@ export default function EntriesPage() {
                   )}
                 </div>
 
-                <div>
-                  <label htmlFor="duration" className="block text-sm font-medium text-foreground">
-                    משך זמן (דקות) *
-                  </label>
-                  <input
-                    type="number"
-                    id="duration"
-                    required
-                    min="1"
-                    step="1"
-                    value={formData.duration}
-                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                    className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.duration ? "border border-destructive" : "border border-border/50"}`}
-                    disabled={submitting}
-                    placeholder="לדוגמה: 60"
-                  />
-                  {fieldErrors.duration && (
-                    <p className="mt-1 text-xs text-destructive">{fieldErrors.duration}</p>
-                  )}
-                  <p className="mt-1 text-xs text-muted-foreground">הזן את משך הזמן בדקות</p>
+                {/* Billing type toggle: hours vs item */}
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-foreground mb-1">סוג</label>
+                  <div className="inline-flex rounded-md border border-border/50 p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, billingKind: "hourly", rateId: "" })}
+                      className={`min-h-[44px] px-4 py-1.5 text-sm rounded ${formData.billingKind === "hourly" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                      disabled={submitting}
+                    >
+                      שעות
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, billingKind: "item", rateId: "" })}
+                      className={`min-h-[44px] px-4 py-1.5 text-sm rounded ${formData.billingKind === "item" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                      disabled={submitting}
+                    >
+                      פריט
+                    </button>
+                  </div>
                 </div>
+
+                {formData.billingKind === "hourly" ? (
+                  <>
+                    <div>
+                      <label htmlFor="duration" className="block text-sm font-medium text-foreground">
+                        משך זמן (דקות) *
+                      </label>
+                      <input
+                        type="number"
+                        id="duration"
+                        min="1"
+                        step="1"
+                        value={formData.duration}
+                        onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                        className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.duration ? "border border-destructive" : "border border-border/50"}`}
+                        disabled={submitting}
+                        placeholder="לדוגמה: 60"
+                      />
+                      {fieldErrors.duration && (
+                        <p className="mt-1 text-xs text-destructive">{fieldErrors.duration}</p>
+                      )}
+                      <p className="mt-1 text-xs text-muted-foreground">הזן את משך הזמן בדקות</p>
+                    </div>
+
+                    {formRates.some((r) => r.kind === "hourly") && (
+                      <div>
+                        <label htmlFor="entryRate" className="block text-sm font-medium text-foreground">
+                          תעריף
+                        </label>
+                        <select
+                          id="entryRate"
+                          value={formData.rateId}
+                          onChange={(e) => setFormData({ ...formData, rateId: e.target.value })}
+                          className="mt-1 block w-full rounded-md border border-border/50 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                          disabled={submitting}
+                        >
+                          {formRates
+                            .filter((r) => r.kind === "hourly")
+                            .map((r) => (
+                              <option key={r.id} value={r.id}>
+                                {r.name} — {r.rate}/שעה
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label htmlFor="entryItem" className="block text-sm font-medium text-foreground">
+                        פריט *
+                      </label>
+                      {formRates.some((r) => r.kind === "item") ? (
+                        <select
+                          id="entryItem"
+                          value={formData.rateId}
+                          onChange={(e) => setFormData({ ...formData, rateId: e.target.value })}
+                          className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.duration ? "border border-destructive" : "border border-border/50"}`}
+                          disabled={submitting}
+                        >
+                          <option value="">בחר פריט</option>
+                          {formRates
+                            .filter((r) => r.kind === "item")
+                            .map((r) => (
+                              <option key={r.id} value={r.id}>
+                                {r.name} — {r.rate}/יח׳
+                              </option>
+                            ))}
+                        </select>
+                      ) : (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          ללקוח זה אין פריטים מוגדרים. ניתן להוסיף פריטים בעמוד הלקוח.
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label htmlFor="quantity" className="block text-sm font-medium text-foreground">
+                        כמות *
+                      </label>
+                      <input
+                        type="number"
+                        id="quantity"
+                        min="0"
+                        step="1"
+                        value={formData.quantity}
+                        onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                        className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.duration ? "border border-destructive" : "border border-border/50"}`}
+                        disabled={submitting}
+                        placeholder="לדוגמה: 3"
+                      />
+                      {fieldErrors.duration && (
+                        <p className="mt-1 text-xs text-destructive">{fieldErrors.duration}</p>
+                      )}
+                    </div>
+                  </>
+                )}
 
                 <div className="flex items-center">
                   <label htmlFor="isBillable" className="flex items-center cursor-pointer min-h-[44px]">
@@ -1074,7 +1246,14 @@ export default function EntriesPage() {
                         </Link>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm font-mono font-semibold text-foreground">{formatDuration(entry.duration)}</div>
+                        <div className="text-sm font-mono font-semibold text-foreground">
+                          {entry.billingKind === "item"
+                            ? `${entry.quantity ?? 0} יח׳`
+                            : formatDuration(entry.duration)}
+                        </div>
+                        {entry.rateLabel && (
+                          <div className="text-xs text-muted-foreground">{entry.rateLabel}</div>
+                        )}
                         {entry.isBillable && (
                           <span className="inline-flex rounded-full bg-accent/20 text-accent px-2 py-0.5 text-xs font-semibold leading-5 me-2">
                             לחיוב
@@ -1158,8 +1337,13 @@ export default function EntriesPage() {
                       {/* Duration and billable status */}
                       <div className="flex items-center gap-2 mb-3">
                         <span className="text-lg font-mono font-bold text-primary">
-                          {formatDuration(entry.duration)}
+                          {entry.billingKind === "item"
+                            ? `${entry.quantity ?? 0} יח׳`
+                            : formatDuration(entry.duration)}
                         </span>
+                        {entry.rateLabel && (
+                          <span className="text-xs text-muted-foreground">{entry.rateLabel}</span>
+                        )}
                         {entry.isBillable && (
                           <span className="inline-flex rounded-full bg-accent/20 text-accent px-2 py-0.5 text-xs font-semibold leading-5">
                             לחיוב
