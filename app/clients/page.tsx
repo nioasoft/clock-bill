@@ -179,7 +179,7 @@ function ClientsPageContent() {
     }
 
     // Clean rates (drop empty-name rows) and guarantee one default hourly.
-    const cleanedRates = formData.rates
+    const base = formData.rates
       .filter((r) => r.name.trim() !== "")
       .map((r) => ({
         kind: r.kind,
@@ -187,10 +187,16 @@ function ClientsPageContent() {
         rate: r.rate,
         isDefault: r.kind === "hourly" && r.isDefault,
       }));
-    const hourlyRates = cleanedRates.filter((r) => r.kind === "hourly");
-    if (hourlyRates.length > 0 && !hourlyRates.some((r) => r.isDefault)) {
-      hourlyRates[0].isDefault = true;
-    }
+    // If no hourly row is marked default, promote the first one (immutably).
+    const hasDefault = base.some((r) => r.kind === "hourly" && r.isDefault);
+    let promoted = false;
+    const cleanedRates = base.map((r) => {
+      if (!hasDefault && !promoted && r.kind === "hourly") {
+        promoted = true;
+        return { ...r, isDefault: true };
+      }
+      return r;
+    });
 
     setSubmitting(true);
 

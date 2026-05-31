@@ -206,7 +206,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
        SET project_id = $1, task_id = $2, description = $3, duration = $4, date = $5,
            tags = $6, notes = $7, is_billable = $8, billing_kind = $9, rate = $10,
            rate_label = $11, quantity = $12, updated_at = NOW()
-       WHERE id = $13`,
+       WHERE id = $13 AND user_id = $14`,
       [
         projectId,
         taskId || null,
@@ -221,6 +221,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         rateLabel?.trim() || null,
         kind === "item" ? (quantity ?? null) : null,
         id,
+        user.id,
       ]
     );
 
