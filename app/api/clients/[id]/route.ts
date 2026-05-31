@@ -174,7 +174,10 @@ export async function PUT(
     const defaultHourly =
       ratesList?.find((r) => r.kind === "hourly" && r.isDefault) ??
       ratesList?.find((r) => r.kind === "hourly");
-    // Only override default_rate when the caller actually sent rates.
+    // Sync default_rate to the default hourly rate when one is present. When the
+    // caller sends rates but no hourly rate (e.g. items-only), pass null and let
+    // the COALESCE below PRESERVE the existing default_rate (don't zero it). When
+    // the caller didn't manage rates (detail form), use its submitted defaultRate.
     const effectiveDefaultRate = ratesList !== null
       ? (defaultHourly ? defaultHourly.rate : null)
       : (defaultRate ?? null);
@@ -183,7 +186,7 @@ export async function PUT(
     await withTransaction(async (db) => {
       await db.query(
         `UPDATE clients
-         SET name = $1, contact_name = $2, email = $3, phone = $4, address = $5, default_rate = $6,
+         SET name = $1, contact_name = $2, email = $3, phone = $4, address = $5, default_rate = COALESCE($6, default_rate),
              currency = $7, is_retainer = $8, retainer_hours = $9, retainer_monthly_fee = $10, overage_rate = $11,
              notes = $12
          WHERE id = $13 AND user_id = $14`,
