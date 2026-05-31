@@ -51,12 +51,6 @@ function assertEqual<T>(actual: T, expected: T, message?: string) {
   }
 }
 
-function assertTrue(value: boolean, message?: string) {
-  if (!value) {
-    throw new Error(message || `Expected true but got ${value}`);
-  }
-}
-
 // Create test runner
 const runner = new TestRunner();
 
