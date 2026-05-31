@@ -27,6 +27,8 @@ interface SidebarProps {
   isCollapsed?: boolean;
   onToggle?: () => void;
   userRole?: string;
+  userName?: string | null;
+  userEmail?: string;
 }
 
 export function Sidebar({
@@ -34,7 +36,14 @@ export function Sidebar({
   isCollapsed = false,
   onToggle,
   userRole,
+  userName,
+  userEmail,
 }: SidebarProps) {
+  // Prefer the real name; fall back to the local-part of the email, then a
+  // generic label. The avatar shows the first letter of whichever we land on.
+  const displayName =
+    userName?.trim() || userEmail?.split("@")[0] || "הפרופיל שלי";
+  const avatarInitial = displayName.charAt(0).toUpperCase();
   const pathname = usePathname();
   const router = useRouter();
   const [logoutLoading, setLogoutLoading] = useState(false);
@@ -151,16 +160,23 @@ export function Sidebar({
       <div className={`border-t border-white/10 space-y-1 ${isCollapsed ? "p-1.5" : "p-4"}`}>
         <Link
           href="/settings"
-          title={isCollapsed ? "הפרופיל שלי" : undefined}
-          aria-label={isCollapsed ? "הפרופיל שלי" : undefined}
+          title={isCollapsed ? displayName : undefined}
+          aria-label={isCollapsed ? displayName : undefined}
           className={`flex items-center gap-3 rounded-lg text-sm font-medium text-white/60 hover:bg-white/6 hover:text-white transition-colors ${
             isCollapsed ? "justify-center px-2 py-2.5" : "px-4 py-2.5"
           }`}
         >
-          <div className="w-8 h-8 bg-accent text-sidebar rounded-full flex items-center justify-center shrink-0 font-bold text-sm">
-            א
+          <div className="w-8 h-8 bg-accent text-sidebar rounded-full flex items-center justify-center shrink-0 font-bold text-sm uppercase">
+            {avatarInitial}
           </div>
-          {!isCollapsed && <span>הפרופיל שלי</span>}
+          {!isCollapsed && (
+            <div className="flex flex-col min-w-0">
+              <span className="truncate text-white/90">{displayName}</span>
+              {userEmail && userName?.trim() && (
+                <span className="truncate text-xs text-white/40">{userEmail}</span>
+              )}
+            </div>
+          )}
         </Link>
         <button
           onClick={handleLogout}

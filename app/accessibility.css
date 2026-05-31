@@ -366,12 +366,8 @@ progress::-moz-progress-bar {
   }
 }
 
-/* Improve link visibility */
-a:not(.btn-primary):not([class*="text-"]) {
-  color: var(--color-primary);
-  text-decoration: underline;
-}
-
-a:not(.btn-primary):hover {
-  text-decoration-thickness: 2px;
-}
+/* NOTE: no automatic link underline. In this app, "bare" <a> (no text-* class)
+   are card/nav links that must stay clean — an auto underline put ugly yellow
+   lines under every dashboard heading. Genuine inline links carry their own
+   text-* color + explicit `hover:underline`; keyboard users get the
+   :focus-visible ring above for affordance. */

@@ -92,6 +92,14 @@ body {
   background-color: var(--color-background);
   color: var(--color-foreground);
 }
+/* Slightly larger base type on desktop for comfortable reading — scales every
+   rem-based size (sidebar, headings, body) uniformly. Mobile stays at 16px
+   (see accessibility.css) so iOS Safari doesn't zoom inputs on focus. */
+@media (min-width: 641px) {
+  html {
+    font-size: 17px;
+  }
+}
 ::selection {
   background-color: var(--color-primary);
   color: var(--color-primary-foreground);

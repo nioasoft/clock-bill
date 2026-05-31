@@ -156,6 +156,7 @@ export interface User {
   email: string;
   emailVerified?: boolean;
   role: string;
+  name?: string | null;
 }
 
 /**
@@ -181,6 +182,7 @@ export async function getUser(): Promise<User | null> {
       email: string;
       emailVerified?: boolean;
       role?: string | null;
+      name?: string | null;
     };
 
     return {
@@ -188,6 +190,7 @@ export async function getUser(): Promise<User | null> {
       email: sessionUser.email,
       emailVerified: sessionUser.emailVerified,
       role: sessionUser.role ?? "user",
+      name: sessionUser.name ?? null,
     };
   } catch {
     return null;

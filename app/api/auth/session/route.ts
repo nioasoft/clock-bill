@@ -13,6 +13,7 @@ export interface SessionResponse {
     email: string;
     emailVerified: boolean;
     role: string;
+    name: string | null;
   };
   message?: string;
 }
@@ -38,6 +39,7 @@ export async function GET(): Promise<NextResponse> {
         email: user.email,
         emailVerified: user.emailVerified ?? false,
         role: user.role ?? "user",
+        name: user.name ?? null,
       },
     });
   } catch (error) {

@@ -17,6 +17,7 @@ interface User {
   id: string;
   email: string;
   role?: string;
+  name?: string | null;
 }
 
 interface AppLayoutProps {
@@ -118,6 +119,8 @@ export function AppLayout({ children }: AppLayoutProps) {
             isCollapsed={sidebarCollapsed}
             onToggle={handleSidebarToggle}
             userRole={user.role}
+            userName={user.name}
+            userEmail={user.email}
           />
         </div>
         <div
