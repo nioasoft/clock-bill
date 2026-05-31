@@ -8,27 +8,24 @@ import { haptic } from "@/lib/haptics";
 
 /**
  * Mobile floating action button to start a timer from anywhere in the app.
- * Hidden on desktop (the persistent bar / sidebar cover it) and while a timer
- * is already running. Also handles the `?action=start-timer` deep link used by
- * the PWA manifest shortcut.
+ * Hidden on desktop (the persistent bar / sidebar cover it). Always available so
+ * an additional (parallel) timer can be started even while others run. Also
+ * handles the `?action=start-timer` deep link used by the PWA manifest shortcut.
  */
 export function TimerFab() {
-  const { runningTimer, setShowTimerModal } = useTimer();
+  const { setShowTimerModal } = useTimer();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
   // PWA shortcut / deep link: /dashboard?action=start-timer opens the modal.
   useEffect(() => {
-    if (searchParams.get("action") === "start-timer" && !runningTimer) {
+    if (searchParams.get("action") === "start-timer") {
       setShowTimerModal(true);
       // Strip the param so it doesn't re-trigger on back/refresh.
       router.replace(pathname);
     }
-  }, [searchParams, runningTimer, setShowTimerModal, router, pathname]);
-
-  // While a timer runs, the persistent bar handles control — hide the FAB.
-  if (runningTimer) return null;
+  }, [searchParams, setShowTimerModal, router, pathname]);
 
   return (
     <button

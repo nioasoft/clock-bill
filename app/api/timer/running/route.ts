@@ -16,65 +16,51 @@ export async function GET(request: NextRequest) {
 
     const userId = user.id;
 
-    // Get running timer entry
+    // Get ALL running timer entries (multiple concurrent timers are allowed).
     const result = await query<{
       id: string;
       project_id: string;
+      task_id: string | null;
       description: string;
       start_time: string;
       paused_at: string | null;
       total_paused_time: number;
     }>(
-      `SELECT id, project_id, description, start_time, paused_at, total_paused_time
+      `SELECT id, project_id, task_id, description, start_time, paused_at, total_paused_time
        FROM time_entries
        WHERE user_id = $1 AND start_time IS NOT NULL AND end_time IS NULL
-       ORDER BY start_time DESC
-       LIMIT 1`,
+       ORDER BY start_time DESC`,
       [userId]
     );
 
-    if (result.rows.length === 0) {
-      return NextResponse.json({
-        success: true,
-        running: null
-      });
-    }
-
-    const entry = result.rows[0];
-    const startTime = new Date(entry.start_time);
     const now = new Date();
-    let elapsedMs = now.getTime() - startTime.getTime();
+    const timers = result.rows.map((entry) => {
+      let elapsedMs = now.getTime() - new Date(entry.start_time).getTime();
+      // Subtract accumulated paused time, plus the current open pause (if any).
+      if (entry.total_paused_time) {
+        elapsedMs -= entry.total_paused_time;
+      }
+      if (entry.paused_at) {
+        elapsedMs -= now.getTime() - new Date(entry.paused_at).getTime();
+      }
+      if (elapsedMs < 0) elapsedMs = 0;
 
-    // Subtract total paused time if exists
-    if (entry.total_paused_time) {
-      elapsedMs -= entry.total_paused_time;
-    }
-
-    // If currently paused, subtract the current pause duration
-    if (entry.paused_at) {
-      const pausedAt = new Date(entry.paused_at);
-      const currentPauseMs = now.getTime() - pausedAt.getTime();
-      elapsedMs -= currentPauseMs;
-    }
-
-    const elapsedMinutes = Math.floor(elapsedMs / 1000 / 60);
-
-    return NextResponse.json({
-      success: true,
-      running: {
+      return {
         id: entry.id,
         projectId: entry.project_id,
+        taskId: entry.task_id,
         description: entry.description,
         startTime: entry.start_time,
         pausedAt: entry.paused_at,
-        elapsedMinutes,
-        elapsedSeconds: Math.floor((elapsedMs / 1000) % 60)
-      }
-    }, {
-      headers: {
-        'Cache-Control': 'no-store'
-      }
+        elapsedMinutes: Math.floor(elapsedMs / 1000 / 60),
+        elapsedSeconds: Math.floor((elapsedMs / 1000) % 60),
+      };
     });
+
+    return NextResponse.json(
+      { success: true, timers },
+      { headers: { 'Cache-Control': 'no-store' } }
+    );
   } catch (error) {
     console.error("Error fetching running timer:", error);
     return NextResponse.json(

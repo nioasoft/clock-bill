@@ -20,6 +20,7 @@ import { haptic } from "@/lib/haptics";
 interface RunningTimer {
   id: string;
   projectId: string;
+  taskId: string | null;
   description: string | null;
   startTime: string;
   pausedAt: string | null;
@@ -39,16 +40,21 @@ interface TaskOption {
 }
 
 interface TimerContextValue {
-  runningTimer: RunningTimer | null;
-  elapsedTime: string;
+  /** All currently running timers (multiple allowed), newest first. */
+  runningTimers: RunningTimer[];
+  /** Live "M:SS" elapsed label per timer id. */
+  elapsedTimes: Record<string, string>;
   timerLoading: boolean;
   projects: Project[];
   startingTimer: boolean;
   stoppingTimer: boolean;
-  pausingTimer: boolean;
-  resumingTimer: boolean;
+  /** Id of the timer currently being paused/resumed (so only its card spins). */
+  pausingTimerId: string | null;
+  resumingTimerId: string | null;
   showTimerModal: boolean;
   showStopTimerModal: boolean;
+  /** Which timer the stop modal is acting on. */
+  stopTimerTargetId: string | null;
   selectedProject: string;
   selectedTask: string;
   timerTasks: TaskOption[];
@@ -65,11 +71,11 @@ interface TimerContextValue {
   setStopTimerHours: (hours: string) => void;
   setStopTimerMinutes: (minutes: string) => void;
   handleStartTimer: () => Promise<void>;
-  handleStopTimer: () => void;
+  handleStopTimer: (entryId: string) => void;
   confirmStopTimer: () => Promise<void>;
   cancelStopTimer: () => void;
-  handlePauseTimer: () => Promise<void>;
-  handleResumeTimer: () => Promise<void>;
+  handlePauseTimer: (entryId: string) => Promise<void>;
+  handleResumeTimer: (entryId: string) => Promise<void>;
   refreshTimer: () => Promise<void>;
 }
 
@@ -77,16 +83,17 @@ const noop = () => {};
 const asyncNoop = async () => {};
 
 const defaultTimerValue: TimerContextValue = {
-  runningTimer: null,
-  elapsedTime: "00:00",
+  runningTimers: [],
+  elapsedTimes: {},
   timerLoading: true,
   projects: [],
   startingTimer: false,
   stoppingTimer: false,
-  pausingTimer: false,
-  resumingTimer: false,
+  pausingTimerId: null,
+  resumingTimerId: null,
   showTimerModal: false,
   showStopTimerModal: false,
+  stopTimerTargetId: null,
   selectedProject: "",
   selectedTask: "",
   timerTasks: [],
@@ -123,17 +130,36 @@ interface TimerProviderProps {
 
 const PUBLIC_ROUTES = ["/", "/login", "/register", "/forgot-password", "/reset-password"];
 
+/** Live elapsed for a single timer, accounting for ticking since the last API sync. */
+function liveElapsed(
+  timer: RunningTimer,
+  lastApiUpdate: number
+): { minutes: number; seconds: number } {
+  if (timer.pausedAt) {
+    return { minutes: timer.elapsedMinutes, seconds: timer.elapsedSeconds };
+  }
+  const base = timer.elapsedMinutes * 60 + timer.elapsedSeconds;
+  const since = Math.max(0, Math.floor((Date.now() - lastApiUpdate) / 1000));
+  const total = base + since;
+  return { minutes: Math.floor(total / 60), seconds: total % 60 };
+}
+
+function formatElapsed(minutes: number, seconds: number): string {
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
 export function TimerProvider({ children }: TimerProviderProps) {
   const pathname = usePathname();
   const isPublicRoute = PUBLIC_ROUTES.some((route) =>
     route === "/" ? pathname === "/" : pathname.startsWith(route)
   );
+
   // Auth is derived from API responses (a 401 from /api/timer/running) rather
   // than a separate up-front /api/auth/session fetch — that round-trip used to
   // gate (and delay) the timer load. The timer fetch is now the first call.
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const [runningTimer, setRunningTimer] = useState<RunningTimer | null>(null);
+  const [runningTimers, setRunningTimers] = useState<RunningTimer[]>([]);
   const [timerLoading, setTimerLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [showTimerModal, setShowTimerModal] = useState(false);
@@ -143,41 +169,42 @@ export function TimerProvider({ children }: TimerProviderProps) {
   const [timerDescription, setTimerDescription] = useState("");
   const [startingTimer, setStartingTimer] = useState(false);
   const [stoppingTimer, setStoppingTimer] = useState(false);
-  const [pausingTimer, setPausingTimer] = useState(false);
-  const [resumingTimer, setResumingTimer] = useState(false);
-  const [elapsedTime, setElapsedTime] = useState("0:00");
-  const [lastApiUpdate, setLastApiUpdate] = useState<Date>(new Date());
+  const [pausingTimerId, setPausingTimerId] = useState<string | null>(null);
+  const [resumingTimerId, setResumingTimerId] = useState<string | null>(null);
+  const [elapsedTimes, setElapsedTimes] = useState<Record<string, string>>({});
+  const [lastApiUpdate, setLastApiUpdate] = useState<number>(() => Date.now());
   const [showStopTimerModal, setShowStopTimerModal] = useState(false);
+  const [stopTimerTargetId, setStopTimerTargetId] = useState<string | null>(null);
   const [stopTimerDescription, setStopTimerDescription] = useState("");
   const [stopTimerHours, setStopTimerHours] = useState("");
   const [stopTimerMinutes, setStopTimerMinutes] = useState("");
 
-  // Callback listeners for when timer stops (e.g. dashboard refreshes stats)
+  // Callback listeners for when a timer stops (e.g. dashboard refreshes stats)
   const onTimerStoppedRef = useRef<Array<() => void>>([]);
 
   const { checkLongTimer, resetLongTimerNotification } = useNotifications();
 
-  // Fetch running timer. Self-guards auth: a 401 means "not logged in", handled
-  // gracefully (no timer). On success we mark the session authenticated so other
+  // Fetch all running timers. Self-guards auth: a 401 means "not logged in",
+  // handled gracefully. On success we mark the session authenticated so other
   // auth-gated UI (e.g. the keyboard shortcut) enables without a separate fetch.
   const fetchRunningTimer = useCallback(async () => {
     try {
       const response = await fetch("/api/timer/running");
       if (response.status === 401) {
         setIsAuthenticated(false);
-        setRunningTimer(null);
+        setRunningTimers([]);
         return;
       }
       const data = await response.json();
       setIsAuthenticated(true);
-      if (data.success && data.running) {
-        setRunningTimer(data.running);
-        setLastApiUpdate(new Date());
+      if (data.success && Array.isArray(data.timers)) {
+        setRunningTimers(data.timers);
+        setLastApiUpdate(Date.now());
       } else {
-        setRunningTimer(null);
+        setRunningTimers([]);
       }
     } catch (error) {
-      console.error("Error fetching running timer:", error);
+      console.error("Error fetching running timers:", error);
     } finally {
       setTimerLoading(false);
     }
@@ -242,72 +269,52 @@ export function TimerProvider({ children }: TimerProviderProps) {
     fetchTasks();
   }, [selectedProject]);
 
-  // Long timer notification check
+  // Long timer notification — based on the longest-running (non-paused) timer.
   useEffect(() => {
-    if (runningTimer && !runningTimer.pausedAt) {
-      checkLongTimer(runningTimer.elapsedMinutes);
-    } else {
+    const active = runningTimers.filter((t) => !t.pausedAt);
+    if (active.length === 0) {
       resetLongTimerNotification();
+      return;
     }
-  }, [runningTimer, checkLongTimer, resetLongTimerNotification]);
+    const maxMinutes = Math.max(...active.map((t) => t.elapsedMinutes));
+    checkLongTimer(maxMinutes);
+  }, [runningTimers, checkLongTimer, resetLongTimerNotification]);
 
-  // Client-side elapsed time ticking
+  // Client-side elapsed ticking — one label per running timer.
   useEffect(() => {
-    if (!runningTimer) {
-      setElapsedTime("0:00");
+    if (runningTimers.length === 0) {
+      setElapsedTimes({});
       return;
     }
 
-    const updateElapsed = () => {
-      const baseElapsedSeconds =
-        runningTimer.elapsedMinutes * 60 + runningTimer.elapsedSeconds;
-
-      if (runningTimer.pausedAt) {
-        const minutes = runningTimer.elapsedMinutes;
-        const seconds = runningTimer.elapsedSeconds;
-        setElapsedTime(`${minutes}:${seconds.toString().padStart(2, "0")}`);
-      } else {
-        const now = new Date();
-        const timeSinceLastUpdate = Math.floor(
-          (now.getTime() - lastApiUpdate.getTime()) / 1000
-        );
-        const totalSeconds = baseElapsedSeconds + timeSinceLastUpdate;
-        const minutes = Math.floor(totalSeconds / 60);
-        const seconds = totalSeconds % 60;
-        setElapsedTime(`${minutes}:${seconds.toString().padStart(2, "0")}`);
+    const update = () => {
+      const next: Record<string, string> = {};
+      for (const timer of runningTimers) {
+        const { minutes, seconds } = liveElapsed(timer, lastApiUpdate);
+        next[timer.id] = formatElapsed(minutes, seconds);
       }
+      setElapsedTimes(next);
     };
 
-    updateElapsed();
-    const interval = setInterval(updateElapsed, 1000);
+    update();
+    const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
-  }, [runningTimer, lastApiUpdate]);
+  }, [runningTimers, lastApiUpdate]);
 
-  // Browser tab title
+  // Browser tab title — driven by the newest running timer; prefix a count when
+  // more than one runs in parallel.
   useEffect(() => {
-    if (!runningTimer) return;
+    if (runningTimers.length === 0) return;
 
+    const primary = runningTimers[0];
     const originalTitle = document.title;
+    const countPrefix = runningTimers.length > 1 ? `(${runningTimers.length}) ` : "";
+
     const updateTitle = () => {
-      let minutes: number;
-      let seconds: number;
-
-      if (runningTimer.pausedAt) {
-        minutes = runningTimer.elapsedMinutes;
-        seconds = runningTimer.elapsedSeconds;
-      } else {
-        const baseElapsedSeconds =
-          runningTimer.elapsedMinutes * 60 + runningTimer.elapsedSeconds;
-        const now = new Date();
-        const timeSinceLastUpdate = Math.floor(
-          (now.getTime() - lastApiUpdate.getTime()) / 1000
-        );
-        const totalSeconds = baseElapsedSeconds + timeSinceLastUpdate;
-        minutes = Math.floor(totalSeconds / 60);
-        seconds = totalSeconds % 60;
-      }
-
-      document.title = `${minutes}:${seconds.toString().padStart(2, "0")} - ${runningTimer.pausedAt ? "מושהה - " : ""}מוניט`;
+      const { minutes, seconds } = liveElapsed(primary, lastApiUpdate);
+      document.title = `${countPrefix}${formatElapsed(minutes, seconds)} - ${
+        primary.pausedAt ? "מושהה - " : ""
+      }מוניט`;
     };
 
     updateTitle();
@@ -316,7 +323,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
       clearInterval(interval);
       document.title = originalTitle;
     };
-  }, [runningTimer, lastApiUpdate]);
+  }, [runningTimers, lastApiUpdate]);
 
   const handleStartTimer = useCallback(async () => {
     if (!selectedProject) {
@@ -345,13 +352,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
         setTimerDescription("");
         haptic("success");
         showSuccessToast("הטיימר הופעל בהצלחה");
-        // Refresh running timer
-        const timerResponse = await fetch("/api/timer/running");
-        const timerData = await timerResponse.json();
-        if (timerData.success && timerData.running) {
-          setRunningTimer(timerData.running);
-          setLastApiUpdate(new Date());
-        }
+        await fetchRunningTimer();
       } else {
         showErrorToast(data.message || "שגיאה בהתחלת הטיימר");
       }
@@ -361,23 +362,29 @@ export function TimerProvider({ children }: TimerProviderProps) {
     } finally {
       setStartingTimer(false);
     }
-  }, [selectedProject, selectedTask, timerDescription]);
+  }, [selectedProject, selectedTask, timerDescription, fetchRunningTimer]);
 
-  const handleStopTimer = useCallback(() => {
-    if (!runningTimer) return;
+  const handleStopTimer = useCallback(
+    (entryId: string) => {
+      const timer = runningTimers.find((t) => t.id === entryId);
+      if (!timer) return;
 
-    const totalMinutes = runningTimer.elapsedMinutes;
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
+      const totalMinutes = timer.elapsedMinutes;
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
 
-    setStopTimerDescription(runningTimer.description || "");
-    setStopTimerHours(hours.toString());
-    setStopTimerMinutes(minutes.toString());
-    setShowStopTimerModal(true);
-  }, [runningTimer]);
+      setStopTimerTargetId(entryId);
+      setStopTimerDescription(timer.description || "");
+      setStopTimerHours(hours.toString());
+      setStopTimerMinutes(minutes.toString());
+      setShowStopTimerModal(true);
+    },
+    [runningTimers]
+  );
 
   const confirmStopTimer = useCallback(async () => {
-    if (!runningTimer) return;
+    if (!stopTimerTargetId) return;
+    const entryId = stopTimerTargetId;
 
     setStoppingTimer(true);
     try {
@@ -389,7 +396,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          entryId: runningTimer.id,
+          entryId,
           description: stopTimerDescription || null,
           duration: totalDuration,
         }),
@@ -398,8 +405,14 @@ export function TimerProvider({ children }: TimerProviderProps) {
       const data = await response.json();
 
       if (data.success) {
-        setRunningTimer(null);
+        setRunningTimers((prev) => prev.filter((t) => t.id !== entryId));
+        setElapsedTimes((prev) => {
+          const next = { ...prev };
+          delete next[entryId];
+          return next;
+        });
         setShowStopTimerModal(false);
+        setStopTimerTargetId(null);
         haptic("success");
         showSuccessToast(
           "הטיימר נעצר ונשמר בהצלחה",
@@ -423,83 +436,77 @@ export function TimerProvider({ children }: TimerProviderProps) {
     } finally {
       setStoppingTimer(false);
     }
-  }, [runningTimer, stopTimerDescription, stopTimerHours, stopTimerMinutes]);
+  }, [stopTimerTargetId, stopTimerDescription, stopTimerHours, stopTimerMinutes]);
 
   const cancelStopTimer = useCallback(() => {
     setShowStopTimerModal(false);
+    setStopTimerTargetId(null);
     setStopTimerDescription("");
     setStopTimerHours("");
     setStopTimerMinutes("");
   }, []);
 
-  const handlePauseTimer = useCallback(async () => {
-    if (!runningTimer) return;
+  const handlePauseTimer = useCallback(
+    async (entryId: string) => {
+      setPausingTimerId(entryId);
+      try {
+        const response = await fetch("/api/timer/pause", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ entryId }),
+        });
+        const data = await response.json();
 
-    setPausingTimer(true);
-    try {
-      const response = await fetch("/api/timer/pause", { method: "POST" });
-      const data = await response.json();
-
-      if (data.success) {
-        haptic("light");
-        showSuccessToast("הטיימר הושהה בהצלחה");
-        const timerResponse = await fetch("/api/timer/running");
-        const timerData = await timerResponse.json();
-        if (timerData.success && timerData.running) {
-          setRunningTimer(timerData.running);
-          setLastApiUpdate(new Date());
+        if (data.success) {
+          haptic("light");
+          showSuccessToast("הטיימר הושהה בהצלחה");
+          await fetchRunningTimer();
+        } else {
+          showErrorToast(data.message || "שגיאה בהשהיית הטיימר");
         }
-      } else {
-        showErrorToast(data.message || "שגיאה בהשהיית הטיימר");
+      } catch (error) {
+        console.error("Error pausing timer:", error);
+        showErrorToast("שגיאה בהשהיית הטיימר");
+      } finally {
+        setPausingTimerId(null);
       }
-    } catch (error) {
-      console.error("Error pausing timer:", error);
-      showErrorToast("שגיאה בהשהיית הטיימר");
-    } finally {
-      setPausingTimer(false);
-    }
-  }, [runningTimer]);
+    },
+    [fetchRunningTimer]
+  );
 
-  const handleResumeTimer = useCallback(async () => {
-    if (!runningTimer) return;
+  const handleResumeTimer = useCallback(
+    async (entryId: string) => {
+      setResumingTimerId(entryId);
+      try {
+        const response = await fetch("/api/timer/resume", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ entryId }),
+        });
+        const data = await response.json();
 
-    setResumingTimer(true);
-    try {
-      const response = await fetch("/api/timer/resume", { method: "POST" });
-      const data = await response.json();
-
-      if (data.success) {
-        haptic("light");
-        showSuccessToast("הטיימר חודש בהצלחה");
-        const timerResponse = await fetch("/api/timer/running");
-        const timerData = await timerResponse.json();
-        if (timerData.success && timerData.running) {
-          setRunningTimer(timerData.running);
-          setLastApiUpdate(new Date());
+        if (data.success) {
+          haptic("light");
+          showSuccessToast("הטיימר חודש בהצלחה");
+          await fetchRunningTimer();
+        } else {
+          showErrorToast(data.message || "שגיאה בחידוש הטיימר");
         }
-      } else {
-        showErrorToast(data.message || "שגיאה בחידוש הטיימר");
+      } catch (error) {
+        console.error("Error resuming timer:", error);
+        showErrorToast("שגיאה בחידוש הטיימר");
+      } finally {
+        setResumingTimerId(null);
       }
-    } catch (error) {
-      console.error("Error resuming timer:", error);
-      showErrorToast("שגיאה בחידוש הטיימר");
-    } finally {
-      setResumingTimer(false);
-    }
-  }, [runningTimer]);
+    },
+    [fetchRunningTimer]
+  );
 
-  // Keyboard shortcut: 't' key toggles timer
+  // Keyboard shortcut: 't' always opens the start modal. With multiple timers,
+  // pausing/resuming a specific one is done from that timer's card.
   const handleTimerShortcut = useCallback(() => {
-    if (runningTimer) {
-      if (runningTimer.pausedAt) {
-        handleResumeTimer();
-      } else {
-        handlePauseTimer();
-      }
-    } else {
-      setShowTimerModal(true);
-    }
-  }, [runningTimer, handleResumeTimer, handlePauseTimer]);
+    setShowTimerModal(true);
+  }, []);
 
   useKeyboardShortcut({
     key: "t",
@@ -512,16 +519,17 @@ export function TimerProvider({ children }: TimerProviderProps) {
   }, [fetchRunningTimer]);
 
   const value: TimerContextValue = {
-    runningTimer,
-    elapsedTime,
+    runningTimers,
+    elapsedTimes,
     timerLoading,
     projects,
     startingTimer,
     stoppingTimer,
-    pausingTimer,
-    resumingTimer,
+    pausingTimerId,
+    resumingTimerId,
     showTimerModal,
     showStopTimerModal,
+    stopTimerTargetId,
     selectedProject,
     selectedTask,
     timerTasks,

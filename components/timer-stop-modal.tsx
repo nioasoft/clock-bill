@@ -12,7 +12,8 @@ import {
 export function TimerStopModal() {
   const {
     showStopTimerModal,
-    elapsedTime,
+    elapsedTimes,
+    stopTimerTargetId,
     stopTimerDescription,
     setStopTimerDescription,
     stopTimerHours,
@@ -23,6 +24,9 @@ export function TimerStopModal() {
     confirmStopTimer,
     cancelStopTimer,
   } = useTimer();
+
+  // Elapsed for the specific timer being stopped.
+  const elapsedTime = (stopTimerTargetId && elapsedTimes[stopTimerTargetId]) || "0:00";
 
   return (
     <Dialog open={showStopTimerModal} onOpenChange={(open) => { if (!open) cancelStopTimer(); }}>

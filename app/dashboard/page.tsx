@@ -52,23 +52,17 @@ export default function DashboardPage() {
 
   // Timer from global context
   const {
-    runningTimer,
-    elapsedTime,
+    runningTimers,
+    elapsedTimes,
     timerLoading,
-    pausingTimer,
-    resumingTimer,
-    stoppingTimer,
+    pausingTimerId,
+    resumingTimerId,
     projects,
     setShowTimerModal,
     handlePauseTimer,
     handleResumeTimer,
     handleStopTimer,
   } = useTimer();
-
-  // Resolve the running timer's project for the hero details.
-  const runningProject = runningTimer
-    ? projects.find((p) => p.id === runningTimer.projectId) ?? null
-    : null;
 
   // Daily reminder notification
   const { checkDailyReminder } = useNotifications();
@@ -253,92 +247,120 @@ export default function DashboardPage() {
         ) : null}
 
         {/* Quick Timer — hero */}
-        <div className="mt-6 bg-card border border-border/50 rounded-[var(--radius-card)] p-6 sm:p-8 relative overflow-hidden">
-          <div className="flex items-start justify-between">
-            <div>
-              {runningTimer ? (
-                <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground flex items-center gap-2.5">
-                  {runningTimer.pausedAt ? (
-                    <span className="inline-flex items-center rounded-full bg-amber-500/20 px-2.5 py-1 text-xs font-semibold text-amber-400">
-                      מושהה
-                    </span>
-                  ) : (
-                    <span className="relative flex h-2.5 w-2.5">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                    </span>
-                  )}
-                  {runningTimer.pausedAt ? "טיימר מושהה" : "טיימר פעיל"}
-                </h3>
-              ) : (
-                <>
-                  <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">טיימר מהיר</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">התחל לעקוב אחר הזמן בלחיצה אחת</p>
-                </>
-              )}
-            </div>
-            {!runningTimer && (
-              <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">T</kbd>
-            )}
-          </div>
-
-          {timerLoading ? (
-            <div className="mt-6 space-y-4" aria-hidden="true">
+        {timerLoading ? (
+          <div className="mt-6 bg-card border border-border/50 rounded-[var(--radius-card)] p-6 sm:p-8">
+            <div className="space-y-4" aria-hidden="true">
+              <div className="h-6 w-32 rounded bg-muted animate-pulse" />
               <div className="h-12 w-40 rounded bg-muted animate-pulse" />
               <div className="h-4 w-48 rounded bg-muted animate-pulse" />
-              <div className="h-4 w-32 rounded bg-muted animate-pulse" />
             </div>
-          ) : runningTimer ? (
-            <div className="mt-6">
-              <p className="font-mono timer-display font-bold text-primary">{elapsedTime}</p>
-
-              {/* Running timer details */}
-              <div className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground">
-                {runningProject && (
-                  <div className="flex items-center gap-2">
-                    <FolderOpen className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    <span className="text-foreground font-medium">{runningProject.name}</span>
-                  </div>
-                )}
-                {runningTimer.description && (
-                  <p className="text-foreground/90 leading-relaxed">{runningTimer.description}</p>
-                )}
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span>
-                    התחיל ב-{new Date(runningTimer.startTime).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+          </div>
+        ) : runningTimers.length > 0 ? (
+          <div className="mt-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">
+                טיימרים פעילים
+                {runningTimers.length > 1 && (
+                  <span className="ms-2 inline-flex items-center rounded-full bg-primary/15 px-2.5 py-0.5 text-sm font-semibold text-primary align-middle">
+                    {runningTimers.length}
                   </span>
-                </div>
-              </div>
-
-              <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:max-w-md">
-                {runningTimer.pausedAt ? (
-                  <button
-                    onClick={handleResumeTimer}
-                    disabled={resumingTimer}
-                    className="flex-1 rounded-md bg-success px-5 py-3 text-base font-semibold text-success-foreground hover:bg-success/90 disabled:opacity-50 transition-colors"
-                  >
-                    {resumingTimer ? "מחדש..." : "חדש טיימר"}
-                  </button>
-                ) : (
-                  <button
-                    onClick={handlePauseTimer}
-                    disabled={pausingTimer}
-                    className="flex-1 rounded-md bg-accent px-5 py-3 text-base font-semibold text-accent-foreground hover:bg-accent/90 disabled:opacity-50 transition-colors"
-                  >
-                    {pausingTimer ? "משהה..." : "השהה טיימר"}
-                  </button>
                 )}
-                <button
-                  onClick={handleStopTimer}
-                  disabled={stoppingTimer}
-                  className="flex-1 rounded-md bg-destructive px-5 py-3 text-base font-semibold text-white hover:bg-destructive/90 disabled:opacity-50 transition-colors"
-                >
-                  {stoppingTimer ? "עוצר..." : "עצור טיימר"}
-                </button>
-              </div>
+              </h3>
+              <button
+                onClick={() => setShowTimerModal(true)}
+                className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                <Clock className="h-4 w-4" />
+                טיימר חדש
+              </button>
             </div>
-          ) : (
+
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              {runningTimers.map((timer) => {
+                const project = projects.find((p) => p.id === timer.projectId) ?? null;
+                const isPaused = !!timer.pausedAt;
+                return (
+                  <div
+                    key={timer.id}
+                    className="bg-card border border-border/50 rounded-[var(--radius-card)] p-5 sm:p-6"
+                  >
+                    <div className="flex items-center gap-2">
+                      {isPaused ? (
+                        <span className="inline-flex items-center rounded-full bg-amber-500/20 px-2.5 py-1 text-xs font-semibold text-amber-400">
+                          מושהה
+                        </span>
+                      ) : (
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                        </span>
+                      )}
+                      <span className="text-sm text-muted-foreground">
+                        {isPaused ? "טיימר מושהה" : "טיימר פעיל"}
+                      </span>
+                    </div>
+
+                    <p className="mt-3 font-mono timer-display font-bold text-primary">
+                      {elapsedTimes[timer.id] ?? "0:00"}
+                    </p>
+
+                    <div className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground">
+                      {project && (
+                        <div className="flex items-center gap-2">
+                          <FolderOpen className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <span className="text-foreground font-medium">{project.name}</span>
+                        </div>
+                      )}
+                      {timer.description && (
+                        <p className="text-foreground/90 leading-relaxed">{timer.description}</p>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <span>
+                          התחיל ב-{new Date(timer.startTime).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 flex gap-3">
+                      {isPaused ? (
+                        <button
+                          onClick={() => handleResumeTimer(timer.id)}
+                          disabled={resumingTimerId === timer.id}
+                          className="flex-1 rounded-md bg-success px-5 py-3 text-base font-semibold text-success-foreground hover:bg-success/90 disabled:opacity-50 transition-colors"
+                        >
+                          {resumingTimerId === timer.id ? "מחדש..." : "חדש טיימר"}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handlePauseTimer(timer.id)}
+                          disabled={pausingTimerId === timer.id}
+                          className="flex-1 rounded-md bg-accent px-5 py-3 text-base font-semibold text-accent-foreground hover:bg-accent/90 disabled:opacity-50 transition-colors"
+                        >
+                          {pausingTimerId === timer.id ? "משהה..." : "השהה טיימר"}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleStopTimer(timer.id)}
+                        className="flex-1 rounded-md bg-destructive px-5 py-3 text-base font-semibold text-white hover:bg-destructive/90 transition-colors"
+                      >
+                        עצור טיימר
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="mt-6 bg-card border border-border/50 rounded-[var(--radius-card)] p-6 sm:p-8 relative overflow-hidden">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">טיימר מהיר</h3>
+                <p className="mt-1 text-sm text-muted-foreground">התחל לעקוב אחר הזמן בלחיצה אחת</p>
+              </div>
+              <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">T</kbd>
+            </div>
             <div className="mt-6 relative flex justify-center sm:justify-start">
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <ClockFaceMarks size={120} className="opacity-[0.07]" />
@@ -350,8 +372,8 @@ export default function DashboardPage() {
                 התחל טיימר חדש
               </button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Navigation cards */}
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">

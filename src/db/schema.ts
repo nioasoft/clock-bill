@@ -8,7 +8,6 @@ import {
   real,
   jsonb,
   unique,
-  uniqueIndex,
   index,
   check,
 } from "drizzle-orm/pg-core";
@@ -280,7 +279,9 @@ export const timeEntries = pgTable(
     index("idx_time_entries_task_id").on(table.taskId),
     index("idx_time_entries_date").on(table.date),
     index("idx_time_entries_user_id_date").on(table.userId, table.date),
-    uniqueIndex("idx_one_running_timer_per_user")
+    // NON-unique: multiple concurrent running timers per user are allowed.
+    // Keeps the partial predicate so the running-timer lookup stays index-backed.
+    index("idx_running_timers_per_user")
       .on(table.userId)
       .where(sql`${table.startTime} IS NOT NULL AND ${table.endTime} IS NULL`),
   ]

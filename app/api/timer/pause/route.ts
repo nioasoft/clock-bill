@@ -17,23 +17,30 @@ export async function POST(request: NextRequest) {
 
     const userId = user.id;
 
+    // Which timer to pause — required now that multiple can run at once.
+    const { entryId } = await request.json().catch(() => ({ entryId: undefined }));
+    if (!entryId) {
+      return NextResponse.json(
+        { success: false, message: "חסר מזהה טיימר" },
+        { status: 400 }
+      );
+    }
+
     const result = await withTransaction(async (client) => {
-      // Get and lock the running timer entry
+      // Get and lock the specific running timer entry (scoped to the user).
       const entryResult = await client.query<{
         id: string;
         paused_at: string | null;
       }>(
         `SELECT id, paused_at
          FROM time_entries
-         WHERE user_id = $1 AND start_time IS NOT NULL AND end_time IS NULL
-         ORDER BY start_time DESC
-         LIMIT 1
+         WHERE id = $1 AND user_id = $2 AND start_time IS NOT NULL AND end_time IS NULL
          FOR UPDATE`,
-        [userId]
+        [entryId, userId]
       );
 
       if (entryResult.rows.length === 0) {
-        return { status: 404 as const, message: "אין טיימר פעיל" };
+        return { status: 404 as const, message: "הטיימר לא נמצא" };
       }
 
       const entry = entryResult.rows[0];
