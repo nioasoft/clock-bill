@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getUser } from "@/lib/auth";
 import { LandingNavbar } from "@/components/landing/navbar";
 import { Hero } from "@/components/landing/hero";
 import { FeaturesGrid } from "@/components/landing/features-grid";
@@ -9,10 +9,12 @@ import { CTASection } from "@/components/landing/cta-section";
 import { LandingFooter } from "@/components/landing/footer";
 
 export default async function Home() {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
+  // Redirect authenticated users straight to the dashboard. Reads the real
+  // Better Auth session (the old code checked an obsolete "session" cookie that
+  // no longer exists, so logged-in users wrongly saw the marketing landing).
+  const user = await getUser();
 
-  if (session?.value) {
+  if (user) {
     redirect("/dashboard");
   }
 

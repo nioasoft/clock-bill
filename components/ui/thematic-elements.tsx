@@ -3,6 +3,13 @@ interface ThematicProps {
   className?: string;
 }
 
+/**
+ * Round to 3 decimals. Trig results can differ in their last float digit between
+ * the Node server and the browser, which trips React's hydration check on SVG
+ * coordinate attributes. Rounding makes both sides serialize identically.
+ */
+const round3 = (n: number): number => Math.round(n * 1000) / 1000;
+
 export function ClockFaceMarks({
   size = 48,
   className = "",
@@ -13,10 +20,10 @@ export function ClockFaceMarks({
     const outer = size / 2 - 2;
     const inner = outer - (i % 3 === 0 ? size * 0.15 : size * 0.08);
     return {
-      x1: size / 2 + Math.sin(angle) * inner,
-      y1: size / 2 - Math.cos(angle) * inner,
-      x2: size / 2 + Math.sin(angle) * outer,
-      y2: size / 2 - Math.cos(angle) * outer,
+      x1: round3(size / 2 + Math.sin(angle) * inner),
+      y1: round3(size / 2 - Math.cos(angle) * inner),
+      x2: round3(size / 2 + Math.sin(angle) * outer),
+      y2: round3(size / 2 - Math.cos(angle) * outer),
       isHour: i % 3 === 0,
     };
   });
@@ -158,10 +165,10 @@ export function RadialLines({
     const inner = size * 0.2;
     const outer = size * 0.48;
     return {
-      x1: center + Math.sin(angle) * inner,
-      y1: center - Math.cos(angle) * inner,
-      x2: center + Math.sin(angle) * outer,
-      y2: center - Math.cos(angle) * outer,
+      x1: round3(center + Math.sin(angle) * inner),
+      y1: round3(center - Math.cos(angle) * inner),
+      x2: round3(center + Math.sin(angle) * outer),
+      y2: round3(center - Math.cos(angle) * outer),
     };
   });
 
