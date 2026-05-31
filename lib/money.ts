@@ -48,3 +48,19 @@ export function calcHourlyAmount(
   if (!hourlyRate || !Number.isFinite(hourlyRate)) return 0;
   return roundMoney((durationMinutes / 60) * hourlyRate);
 }
+
+/**
+ * Bill a fixed-price item line: quantity × unit price, rounded to whole cents.
+ * Returns 0 when quantity or rate is missing/zero.
+ *
+ * @param quantity - Number of units billed
+ * @param rate - Price per unit, or null/undefined when unset
+ */
+export function calcItemAmount(
+  quantity: number | null | undefined,
+  rate: number | null | undefined
+): number {
+  if (!rate || !Number.isFinite(rate)) return 0;
+  if (!quantity || !Number.isFinite(quantity)) return 0;
+  return roundMoney(quantity * rate);
+}
