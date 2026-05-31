@@ -1,4 +1,4 @@
-# Per-client rate types ("תעריפים") — Design
+# Per-client rate types & items ("תעריפים ופריטים") — Design
 
 **Date:** 2026-05-31
 **Status:** Approved (design); pending implementation plan.
@@ -20,34 +20,49 @@ client owns its own rate list; the rate is chosen per entry and snapshotted onto
 entry. The existing `default_rate` remains a fallback. No global shared names, no
 per-rate currency, no per-project rates (YAGNI).
 
+**Plus: fixed-price items.** Beyond hourly rates, the same per-client catalog also holds
+**items** — billed per unit, NOT by time (e.g. "כתיבת מכתב" = ₪100/unit). When billing an
+item you log a **quantity** instead of a duration; amount = `quantity × unit price`. The UI
+collectively calls these "תעריפים ופריטים".
+
 ## Data model
 
-**New table `client_rates`**
+**New table `client_rates`** (holds both hourly rates AND fixed items)
 - `id` text PK
 - `user_id` text NOT NULL (RLS tenant key)
 - `client_id` text NOT NULL → `clients.id` ON DELETE CASCADE
-- `name` text NOT NULL (e.g. "תכנות", "הדרכה")
-- `rate` real NOT NULL (hourly price, in the client's currency)
-- `is_default` boolean NOT NULL DEFAULT false (preselected rate for the client)
+- `kind` text NOT NULL DEFAULT 'hourly' — `'hourly'` (price per hour) or `'item'` (price per unit)
+- `name` text NOT NULL (e.g. "תכנות" hourly, "כתיבת מכתב" item)
+- `rate` real NOT NULL (the price; ₪/hour when `kind='hourly'`, ₪/unit when `kind='item'`; in the client's currency)
+- `is_default` boolean NOT NULL DEFAULT false (preselected **hourly** rate for the client; items are not "default")
 - `created_at`, `updated_at` timestamps
 - Indexes: `(client_id)`, `(user_id)`
 - **RLS**: FORCE-enabled with the standard `user_id = current_setting('app.current_user_id')`
   policies (4 ops), matching the other tenant tables. Add to `drizzle/rls-policies.sql`
   and the app role grants.
 
-**`time_entries` — two new nullable columns (snapshot)**
-- `rate` real NULL — the hourly rate applied to this entry at the moment it was logged.
-- `rate_label` text NULL — the rate's name at that moment (for report breakdown).
+**`time_entries` — new nullable columns (snapshot)**
+- `rate` real NULL — the unit price applied to this line at the moment it was logged
+  (₪/hour for hourly, ₪/unit for item).
+- `rate_label` text NULL — the rate/item name at that moment (for report breakdown).
+- `billing_kind` text NULL — `'hourly'` or `'item'`; how to compute the amount. NULL ⇒ legacy
+  hourly (treated as `'hourly'`).
+- `quantity` real NULL — the number of units for an **item** line (e.g. 3 letters). Ignored for
+  hourly lines (which use `duration`).
 - Snapshot rationale: immune to later edits/deletes of `client_rates`; keeps historical
   billing correct.
+- An **item line** has `billing_kind='item'`, a `quantity`, no timer (`start_time`/`end_time`
+  NULL, `duration` 0); it is a manual billable line with a `date`.
 
 **`clients.default_rate`** — retained, used as the fallback when `time_entries.rate IS NULL`.
 
 ## Managing rates (client form / `app/clients/page.tsx`)
 
-In the form's "חיוב" section, the single "תעריף שעתי" field becomes a small **rates
-editor**: a list of rows `{ name, rate }` with a "default" radio/star (exactly one
-default). Add row / remove row. The currency stays the client-level `currency`.
+In the form's "חיוב" section, the single "תעריף שעתי" field becomes a small **rates &
+items editor**: a list of rows `{ kind, name, rate }` where `kind` is "שעתי" or "פריט",
+plus a "default" radio/star on exactly one **hourly** row. Add row / remove row; a per-row
+toggle picks hourly vs item. The label/placeholder adapts ("₪ לשעה" vs "₪ ליחידה"). The
+currency stays the client-level `currency`.
 
 - Non-retainer clients: the rates list is the primary billing input.
 - Retainer clients: retainer fields unchanged; the rates list still applies to
@@ -64,39 +79,45 @@ New API surface (under the existing clients routes, scoped by `user_id`, Zod-val
 ## Choosing a rate while tracking
 
 - **Timer start modal (`components/timer-start-modal.tsx` + `contexts/timer-context.tsx`)**:
-  after a project is selected, load that project's client's rates and show a "תעריף"
-  dropdown (default preselected). On start, `POST /api/timer/start` receives the chosen
-  `rate` + `rate_label`, snapshotted onto the new `time_entries` row.
-- **Manual entry form + entry edit (`app/entries/page.tsx`)**: same "תעריף" dropdown,
-  driven by the entry's client (resolved via the selected project → `projects.client_id`,
-  since `time_entries` has no `client_id`).
-- **Zero-friction fallback**: a client with exactly one rate → auto-selected, no prompt
-  needed; a client with no rates → falls back to `default_rate` (current behavior).
+  timers are **hourly only** (you can only time work). After a project is selected, show a
+  "תעריף" dropdown of that client's **hourly** rates (default preselected). On start,
+  `POST /api/timer/start` receives the chosen `rate` + `rate_label` (`billing_kind='hourly'`),
+  snapshotted onto the new `time_entries` row.
+- **Manual entry form + entry edit (`app/entries/page.tsx`)**: a "סוג" toggle — **שעות**
+  (duration + an hourly-rate dropdown) or **פריט** (an item dropdown + a `quantity` field).
+  Both dropdowns are driven by the entry's client (resolved via the selected project →
+  `projects.client_id`, since `time_entries` has no `client_id`). An item line stores
+  `billing_kind='item'`, `rate`, `rate_label`, `quantity`, `duration=0`.
+- **Zero-friction fallback**: a client with exactly one hourly rate → auto-selected; a
+  client with no rates → hourly falls back to `default_rate` (current behavior).
 
 ## Reports (`app/api/reports/route.ts`, `app/api/reports/excel/route.ts`, PDF templates)
 
-- Per-entry amount = `hours × COALESCE(time_entries.rate, clients.default_rate)`.
-  Old entries (`rate IS NULL`) bill exactly as today.
-- Add a **breakdown by `rate_label`** to the report output (PDF + Excel): group billable
-  hours and amounts per label, e.g. "תכנות — 3.0ש׳ — ₪900 / הדרכה — 2.0ש׳ — ₪400".
+- Per-line amount:
+  - hourly (`billing_kind='hourly'` or NULL): `hours × COALESCE(time_entries.rate, clients.default_rate)`.
+    Old entries (`rate IS NULL`) bill exactly as today.
+  - item (`billing_kind='item'`): `quantity × time_entries.rate`.
+- Add a **breakdown by `rate_label`** to the report output (PDF + Excel), grouped and showing
+  the unit: hourly as "תכנות — 3.0ש׳ — ₪900", items as "כתיבת מכתב — 3 יח׳ — ₪300".
   Entries with no label fall under a default group ("תכנות" after migration; "—" otherwise).
+  The grand total sums hourly + item amounts (and existing fixed-monthly charges).
 
 ## Migration (`drizzle/00NN_per_client_rate_types.sql`, applied via psql/admin)
 
 Everything that exists today is **programming work ("תכנות")**:
-1. `CREATE TABLE client_rates ...` + indexes + RLS policies + grants to `clockbill_app`.
-2. `ALTER TABLE time_entries ADD COLUMN rate real, ADD COLUMN rate_label text;`
-3. Seed one default rate per existing client:
-   `INSERT INTO client_rates (id, user_id, client_id, name, rate, is_default, ...)`
-   `SELECT gen_random_uuid()::text, user_id, id, 'תכנות', COALESCE(default_rate, 0), true, ...`
+1. `CREATE TABLE client_rates ...` (incl. `kind` default `'hourly'`) + indexes + RLS policies + grants to `clockbill_app`.
+2. `ALTER TABLE time_entries ADD COLUMN rate real, ADD COLUMN rate_label text, ADD COLUMN billing_kind text, ADD COLUMN quantity real;`
+3. Seed one default **hourly** rate per existing client:
+   `INSERT INTO client_rates (id, user_id, client_id, kind, name, rate, is_default, ...)`
+   `SELECT gen_random_uuid()::text, user_id, id, 'hourly', 'תכנות', COALESCE(default_rate, 0), true, ...`
    `FROM clients;`
-4. Backfill existing entries as תכנות at their client's current rate (historical snapshot).
+4. Backfill existing entries as hourly תכנות at their client's current rate (historical snapshot).
    NOTE: `time_entries` has no `client_id` — the client is reached via `project_id → projects.client_id`:
-   `UPDATE time_entries te SET rate_label = 'תכנות', rate = c.default_rate`
+   `UPDATE time_entries te SET rate_label = 'תכנות', billing_kind = 'hourly', rate = c.default_rate`
    `FROM projects p JOIN clients c ON c.id = p.client_id`
    `WHERE te.project_id = p.id AND te.rate IS NULL;`
-   (Entries whose client has a NULL `default_rate` keep `rate = NULL`, label 'תכנות' →
-   still fall back to the client default.)
+   (Entries whose client has a NULL `default_rate` keep `rate = NULL`, label 'תכנות',
+   `billing_kind='hourly'` → still fall back to the client default.)
 
 Schema source of truth is `src/db/schema.ts` (edit it too); the migration is applied
 directly via `DATABASE_URL_ADMIN` because the drizzle migration meta is drifted from prod.
