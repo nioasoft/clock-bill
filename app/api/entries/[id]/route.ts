@@ -346,7 +346,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     }
 
     // Delete the entry
-    await query(`DELETE FROM time_entries WHERE id = $1`, [id]);
+    await query(`DELETE FROM time_entries WHERE id = $1 AND user_id = $2`, [id, user.id]);
 
     return NextResponse.json({
       success: true,
