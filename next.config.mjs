@@ -1,3 +1,5 @@
+import { withSentryConfig } from "@sentry/nextjs";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Dev server configuration
@@ -15,12 +17,10 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
 };
 
-const { withSentryConfig } = require("@sentry/nextjs");
-
 // Wrap with Sentry. Build-safe without any Sentry env: source maps upload only
 // when SENTRY_AUTH_TOKEN (+ org/project) are present; the runtime SDK stays inert
 // unless NEXT_PUBLIC_SENTRY_DSN is set.
-module.exports = withSentryConfig(nextConfig, {
+export default withSentryConfig(nextConfig, {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,

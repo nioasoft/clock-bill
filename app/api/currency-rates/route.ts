@@ -25,7 +25,7 @@ const deleteRateSchema = z.object({
 });
 
 // GET /api/currency-rates - Get all currency conversion rates for current user
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const user = await getUser();
 

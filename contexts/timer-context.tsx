@@ -256,6 +256,9 @@ export function TimerProvider({ children }: TimerProviderProps) {
     };
 
     fetchProjects();
+    // `projects.length` is read only as an early-exit guard; depending on it would
+    // re-run this effect after it calls setProjects, causing a fetch loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPublicRoute, showTimerModal]);
 
   // Fetch tasks when project changes (for timer start modal)

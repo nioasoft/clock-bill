@@ -32,7 +32,7 @@ const createClientSchema = z.object({
  * GET /api/clients
  * List all clients for the authenticated user
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const user = await getUser();
 

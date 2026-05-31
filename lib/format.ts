@@ -22,7 +22,7 @@ export interface FormatOptions {
 export function formatDate(
   date: string | Date,
   dateFormat: DateFormat = "DD/MM/YYYY",
-  locale: string = "he-IL"
+  _locale: string = "he-IL"
 ): string {
   const dateObj = typeof date === "string" ? new Date(date) : date;
 
@@ -60,7 +60,7 @@ export function formatDate(
 export function formatTime(
   time: string | Date,
   timeFormat: TimeFormat = "24h",
-  locale: string = "he-IL"
+  _locale: string = "he-IL"
 ): string {
   const dateObj = typeof time === "string" ? new Date(time) : time;
 
@@ -138,7 +138,7 @@ export function formatDateRange(
  * @param locale - The locale to use (default: "he-IL" for Hebrew)
  * @returns Formatted duration string
  */
-export function formatDuration(minutes: number, locale: string = "he-IL"): string {
+export function formatDuration(minutes: number, _locale: string = "he-IL"): string {
   if (minutes < 60) {
     return `${minutes} דק׳`;
   }

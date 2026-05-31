@@ -6,7 +6,7 @@ import { getUser } from "@/lib/auth";
  * GET /api/dashboard/earnings-chart
  * Returns monthly earnings data for the last 12 months
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Get authenticated user
     const user = await getUser();

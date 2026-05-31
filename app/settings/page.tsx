@@ -696,21 +696,6 @@ export default function SettingsPage() {
     }
   };
 
-  // Handle JSON backup file selection
-  const handleBackupFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!file.name.endsWith(".json")) {
-        setBackupError("יש לבחור קובץ JSON");
-        return;
-      }
-      setBackupFile(file);
-      setBackupError("");
-      setBackupSuccess("");
-      setBackupImportResults(null);
-    }
-  };
-
   // Handle JSON backup import
   const handleImportBackup = async () => {
     if (!backupFile) {
@@ -1601,6 +1586,10 @@ export default function SettingsPage() {
                 {/* Logo Preview */}
                 <div className="w-32 h-32 rounded-full border-2 border-dashed border-border hover:border-primary/50 transition-colors flex items-center justify-center bg-muted overflow-hidden">
                   {profile?.logoUrl ? (
+                    // User-uploaded logo from Blob/local storage at runtime; next/image
+                    // optimization adds no value for a small one-off preview and would
+                    // require width/height we don't control. Plain <img> is intentional.
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={profile.logoUrl}
                       alt="לוגו עסקי"
@@ -1714,6 +1703,8 @@ export default function SettingsPage() {
                 {/* Signature Preview */}
                 <div className="w-64 h-32 rounded-[var(--radius-card)] border-2 border-dashed border-border hover:border-primary/50 transition-colors flex items-center justify-center bg-muted overflow-hidden">
                   {profile?.signatureUrl ? (
+                    // User-uploaded signature image; same rationale as the logo above.
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={profile.signatureUrl}
                       alt="חתימה דיגיטלית"

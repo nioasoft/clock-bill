@@ -41,9 +41,6 @@ export function calculatePasswordStrength(password: string): PasswordStrengthRes
     special: /[^a-zA-Z0-9]/.test(password),
   };
 
-  // Count passed checks
-  const passedChecks = Object.values(checks).filter(Boolean).length;
-
   // Calculate base score (0-100)
   let score = 0;
 

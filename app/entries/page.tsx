@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Clock, Timer } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
-import { validateRequired, validateDate, validatePastDate, validateNumber } from "@/lib/validation";
+import { validateRequired, validateDate, validateNumber } from "@/lib/validation";
 import { pickDefaultHourlyRate, type ClientRate } from "@/lib/schemas/rates";
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
 import {

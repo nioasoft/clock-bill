@@ -66,7 +66,6 @@ export function ProjectHoursChart() {
 
   // Calculate chart dimensions
   const maxHours = Math.max(...projectHours.map(p => p.totalHours));
-  const chartHeight = 150;
   const barHeight = 40;
   const gap = 15;
   const chartWidth = 300; // Fixed width for horizontal bars

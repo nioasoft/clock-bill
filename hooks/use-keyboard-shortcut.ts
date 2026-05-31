@@ -95,8 +95,6 @@ export function useKeyboardShortcut({
       const keyMatches = event.key.toLowerCase() === key.toLowerCase();
 
       // Check modifiers
-      const metaMatches = event.metaKey === metaKey;
-      const ctrlMatches = event.ctrlKey === ctrlKey;
       const shiftMatches = event.shiftKey === shiftKey;
       const altMatches = event.altKey === altKey;
 

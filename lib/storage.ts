@@ -41,7 +41,7 @@ async function initBlobStorage(): Promise<void> {
       const blob = await import("@vercel/blob");
       blobPut = blob.put;
       blobDel = blob.del;
-    } catch (error) {
+    } catch {
       console.warn("@vercel/blob not available, falling back to local storage");
     }
   }
@@ -83,7 +83,6 @@ class LocalStorageAdapter implements StorageAdapter {
   }
 
   async delete(url: string): Promise<void> {
-    const filename = path.basename(url);
     const filepath = path.join(process.cwd(), "public", url);
 
     try {
@@ -140,7 +139,7 @@ class BlobStorageAdapter implements StorageAdapter {
     }
   }
 
-  getUrl(filename: string, prefix: string): string {
+  getUrl(_filename: string, _prefix: string): string {
     // This method is not used for Blob storage since URLs are returned by put()
     throw new Error("getUrl() should not be called for Blob storage");
   }

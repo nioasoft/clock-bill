@@ -9,8 +9,6 @@ import {
   formatDateTime,
   formatDateRange,
   formatDuration,
-  type DateFormat,
-  type TimeFormat,
 } from '../../lib/format';
 
 // Simple test runner

@@ -93,7 +93,7 @@ function FeatureCard({ feature, index }: { feature: typeof features[0]; index: n
 }
 
 export function FeaturesGrid() {
-  const [isVisible, setIsVisible] = useState(false);
+  const [, setIsVisible] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

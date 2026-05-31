@@ -71,7 +71,7 @@ export function EarningsChart() {
 
   // Format Hebrew month name
   const formatMonthName = (monthStr: string) => {
-    const [year, month] = monthStr.split('-');
+    const [, month] = monthStr.split('-');
     const monthNames = [
       'ינו׳', 'פבר׳', 'מרץ', 'אפר׳',
       'מאי', 'יונ׳', 'יול׳', 'אוג׳',

@@ -30,7 +30,7 @@ async function runTestFile(testFile: string): Promise<TestResult> {
     });
     const duration = Date.now() - startTime;
     return { file: testFile, success: true, duration };
-  } catch (error) {
+  } catch {
     const duration = Date.now() - startTime;
     return { file: testFile, success: false, duration };
   }
