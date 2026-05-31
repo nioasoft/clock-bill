@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
+import { clientRatesSchema } from "@/lib/schemas/rates";
 
 /** Body schema for updating a client. Mirrors the previously inline checks. */
 const updateClientSchema = z.object({
@@ -24,6 +25,7 @@ const updateClientSchema = z.object({
   retainerMonthlyFee: z.number().nullish(),
   overageRate: z.number().nullish(),
   notes: z.string().max(5000).nullish(),
+  rates: clientRatesSchema.nullish(),
 });
 
 /**
@@ -82,6 +84,18 @@ export async function GET(
 
     const client = result.rows[0];
 
+    const ratesResult = await query<{
+      id: string; kind: string; name: string; rate: number; is_default: boolean;
+    }>(
+      `SELECT id, kind, name, rate, is_default
+       FROM client_rates WHERE client_id = $1 AND user_id = $2
+       ORDER BY kind, is_default DESC, name`,
+      [clientId, user.id]
+    );
+    const rates = ratesResult.rows.map((r) => ({
+      id: r.id, kind: r.kind as "hourly" | "item", name: r.name, rate: r.rate, isDefault: r.is_default,
+    }));
+
     return NextResponse.json({
       success: true,
       client: {
@@ -100,6 +114,7 @@ export async function GET(
         notes: client.notes,
         isActive: client.is_active,
         createdAt: client.created_at,
+        rates,
       },
     }, {
       headers: {
@@ -135,10 +150,10 @@ export async function PUT(
 
     const parsed = await parseBody(request, updateClientSchema);
     if (!parsed.ok) return parsed.response;
-    const { name, contactName, email, phone, address, defaultRate, currency, isRetainer, retainerHours, retainerMonthlyFee, overageRate, notes } = parsed.data;
+    const { name, contactName, email, phone, address, defaultRate, currency, isRetainer, retainerHours, retainerMonthlyFee, overageRate, notes, rates } = parsed.data;
     const { id: clientId } = await params;
 
-    const { query } = await import("@/lib/db");
+    const { query, withTransaction } = await import("@/lib/db");
 
     // Verify ownership BEFORE mutating
     const ownershipCheck = await query<{ exists: boolean }>(
@@ -153,30 +168,54 @@ export async function PUT(
       );
     }
 
-    // Update client (still scoped by user_id as defense in depth)
-    await query(
-      `UPDATE clients
-       SET name = $1, contact_name = $2, email = $3, phone = $4, address = $5, default_rate = $6,
-           currency = $7, is_retainer = $8, retainer_hours = $9, retainer_monthly_fee = $10, overage_rate = $11,
-           notes = $12
-       WHERE id = $13 AND user_id = $14`,
-      [
-        name.trim(),
-        contactName?.trim() || null,
-        email?.trim() || null,
-        phone?.trim() || null,
-        address?.trim() || null,
-        defaultRate || null,
-        currency || "ILS",
-        isRetainer ?? false,
-        retainerHours || null,
-        retainerMonthlyFee || null,
-        overageRate || null,
-        notes?.trim() || null,
-        clientId,
-        user.id,
-      ]
-    );
+    // rates === undefined (key absent) => caller didn't manage rates; leave them
+    // untouched (the [id] detail form PUTs without rates). An explicit [] wipes them.
+    const ratesList = rates ?? null;
+    const defaultHourly =
+      ratesList?.find((r) => r.kind === "hourly" && r.isDefault) ??
+      ratesList?.find((r) => r.kind === "hourly");
+    // Only override default_rate when the caller actually sent rates.
+    const effectiveDefaultRate = ratesList !== null
+      ? (defaultHourly ? defaultHourly.rate : null)
+      : (defaultRate ?? null);
+
+    // Update client + replace rates atomically (still scoped by user_id; RLS bound).
+    await withTransaction(async (db) => {
+      await db.query(
+        `UPDATE clients
+         SET name = $1, contact_name = $2, email = $3, phone = $4, address = $5, default_rate = $6,
+             currency = $7, is_retainer = $8, retainer_hours = $9, retainer_monthly_fee = $10, overage_rate = $11,
+             notes = $12
+         WHERE id = $13 AND user_id = $14`,
+        [
+          name.trim(),
+          contactName?.trim() || null,
+          email?.trim() || null,
+          phone?.trim() || null,
+          address?.trim() || null,
+          effectiveDefaultRate,
+          currency || "ILS",
+          isRetainer ?? false,
+          retainerHours || null,
+          retainerMonthlyFee || null,
+          overageRate || null,
+          notes?.trim() || null,
+          clientId,
+          user.id,
+        ]
+      );
+
+      if (ratesList !== null) {
+        await db.query(`DELETE FROM client_rates WHERE client_id = $1 AND user_id = $2`, [clientId, user.id]);
+        for (const r of ratesList) {
+          await db.query(
+            `INSERT INTO client_rates (id, user_id, client_id, kind, name, rate, is_default)
+             VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6)`,
+            [user.id, clientId, r.kind, r.name.trim(), r.rate, r.kind === "hourly" ? r.isDefault : false]
+          );
+        }
+      }
+    });
 
     // Fetch the updated client (scoped by user_id)
     const clientResult = await query<{
@@ -206,6 +245,18 @@ export async function PUT(
 
     const client = clientResult.rows[0];
 
+    const ratesResult = await query<{
+      id: string; kind: string; name: string; rate: number; is_default: boolean;
+    }>(
+      `SELECT id, kind, name, rate, is_default
+       FROM client_rates WHERE client_id = $1 AND user_id = $2
+       ORDER BY kind, is_default DESC, name`,
+      [clientId, user.id]
+    );
+    const updatedRates = ratesResult.rows.map((r) => ({
+      id: r.id, kind: r.kind as "hourly" | "item", name: r.name, rate: r.rate, isDefault: r.is_default,
+    }));
+
     return NextResponse.json({
       success: true,
       client: {
@@ -224,6 +275,7 @@ export async function PUT(
         notes: client.notes,
         isActive: client.is_active,
         createdAt: client.created_at,
+        rates: updatedRates,
       },
     });
   } catch (error) {
