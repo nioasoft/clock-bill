@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { query } from "@/lib/db";
 import { getUser } from "@/lib/auth";
+import { parseBody } from "@/lib/api-validation";
 import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("api-reports-presets");
+
+/** Body schema for creating a report preset. */
+const createPresetSchema = z.object({
+  name: z.string({ message: "שם הפריסט הוא שדה חובה" }).min(1, "שם הפריסט הוא שדה חובה").max(500),
+  clientId: z.string().nullish(),
+  projectId: z.string().nullish(),
+  startDate: z.string().nullish(),
+  endDate: z.string().nullish(),
+});
 
 // GET - Fetch all report presets for the current user
 export async function GET(req: NextRequest) {
@@ -73,16 +84,9 @@ export async function POST(req: NextRequest) {
     const userId = user.id;
 
     // Parse request body
-    const body = await req.json();
-    const { name, clientId, projectId, startDate, endDate } = body;
-
-    // Validate required fields
-    if (!name) {
-      return NextResponse.json(
-        { success: false, message: "שם הפריסט הוא שדה חובה" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(req, createPresetSchema);
+    if (!parsed.ok) return parsed.response;
+    const { name, clientId, projectId, startDate, endDate } = parsed.data;
 
     // Generate new ID
     const id = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;

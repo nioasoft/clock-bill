@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { withTransaction } from "@/lib/db";
 import { getUser } from "@/lib/auth";
+import { parseBody } from "@/lib/api-validation";
+
+/** Body schema for resuming a timer. */
+const resumeTimerSchema = z.object({
+  entryId: z.string({ message: "חסר מזהה טיימר" }).min(1, "חסר מזהה טיימר"),
+});
 
 /**
  * POST /api/timer/resume
@@ -18,13 +25,9 @@ export async function POST(request: NextRequest) {
     const userId = user.id;
 
     // Which timer to resume — required now that multiple can run at once.
-    const { entryId } = await request.json().catch(() => ({ entryId: undefined }));
-    if (!entryId) {
-      return NextResponse.json(
-        { success: false, message: "חסר מזהה טיימר" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(request, resumeTimerSchema);
+    if (!parsed.ok) return parsed.response;
+    const { entryId } = parsed.data;
 
     const result = await withTransaction(async (client) => {
       // Get and lock the specific paused timer entry (scoped to the user).

@@ -1,8 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { getUser } from "@/lib/auth";
+import { parseBody } from "@/lib/api-validation";
 
 /** Maximum number of entry IDs accepted in a single bulk operation. */
 const MAX_BULK_ENTRIES = 1000;
+
+/** Body schema for bulk-updating time entries. */
+const bulkUpdateSchema = z.object({
+  entryIds: z
+    .array(z.string().min(1), { message: "יש לבחור לפחות רשומה אחת" })
+    .min(1, "יש לבחור לפחות רשומה אחת")
+    .max(MAX_BULK_ENTRIES, `ניתן לעדכן עד ${MAX_BULK_ENTRIES} רשומות בבת אחת`),
+  projectId: z.string().min(1).optional(),
+  date: z.string().min(1).optional(),
+  isBillable: z.boolean().optional(),
+});
+
+/** Body schema for bulk-deleting time entries. */
+const bulkDeleteSchema = z.object({
+  entryIds: z
+    .array(z.string().min(1), { message: "יש לבחור לפחות רשומה אחת" })
+    .min(1, "יש לבחור לפחות רשומה אחת")
+    .max(MAX_BULK_ENTRIES, `ניתן למחוק עד ${MAX_BULK_ENTRIES} רשומות בבת אחת`),
+});
 
 /**
  * PATCH /api/entries/bulk
@@ -19,23 +40,9 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { entryIds, projectId, date, isBillable } = body;
-
-    // Validation
-    if (!entryIds || !Array.isArray(entryIds) || entryIds.length === 0) {
-      return NextResponse.json(
-        { success: false, message: "יש לבחור לפחות רשומה אחת" },
-        { status: 400 }
-      );
-    }
-
-    if (entryIds.length > MAX_BULK_ENTRIES) {
-      return NextResponse.json(
-        { success: false, message: `ניתן לעדכן עד ${MAX_BULK_ENTRIES} רשומות בבת אחת` },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(request, bulkUpdateSchema);
+    if (!parsed.ok) return parsed.response;
+    const { entryIds, projectId, date, isBillable } = parsed.data;
 
     // Check if at least one field is being updated
     if (!projectId && !date && isBillable === undefined) {
@@ -129,23 +136,9 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { entryIds } = body;
-
-    // Validation
-    if (!entryIds || !Array.isArray(entryIds) || entryIds.length === 0) {
-      return NextResponse.json(
-        { success: false, message: "יש לבחור לפחות רשומה אחת" },
-        { status: 400 }
-      );
-    }
-
-    if (entryIds.length > MAX_BULK_ENTRIES) {
-      return NextResponse.json(
-        { success: false, message: `ניתן למחוק עד ${MAX_BULK_ENTRIES} רשומות בבת אחת` },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(request, bulkDeleteSchema);
+    if (!parsed.ok) return parsed.response;
+    const { entryIds } = parsed.data;
 
     const { query } = await import("@/lib/db");
 

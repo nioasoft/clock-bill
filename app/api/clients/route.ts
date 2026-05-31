@@ -1,5 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { getUser } from "@/lib/auth";
+import { parseBody } from "@/lib/api-validation";
+
+/** Body schema for creating a client. Mirrors the previously inline checks. */
+const createClientSchema = z.object({
+  name: z
+    .string({ message: "יש להזין שם לקוח" })
+    .trim()
+    .min(1, "יש להזין שם לקוח")
+    .max(200, "שם הלקוח ארוך מדי (מקסימום 200 תווים)"),
+  contactName: z.string().max(200).nullish(),
+  email: z.string().max(200, "כתובת האימייל ארוכה מדי").nullish(),
+  phone: z.string().max(50, "מספר הטלפון ארוך מדי").nullish(),
+  address: z.string().max(500, "הכתובת ארוכה מדי (מקסימום 500 תווים)").nullish(),
+  defaultRate: z
+    .number()
+    .min(0, "התעריף השעתי לא יכול להיות שלילי")
+    .nullish(),
+  currency: z.string().max(10).nullish(),
+  isRetainer: z.boolean().nullish(),
+  retainerHours: z.number().nullish(),
+  retainerMonthlyFee: z.number().nullish(),
+  overageRate: z.number().nullish(),
+  notes: z.string().max(5000).nullish(),
+});
 
 /**
  * GET /api/clients
@@ -114,51 +139,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { name, contactName, email, phone, address, defaultRate, currency, isRetainer, retainerHours, retainerMonthlyFee, overageRate, notes } = body;
-
-    // Validation
-    if (!name || name.trim().length === 0) {
-      return NextResponse.json(
-        { success: false, message: "יש להזין שם לקוח" },
-        { status: 400 }
-      );
-    }
-
-    if (name.length > 200) {
-      return NextResponse.json(
-        { success: false, message: "שם הלקוח ארוך מדי (מקסימום 200 תווים)" },
-        { status: 400 }
-      );
-    }
-
-    if (email && email.length > 200) {
-      return NextResponse.json(
-        { success: false, message: "כתובת האימייל ארוכה מדי" },
-        { status: 400 }
-      );
-    }
-
-    if (phone && phone.length > 50) {
-      return NextResponse.json(
-        { success: false, message: "מספר הטלפון ארוך מדי" },
-        { status: 400 }
-      );
-    }
-
-    if (address && address.length > 500) {
-      return NextResponse.json(
-        { success: false, message: "הכתובת ארוכה מדי (מקסימום 500 תווים)" },
-        { status: 400 }
-      );
-    }
-
-    if (defaultRate !== undefined && defaultRate !== null && defaultRate < 0) {
-      return NextResponse.json(
-        { success: false, message: "התעריף השעתי לא יכול להיות שלילי" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(request, createClientSchema);
+    if (!parsed.ok) return parsed.response;
+    const { name, contactName, email, phone, address, defaultRate, currency, isRetainer, retainerHours, retainerMonthlyFee, overageRate, notes } = parsed.data;
 
     const { query } = await import("@/lib/db");
 

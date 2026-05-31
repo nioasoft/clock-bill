@@ -1,6 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { query } from "@/lib/db";
 import { getUser } from "@/lib/auth";
+import { parseBody } from "@/lib/api-validation";
+
+/** Body schema for creating/updating a currency conversion rate. */
+const upsertRateSchema = z.object({
+  fromCurrency: z
+    .string({ message: "חסרים פרטים - נדרשים מטבע מקור, מטבע יעד ושער" })
+    .min(1, "חסרים פרטים - נדרשים מטבע מקור, מטבע יעד ושער")
+    .max(10),
+  toCurrency: z
+    .string({ message: "חסרים פרטים - נדרשים מטבע מקור, מטבע יעד ושער" })
+    .min(1, "חסרים פרטים - נדרשים מטבע מקור, מטבע יעד ושער")
+    .max(10),
+  rate: z
+    .number({ message: "שער החליפין חייב להיות מספר חיובי" })
+    .positive("שער החליפין חייב להיות מספר חיובי"),
+});
+
+/** Body schema for deleting a currency conversion rate. */
+const deleteRateSchema = z.object({
+  rateId: z.string({ message: "מזהה שער חסר" }).min(1, "מזהה שער חסר"),
+});
 
 // GET /api/currency-rates - Get all currency conversion rates for current user
 export async function GET(request: NextRequest) {
@@ -46,27 +68,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { fromCurrency, toCurrency, rate } = body;
-
-    // Validate input
-    if (!fromCurrency || !toCurrency || !rate) {
-      return NextResponse.json(
-        { success: false, message: "חסרים פרטים - נדרשים מטבע מקור, מטבע יעד ושער" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(request, upsertRateSchema);
+    if (!parsed.ok) return parsed.response;
+    const { fromCurrency, toCurrency, rate } = parsed.data;
 
     if (fromCurrency === toCurrency) {
       return NextResponse.json(
         { success: false, message: "מטבע המקור ומטבע היעד לא יכולים להיות זהים" },
-        { status: 400 }
-      );
-    }
-
-    if (typeof rate !== "number" || rate <= 0) {
-      return NextResponse.json(
-        { success: false, message: "שער החליפין חייב להיות מספר חיובי" },
         { status: 400 }
       );
     }
@@ -134,15 +142,9 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { rateId } = body;
-
-    if (!rateId) {
-      return NextResponse.json(
-        { success: false, message: "מזהה שער חסר" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(request, deleteRateSchema);
+    if (!parsed.ok) return parsed.response;
+    const { rateId } = parsed.data;
 
     // Verify ownership and delete
     const result = await query(

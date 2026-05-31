@@ -1,5 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { getUser } from "@/lib/auth";
+import { parseBody } from "@/lib/api-validation";
+
+/** Body schema for creating a project. Cross-field rules stay inline below. */
+const createProjectSchema = z.object({
+  clientId: z.string({ message: "יש לבחור לקוח" }).trim().min(1, "יש לבחור לקוח"),
+  name: z
+    .string({ message: "יש להזין שם פרויקט" })
+    .trim()
+    .min(1, "יש להזין שם פרויקט")
+    .max(200, "שם הפרויקט ארוך מדי (מקסימום 200 תווים)"),
+  status: z.enum(["active", "completed", "paused", "archived"], { message: "סטטוס לא חוקי" }).nullish(),
+  startDate: z.string().nullish(),
+  endDate: z.string().nullish(),
+  fixedMonthlyEnabled: z.boolean().nullish(),
+  fixedMonthlyFee: z.number().nullish(),
+  fixedMonthlyStartDate: z.string().nullish(),
+  fixedMonthlyEndDate: z.string().nullish(),
+  notes: z.string().max(5000).nullish(),
+});
 
 /**
  * GET /api/projects
@@ -109,7 +129,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    const parsed = await parseBody(request, createProjectSchema);
+    if (!parsed.ok) return parsed.response;
     const {
       clientId,
       name,
@@ -121,36 +142,7 @@ export async function POST(request: NextRequest) {
       fixedMonthlyStartDate,
       fixedMonthlyEndDate,
       notes,
-    } = body;
-
-    // Validation
-    if (!name || name.trim().length === 0) {
-      return NextResponse.json(
-        { success: false, message: "יש להזין שם פרויקט" },
-        { status: 400 }
-      );
-    }
-
-    if (!clientId || clientId.trim().length === 0) {
-      return NextResponse.json(
-        { success: false, message: "יש לבחור לקוח" },
-        { status: 400 }
-      );
-    }
-
-    if (name.length > 200) {
-      return NextResponse.json(
-        { success: false, message: "שם הפרויקט ארוך מדי (מקסימום 200 תווים)" },
-        { status: 400 }
-      );
-    }
-
-    if (status && !["active", "completed", "paused", "archived"].includes(status)) {
-      return NextResponse.json(
-        { success: false, message: "סטטוס לא חוקי" },
-        { status: 400 }
-      );
-    }
+    } = parsed.data;
 
     if (fixedMonthlyEnabled && (!(typeof fixedMonthlyFee === "number") || fixedMonthlyFee <= 0)) {
       return NextResponse.json(

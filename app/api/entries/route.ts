@@ -1,5 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { getUser } from "@/lib/auth";
+import { parseBody } from "@/lib/api-validation";
+
+/** Body schema for creating a manual time entry. Mirrors prior inline checks. */
+const createEntrySchema = z.object({
+  projectId: z.string({ message: "נא לבחור פרויקט" }).min(1, "נא לבחור פרויקט"),
+  taskId: z.string().nullish(),
+  date: z.string({ message: "נא לבחור תאריך" }).min(1, "נא לבחור תאריך"),
+  duration: z
+    .number({ message: "נא להזין משך זמן תקין" })
+    .positive("נא להזין משך זמן תקין"),
+  description: z
+    .string({ message: "נא להזין תיאור" })
+    .trim()
+    .min(1, "נא להזין תיאור")
+    .max(5000),
+  notes: z.string().max(5000).nullish(),
+  isBillable: z.boolean().nullish(),
+  tags: z.array(z.string().max(100)).nullish(),
+});
 
 /** Default and maximum page size for the entries list to bound query cost. */
 const DEFAULT_LIMIT = 500;
@@ -188,37 +208,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { projectId, taskId, date, duration, description, notes, isBillable, tags } = body;
-
-    // Validation
-    if (!projectId) {
-      return NextResponse.json(
-        { success: false, message: "נא לבחור פרויקט" },
-        { status: 400 }
-      );
-    }
-
-    if (!date) {
-      return NextResponse.json(
-        { success: false, message: "נא לבחור תאריך" },
-        { status: 400 }
-      );
-    }
-
-    if (!duration || duration <= 0) {
-      return NextResponse.json(
-        { success: false, message: "נא להזין משך זמן תקין" },
-        { status: 400 }
-      );
-    }
-
-    if (!description || description.trim().length === 0) {
-      return NextResponse.json(
-        { success: false, message: "נא להזין תיאור" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(request, createEntrySchema);
+    if (!parsed.ok) return parsed.response;
+    const { projectId, taskId, date, duration, description, notes, isBillable, tags } = parsed.data;
 
     const { query } = await import("@/lib/db");
 

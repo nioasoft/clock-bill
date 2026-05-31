@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { query } from "@/lib/db";
 import { getUser } from "@/lib/auth";
+import { parseBody } from "@/lib/api-validation";
 import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("timer:start");
+
+/** Body schema for starting a timer. */
+const startTimerSchema = z.object({
+  projectId: z.string({ message: "נא לבחור פרויקט" }).min(1, "נא לבחור פרויקט"),
+  taskId: z.string().nullish(),
+  description: z.string().max(5000).nullish(),
+});
 
 /**
  * POST /api/timer/start
@@ -22,17 +31,10 @@ export async function POST(request: NextRequest) {
     userId = user.id;
 
     // Parse request body
-    const body = await request.json();
-    projectId = body.projectId;
-    const { description, taskId } = body;
-
-    // Validate required fields
-    if (!projectId) {
-      return NextResponse.json(
-        { success: false, message: "נא לבחור פרויקט" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(request, startTimerSchema);
+    if (!parsed.ok) return parsed.response;
+    const { description, taskId } = parsed.data;
+    projectId = parsed.data.projectId;
 
     // Verify the project belongs to the user
     const projectCheck = await query<{ id: string }>(

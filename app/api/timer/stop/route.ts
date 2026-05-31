@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { withTransaction } from "@/lib/db";
 import { getUser } from "@/lib/auth";
+import { parseBody } from "@/lib/api-validation";
+
+/** Body schema for stopping a timer. */
+const stopTimerSchema = z.object({
+  entryId: z.string({ message: "הטיימר לא נמצא או כבר הופסק" }).min(1, "הטיימר לא נמצא או כבר הופסק"),
+  description: z.string().max(5000).nullish(),
+  duration: z.number().nullish(),
+});
 
 /**
  * POST /api/timer/stop
@@ -19,8 +28,9 @@ export async function POST(request: NextRequest) {
     const userId = user.id;
 
     // Parse request body
-    const body = await request.json();
-    const { entryId, description, duration: customDuration } = body;
+    const parsed = await parseBody(request, stopTimerSchema);
+    if (!parsed.ok) return parsed.response;
+    const { entryId, description, duration: customDuration } = parsed.data;
 
     const result = await withTransaction(async (client) => {
       // Lock the running entry for the duration of the transaction so a

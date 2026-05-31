@@ -4,11 +4,45 @@
  * PATCH: Update user profile
  */
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { query } from "@/lib/db";
 import { getUser } from "@/lib/auth";
+import { parseBody } from "@/lib/api-validation";
 import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("api:profile");
+
+/**
+ * Body schema for updating the user profile. Every field is optional; only the
+ * keys present in the body get applied (partial update), matching prior behavior.
+ */
+const updateProfileSchema = z.object({
+  businessName: z.string().max(500).optional(),
+  phone: z.string().max(100).optional(),
+  email: z.string().max(200).optional(),
+  address: z.string().max(1000).optional(),
+  taxId: z.string().max(100).optional(),
+  website: z.string().max(500).optional(),
+  defaultCurrency: z.string().max(10).optional(),
+  preferredPdfTemplate: z.string().max(100).optional(),
+  invoicePrefix: z.string().max(100).optional(),
+  nextInvoiceNumber: z.number().optional(),
+  paymentTerms: z.string().max(2000).optional(),
+  bankName: z.string().max(200).optional(),
+  bankAccountNumber: z.string().max(100).optional(),
+  bankBranch: z.string().max(100).optional(),
+  bankSwift: z.string().max(100).optional(),
+  pdfPrimaryColor: z.string().max(50).optional(),
+  pdfAccentColor: z.string().max(50).optional(),
+  longTimerEnabled: z.boolean().optional(),
+  longTimerThreshold: z.number().optional(),
+  dailyReminderEnabled: z.boolean().optional(),
+  dailyReminderTime: z.string().max(50).optional(),
+  workingHours: z.number().optional(),
+  dateFormat: z.string().max(50).optional(),
+  timeFormat: z.string().max(50).optional(),
+  firstDayOfWeek: z.string().max(50).optional(),
+});
 
 export interface Profile {
   id: string;
@@ -160,7 +194,9 @@ export async function PATCH(request: Request): Promise<NextResponse> {
 
     userId = user.id;
 
-    const body: ProfileUpdateRequest = await request.json();
+    const parsed = await parseBody(request, updateProfileSchema);
+    if (!parsed.ok) return parsed.response;
+    const body: ProfileUpdateRequest = parsed.data;
 
     // Build update query dynamically based on provided fields
     const updates: string[] = [];

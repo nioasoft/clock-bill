@@ -1,5 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { getUser } from "@/lib/auth";
+import { parseBody } from "@/lib/api-validation";
+
+/**
+ * Body schema for updating a project. All fields are optional (partial update);
+ * the route merges them onto current values, and cross-field rules stay inline.
+ */
+const updateProjectSchema = z.object({
+  name: z.string().max(200, "שם הפרויקט ארוך מדי (מקסימום 200 תווים)").optional(),
+  status: z.enum(["active", "completed", "paused", "archived"], { message: "סטטוס לא חוקי" }).optional(),
+  startDate: z.string().nullish(),
+  endDate: z.string().nullish(),
+  fixedMonthlyEnabled: z.boolean().nullish(),
+  fixedMonthlyFee: z.number().nullish(),
+  fixedMonthlyStartDate: z.string().nullish(),
+  fixedMonthlyEndDate: z.string().nullish(),
+  notes: z.string().max(5000).nullish(),
+});
 
 /**
  * GET /api/projects/[id]
@@ -124,7 +142,8 @@ export async function PUT(
       );
     }
 
-    const body = await request.json();
+    const parsed = await parseBody(request, updateProjectSchema);
+    if (!parsed.ok) return parsed.response;
     const {
       name,
       status,
@@ -135,15 +154,8 @@ export async function PUT(
       fixedMonthlyStartDate,
       fixedMonthlyEndDate,
       notes,
-    } = body;
+    } = parsed.data;
     const { id: projectId } = await params;
-
-    if (status && !["active", "completed", "paused", "archived"].includes(status)) {
-      return NextResponse.json(
-        { success: false, message: "סטטוס לא חוקי" },
-        { status: 400 }
-      );
-    }
 
     const { query } = await import("@/lib/db");
 

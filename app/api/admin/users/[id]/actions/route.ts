@@ -9,12 +9,18 @@
  * is not supported here.
  */
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { query } from "@/lib/db";
 import { getAdminUser } from "@/lib/admin";
+import { parseBody } from "@/lib/api-validation";
 
-interface ActionBody {
-  action: "reset_password" | "verify_email" | "delete_sessions" | "toggle_role" | "delete_user";
-}
+/** Body schema for an admin user action. */
+const actionSchema = z.object({
+  action: z.enum(
+    ["reset_password", "verify_email", "delete_sessions", "toggle_role", "delete_user"],
+    { message: "פעולה לא מוכרת" }
+  ),
+});
 
 export async function POST(
   request: NextRequest,
@@ -27,7 +33,9 @@ export async function POST(
     }
 
     const { id: userId } = await params;
-    const body = (await request.json()) as ActionBody;
+    const parsed = await parseBody(request, actionSchema);
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.data;
 
     // Verify user exists (Better Auth `user` table — "user" is a reserved word).
     const userResult = await query<{ id: string; email: string; role: string }>(

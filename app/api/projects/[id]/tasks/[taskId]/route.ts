@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { getUser } from "@/lib/auth";
 import { query } from "@/lib/db";
+import { parseBody } from "@/lib/api-validation";
 
 type RouteContext = {
   params: Promise<{ id: string; taskId: string }>;
 };
+
+/**
+ * Body schema for updating a task. All fields optional (partial update); the
+ * empty-name check stays inline since it only applies when `name` is provided.
+ */
+const updateTaskSchema = z.object({
+  name: z.string().max(500).optional(),
+  description: z.string().max(5000).nullish(),
+  status: z.enum(["todo", "in_progress", "done"], { message: "סטטוס לא תקין" }).optional(),
+});
 
 /**
  * PUT /api/projects/[id]/tasks/[taskId]
@@ -21,8 +33,9 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     }
 
     const { id: projectId, taskId } = await context.params;
-    const body = await request.json();
-    const { name, description, status } = body;
+    const parsed = await parseBody(request, updateTaskSchema);
+    if (!parsed.ok) return parsed.response;
+    const { name, description, status } = parsed.data;
 
     // Verify task belongs to user's project
     const taskCheck = await query<{ id: string }>(
@@ -36,13 +49,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       return NextResponse.json(
         { success: false, message: "המשימה לא נמצאה" },
         { status: 404 }
-      );
-    }
-
-    if (status && !["todo", "in_progress", "done"].includes(status)) {
-      return NextResponse.json(
-        { success: false, message: "סטטוס לא תקין" },
-        { status: 400 }
       );
     }
 

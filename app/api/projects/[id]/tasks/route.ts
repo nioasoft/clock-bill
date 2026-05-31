@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { getUser } from "@/lib/auth";
 import { query } from "@/lib/db";
+import { parseBody } from "@/lib/api-validation";
+
+/** Body schema for creating a task. */
+const createTaskSchema = z.object({
+  name: z
+    .string({ message: "נא להזין שם משימה" })
+    .trim()
+    .min(1, "נא להזין שם משימה")
+    .max(500),
+  description: z.string().max(5000).nullish(),
+  status: z.enum(["todo", "in_progress", "done"], { message: "סטטוס לא תקין" }).nullish(),
+});
 
 /**
  * GET /api/projects/[id]/tasks
@@ -94,15 +107,9 @@ export async function POST(
     }
 
     const { id: projectId } = await params;
-    const body = await request.json();
-    const { name, description, status } = body;
-
-    if (!name || name.trim().length === 0) {
-      return NextResponse.json(
-        { success: false, message: "נא להזין שם משימה" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(request, createTaskSchema);
+    if (!parsed.ok) return parsed.response;
+    const { name, description, status } = parsed.data;
 
     // Verify project belongs to user
     const projectCheck = await query<{ id: string }>(
@@ -118,12 +125,6 @@ export async function POST(
     }
 
     const taskStatus = status || "todo";
-    if (!["todo", "in_progress", "done"].includes(taskStatus)) {
-      return NextResponse.json(
-        { success: false, message: "סטטוס לא תקין" },
-        { status: 400 }
-      );
-    }
 
     const result = await query<{
       id: string;
