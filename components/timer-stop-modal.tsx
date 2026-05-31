@@ -16,6 +16,8 @@ export function TimerStopModal() {
     stopTimerTargetId,
     stopTimerDescription,
     setStopTimerDescription,
+    stopTimerNotes,
+    setStopTimerNotes,
     stopTimerHours,
     setStopTimerHours,
     stopTimerMinutes,
@@ -63,6 +65,25 @@ export function TimerStopModal() {
               onChange={(e) => setStopTimerDescription(e.target.value)}
               placeholder="מה עשית?"
               className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
+              disabled={stoppingTimer}
+            />
+          </div>
+
+          {/* Notes — appear in the report */}
+          <div>
+            <label
+              htmlFor="stop-notes"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
+              הערות (יופיעו בדוח)
+            </label>
+            <textarea
+              id="stop-notes"
+              rows={3}
+              value={stopTimerNotes}
+              onChange={(e) => setStopTimerNotes(e.target.value)}
+              placeholder="פירוט מה נעשה בעבודה (אופציונלי)"
+              className="w-full resize-y rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm placeholder:text-muted-foreground/50 focus:border-primary focus:ring-1 focus:ring-primary"
               disabled={stoppingTimer}
             />
           </div>

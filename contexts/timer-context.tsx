@@ -23,6 +23,7 @@ interface RunningTimer {
   projectId: string;
   taskId: string | null;
   description: string | null;
+  notes: string | null;
   startTime: string;
   pausedAt: string | null;
   elapsedMinutes: number;
@@ -83,6 +84,8 @@ interface TimerContextValue {
   cancelStopTimer: () => void;
   handlePauseTimer: (entryId: string) => Promise<void>;
   handleResumeTimer: (entryId: string) => Promise<void>;
+  /** Save notes on a still-running timer (latest overwrites previous). */
+  handleUpdateTimerNotes: (entryId: string, notes: string) => Promise<boolean>;
   refreshTimer: () => Promise<void>;
 }
 
@@ -127,6 +130,7 @@ const defaultTimerValue: TimerContextValue = {
   cancelStopTimer: noop,
   handlePauseTimer: asyncNoop,
   handleResumeTimer: asyncNoop,
+  handleUpdateTimerNotes: async () => false,
   refreshTimer: asyncNoop,
 };
 
@@ -560,6 +564,35 @@ export function TimerProvider({ children }: TimerProviderProps) {
     [fetchRunningTimer]
   );
 
+  // Save notes on a running timer mid-work. Optimistically updates the local
+  // timer so the edited text sticks between 30s polls; latest write wins.
+  const handleUpdateTimerNotes = useCallback(
+    async (entryId: string, notes: string): Promise<boolean> => {
+      try {
+        const response = await fetch("/api/timer/notes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ entryId, notes: notes || null }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          setRunningTimers((prev) =>
+            prev.map((t) => (t.id === entryId ? { ...t, notes: notes || null } : t))
+          );
+          showSuccessToast("ההערות נשמרו");
+          return true;
+        }
+        showErrorToast(data.message || "שגיאה בשמירת ההערות");
+        return false;
+      } catch (error) {
+        console.error("Error updating timer notes:", error);
+        showErrorToast("שגיאה בשמירת ההערות");
+        return false;
+      }
+    },
+    []
+  );
+
   // Keyboard shortcut: 't' always opens the start modal. With multiple timers,
   // pausing/resuming a specific one is done from that timer's card.
   const handleTimerShortcut = useCallback(() => {
@@ -614,6 +647,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
     cancelStopTimer,
     handlePauseTimer,
     handleResumeTimer,
+    handleUpdateTimerNotes,
     refreshTimer,
   };
 
