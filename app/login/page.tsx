@@ -217,6 +217,11 @@ export default function LoginPage() {
                   הירשם כאן
                 </Link>
               </p>
+              <p className="pt-2 text-xs text-muted-foreground">
+                <Link href="/privacy" className="hover:text-foreground">מדיניות פרטיות</Link>
+                <span className="mx-2">·</span>
+                <Link href="/terms" className="hover:text-foreground">תנאי שימוש</Link>
+              </p>
             </div>
           </form>
         </div>

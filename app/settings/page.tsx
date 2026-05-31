@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ImportContent } from "@/components/import-content";
+import { DeleteAccountSection } from "@/components/delete-account-section";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
@@ -2320,6 +2321,11 @@ export default function SettingsPage() {
           />
           </div>
         )}
+
+        {/* Danger zone — permanent account deletion (always available) */}
+        <div className="mt-8">
+          <DeleteAccountSection />
+        </div>
       </PageContainer>
 
       {/* Confirmation Dialog */}

@@ -49,6 +49,18 @@ export function LandingFooter() {
             >
               התחבר
             </Link>
+            <Link
+              href="/privacy"
+              className="text-sidebar-foreground/80 hover:text-white transition-colors"
+            >
+              פרטיות
+            </Link>
+            <Link
+              href="/terms"
+              className="text-sidebar-foreground/80 hover:text-white transition-colors"
+            >
+              תנאי שימוש
+            </Link>
           </nav>
         </div>
 

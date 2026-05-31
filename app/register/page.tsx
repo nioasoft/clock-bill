@@ -286,6 +286,12 @@ export default function RegisterPage() {
                   התחבר כאן
                 </Link>
               </p>
+              <p className="pt-2 text-xs text-muted-foreground">
+                בהרשמה אתה מסכים ל
+                <Link href="/terms" className="text-primary hover:text-primary/80">תנאי השימוש</Link>
+                {" "}ול
+                <Link href="/privacy" className="text-primary hover:text-primary/80">מדיניות הפרטיות</Link>
+              </p>
             </div>
           </form>
         </div>
