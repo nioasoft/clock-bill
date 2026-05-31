@@ -65,6 +65,7 @@ interface TimerContextValue {
   setSelectedRateId: (id: string) => void;
   timerDescription: string;
   stopTimerDescription: string;
+  stopTimerNotes: string;
   stopTimerHours: string;
   stopTimerMinutes: string;
   setShowTimerModal: (show: boolean) => void;
@@ -73,6 +74,7 @@ interface TimerContextValue {
   setSelectedTask: (id: string) => void;
   setTimerDescription: (desc: string) => void;
   setStopTimerDescription: (desc: string) => void;
+  setStopTimerNotes: (notes: string) => void;
   setStopTimerHours: (hours: string) => void;
   setStopTimerMinutes: (minutes: string) => void;
   handleStartTimer: () => Promise<void>;
@@ -107,6 +109,7 @@ const defaultTimerValue: TimerContextValue = {
   setSelectedRateId: noop,
   timerDescription: "",
   stopTimerDescription: "",
+  stopTimerNotes: "",
   stopTimerHours: "",
   stopTimerMinutes: "",
   setShowTimerModal: noop,
@@ -115,6 +118,7 @@ const defaultTimerValue: TimerContextValue = {
   setSelectedTask: noop,
   setTimerDescription: noop,
   setStopTimerDescription: noop,
+  setStopTimerNotes: noop,
   setStopTimerHours: noop,
   setStopTimerMinutes: noop,
   handleStartTimer: asyncNoop,
@@ -186,6 +190,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
   const [showStopTimerModal, setShowStopTimerModal] = useState(false);
   const [stopTimerTargetId, setStopTimerTargetId] = useState<string | null>(null);
   const [stopTimerDescription, setStopTimerDescription] = useState("");
+  const [stopTimerNotes, setStopTimerNotes] = useState("");
   const [stopTimerHours, setStopTimerHours] = useState("");
   const [stopTimerMinutes, setStopTimerMinutes] = useState("");
 
@@ -422,6 +427,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
 
       setStopTimerTargetId(entryId);
       setStopTimerDescription(timer.description || "");
+      setStopTimerNotes("");
       setStopTimerHours(hours.toString());
       setStopTimerMinutes(minutes.toString());
       setShowStopTimerModal(true);
@@ -445,6 +451,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
         body: JSON.stringify({
           entryId,
           description: stopTimerDescription || null,
+          notes: stopTimerNotes || null,
           duration: totalDuration,
         }),
       });
@@ -483,12 +490,13 @@ export function TimerProvider({ children }: TimerProviderProps) {
     } finally {
       setStoppingTimer(false);
     }
-  }, [stopTimerTargetId, stopTimerDescription, stopTimerHours, stopTimerMinutes]);
+  }, [stopTimerTargetId, stopTimerDescription, stopTimerNotes, stopTimerHours, stopTimerMinutes]);
 
   const cancelStopTimer = useCallback(() => {
     setShowStopTimerModal(false);
     setStopTimerTargetId(null);
     setStopTimerDescription("");
+    setStopTimerNotes("");
     setStopTimerHours("");
     setStopTimerMinutes("");
   }, []);
@@ -585,6 +593,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
     setSelectedRateId,
     timerDescription,
     stopTimerDescription,
+    stopTimerNotes,
     stopTimerHours,
     stopTimerMinutes,
     setShowTimerModal,
@@ -593,6 +602,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
     setSelectedTask,
     setTimerDescription,
     setStopTimerDescription,
+    setStopTimerNotes,
     setStopTimerHours,
     setStopTimerMinutes,
     handleStartTimer,
