@@ -15,7 +15,7 @@ import type { NextRequest } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 
 // Routes that don't require authentication
-const publicRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/offline", "/privacy", "/terms"];
+const publicRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/offline", "/privacy", "/terms", "/monitoring"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

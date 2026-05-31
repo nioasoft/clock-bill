@@ -189,6 +189,24 @@ export class Logger {
       };
       console.error(this.formatMessage('ERROR', message, errorMeta));
     }
+
+    // Report handled errors to Sentry (no-op unless a DSN is configured). Loaded
+    // lazily so the SDK isn't pulled in when observability is off. Errors here are
+    // rare, so the dynamic import cost is negligible.
+    if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+      const captured =
+        error instanceof Error ? error : new Error(message);
+      import('@sentry/nextjs')
+        .then((Sentry) => {
+          Sentry.captureException(captured, {
+            tags: this.config.prefix ? { module: this.config.prefix } : undefined,
+            extra: { message, ...meta },
+          });
+        })
+        .catch(() => {
+          // Never let observability break the request.
+        });
+    }
   }
 
   /**

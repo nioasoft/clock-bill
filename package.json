@@ -17,6 +17,7 @@
     "verify:deployment": "node --import tsx scripts/verify-deployment.ts"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.55.0",
     "better-auth": "^1.6.12",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
