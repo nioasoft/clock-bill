@@ -56,6 +56,22 @@ export const auth = betterAuth({
     // tenant resolver on each query) is cheap — no DB hit for ~5 minutes.
     cookieCache: { enabled: true, maxAge: 300 },
   },
+  // Throttle brute-force attempts. Default applies to all auth endpoints; the
+  // custom rules tighten the credential-guessing paths (sign-in / sign-up /
+  // password reset). Storage is in-memory per instance — fine on Vercel Fluid
+  // Compute (warm instances persist); switch to DB-backed storage for strict
+  // distributed limits later.
+  rateLimit: {
+    enabled: true,
+    window: 60,
+    max: 100,
+    customRules: {
+      "/sign-in/email": { window: 60, max: 5 },
+      "/sign-up/email": { window: 60, max: 5 },
+      "/forget-password": { window: 60, max: 3 },
+      "/reset-password": { window: 60, max: 5 },
+    },
+  },
   user: {
     additionalFields: {
       // Not settable by the client during signup; managed server-side.
