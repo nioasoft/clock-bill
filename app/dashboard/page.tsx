@@ -11,7 +11,7 @@ import { ProjectHoursChart } from "@/components/project-hours-chart";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useTimer } from "@/contexts/timer-context";
 import { Users, FolderOpen, Clock } from "lucide-react";
-import { ClockFaceMarks, CircularProgress } from "@/components/ui/thematic-elements";
+import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 
 interface DashboardStats {
   today: {
@@ -178,71 +178,36 @@ export default function DashboardPage() {
         {statsLoading ? (
           <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4 shadow-sm">
-                <Skeleton className="h-4 w-1/2 mb-2" />
+              <div key={i} className="bg-card border border-border rounded-[var(--radius-card)] p-5">
+                <Skeleton className="h-4 w-1/2 mb-3" />
                 <Skeleton className="h-8 w-3/4" />
               </div>
             ))}
           </div>
         ) : statsError ? (
-          <div className="mt-5 rounded-[var(--radius-card)] bg-destructive/10 p-6 text-center">
+          <div className="mt-5 rounded-[var(--radius-card)] bg-destructive/10 border border-destructive/20 p-6 text-center">
             <p className="text-destructive">שגיאה בטעינת הנתונים. נסה לרענן את הדף.</p>
           </div>
         ) : stats && !isFirstTimeUser ? (
           <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="relative bg-card border border-border/50 border-s-2 border-s-primary rounded-[var(--radius-card)] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all motion-safe:animate-fade-up stagger-1">
-              <div className="absolute top-2 start-2">
-                <CircularProgress value={Math.min((stats.today.hours / 8) * 100, 100)} size={24} strokeWidth={2} className="text-primary/20" />
+            {[
+              { label: "שעות היום", value: stats.today.formatted, accent: false, stagger: "stagger-1" },
+              { label: "שעות השבוע", value: stats.week.formatted, accent: false, stagger: "stagger-2" },
+              { label: "שעות החודש", value: stats.month.formatted, accent: false, stagger: "stagger-3" },
+              { label: "הכנסות החודש", value: stats.earnings.formatted, accent: true, stagger: "stagger-4" },
+              { label: "פרויקטים פעילים", value: String(stats.projectsCount), accent: false, stagger: "stagger-5" },
+              { label: "לקוחות", value: String(stats.clientsCount), accent: false, stagger: "stagger-5" },
+            ].map((card) => (
+              <div
+                key={card.label}
+                className={`bg-card border border-border rounded-[var(--radius-card)] p-5 transition-colors hover:border-border-strong motion-safe:animate-fade-up ${card.stagger}`}
+              >
+                <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">{card.label}</p>
+                <p className={`mt-2 font-mono text-3xl font-bold tabular-nums ${card.accent ? "text-primary" : "text-foreground"}`}>
+                  {card.value}
+                </p>
               </div>
-              <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">שעות היום</p>
-              <p className="mt-2 font-mono text-3xl font-bold tabular-nums text-foreground">{stats.today.formatted}</p>
-            </div>
-
-            <div className="relative bg-card border border-border/50 border-s-2 border-s-primary rounded-[var(--radius-card)] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all motion-safe:animate-fade-up stagger-2">
-              <div className="absolute top-2 start-2">
-                <CircularProgress value={Math.min((stats.week.hours / 40) * 100, 100)} size={24} strokeWidth={2} className="text-primary/20" />
-              </div>
-              <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">שעות השבוע</p>
-              <p className="mt-2 font-mono text-3xl font-bold tabular-nums text-foreground">{stats.week.formatted}</p>
-            </div>
-
-            <div className="relative bg-card border border-border/50 border-s-2 border-s-primary rounded-[var(--radius-card)] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all motion-safe:animate-fade-up stagger-3">
-              <div className="absolute top-2 start-2">
-                <CircularProgress value={Math.min((stats.month.hours / 160) * 100, 100)} size={24} strokeWidth={2} className="text-primary/20" />
-              </div>
-              <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">שעות החודש</p>
-              <p className="mt-2 font-mono text-3xl font-bold tabular-nums text-foreground">{stats.month.formatted}</p>
-            </div>
-
-            <div className="relative bg-card border border-border/50 border-s-2 border-s-accent rounded-[var(--radius-card)] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all motion-safe:animate-fade-up stagger-4">
-              <div className="absolute top-2 start-2">
-                <CircularProgress value={75} size={24} strokeWidth={2} className="text-accent/20" />
-              </div>
-              <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">הכנסות החודש</p>
-              <p className="mt-2 font-mono text-3xl font-bold tabular-nums text-foreground">
-                {stats.earnings.formatted}
-              </p>
-            </div>
-
-            <div className="relative bg-card border border-border/50 border-s-2 border-s-secondary rounded-[var(--radius-card)] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all motion-safe:animate-fade-up stagger-5">
-              <div className="absolute top-2 start-2">
-                <CircularProgress value={(stats.projectsCount / 10) * 100} size={24} strokeWidth={2} className="text-secondary/20" />
-              </div>
-              <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">פרויקטים פעילים</p>
-              <p className="mt-2 font-mono text-3xl font-bold tabular-nums text-foreground">
-                {stats.projectsCount}
-              </p>
-            </div>
-
-            <div className="relative bg-card border border-border/50 border-s-2 border-s-secondary rounded-[var(--radius-card)] p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all motion-safe:animate-fade-up stagger-5">
-              <div className="absolute top-2 start-2">
-                <CircularProgress value={(stats.clientsCount / 10) * 100} size={24} strokeWidth={2} className="text-secondary/20" />
-              </div>
-              <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">לקוחות</p>
-              <p className="mt-2 font-mono text-3xl font-bold tabular-nums text-foreground">
-                {stats.clientsCount}
-              </p>
-            </div>
+            ))}
           </div>
         ) : null}
 

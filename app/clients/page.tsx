@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Users } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
+import { fieldClass } from "@/lib/form-styles";
 import {
   validateRequired,
   validateEmail,
@@ -354,228 +355,236 @@ function ClientsPageContent() {
         </PageHeader>
         {/* Add/Edit Client Form */}
         {showForm && (
-          <div className="mb-8 rounded-[var(--radius-card)] bg-surface p-6 shadow motion-safe:animate-scale-in">
-            <h2 className="text-xl font-semibold text-foreground mb-4">
-              {editingClient ? "ערוך לקוח" : "הוסף לקוח חדש"}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="mb-8 rounded-[var(--radius-card)] border border-border bg-card p-6 sm:p-8 motion-safe:animate-scale-in">
+            <div className="mb-6">
+              <h2 className="font-display text-xl font-semibold text-foreground">
+                {editingClient ? "עריכת לקוח" : "לקוח חדש"}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {editingClient ? "עדכן את פרטי הלקוח" : "מלא את הפרטים כדי להוסיף לקוח לרשימה"}
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-8">
               {formError && (
-                <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
+                <div className="rounded-[var(--radius)] border border-destructive/30 bg-destructive/10 p-3.5 text-sm text-destructive">
                   {formError}
                 </div>
               )}
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-foreground">
-                    שם הלקוח *
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    required
-                    value={formData.name}
-                    onChange={(e) => {
-                      setFormData({ ...formData, name: e.target.value });
-                      setFieldErrors({ ...fieldErrors, name: undefined });
-                    }}
-                    className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 shadow-sm focus:outline-none focus:ring-primary disabled:opacity-50 ${
-                      fieldErrors.name
-                        ? "border-destructive/30 focus:border-destructive focus:ring-destructive/20"
-                        : "border-border focus:border-primary"
-                    }`}
-                    disabled={submitting}
-                  />
-                  {fieldErrors.name && <p className="mt-1 text-sm text-destructive">{fieldErrors.name}</p>}
-                </div>
-
-                <div>
-                  <label htmlFor="contactName" className="block text-sm font-medium text-foreground">
-                    איש קשר
-                  </label>
-                  <input
-                    type="text"
-                    id="contactName"
-                    value={formData.contactName}
-                    onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
-                    className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary disabled:opacity-50"
-                    disabled={submitting}
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-foreground">
-                    אימייל
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    value={formData.email}
-                    onChange={(e) => {
-                      setFormData({ ...formData, email: e.target.value });
-                      setFieldErrors({ ...fieldErrors, email: undefined });
-                    }}
-                    className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 shadow-sm focus:outline-none focus:ring-primary disabled:opacity-50 ${
-                      fieldErrors.email
-                        ? "border-destructive/30 focus:border-destructive focus:ring-destructive/20"
-                        : "border-border focus:border-primary"
-                    }`}
-                    disabled={submitting}
-                  />
-                  {fieldErrors.email && <p className="mt-1 text-sm text-destructive">{fieldErrors.email}</p>}
-                </div>
-
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-foreground">
-                    טלפון
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => {
-                      setFormData({ ...formData, phone: e.target.value });
-                      setFieldErrors({ ...fieldErrors, phone: undefined });
-                    }}
-                    className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 shadow-sm focus:outline-none focus:ring-primary disabled:opacity-50 ${
-                      fieldErrors.phone
-                        ? "border-destructive/30 focus:border-destructive focus:ring-destructive/20"
-                        : "border-border focus:border-primary"
-                    }`}
-                    disabled={submitting}
-                  />
-                  {fieldErrors.phone && <p className="mt-1 text-sm text-destructive">{fieldErrors.phone}</p>}
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label htmlFor="address" className="block text-sm font-medium text-foreground">
-                    כתובת
-                  </label>
-                  <input
-                    type="text"
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                    disabled={submitting}
-                    placeholder="רחוב, מספר, עיר"
-                  />
-                </div>
-
-                <div className="w-32">
-                  <label htmlFor="currency" className="block text-sm font-medium text-foreground">
-                    מטבע
-                  </label>
-                  <select
-                    id="currency"
-                    value={formData.currency}
-                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                    className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary disabled:opacity-50"
-                    disabled={submitting}
-                  >
-                    {CURRENCIES.map((c) => (
-                      <option key={c.value} value={c.value}>{c.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Retainer toggle */}
-                <div className="sm:col-span-2">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.isRetainer}
-                      onChange={(e) => setFormData({ ...formData, isRetainer: e.target.checked })}
-                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
-                      disabled={submitting}
-                    />
-                    <span className="text-sm font-medium text-foreground">לקוח בריטיינר</span>
-                  </label>
-                </div>
-
-                {/* Hourly rate - shown only when NOT retainer */}
-                {!formData.isRetainer && (
+              {/* Section — contact details */}
+              <fieldset className="space-y-4">
+                <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  פרטי קשר
+                </legend>
+                <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
                   <div>
-                    <label htmlFor="defaultRate" className="block text-sm font-medium text-foreground">
-                      תעריף שעתי ({CURRENCY_SYMBOLS[formData.currency] || "₪"})
+                    <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-foreground">
+                      שם הלקוח <span className="text-primary">*</span>
                     </label>
                     <input
-                      type="number"
-                      id="defaultRate"
-                      min="0"
-                      step="0.01"
-                      value={formData.defaultRate}
+                      type="text"
+                      id="name"
+                      required
+                      value={formData.name}
                       onChange={(e) => {
-                        setFormData({ ...formData, defaultRate: e.target.value });
-                        setFieldErrors({ ...fieldErrors, defaultRate: undefined });
+                        setFormData({ ...formData, name: e.target.value });
+                        setFieldErrors({ ...fieldErrors, name: undefined });
                       }}
-                      className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 shadow-sm focus:outline-none focus:ring-primary disabled:opacity-50 ${
-                        fieldErrors.defaultRate
-                          ? "border-destructive/30 focus:border-destructive focus:ring-destructive/20"
-                          : "border-border focus:border-primary"
-                      }`}
+                      className={fieldClass(!!fieldErrors.name)}
                       disabled={submitting}
+                      placeholder="לדוגמה: חברת אקמה בע״מ"
                     />
-                    {fieldErrors.defaultRate && (
-                      <p className="mt-1 text-sm text-destructive">{fieldErrors.defaultRate}</p>
-                    )}
+                    {fieldErrors.name && <p className="mt-1.5 text-xs text-destructive">{fieldErrors.name}</p>}
                   </div>
-                )}
 
-                {/* Retainer fields - shown only when isRetainer is true */}
-                {formData.isRetainer && (
-                  <>
+                  <div>
+                    <label htmlFor="contactName" className="mb-1.5 block text-sm font-medium text-foreground">
+                      איש קשר
+                    </label>
+                    <input
+                      type="text"
+                      id="contactName"
+                      value={formData.contactName}
+                      onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
+                      className={fieldClass(false)}
+                      disabled={submitting}
+                      placeholder="שם מלא"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
+                      אימייל
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      dir="ltr"
+                      value={formData.email}
+                      onChange={(e) => {
+                        setFormData({ ...formData, email: e.target.value });
+                        setFieldErrors({ ...fieldErrors, email: undefined });
+                      }}
+                      className={`${fieldClass(!!fieldErrors.email)} text-end`}
+                      disabled={submitting}
+                      placeholder="name@example.com"
+                    />
+                    {fieldErrors.email && <p className="mt-1.5 text-xs text-destructive">{fieldErrors.email}</p>}
+                  </div>
+
+                  <div>
+                    <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-foreground">
+                      טלפון
+                    </label>
+                    <input
+                      type="tel"
+                      id="phone"
+                      dir="ltr"
+                      value={formData.phone}
+                      onChange={(e) => {
+                        setFormData({ ...formData, phone: e.target.value });
+                        setFieldErrors({ ...fieldErrors, phone: undefined });
+                      }}
+                      className={`${fieldClass(!!fieldErrors.phone)} text-end`}
+                      disabled={submitting}
+                      placeholder="050-0000000"
+                    />
+                    {fieldErrors.phone && <p className="mt-1.5 text-xs text-destructive">{fieldErrors.phone}</p>}
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label htmlFor="address" className="mb-1.5 block text-sm font-medium text-foreground">
+                      כתובת
+                    </label>
+                    <input
+                      type="text"
+                      id="address"
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      className={fieldClass(false)}
+                      disabled={submitting}
+                      placeholder="רחוב, מספר, עיר"
+                    />
+                  </div>
+                </div>
+              </fieldset>
+
+              {/* Section — billing */}
+              <fieldset className="space-y-4">
+                <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  חיוב
+                </legend>
+
+                <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="currency" className="mb-1.5 block text-sm font-medium text-foreground">
+                      מטבע
+                    </label>
+                    <select
+                      id="currency"
+                      value={formData.currency}
+                      onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                      className={fieldClass(false)}
+                      disabled={submitting}
+                    >
+                      {CURRENCIES.map((c) => (
+                        <option key={c.value} value={c.value}>{c.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Hourly rate — only when NOT retainer */}
+                  {!formData.isRetainer && (
                     <div>
-                      <label htmlFor="retainerHours" className="block text-sm font-medium text-foreground">
-                        שעות בריטיינר
+                      <label htmlFor="defaultRate" className="mb-1.5 block text-sm font-medium text-foreground">
+                        תעריף שעתי ({CURRENCY_SYMBOLS[formData.currency] || "₪"})
                       </label>
                       <input
                         type="number"
-                        id="retainerHours"
-                        min="0"
-                        step="0.5"
-                        value={formData.retainerHours}
-                        onChange={(e) => setFormData({ ...formData, retainerHours: e.target.value })}
-                        className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary disabled:opacity-50"
-                        disabled={submitting}
-                        placeholder="למשל 40"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="retainerMonthlyFee" className="block text-sm font-medium text-foreground">
-                        סכום חודשי ({CURRENCY_SYMBOLS[formData.currency] || "₪"})
-                      </label>
-                      <input
-                        type="number"
-                        id="retainerMonthlyFee"
+                        id="defaultRate"
                         min="0"
                         step="0.01"
-                        value={formData.retainerMonthlyFee}
-                        onChange={(e) => setFormData({ ...formData, retainerMonthlyFee: e.target.value })}
-                        className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary disabled:opacity-50"
+                        value={formData.defaultRate}
+                        onChange={(e) => {
+                          setFormData({ ...formData, defaultRate: e.target.value });
+                          setFieldErrors({ ...fieldErrors, defaultRate: undefined });
+                        }}
+                        className={`${fieldClass(!!fieldErrors.defaultRate)} font-mono`}
                         disabled={submitting}
-                        placeholder="למשל 10000"
+                        placeholder="0.00"
                       />
+                      {fieldErrors.defaultRate && (
+                        <p className="mt-1.5 text-xs text-destructive">{fieldErrors.defaultRate}</p>
+                      )}
                     </div>
+                  )}
+                </div>
 
-                    {/* Overflow rate toggle */}
-                    <div className="sm:col-span-2">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.hasOverageRate}
-                          onChange={(e) => setFormData({ ...formData, hasOverageRate: e.target.checked })}
-                          className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
-                          disabled={submitting}
-                        />
-                        <span className="text-sm font-medium text-foreground">תעריף נפרד מעל הריטיינר</span>
-                      </label>
-                    </div>
+                {/* Retainer toggle — full-width switch row */}
+                <label className="flex cursor-pointer items-center justify-between rounded-[var(--radius)] border border-border bg-background px-4 py-3">
+                  <span className="text-sm font-medium text-foreground">לקוח בריטיינר</span>
+                  <input
+                    type="checkbox"
+                    checked={formData.isRetainer}
+                    onChange={(e) => setFormData({ ...formData, isRetainer: e.target.checked })}
+                    className="h-4 w-4 rounded border-border accent-primary"
+                    disabled={submitting}
+                  />
+                </label>
 
-                    {/* Overflow rate field */}
-                    {formData.hasOverageRate && (
+                {/* Retainer fields */}
+                {formData.isRetainer && (
+                  <div className="space-y-4 rounded-[var(--radius)] border border-border bg-background/50 p-4">
+                    <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
                       <div>
-                        <label htmlFor="overageRate" className="block text-sm font-medium text-foreground">
+                        <label htmlFor="retainerHours" className="mb-1.5 block text-sm font-medium text-foreground">
+                          שעות בריטיינר
+                        </label>
+                        <input
+                          type="number"
+                          id="retainerHours"
+                          min="0"
+                          step="0.5"
+                          value={formData.retainerHours}
+                          onChange={(e) => setFormData({ ...formData, retainerHours: e.target.value })}
+                          className={`${fieldClass(false)} font-mono`}
+                          disabled={submitting}
+                          placeholder="40"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="retainerMonthlyFee" className="mb-1.5 block text-sm font-medium text-foreground">
+                          סכום חודשי ({CURRENCY_SYMBOLS[formData.currency] || "₪"})
+                        </label>
+                        <input
+                          type="number"
+                          id="retainerMonthlyFee"
+                          min="0"
+                          step="0.01"
+                          value={formData.retainerMonthlyFee}
+                          onChange={(e) => setFormData({ ...formData, retainerMonthlyFee: e.target.value })}
+                          className={`${fieldClass(false)} font-mono`}
+                          disabled={submitting}
+                          placeholder="10000"
+                        />
+                      </div>
+                    </div>
+
+                    <label className="flex cursor-pointer items-center justify-between rounded-[var(--radius)] border border-border bg-background px-4 py-3">
+                      <span className="text-sm font-medium text-foreground">תעריף נפרד מעל הריטיינר</span>
+                      <input
+                        type="checkbox"
+                        checked={formData.hasOverageRate}
+                        onChange={(e) => setFormData({ ...formData, hasOverageRate: e.target.checked })}
+                        className="h-4 w-4 rounded border-border accent-primary"
+                        disabled={submitting}
+                      />
+                    </label>
+
+                    {formData.hasOverageRate && (
+                      <div className="sm:max-w-[calc(50%-0.5rem)]">
+                        <label htmlFor="overageRate" className="mb-1.5 block text-sm font-medium text-foreground">
                           תעריף שעתי מעל הריטיינר ({CURRENCY_SYMBOLS[formData.currency] || "₪"})
                         </label>
                         <input
@@ -585,68 +594,69 @@ function ClientsPageContent() {
                           step="0.01"
                           value={formData.overageRate}
                           onChange={(e) => setFormData({ ...formData, overageRate: e.target.value })}
-                          className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary disabled:opacity-50"
+                          className={`${fieldClass(false)} font-mono`}
                           disabled={submitting}
+                          placeholder="0.00"
                         />
                       </div>
                     )}
-                  </>
+                  </div>
                 )}
-              </div>
+              </fieldset>
 
-              <div>
-                <label htmlFor="notes" className="block text-sm font-medium text-foreground">
+              {/* Section — notes */}
+              <fieldset className="space-y-4">
+                <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                   הערות
-                </label>
+                </legend>
                 <textarea
                   id="notes"
                   rows={3}
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                  className={`${fieldClass(false)} resize-y`}
                   disabled={submitting}
+                  placeholder="מידע נוסף על הלקוח (אופציונלי)"
                 />
-              </div>
+              </fieldset>
 
               {editingClient && (
-                <div className="border-t border-border pt-4 mt-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
-                        {editingClient.isActive ? "העבר לארכיון" : "שחזר מארכיון"}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {editingClient.isActive
-                          ? "הלקוח יוסתר מהרשימה אך יישמר במערכת"
-                          : "הלקוח יוחזר לרשימה הפעילה"}
-                      </p>
-                    </div>
-                    {editingClient.isActive ? (
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(editingClient)}
-                        className="rounded-[var(--radius-card)] border border-destructive/30 px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10"
-                      >
-                        ארכב לקוח
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleRestore(editingClient)}
-                        className="rounded-[var(--radius-card)] border border-success/30 px-3 py-1.5 text-sm text-success hover:bg-success/10"
-                      >
-                        שחזר לקוח
-                      </button>
-                    )}
+                <div className="flex items-center justify-between rounded-[var(--radius)] border border-border bg-background/50 p-4">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      {editingClient.isActive ? "העבר לארכיון" : "שחזר מארכיון"}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {editingClient.isActive
+                        ? "הלקוח יוסתר מהרשימה אך יישמר במערכת"
+                        : "הלקוח יוחזר לרשימה הפעילה"}
+                    </p>
                   </div>
+                  {editingClient.isActive ? (
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(editingClient)}
+                      className="shrink-0 rounded-[var(--radius)] border border-destructive/30 px-3 py-1.5 text-sm text-destructive transition-colors hover:bg-destructive/10"
+                    >
+                      ארכב לקוח
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleRestore(editingClient)}
+                      className="shrink-0 rounded-[var(--radius)] border border-success/30 px-3 py-1.5 text-sm text-success transition-colors hover:bg-success/10"
+                    >
+                      שחזר לקוח
+                    </button>
+                  )}
                 </div>
               )}
 
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-3 border-t border-border pt-5">
                 <button
                   type="button"
                   onClick={handleCancelEdit}
-                  className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted"
+                  className="rounded-[var(--radius)] border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
                   disabled={submitting}
                 >
                   ביטול
@@ -654,9 +664,9 @@ function ClientsPageContent() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                  className="rounded-[var(--radius)] bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
                 >
-                  {submitting ? "שומר..." : editingClient ? "עדכן" : "שמור"}
+                  {submitting ? "שומר..." : editingClient ? "עדכן לקוח" : "שמור לקוח"}
                 </button>
               </div>
             </form>

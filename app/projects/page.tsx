@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FolderOpen } from "lucide-react";
 import { validateRequired, validateDateRange } from "@/lib/validation";
+import { fieldClass } from "@/lib/form-styles";
 
 interface Client {
   id: string;
@@ -312,231 +313,236 @@ function ProjectsPageContent() {
         </div>
         {/* Add Project Form */}
         {showForm && (
-          <div className="mb-8 rounded-[var(--radius-card)] bg-surface p-6 shadow motion-safe:animate-scale-in">
-            <h2 className="text-xl font-semibold text-foreground mb-4">הוסף פרויקט חדש</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="mb-8 rounded-[var(--radius-card)] border border-border bg-card p-6 sm:p-8 motion-safe:animate-scale-in">
+            <div className="mb-6">
+              <h2 className="font-display text-xl font-semibold text-foreground">פרויקט חדש</h2>
+              <p className="mt-1 text-sm text-muted-foreground">שייך את הפרויקט ללקוח והגדר את מודל החיוב</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-8">
               {formError && (
-                <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 text-sm text-destructive">
+                <div className="rounded-[var(--radius)] border border-destructive/30 bg-destructive/10 p-3.5 text-sm text-destructive">
                   {formError}
                 </div>
               )}
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="clientId" className="block text-sm font-medium text-foreground">
-                    לקוח *
-                  </label>
-                  <select
-                    id="clientId"
-                    required
-                    value={formData.clientId}
-                    onChange={(e) => {
-                      setFormData({ ...formData, clientId: e.target.value });
-                      setFieldErrors({ ...fieldErrors, clientId: undefined });
-                    }}
-                    className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 shadow-sm focus:outline-none focus:ring-primary disabled:opacity-50 ${
-                      fieldErrors.clientId
-                        ? "border-destructive/30 focus:border-destructive focus:ring-destructive/20"
-                        : "border-border focus:border-primary"
-                    }`}
-                    disabled={submitting}
-                  >
-                    <option value="">בחר לקוח</option>
-                    {clients.map((client) => (
-                      <option key={client.id} value={client.id}>
-                        {client.name}
-                      </option>
-                    ))}
-                  </select>
-                  {fieldErrors.clientId && <p className="mt-1 text-sm text-destructive">{fieldErrors.clientId}</p>}
-                  {clients.length === 0 && (
-                    <Link
-                      href="/clients?create=true"
-                      className="mt-1 inline-block text-xs text-primary hover:text-primary/90"
-                    >
-                      + צור לקוח חדש
-                    </Link>
-                  )}
-                </div>
-
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-foreground">
-                    שם הפרויקט *
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    required
-                    value={formData.name}
-                    onChange={(e) => {
-                      setFormData({ ...formData, name: e.target.value });
-                      setFieldErrors({ ...fieldErrors, name: undefined });
-                    }}
-                    className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 shadow-sm focus:outline-none focus:ring-primary disabled:opacity-50 ${
-                      fieldErrors.name
-                        ? "border-destructive/30 focus:border-destructive focus:ring-destructive/20"
-                        : "border-border focus:border-primary"
-                    }`}
-                    disabled={submitting}
-                  />
-                  {fieldErrors.name && <p className="mt-1 text-sm text-destructive">{fieldErrors.name}</p>}
-                </div>
-
-                <div>
-                  <label htmlFor="status" className="block text-sm font-medium text-foreground">
-                    סטטוס
-                  </label>
-                  <select
-                    id="status"
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                    disabled={submitting}
-                  >
-                    <option value="active">פעיל</option>
-                    <option value="paused">מושהה</option>
-                    <option value="completed">הושלם</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="startDate" className="block text-sm font-medium text-foreground">
-                    תאריך התחלה
-                  </label>
-                  <input
-                    type="date"
-                    id="startDate"
-                    value={formData.startDate}
-                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.startDate ? "border-destructive" : "border-border"}`}
-                    disabled={submitting}
-                  />
-                  {fieldErrors.startDate && (
-                    <p className="mt-1 text-xs text-destructive">{fieldErrors.startDate}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label htmlFor="endDate" className="block text-sm font-medium text-foreground">
-                    תאריך סיום
-                  </label>
-                  <input
-                    type="date"
-                    id="endDate"
-                    value={formData.endDate}
-                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.endDate ? "border-destructive" : "border-border"}`}
-                    disabled={submitting}
-                  />
-                  {fieldErrors.endDate && (
-                    <p className="mt-1 text-xs text-destructive">{fieldErrors.endDate}</p>
-                  )}
-                </div>
-
-                <div className="sm:col-span-2">
-                  <div className="rounded-[var(--radius)] border border-border p-4">
-                    <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-                      <input
-                        type="checkbox"
-                        checked={formData.fixedMonthlyEnabled}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            fixedMonthlyEnabled: e.target.checked,
-                            ...(e.target.checked ? {} : {
-                              fixedMonthlyFee: "",
-                              fixedMonthlyStartDate: "",
-                              fixedMonthlyEndDate: "",
-                            }),
-                          })
-                        }
-                        className="h-4 w-4 rounded border-border"
-                        disabled={submitting}
-                      />
-                      חיוב קבוע חודשי
+              {/* Section — details */}
+              <fieldset className="space-y-4">
+                <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  פרטי הפרויקט
+                </legend>
+                <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="clientId" className="mb-1.5 block text-sm font-medium text-foreground">
+                      לקוח <span className="text-primary">*</span>
                     </label>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      החיוב הקבוע מתווסף לחיוב לפי שעות בדוחות.
-                    </p>
-
-                    {formData.fixedMonthlyEnabled && (
-                      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                        <div>
-                          <label htmlFor="fixedMonthlyFee" className="block text-sm font-medium text-foreground">
-                            סכום חודשי *
-                          </label>
-                          <input
-                            type="number"
-                            id="fixedMonthlyFee"
-                            min="0"
-                            step="0.01"
-                            value={formData.fixedMonthlyFee}
-                            onChange={(e) => {
-                              setFormData({ ...formData, fixedMonthlyFee: e.target.value });
-                              setFieldErrors({ ...fieldErrors, fixedMonthlyFee: undefined });
-                            }}
-                            className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 shadow-sm ${
-                              fieldErrors.fixedMonthlyFee ? "border-destructive" : "border-border"
-                            }`}
-                            disabled={submitting}
-                          />
-                          {fieldErrors.fixedMonthlyFee && <p className="mt-1 text-xs text-destructive">{fieldErrors.fixedMonthlyFee}</p>}
-                        </div>
-
-                        <div>
-                          <label htmlFor="fixedMonthlyStartDate" className="block text-sm font-medium text-foreground">
-                            תוקף מ-
-                          </label>
-                          <input
-                            type="date"
-                            id="fixedMonthlyStartDate"
-                            value={formData.fixedMonthlyStartDate}
-                            onChange={(e) => setFormData({ ...formData, fixedMonthlyStartDate: e.target.value })}
-                            className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 shadow-sm ${
-                              fieldErrors.fixedMonthlyStartDate ? "border-destructive" : "border-border"
-                            }`}
-                            disabled={submitting}
-                          />
-                          {fieldErrors.fixedMonthlyStartDate && <p className="mt-1 text-xs text-destructive">{fieldErrors.fixedMonthlyStartDate}</p>}
-                        </div>
-
-                        <div>
-                          <label htmlFor="fixedMonthlyEndDate" className="block text-sm font-medium text-foreground">
-                            תוקף עד
-                          </label>
-                          <input
-                            type="date"
-                            id="fixedMonthlyEndDate"
-                            value={formData.fixedMonthlyEndDate}
-                            onChange={(e) => setFormData({ ...formData, fixedMonthlyEndDate: e.target.value })}
-                            className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 shadow-sm ${
-                              fieldErrors.fixedMonthlyEndDate ? "border-destructive" : "border-border"
-                            }`}
-                            disabled={submitting}
-                          />
-                          {fieldErrors.fixedMonthlyEndDate && <p className="mt-1 text-xs text-destructive">{fieldErrors.fixedMonthlyEndDate}</p>}
-                        </div>
-                      </div>
+                    <select
+                      id="clientId"
+                      required
+                      value={formData.clientId}
+                      onChange={(e) => {
+                        setFormData({ ...formData, clientId: e.target.value });
+                        setFieldErrors({ ...fieldErrors, clientId: undefined });
+                      }}
+                      className={fieldClass(!!fieldErrors.clientId)}
+                      disabled={submitting}
+                    >
+                      <option value="">בחר לקוח</option>
+                      {clients.map((client) => (
+                        <option key={client.id} value={client.id}>
+                          {client.name}
+                        </option>
+                      ))}
+                    </select>
+                    {fieldErrors.clientId && <p className="mt-1.5 text-xs text-destructive">{fieldErrors.clientId}</p>}
+                    {clients.length === 0 && (
+                      <Link
+                        href="/clients?create=true"
+                        className="mt-1.5 inline-block text-xs text-primary hover:text-primary/90"
+                      >
+                        + צור לקוח חדש
+                      </Link>
                     )}
                   </div>
-                </div>
 
-                <div className="sm:col-span-2">
-                  <label htmlFor="notes" className="block text-sm font-medium text-foreground">
-                    הערות
-                  </label>
-                  <textarea
-                    id="notes"
-                    rows={3}
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                  <div>
+                    <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-foreground">
+                      שם הפרויקט <span className="text-primary">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      required
+                      value={formData.name}
+                      onChange={(e) => {
+                        setFormData({ ...formData, name: e.target.value });
+                        setFieldErrors({ ...fieldErrors, name: undefined });
+                      }}
+                      className={fieldClass(!!fieldErrors.name)}
+                      disabled={submitting}
+                      placeholder="לדוגמה: עיצוב אתר"
+                    />
+                    {fieldErrors.name && <p className="mt-1.5 text-xs text-destructive">{fieldErrors.name}</p>}
+                  </div>
+
+                  <div>
+                    <label htmlFor="status" className="mb-1.5 block text-sm font-medium text-foreground">
+                      סטטוס
+                    </label>
+                    <select
+                      id="status"
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                      className={fieldClass(false)}
+                      disabled={submitting}
+                    >
+                      <option value="active">פעיל</option>
+                      <option value="paused">מושהה</option>
+                      <option value="completed">הושלם</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="startDate" className="mb-1.5 block text-sm font-medium text-foreground">
+                        תאריך התחלה
+                      </label>
+                      <input
+                        type="date"
+                        id="startDate"
+                        value={formData.startDate}
+                        onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                        className={fieldClass(!!fieldErrors.startDate)}
+                        disabled={submitting}
+                      />
+                      {fieldErrors.startDate && (
+                        <p className="mt-1.5 text-xs text-destructive">{fieldErrors.startDate}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label htmlFor="endDate" className="mb-1.5 block text-sm font-medium text-foreground">
+                        תאריך סיום
+                      </label>
+                      <input
+                        type="date"
+                        id="endDate"
+                        value={formData.endDate}
+                        onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                        className={fieldClass(!!fieldErrors.endDate)}
+                        disabled={submitting}
+                      />
+                      {fieldErrors.endDate && (
+                        <p className="mt-1.5 text-xs text-destructive">{fieldErrors.endDate}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </fieldset>
+
+              {/* Section — fixed monthly billing */}
+              <fieldset className="space-y-4">
+                <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  חיוב קבוע
+                </legend>
+                <label className="flex cursor-pointer items-start justify-between gap-4 rounded-[var(--radius)] border border-border bg-background px-4 py-3">
+                  <span>
+                    <span className="block text-sm font-medium text-foreground">חיוב קבוע חודשי</span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      מתווסף לחיוב לפי שעות בדוחות
+                    </span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={formData.fixedMonthlyEnabled}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        fixedMonthlyEnabled: e.target.checked,
+                        ...(e.target.checked ? {} : {
+                          fixedMonthlyFee: "",
+                          fixedMonthlyStartDate: "",
+                          fixedMonthlyEndDate: "",
+                        }),
+                      })
+                    }
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-primary"
                     disabled={submitting}
                   />
-                </div>
-              </div>
+                </label>
 
-              <div className="flex justify-end gap-2">
+                {formData.fixedMonthlyEnabled && (
+                  <div className="grid grid-cols-1 gap-x-4 gap-y-5 rounded-[var(--radius)] border border-border bg-background/50 p-4 sm:grid-cols-3">
+                    <div>
+                      <label htmlFor="fixedMonthlyFee" className="mb-1.5 block text-sm font-medium text-foreground">
+                        סכום חודשי <span className="text-primary">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        id="fixedMonthlyFee"
+                        min="0"
+                        step="0.01"
+                        value={formData.fixedMonthlyFee}
+                        onChange={(e) => {
+                          setFormData({ ...formData, fixedMonthlyFee: e.target.value });
+                          setFieldErrors({ ...fieldErrors, fixedMonthlyFee: undefined });
+                        }}
+                        className={`${fieldClass(!!fieldErrors.fixedMonthlyFee)} font-mono`}
+                        disabled={submitting}
+                        placeholder="0.00"
+                      />
+                      {fieldErrors.fixedMonthlyFee && <p className="mt-1.5 text-xs text-destructive">{fieldErrors.fixedMonthlyFee}</p>}
+                    </div>
+
+                    <div>
+                      <label htmlFor="fixedMonthlyStartDate" className="mb-1.5 block text-sm font-medium text-foreground">
+                        תוקף מ-
+                      </label>
+                      <input
+                        type="date"
+                        id="fixedMonthlyStartDate"
+                        value={formData.fixedMonthlyStartDate}
+                        onChange={(e) => setFormData({ ...formData, fixedMonthlyStartDate: e.target.value })}
+                        className={fieldClass(!!fieldErrors.fixedMonthlyStartDate)}
+                        disabled={submitting}
+                      />
+                      {fieldErrors.fixedMonthlyStartDate && <p className="mt-1.5 text-xs text-destructive">{fieldErrors.fixedMonthlyStartDate}</p>}
+                    </div>
+
+                    <div>
+                      <label htmlFor="fixedMonthlyEndDate" className="mb-1.5 block text-sm font-medium text-foreground">
+                        תוקף עד
+                      </label>
+                      <input
+                        type="date"
+                        id="fixedMonthlyEndDate"
+                        value={formData.fixedMonthlyEndDate}
+                        onChange={(e) => setFormData({ ...formData, fixedMonthlyEndDate: e.target.value })}
+                        className={fieldClass(!!fieldErrors.fixedMonthlyEndDate)}
+                        disabled={submitting}
+                      />
+                      {fieldErrors.fixedMonthlyEndDate && <p className="mt-1.5 text-xs text-destructive">{fieldErrors.fixedMonthlyEndDate}</p>}
+                    </div>
+                  </div>
+                )}
+              </fieldset>
+
+              {/* Section — notes */}
+              <fieldset className="space-y-4">
+                <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  הערות
+                </legend>
+                <textarea
+                  id="notes"
+                  rows={3}
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  className={`${fieldClass(false)} resize-y`}
+                  disabled={submitting}
+                  placeholder="מידע נוסף על הפרויקט (אופציונלי)"
+                />
+              </fieldset>
+
+              <div className="flex justify-end gap-3 border-t border-border pt-5">
                 <button
                   type="button"
                   onClick={() => {
@@ -554,7 +560,7 @@ function ProjectsPageContent() {
                       notes: "",
                     });
                   }}
-                  className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted"
+                  className="rounded-[var(--radius)] border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
                   disabled={submitting}
                 >
                   ביטול
@@ -562,9 +568,9 @@ function ProjectsPageContent() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                  className="rounded-[var(--radius)] bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
                 >
-                  {submitting ? "שומר..." : "שמור"}
+                  {submitting ? "שומר..." : "שמור פרויקט"}
                 </button>
               </div>
             </form>
