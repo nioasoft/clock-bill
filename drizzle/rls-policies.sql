@@ -29,7 +29,7 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO cl
 DO $$
 DECLARE t text;
 BEGIN
-  FOREACH t IN ARRAY ARRAY['user_profiles','clients','projects','tasks','time_entries','report_presets']
+  FOREACH t IN ARRAY ARRAY['user_profiles','clients','projects','tasks','time_entries','report_presets','client_rates']
   LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
     EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY', t);
@@ -47,3 +47,6 @@ DROP POLICY IF EXISTS tenant_isolation ON custom_tags;
 CREATE POLICY tenant_isolation ON custom_tags FOR ALL
   USING (user_id = current_setting('app.current_user_id', true) OR user_id = 'system')
   WITH CHECK (user_id = current_setting('app.current_user_id', true));
+
+-- client_rates: explicit grant (defense in depth; default privileges also apply).
+GRANT SELECT, INSERT, UPDATE, DELETE ON client_rates TO clockbill_app;

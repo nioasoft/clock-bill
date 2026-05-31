@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { calculateFixedMonthlyCharges } from "@/lib/fixed-charges";
-import { addMoney, calcHourlyAmount } from "@/lib/money";
+import { addMoney, calcHourlyAmount, calcItemAmount } from "@/lib/money";
 
 /**
  * GET /api/reports
@@ -42,6 +42,10 @@ export async function GET(request: NextRequest) {
         te.notes,
         te.is_billable,
         te.created_at,
+        te.billing_kind,
+        te.rate,
+        te.rate_label,
+        te.quantity,
         p.name as project_name,
         c.default_rate as hourly_rate,
         c.currency,
@@ -97,6 +101,10 @@ export async function GET(request: NextRequest) {
       notes: string | null;
       is_billable: boolean;
       created_at: string;
+      billing_kind: string | null;
+      rate: number | null;
+      rate_label: string | null;
+      quantity: number | null;
       project_name: string;
       hourly_rate: number | null;
       currency: string;
@@ -109,7 +117,12 @@ export async function GET(request: NextRequest) {
     }>(queryText, queryParams);
 
     const entries = result.rows.map((entry) => {
-      const amount = calcHourlyAmount(entry.duration, entry.hourly_rate);
+      const isItem = entry.billing_kind === "item";
+      // Hourly lines fall back to the client default_rate when no snapshot rate.
+      const effectiveRate = entry.rate ?? entry.hourly_rate;
+      const amount = isItem
+        ? calcItemAmount(entry.quantity, entry.rate)
+        : calcHourlyAmount(entry.duration, effectiveRate);
 
       return {
         id: entry.id,
@@ -129,8 +142,11 @@ export async function GET(request: NextRequest) {
         tags: entry.tags || [],
         notes: entry.notes,
         isBillable: entry.is_billable,
-        pricingModel: "hourly",
-        hourlyRate: entry.hourly_rate,
+        pricingModel: isItem ? "item" : "hourly",
+        billingKind: isItem ? "item" : "hourly",
+        hourlyRate: effectiveRate,
+        rateLabel: entry.rate_label,
+        quantity: entry.quantity,
         currency: entry.currency,
         amount,
         createdAt: entry.created_at,
@@ -297,6 +313,40 @@ export async function GET(request: NextRequest) {
       entries: typeof entries;
     }>);
 
+    // Breakdown by rate/item label (for the report's "פירוט לפי תווית" section).
+    const byRateLabel = entries.reduce((acc, entry) => {
+      const label = entry.rateLabel || "—";
+      const currency = entry.currency || "ILS";
+      const key = `${label}|${currency}`;
+      if (!acc[key]) {
+        acc[key] = {
+          label,
+          kind: entry.billingKind,
+          currency,
+          totalMinutes: 0,
+          totalQuantity: 0,
+          totalAmount: 0,
+          entryCount: 0,
+        };
+      }
+      acc[key].entryCount += 1;
+      if (entry.billingKind === "item") {
+        acc[key].totalQuantity += entry.quantity || 0;
+      } else {
+        acc[key].totalMinutes += entry.duration;
+      }
+      acc[key].totalAmount = addMoney(acc[key].totalAmount, entry.amount || 0);
+      return acc;
+    }, {} as Record<string, {
+      label: string;
+      kind: string;
+      currency: string;
+      totalMinutes: number;
+      totalQuantity: number;
+      totalAmount: number;
+      entryCount: number;
+    }>);
+
     let fixedCharges: ReturnType<typeof calculateFixedMonthlyCharges> = [];
     const fixedAmountsByCurrency: Record<string, number> = {};
 
@@ -429,6 +479,7 @@ export async function GET(request: NextRequest) {
         byProject: Object.values(byProject),
         byDate: Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date)),
         byWeek: Object.values(byWeek).sort((a, b) => a.weekStart.localeCompare(b.weekStart)),
+        byRateLabel: Object.values(byRateLabel),
       },
     }, {
       headers: {

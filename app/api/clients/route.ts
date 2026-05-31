@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
+import { clientRatesSchema } from "@/lib/schemas/rates";
 
 /** Body schema for creating a client. Mirrors the previously inline checks. */
 const createClientSchema = z.object({
@@ -24,6 +25,7 @@ const createClientSchema = z.object({
   retainerMonthlyFee: z.number().nullish(),
   overageRate: z.number().nullish(),
   notes: z.string().max(5000).nullish(),
+  rates: clientRatesSchema.nullish(),
 });
 
 /**
@@ -141,49 +143,66 @@ export async function POST(request: NextRequest) {
 
     const parsed = await parseBody(request, createClientSchema);
     if (!parsed.ok) return parsed.response;
-    const { name, contactName, email, phone, address, defaultRate, currency, isRetainer, retainerHours, retainerMonthlyFee, overageRate, notes } = parsed.data;
+    const { name, contactName, email, phone, address, defaultRate, currency, isRetainer, retainerHours, retainerMonthlyFee, overageRate, notes, rates } = parsed.data;
 
-    const { query } = await import("@/lib/db");
+    const { withTransaction } = await import("@/lib/db");
 
-    // Insert client with inline UUID, returning all fields
-    const clientResult = await query<{
-      id: string;
-      name: string;
-      contact_name: string | null;
-      email: string | null;
-      phone: string | null;
-      address: string | null;
-      default_rate: number | null;
-      currency: string | null;
-      is_retainer: boolean | null;
-      retainer_hours: number | null;
-      retainer_monthly_fee: number | null;
-      overage_rate: number | null;
-      notes: string | null;
-      is_active: boolean;
-      created_at: string;
-    }>(
-      `INSERT INTO clients (id, user_id, name, contact_name, email, phone, address, default_rate, currency, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate, notes, is_active)
-       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, TRUE)
-       RETURNING id, name, contact_name, email, phone, address, default_rate, currency, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate, notes, is_active, created_at`,
-      [
-        user.id,
-        name.trim(),
-        contactName?.trim() || null,
-        email?.trim() || null,
-        phone?.trim() || null,
-        address?.trim() || null,
-        defaultRate || null,
-        currency || "ILS",
-        isRetainer ?? false,
-        retainerHours || null,
-        retainerMonthlyFee || null,
-        overageRate || null,
-        notes?.trim() || null,
-      ]
-    );
+    // default_rate stays in sync with the default hourly rate (legacy fallback).
+    const ratesList = rates ?? [];
+    const defaultHourly =
+      ratesList.find((r) => r.kind === "hourly" && r.isDefault) ??
+      ratesList.find((r) => r.kind === "hourly");
+    const effectiveDefaultRate = defaultHourly ? defaultHourly.rate : (defaultRate ?? null);
 
-    const client = clientResult.rows[0];
+    // Insert client + rates atomically (RLS GUC bound by withTransaction).
+    const client = await withTransaction(async (db) => {
+      const clientResult = await db.query<{
+        id: string;
+        name: string;
+        contact_name: string | null;
+        email: string | null;
+        phone: string | null;
+        address: string | null;
+        default_rate: number | null;
+        currency: string | null;
+        is_retainer: boolean | null;
+        retainer_hours: number | null;
+        retainer_monthly_fee: number | null;
+        overage_rate: number | null;
+        notes: string | null;
+        is_active: boolean;
+        created_at: string;
+      }>(
+        `INSERT INTO clients (id, user_id, name, contact_name, email, phone, address, default_rate, currency, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate, notes, is_active)
+         VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, TRUE)
+         RETURNING id, name, contact_name, email, phone, address, default_rate, currency, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate, notes, is_active, created_at`,
+        [
+          user.id,
+          name.trim(),
+          contactName?.trim() || null,
+          email?.trim() || null,
+          phone?.trim() || null,
+          address?.trim() || null,
+          effectiveDefaultRate,
+          currency || "ILS",
+          isRetainer ?? false,
+          retainerHours || null,
+          retainerMonthlyFee || null,
+          overageRate || null,
+          notes?.trim() || null,
+        ]
+      );
+      const row = clientResult.rows[0];
+
+      for (const r of ratesList) {
+        await db.query(
+          `INSERT INTO client_rates (id, user_id, client_id, kind, name, rate, is_default)
+           VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6)`,
+          [user.id, row.id, r.kind, r.name.trim(), r.rate, r.kind === "hourly" ? r.isDefault : false]
+        );
+      }
+      return row;
+    });
 
     return NextResponse.json({
       success: true,

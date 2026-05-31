@@ -8,9 +8,8 @@ const createEntrySchema = z.object({
   projectId: z.string({ message: "נא לבחור פרויקט" }).min(1, "נא לבחור פרויקט"),
   taskId: z.string().nullish(),
   date: z.string({ message: "נא לבחור תאריך" }).min(1, "נא לבחור תאריך"),
-  duration: z
-    .number({ message: "נא להזין משך זמן תקין" })
-    .positive("נא להזין משך זמן תקין"),
+  // hourly lines use duration (minutes); item lines use quantity with duration 0.
+  duration: z.number({ message: "נא להזין משך זמן תקין" }).min(0),
   description: z
     .string({ message: "נא להזין תיאור" })
     .trim()
@@ -19,7 +18,14 @@ const createEntrySchema = z.object({
   notes: z.string().max(5000).nullish(),
   isBillable: z.boolean().nullish(),
   tags: z.array(z.string().max(100)).nullish(),
-});
+  billingKind: z.enum(["hourly", "item"]).nullish(),
+  rate: z.number().min(0).nullish(),
+  rateLabel: z.string().max(100).nullish(),
+  quantity: z.number().min(0).nullish(),
+}).refine(
+  (d) => (d.billingKind === "item" ? (d.quantity ?? 0) > 0 : d.duration > 0),
+  { message: "נא להזין כמות לפריט או משך זמן לשעות", path: ["duration"] }
+);
 
 /** Default and maximum page size for the entries list to bound query cost. */
 const DEFAULT_LIMIT = 500;
@@ -114,6 +120,10 @@ export async function GET(request: NextRequest) {
         te.paused_at,
         te.total_paused_time,
         te.task_id,
+        te.billing_kind,
+        te.rate,
+        te.rate_label,
+        te.quantity,
         p.name as project_name,
         c.name as client_name,
         c.id as client_id,
@@ -143,6 +153,10 @@ export async function GET(request: NextRequest) {
       paused_at: string | null;
       total_paused_time: number | null;
       task_id: string | null;
+      billing_kind: string | null;
+      rate: number | null;
+      rate_label: string | null;
+      quantity: number | null;
       project_name: string;
       client_name: string;
       client_id: string;
@@ -168,6 +182,10 @@ export async function GET(request: NextRequest) {
       totalPausedTime: entry.total_paused_time,
       taskId: entry.task_id,
       taskName: entry.task_name,
+      billingKind: entry.billing_kind ?? "hourly",
+      rate: entry.rate,
+      rateLabel: entry.rate_label,
+      quantity: entry.quantity,
     }));
 
     return NextResponse.json({
@@ -210,7 +228,9 @@ export async function POST(request: NextRequest) {
 
     const parsed = await parseBody(request, createEntrySchema);
     if (!parsed.ok) return parsed.response;
-    const { projectId, taskId, date, duration, description, notes, isBillable, tags } = parsed.data;
+    const { projectId, taskId, date, duration, description, notes, isBillable, tags, billingKind, rate, rateLabel, quantity } = parsed.data;
+    const kind = billingKind ?? "hourly";
+    const effectiveDuration = kind === "item" ? 0 : duration;
 
     const { query } = await import("@/lib/db");
 
@@ -238,11 +258,11 @@ export async function POST(request: NextRequest) {
     // Calculate start/end times for manual entries
     // startTime = now, endTime = now + duration minutes
     const now = new Date();
-    const endTime = new Date(now.getTime() + duration * 60 * 1000);
+    const endTime = new Date(now.getTime() + effectiveDuration * 60 * 1000);
 
     await query(
-      `INSERT INTO time_entries (id, user_id, project_id, task_id, description, start_time, end_time, duration, date, tags, notes, is_billable)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+      `INSERT INTO time_entries (id, user_id, project_id, task_id, description, start_time, end_time, duration, date, tags, notes, is_billable, billing_kind, rate, rate_label, quantity)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
       [
         entryId,
         user.id,
@@ -251,11 +271,15 @@ export async function POST(request: NextRequest) {
         description.trim(),
         now.toISOString(),
         endTime.toISOString(),
-        duration,
+        effectiveDuration,
         date,
         JSON.stringify(tags || []),
         notes?.trim() || null,
         isBillable !== undefined ? isBillable : true,
+        kind,
+        rate ?? null,
+        rateLabel?.trim() || null,
+        kind === "item" ? (quantity ?? null) : null,
       ]
     );
 
@@ -275,6 +299,10 @@ export async function POST(request: NextRequest) {
       paused_at: string | null;
       total_paused_time: number | null;
       task_id: string | null;
+      billing_kind: string | null;
+      rate: number | null;
+      rate_label: string | null;
+      quantity: number | null;
       project_name: string;
       client_name: string;
       client_id: string;
@@ -295,6 +323,10 @@ export async function POST(request: NextRequest) {
         te.paused_at,
         te.total_paused_time,
         te.task_id,
+        te.billing_kind,
+        te.rate,
+        te.rate_label,
+        te.quantity,
         p.name as project_name,
         c.name as client_name,
         c.id as client_id,
@@ -330,6 +362,10 @@ export async function POST(request: NextRequest) {
         totalPausedTime: entry.total_paused_time,
         taskId: entry.task_id,
         taskName: entry.task_name,
+        billingKind: entry.billing_kind ?? "hourly",
+        rate: entry.rate,
+        rateLabel: entry.rate_label,
+        quantity: entry.quantity,
       },
     });
   } catch (error) {

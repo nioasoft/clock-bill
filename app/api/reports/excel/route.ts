@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { calculateFixedMonthlyCharges } from "@/lib/fixed-charges";
-import { addMoney, calcHourlyAmount } from "@/lib/money";
+import { addMoney, calcHourlyAmount, calcItemAmount } from "@/lib/money";
 import ExcelJS from "exceljs";
 
 /**
@@ -41,6 +41,10 @@ export async function GET(request: NextRequest) {
         te.notes,
         te.is_billable,
         te.created_at,
+        te.billing_kind,
+        te.rate,
+        te.rate_label,
+        te.quantity,
         p.name as project_name,
         c.default_rate as hourly_rate,
         c.currency,
@@ -96,6 +100,10 @@ export async function GET(request: NextRequest) {
       notes: string | null;
       is_billable: boolean;
       created_at: string;
+      billing_kind: string | null;
+      rate: number | null;
+      rate_label: string | null;
+      quantity: number | null;
       project_name: string;
       hourly_rate: number | null;
       currency: string;
@@ -116,10 +124,13 @@ export async function GET(request: NextRequest) {
       { header: "תאריך", key: "date", width: 15 },
       { header: "לקוח", key: "clientName", width: 20 },
       { header: "פרויקט", key: "projectName", width: 20 },
+      { header: "סוג", key: "kind", width: 10 },
+      { header: "תווית", key: "rateLabel", width: 18 },
       { header: "תיאור", key: "description", width: 40 },
       { header: "משך (דקות)", key: "durationMinutes", width: 15 },
       { header: "משך (שעות)", key: "durationHours", width: 15 },
-      { header: "תעריף שעתי", key: "hourlyRate", width: 15 },
+      { header: "כמות", key: "quantity", width: 10 },
+      { header: "תעריף", key: "hourlyRate", width: 15 },
       { header: "מטבע", key: "currency", width: 10 },
       { header: "סכום", key: "amount", width: 15 },
       { header: "ניתן לחיוב", key: "isBillable", width: 12 },
@@ -141,13 +152,16 @@ export async function GET(request: NextRequest) {
     const timeAmounts: Record<string, number> = {};
 
     result.rows.forEach((entry) => {
+      const isItem = entry.billing_kind === "item";
       const durationMinutes = entry.duration;
       const durationHours = durationMinutes / 60;
-      const hourlyRate = entry.hourly_rate || 0;
-      const amount = calcHourlyAmount(durationMinutes, entry.hourly_rate);
+      const effectiveRate = entry.rate ?? entry.hourly_rate;
+      const amount = isItem
+        ? calcItemAmount(entry.quantity, entry.rate)
+        : calcHourlyAmount(durationMinutes, effectiveRate);
       const currency = entry.currency || "ILS";
 
-      totalMinutes += durationMinutes;
+      totalMinutes += isItem ? 0 : durationMinutes;
       if (!timeAmounts[currency]) {
         timeAmounts[currency] = 0;
       }
@@ -157,10 +171,13 @@ export async function GET(request: NextRequest) {
         date: entry.date,
         clientName: entry.client_name,
         projectName: entry.project_name,
+        kind: isItem ? "פריט" : "שעות",
+        rateLabel: entry.rate_label || "",
         description: entry.description,
-        durationMinutes,
-        durationHours: durationHours.toFixed(2),
-        hourlyRate: hourlyRate || "",
+        durationMinutes: isItem ? "" : durationMinutes,
+        durationHours: isItem ? "" : durationHours.toFixed(2),
+        quantity: isItem ? (entry.quantity ?? "") : "",
+        hourlyRate: effectiveRate || "",
         currency,
         amount: amount > 0 ? amount.toFixed(2) : "",
         isBillable: entry.is_billable ? "כן" : "לא",
@@ -378,6 +395,56 @@ export async function GET(request: NextRequest) {
     clientSummarySheet.eachRow((row: ExcelJS.Row) => {
       row.alignment = { readingOrder: "rtl" };
     });
+
+    // Breakdown by rate/item label ("פירוט לפי תווית").
+    const byLabel: Record<string, {
+      label: string; kind: string; currency: string;
+      totalMinutes: number; totalQuantity: number; totalAmount: number;
+    }> = {};
+    result.rows.forEach((entry) => {
+      const isItem = entry.billing_kind === "item";
+      const label = entry.rate_label || "—";
+      const currency = entry.currency || "ILS";
+      const key = `${label}|${currency}`;
+      const effectiveRate = entry.rate ?? entry.hourly_rate;
+      const amount = isItem
+        ? calcItemAmount(entry.quantity, entry.rate)
+        : calcHourlyAmount(entry.duration, effectiveRate);
+      if (!byLabel[key]) {
+        byLabel[key] = { label, kind: isItem ? "item" : "hourly", currency, totalMinutes: 0, totalQuantity: 0, totalAmount: 0 };
+      }
+      if (isItem) byLabel[key].totalQuantity += entry.quantity || 0;
+      else byLabel[key].totalMinutes += entry.duration;
+      byLabel[key].totalAmount = addMoney(byLabel[key].totalAmount, amount);
+    });
+
+    if (Object.keys(byLabel).length > 0) {
+      const labelSheet = workbook.addWorksheet("פירוט לפי תווית");
+      labelSheet.columns = [
+        { header: "תווית", key: "label", width: 25 },
+        { header: "סוג", key: "kind", width: 10 },
+        { header: "שעות / כמות", key: "measure", width: 15 },
+        { header: "מטבע", key: "currency", width: 10 },
+        { header: "סכום", key: "amount", width: 15 },
+      ];
+      const labelHeader = labelSheet.getRow(1);
+      labelHeader.font = { bold: true, size: 12 };
+      labelHeader.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE85D04" } };
+      labelHeader.alignment = { vertical: "middle", horizontal: "center", readingOrder: "rtl" };
+      labelHeader.height = 25;
+      Object.values(byLabel).forEach((l) => {
+        labelSheet.addRow({
+          label: l.label,
+          kind: l.kind === "item" ? "פריט" : "שעות",
+          measure: l.kind === "item" ? `${l.totalQuantity} יח׳` : (l.totalMinutes / 60).toFixed(2),
+          currency: l.currency,
+          amount: l.totalAmount.toFixed(2),
+        });
+      });
+      labelSheet.eachRow((row: ExcelJS.Row) => {
+        row.alignment = { readingOrder: "rtl" };
+      });
+    }
 
     const buffer = await workbook.xlsx.writeBuffer();
 

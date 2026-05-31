@@ -20,6 +20,9 @@ export function TimerStartModal() {
     selectedTask,
     setSelectedTask,
     timerTasks,
+    timerRates,
+    selectedRateId,
+    setSelectedRateId,
     timerDescription,
     setTimerDescription,
     startingTimer,
@@ -91,6 +94,30 @@ export function TimerStartModal() {
                     {timerTasks.map((task) => (
                       <option key={task.id} value={task.id}>
                         {task.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {selectedProject && timerRates.length > 0 && (
+                <div>
+                  <label
+                    htmlFor="timer-rate"
+                    className="block text-sm font-medium text-foreground mb-1"
+                  >
+                    תעריף
+                  </label>
+                  <select
+                    id="timer-rate"
+                    value={selectedRateId}
+                    onChange={(e) => setSelectedRateId(e.target.value)}
+                    className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
+                    disabled={startingTimer}
+                  >
+                    {timerRates.map((rate) => (
+                      <option key={rate.id} value={rate.id}>
+                        {rate.name} — {rate.rate}/שעה
                       </option>
                     ))}
                   </select>

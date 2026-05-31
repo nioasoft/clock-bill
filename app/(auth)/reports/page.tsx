@@ -60,6 +60,10 @@ interface ReportEntry {
   pricingModel: string;
   hourlyRate: number | null;
   currency: string;
+  billingKind?: "hourly" | "item";
+  rateLabel?: string | null;
+  quantity?: number | null;
+  amount?: number;
 }
 
 interface ReportSummary {
@@ -127,6 +131,16 @@ interface WeekSummary {
   entries: ReportEntry[];
 }
 
+interface RateLabelSummary {
+  label: string;
+  kind: string;
+  currency: string;
+  totalMinutes: number;
+  totalQuantity: number;
+  totalAmount: number;
+  entryCount: number;
+}
+
 interface ReportData {
   entries: ReportEntry[];
   fixedCharges: FixedChargeEntry[];
@@ -135,6 +149,7 @@ interface ReportData {
   byProject: ProjectSummary[];
   byDate?: DateSummary[];
   byWeek?: WeekSummary[];
+  byRateLabel?: RateLabelSummary[];
 }
 
 type PdfTemplate = "modern" | "classic" | "bold" | "elegant" | "nature" | "ocean";
@@ -451,6 +466,17 @@ export default function ReportsPage() {
     if (mins === 0) return `${hours} שע׳`;
     return `${hours} שע׳ ${mins} דק׳`;
   };
+
+  // Per-entry billed amount, honoring the item vs hourly snapshot.
+  const entryAmount = (entry: ReportEntry): number => {
+    if (typeof entry.amount === "number") return entry.amount;
+    if (entry.billingKind === "item") return (entry.quantity ?? 0) * (entry.hourlyRate ?? 0);
+    return (entry.duration / 60) * (entry.hourlyRate ?? 0);
+  };
+
+  // "3.0ש׳" for hourly, "3 יח׳" for item — used in the by-label breakdown.
+  const formatMeasure = (row: RateLabelSummary): string =>
+    row.kind === "item" ? `${row.totalQuantity} יח׳` : `${(row.totalMinutes / 60).toFixed(1)}ש׳`;
 
   const formatCurrency = (amount: number, currency: string) => {
     const symbols: Record<string, string> = {
@@ -1028,12 +1054,17 @@ export default function ReportsPage() {
                                   : "-"}
                             </td>
                           )}
-                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>{entry.description}{entry.notes ? ` (${entry.notes})` : ""}</td>
-                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>{formatDuration(entry.duration)}</td>
+                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>
+                            {entry.description}{entry.notes ? ` (${entry.notes})` : ""}
+                            {entry.rateLabel ? <span style={{ color: "#94a3b8" }}> · {entry.rateLabel}</span> : ""}
+                          </td>
                           <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>
-                            {entry.isBillable && entry.hourlyRate
-                              ? formatCurrency((entry.duration / 60) * entry.hourlyRate, entry.currency)
-                              : entry.isBillable ? "-" : "לא לחיוב"}
+                            {entry.billingKind === "item" ? `${entry.quantity ?? 0} יח׳` : formatDuration(entry.duration)}
+                          </td>
+                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>
+                            {entry.isBillable
+                              ? (entryAmount(entry) > 0 ? formatCurrency(entryAmount(entry), entry.currency) : "-")
+                              : "לא לחיוב"}
                           </td>
                         </tr>
                       ))}
@@ -1073,6 +1104,35 @@ export default function ReportsPage() {
                           <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>{line.month}</td>
                           <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>{line.projectName}</td>
                           <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", fontWeight: "500" }}>{formatCurrency(line.amount, line.currency)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* ── Breakdown by rate/item label ── */}
+              {reportData.byRateLabel && reportData.byRateLabel.length > 0 && (
+                <div className="pdf-section" style={{ marginBottom: "1.5rem" }}>
+                  <h2 className="pdf-section-title" style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "0.75rem", borderBottom: "1px solid #e2e8f0", paddingBottom: "0.5rem" }}>
+                    פירוט לפי תווית
+                  </h2>
+                  <table className="pdf-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ backgroundColor: "#f8fafc" }}>
+                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b" }}>תווית</th>
+                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b" }}>סוג</th>
+                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b" }}>שעות / כמות</th>
+                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b" }}>סכום</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportData.byRateLabel.map((row, i) => (
+                        <tr key={`${row.label}-${row.currency}-${i}`} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>{row.label}</td>
+                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>{row.kind === "item" ? "פריט" : "שעות"}</td>
+                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>{formatMeasure(row)}</td>
+                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", fontWeight: "500" }}>{formatCurrency(row.totalAmount, row.currency)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1276,6 +1336,37 @@ export default function ReportsPage() {
               </div>
             )}
 
+            {/* By Rate Label Summary (breakdown by work-type / item) */}
+            {reportData.byRateLabel && reportData.byRateLabel.length > 0 && (
+              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 shadow-sm">
+                <h3 className="font-display text-lg font-bold mb-4">פירוט לפי תווית</h3>
+                <div className="space-y-3">
+                  {reportData.byRateLabel.map((row, index) => (
+                    <div
+                      key={`${row.label}-${row.currency}-${index}`}
+                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[0.625rem] border border-border/30 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium">
+                          {row.label}
+                          <span className="ms-2 text-xs text-muted-foreground">
+                            {row.kind === "item" ? "פריט" : "שעות"}
+                          </span>
+                        </p>
+                        <p className="text-sm text-muted-foreground">{row.entryCount} רשומות</p>
+                      </div>
+                      <div className="text-end">
+                        <p className="font-mono text-lg font-semibold">{formatMeasure(row)}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatCurrency(row.totalAmount, row.currency)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {reportData.fixedCharges && reportData.fixedCharges.length > 0 && (
               <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 shadow-sm">
                 <h3 className="font-display text-lg font-bold mb-4">חיובים קבועים</h3>
@@ -1426,9 +1517,14 @@ export default function ReportsPage() {
                           </td>
                           <td className="px-6 py-4 text-sm">
                             {entry.description}
+                            {entry.rateLabel && (
+                              <span className="ms-2 text-xs text-muted-foreground">· {entry.rateLabel}</span>
+                            )}
                           </td>
                           <td className="px-6 py-4 text-sm font-mono font-semibold">
-                            {formatDuration(entry.duration)}
+                            {entry.billingKind === "item"
+                              ? `${entry.quantity ?? 0} יח׳`
+                              : formatDuration(entry.duration)}
                           </td>
                         </tr>
                       ))}

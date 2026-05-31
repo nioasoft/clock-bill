@@ -12,6 +12,8 @@ const startTimerSchema = z.object({
   projectId: z.string({ message: "נא לבחור פרויקט" }).min(1, "נא לבחור פרויקט"),
   taskId: z.string().nullish(),
   description: z.string().max(5000).nullish(),
+  rate: z.number().min(0).nullish(),
+  rateLabel: z.string().max(100).nullish(),
 });
 
 /**
@@ -33,7 +35,7 @@ export async function POST(request: NextRequest) {
     // Parse request body
     const parsed = await parseBody(request, startTimerSchema);
     if (!parsed.ok) return parsed.response;
-    const { description, taskId } = parsed.data;
+    const { description, taskId, rate, rateLabel } = parsed.data;
     projectId = parsed.data.projectId;
 
     // Verify the project belongs to the user
@@ -55,10 +57,10 @@ export async function POST(request: NextRequest) {
     const today = now.toISOString().split('T')[0];
 
     const result = await query<{ id: string }>(
-      `INSERT INTO time_entries (id, user_id, project_id, task_id, description, start_time, date, duration, is_billable)
-       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, 0, TRUE)
+      `INSERT INTO time_entries (id, user_id, project_id, task_id, description, start_time, date, duration, is_billable, billing_kind, rate, rate_label)
+       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, 0, TRUE, 'hourly', $7, $8)
        RETURNING id`,
-      [userId, projectId, taskId || null, description || '', now.toISOString(), today]
+      [userId, projectId, taskId || null, description || '', now.toISOString(), today, rate ?? null, rateLabel?.trim() || null]
     );
 
     const newEntry = result.rows[0];

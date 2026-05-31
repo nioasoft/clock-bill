@@ -16,6 +16,7 @@ import React from "react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { ToastAction, type ToastActionElement } from "@/components/ui/toast";
 import { haptic } from "@/lib/haptics";
+import { pickDefaultHourlyRate, type ClientRate } from "@/lib/schemas/rates";
 
 interface RunningTimer {
   id: string;
@@ -58,6 +59,10 @@ interface TimerContextValue {
   selectedProject: string;
   selectedTask: string;
   timerTasks: TaskOption[];
+  /** Hourly rates of the selected project's client (for the "תעריף" dropdown). */
+  timerRates: ClientRate[];
+  selectedRateId: string;
+  setSelectedRateId: (id: string) => void;
   timerDescription: string;
   stopTimerDescription: string;
   stopTimerHours: string;
@@ -97,6 +102,9 @@ const defaultTimerValue: TimerContextValue = {
   selectedProject: "",
   selectedTask: "",
   timerTasks: [],
+  timerRates: [],
+  selectedRateId: "",
+  setSelectedRateId: noop,
   timerDescription: "",
   stopTimerDescription: "",
   stopTimerHours: "",
@@ -166,6 +174,8 @@ export function TimerProvider({ children }: TimerProviderProps) {
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedTask, setSelectedTask] = useState("");
   const [timerTasks, setTimerTasks] = useState<TaskOption[]>([]);
+  const [timerRates, setTimerRates] = useState<ClientRate[]>([]);
+  const [selectedRateId, setSelectedRateId] = useState("");
   const [timerDescription, setTimerDescription] = useState("");
   const [startingTimer, setStartingTimer] = useState(false);
   const [stoppingTimer, setStoppingTimer] = useState(false);
@@ -269,6 +279,40 @@ export function TimerProvider({ children }: TimerProviderProps) {
     fetchTasks();
   }, [selectedProject]);
 
+  // Fetch the selected project's client hourly rates (for the "תעריף" dropdown)
+  // and preselect the default hourly rate. Items are excluded — timers are hourly.
+  useEffect(() => {
+    if (!selectedProject) {
+      setTimerRates([]);
+      setSelectedRateId("");
+      return;
+    }
+    const clientId = projects.find((p) => p.id === selectedProject)?.clientId;
+    if (!clientId) {
+      setTimerRates([]);
+      setSelectedRateId("");
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/clients/${clientId}/rates`);
+        const data = await res.json();
+        if (cancelled || !data.success) return;
+        const hourly: ClientRate[] = (data.rates || []).filter(
+          (r: ClientRate) => r.kind === "hourly"
+        );
+        setTimerRates(hourly);
+        setSelectedRateId(pickDefaultHourlyRate(hourly)?.id ?? "");
+      } catch (error) {
+        console.error("Error fetching client rates for timer:", error);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedProject, projects]);
+
   // Long timer notification — based on the longest-running (non-paused) timer.
   useEffect(() => {
     const active = runningTimers.filter((t) => !t.pausedAt);
@@ -340,6 +384,8 @@ export function TimerProvider({ children }: TimerProviderProps) {
           projectId: selectedProject,
           taskId: selectedTask || null,
           description: timerDescription || null,
+          rate: timerRates.find((r) => r.id === selectedRateId)?.rate ?? null,
+          rateLabel: timerRates.find((r) => r.id === selectedRateId)?.name ?? null,
         }),
       });
 
@@ -349,6 +395,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
         setShowTimerModal(false);
         setSelectedProject("");
         setSelectedTask("");
+        setSelectedRateId("");
         setTimerDescription("");
         haptic("success");
         showSuccessToast("הטיימר הופעל בהצלחה");
@@ -362,7 +409,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
     } finally {
       setStartingTimer(false);
     }
-  }, [selectedProject, selectedTask, timerDescription, fetchRunningTimer]);
+  }, [selectedProject, selectedTask, timerDescription, timerRates, selectedRateId, fetchRunningTimer]);
 
   const handleStopTimer = useCallback(
     (entryId: string) => {
@@ -533,6 +580,9 @@ export function TimerProvider({ children }: TimerProviderProps) {
     selectedProject,
     selectedTask,
     timerTasks,
+    timerRates,
+    selectedRateId,
+    setSelectedRateId,
     timerDescription,
     stopTimerDescription,
     stopTimerHours,

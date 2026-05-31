@@ -188,6 +188,32 @@ export const clients = pgTable(
   ]
 );
 
+// ─── Client Rates (hourly rates + fixed items) ──────────────────────
+
+export const clientRates = pgTable(
+  "client_rates",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "cascade" }),
+    // 'hourly' => price per hour; 'item' => price per unit (billed by quantity)
+    kind: text("kind").notNull().default("hourly"),
+    name: text("name").notNull(),
+    rate: real("rate").notNull(),
+    // Preselected hourly rate for the client; items are never default.
+    isDefault: boolean("is_default").notNull().default(false),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_client_rates_client_id").on(table.clientId),
+    index("idx_client_rates_user_id").on(table.userId),
+    check("client_rates_kind_check", sql`${table.kind} IN ('hourly', 'item')`),
+  ]
+);
+
 // ─── Projects ───────────────────────────────────────────────────────
 
 export const projects = pgTable(
@@ -270,6 +296,11 @@ export const timeEntries = pgTable(
     isBillable: boolean("is_billable").default(true),
     pausedAt: timestamp("paused_at"),
     totalPausedTime: integer("total_paused_time").default(0),
+    // Per-line billing snapshot (immune to later edits of client_rates).
+    rate: real("rate"), // ₪/hour for hourly lines, ₪/unit for item lines
+    rateLabel: text("rate_label"), // the rate/item name at log time
+    billingKind: text("billing_kind"), // 'hourly' | 'item'; NULL => legacy hourly
+    quantity: real("quantity"), // units for an item line; ignored for hourly
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
