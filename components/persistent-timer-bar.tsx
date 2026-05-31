@@ -16,7 +16,25 @@ export function PersistentTimerBar() {
     handleStopTimer,
   } = useTimer();
 
-  if (timerLoading) return null;
+  if (timerLoading) {
+    // Height-matched skeleton (not null) so the bar reserves its space and the
+    // active-timer state doesn't pop in with a layout shift.
+    return (
+      <div className="border-b border-border bg-muted/20" aria-hidden="true">
+        <div className="flex items-center justify-between px-4 py-2.5 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="h-2.5 w-2.5 rounded-full bg-muted animate-pulse" />
+            <span className="h-4 w-32 rounded bg-muted animate-pulse" />
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="h-5 w-14 rounded bg-muted animate-pulse" />
+            <span className="h-9 w-9 rounded-full bg-muted animate-pulse" />
+            <span className="h-9 w-9 rounded-full bg-muted animate-pulse" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!runningTimer) {
     return (

@@ -3,11 +3,23 @@
  * Connects to PostgreSQL via connection pool for concurrent request handling
  */
 import { AsyncLocalStorage } from "async_hooks";
-import { Pool, PoolClient, QueryResult } from "pg";
+import { Pool, PoolClient, QueryResult, types } from "pg";
 import { getDatabaseUrl } from "./env";
 import { createLogger } from "./logger";
 
 const logger = createLogger("db");
+
+// `timestamp without time zone` (OID 1114) is parsed by node-postgres using the
+// Node PROCESS's local timezone. The same stored value therefore reads correctly
+// on a UTC host (Vercel) but is shifted by N hours on a UTC+N dev machine —
+// which inflated the running-timer elapsed (e.g. +3h in Israel / IDT).
+// All our timestamps are persisted as UTC wall-clock (NOW() on Neon=UTC, or
+// JS toISOString()), so force tz-less timestamps to be read as UTC everywhere,
+// independent of the host timezone. Returned Dates are correct instants; the
+// browser still renders them in the user's local time for display.
+types.setTypeParser(types.builtins.TIMESTAMP, (value: string | null) =>
+  value === null ? null : new Date(`${value.replace(" ", "T")}Z`)
+);
 
 let pool: Pool | null = null;
 
@@ -66,8 +78,27 @@ export function getPool(): Pool {
   return pool;
 }
 
-// SQL to bind the tenant id to the transaction-local RLS GUC.
-const SET_RLS_GUC = "SELECT set_config('app.current_user_id', $1, true)";
+/**
+ * Strict allowlist for safely interpolating the tenant id into a simple-protocol
+ * statement. Better Auth ids are alphanumeric + `_-` (NOT RFC-4122 UUIDs), so a
+ * uuid regex would reject real ids. This pattern forbids quotes, backslashes,
+ * whitespace and semicolons, so the value cannot escape the SQL string literal.
+ */
+const SAFE_USER_ID = /^[A-Za-z0-9_-]{1,64}$/;
+
+/**
+ * Build a single statement that opens a transaction AND binds the transaction-local
+ * RLS GUC `app.current_user_id` in one network round-trip (simple query protocol).
+ * The id is interpolated (constrained by SAFE_USER_ID), not parameterized, so the
+ * two statements can be batched — saving a round-trip to Neon on every authed query.
+ */
+function beginWithTenant(userId: string): string {
+  // Fail closed: never run an authed query without a correctly-bound RLS context.
+  if (!SAFE_USER_ID.test(userId)) {
+    throw new Error("Invalid tenant user id; refusing to bind RLS context");
+  }
+  return `BEGIN; SELECT set_config('app.current_user_id', '${userId}', true);`;
+}
 
 /**
  * Execute a parameterized query against the database (placeholders $1, $2, ...).
@@ -85,11 +116,13 @@ export async function query<T extends Record<string, unknown> = Record<string, u
     return getPool().query<T>(text, params);
   }
 
+  // Validate before checking out a connection so a bad id fails fast.
+  const begin = beginWithTenant(userId);
+
   const client = await getPool().connect();
   try {
-    await client.query("BEGIN");
-    await client.query(SET_RLS_GUC, [userId]);
-    const result = await client.query<T>(text, params);
+    await client.query(begin); // 1 round-trip: BEGIN + set_config(local)
+    const result = await client.query<T>(text, params); // parameterized
     await client.query("COMMIT");
     return result;
   } catch (error) {
@@ -113,12 +146,12 @@ export async function withTransaction<T>(
   callback: (client: PoolClient) => Promise<T>
 ): Promise<T> {
   const userId = await resolveTenantUserId();
+  // Validate before checking out a connection so a bad id fails fast.
+  const begin = userId ? beginWithTenant(userId) : "BEGIN";
+
   const client = await getPool().connect();
   try {
-    await client.query("BEGIN");
-    if (userId) {
-      await client.query(SET_RLS_GUC, [userId]);
-    }
+    await client.query(begin); // 1 round-trip (BEGIN [+ set_config] when authed)
     const result = await callback(client);
     await client.query("COMMIT");
     return result;

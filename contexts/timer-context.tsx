@@ -128,8 +128,10 @@ export function TimerProvider({ children }: TimerProviderProps) {
   const isPublicRoute = PUBLIC_ROUTES.some((route) =>
     route === "/" ? pathname === "/" : pathname.startsWith(route)
   );
+  // Auth is derived from API responses (a 401 from /api/timer/running) rather
+  // than a separate up-front /api/auth/session fetch — that round-trip used to
+  // gate (and delay) the timer load. The timer fetch is now the first call.
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
 
   const [runningTimer, setRunningTimer] = useState<RunningTimer | null>(null);
   const [timerLoading, setTimerLoading] = useState(true);
@@ -155,33 +157,19 @@ export function TimerProvider({ children }: TimerProviderProps) {
 
   const { checkLongTimer, resetLongTimerNotification } = useNotifications();
 
-  // Check auth once (skip on public routes like login/register)
-  useEffect(() => {
-    if (isPublicRoute) {
-      setIsAuthenticated(false);
-      setAuthChecked(true);
-      return;
-    }
-    const checkAuth = async () => {
-      try {
-        const response = await fetch("/api/auth/session");
-        const data = await response.json();
-        setIsAuthenticated(data.success && !!data.user);
-      } catch {
-        setIsAuthenticated(false);
-      } finally {
-        setAuthChecked(true);
-      }
-    };
-    checkAuth();
-  }, [isPublicRoute]);
-
-  // Fetch running timer
+  // Fetch running timer. Self-guards auth: a 401 means "not logged in", handled
+  // gracefully (no timer). On success we mark the session authenticated so other
+  // auth-gated UI (e.g. the keyboard shortcut) enables without a separate fetch.
   const fetchRunningTimer = useCallback(async () => {
-    if (!isAuthenticated) return;
     try {
       const response = await fetch("/api/timer/running");
+      if (response.status === 401) {
+        setIsAuthenticated(false);
+        setRunningTimer(null);
+        return;
+      }
       const data = await response.json();
+      setIsAuthenticated(true);
       if (data.success && data.running) {
         setRunningTimer(data.running);
         setLastApiUpdate(new Date());
@@ -193,11 +181,12 @@ export function TimerProvider({ children }: TimerProviderProps) {
     } finally {
       setTimerLoading(false);
     }
-  }, [isAuthenticated]);
+  }, []);
 
-  // Initial fetch + polling
+  // Initial fetch + polling. Fires immediately on non-public routes — no auth
+  // round-trip first. Public routes (login/register) skip it.
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (isPublicRoute) {
       setTimerLoading(false);
       return;
     }
@@ -205,11 +194,11 @@ export function TimerProvider({ children }: TimerProviderProps) {
     fetchRunningTimer();
     const interval = setInterval(fetchRunningTimer, 30000);
     return () => clearInterval(interval);
-  }, [isAuthenticated, fetchRunningTimer]);
+  }, [isPublicRoute, fetchRunningTimer]);
 
   // Fetch projects for start modal — refetch when modal opens to catch newly created projects
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (isPublicRoute) return;
     if (!showTimerModal && projects.length > 0) return;
 
     const fetchProjects = async () => {
@@ -225,7 +214,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
     };
 
     fetchProjects();
-  }, [isAuthenticated, showTimerModal]);
+  }, [isPublicRoute, showTimerModal]);
 
   // Fetch tasks when project changes (for timer start modal)
   useEffect(() => {
@@ -556,11 +545,6 @@ export function TimerProvider({ children }: TimerProviderProps) {
     handleResumeTimer,
     refreshTimer,
   };
-
-  // Don't render provider until auth is checked
-  if (!authChecked) {
-    return <>{children}</>;
-  }
 
   return (
     <TimerContext.Provider value={value}>{children}</TimerContext.Provider>

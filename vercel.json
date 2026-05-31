@@ -1,4 +1,7 @@
 {
   "framework": "nextjs",
-  "regions": ["iad1"]
+  "regions": ["fra1"],
+  "crons": [
+    { "path": "/api/cron/keep-alive", "schedule": "*/5 * * * *" }
+  ]
 }
