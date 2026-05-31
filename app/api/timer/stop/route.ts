@@ -8,6 +8,7 @@ import { parseBody } from "@/lib/api-validation";
 const stopTimerSchema = z.object({
   entryId: z.string({ message: "הטיימר לא נמצא או כבר הופסק" }).min(1, "הטיימר לא נמצא או כבר הופסק"),
   description: z.string().max(5000).nullish(),
+  notes: z.string().max(5000).nullish(),
   duration: z.number().nullish(),
 });
 
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
     // Parse request body
     const parsed = await parseBody(request, stopTimerSchema);
     if (!parsed.ok) return parsed.response;
-    const { entryId, description, duration: customDuration } = parsed.data;
+    const { entryId, description, notes, duration: customDuration } = parsed.data;
 
     const result = await withTransaction(async (client) => {
       // Lock the running entry for the duration of the transaction so a
@@ -80,12 +81,21 @@ export async function POST(request: NextRequest) {
         durationMinutes = Math.floor(durationMs / 1000 / 60);
       }
 
-      // Update the entry with end_time, duration, and optionally description
+      // Update the entry with end_time, duration, and optionally description/notes.
+      // COALESCE keeps the existing value when a field isn't sent; notes are
+      // trimmed to null so an empty box clears them only when explicitly passed.
       await client.query(
         `UPDATE time_entries
-         SET end_time = $1, duration = $2, description = COALESCE($3, description), paused_at = NULL, updated_at = NOW()
-         WHERE id = $4`,
-        [endTime.toISOString(), durationMinutes, description || null, entryId]
+         SET end_time = $1, duration = $2, description = COALESCE($3, description),
+             notes = COALESCE($4, notes), paused_at = NULL, updated_at = NOW()
+         WHERE id = $5`,
+        [
+          endTime.toISOString(),
+          durationMinutes,
+          description || null,
+          notes !== undefined && notes !== null ? notes.trim() : null,
+          entryId,
+        ]
       );
 
       return { durationMinutes, endTime };

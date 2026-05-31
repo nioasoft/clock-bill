@@ -22,11 +22,12 @@ export async function GET(_request: NextRequest) {
       project_id: string;
       task_id: string | null;
       description: string;
+      notes: string | null;
       start_time: string;
       paused_at: string | null;
       total_paused_time: number;
     }>(
-      `SELECT id, project_id, task_id, description, start_time, paused_at, total_paused_time
+      `SELECT id, project_id, task_id, description, notes, start_time, paused_at, total_paused_time
        FROM time_entries
        WHERE user_id = $1 AND start_time IS NOT NULL AND end_time IS NULL
        ORDER BY start_time DESC`,
@@ -50,6 +51,7 @@ export async function GET(_request: NextRequest) {
         projectId: entry.project_id,
         taskId: entry.task_id,
         description: entry.description,
+        notes: entry.notes,
         startTime: entry.start_time,
         pausedAt: entry.paused_at,
         elapsedMinutes: Math.floor(elapsedMs / 1000 / 60),
