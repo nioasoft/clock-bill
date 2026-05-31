@@ -2295,7 +2295,6 @@ export default function SettingsPage() {
             backupFile={backupFile}
             setBackupFile={setBackupFile}
             backupLoading={backupLoading}
-            setBackupLoading={setBackupLoading}
             backupError={backupError}
             setBackupError={setBackupError}
             backupSuccess={backupSuccess}
@@ -2304,8 +2303,6 @@ export default function SettingsPage() {
             setBackupImportResults={setBackupImportResults}
             importMode={importMode}
             setImportMode={setImportMode}
-            showImportConfirm={showImportConfirm}
-            setShowImportConfirm={setShowImportConfirm}
             backupInputRef={backupInputRef}
             handleExportBackup={handleExportBackup}
             handleImportBackup={handleImportBackup}
