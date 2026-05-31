@@ -6,7 +6,7 @@ import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BarChart3, Coins, Image, TrendingUp } from "lucide-react";
+import { BarChart3, Coins, Image as ImageIcon, TrendingUp } from "lucide-react";
 
 interface SystemStats {
   topUsers: { userId: string; email: string; entryCount: number }[];
@@ -90,7 +90,7 @@ export default function AdminStatsPage() {
 
               <div className="bg-card border border-border/50 border-t-2 border-t-accent rounded-[var(--radius-card)] p-4 shadow-sm">
                 <div className="flex items-center gap-2">
-                  <Image className="h-4 w-4 text-muted-foreground" />
+                  <ImageIcon className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
                     לוגואים שהועלו
                   </p>

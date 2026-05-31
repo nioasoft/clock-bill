@@ -338,6 +338,9 @@ export default function ReportsPage() {
         generateReport();
       }, 100);
     }
+    // Mount-only: parse shared-link URL params once. generateReport is a stable
+    // closure here; adding it (or filters) would re-run on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const generateReport = async () => {
@@ -976,6 +979,10 @@ export default function ReportsPage() {
                   {/* Business info (right side in RTL) */}
                   <div style={{ flex: 1 }}>
                     {userProfile?.logoUrl && (
+                      // This block is cloned into a print container for PDF export;
+                      // next/image's lazy-loading/optimization breaks print rendering,
+                      // so a plain <img> is required here.
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img src={userProfile.logoUrl} alt="Logo" style={{ maxHeight: "50px", marginBottom: "10px" }} />
                     )}
                     <h1 className="pdf-business-name" style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "0.25rem" }}>

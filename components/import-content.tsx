@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 
 interface ImportContentProps {
   importType: "clients" | "entries";
@@ -29,7 +28,6 @@ interface ImportContentProps {
   backupFile: File | null;
   setBackupFile: (file: File | null) => void;
   backupLoading: boolean;
-  setBackupLoading: (loading: boolean) => void;
   backupError: string;
   setBackupError: (error: string) => void;
   backupSuccess: string;
@@ -56,8 +54,6 @@ interface ImportContentProps {
   } | null) => void;
   importMode: "merge" | "replace";
   setImportMode: (mode: "merge" | "replace") => void;
-  showImportConfirm: boolean;
-  setShowImportConfirm: (show: boolean) => void;
   backupInputRef: React.RefObject<HTMLInputElement | null>;
   handleExportBackup: () => Promise<void>;
   handleImportBackup: () => Promise<void>;
@@ -89,7 +85,6 @@ export function ImportContent({
   backupFile,
   setBackupFile,
   backupLoading,
-  setBackupLoading,
   backupError,
   setBackupError,
   backupSuccess,
@@ -98,8 +93,6 @@ export function ImportContent({
   setBackupImportResults,
   importMode,
   setImportMode,
-  showImportConfirm,
-  setShowImportConfirm,
   backupInputRef,
   handleExportBackup,
   handleImportBackup,

@@ -28,7 +28,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [logoutLoading, setLogoutLoading] = useState(false);
+  const [, setLogoutLoading] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("sidebar-collapsed") === "true";

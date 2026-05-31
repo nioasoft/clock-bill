@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { BRAND } from "@/lib/brand";
 import { GrainOverlay, RadialLines, HourglassSVG, ClockFaceMarks } from "@/components/ui/thematic-elements";
-import { BarChart3, Clock, DollarSign } from "lucide-react";
+import { Clock, DollarSign } from "lucide-react";
 
 export function Hero() {
   return (

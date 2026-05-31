@@ -22,7 +22,7 @@ const steps = [
 ];
 
 export function HowItWorks() {
-  const [isVisible, setIsVisible] = useState(false);
+  const [, setIsVisible] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

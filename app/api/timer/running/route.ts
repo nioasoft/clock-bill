@@ -6,7 +6,7 @@ import { getUser } from "@/lib/auth";
  * GET /api/timer/running
  * Returns the currently running timer entry (if any)
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Get authenticated user
     const user = await getUser();

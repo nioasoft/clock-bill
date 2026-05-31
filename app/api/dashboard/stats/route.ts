@@ -8,7 +8,7 @@ import { addDays, appDateBoundaries } from "@/lib/dates";
  * GET /api/dashboard/stats
  * Returns dashboard statistics for the authenticated user
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Get authenticated user
     const user = await getUser();

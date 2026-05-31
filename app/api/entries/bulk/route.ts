@@ -95,7 +95,7 @@ export async function PATCH(request: NextRequest) {
     updateFields.push(`updated_at = NOW()`);
 
     // Add entry IDs and user ID to parameters
-    const entryIdsPlaceholder = entryIds.map((_, i) => `$${paramIndex++}`).join(",");
+    const entryIdsPlaceholder = entryIds.map(() => `$${paramIndex++}`).join(",");
     updateValues.push(...entryIds, user.id);
 
     // Verify all entries belong to user and update them

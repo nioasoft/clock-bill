@@ -3,7 +3,7 @@ import { getUser } from "@/lib/auth";
 import { query } from "@/lib/db";
 
 // GET /api/backup/export - Export all user data as JSON
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Check authentication
     const user = await getUser();

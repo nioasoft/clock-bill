@@ -17,7 +17,7 @@ const createPresetSchema = z.object({
 });
 
 // GET - Fetch all report presets for the current user
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     // Get authenticated user
     const user = await getUser();
