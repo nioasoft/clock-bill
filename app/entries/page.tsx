@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useTimer } from "@/contexts/timer-context";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
@@ -198,11 +199,12 @@ export default function EntriesPage() {
     fetchProjects();
   }, []);
 
-  useEffect(() => {
-    // Fetch entries when component mounts or filters change
-    const fetchEntries = async () => {
+  // Fetch entries for the current filters. `silent` skips the loading state so a
+  // background refresh (e.g. after a timer stops) doesn't flash the whole table.
+  const fetchEntries = useCallback(
+    async (opts?: { silent?: boolean }) => {
       try {
-        setEntriesLoading(true);
+        if (!opts?.silent) setEntriesLoading(true);
 
         // Build query parameters for filtering
         const params = new URLSearchParams();
@@ -220,12 +222,25 @@ export default function EntriesPage() {
       } catch (error) {
         console.error("Error fetching entries:", error);
       } finally {
-        setEntriesLoading(false);
+        if (!opts?.silent) setEntriesLoading(false);
       }
-    };
+    },
+    [filters]
+  );
 
+  // Fetch entries on mount and whenever filters change.
+  useEffect(() => {
     fetchEntries();
-  }, [filters]);
+  }, [fetchEntries]);
+
+  // Refetch when a timer is stopped elsewhere (e.g. the persistent timer bar),
+  // so the just-saved record appears without a manual page refresh.
+  const { onTimerStopped } = useTimer();
+  useEffect(() => {
+    return onTimerStopped(() => {
+      fetchEntries({ silent: true });
+    });
+  }, [onTimerStopped, fetchEntries]);
 
   // Fetch tasks when project changes in form
   useEffect(() => {
@@ -673,7 +688,7 @@ export default function EntriesPage() {
             onClick={() => setShowForm(!showForm)}
             className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
           >
-            {showForm ? "ביטול" : "+ רשום זמן"}
+            {showForm ? "ביטול" : "+ הזנת רשומת זמן ידנית"}
           </button>
         </PageHeader>
 
@@ -1232,7 +1247,7 @@ export default function EntriesPage() {
                           </div>
                         </div>
                         {entry.notes && (
-                          <div className="text-xs text-muted-foreground truncate max-w-xs ms-6">{entry.notes}</div>
+                          <div className="mt-0.5 text-xs text-muted-foreground truncate max-w-xs">{entry.notes}</div>
                         )}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">

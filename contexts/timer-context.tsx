@@ -87,6 +87,8 @@ interface TimerContextValue {
   /** Save notes on a still-running timer (latest overwrites previous). */
   handleUpdateTimerNotes: (entryId: string, notes: string) => Promise<boolean>;
   refreshTimer: () => Promise<void>;
+  /** Subscribe to "a timer was stopped" events; returns an unsubscribe fn. */
+  onTimerStopped: (cb: () => void) => () => void;
 }
 
 const noop = () => {};
@@ -132,6 +134,7 @@ const defaultTimerValue: TimerContextValue = {
   handleResumeTimer: asyncNoop,
   handleUpdateTimerNotes: async () => false,
   refreshTimer: asyncNoop,
+  onTimerStopped: () => () => {},
 };
 
 const TimerContext = createContext<TimerContextValue>(defaultTimerValue);
@@ -614,6 +617,15 @@ export function TimerProvider({ children }: TimerProviderProps) {
     await fetchRunningTimer();
   }, [fetchRunningTimer]);
 
+  // Let other screens (e.g. the entries list) react when a timer is stopped,
+  // so the freshly-saved record shows up without a manual page refresh.
+  const onTimerStopped = useCallback((cb: () => void) => {
+    onTimerStoppedRef.current.push(cb);
+    return () => {
+      onTimerStoppedRef.current = onTimerStoppedRef.current.filter((c) => c !== cb);
+    };
+  }, []);
+
   const value: TimerContextValue = {
     runningTimers,
     elapsedTimes,
@@ -654,6 +666,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
     handleResumeTimer,
     handleUpdateTimerNotes,
     refreshTimer,
+    onTimerStopped,
   };
 
   return (
