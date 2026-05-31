@@ -340,39 +340,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Navigation cards */}
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Link
-            href="/entries"
-            className="bg-card border border-border/50 rounded-[var(--radius-card)] p-5 hover:-translate-y-1 hover:border-primary/40 transition-all duration-200"
-          >
-            <h3 className="font-display text-xl font-semibold text-foreground">רשומות זמן</h3>
-            <p className="mt-2 text-base text-muted-foreground">
-              צפה ונהל את רשומות הזמן שלך
-            </p>
-          </Link>
-
-          <Link
-            href="/clients"
-            className="bg-card border border-border/50 rounded-[var(--radius-card)] p-5 hover:-translate-y-1 hover:border-primary/40 transition-all duration-200"
-          >
-            <h3 className="font-display text-xl font-semibold text-foreground">לקוחות</h3>
-            <p className="mt-2 text-base text-muted-foreground">
-              נהל את הלקוחות שלך
-            </p>
-          </Link>
-
-          <Link
-            href="/reports"
-            className="bg-card border border-border/50 rounded-[var(--radius-card)] p-5 hover:-translate-y-1 hover:border-primary/40 transition-all duration-200"
-          >
-            <h3 className="font-display text-xl font-semibold text-foreground">דוחות</h3>
-            <p className="mt-2 text-base text-muted-foreground">
-              צור דוחות PDF ו-Excel
-            </p>
-          </Link>
-        </div>
-
         {/* Charts Grid */}
         {!isFirstTimeUser && (
           <div className="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-6">

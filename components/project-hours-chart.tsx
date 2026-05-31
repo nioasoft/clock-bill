@@ -64,105 +64,40 @@ export function ProjectHoursChart() {
     );
   }
 
-  // Calculate chart dimensions
-  const maxHours = Math.max(...projectHours.map(p => p.totalHours));
-  const barHeight = 40;
-  const gap = 15;
-  const chartWidth = 300; // Fixed width for horizontal bars
-
-  // Generate colors for different projects - theme-based
-  const getBarColor = (index: number) => {
-    const colors = [
-      'text-primary',
-      'text-secondary',
-      'text-accent',
-      'text-success',
-      'text-primary/70',
-      'text-secondary/70',
-      'text-accent/70',
-      'text-success/70'
-    ];
-    return colors[index % colors.length];
-  };
+  const maxHours = Math.max(...projectHours.map((p) => p.totalHours));
+  // Show the heaviest projects first so the chart reads top-to-bottom by size.
+  const rows = [...projectHours].sort((a, b) => b.totalHours - a.totalHours);
 
   return (
     <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
-      <h3 className="font-display text-lg font-semibold text-foreground mb-4">שעות לפי פרויקט - החודש</h3>
+      <h3 className="font-display text-lg font-semibold text-foreground">שעות לפי פרויקט</h3>
+      <p className="mt-0.5 mb-5 text-xs text-muted-foreground">פילוח השעות שנרשמו החודש, לפי פרויקט</p>
 
-      <div className="overflow-x-auto">
-        <svg
-          width={chartWidth + 150}
-          height={projectHours.length * (barHeight + gap)}
-          className="mx-auto"
-          role="img"
-          aria-label="תרשים שעות לפי פרויקט"
-        >
-          {projectHours.map((project, index) => {
-            const barWidth = (project.totalHours / maxHours) * chartWidth;
-            const y = index * (barHeight + gap);
-
-            return (
-              <g key={project.projectId} className="group cursor-pointer">
-                {/* Project name */}
-                <text
-                  x={0}
-                  y={y + barHeight / 2 + 5}
-                  className="fill-foreground text-xs font-medium"
-                  textAnchor="start"
-                >
-                  {project.projectName.length > 20
-                    ? project.projectName.substring(0, 20) + '...'
-                    : project.projectName}
-                </text>
-
-                {/* Bar background */}
-                <rect
-                  x={120}
-                  y={y}
-                  width={chartWidth}
-                  height={barHeight}
-                  className="fill-muted opacity-50"
-                  rx={6}
-                />
-
-                {/* Bar */}
-                <rect
-                  x={120}
-                  y={y}
-                  width={barWidth}
-                  height={barHeight}
-                  fill="currentColor"
-                  className={`${getBarColor(index)} group-hover:opacity-80 transition-opacity`}
-                  rx={6}
-                />
-
-                {/* Hours label */}
-                <text
-                  x={120 + barWidth + 10}
-                  y={y + barHeight / 2 + 5}
-                  className="fill-foreground text-xs font-medium"
-                  textAnchor="start"
-                >
+      {/* RTL-native horizontal bars: each fills from the inline-start (right). */}
+      <div className="space-y-4">
+        {rows.map((project) => {
+          const pct = maxHours > 0 ? (project.totalHours / maxHours) * 100 : 0;
+          return (
+            <div key={project.projectId}>
+              <div className="mb-1.5 flex items-baseline justify-between gap-3 text-sm">
+                <span className="truncate font-medium text-foreground">{project.projectName}</span>
+                <span className="shrink-0 font-mono tabular-nums text-muted-foreground">
                   {project.formatted}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
-      </div>
-
-      {/* Legend */}
-      <div className="mt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-primary rounded"></div>
-          <span>פרויקט 1</span>
-        </div>
-        {projectHours.length > 1 && (
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-secondary rounded"></div>
-            <span>פרויקט 2</span>
-          </div>
-        )}
+                </span>
+              </div>
+              <div
+                className="h-2.5 w-full overflow-hidden rounded-full bg-muted/50"
+                role="img"
+                aria-label={`${project.projectName}: ${project.formatted}`}
+              >
+                <div
+                  className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out"
+                  style={{ width: `${Math.max(pct, 2)}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

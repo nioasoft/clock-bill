@@ -62,12 +62,7 @@ export function EarningsChart() {
     );
   }
 
-  // Calculate chart dimensions
-  const maxAmount = Math.max(...earningsData.map(d => d.amount));
-  const chartHeight = 150;
-  const barWidth = 40;
-  const gap = 20;
-  const chartWidth = earningsData.length * (barWidth + gap) - gap;
+  const maxAmount = Math.max(...earningsData.map((d) => d.amount));
 
   // Format Hebrew month name
   const formatMonthName = (monthStr: string) => {
@@ -83,84 +78,33 @@ export function EarningsChart() {
 
   return (
     <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
-      <h3 className="font-display text-lg font-semibold text-foreground mb-4">הכנסות חודשיות</h3>
+      <h3 className="font-display text-lg font-semibold text-foreground">הכנסות חודשיות</h3>
+      <p className="mt-0.5 mb-5 text-xs text-muted-foreground">
+        סך ההכנסות לחיוב ב-{earningsData.length} החודשים האחרונים
+      </p>
 
-      <div className="h-48 overflow-x-auto">
-        <svg
-          width={Math.max(chartWidth, 400)}
-          height={chartHeight + 40}
-          className="mx-auto"
-          role="img"
-          aria-label="תרשים הכנסות"
-        >
-          {/* Grid lines */}
-          {[0, 0.25, 0.5, 0.75, 1].map((fraction) => {
-            const y = chartHeight - (chartHeight * fraction);
-            return (
-              <line
-                key={`grid-${fraction}`}
-                x1={0}
-                y1={y}
-                x2={chartWidth}
-                y2={y}
-                className="stroke-border opacity-50"
-                strokeWidth={1}
-                strokeDasharray="4 4"
-              />
-            );
-          })}
-
-          {/* Bars */}
-          {earningsData.map((data, index) => {
-            const barHeight = (data.amount / maxAmount) * chartHeight;
-            const x = index * (barWidth + gap);
-            const y = chartHeight - barHeight;
-
-            return (
-              <g key={data.month} className="group cursor-pointer">
-                {/* Bar */}
-                <rect
-                  x={x}
-                  y={y}
-                  width={barWidth}
-                  height={barHeight}
-                  fill="currentColor"
-                  className="text-primary group-hover:opacity-80 transition-opacity"
-                  rx={6}
+      {/* Vertical bars in plain flex — responsive and RTL-native, no fixed SVG
+          width that strands a lone bar on one side. */}
+      <div className="flex items-end gap-2 sm:gap-4">
+        {earningsData.map((data) => {
+          const pct = maxAmount > 0 ? (data.amount / maxAmount) * 100 : 0;
+          return (
+            <div key={data.month} className="flex flex-1 flex-col items-center gap-2">
+              <span className="text-[11px] font-semibold tabular-nums text-foreground">
+                {data.formatted}
+              </span>
+              <div className="flex h-40 w-full max-w-[44px] items-end">
+                <div
+                  className="w-full rounded-t-md bg-primary transition-[height] duration-500 ease-out"
+                  style={{ height: `${Math.max(pct, 3)}%` }}
+                  role="img"
+                  aria-label={`${formatMonthName(data.month)}: ${data.formatted}`}
                 />
-
-                {/* Amount label on top of bar */}
-                <text
-                  x={x + barWidth / 2}
-                  y={y - 5}
-                  textAnchor="middle"
-                  className="fill-foreground text-xs font-medium"
-                >
-                  {data.formatted}
-                </text>
-
-                {/* Month label */}
-                <text
-                  x={x + barWidth / 2}
-                  y={chartHeight + 20}
-                  textAnchor="middle"
-                  className="fill-muted-foreground text-xs"
-                >
-                  {formatMonthName(data.month)}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
-      </div>
-
-      {/* Y-axis labels */}
-      <div className="flex justify-between text-xs text-muted-foreground mt-2">
-        <span>0</span>
-        <span>₪{(maxAmount / 4).toFixed(0)}</span>
-        <span>₪{(maxAmount / 2).toFixed(0)}</span>
-        <span>₪{(maxAmount * 0.75).toFixed(0)}</span>
-        <span>₪{maxAmount.toFixed(0)}</span>
+              </div>
+              <span className="text-[11px] text-muted-foreground">{formatMonthName(data.month)}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
