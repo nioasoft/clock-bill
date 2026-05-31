@@ -12,9 +12,8 @@ const updateEntrySchema = z.object({
   projectId: z.string({ message: "נא לבחור פרויקט" }).min(1, "נא לבחור פרויקט"),
   taskId: z.string().nullish(),
   date: z.string({ message: "נא לבחור תאריך" }).min(1, "נא לבחור תאריך"),
-  duration: z
-    .number({ message: "נא להזין משך זמן תקין" })
-    .positive("נא להזין משך זמן תקין"),
+  // hourly lines use duration (minutes); item lines use quantity with duration 0.
+  duration: z.number({ message: "נא להזין משך זמן תקין" }).min(0),
   description: z
     .string({ message: "נא להזין תיאור" })
     .trim()
@@ -23,7 +22,14 @@ const updateEntrySchema = z.object({
   notes: z.string().max(5000).nullish(),
   isBillable: z.boolean().nullish(),
   tags: z.array(z.string().max(100)).nullish(),
-});
+  billingKind: z.enum(["hourly", "item"]).nullish(),
+  rate: z.number().min(0).nullish(),
+  rateLabel: z.string().max(100).nullish(),
+  quantity: z.number().min(0).nullish(),
+}).refine(
+  (d) => (d.billingKind === "item" ? (d.quantity ?? 0) > 0 : d.duration > 0),
+  { message: "נא להזין כמות לפריט או משך זמן לשעות", path: ["duration"] }
+);
 
 /**
  * GET /api/entries/[id]
@@ -57,6 +63,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
       is_billable: boolean;
       created_at: string;
       task_id: string | null;
+      billing_kind: string | null;
+      rate: number | null;
+      rate_label: string | null;
+      quantity: number | null;
       project_name: string;
       client_name: string;
       client_id: string;
@@ -75,6 +85,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
         te.is_billable,
         te.created_at,
         te.task_id,
+        te.billing_kind,
+        te.rate,
+        te.rate_label,
+        te.quantity,
         p.name as project_name,
         c.name as client_name,
         c.id as client_id,
@@ -115,6 +129,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
         createdAt: entry.created_at,
         taskId: entry.task_id,
         taskName: entry.task_name,
+        billingKind: entry.billing_kind ?? "hourly",
+        rate: entry.rate,
+        rateLabel: entry.rate_label,
+        quantity: entry.quantity,
       },
     }, {
       headers: {
@@ -148,7 +166,9 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     const { id } = await context.params;
     const parsed = await parseBody(request, updateEntrySchema);
     if (!parsed.ok) return parsed.response;
-    const { projectId, taskId, date, duration, description, notes, isBillable, tags } = parsed.data;
+    const { projectId, taskId, date, duration, description, notes, isBillable, tags, billingKind, rate, rateLabel, quantity } = parsed.data;
+    const kind = billingKind ?? "hourly";
+    const effectiveDuration = kind === "item" ? 0 : duration;
 
     const { query } = await import("@/lib/db");
 
@@ -180,21 +200,26 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       );
     }
 
-    // Update time entry
+    // Update time entry (snapshot billing fields; item lines force duration 0)
     await query(
       `UPDATE time_entries
        SET project_id = $1, task_id = $2, description = $3, duration = $4, date = $5,
-           tags = $6, notes = $7, is_billable = $8, updated_at = NOW()
-       WHERE id = $9`,
+           tags = $6, notes = $7, is_billable = $8, billing_kind = $9, rate = $10,
+           rate_label = $11, quantity = $12, updated_at = NOW()
+       WHERE id = $13`,
       [
         projectId,
         taskId || null,
         description.trim(),
-        duration,
+        effectiveDuration,
         date,
         JSON.stringify(tags || []),
         notes?.trim() || null,
         isBillable !== undefined ? isBillable : true,
+        kind,
+        rate ?? null,
+        rateLabel?.trim() || null,
+        kind === "item" ? (quantity ?? null) : null,
         id,
       ]
     );
@@ -213,6 +238,10 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       is_billable: boolean;
       created_at: string;
       task_id: string | null;
+      billing_kind: string | null;
+      rate: number | null;
+      rate_label: string | null;
+      quantity: number | null;
       project_name: string;
       client_name: string;
       client_id: string;
@@ -231,6 +260,10 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         te.is_billable,
         te.created_at,
         te.task_id,
+        te.billing_kind,
+        te.rate,
+        te.rate_label,
+        te.quantity,
         p.name as project_name,
         c.name as client_name,
         c.id as client_id,
@@ -264,6 +297,10 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         createdAt: entry.created_at,
         taskId: entry.task_id,
         taskName: entry.task_name,
+        billingKind: entry.billing_kind ?? "hourly",
+        rate: entry.rate,
+        rateLabel: entry.rate_label,
+        quantity: entry.quantity,
       },
     });
   } catch (error) {
