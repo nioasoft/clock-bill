@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { STATUS_META, type ChargeDocStatus } from "./statusMeta";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { formatDate } from "@/lib/format";
@@ -84,6 +84,8 @@ interface ChargeDocumentViewProps {
   documentId: string;
   onChanged?: () => void;
   onClose?: () => void;
+  /** When true, prompt the user once (after load) to export a PDF — used right after issuing. */
+  autoPromptPdf?: boolean;
 }
 
 /**
@@ -94,6 +96,7 @@ export default function ChargeDocumentView({
   documentId,
   onChanged,
   onClose,
+  autoPromptPdf = false,
 }: ChargeDocumentViewProps) {
   const [state, setState] = useState<LoadState>("loading");
   const [doc, setDoc] = useState<ChargeDocument | null>(null);
@@ -124,6 +127,11 @@ export default function ChargeDocumentView({
 
   const [actionBusy, setActionBusy] = useState(false);
 
+  // Post-issue PDF prompt: show a one-time "create PDF now?" dialog after the
+  // document first loads. The ref guards against re-showing on later refetches.
+  const [pdfPromptOpen, setPdfPromptOpen] = useState(false);
+  const pdfPrompted = useRef(false);
+
   // Bumped to force a refetch after a mutation. The fetch lives in an effect
   // keyed on [documentId, reloadKey] with an `active` guard so an in-flight
   // response from a previous document/key never overwrites newer state.
@@ -146,6 +154,11 @@ export default function ChargeDocumentView({
         setLines(json.data.lines as DocumentLine[]);
         setNotesDraft(document.notes ?? "");
         setState("ready");
+        // Offer a PDF export once, right after a freshly-issued doc loads.
+        if (autoPromptPdf && !pdfPrompted.current) {
+          pdfPrompted.current = true;
+          setPdfPromptOpen(true);
+        }
       } catch {
         if (active) setState("error");
       }
@@ -153,7 +166,7 @@ export default function ChargeDocumentView({
     return () => {
       active = false;
     };
-  }, [documentId, reloadKey]);
+  }, [documentId, reloadKey, autoPromptPdf]);
 
   useEffect(() => {
     let active = true;
@@ -656,6 +669,34 @@ export default function ChargeDocumentView({
         </DialogContent>
       </Dialog>
 
+      {/* ── Post-issue "export PDF now?" prompt (shown once) ── */}
+      <Dialog open={pdfPromptOpen} onOpenChange={setPdfPromptOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>התעודה נוצרה בהצלחה</DialogTitle>
+            <DialogDescription>להפיק PDF עכשיו?</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="ghost"
+              onClick={() => setPdfPromptOpen(false)}
+              className="min-h-[44px]"
+            >
+              לא עכשיו
+            </Button>
+            <Button
+              onClick={() => {
+                handleExportPdf();
+                setPdfPromptOpen(false);
+              }}
+              className="min-h-[44px]"
+            >
+              הפק PDF
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* ── Hidden PDF print block (light/print styling) ── */}
       <div id="pdf-content" className="print-only" dir="rtl">
         <div
@@ -677,18 +718,24 @@ export default function ChargeDocumentView({
                   style={{ maxHeight: "50px", marginBottom: "10px" }}
                 />
               )}
-              <h1
-                className="pdf-business-name"
-                style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "0.25rem" }}
-              >
-                {profile?.businessName || "תעודת התחשבנות פנימית"}
-              </h1>
-              <div style={{ fontSize: "12px", color: "#64748b", lineHeight: 1.6 }}>
-                {profile?.taxId && <div>ע.מ / ח.פ: {profile.taxId}</div>}
-                {profile?.address && <div>{profile.address}</div>}
-                {profile?.phone && <div>{profile.phone}</div>}
-                {profile?.email && <div>{profile.email}</div>}
-              </div>
+              {/* Business identity shows ONLY when there is a real business name —
+                  never fall back to the document title (that would duplicate the h2). */}
+              {profile?.businessName && (
+                <>
+                  <h1
+                    className="pdf-business-name"
+                    style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "0.25rem" }}
+                  >
+                    {profile.businessName}
+                  </h1>
+                  <div style={{ fontSize: "12px", color: "#64748b", lineHeight: 1.6 }}>
+                    {profile.taxId && <div>ע.מ / ח.פ: {profile.taxId}</div>}
+                    {profile.address && <div>{profile.address}</div>}
+                    {profile.phone && <div>{profile.phone}</div>}
+                    {profile.email && <div>{profile.email}</div>}
+                  </div>
+                </>
+              )}
             </div>
             <div style={{ textAlign: "start" }}>
               <h2 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "0.5rem" }}>

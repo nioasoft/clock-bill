@@ -18,6 +18,9 @@ const TABS: [Tab, string][] = [
 
 export default function SettlementPage() {
   const [tab, setTab] = useState<Tab>("billable");
+  // Set when a document is freshly issued so the documents tab auto-opens it
+  // (and prompts for a PDF). Cleared once the documents tab consumes it.
+  const [openDocId, setOpenDocId] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -53,8 +56,20 @@ export default function SettlementPage() {
           ))}
         </div>
 
-        {tab === "billable" && <BillableTab onIssued={() => setTab("documents")} />}
-        {tab === "documents" && <DocumentsTab />}
+        {tab === "billable" && (
+          <BillableTab
+            onIssued={(id) => {
+              setOpenDocId(id);
+              setTab("documents");
+            }}
+          />
+        )}
+        {tab === "documents" && (
+          <DocumentsTab
+            initialOpenId={openDocId}
+            onConsumedInitialOpen={() => setOpenDocId(null)}
+          />
+        )}
         {tab === "report" && <AdHocReportTab />}
       </PageContainer>
     </AppLayout>

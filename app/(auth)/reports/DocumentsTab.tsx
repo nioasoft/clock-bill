@@ -33,14 +33,39 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+/** Status sort order: pending first, then paid, then canceled. */
+const STATUS_ORDER: Record<string, number> = { pending: 0, paid: 1, canceled: 2 };
+
+/** Pending → paid → canceled; within each group, newest doc_number first. */
+function sortDocs(rows: DocumentRow[]): DocumentRow[] {
+  return [...rows].sort((a, b) => {
+    const sa = STATUS_ORDER[a.status] ?? 99;
+    const sb = STATUS_ORDER[b.status] ?? 99;
+    if (sa !== sb) return sa - sb;
+    return b.doc_number - a.doc_number;
+  });
+}
+
+interface DocumentsTabProps {
+  /** Document id to auto-open on mount (freshly issued); prompts a PDF export. */
+  initialOpenId?: string | null;
+  /** Called once after the initialOpenId has been consumed (opened). */
+  onConsumedInitialOpen?: () => void;
+}
+
 /**
  * History of issued internal settlement documents. Lists every document and
  * opens a full ChargeDocumentView (inline) on click.
  */
-export default function DocumentsTab() {
+export default function DocumentsTab({
+  initialOpenId,
+  onConsumedInitialOpen,
+}: DocumentsTabProps = {}) {
   const [state, setState] = useState<LoadState>("loading");
   const [docs, setDocs] = useState<DocumentRow[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
+  // True only for a doc opened via initialOpenId (freshly issued) — drives the PDF prompt.
+  const [autoPrompt, setAutoPrompt] = useState(false);
 
   const load = useCallback(async (): Promise<void> => {
     try {
@@ -50,7 +75,7 @@ export default function DocumentsTab() {
         setState("error");
         return;
       }
-      setDocs(json.data as DocumentRow[]);
+      setDocs(sortDocs(json.data as DocumentRow[]));
       setState("ready");
     } catch {
       setState("error");
@@ -70,13 +95,27 @@ export default function DocumentsTab() {
     void load();
   }, [load]);
 
+  // Auto-open a freshly-issued document once, then hand the flag back to the shell.
+  useEffect(() => {
+    if (!initialOpenId) return;
+    // Synchronous state set guarded by a stable prop; runs only when a new id arrives.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setOpenId(initialOpenId);
+    setAutoPrompt(true);
+    onConsumedInitialOpen?.();
+  }, [initialOpenId, onConsumedInitialOpen]);
+
   // ── Detail view (inline) ──────────────────────────────────────────────────
   if (openId) {
     return (
       <ChargeDocumentView
         documentId={openId}
+        autoPromptPdf={autoPrompt}
         onChanged={() => void load()}
-        onClose={() => setOpenId(null)}
+        onClose={() => {
+          setOpenId(null);
+          setAutoPrompt(false);
+        }}
       />
     );
   }
@@ -120,12 +159,14 @@ export default function DocumentsTab() {
   // ── Success ───────────────────────────────────────────────────────────────
   return (
     <div className="space-y-3" dir="rtl">
-      {docs.map((d) => (
+      {docs.map((d) => {
+        const meta = STATUS_META[d.status as ChargeDocStatus] ?? STATUS_META.pending;
+        return (
         <button
           key={d.id}
           type="button"
           onClick={() => setOpenId(d.id)}
-          className="flex w-full min-h-[44px] flex-wrap items-center justify-between gap-3 rounded-[var(--radius-card)] border border-border bg-card p-4 text-start transition-colors hover:bg-card-elevated focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className={`flex w-full min-h-[44px] flex-wrap items-center justify-between gap-3 rounded-[var(--radius-card)] border border-border border-s-2 ${meta.accent} bg-card p-4 text-start transition-colors hover:bg-card-elevated focus:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
         >
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -140,7 +181,8 @@ export default function DocumentsTab() {
             {formatCurrency(d.total, d.currency)}
           </div>
         </button>
-      ))}
+        );
+      })}
     </div>
   );
 }

@@ -62,7 +62,11 @@ function entryAmount(entry: BillableEntryRow): number {
   return calcHourlyAmount(entry.duration, entry.rate);
 }
 
-export default function BillableTab({ onIssued }: { onIssued?: () => void }) {
+export default function BillableTab({
+  onIssued,
+}: {
+  onIssued?: (documentId: string) => void;
+}) {
   const [clients, setClients] = useState<Client[]>([]);
   const [clientsLoading, setClientsLoading] = useState(true);
   const [clientId, setClientId] = useState<string>("");
@@ -209,7 +213,7 @@ export default function BillableTab({ onIssued }: { onIssued?: () => void }) {
         showSuccessToast(`תעודה #${json.data.docNumber} נוצרה`);
         setSelectedEntryIds(new Set());
         setSelectedComputed(new Set());
-        onIssued?.();
+        onIssued?.(json.data.id);
         // Re-fetch so the just-billed entries drop off the list (a second issue would 409).
         reloadBillable();
       } else {
@@ -235,11 +239,12 @@ export default function BillableTab({ onIssued }: { onIssued?: () => void }) {
             לקוח
           </label>
           <Select
+            dir="rtl"
             value={clientId}
             onValueChange={setClientId}
             disabled={clientsLoading}
           >
-            <SelectTrigger className="min-h-[44px]">
+            <SelectTrigger className="min-h-[44px] text-start">
               <SelectValue
                 placeholder={clientsLoading ? "טוען לקוחות..." : "בחר לקוח"}
               />
