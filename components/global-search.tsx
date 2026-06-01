@@ -105,10 +105,14 @@ export function GlobalSearch() {
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/20 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <DialogPrimitive.Content
-          aria-label="חיפוש גלובלי"
           className="fixed inset-0 z-50 flex items-start justify-center pt-24 sm:pt-32 px-4"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
+          {/* Radix requires a Title/Description for screen readers; hidden visually. */}
+          <DialogPrimitive.Title className="sr-only">חיפוש גלובלי</DialogPrimitive.Title>
+          <DialogPrimitive.Description className="sr-only">
+            חיפוש לקוחות, פרויקטים ורשומות
+          </DialogPrimitive.Description>
           {/* Search Modal */}
           <div
             className="relative w-full max-w-2xl bg-card rounded-[var(--radius-card)] shadow-2xl overflow-hidden motion-safe:animate-scale-in border border-border/50"
