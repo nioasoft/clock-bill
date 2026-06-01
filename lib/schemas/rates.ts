@@ -41,3 +41,29 @@ export function pickDefaultHourlyRate(rates: ClientRate[]): ClientRate | null {
   const hourly = rates.filter((r) => r.kind === "hourly");
   return hourly.find((r) => r.isDefault) ?? hourly[0] ?? null;
 }
+
+/**
+ * Normalize a rates array before saving: drop rows with an empty name, trim
+ * names, allow only hourly rows to be default, and guarantee exactly one
+ * default hourly (promote the first hourly if none is flagged). Returns a new
+ * array — the input is never mutated.
+ */
+export function cleanClientRates(rates: ClientRateInput[]): ClientRateInput[] {
+  const base = rates
+    .filter((r) => r.name.trim() !== "")
+    .map((r) => ({
+      kind: r.kind,
+      name: r.name.trim(),
+      rate: r.rate,
+      isDefault: r.kind === "hourly" && r.isDefault,
+    }));
+  const hasDefault = base.some((r) => r.kind === "hourly" && r.isDefault);
+  let promoted = false;
+  return base.map((r) => {
+    if (!hasDefault && !promoted && r.kind === "hourly") {
+      promoted = true;
+      return { ...r, isDefault: true };
+    }
+    return r;
+  });
+}

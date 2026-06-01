@@ -10,7 +10,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Users } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { fieldClass } from "@/lib/form-styles";
-import type { ClientRate, ClientRateInput, RateKind } from "@/lib/schemas/rates";
+import { CURRENCY_SYMBOLS } from "@/lib/currency";
+import { ClientRatesEditor } from "@/components/client-rates-editor";
+import { cleanClientRates } from "@/lib/schemas/rates";
+import type { ClientRate, ClientRateInput } from "@/lib/schemas/rates";
 import {
   validateRequired,
   validateEmail,
@@ -56,14 +59,6 @@ const CURRENCIES = [
   { value: "BTC", label: "₿ BTC" },
   { value: "ETH", label: "Ξ ETH" },
 ] as const;
-
-const CURRENCY_SYMBOLS: Record<string, string> = {
-  ILS: "₪",
-  USD: "$",
-  USDT: "₮",
-  BTC: "₿",
-  ETH: "Ξ",
-};
 
 export default function ClientsPage() {
   return (
@@ -179,24 +174,7 @@ function ClientsPageContent() {
     }
 
     // Clean rates (drop empty-name rows) and guarantee one default hourly.
-    const base = formData.rates
-      .filter((r) => r.name.trim() !== "")
-      .map((r) => ({
-        kind: r.kind,
-        name: r.name.trim(),
-        rate: r.rate,
-        isDefault: r.kind === "hourly" && r.isDefault,
-      }));
-    // If no hourly row is marked default, promote the first one (immutably).
-    const hasDefault = base.some((r) => r.kind === "hourly" && r.isDefault);
-    let promoted = false;
-    const cleanedRates = base.map((r) => {
-      if (!hasDefault && !promoted && r.kind === "hourly") {
-        promoted = true;
-        return { ...r, isDefault: true };
-      }
-      return r;
-    });
+    const cleanedRates = cleanClientRates(formData.rates);
 
     setSubmitting(true);
 
@@ -325,51 +303,6 @@ function ClientsPageContent() {
     });
     setShowForm(false);
   };
-
-  // ─── Rate/item row helpers ───────────────────────────────────────
-  const addRate = (kind: RateKind) =>
-    setFormData((p) => ({
-      ...p,
-      rates: [
-        ...p.rates,
-        {
-          kind,
-          name: "",
-          rate: 0,
-          isDefault: kind === "hourly" && !p.rates.some((r) => r.kind === "hourly" && r.isDefault),
-        },
-      ],
-    }));
-
-  const removeRate = (idx: number) =>
-    setFormData((p) => {
-      const removed = p.rates[idx];
-      let next = p.rates.filter((_, i) => i !== idx);
-      // If the default hourly was removed, promote the first remaining hourly.
-      if (removed?.kind === "hourly" && removed.isDefault && !next.some((r) => r.kind === "hourly" && r.isDefault)) {
-        let promoted = false;
-        next = next.map((r) => {
-          if (!promoted && r.kind === "hourly") {
-            promoted = true;
-            return { ...r, isDefault: true };
-          }
-          return r;
-        });
-      }
-      return { ...p, rates: next };
-    });
-
-  const updateRate = (idx: number, patch: Partial<ClientRateInput>) =>
-    setFormData((p) => ({
-      ...p,
-      rates: p.rates.map((r, i) => (i === idx ? { ...r, ...patch } : r)),
-    }));
-
-  const setDefaultRate = (idx: number) =>
-    setFormData((p) => ({
-      ...p,
-      rates: p.rates.map((r, i) => ({ ...r, isDefault: i === idx && r.kind === "hourly" })),
-    }));
 
   const handleDelete = async (client: Client) => {
     setClientToDelete(client);
@@ -594,134 +527,14 @@ function ClientsPageContent() {
                 </div>
 
                 {/* Rates & items editor */}
-                <div className="space-y-4 rounded-[var(--radius)] border border-border bg-background/50 p-4">
-                  {/* Hourly rates */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-foreground">תעריפים שעתיים</span>
-                      <button
-                        type="button"
-                        onClick={() => addRate("hourly")}
-                        className="text-sm font-medium text-primary hover:text-primary/90"
-                        disabled={submitting}
-                      >
-                        + הוסף תעריף שעתי
-                      </button>
-                    </div>
-                    {formData.rates.some((r) => r.kind === "hourly") ? (
-                      <div className="space-y-2">
-                        {formData.rates.map((r, idx) =>
-                          r.kind !== "hourly" ? null : (
-                            <div key={idx} className="flex items-center gap-2">
-                              <input
-                                type="radio"
-                                name="defaultHourly"
-                                checked={r.isDefault}
-                                onChange={() => setDefaultRate(idx)}
-                                className="h-4 w-4 shrink-0 accent-primary"
-                                disabled={submitting}
-                                aria-label="תעריף ברירת מחדל"
-                                title="ברירת מחדל"
-                              />
-                              <input
-                                type="text"
-                                value={r.name}
-                                onChange={(e) => updateRate(idx, { name: e.target.value })}
-                                placeholder="שם (למשל תכנות)"
-                                className={fieldClass(false)}
-                                disabled={submitting}
-                              />
-                              <div className="relative w-44 shrink-0">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  value={r.rate || ""}
-                                  onChange={(e) => updateRate(idx, { rate: parseFloat(e.target.value) || 0 })}
-                                  className={`${fieldClass(false)} font-mono pe-16`}
-                                  disabled={submitting}
-                                  placeholder="0.00"
-                                />
-                                <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-muted-foreground">
-                                  {CURRENCY_SYMBOLS[formData.currency] || "₪"}/שעה
-                                </span>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => removeRate(idx)}
-                                className="shrink-0 rounded-[var(--radius)] px-2 py-1 text-destructive hover:bg-destructive/10"
-                                disabled={submitting}
-                                aria-label="הסר תעריף"
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          )
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">
-                        לא הוגדרו תעריפים שעתיים — ייעשה שימוש בתעריף ברירת המחדל.
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Items (price per unit) */}
-                  <div className="space-y-2 border-t border-border pt-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-foreground">פריטים (מחיר ליחידה)</span>
-                      <button
-                        type="button"
-                        onClick={() => addRate("item")}
-                        className="text-sm font-medium text-primary hover:text-primary/90"
-                        disabled={submitting}
-                      >
-                        + הוסף פריט
-                      </button>
-                    </div>
-                    {formData.rates.some((r) => r.kind === "item") && (
-                      <div className="space-y-2">
-                        {formData.rates.map((r, idx) =>
-                          r.kind !== "item" ? null : (
-                            <div key={idx} className="flex items-center gap-2">
-                              <input
-                                type="text"
-                                value={r.name}
-                                onChange={(e) => updateRate(idx, { name: e.target.value })}
-                                placeholder="שם (למשל כתיבת מכתב)"
-                                className={fieldClass(false)}
-                                disabled={submitting}
-                              />
-                              <div className="relative w-44 shrink-0">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  value={r.rate || ""}
-                                  onChange={(e) => updateRate(idx, { rate: parseFloat(e.target.value) || 0 })}
-                                  className={`${fieldClass(false)} font-mono pe-16`}
-                                  disabled={submitting}
-                                  placeholder="0.00"
-                                />
-                                <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-muted-foreground">
-                                  {CURRENCY_SYMBOLS[formData.currency] || "₪"}/יח׳
-                                </span>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => removeRate(idx)}
-                                className="shrink-0 rounded-[var(--radius)] px-2 py-1 text-destructive hover:bg-destructive/10"
-                                disabled={submitting}
-                                aria-label="הסר פריט"
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          )
-                        )}
-                      </div>
-                    )}
-                  </div>
+                <div className="space-y-2">
+                  <span className="text-sm font-medium text-foreground">תעריפים ופריטים</span>
+                  <ClientRatesEditor
+                    rates={formData.rates}
+                    currency={formData.currency}
+                    onChange={(rates) => setFormData((prev) => ({ ...prev, rates }))}
+                    disabled={submitting}
+                  />
                 </div>
 
                 {/* Retainer toggle — full-width switch row */}

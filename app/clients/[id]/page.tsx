@@ -5,6 +5,19 @@ import { useRouter, useParams } from "next/navigation";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { Breadcrumb } from "@/components/breadcrumb";
+import { fieldClass } from "@/lib/form-styles";
+import { CURRENCY_SYMBOLS } from "@/lib/currency";
+import { ClientRatesEditor } from "@/components/client-rates-editor";
+import { cleanClientRates } from "@/lib/schemas/rates";
+import type { ClientRate, ClientRateInput } from "@/lib/schemas/rates";
+
+const CURRENCIES = [
+  { value: "ILS", label: "₪ ILS" },
+  { value: "USD", label: "$ USD" },
+  { value: "USDT", label: "₮ USDT" },
+  { value: "BTC", label: "₿ BTC" },
+  { value: "ETH", label: "Ξ ETH" },
+] as const;
 
 interface Client {
   id: string;
@@ -22,6 +35,31 @@ interface Client {
   notes: string | null;
   isActive: boolean;
   createdAt: string;
+  rates?: ClientRate[];
+}
+
+/** Map a loaded client into the edit form's controlled state. */
+function clientToFormData(client: Client) {
+  return {
+    name: client.name || "",
+    contactName: client.contactName || "",
+    email: client.email || "",
+    phone: client.phone || "",
+    address: client.address || "",
+    currency: client.currency || "ILS",
+    isRetainer: !!client.isRetainer,
+    retainerHours: client.retainerHours?.toString() || "",
+    retainerMonthlyFee: client.retainerMonthlyFee?.toString() || "",
+    hasOverageRate: client.overageRate != null,
+    overageRate: client.overageRate?.toString() || "",
+    notes: client.notes || "",
+    rates: (client.rates ?? []).map((r) => ({
+      kind: r.kind,
+      name: r.name,
+      rate: r.rate,
+      isDefault: r.isDefault,
+    })) as ClientRateInput[],
+  };
 }
 
 export default function ClientDetailsPage() {
@@ -40,8 +78,14 @@ export default function ClientDetailsPage() {
     email: "",
     phone: "",
     address: "",
-    defaultRate: "",
+    currency: "ILS",
+    isRetainer: false,
+    retainerHours: "",
+    retainerMonthlyFee: "",
+    hasOverageRate: false,
+    overageRate: "",
     notes: "",
+    rates: [] as ClientRateInput[],
   });
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -57,15 +101,7 @@ export default function ClientDetailsPage() {
         const data = await response.json();
         if (data.success) {
           setClient(data.client);
-          setFormData({
-            name: data.client.name || "",
-            contactName: data.client.contactName || "",
-            email: data.client.email || "",
-            phone: data.client.phone || "",
-            address: data.client.address || "",
-            defaultRate: data.client.defaultRate?.toString() || "",
-            notes: data.client.notes || "",
-          });
+          setFormData(clientToFormData(data.client));
         } else {
           setError(data.message || "שגיאה בטעינת הלקוח");
         }
@@ -101,6 +137,14 @@ export default function ClientDetailsPage() {
   const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
+
+    // Rows with a price but no name are likely mistakes — block submit.
+    if (formData.rates.some((r) => r.name.trim() === "" && r.rate > 0)) {
+      setFormError("יש להזין שם לכל תעריף עם מחיר");
+      return;
+    }
+
+    const cleanedRates = cleanClientRates(formData.rates);
     setSubmitting(true);
 
     try {
@@ -115,14 +159,13 @@ export default function ClientDetailsPage() {
           email: formData.email || undefined,
           phone: formData.phone || undefined,
           address: formData.address || undefined,
-          defaultRate: formData.defaultRate ? parseFloat(formData.defaultRate) : undefined,
+          currency: formData.currency,
+          isRetainer: formData.isRetainer,
+          retainerHours: formData.isRetainer && formData.retainerHours ? parseFloat(formData.retainerHours) : undefined,
+          retainerMonthlyFee: formData.isRetainer && formData.retainerMonthlyFee ? parseFloat(formData.retainerMonthlyFee) : undefined,
+          overageRate: formData.isRetainer && formData.hasOverageRate && formData.overageRate ? parseFloat(formData.overageRate) : undefined,
           notes: formData.notes || undefined,
-          // Preserve retainer fields not shown in this form
-          currency: client?.currency,
-          isRetainer: client?.isRetainer,
-          retainerHours: client?.retainerHours,
-          retainerMonthlyFee: client?.retainerMonthlyFee,
-          overageRate: client?.overageRate,
+          rates: cleanedRates,
         }),
       });
 
@@ -130,6 +173,7 @@ export default function ClientDetailsPage() {
 
       if (data.success) {
         setClient(data.client);
+        setFormData(clientToFormData(data.client));
         setShowEditForm(false);
       } else {
         setFormError(data.message || "שגיאה בעדכון הלקוח");
@@ -223,7 +267,7 @@ export default function ClientDetailsPage() {
               <button
                 onClick={handleDelete}
                 disabled={submitting}
-                className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
+                className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
               >
                 {submitting ? "מוחק..." : "מחק לקוח"}
               </button>
@@ -241,10 +285,10 @@ export default function ClientDetailsPage() {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-foreground">
-                    שם הלקוח *
+                  <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-foreground">
+                    שם הלקוח <span className="text-primary">*</span>
                   </label>
                   <input
                     type="text"
@@ -252,13 +296,13 @@ export default function ClientDetailsPage() {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-border/50 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className={fieldClass(false)}
                     disabled={submitting}
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="contactName" className="block text-sm font-medium text-foreground">
+                  <label htmlFor="contactName" className="mb-1.5 block text-sm font-medium text-foreground">
                     איש קשר
                   </label>
                   <input
@@ -266,41 +310,43 @@ export default function ClientDetailsPage() {
                     id="contactName"
                     value={formData.contactName}
                     onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-border/50 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className={fieldClass(false)}
                     disabled={submitting}
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-foreground">
+                  <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
                     אימייל
                   </label>
                   <input
                     type="email"
                     id="email"
+                    dir="ltr"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-border/50 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className={`${fieldClass(false)} text-end`}
                     disabled={submitting}
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-foreground">
+                  <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-foreground">
                     טלפון
                   </label>
                   <input
                     type="tel"
                     id="phone"
+                    dir="ltr"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-border/50 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className={`${fieldClass(false)} text-end`}
                     disabled={submitting}
                   />
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label htmlFor="address" className="block text-sm font-medium text-foreground">
+                  <label htmlFor="address" className="mb-1.5 block text-sm font-medium text-foreground">
                     כתובת
                   </label>
                   <input
@@ -308,31 +354,127 @@ export default function ClientDetailsPage() {
                     id="address"
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-border/50 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className={fieldClass(false)}
                     disabled={submitting}
                     placeholder="רחוב, מספר, עיר"
                   />
                 </div>
+              </div>
 
-                <div>
-                  <label htmlFor="defaultRate" className="block text-sm font-medium text-foreground">
-                    תעריף שעתי (₪)
+              {/* Billing — currency, rates/items, retainer */}
+              <div className="space-y-4 border-t border-border pt-4">
+                <div className="sm:max-w-[calc(50%-0.5rem)]">
+                  <label htmlFor="currency" className="mb-1.5 block text-sm font-medium text-foreground">
+                    מטבע
                   </label>
-                  <input
-                    type="number"
-                    id="defaultRate"
-                    min="0"
-                    step="0.01"
-                    value={formData.defaultRate}
-                    onChange={(e) => setFormData({ ...formData, defaultRate: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-border/50 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                  <select
+                    id="currency"
+                    value={formData.currency}
+                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                    className={fieldClass(false)}
+                    disabled={submitting}
+                  >
+                    {CURRENCIES.map((c) => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <span className="text-sm font-medium text-foreground">תעריפים ופריטים</span>
+                  <ClientRatesEditor
+                    rates={formData.rates}
+                    currency={formData.currency}
+                    onChange={(rates) => setFormData((prev) => ({ ...prev, rates }))}
                     disabled={submitting}
                   />
                 </div>
+
+                {/* Retainer toggle */}
+                <label className="flex cursor-pointer items-center justify-between rounded-[var(--radius)] border border-border bg-background px-4 py-3">
+                  <span className="text-sm font-medium text-foreground">לקוח בריטיינר</span>
+                  <input
+                    type="checkbox"
+                    checked={formData.isRetainer}
+                    onChange={(e) => setFormData({ ...formData, isRetainer: e.target.checked })}
+                    className="h-4 w-4 rounded border-border accent-primary"
+                    disabled={submitting}
+                  />
+                </label>
+
+                {/* Retainer fields */}
+                {formData.isRetainer && (
+                  <div className="space-y-4 rounded-[var(--radius)] border border-border bg-background/50 p-4">
+                    <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+                      <div>
+                        <label htmlFor="retainerHours" className="mb-1.5 block text-sm font-medium text-foreground">
+                          שעות בריטיינר
+                        </label>
+                        <input
+                          type="number"
+                          id="retainerHours"
+                          min="0"
+                          step="0.5"
+                          value={formData.retainerHours}
+                          onChange={(e) => setFormData({ ...formData, retainerHours: e.target.value })}
+                          className={`${fieldClass(false)} font-mono`}
+                          disabled={submitting}
+                          placeholder="40"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="retainerMonthlyFee" className="mb-1.5 block text-sm font-medium text-foreground">
+                          סכום חודשי ({CURRENCY_SYMBOLS[formData.currency] || "₪"})
+                        </label>
+                        <input
+                          type="number"
+                          id="retainerMonthlyFee"
+                          min="0"
+                          step="0.01"
+                          value={formData.retainerMonthlyFee}
+                          onChange={(e) => setFormData({ ...formData, retainerMonthlyFee: e.target.value })}
+                          className={`${fieldClass(false)} font-mono`}
+                          disabled={submitting}
+                          placeholder="10000"
+                        />
+                      </div>
+                    </div>
+
+                    <label className="flex cursor-pointer items-center justify-between rounded-[var(--radius)] border border-border bg-background px-4 py-3">
+                      <span className="text-sm font-medium text-foreground">תעריף נפרד מעל הריטיינר</span>
+                      <input
+                        type="checkbox"
+                        checked={formData.hasOverageRate}
+                        onChange={(e) => setFormData({ ...formData, hasOverageRate: e.target.checked })}
+                        className="h-4 w-4 rounded border-border accent-primary"
+                        disabled={submitting}
+                      />
+                    </label>
+
+                    {formData.hasOverageRate && (
+                      <div className="sm:max-w-[calc(50%-0.5rem)]">
+                        <label htmlFor="overageRate" className="mb-1.5 block text-sm font-medium text-foreground">
+                          תעריף שעתי מעל הריטיינר ({CURRENCY_SYMBOLS[formData.currency] || "₪"})
+                        </label>
+                        <input
+                          type="number"
+                          id="overageRate"
+                          min="0"
+                          step="0.01"
+                          value={formData.overageRate}
+                          onChange={(e) => setFormData({ ...formData, overageRate: e.target.value })}
+                          className={`${fieldClass(false)} font-mono`}
+                          disabled={submitting}
+                          placeholder="0.00"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div>
-                <label htmlFor="notes" className="block text-sm font-medium text-foreground">
+                <label htmlFor="notes" className="mb-1.5 block text-sm font-medium text-foreground">
                   הערות
                 </label>
                 <textarea
@@ -340,7 +482,7 @@ export default function ClientDetailsPage() {
                   rows={3}
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-border px-3 py-2 border border-border/50 border border-border/50 shadow-sm-sm focus:border-primary focus:outline-none focus:ring-primary"
+                  className={`${fieldClass(false)} resize-y`}
                   disabled={submitting}
                 />
               </div>
@@ -352,15 +494,7 @@ export default function ClientDetailsPage() {
                     setShowEditForm(false);
                     setFormError("");
                     if (client) {
-                      setFormData({
-                        name: client.name || "",
-                        contactName: client.contactName || "",
-                        email: client.email || "",
-                        phone: client.phone || "",
-                        address: client.address || "",
-                        defaultRate: client.defaultRate?.toString() || "",
-                        notes: client.notes || "",
-                      });
+                      setFormData(clientToFormData(client));
                     }
                   }}
                   className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted"
@@ -447,9 +581,9 @@ export default function ClientDetailsPage() {
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">תעריף שעתי</h3>
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">מטבע</h3>
                 <p className="text-foreground">
-                  {client.defaultRate ? `₪${client.defaultRate}/שעה` : <span className="text-muted-foreground">לא צוין</span>}
+                  {CURRENCIES.find((c) => c.value === client.currency)?.label || client.currency}
                 </p>
               </div>
 
@@ -460,6 +594,89 @@ export default function ClientDetailsPage() {
                 </p>
               </div>
             </div>
+
+            {/* Rates & items */}
+            {(() => {
+              const symbol = CURRENCY_SYMBOLS[client.currency] || "₪";
+              const hourly = (client.rates ?? []).filter((r) => r.kind === "hourly");
+              const items = (client.rates ?? []).filter((r) => r.kind === "item");
+              const hasAny = hourly.length > 0 || items.length > 0 || client.isRetainer;
+              return (
+                <div className="mt-6 border-t border-border pt-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-display text-lg font-semibold text-foreground">תעריפים ופריטים</h3>
+                    {client.isActive && (
+                      <button
+                        onClick={() => setShowEditForm(true)}
+                        className="text-sm font-medium text-primary hover:text-primary/90"
+                      >
+                        ערוך תעריפים
+                      </button>
+                    )}
+                  </div>
+                  {!hasAny ? (
+                    <p className="text-sm text-muted-foreground">
+                      לא הוגדרו תעריפים ללקוח זה — לחץ &quot;ערוך תעריפים&quot; כדי להוסיף.
+                    </p>
+                  ) : (
+                    <div className="space-y-4">
+                      {hourly.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium text-muted-foreground mb-2">תעריפים שעתיים</h4>
+                          <ul className="space-y-1.5">
+                            {hourly.map((r) => (
+                              <li key={r.id} className="flex items-center justify-between rounded-[var(--radius)] border border-border bg-background/50 px-3 py-2">
+                                <span className="flex items-center gap-2 text-sm text-foreground">
+                                  {r.name}
+                                  {r.isDefault && (
+                                    <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">
+                                      ברירת מחדל
+                                    </span>
+                                  )}
+                                </span>
+                                <span className="font-mono text-sm tabular-nums text-foreground">
+                                  {symbol}{r.rate}/שעה
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {items.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium text-muted-foreground mb-2">פריטים (מחיר ליחידה)</h4>
+                          <ul className="space-y-1.5">
+                            {items.map((r) => (
+                              <li key={r.id} className="flex items-center justify-between rounded-[var(--radius)] border border-border bg-background/50 px-3 py-2">
+                                <span className="text-sm text-foreground">{r.name}</span>
+                                <span className="font-mono text-sm tabular-nums text-foreground">
+                                  {symbol}{r.rate}/יח׳
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {client.isRetainer && (
+                        <div>
+                          <h4 className="text-sm font-medium text-muted-foreground mb-2">ריטיינר</h4>
+                          <div className="rounded-[var(--radius)] border border-border bg-background/50 px-3 py-2 text-sm text-foreground">
+                            <span className="tabular-nums">
+                              {client.retainerHours ?? 0} שעות בחודש · {symbol}{client.retainerMonthlyFee ?? 0} לחודש
+                            </span>
+                            {client.overageRate != null && (
+                              <span className="block text-muted-foreground">
+                                תעריף מעל הריטיינר: {symbol}{client.overageRate}/שעה
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {client.notes && (
               <div className="mt-6">
