@@ -28,17 +28,26 @@ export const createChargeDocumentSchema = z
 /** PATCH a single line on a pending document (edit text). */
 export const patchChargeLineSchema = z.object({
   lineId: z.string().min(1),
-  description: z.string().max(5000).nullish(),
-  notes: z.string().max(5000).nullish(),
+  description: z.string().max(5000).optional(),
+  notes: z.string().max(5000).optional(),
 });
 
 /** PATCH document-level fields / line operations. */
-export const patchChargeDocumentSchema = z.object({
-  notes: z.string().max(2000).nullish(),
-  editLine: patchChargeLineSchema.nullish(),
-  removeLineId: z.string().min(1).nullish(),
-  addTimeEntryId: z.string().min(1).nullish(),
-});
+export const patchChargeDocumentSchema = z
+  .object({
+    notes: z.string().max(2000).optional(),
+    editLine: patchChargeLineSchema.optional(),
+    removeLineId: z.string().min(1).optional(),
+    addTimeEntryId: z.string().min(1).optional(),
+  })
+  .refine(
+    (d) =>
+      d.notes !== undefined ||
+      d.editLine !== undefined ||
+      d.removeLineId !== undefined ||
+      d.addTimeEntryId !== undefined,
+    { message: "נא לספק לפחות שדה אחד לעדכון" }
+  );
 
 export type CreateChargeDocumentBody = z.infer<typeof createChargeDocumentSchema>;
 export type PatchChargeDocumentBody = z.infer<typeof patchChargeDocumentSchema>;

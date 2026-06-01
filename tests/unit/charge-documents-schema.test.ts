@@ -4,6 +4,7 @@
 import {
   createChargeDocumentSchema,
   patchChargeLineSchema,
+  patchChargeDocumentSchema,
 } from "../../lib/schemas/charge-documents";
 
 class TestRunner {
@@ -56,6 +57,15 @@ runner.test("create: rejects malformed periodMonth", () => {
 runner.test("patchLine: edit description/notes parses", () => {
   const r = patchChargeLineSchema.safeParse({ lineId: "l1", description: "מכתב חדש", notes: "" });
   assert(r.success, "expected line edit to parse");
+});
+
+runner.test("patchDocument: empty object is rejected (no field to update)", () => {
+  const r = patchChargeDocumentSchema.safeParse({});
+  assert(!r.success, "expected empty patch to fail");
+});
+runner.test("patchDocument: single field passes", () => {
+  const r = patchChargeDocumentSchema.safeParse({ notes: "עדכון" });
+  assert(r.success, "expected single-field patch to parse");
 });
 
 runner.run().then((ok) => process.exit(ok ? 0 : 1));

@@ -35,7 +35,7 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
   } catch (error) {
     const msg = error instanceof Error ? error.message : "";
     if (msg === "NOT_FOUND") return NextResponse.json({ success: false, message: "תעודה לא נמצאה" }, { status: 404 });
-    if (msg === "BAD_STATE") return NextResponse.json({ success: false, message: "בטל תשלום לפני ביטול התעודה" }, { status: 409 });
+    if (msg === "BAD_STATE") return NextResponse.json({ success: false, message: "ניתן לבטל רק תעודה ממתינה" }, { status: 409 });
     console.error("POST cancel failed:", error);
     return NextResponse.json({ success: false, message: "שגיאה בביטול תעודה" }, { status: 500 });
   }

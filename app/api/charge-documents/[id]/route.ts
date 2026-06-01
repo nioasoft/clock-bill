@@ -45,7 +45,7 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
     const { notes, editLine, removeLineId, addTimeEntryId } = parsed.data;
     const { withTransaction } = await import("@/lib/db");
 
-    await withTransaction(async (client: PoolClient) => {
+    const total = await withTransaction(async (client: PoolClient) => {
       const doc = await client.query(
         `SELECT id, client_id, status FROM charge_documents WHERE id = $1 AND user_id = $2 FOR UPDATE`,
         [id, user.id]
@@ -54,7 +54,7 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
       if (doc.rows[0].status !== "pending") throw new Error("LOCKED");
       const clientId: string = doc.rows[0].client_id;
 
-      if (typeof notes !== "undefined" && notes !== null) {
+      if (typeof notes !== "undefined") {
         await client.query(`UPDATE charge_documents SET notes = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3`, [notes, id, user.id]);
       }
 
@@ -105,9 +105,10 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
       const sum = await client.query(`SELECT amount FROM charge_document_lines WHERE document_id = $1 AND user_id = $2`, [id, user.id]);
       const total = computeDocumentTotal(sum.rows as Array<{ amount: number | null }>);
       await client.query(`UPDATE charge_documents SET total = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3`, [total, id, user.id]);
+      return total;
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { total } });
   } catch (error) {
     const msg = error instanceof Error ? error.message : "";
     if (msg === "NOT_FOUND") return NextResponse.json({ success: false, message: "תעודה לא נמצאה" }, { status: 404 });
