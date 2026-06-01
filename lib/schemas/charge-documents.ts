@@ -8,7 +8,7 @@ export const computedLineSchema = z.object({
   sourceType: z.enum(["fixed_monthly", "retainer"]),
   periodMonth: z.string().regex(PERIOD_MONTH, "חודש לא תקין"),
   label: z.string().min(1).max(200),
-  amount: z.number(),
+  amount: z.number().min(0, "סכום לא תקין"),
 });
 
 /** POST /api/charge-documents body. */

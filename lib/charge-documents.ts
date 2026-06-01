@@ -7,6 +7,7 @@ import { calcHourlyAmount, calcItemAmount, sumMoney } from "./money";
 
 export type ChargeStatus = "pending" | "paid" | "canceled";
 export type SourceType = "time_entry" | "fixed_monthly" | "retainer";
+// 'fixed' is used by computed fixed_monthly/retainer lines built in the create route, not by buildLineFromEntry.
 export type BillingKind = "hourly" | "item" | "fixed";
 
 /** A client's unbilled entry as returned by the billable query. */

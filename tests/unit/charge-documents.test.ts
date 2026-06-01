@@ -70,5 +70,18 @@ runner.test("buildLineFromEntry: item entry -> item line amount + item_ref", () 
   assertEqual(line.itemRef, 42);
   assertEqual(line.quantity, 3);
 });
+runner.test("buildLineFromEntry: null rateLabel falls back to description for label", () => {
+  const entry: BillableEntry = {
+    id: "e3", description: "ייעוץ", notes: null, billingKind: "hourly",
+    duration: 60, quantity: null, rate: 150, rateLabel: null, itemRef: null,
+  };
+  const line = buildLineFromEntry(entry);
+  assertEqual(line.label, "ייעוץ");
+  assertEqual(line.notes, null);
+});
+
+runner.test("computeDocumentTotal of empty list is 0", () => {
+  assertEqual(computeDocumentTotal([]), 0);
+});
 
 runner.run().then((ok) => process.exit(ok ? 0 : 1));
