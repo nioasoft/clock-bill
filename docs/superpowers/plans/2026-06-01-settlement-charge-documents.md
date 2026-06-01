@@ -9,7 +9,7 @@
 **Tech Stack:** Next.js 16 App Router, Postgres/Neon, Drizzle (types) + raw `pg` (`lib/db.ts`), Zod, Better Auth, RLS (`current_setting('app.current_user_id')`), custom tsx test runner.
 
 **Spec:** `docs/superpowers/specs/2026-06-01-settlement-charge-documents-design.md`
-**Coordinates with:** `docs/superpowers/specs/2026-06-01-ad-hoc-items-design.md` (owns migration `0009`, `item_ref`, `next_item_ref`). This plan uses migration `0011` (0009 and 0010 are already taken) and assumes 0009 is applied first; if not, `item_ref` snapshots are simply `NULL`.
+**Coordinates with:** `docs/superpowers/specs/2026-06-01-ad-hoc-items-design.md` (owns migration `0009`, `item_ref`, `next_item_ref`). This plan uses migration `0013` (0009-0012 are already taken) and assumes 0009 is applied first; if not, `item_ref` snapshots are simply `NULL`.
 
 ---
 
@@ -18,7 +18,7 @@
 **New files**
 - `lib/charge-documents.ts` — pure logic: line-snapshot building, total computation, status-transition table. No DB/IO.
 - `lib/schemas/charge-documents.ts` — Zod schemas (create, line-edit, status) shared client+server.
-- `drizzle/0011_charge_documents.sql` — DDL (2 tables, 2 ALTERs, indexes). Applied via psql.
+- `drizzle/0013_charge_documents.sql` — DDL (2 tables, 2 ALTERs, indexes). Applied via psql.
 - `app/api/charge-documents/route.ts` — `GET` list, `POST` create.
 - `app/api/charge-documents/billable/route.ts` — `GET` unbilled items + computed charges for a client/month.
 - `app/api/charge-documents/[id]/route.ts` — `GET`, `PATCH`, `DELETE`.
@@ -170,12 +170,12 @@ git commit -m "feat(db): add charge_documents schema (types) for settlement"
 ### Task 2: SQL migration file (DDL)
 
 **Files:**
-- Create: `drizzle/0011_charge_documents.sql`
+- Create: `drizzle/0013_charge_documents.sql`
 
 - [ ] **Step 1: Write the migration SQL**
 
 ```sql
--- 0011_charge_documents.sql
+-- 0013_charge_documents.sql
 -- Internal settlement / charge documents. Apply via psql + DATABASE_URL_ADMIN
 -- (db:migrate is broken — drizzle meta drift). Depends on 0009_item_ref.
 BEGIN;
@@ -245,7 +245,7 @@ COMMIT;
 - [ ] **Step 2: Commit (do NOT apply yet — applied in Phase 5 after code is ready)**
 
 ```bash
-git add drizzle/0011_charge_documents.sql
+git add drizzle/0013_charge_documents.sql
 git commit -m "feat(db): migration SQL for charge_documents (apply in Phase 5)"
 ```
 
@@ -1473,7 +1473,7 @@ git commit -m "feat(ui): documents history + document view with actions and PDF"
 
 Run (uses admin URL — `db:migrate` is intentionally NOT used):
 ```bash
-psql "$DATABASE_URL_ADMIN" -f drizzle/0011_charge_documents.sql
+psql "$DATABASE_URL_ADMIN" -f drizzle/0013_charge_documents.sql
 ```
 Expected: `COMMIT` with no errors. (If `item_ref`/`next_item_ref` referenced anywhere fails, confirm `0009_item_ref.sql` was applied first.)
 
@@ -1522,7 +1522,7 @@ Take a Neon snapshot of the prod (`main`) branch (per infra memory, also keep th
 - [ ] **Step 2: Apply migration + RLS to prod**
 
 ```bash
-psql "$DATABASE_URL_ADMIN_PROD" -f drizzle/0011_charge_documents.sql
+psql "$DATABASE_URL_ADMIN_PROD" -f drizzle/0013_charge_documents.sql
 psql "$DATABASE_URL_ADMIN_PROD" -f drizzle/rls-policies.sql
 ```
 (Use the prod admin connection string. Confirm `0009_item_ref` is already on prod first.)
