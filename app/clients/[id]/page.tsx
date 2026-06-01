@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
@@ -91,6 +91,16 @@ export default function ClientDetailsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [clientProjects, setClientProjects] = useState<{id: string; name: string; status: string}[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(true);
+  const editFormRef = useRef<HTMLDivElement>(null);
+
+  // The edit form renders inline near the top of the page. The "ערוך תעריפים"
+  // trigger lives far down in the rates section, so without this the form
+  // opens off-screen and feels like nothing happened — scroll it into view.
+  useEffect(() => {
+    if (showEditForm) {
+      editFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [showEditForm]);
 
   useEffect(() => {
     const fetchClient = async () => {
@@ -276,7 +286,7 @@ export default function ClientDetailsPage() {
         )}
 
         {showEditForm && (
-          <div className="mb-6 rounded-[var(--radius-card)] bg-card p-6 border border-border/50 shadow-sm">
+          <div ref={editFormRef} className="mb-6 rounded-[var(--radius-card)] bg-card p-6 border border-border/50 shadow-sm scroll-mt-20">
             <h2 className="text-xl font-semibold text-foreground mb-4">ערוך לקוח</h2>
             <form onSubmit={handleEdit} className="space-y-4">
               {formError && (
