@@ -403,10 +403,15 @@ export const currencyRates = pgTable(
   "currency_rates",
   {
     id: text("id").primaryKey(),
-    baseCurrency: text("base_currency").notNull(),
-    targetCurrency: text("target_currency").notNull(),
+    userId: text("user_id").notNull(),
+    fromCurrency: text("from_currency").notNull(),
+    toCurrency: text("to_currency").notNull(),
     rate: real("rate").notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
-  (table) => [unique().on(table.baseCurrency, table.targetCurrency)]
+  (table) => [
+    unique().on(table.userId, table.fromCurrency, table.toCurrency),
+    index("idx_currency_rates_user_id").on(table.userId),
+  ]
 );

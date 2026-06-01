@@ -29,7 +29,7 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO cl
 DO $$
 DECLARE t text;
 BEGIN
-  FOREACH t IN ARRAY ARRAY['user_profiles','clients','projects','tasks','time_entries','report_presets','client_rates']
+  FOREACH t IN ARRAY ARRAY['user_profiles','clients','projects','tasks','time_entries','report_presets','client_rates','currency_rates']
   LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
     EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY', t);
