@@ -70,7 +70,7 @@ export default function NotFound() {
                 href="/reports"
                 className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-primary-light rounded-md transition-colors"
               >
-                דוחות
+                התחשבנות
               </Link>
             </div>
           </div>
