@@ -113,7 +113,7 @@ export const userProfiles = pgTable("user_profiles", {
   invoicePrefix: text("invoice_prefix"),
   nextInvoiceNumber: integer("next_invoice_number"),
   // Per-user counter for charge-document (settlement) numbers.
-  nextChargeDocNumber: integer("next_charge_doc_number").default(1),
+  nextChargeDocNumber: integer("next_charge_doc_number").notNull().default(1),
   // Per-user counter for item-line reference numbers (time_entries.item_ref).
   nextItemRef: integer("next_item_ref").notNull().default(1),
   paymentTerms: text("payment_terms"),
@@ -319,7 +319,7 @@ export const timeEntries = pgTable(
     index("idx_time_entries_charge_document_id").on(table.chargeDocumentId),
     index("idx_time_entries_user_unbilled")
       .on(table.userId, table.projectId)
-      .where(sql`${table.chargeDocumentId} IS NULL AND ${table.isBillable} = true`),
+      .where(sql`${table.chargeDocumentId} IS NULL AND ${table.isBillable} = TRUE`),
   ]
 );
 
@@ -435,7 +435,7 @@ export const chargeDocumentLines = pgTable(
     periodMonth: text("period_month"),
     label: text("label").notNull(),
     description: text("description"),
-    note: text("note"),
+    notes: text("notes"),
     itemRef: integer("item_ref"),
     billingKind: text("billing_kind"),
     quantity: real("quantity"),

@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS charge_document_lines (
   period_month text,
   label text NOT NULL,
   description text,
-  note text,
+  notes text,
   item_ref integer,
   billing_kind text,
   quantity real,
@@ -57,7 +57,7 @@ ALTER TABLE time_entries
 CREATE INDEX IF NOT EXISTS idx_time_entries_charge_document_id ON time_entries(charge_document_id);
 CREATE INDEX IF NOT EXISTS idx_time_entries_user_unbilled
   ON time_entries (user_id, project_id)
-  WHERE charge_document_id IS NULL AND is_billable = true;
+  WHERE charge_document_id IS NULL AND is_billable = TRUE;
 
 ALTER TABLE user_profiles
   ADD COLUMN IF NOT EXISTS next_charge_doc_number integer NOT NULL DEFAULT 1;
