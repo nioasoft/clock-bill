@@ -90,20 +90,14 @@ export async function POST(request: NextRequest) {
       const total = computeDocumentTotal(allLines);
 
       const counter = await client.query(
-        `UPDATE user_profiles SET next_charge_doc_number = next_charge_doc_number + 1
-          WHERE user_id = $1 RETURNING next_charge_doc_number - 1 AS doc_number`,
+        `INSERT INTO user_profiles (id, user_id, next_charge_doc_number)
+         VALUES (gen_random_uuid()::text, $1, 2)
+         ON CONFLICT (user_id) DO UPDATE
+           SET next_charge_doc_number = user_profiles.next_charge_doc_number + 1
+         RETURNING next_charge_doc_number - 1 AS doc_number`,
         [user.id]
       );
-      let docNumber: number;
-      if (counter.rowCount === 0) {
-        const max = await client.query(
-          `SELECT COALESCE(MAX(doc_number), 0) + 1 AS n FROM charge_documents WHERE user_id = $1`,
-          [user.id]
-        );
-        docNumber = max.rows[0].n;
-      } else {
-        docNumber = counter.rows[0].doc_number;
-      }
+      const docNumber: number = counter.rows[0].doc_number;
 
       const doc = await client.query(
         `INSERT INTO charge_documents

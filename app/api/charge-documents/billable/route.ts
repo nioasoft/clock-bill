@@ -45,8 +45,10 @@ export async function GET(request: NextRequest) {
 
     let computedLines: Array<{ sourceType: string; periodMonth: string; label: string; amount: number; currency: string; alreadyBilled: boolean }> = [];
     if (periodMonth && /^\d{4}-\d{2}$/.test(periodMonth)) {
+      const [my, mm] = periodMonth.split("-").map(Number);
+      const lastDay = new Date(my, mm, 0).getDate(); // mm is 1-based; day 0 of month mm = last day of the target month
       const monthStart = `${periodMonth}-01`;
-      const monthEnd = `${periodMonth}-31`;
+      const monthEnd = `${periodMonth}-${String(lastDay).padStart(2, "0")}`;
       const projects = await query<FixedChargeProject & Record<string, unknown>>(
         `SELECT p.id AS "projectId", p.name AS "projectName", c.id AS "clientId",
                 c.name AS "clientName", c.currency AS currency,
