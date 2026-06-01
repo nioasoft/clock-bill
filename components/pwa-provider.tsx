@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, X } from "lucide-react";
+import { Download, Share, X } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -9,6 +9,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const DISMISS_KEY = "monit-pwa-install-dismissed";
+const IOS_DISMISS_KEY = "monit-ios-install-dismissed";
 
 /**
  * Registers the service worker and surfaces an "install app" prompt (Android/
@@ -18,6 +19,8 @@ const DISMISS_KEY = "monit-pwa-install-dismissed";
 export function PwaProvider() {
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
+  // iOS has no beforeinstallprompt; we show a manual "Add to Home Screen" hint.
+  const [iosHintVisible, setIosHintVisible] = useState(false);
 
   // Register the service worker (production only — dev has no /sw.js caching needs).
   useEffect(() => {
@@ -48,6 +51,27 @@ export function PwaProvider() {
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
+  // iOS Safari can't fire beforeinstallprompt — installation is manual via
+  // Share → Add to Home Screen. Detect iOS Safari (not already installed, not
+  // dismissed) and show an instructional hint instead.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (localStorage.getItem(IOS_DISMISS_KEY) === "1") return;
+    const ua = window.navigator.userAgent;
+    const nav = window.navigator as Navigator & { standalone?: boolean; platform?: string };
+    const isIOS =
+      /iphone|ipad|ipod/i.test(ua) ||
+      (nav.platform === "MacIntel" && nav.maxTouchPoints > 1); // iPadOS reports as Mac
+    // Add to Home Screen only works in Safari on iOS, not Chrome/Firefox/Edge iOS.
+    const isSafari = /safari/i.test(ua) && !/crios|fxios|edgios/i.test(ua);
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
+    // Client-only capability detection has to run post-mount, so setting state
+    // here is intentional (SSR has no navigator; the value can't be derived).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (isIOS && isSafari && !isStandalone) setIosHintVisible(true);
+  }, []);
+
   const install = async () => {
     if (!installEvent) return;
     await installEvent.prompt();
@@ -64,6 +88,50 @@ export function PwaProvider() {
       // ignore storage failures
     }
   };
+
+  const dismissIos = () => {
+    setIosHintVisible(false);
+    try {
+      localStorage.setItem(IOS_DISMISS_KEY, "1");
+    } catch {
+      // ignore storage failures
+    }
+  };
+
+  // iOS instructional hint (no programmatic install). Shown only when the
+  // Android/desktop prompt isn't available.
+  if (!visible && iosHintVisible) {
+    return (
+      <div
+        dir="rtl"
+        className="fixed inset-x-3 z-50 mx-auto max-w-sm rounded-[var(--radius-card)] border border-border bg-card-elevated p-4 shadow-lg"
+        style={{ bottom: "calc(env(safe-area-inset-bottom) + 5rem)" }}
+        role="dialog"
+        aria-label="התקנת האפליקציה"
+      >
+        <button
+          onClick={dismissIos}
+          className="absolute top-2 end-2 z-10 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
+          aria-label="סגור"
+        >
+          <X className="h-4 w-4" />
+        </button>
+        <div className="flex items-start gap-3 pe-7">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius)] bg-primary text-primary-foreground">
+            <Download className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground">התקן את מוניט</p>
+            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+              הקש על כפתור השיתוף
+              <Share className="mx-1 inline h-3.5 w-3.5 align-text-bottom" aria-label="שיתוף" />
+              בסרגל הדפדפן, ואז בחר &quot;הוסף למסך הבית&quot;.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!visible) return null;
 

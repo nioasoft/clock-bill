@@ -101,7 +101,7 @@ export function PersistentTimerBar() {
           return (
             <div
               key={timer.id}
-              className={`flex shrink-0 items-center gap-2.5 rounded-full border ps-3 pe-1.5 py-1 ${
+              className={`flex shrink-0 items-center gap-2 sm:gap-2.5 rounded-full border ps-3 pe-1.5 py-1 ${
                 isPaused
                   ? "border-amber-500/30 bg-amber-500/5"
                   : "border-emerald-500/30 bg-emerald-500/5"
@@ -118,7 +118,7 @@ export function PersistentTimerBar() {
                 </span>
               )}
 
-              <span className="max-w-[10rem] truncate text-sm font-medium text-foreground">
+              <span className="max-w-[7rem] sm:max-w-[10rem] truncate text-sm font-medium text-foreground">
                 {timer.description || "טיימר פעיל"}
               </span>
 
@@ -131,14 +131,16 @@ export function PersistentTimerBar() {
                 onClick={() => openNotesEditor(timer.id, timer.notes)}
                 aria-label={hasNotes ? "ערוך הערות" : "הוסף הערות"}
                 title={hasNotes ? "ערוך הערות" : "הוסף הערות"}
-                className={`inline-flex items-center gap-1.5 h-8 ps-2.5 pe-3 rounded-full text-xs font-semibold transition-all ${
+                className={`inline-flex items-center justify-center sm:justify-start gap-1.5 h-8 w-8 sm:w-auto sm:ps-2.5 sm:pe-3 rounded-full text-xs font-semibold transition-all ${
                   hasNotes || editingNotes
                     ? "bg-primary/20 text-primary hover:bg-primary/30"
                     : "bg-muted text-muted-foreground hover:bg-muted/70"
                 }`}
               >
                 <StickyNote className="h-4 w-4 shrink-0" />
-                <span>{hasNotes ? "הערה" : "הערות"}</span>
+                {/* Label only on sm+ — on mobile the chip must stay narrow enough
+                    that the stop button isn't clipped off the screen edge. */}
+                <span className="hidden sm:inline">{hasNotes ? "הערה" : "הערות"}</span>
               </button>
 
               {isPaused ? (
