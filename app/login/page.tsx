@@ -15,6 +15,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendNote, setResendNote] = useState("");
 
   // Validation errors
   const [emailError, setEmailError] = useState<string | undefined>(undefined);
@@ -31,6 +34,8 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setNeedsVerification(false);
+    setResendNote("");
 
     // Clear previous errors
     setEmailError(undefined);
@@ -59,7 +64,13 @@ export default function LoginPage() {
       });
 
       if (authError) {
-        setError(authError.message || "שגיאה בהתחברות");
+        // Email/password account that hasn't confirmed its address yet.
+        if (authError.status === 403 || authError.code === "EMAIL_NOT_VERIFIED") {
+          setNeedsVerification(true);
+          setError("עליך לאמת את כתובת האימייל לפני ההתחברות. בדוק את תיבת הדואר שלך.");
+        } else {
+          setError(authError.message || "שגיאה בהתחברות");
+        }
       } else {
         router.push("/dashboard");
         router.refresh();
@@ -68,6 +79,19 @@ export default function LoginPage() {
       setError("שגיאת תקשורת. אנא נסה שוב.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    setResending(true);
+    setResendNote("");
+    try {
+      await authClient.sendVerificationEmail({ email, callbackURL: "/dashboard" });
+      setResendNote("שלחנו מייל אימות חדש.");
+    } catch {
+      setResendNote("שליחה נכשלה. נסה שוב בעוד רגע.");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -174,6 +198,19 @@ export default function LoginPage() {
             {error && (
               <div className="rounded-[var(--radius)] bg-destructive/10 p-4" role="alert">
                 <p className="text-sm text-destructive">{error}</p>
+                {needsVerification && (
+                  <div className="mt-3">
+                    <button
+                      type="button"
+                      onClick={handleResend}
+                      disabled={resending}
+                      className="text-sm font-medium text-primary hover:text-primary/80 disabled:opacity-50"
+                    >
+                      {resending ? "שולח..." : "שלח מייל אימות מחדש"}
+                    </button>
+                    {resendNote && <p className="mt-1 text-sm text-muted-foreground">{resendNote}</p>}
+                  </div>
+                )}
               </div>
             )}
 

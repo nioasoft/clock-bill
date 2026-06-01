@@ -97,6 +97,12 @@ const ENV_SCHEMA: EnvVarSchema[] = [
     descriptionHe: "מפתח API לשירות דוא״ל Resend (אופציונלי)",
   },
   {
+    name: "EMAIL_FROM",
+    required: false,
+    description: 'Verified Resend sender, e.g. "מוניט <noreply@clock-bill.com>" (optional)',
+    descriptionHe: "כתובת שולח מאומתת ב-Resend (אופציונלי)",
+  },
+  {
     name: "R2_BUCKET_NAME",
     required: false,
     description: "Cloudflare R2 bucket name (optional)",

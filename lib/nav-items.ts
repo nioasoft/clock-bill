@@ -5,7 +5,7 @@
 export interface NavItemDef {
   name: string;
   href: string;
-  iconName: "Home" | "Clock" | "Users" | "FolderKanban" | "FileText" | "Settings" | "Shield";
+  iconName: "Home" | "Clock" | "Users" | "FolderKanban" | "FileText" | "MessageSquare" | "Settings" | "Shield";
   adminOnly?: boolean;
 }
 
@@ -15,6 +15,7 @@ export const navItemDefs: NavItemDef[] = [
   { name: "לקוחות", href: "/clients", iconName: "Users" },
   { name: "פרויקטים", href: "/projects", iconName: "FolderKanban" },
   { name: "התחשבנות", href: "/reports", iconName: "FileText" },
+  { name: "פניות", href: "/feedback", iconName: "MessageSquare" },
   { name: "הגדרות", href: "/settings", iconName: "Settings" },
   { name: "ניהול", href: "/admin", iconName: "Shield", adminOnly: true },
 ];

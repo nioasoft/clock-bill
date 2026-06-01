@@ -44,6 +44,20 @@ export function AppLayout({ children }: AppLayoutProps) {
 
         if (data.success && data.user) {
           setUser(data.user);
+          // Apply a business name captured at signup. Email verification means
+          // the profile PATCH can't run during registration (no session yet),
+          // so it's stashed and applied here on the first authenticated load.
+          const pendingBusinessName = localStorage.getItem("pendingBusinessName");
+          if (pendingBusinessName) {
+            localStorage.removeItem("pendingBusinessName");
+            void fetch("/api/profile", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ businessName: pendingBusinessName }),
+            }).catch(() => {
+              // Non-fatal: the user can set the business name later in settings.
+            });
+          }
         } else {
           document.cookie = "session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
           router.push("/login");

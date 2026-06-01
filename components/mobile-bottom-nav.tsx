@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Clock, Users, FolderKanban, FileText, Settings, Shield } from "lucide-react";
+import { Home, Clock, Users, FolderKanban, FileText, MessageSquare, Settings, Shield } from "lucide-react";
 import { navItemDefs } from "@/lib/nav-items";
 
-const iconMap = { Home, Clock, Users, FolderKanban, FileText, Settings, Shield } as const;
+const iconMap = { Home, Clock, Users, FolderKanban, FileText, MessageSquare, Settings, Shield } as const;
 
 const navItems = navItemDefs
   .filter((item) => !item.adminOnly)
