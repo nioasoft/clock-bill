@@ -13,42 +13,12 @@ import {
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
-// ─── Users ──────────────────────────────────────────────────────────
-
-export const users = pgTable("users", {
-  id: text("id").primaryKey(),
-  email: text("email").unique().notNull(),
-  passwordHash: text("password_hash").notNull(),
-  emailVerified: boolean("email_verified").default(false),
-  role: text("role").default("user"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// ─── Sessions ───────────────────────────────────────────────────────
-
-export const sessions = pgTable(
-  "sessions",
-  {
-    id: text("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    token: text("token").unique().notNull(),
-    expiresAt: timestamp("expires_at").notNull(),
-    createdAt: timestamp("created_at").defaultNow(),
-  },
-  (table) => [
-    index("idx_sessions_user_id").on(table.userId),
-    index("idx_sessions_token").on(table.token),
-  ]
-);
-
 // ─── Better Auth tables ─────────────────────────────────────────────
-// These back Better Auth (email/password + Google). They are SEPARATE from
-// the legacy `users`/`sessions` tables above. Application data tables
+// These back Better Auth (email/password + Google). Application data tables
 // (clients/projects/time_entries/...) reference `user.id` via their loose
-// `user_id` text columns. Managed by Better Auth; do not hand-edit rows.
+// `user_id` text columns (no FK). Managed by Better Auth; do not hand-edit rows.
+// (The pre-Better-Auth `users`/`sessions`/*_tokens tables were dropped 2026-06-01 —
+// see drizzle/0011_drop_legacy_auth_tables.sql.)
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -352,45 +322,9 @@ export const customTags = pgTable(
   ]
 );
 
-// ─── Password Reset Tokens ─────────────────────────────────────────
-
-export const passwordResetTokens = pgTable(
-  "password_reset_tokens",
-  {
-    id: text("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    token: text("token").unique().notNull(),
-    expiresAt: timestamp("expires_at").notNull(),
-    used: boolean("used").default(false),
-    createdAt: timestamp("created_at").defaultNow(),
-  },
-  (table) => [
-    index("idx_password_reset_tokens_token").on(table.token),
-    index("idx_password_reset_tokens_user_id").on(table.userId),
-  ]
-);
-
-// ─── Email Verification Tokens ──────────────────────────────────────
-
-export const emailVerificationTokens = pgTable(
-  "email_verification_tokens",
-  {
-    id: text("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    token: text("token").unique().notNull(),
-    expiresAt: timestamp("expires_at").notNull(),
-    used: boolean("used").default(false),
-    createdAt: timestamp("created_at").defaultNow(),
-  },
-  (table) => [
-    index("idx_email_verification_tokens_token").on(table.token),
-    index("idx_email_verification_tokens_user_id").on(table.userId),
-  ]
-);
+// (Legacy `password_reset_tokens` / `email_verification_tokens` tables were
+// dropped 2026-06-01 — Better Auth uses its own `verification` table. See
+// drizzle/0011_drop_legacy_auth_tables.sql.)
 
 // ─── Report Presets ─────────────────────────────────────────────────
 
@@ -398,9 +332,10 @@ export const reportPresets = pgTable(
   "report_presets",
   {
     id: text("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    // Loose text ref to the Better Auth user.id (no FK — matches the other app
+    // tables). The old FK to the legacy `users` table was dropped 2026-06-01;
+    // because that table was empty it had silently blocked all preset inserts.
+    userId: text("user_id").notNull(),
     name: text("name").notNull(),
     clientId: text("client_id"),
     projectId: text("project_id"),

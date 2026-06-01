@@ -102,15 +102,20 @@ with the claim + rewriting all policies. **Effort:** high. **Impact:** HIGH at s
 - `[x]` Appended `AND user_id = $n` to the 3 cosmetic "fetch-after-write" reads (`clients/[id]`,
   `currency-rates`, `reports/presets`) — uniform, grep-clean (done 2026-06-01).
 
-### 10. Hardening (not perf, tracked here for completeness)  `[ ]`
-- **Drizzle footgun:** `@/src/db` runs with no tenant context → using it on an RLS'd table fails
-  closed (0 rows). Keep it for Better Auth tables only, or wrap with context binding. Add a code-review/
-  lint note.
-- **Better Auth rate-limit** storage is in-memory per instance, and `sendResetPassword` only logs the
-  link. Move BA `rateLimit` to DB/Redis and wire Resend before wide launch.
-- **Legacy dead tables** (`users`, `sessions`, `password_reset_tokens`, `email_verification_tokens`)
-  are unused + un-RLS'd — drop from schema + DB once confirmed unreferenced.
-- No app-level cache (Upstash) is wired; `Cache-Control: private` is browser-only.
+### 10. Hardening (not perf, tracked here for completeness)  `[~]`
+- `[x]` **Drizzle footgun:** added a prominent RLS warning to `src/db/index.ts` (fails closed on
+  user-data tables; safe only for Better Auth tables) and fixed its example (was pointing at a legacy
+  table). Done 2026-06-01.
+- `[x]` **Legacy dead tables dropped** (`users`, `sessions`, `password_reset_tokens`,
+  `email_verification_tokens`) — all empty on dev+prod. drizzle/0011 + schema.ts. **Also fixed a latent
+  bug:** `report_presets.user_id` had a stale FK to the empty legacy `users` table, which had silently
+  made saving any report preset impossible; the FK is dropped (user_id is now a loose text ref like the
+  other app tables).
+- `[ ]` **Better Auth rate-limit → DB + Resend** — HELD, needs your call. In-memory rate-limit is fine
+  while you're the only user; moving to DB-backed only matters at scale and is auth-sensitive on prod.
+  `sendResetPassword` still only logs the link — wiring real reset emails needs a Resend API key + a
+  verified from-domain. Tell me and I'll wire it.
+- `[ ]` **App-level cache (Upstash)** — optional infra, needs an Upstash account/creds. Deferred.
 
 ---
 
