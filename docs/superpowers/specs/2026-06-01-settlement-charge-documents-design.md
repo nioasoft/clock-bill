@@ -158,7 +158,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON charge_document_lines TO clockbill_app;
 shared files:
 
 - **Migration numbering:** ad-hoc owns `drizzle/0009_item_ref.sql`. This feature uses
-  **`drizzle/0010_charge_documents.sql`** and assumes 0009 is applied first (so `item_ref`
+  **`drizzle/0011_charge_documents.sql`** and assumes 0009 is applied first (so `item_ref`
   exists on `time_entries` and `next_item_ref` on `user_profiles`). If 0009 is not yet
   applied, the `item_ref` snapshot column in lines is simply populated as `NULL` until it is.
 - **`item_ref` snapshot:** `charge_document_lines.item_ref` is copied from
@@ -277,10 +277,10 @@ edits). Each item line prints `label`, the per-line `description`/`note`, `אס�
 1. Update `src/db/schema.ts`: add `chargeDocuments`, `chargeDocumentLines`, the
    `chargeDocumentId` column on `timeEntries`, and `nextChargeDocNumber` on `userProfiles`
    (matching conventions above) — for Drizzle type-safety, even though migration is manual.
-2. Write `drizzle/0010_charge_documents.sql` (CREATE TABLEs + ALTER `time_entries` ADD COLUMN
+2. Write `drizzle/0011_charge_documents.sql` (CREATE TABLEs + ALTER `time_entries` ADD COLUMN
    + ALTER `user_profiles` ADD COLUMN + indexes), wrapped `BEGIN; … COMMIT;`.
 3. **Dev branch** (Neon `dev`, role admin): `psql "$DATABASE_URL_ADMIN" -f
-   drizzle/0010_charge_documents.sql`, then apply the RLS DO-block (as `neondb_owner`).
+   drizzle/0011_charge_documents.sql`, then apply the RLS DO-block (as `neondb_owner`).
 4. Smoke-test as `clockbill_app`: user A issues a document; confirm user B's session cannot
    read it or its lines (IDOR check).
 5. **Prod branch** (`main`): take a Neon snapshot first, then repeat steps 3–4 with the prod
@@ -309,7 +309,7 @@ out of order, the `item_ref` snapshot is `NULL` until 0009 lands.
 
 ## Files touched
 
-- **Migration:** `drizzle/0010_charge_documents.sql` (psql → dev + prod) + RLS block appended
+- **Migration:** `drizzle/0011_charge_documents.sql` (psql → dev + prod) + RLS block appended
   to `drizzle/rls-policies.sql` (`charge_documents`, `charge_document_lines`).
 - `src/db/schema.ts` — two new tables, `timeEntries.chargeDocumentId`,
   `userProfiles.nextChargeDocNumber`.
