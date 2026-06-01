@@ -18,6 +18,9 @@ export default function RegisterPage() {
   const [businessName, setBusinessName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendNote, setResendNote] = useState("");
 
   // Validation errors
   const [emailError, setEmailError] = useState<string | undefined>(undefined);
@@ -57,7 +60,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const { error: authError } = await authClient.signUp.email({
+      const { data, error: authError } = await authClient.signUp.email({
         email,
         password,
         name: businessName || email.split("@")[0],
@@ -65,8 +68,8 @@ export default function RegisterPage() {
 
       if (authError) {
         setError(authError.message || "שגיאה בהרשמה");
-      } else {
-        // Persist the business name on the user's profile if provided.
+      } else if (data?.token) {
+        // A session was created (email verification is disabled) — sign straight in.
         if (businessName.trim()) {
           try {
             await fetch("/api/profile", {
@@ -80,11 +83,31 @@ export default function RegisterPage() {
         }
         router.push("/dashboard");
         router.refresh();
+      } else {
+        // Verification required, no session yet — stash the business name and
+        // apply it on the first authenticated load (AppLayout).
+        if (businessName.trim()) {
+          localStorage.setItem("pendingBusinessName", businessName.trim());
+        }
+        setVerificationSent(true);
       }
     } catch {
       setError("שגיאת תקשורת. אנא נסה שוב.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    setResending(true);
+    setResendNote("");
+    try {
+      await authClient.sendVerificationEmail({ email, callbackURL: "/dashboard" });
+      setResendNote("שלחנו שוב את מייל האימות.");
+    } catch {
+      setResendNote("שליחה נכשלה. נסה שוב בעוד רגע.");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -145,6 +168,40 @@ export default function RegisterPage() {
             </div>
           </div>
 
+          {verificationSent ? (
+            <div className="rounded-[var(--radius-card)] border border-border bg-card p-6 text-center lg:text-start" role="status" aria-live="polite">
+              <div className="w-12 h-1 bg-accent rounded-full mb-6 mx-auto lg:mx-0" />
+              <h1 className="text-2xl font-display font-bold tracking-tight text-foreground">
+                בדוק את האימייל שלך 📧
+              </h1>
+              <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                שלחנו קישור אימות לכתובת{" "}
+                <span className="font-medium text-foreground" dir="ltr">{email}</span>.
+                לחץ על הקישור במייל כדי להפעיל את החשבון ולהתחיל לעבוד.
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                לא קיבלת? בדוק את תיקיית הספאם, או שלח שוב.
+              </p>
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resending}
+                className="mt-5 w-full rounded-[var(--radius)] border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50 transition-colors"
+              >
+                {resending ? "שולח..." : "שלח מייל אימות שוב"}
+              </button>
+              {resendNote && (
+                <p className="mt-2 text-sm text-muted-foreground">{resendNote}</p>
+              )}
+              <p className="mt-5 text-sm text-muted-foreground">
+                כבר אימתת?{" "}
+                <Link href="/login" className="font-medium text-primary hover:text-primary/80">
+                  התחבר כאן
+                </Link>
+              </p>
+            </div>
+          ) : (
+          <>
           <div className="text-center lg:text-start">
             <div className="w-12 h-1 bg-accent rounded-full mb-6 mx-auto lg:mx-0" />
             <h1 className="text-3xl font-display font-bold tracking-tight text-foreground">
@@ -294,6 +351,8 @@ export default function RegisterPage() {
               </p>
             </div>
           </form>
+          </>
+          )}
         </div>
       </div>
     </div>

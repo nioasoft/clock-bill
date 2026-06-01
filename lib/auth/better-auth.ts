@@ -15,8 +15,14 @@ import { db } from "@/src/db";
 import * as schema from "@/src/db/schema";
 import { query, setUserContext } from "@/lib/db";
 import { createLogger } from "@/lib/logger";
+import { sendEmail, emailLayout, emailButton, isEmailConfigured } from "@/lib/email";
 
 const logger = createLogger("auth");
+
+// Only gate login on verification when email can actually be sent — otherwise
+// (local dev / before Resend is configured) signups would be permanently locked
+// out with no way to verify. With no key, the reset/verify links are logged.
+const emailEnabled = isEmailConfigured();
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -35,13 +41,50 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    // Clean-start migration: don't block login on verification for now.
-    requireEmailVerification: false,
+    // Block login until the email is confirmed (verification email sent on
+    // signup below). Google sign-ins arrive pre-verified, so this only gates
+    // email/password accounts. Disabled when email isn't configured.
+    requireEmailVerification: emailEnabled,
     minPasswordLength: 8,
-    // No email provider wired yet — log the reset link (dev parity with the
-    // previous custom auth). Replace with a real mailer (Resend/SES) in prod.
     sendResetPassword: async ({ user, url }) => {
-      logger.info(`Password reset link for ${user.email}: ${url}`);
+      const sent = await sendEmail({
+        to: user.email,
+        subject: "איפוס סיסמה — מוניט",
+        html: emailLayout({
+          heading: "איפוס סיסמה",
+          bodyHtml: `
+            <p style="margin:0 0 8px;font-size:15px;line-height:1.6;">קיבלנו בקשה לאיפוס הסיסמה לחשבון שלך במוניט.</p>
+            <p style="margin:0;font-size:15px;line-height:1.6;">לחץ על הכפתור כדי לבחור סיסמה חדשה. הקישור תקף לזמן מוגבל.</p>
+            ${emailButton(url, "אפס סיסמה")}
+            <p style="margin:0;font-size:13px;color:#71717a;line-height:1.6;">אם לא ביקשת לאפס סיסמה, אפשר להתעלם מהודעה זו — הסיסמה שלך לא תשתנה.</p>`,
+        }),
+      });
+      // Dev parity / fallback when email isn't configured: log the link.
+      if (!sent) {
+        logger.info(`Password reset link for ${user.email}: ${url}`);
+      }
+    },
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+    expiresIn: 3600,
+    sendVerificationEmail: async ({ user, url }) => {
+      const sent = await sendEmail({
+        to: user.email,
+        subject: "אימות כתובת אימייל — מוניט",
+        html: emailLayout({
+          heading: "אמת את כתובת האימייל שלך",
+          bodyHtml: `
+            <p style="margin:0 0 8px;font-size:15px;line-height:1.6;">ברוך הבא למוניט! 🎉</p>
+            <p style="margin:0;font-size:15px;line-height:1.6;">כדי להתחיל, אנא אמת את כתובת האימייל שלך בלחיצה על הכפתור.</p>
+            ${emailButton(url, "אמת אימייל")}
+            <p style="margin:0;font-size:13px;color:#71717a;line-height:1.6;">אם לא נרשמת למוניט, אפשר להתעלם מהודעה זו.</p>`,
+        }),
+      });
+      if (!sent) {
+        logger.info(`Email verification link for ${user.email}: ${url}`);
+      }
     },
   },
   socialProviders: googleEnabled

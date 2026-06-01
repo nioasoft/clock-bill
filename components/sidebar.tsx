@@ -8,6 +8,7 @@ import {
   Users,
   FolderKanban,
   FileText,
+  MessageSquare,
   Settings,
   Shield,
   LogOut,
@@ -20,7 +21,7 @@ import { navItemDefs } from "@/lib/nav-items";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { BRAND } from "@/lib/brand";
 
-const iconMap = { Home, Clock: Gauge, Users, FolderKanban, FileText, Settings, Shield } as const;
+const iconMap = { Home, Clock: Gauge, Users, FolderKanban, FileText, MessageSquare, Settings, Shield } as const;
 
 interface SidebarProps {
   className?: string;
