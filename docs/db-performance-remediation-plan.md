@@ -23,7 +23,7 @@ Nothing here is a data-leak risk. The items below are performance + future-proof
 
 ## P0 — Before public launch (high impact, low effort)
 
-### 1. Covering index on `time_entries`  `[ ]`
+### 1. Covering index on `time_entries`  `[~]` (dev applied 2026-06-01; **prod pending**)
 Every dashboard/report aggregate (`SUM(duration)`, earnings, billable totals) currently does an
 index scan **plus a heap fetch per row**. One online index removes the heap fetch.
 
@@ -36,13 +36,13 @@ CREATE INDEX CONCURRENTLY idx_time_entries_user_date_covering
   (meta drift — see project memory). Add the matching index to `src/db/schema.ts` so it isn't lost.
 - **Effort:** ~15 min. **Impact:** HIGH — first query to degrade at scale, fixed cheaply.
 
-### 2. Reduce pg pool `max` 20 → 5  `[ ]`
+### 2. Reduce pg pool `max` 20 → 5  `[x]` (done 2026-06-01, `lib/db.ts`)
 Each Vercel instance holds its own pool. `max:20` × N instances can exhaust Neon's connection limit
 under load. Prod is already on the `-pooler` endpoint, so only the size needs to drop.
 - File: `lib/db.ts` pool config (`max`, keep `idleTimeoutMillis`/`connectionTimeoutMillis`).
 - **Effort:** ~10 min. **Impact:** HIGH — the only change that prevents connection exhaustion at scale.
 
-### 3. Kill the reports-page fan-out  `[ ]`
+### 3. Kill the reports-page fan-out  `[x]` (done 2026-06-01: `GET /api/reports/init` + page now one call)
 `/(auth)/reports` fires **5 independent API calls** on mount (`profile`, `clients`, `projects`,
 `presets`, `currency-rates`) ≈ 15 DB round-trips before the user clicks "Generate".
 - Add `GET /api/reports/init` returning `{ clients, projects, presets, currencyRates }` in a single

@@ -67,7 +67,10 @@ export function getPool(): Pool {
   if (!pool) {
     pool = new Pool({
       connectionString: getDatabaseUrl(),
-      max: 20,
+      // Each serverless instance keeps its own pool, and prod already talks to
+      // Neon's PgBouncer (-pooler) endpoint — so a large per-instance pool just
+      // burns Neon connections (N instances × max). Keep it small.
+      max: 5,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,
     });

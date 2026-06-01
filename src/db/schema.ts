@@ -310,6 +310,11 @@ export const timeEntries = pgTable(
     index("idx_time_entries_task_id").on(table.taskId),
     index("idx_time_entries_date").on(table.date),
     index("idx_time_entries_user_id_date").on(table.userId, table.date),
+    // NOTE: a covering index `idx_time_entries_user_date_covering` on
+    // (user_id, date) INCLUDE (duration, is_billable, project_id) also exists in
+    // the DB, created out-of-band via psql (Drizzle 0.45 can't express INCLUDE).
+    // It lets dashboard/report aggregates skip the heap fetch. Keep it when
+    // running db:push — see drizzle/0008_time_entries_covering_index.sql.
     // NON-unique: multiple concurrent running timers per user are allowed.
     // Keeps the partial predicate so the running-timer lookup stays index-backed.
     index("idx_running_timers_per_user")

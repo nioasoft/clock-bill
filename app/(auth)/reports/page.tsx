@@ -194,14 +194,19 @@ export default function ReportsPage() {
   const [displayCurrency, setDisplayCurrency] = useState<string>("original");
   const [currencyRates, setCurrencyRates] = useState<Record<string, Record<string, number>>>({});
 
+  // Single bootstrap call: profile + clients + projects + presets + currency
+  // rates in one request (one DB transaction) instead of five parallel fetches.
   useEffect(() => {
-    const fetchUserProfile = async () => {
-
+    const fetchInit = async () => {
+      setClientsLoading(true);
+      setProjectsLoading(true);
+      setPresetsLoading(true);
       try {
-        const response = await fetch("/api/profile");
+        const response = await fetch("/api/reports/init");
         const data = await response.json();
+        if (!data.success) return;
 
-        if (data.success && data.profile) {
+        if (data.profile) {
           setUserProfile({
             businessName: data.profile.businessName,
             logoUrl: data.profile.logoUrl,
@@ -215,85 +220,12 @@ export default function ReportsPage() {
             pdfAccentColor: data.profile.pdfAccentColor || "#347B52",
           });
         }
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-      }
-    };
 
-    fetchUserProfile();
-  }, []);
+        setClients(data.clients || []);
+        setProjects(data.projects || []);
+        setPresets(data.presets || []);
 
-  useEffect(() => {
-    const fetchClients = async () => {
-
-      try {
-        setClientsLoading(true);
-        const response = await fetch("/api/clients");
-        const data = await response.json();
-
-        if (data.success) {
-          setClients(data.clients || []);
-        }
-      } catch (error) {
-        console.error("Error fetching clients:", error);
-      } finally {
-        setClientsLoading(false);
-      }
-    };
-
-    fetchClients();
-  }, []);
-
-  useEffect(() => {
-    const fetchProjects = async () => {
-
-      try {
-        setProjectsLoading(true);
-        const response = await fetch("/api/projects");
-        const data = await response.json();
-
-        if (data.success) {
-          setProjects(data.projects || []);
-        }
-      } catch (error) {
-        console.error("Error fetching projects:", error);
-      } finally {
-        setProjectsLoading(false);
-      }
-    };
-
-    fetchProjects();
-  }, []);
-
-  useEffect(() => {
-    const fetchPresets = async () => {
-
-      try {
-        setPresetsLoading(true);
-        const response = await fetch("/api/reports/presets");
-        const data = await response.json();
-
-        if (data.success) {
-          setPresets(data.presets || []);
-        }
-      } catch (error) {
-        console.error("Error fetching presets:", error);
-      } finally {
-        setPresetsLoading(false);
-      }
-    };
-
-    fetchPresets();
-  }, []);
-
-  useEffect(() => {
-    const fetchCurrencyRates = async () => {
-
-      try {
-        const response = await fetch("/api/currency-rates");
-        const data = await response.json();
-
-        if (data.success && data.rates) {
+        if (data.rates) {
           // Build a nested map: rates[fromCurrency][toCurrency] = rate
           const ratesMap: Record<string, Record<string, number>> = {};
           data.rates.forEach((rate: { fromCurrency: string; toCurrency: string; rate: number }) => {
@@ -305,11 +237,15 @@ export default function ReportsPage() {
           setCurrencyRates(ratesMap);
         }
       } catch (error) {
-        console.error("Error fetching currency rates:", error);
+        console.error("Error loading reports init:", error);
+      } finally {
+        setClientsLoading(false);
+        setProjectsLoading(false);
+        setPresetsLoading(false);
       }
     };
 
-    fetchCurrencyRates();
+    fetchInit();
   }, []);
 
   // Check for URL parameters on mount (for shared links)
