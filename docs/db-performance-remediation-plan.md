@@ -111,11 +111,15 @@ with the claim + rewriting all policies. **Effort:** high. **Impact:** HIGH at s
   bug:** `report_presets.user_id` had a stale FK to the empty legacy `users` table, which had silently
   made saving any report preset impossible; the FK is dropped (user_id is now a loose text ref like the
   other app tables).
-- `[ ]` **Better Auth rate-limit → DB + Resend** — HELD, needs your call. In-memory rate-limit is fine
-  while you're the only user; moving to DB-backed only matters at scale and is auth-sensitive on prod.
-  `sendResetPassword` still only logs the link — wiring real reset emails needs a Resend API key + a
-  verified from-domain. Tell me and I'll wire it.
-- `[ ]` **App-level cache (Upstash)** — optional infra, needs an Upstash account/creds. Deferred.
+- `[x]` **Better Auth rate-limit → DB** — done 2026-06-01: `storage: "database"` + `rate_limit` table
+  (drizzle/0012, dev+prod), verified live (a failed sign-in writes a row; auth still returns 401).
+- `[ ]` **Resend** (reset emails) — `sendResetPassword` still only logs; needs a Resend API key +
+  verified from-domain. Wiring ready to add when the env vars land.
+- `[ ]` **App-level cache (Upstash)** — RECOMMEND NOT NOW. All hot data here is per-user private, so a
+  shared cache needs per-user keys (low reuse for a single user) + invalidation on every write (stale-data
+  risk), plus an external dependency/creds. The lag was already fixed by the fan-out + index + query-merge
+  work; browser `Cache-Control: private` already covers per-user reuse. Revisit only if a specific endpoint
+  proves slow under real load (measure first).
 
 ---
 
