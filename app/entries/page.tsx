@@ -1231,10 +1231,21 @@ export default function EntriesPage() {
                               פעיל
                             </div>
                           )}
-                          <div className="text-sm text-foreground max-w-xs truncate">
-                            {entry.description}
+                          <div
+                            className={`text-sm max-w-xs truncate ${
+                              entry.billingKind === "item" && entry.rateLabel
+                                ? "font-semibold text-foreground"
+                                : "text-foreground"
+                            }`}
+                          >
+                            {entry.billingKind === "item" && entry.rateLabel
+                              ? entry.rateLabel
+                              : entry.description}
                           </div>
                         </div>
+                        {entry.billingKind === "item" && entry.rateLabel && (
+                          <div className="mt-0.5 text-xs text-muted-foreground truncate max-w-xs">{entry.description}</div>
+                        )}
                         {entry.notes && (
                           <div className="mt-0.5 text-xs text-muted-foreground truncate max-w-xs">{entry.notes}</div>
                         )}
@@ -1315,8 +1326,20 @@ export default function EntriesPage() {
                         <Link href={`/clients/${entry.clientId}`} className="text-muted-foreground hover:text-primary hover:underline">{entry.clientName}</Link>
                       </div>
 
+                      {/* Item name (for item lines) shown prominently, then the detail */}
+                      {entry.billingKind === "item" && entry.rateLabel && (
+                        <div className="text-sm font-semibold text-foreground mb-0.5">
+                          {entry.rateLabel}
+                        </div>
+                      )}
                       {/* Description */}
-                      <div className="text-sm text-foreground mb-1">
+                      <div
+                        className={`mb-1 ${
+                          entry.billingKind === "item" && entry.rateLabel
+                            ? "text-xs text-muted-foreground"
+                            : "text-sm text-foreground"
+                        }`}
+                      >
                         {entry.description}
                       </div>
                       {entry.notes && (
