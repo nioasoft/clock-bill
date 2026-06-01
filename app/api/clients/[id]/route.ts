@@ -347,8 +347,8 @@ export async function PATCH(
     }>(
       `SELECT id, name, contact_name, email, phone, address, default_rate, notes, is_active, created_at
        FROM clients
-       WHERE id = $1`,
-      [clientId]
+       WHERE id = $1 AND user_id = $2`,
+      [clientId, user.id]
     );
 
     const client = clientResult.rows[0];

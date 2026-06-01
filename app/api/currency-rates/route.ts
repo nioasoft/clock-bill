@@ -107,8 +107,8 @@ export async function POST(request: NextRequest) {
     const result = await query(
       `SELECT id, user_id, from_currency as "fromCurrency", to_currency as "toCurrency", rate, created_at as "createdAt", updated_at as "updatedAt"
        FROM currency_rates
-       WHERE id = $1`,
-      [rateId]
+       WHERE id = $1 AND user_id = $2`,
+      [rateId, user.id]
     );
 
     return NextResponse.json({

@@ -105,9 +105,9 @@ export async function POST(req: NextRequest) {
       `
       SELECT id, name, client_id, project_id, start_date, end_date, created_at, updated_at
       FROM report_presets
-      WHERE id = $1
+      WHERE id = $1 AND user_id = $2
       `,
-      [id]
+      [id, userId]
     );
 
     const preset = {

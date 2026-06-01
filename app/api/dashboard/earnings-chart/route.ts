@@ -16,13 +16,6 @@ export async function GET(_request: NextRequest) {
 
     const userId = user.id;
 
-    // Get user's default currency
-    const currencyResult = await query<{ default_currency: string }>(
-      `SELECT default_currency FROM user_profiles WHERE user_id = $1`,
-      [userId]
-    );
-    const userCurrency = currencyResult.rows[0]?.default_currency || 'ILS';
-
     // Get currency symbol
     const getCurrencySymbol = (currency: string) => {
       const symbols: Record<string, string> = {
@@ -35,26 +28,35 @@ export async function GET(_request: NextRequest) {
       return symbols[currency] || currency;
     };
 
-    // Get earnings for the last 12 months
+    // Earnings for the last 12 months + the user's default currency in one query
+    // (the currency rides along on each row; on an empty result there's nothing to
+    // format anyway, so losing it is harmless).
     const earningsResult = await query<{
       month: string;
       total: string;
+      currency: string | null;
     }>(
-      `SELECT
-         TO_CHAR(te.date, 'YYYY-MM') as month,
-         COALESCE(SUM(
-           (te.duration / 60.0) * COALESCE(c.default_rate, 0)
-         ), 0) as total
-       FROM time_entries te
-       JOIN projects p ON te.project_id = p.id
-       JOIN clients c ON p.client_id = c.id
-       WHERE te.user_id = $1
-         AND te.is_billable = TRUE
-         AND te.date >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '11 months')
-       GROUP BY TO_CHAR(te.date, 'YYYY-MM')
-       ORDER BY month ASC`,
+      `SELECT m.month, m.total,
+              (SELECT default_currency FROM user_profiles WHERE user_id = $1) AS currency
+       FROM (
+         SELECT
+           TO_CHAR(te.date, 'YYYY-MM') as month,
+           COALESCE(SUM(
+             (te.duration / 60.0) * COALESCE(c.default_rate, 0)
+           ), 0) as total
+         FROM time_entries te
+         JOIN projects p ON te.project_id = p.id
+         JOIN clients c ON p.client_id = c.id
+         WHERE te.user_id = $1
+           AND te.is_billable = TRUE
+           AND te.date >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '11 months')
+         GROUP BY TO_CHAR(te.date, 'YYYY-MM')
+       ) m
+       ORDER BY m.month ASC`,
       [userId]
     );
+
+    const userCurrency = earningsResult.rows[0]?.currency || 'ILS';
 
     // Format the data
     const monthlyEarnings = earningsResult.rows.map(row => {

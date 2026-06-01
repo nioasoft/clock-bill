@@ -70,17 +70,8 @@ export async function GET(request: NextRequest) {
       filterIndex++;
     }
 
-    // Total count for pagination metadata
-    const countResult = await query<{ total: string }>(
-      `SELECT COUNT(*) as total
-       FROM time_entries te
-       JOIN projects p ON te.project_id = p.id
-       JOIN clients c ON p.client_id = c.id${whereClause}`,
-      filterParams
-    );
-    const total = parseInt(countResult.rows[0]?.total || "0", 10);
-
-    // Build query with filters
+    // Build query with filters. The total (for pagination metadata) comes from a
+    // COUNT(*) OVER() window on the same statement — no separate count round-trip.
     let queryText = `
       SELECT
         te.id,
@@ -102,6 +93,7 @@ export async function GET(request: NextRequest) {
         te.rate_label,
         te.quantity,
         te.item_ref,
+        COUNT(*) OVER() AS total_count,
         p.name as project_name,
         c.name as client_name,
         c.id as client_id,
@@ -136,11 +128,14 @@ export async function GET(request: NextRequest) {
       rate_label: string | null;
       quantity: number | null;
       item_ref: number | null;
+      total_count: string;
       project_name: string;
       client_name: string;
       client_id: string;
       task_name: string | null;
     }>(queryText, queryParams);
+
+    const total = parseInt(result.rows[0]?.total_count || "0", 10);
 
     const entries = result.rows.map((entry) => ({
       id: entry.id,

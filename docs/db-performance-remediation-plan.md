@@ -66,22 +66,27 @@ chart aggregates into the `stats` `Promise.all` and rename to `GET /api/dashboar
 `/api/timer/running` separate (must not be cached).
 - **Effort:** ~1–2 h. **Impact:** MEDIUM.
 
-### 6. Merge multi-query read routes into one statement  `[~]` (partly done 2026-06-01)
+### 6. Merge multi-query read routes into one statement  `[x]` (done 2026-06-01)
 - `[x]` `GET /api/dashboard/stats`: 3 time-period SUMs → one `FILTER` aggregate, clients+projects
   COUNTs → one scalar-subquery row, currency folded onto earnings (10 → 6 queries). FILTER equivalence
   verified on dev.
 - `[x]` `GET /api/projects/[id]/stats`: ownership + SUM + COUNT → one LEFT JOIN aggregate (3 → 1).
-- `[ ]` `GET /api/dashboard/earnings-chart`: JOIN `user_profiles` for currency instead of a separate lookup.
-- `[ ]` `GET /api/entries`: get total via `COUNT(*) OVER ()` window instead of a separate COUNT round-trip.
+- `[x]` `GET /api/dashboard/earnings-chart`: currency folded onto the earnings query via an outer
+  scalar subquery (2 → 1). Verified on dev.
+- `[x]` `GET /api/entries`: total now comes from `COUNT(*) OVER()` on the page query (no separate
+  COUNT round-trip). Window-count == plain count verified on dev.
 
 ---
 
 ## P2 — Future-proofing (lower priority / larger)
 
-### 7. Drop the RLS COMMIT round-trip on read-only queries  `[ ]`
+### 7. Drop the RLS COMMIT round-trip on read-only queries  `[ ]` (HELD — audit suggestion is unsafe as written)
 Read paths do `BEGIN; set_config; SELECT; COMMIT` = 3 round-trips; the COMMIT is wasted on SELECTs.
-Detect read-only intent in `query()` and release without an explicit COMMIT (pool auto-rollbacks).
-Saves 1 round-trip per read. **Effort:** ~1 h. **Impact:** MEDIUM-LOW but touches every read.
+⚠️ The audit's "release without COMMIT, pool auto-rollbacks" is WRONG for node-pg: `pool.client.release()`
+does NOT roll back an open transaction, so skipping COMMIT would leak open transactions and exhaust the
+connection. A correct version must explicitly `ROLLBACK` read-only txns (still a round-trip, no win) or
+pipeline set_config+SELECT+COMMIT. Net: no safe easy win here — deferred until we adopt #8 (JWT claim),
+which removes the per-query set_config entirely and makes this moot. **Impact:** MEDIUM-LOW.
 
 ### 8. (Bigger) Move tenant id into the session JWT claim  `[ ]`
 Reference `auth.jwt()->'app_metadata'->>'user_id'` directly in RLS policies → drops `set_config`
@@ -93,8 +98,8 @@ with the claim + rewriting all policies. **Effort:** high. **Impact:** HIGH at s
   (drizzle/0010), schema.ts updated.
 - `[x]` Partial billable index `… (user_id, date) WHERE is_billable = TRUE` — applied dev+prod.
 - `[ ]` Optional `client_rates (user_id, client_id)` for defence-in-depth.
-- `[ ]` Append `AND user_id = $n` to the 3 cosmetic "fetch-after-write" reads (`clients/[id]:350`,
-  `currency-rates:110`, `reports/presets:108`) for a grep-clean, uniform pattern.
+- `[x]` Appended `AND user_id = $n` to the 3 cosmetic "fetch-after-write" reads (`clients/[id]`,
+  `currency-rates`, `reports/presets`) — uniform, grep-clean (done 2026-06-01).
 
 ### 10. Hardening (not perf, tracked here for completeness)  `[ ]`
 - **Drizzle footgun:** `@/src/db` runs with no tenant context → using it on an RLS'd table fails
