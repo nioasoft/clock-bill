@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
@@ -18,6 +18,14 @@ const TABS: [Tab, string][] = [
 
 export default function SettlementPage() {
   const [tab, setTab] = useState<Tab>("billable");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const p = new URLSearchParams(window.location.search);
+    if (p.has("clientId") || p.has("projectId") || p.has("startDate") || p.has("endDate")) {
+      setTab("report");
+    }
+  }, []);
 
   return (
     <AppLayout>
