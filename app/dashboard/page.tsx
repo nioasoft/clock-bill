@@ -31,6 +31,8 @@ interface DashboardStats {
   earnings: {
     amount: number;
     formatted: string;
+    byHours: { amount: number; formatted: string };
+    byItems: { amount: number; formatted: string };
     currency: string;
   };
 }
@@ -194,11 +196,11 @@ export default function DashboardPage() {
 
         {/* Stats Cards */}
         {statsLoading ? (
-          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-5 grid grid-cols-3 gap-3 lg:grid-cols-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="bg-card border border-border rounded-[var(--radius-card)] p-5">
-                <Skeleton className="h-4 w-1/2 mb-3" />
-                <Skeleton className="h-8 w-3/4" />
+              <div key={i} className="bg-card border border-border rounded-[var(--radius-card)] p-3 sm:p-4">
+                <Skeleton className="h-3 w-1/2 mb-3" />
+                <Skeleton className="h-6 w-3/4" />
               </div>
             ))}
           </div>
@@ -207,21 +209,21 @@ export default function DashboardPage() {
             <p className="text-destructive">שגיאה בטעינת הנתונים. נסה לרענן את הדף.</p>
           </div>
         ) : stats && !isFirstTimeUser ? (
-          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-5 grid grid-cols-3 gap-3 lg:grid-cols-6">
             {[
               { label: "שעות היום", value: stats.today.formatted, accent: false, stagger: "stagger-1" },
               { label: "שעות השבוע", value: stats.week.formatted, accent: false, stagger: "stagger-2" },
               { label: "שעות החודש", value: stats.month.formatted, accent: false, stagger: "stagger-3" },
-              { label: "הכנסות החודש", value: stats.earnings.formatted, accent: true, stagger: "stagger-4" },
-              { label: "פרויקטים פעילים", value: String(stats.projectsCount), accent: false, stagger: "stagger-5" },
-              { label: "לקוחות", value: String(stats.clientsCount), accent: false, stagger: "stagger-5" },
+              { label: "סך הכנסות", value: stats.earnings.formatted, accent: true, stagger: "stagger-4" },
+              { label: "לפי שעות", value: stats.earnings.byHours.formatted, accent: false, stagger: "stagger-5" },
+              { label: "לפי פריטים", value: stats.earnings.byItems.formatted, accent: false, stagger: "stagger-6" },
             ].map((card) => (
               <div
                 key={card.label}
-                className={`bg-card border border-border rounded-[var(--radius-card)] p-5 transition-colors hover:border-border-strong motion-safe:animate-fade-up ${card.stagger}`}
+                className={`bg-card border border-border rounded-[var(--radius-card)] p-3 sm:p-4 transition-colors hover:border-border-strong motion-safe:animate-fade-up ${card.stagger}`}
               >
-                <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">{card.label}</p>
-                <p className={`mt-2 font-mono text-3xl font-bold tabular-nums ${card.accent ? "text-primary" : "text-foreground"}`}>
+                <p className="text-[10px] sm:text-xs uppercase tracking-widest font-semibold text-muted-foreground">{card.label}</p>
+                <p className={`mt-2 font-mono text-xl sm:text-2xl font-bold tabular-nums ${card.accent ? "text-primary" : "text-foreground"}`}>
                   {card.value}
                 </p>
               </div>
@@ -231,7 +233,7 @@ export default function DashboardPage() {
 
         {/* Quick Timer — hero */}
         {timerLoading ? (
-          <div className="mt-6 bg-card border border-border/50 rounded-[var(--radius-card)] p-6 sm:p-8">
+          <div className="mt-5 bg-card border border-border/50 rounded-[var(--radius-card)] p-5 sm:p-6">
             <div className="space-y-4" aria-hidden="true">
               <div className="h-6 w-32 rounded bg-muted animate-pulse" />
               <div className="h-12 w-40 rounded bg-muted animate-pulse" />
@@ -239,7 +241,7 @@ export default function DashboardPage() {
             </div>
           </div>
         ) : runningTimers.length > 0 ? (
-          <div className="mt-6 space-y-4">
+          <div className="mt-5 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">
                 טיימרים פעילים
@@ -336,27 +338,27 @@ export default function DashboardPage() {
             </div>
           </div>
         ) : (
-          <div className="mt-6 bg-card border border-border/50 rounded-[var(--radius-card)] p-6 sm:p-8 relative overflow-hidden">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">טיימר מהיר</h3>
-                <p className="mt-1 text-sm text-muted-foreground">התחל לעקוב אחר הזמן בלחיצה אחת</p>
-              </div>
-              <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">T</kbd>
+          <div className="mt-5 bg-card border border-border/50 rounded-[var(--radius-card)] p-5 sm:p-6 relative overflow-hidden">
+            <div className="absolute inset-0 flex items-center justify-end pe-8 pointer-events-none">
+              <ClockFaceMarks size={120} className="opacity-[0.07]" />
             </div>
-            <div className="mt-6 relative flex justify-center sm:justify-start">
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <ClockFaceMarks size={120} className="opacity-[0.07]" />
+            <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">טיימר מהיר</h3>
+                  <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">T</kbd>
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">התחל לעקוב אחר הזמן בלחיצה אחת</p>
               </div>
               <button
                 onClick={() => setShowTimerModal(true)}
-                className="relative w-full sm:w-auto sm:min-w-[280px] rounded-md bg-primary px-8 py-4 text-lg font-semibold text-primary-foreground hover:bg-primary/90 transition-all hover:shadow-md"
+                className="w-full sm:w-auto rounded-md bg-primary px-8 py-4 text-lg font-semibold text-primary-foreground hover:bg-primary/90 transition-all hover:shadow-md"
               >
                 התחל טיימר חדש
               </button>
             </div>
             {/* Manual entry quick actions — for work that isn't timed (e.g. a billed item) */}
-            <div className="mt-4 flex flex-wrap justify-center gap-2 sm:justify-start">
+            <div className="relative mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
               <Link
                 href="/entries?new=item"
                 className="inline-flex items-center rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition-colors"

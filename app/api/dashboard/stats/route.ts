@@ -61,10 +61,15 @@ export async function GET(_request: NextRequest) {
             (SELECT COUNT(*) FROM projects WHERE user_id = $1 AND status = 'active')  AS projects`,
         [userId]
       ),
-      query<{ total: string; default_currency: string | null }>(
-        `SELECT COALESCE(SUM(
-             (te.duration / 60.0) * COALESCE(c.default_rate, 0)
-           ), 0) as total,
+      query<{ hours_total: string; items_total: string; default_currency: string | null }>(
+        // Split monthly revenue by billing kind so the dashboard can show
+        // hours vs. items separately. Hourly lines use the per-entry snapshot
+        // rate (legacy rows have NULL rate → fall back to the client default).
+        `SELECT
+           COALESCE(SUM(CASE WHEN te.billing_kind = 'item' THEN 0
+                ELSE (te.duration / 60.0) * COALESCE(te.rate, c.default_rate, 0) END), 0) AS hours_total,
+           COALESCE(SUM(CASE WHEN te.billing_kind = 'item'
+                THEN COALESCE(te.quantity, 0) * COALESCE(te.rate, 0) ELSE 0 END), 0) AS items_total,
            (SELECT default_currency FROM user_profiles WHERE user_id = $1) AS default_currency
          FROM time_entries te
          JOIN projects p ON te.project_id = p.id
@@ -137,9 +142,13 @@ export async function GET(_request: NextRequest) {
       // Monthly earnings for the chart (last 12 months) — folded in from the old
       // /api/dashboard/earnings-chart endpoint so the dashboard loads in one call.
       query<{ month: string; total: string }>(
+        // Same billing-kind split as the headline figure so the chart agrees
+        // with the "סך הכנסות" card (counts items, not just hours).
         `SELECT
            TO_CHAR(te.date, 'YYYY-MM') as month,
-           COALESCE(SUM((te.duration / 60.0) * COALESCE(c.default_rate, 0)), 0) as total
+           COALESCE(SUM(CASE WHEN te.billing_kind = 'item'
+                THEN COALESCE(te.quantity, 0) * COALESCE(te.rate, 0)
+                ELSE (te.duration / 60.0) * COALESCE(te.rate, c.default_rate, 0) END), 0) as total
          FROM time_entries te
          JOIN projects p ON te.project_id = p.id
          JOIN clients c ON p.client_id = c.id
@@ -212,9 +221,12 @@ export async function GET(_request: NextRequest) {
       return `${hours}:${mins.toString().padStart(2, '0')}`;
     };
 
-    const timeEarnings = parseFloat(earningsResult.rows[0]?.total || '0');
     const fixedEarnings = fixedEarningsByCurrency[userCurrency] || 0;
-    const totalEarnings = timeEarnings + fixedEarnings;
+    // Fold fixed monthly charges into the hours bucket (a retainer is
+    // time-based work) so hours + items === total exactly.
+    const itemsRevenue = parseFloat(earningsResult.rows[0]?.items_total || '0');
+    const hoursRevenue = parseFloat(earningsResult.rows[0]?.hours_total || '0') + fixedEarnings;
+    const totalEarnings = hoursRevenue + itemsRevenue;
 
     // Add cache headers for better performance
     // Cache for 30 seconds since this is real-time data that changes frequently
@@ -238,6 +250,14 @@ export async function GET(_request: NextRequest) {
         earnings: {
           amount: totalEarnings,
           formatted: `${getCurrencySymbol(userCurrency)}${totalEarnings.toFixed(2)}`,
+          byHours: {
+            amount: hoursRevenue,
+            formatted: `${getCurrencySymbol(userCurrency)}${hoursRevenue.toFixed(2)}`
+          },
+          byItems: {
+            amount: itemsRevenue,
+            formatted: `${getCurrencySymbol(userCurrency)}${itemsRevenue.toFixed(2)}`
+          },
           currency: userCurrency
         }
       },
