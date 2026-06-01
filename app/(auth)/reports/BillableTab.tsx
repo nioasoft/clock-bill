@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { formatDuration } from "@/lib/format";
+import { formatCurrency } from "@/lib/currency";
+import { calcHourlyAmount, calcItemAmount, sumMoney } from "@/lib/money";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -49,24 +51,15 @@ interface BillableData {
 
 type LoadState = "idle" | "loading" | "error" | "ready";
 
-const CURRENCY_SYMBOLS: Record<string, string> = {
-  ILS: "₪",
-  USD: "$",
-  USDT: "₮",
-  BTC: "₿",
-  ETH: "Ξ",
-};
-
-/** Same currency display helper used across the reports screen. */
-function formatCurrency(amount: number, currency: string): string {
-  return `${CURRENCY_SYMBOLS[currency] || currency}${amount.toFixed(2)}`;
-}
-
-/** Per-entry billed amount: item = quantity × rate, hourly = (minutes/60) × rate. */
+/**
+ * Per-entry billed amount, rounded to whole cents to match what the server
+ * stores: item = quantity × rate, hourly = (minutes/60) × rate.
+ */
 function entryAmount(entry: BillableEntryRow): number {
-  const rate = entry.rate ?? 0;
-  if (entry.billing_kind === "item") return (entry.quantity ?? 0) * rate;
-  return (entry.duration / 60) * rate;
+  if (entry.billing_kind === "item") {
+    return calcItemAmount(entry.quantity, entry.rate);
+  }
+  return calcHourlyAmount(entry.duration, entry.rate);
 }
 
 export default function BillableTab({ onIssued }: { onIssued?: () => void }) {
@@ -85,6 +78,9 @@ export default function BillableTab({ onIssued }: { onIssued?: () => void }) {
   const [selectedComputed, setSelectedComputed] = useState<Set<string>>(new Set());
   const [issuing, setIssuing] = useState(false);
 
+  // Bumping this re-triggers the billable fetch (retry button, post-issue reload).
+  const [reloadKey, setReloadKey] = useState(0);
+
   // Reuse the reports bootstrap endpoint so the picker matches the rest of the screen.
   useEffect(() => {
     const fetchClients = async () => {
@@ -102,34 +98,41 @@ export default function BillableTab({ onIssued }: { onIssued?: () => void }) {
     fetchClients();
   }, []);
 
-  const loadBillable = useCallback(async () => {
+  // Retry / post-issue reload: bump the key the fetch effect depends on.
+  const reloadBillable = () => setReloadKey((k) => k + 1);
+
+  useEffect(() => {
     if (!clientId) {
       setState("idle");
       setData(null);
       return;
     }
+    let ignore = false;
     setState("loading");
     setSelectedEntryIds(new Set());
     setSelectedComputed(new Set());
-    try {
-      const params = new URLSearchParams({ clientId, periodMonth });
-      const response = await fetch(`/api/charge-documents/billable?${params.toString()}`);
-      const json = await response.json();
-      if (json.success) {
+    (async () => {
+      try {
+        const params = new URLSearchParams({ clientId, periodMonth });
+        const res = await fetch(
+          `/api/charge-documents/billable?${params.toString()}`
+        );
+        const json = await res.json();
+        // Ignore a response that arrived after client/month changed mid-flight.
+        if (ignore) return;
+        if (!json.success) throw new Error(json.message || "load failed");
         setData(json.data as BillableData);
         setState("ready");
-      } else {
+      } catch (error) {
+        if (ignore) return;
+        console.error("Error loading billable items:", error);
         setState("error");
       }
-    } catch (error) {
-      console.error("Error loading billable items:", error);
-      setState("error");
-    }
-  }, [clientId, periodMonth]);
-
-  useEffect(() => {
-    loadBillable();
-  }, [loadBillable]);
+    })();
+    return () => {
+      ignore = true;
+    };
+  }, [clientId, periodMonth, reloadKey]);
 
   const toggleEntry = (id: string) => {
     setSelectedEntryIds((prev) => {
@@ -153,6 +156,7 @@ export default function BillableTab({ onIssued }: { onIssued?: () => void }) {
   const computedKey = (line: ComputedRow): string =>
     `${line.sourceType}|${line.periodMonth}|${line.label}`;
 
+  // The billable endpoint returns a single client's items, so all rows share one currency.
   const clientCurrency = useMemo(() => {
     if (!data) return "ILS";
     if (data.entries.length > 0) return data.entries[0].currency;
@@ -162,13 +166,14 @@ export default function BillableTab({ onIssued }: { onIssued?: () => void }) {
 
   const selectedTotal = useMemo(() => {
     if (!data) return 0;
-    const entriesTotal = data.entries
+    // Sum via integer-cents so the footer total matches what the server stores.
+    const entryAmounts = data.entries
       .filter((e) => selectedEntryIds.has(e.id))
-      .reduce((sum, e) => sum + entryAmount(e), 0);
-    const computedTotal = data.computedLines
+      .map((e) => entryAmount(e));
+    const computedAmounts = data.computedLines
       .filter((l) => selectedComputed.has(computedKey(l)))
-      .reduce((sum, l) => sum + l.amount, 0);
-    return entriesTotal + computedTotal;
+      .map((l) => l.amount);
+    return sumMoney([...entryAmounts, ...computedAmounts]);
   }, [data, selectedEntryIds, selectedComputed]);
 
   const selectionCount = selectedEntryIds.size + selectedComputed.size;
@@ -192,6 +197,7 @@ export default function BillableTab({ onIssued }: { onIssued?: () => void }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           clientId,
+          // TODO: use the user's preferred PDF template; the document's template is only a default — the PDF export tab can still re-pick.
           pdfTemplate: "modern",
           timeEntryIds: Array.from(selectedEntryIds),
           computedLines,
@@ -204,6 +210,8 @@ export default function BillableTab({ onIssued }: { onIssued?: () => void }) {
         setSelectedEntryIds(new Set());
         setSelectedComputed(new Set());
         onIssued?.();
+        // Re-fetch so the just-billed entries drop off the list (a second issue would 409).
+        reloadBillable();
       } else {
         showErrorToast(json.message || "שגיאה ביצירת התעודה");
       }
@@ -271,7 +279,7 @@ export default function BillableTab({ onIssued }: { onIssued?: () => void }) {
       {clientId && state === "error" && (
         <div className="rounded-[var(--radius-card)] border border-destructive/40 bg-destructive/10 p-6 text-center">
           <p className="text-destructive mb-4">שגיאה בטעינת פריטים לחיוב.</p>
-          <Button variant="outline" onClick={loadBillable} className="min-h-[44px]">
+          <Button variant="outline" onClick={reloadBillable} className="min-h-[44px]">
             נסה שוב
           </Button>
         </div>
