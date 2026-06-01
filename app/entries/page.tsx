@@ -7,7 +7,7 @@ import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Clock, Timer } from "lucide-react";
+import { Clock, Timer, Pencil, Trash2 } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { validateRequired, validateDate, validateNumber } from "@/lib/validation";
 import { pickDefaultHourlyRate, type ClientRate } from "@/lib/schemas/rates";
@@ -112,17 +112,6 @@ export default function EntriesPage() {
     endDate: "",
   });
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedEntries, setSelectedEntries] = useState<Set<string>>(new Set());
-  const [showBulkEdit, setShowBulkEdit] = useState(false);
-  const [bulkEditData, setBulkEditData] = useState({
-    projectId: "",
-    date: "",
-    isBillable: undefined as boolean | undefined,
-  });
-  const [bulkEditSubmitting, setBulkEditSubmitting] = useState(false);
-  const [bulkEditError, setBulkEditError] = useState("");
-  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
-  const [bulkDeleteSubmitting, setBulkDeleteSubmitting] = useState(false);
 
   // Handle keyboard shortcut for quick entry
   const handleQuickEntryShortcut = () => {
@@ -458,39 +447,6 @@ export default function EntriesPage() {
     setEntryToDelete(entry);
   };
 
-  const handleDuplicate = async (entry: TimeEntry) => {
-    try {
-      const response = await fetch("/api/entries", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          projectId: entry.projectId,
-          date: entry.date,
-          duration: entry.duration,
-          description: entry.description,
-          notes: entry.notes,
-          isBillable: entry.isBillable,
-          tags: entry.tags,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Add the duplicated entry to the list
-        setEntries([data.entry, ...entries]);
-        showSuccessToast("הרשומה שוכפלה בהצלחה");
-      } else {
-        showErrorToast(data.message || "שגיאה בשכפול הרשומה");
-      }
-    } catch (error) {
-      console.error("Error duplicating entry:", error);
-      showErrorToast("שגיאה בשכפול הרשומה");
-    }
-  };
-
   const handleDeleteConfirm = async () => {
     if (!entryToDelete) return;
 
@@ -506,6 +462,9 @@ export default function EntriesPage() {
         // Remove entry from list
         setEntries(entries.filter((e) => e.id !== entryToDelete.id));
         setEntryToDelete(null);
+        // Delete is only reachable from within the edit form — close it on success.
+        setShowForm(false);
+        setEditingEntry(null);
         showSuccessToast("הרשומה נמחקה בהצלחה");
       } else {
         showErrorToast(data.message || "שגיאה במחיקת הרשומה");
@@ -520,128 +479,6 @@ export default function EntriesPage() {
 
   const cancelDelete = () => {
     setEntryToDelete(null);
-  };
-
-  const handleSelectEntry = (entryId: string) => {
-    setSelectedEntries((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(entryId)) {
-        newSet.delete(entryId);
-      } else {
-        newSet.add(entryId);
-      }
-      return newSet;
-    });
-  };
-
-  const handleSelectAll = () => {
-    if (selectedEntries.size === entries.length) {
-      setSelectedEntries(new Set());
-    } else {
-      setSelectedEntries(new Set(entries.map((e) => e.id)));
-    }
-  };
-
-  const handleBulkEdit = () => {
-    if (selectedEntries.size === 0) return;
-    setBulkEditData({
-      projectId: "",
-      date: "",
-      isBillable: undefined,
-    });
-    setBulkEditError("");
-    setShowBulkEdit(true);
-  };
-
-  const handleBulkEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBulkEditError("");
-    setBulkEditSubmitting(true);
-
-    try {
-      const response = await fetch("/api/entries/bulk", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          entryIds: Array.from(selectedEntries),
-          projectId: bulkEditData.projectId || undefined,
-          date: bulkEditData.date || undefined,
-          isBillable: bulkEditData.isBillable,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Refresh entries to show updated values
-        const params = new URLSearchParams();
-        if (filters.clientId) params.append("clientId", filters.clientId);
-        if (filters.projectId) params.append("projectId", filters.projectId);
-        if (filters.startDate) params.append("startDate", filters.startDate);
-        if (filters.endDate) params.append("endDate", filters.endDate);
-
-        const entriesResponse = await fetch(`/api/entries?${params.toString()}`);
-        const entriesData = await entriesResponse.json();
-
-        if (entriesData.success) {
-          setEntries(entriesData.entries || []);
-        }
-
-        // Close modal and clear selection
-        setShowBulkEdit(false);
-        setSelectedEntries(new Set());
-        setBulkEditData({
-          projectId: "",
-          date: "",
-          isBillable: undefined,
-        });
-      } else {
-        setBulkEditError(data.message || "שגיאה בעדכון הרשומות");
-      }
-    } catch (error) {
-      console.error("Error bulk updating entries:", error);
-      setBulkEditError("שגיאה בעדכון הרשומות");
-    } finally {
-      setBulkEditSubmitting(false);
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    setBulkDeleteSubmitting(true);
-
-    try {
-      const response = await fetch("/api/entries/bulk", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          entryIds: Array.from(selectedEntries),
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Remove deleted entries from list
-        setEntries(entries.filter((e) => !selectedEntries.has(e.id)));
-
-        // Close modal and clear selection
-        setShowBulkDeleteConfirm(false);
-        setSelectedEntries(new Set());
-
-        showSuccessToast(data.message || "הרשומות נמחקו בהצלחה");
-      } else {
-        showErrorToast(data.message || "שגיאה במחיקת הרשומות");
-      }
-    } catch (error) {
-      console.error("Error bulk deleting entries:", error);
-      showErrorToast("שגיאה במחיקת הרשומות");
-    } finally {
-      setBulkDeleteSubmitting(false);
-    }
   };
 
   const handleFilterChange = (key: string, value: string) => {
@@ -1108,22 +945,38 @@ export default function EntriesPage() {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={handleCancelEdit}
-                  className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted"
-                  disabled={submitting}
-                >
-                  ביטול
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-                >
-                  {submitting ? "שומר..." : editingEntry ? "עדכן" : "שמור"}
-                </button>
+              <div className="flex items-center justify-between gap-2">
+                {/* Delete lives inside edit only — a quiet text action, confirmed before it runs */}
+                {editingEntry ? (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteClick(editingEntry)}
+                    className="inline-flex items-center gap-1.5 text-sm text-destructive hover:text-destructive/80 transition-colors"
+                    disabled={submitting}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    מחיקת רשומה
+                  </button>
+                ) : (
+                  <span />
+                )}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleCancelEdit}
+                    className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted"
+                    disabled={submitting}
+                  >
+                    ביטול
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                  >
+                    {submitting ? "שומר..." : editingEntry ? "עדכן" : "שמור"}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -1148,51 +1001,11 @@ export default function EntriesPage() {
             </div>
           ) : (
             <>
-              {/* Bulk Action Bar */}
-              {selectedEntries.size > 0 && (
-                <div className="fixed bottom-0 inset-x-0 md:sticky md:bottom-4 bg-primary text-primary-foreground rounded-lg shadow-lg motion-safe:animate-fade-up p-4 z-30 mb-4">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <span className="text-sm font-medium">
-                      נבחרו {selectedEntries.size} רשומות
-                    </span>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <button
-                        onClick={handleBulkEdit}
-                        className="rounded-[var(--radius-card)] bg-accent text-accent-foreground px-4 py-2 text-sm hover:bg-accent/90"
-                      >
-                        ערוך נבחרים
-                      </button>
-                      <button
-                        onClick={() => setShowBulkDeleteConfirm(true)}
-                        className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-sm text-white hover:bg-destructive/90"
-                      >
-                        מחק נבחרים
-                      </button>
-                      <button
-                        onClick={() => setSelectedEntries(new Set())}
-                        className="rounded-[var(--radius-card)] border border-primary-foreground/20 px-4 py-2 text-sm hover:bg-primary-foreground/10"
-                      >
-                        בטל בחירה
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Desktop Table View */}
               <div className="hidden md:block overflow-x-auto">
                 <table className="min-w-full divide-y divide-border">
                   <thead className="bg-surface">
                     <tr>
-                      <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-muted-foreground w-12">
-                        <input
-                          type="checkbox"
-                          checked={selectedEntries.size === entries.length && entries.length > 0}
-                          onChange={handleSelectAll}
-                          className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
-                          aria-label="בחר הכל"
-                        />
-                      </th>
                       <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         תאריך
                       </th>
@@ -1215,16 +1028,7 @@ export default function EntriesPage() {
                   </thead>
                   <tbody className="divide-y divide-border bg-card">
                     {entries.map((entry) => (
-                      <tr key={entry.id} className={`hover:bg-surface even:bg-surface/50 ${selectedEntries.has(entry.id) ? "bg-primary-light" : ""}`}>
-                        <td className="whitespace-nowrap px-6 py-4">
-                          <input
-                            type="checkbox"
-                            checked={selectedEntries.has(entry.id)}
-                            onChange={() => handleSelectEntry(entry.id)}
-                            className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
-                            aria-label="בחר רשומה"
-                          />
-                        </td>
+                      <tr key={entry.id} className="hover:bg-surface even:bg-surface/50">
                         <td className="whitespace-nowrap px-6 py-4">
                           <div className="text-sm text-foreground">
                             {new Date(entry.date).toLocaleDateString("he-IL")}
@@ -1277,22 +1081,12 @@ export default function EntriesPage() {
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm">
                         <button
-                          onClick={() => handleDuplicate(entry)}
-                          className="text-secondary hover:text-secondary/90 font-medium ms-2"
-                        >
-                          שכפל
-                        </button>
-                        <button
                           onClick={() => handleEdit(entry)}
-                          className="text-primary hover:text-primary/90 font-medium ms-2"
+                          className="inline-flex items-center gap-1.5 rounded-[var(--radius)] border border-border px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
+                          aria-label="ערוך רשומה"
                         >
+                          <Pencil className="h-3.5 w-3.5" />
                           ערוך
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(entry)}
-                          className="text-destructive hover:text-destructive/90 font-medium ms-2"
-                        >
-                          מחק
                         </button>
                       </td>
                     </tr>
@@ -1304,18 +1098,8 @@ export default function EntriesPage() {
             {/* Mobile Card View */}
             <div className="md:hidden space-y-4">
               {entries.map((entry) => (
-                <div key={entry.id} className={`bg-card rounded-[var(--radius-card)] shadow p-4 border-s-4 border-primary ${selectedEntries.has(entry.id) ? "ring-2 ring-primary" : ""}`}>
+                <div key={entry.id} className="bg-card rounded-[var(--radius-card)] shadow p-4 border-s-4 border-primary">
                   <div className="flex items-start gap-3">
-                    {/* Large touch-friendly checkbox */}
-                    <div className="pt-1">
-                      <input
-                        type="checkbox"
-                        checked={selectedEntries.has(entry.id)}
-                        onChange={() => handleSelectEntry(entry.id)}
-                        className="h-6 w-6 rounded border-border text-primary focus:ring-primary cursor-pointer"
-                      />
-                    </div>
-
                     <div className="flex-1 min-w-0">
                       {/* Header with date and status */}
                       <div className="flex items-center justify-between mb-2">
@@ -1366,25 +1150,15 @@ export default function EntriesPage() {
                         )}
                       </div>
 
-                      {/* Action buttons - large touch targets */}
-                      <div className="grid grid-cols-3 gap-2">
-                        <button
-                          onClick={() => handleDuplicate(entry)}
-                          className="min-h-[44px] flex items-center justify-center rounded-[var(--radius-card)] border border-secondary bg-secondary-light px-3 py-2 text-sm font-medium text-secondary hover:bg-secondary-light/80 active:bg-secondary-light/60 transition-colors"
-                        >
-                          שכפל
-                        </button>
+                      {/* Single quiet edit action — delete/duplicate live inside the edit form */}
+                      <div className="flex justify-end">
                         <button
                           onClick={() => handleEdit(entry)}
-                          className="min-h-[44px] flex items-center justify-center rounded-[var(--radius-card)] bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 active:bg-primary/80 transition-colors"
+                          className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface active:bg-surface/80"
+                          aria-label="ערוך רשומה"
                         >
+                          <Pencil className="h-4 w-4" />
                           ערוך
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(entry)}
-                          className="min-h-[44px] flex items-center justify-center rounded-[var(--radius-card)] border border-destructive bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/20 active:bg-destructive/30 transition-colors"
-                        >
-                          מחק
                         </button>
                       </div>
                     </div>
@@ -1420,129 +1194,6 @@ export default function EntriesPage() {
               className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
             >
               {deleting ? "מוחק..." : "מחק"}
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Bulk Edit Modal */}
-      <Dialog open={showBulkEdit} onOpenChange={(open) => { if (!open) setShowBulkEdit(false); }}>
-        <DialogContent showCloseButton={false}>
-          <DialogHeader>
-            <DialogTitle>ערוך {selectedEntries.size} רשומות</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleBulkEditSubmit} className="space-y-4">
-            {bulkEditError && (
-              <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
-                {bulkEditError}
-              </div>
-            )}
-
-            <div>
-              <label htmlFor="bulkProjectId" className="block text-sm font-medium text-foreground mb-1">
-                פרויקט (אופציונלי)
-              </label>
-              <select
-                id="bulkProjectId"
-                value={bulkEditData.projectId}
-                onChange={(e) => setBulkEditData({ ...bulkEditData, projectId: e.target.value })}
-                className="block w-full rounded-md border border-border/50 px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                disabled={bulkEditSubmitting}
-              >
-                <option value="">ללא שינוי</option>
-                {Object.entries(groupedProjects).map(([clientId, { clientName, projects: clientProjects }]) => (
-                  <optgroup key={clientId} label={clientName}>
-                    {clientProjects.map((project) => (
-                      <option key={project.id} value={project.id}>
-                        {project.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="bulkDate" className="block text-sm font-medium text-foreground mb-1">
-                תאריך (אופציונלי)
-              </label>
-              <input
-                type="date"
-                id="bulkDate"
-                value={bulkEditData.date}
-                onChange={(e) => setBulkEditData({ ...bulkEditData, date: e.target.value })}
-                className="block w-full rounded-md border border-border/50 px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                disabled={bulkEditSubmitting}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="bulkIsBillable" className="block text-sm font-medium text-foreground mb-1">
-                ניתן לחיוב (אופציונלי)
-              </label>
-              <select
-                id="bulkIsBillable"
-                value={bulkEditData.isBillable === undefined ? "" : bulkEditData.isBillable ? "true" : "false"}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setBulkEditData({
-                    ...bulkEditData,
-                    isBillable: value === "" ? undefined : value === "true",
-                  });
-                }}
-                className="block w-full rounded-md border border-border/50 px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                disabled={bulkEditSubmitting}
-              >
-                <option value="">ללא שינוי</option>
-                <option value="true">כן</option>
-                <option value="false">לא</option>
-              </select>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-4">
-              <button
-                type="button"
-                onClick={() => setShowBulkEdit(false)}
-                className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted"
-                disabled={bulkEditSubmitting}
-              >
-                ביטול
-              </button>
-              <button
-                type="submit"
-                disabled={bulkEditSubmitting}
-                className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-              >
-                {bulkEditSubmitting ? "מעדכן..." : "עדכן רשומות"}
-              </button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Bulk Delete Confirmation Modal */}
-      <Dialog open={showBulkDeleteConfirm} onOpenChange={(open) => { if (!open) setShowBulkDeleteConfirm(false); }}>
-        <DialogContent showCloseButton={false} className="border-destructive/20">
-          <DialogHeader>
-            <DialogTitle>מחק {selectedEntries.size} רשומות</DialogTitle>
-            <DialogDescription>
-              האם למחוק את {selectedEntries.size} הרשומות הנבחרות? פעולה זו אינה הפיכה.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={() => setShowBulkDeleteConfirm(false)}
-              disabled={bulkDeleteSubmitting}
-              className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted disabled:opacity-50"
-            >
-              ביטול
-            </button>
-            <button
-              onClick={handleBulkDelete}
-              disabled={bulkDeleteSubmitting}
-              className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
-            >
-              {bulkDeleteSubmitting ? "מוחק..." : "מחק"}
             </button>
           </div>
         </DialogContent>
