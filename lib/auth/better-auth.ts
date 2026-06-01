@@ -30,6 +30,7 @@ export const auth = betterAuth({
       session: schema.session,
       account: schema.account,
       verification: schema.verification,
+      rateLimit: schema.rateLimit,
     },
   }),
   emailAndPassword: {
@@ -58,11 +59,11 @@ export const auth = betterAuth({
   },
   // Throttle brute-force attempts. Default applies to all auth endpoints; the
   // custom rules tighten the credential-guessing paths (sign-in / sign-up /
-  // password reset). Storage is in-memory per instance — fine on Vercel Fluid
-  // Compute (warm instances persist); switch to DB-backed storage for strict
-  // distributed limits later.
+  // password reset). Storage is the DB (rate_limit table) so limits are
+  // consistent across all serverless instances, not per-warm-instance.
   rateLimit: {
     enabled: true,
+    storage: "database",
     window: 60,
     max: 100,
     customRules: {

@@ -5,6 +5,7 @@ import {
   timestamp,
   date,
   integer,
+  bigint,
   real,
   jsonb,
   unique,
@@ -83,6 +84,16 @@ export const verification = pgTable(
   },
   (table) => [index("idx_ba_verification_identifier").on(table.identifier)]
 );
+
+// Better Auth persistent rate-limit store (storage: "database"). Keyed by
+// IP/endpoint, not user — no RLS (like the other BA tables). Column/field names
+// must match Better Auth's rateLimit model (id, key, count, lastRequest).
+export const rateLimit = pgTable("rate_limit", {
+  id: text("id").primaryKey(),
+  key: text("key").unique(),
+  count: integer("count"),
+  lastRequest: bigint("last_request", { mode: "number" }),
+});
 
 // ─── User Profiles ──────────────────────────────────────────────────
 
