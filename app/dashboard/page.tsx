@@ -337,6 +337,21 @@ export default function DashboardPage() {
                 התחל טיימר חדש
               </button>
             </div>
+            {/* Manual entry quick actions — for work that isn't timed (e.g. a billed item) */}
+            <div className="mt-4 flex flex-wrap justify-center gap-2 sm:justify-start">
+              <Link
+                href="/entries?new=item"
+                className="inline-flex items-center rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition-colors"
+              >
+                + הזן פריט ידני
+              </Link>
+              <Link
+                href="/entries?new=manual"
+                className="inline-flex items-center rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition-colors"
+              >
+                + הזן רשומת זמן
+              </Link>
+            </div>
           </div>
         )}
 

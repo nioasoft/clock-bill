@@ -523,6 +523,39 @@ export default function EntriesPage() {
     setShowForm(false);
   };
 
+  // Open a fresh manual-entry form directly in the requested mode. Lets the
+  // header (and dashboard deep-links) jump straight to "hours" or "item" without
+  // making the user open the form and then flip the toggle.
+  const openManualEntry = useCallback((kind: "hourly" | "item") => {
+    setEditingEntry(null);
+    setFormData({
+      projectId: "",
+      taskId: "",
+      date: new Date().toISOString().split("T")[0],
+      duration: "",
+      description: "",
+      notes: "",
+      isBillable: true,
+      billingKind: kind,
+      rateId: "",
+      quantity: "",
+      adhocName: "",
+      adhocPrice: "",
+      saveItemToClient: false,
+    });
+    setFieldErrors({});
+    setShowForm(true);
+  }, []);
+
+  // Deep link: /entries?new=item or ?new=manual opens the form in that mode
+  // (used by the dashboard quick actions). Cleans the URL afterwards.
+  useEffect(() => {
+    const mode = new URLSearchParams(window.location.search).get("new");
+    if (mode === "item") openManualEntry("item");
+    else if (mode === "manual") openManualEntry("hourly");
+    if (mode) window.history.replaceState({}, "", "/entries");
+  }, [openManualEntry]);
+
   const handleDeleteClick = (entry: TimeEntry) => {
     setEntryToDelete(entry);
   };
@@ -601,12 +634,29 @@ export default function EntriesPage() {
       <PageContainer>
         <PageHeader title="רישום זמן">
           <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">N</kbd>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
-          >
-            {showForm ? "ביטול" : "+ הזנת רשומת זמן ידנית"}
-          </button>
+          {showForm ? (
+            <button
+              onClick={handleCancelEdit}
+              className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted"
+            >
+              ביטול
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={() => openManualEntry("hourly")}
+                className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
+              >
+                + הזנת רשומת זמן
+              </button>
+              <button
+                onClick={() => openManualEntry("item")}
+                className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-surface"
+              >
+                + הזנת פריט ידני
+              </button>
+            </>
+          )}
         </PageHeader>
 
         {/* Filters Section */}
