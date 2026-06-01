@@ -61,7 +61,11 @@ interface TimeEntry {
   rate?: number | null;
   rateLabel?: string | null;
   quantity?: number | null;
+  itemRef?: number | null;
 }
+
+/** Sentinel rateId for "+ פריט חד-פעמי…" (an ad-hoc, typed item not in the catalog). */
+const ADHOC = "__adhoc__";
 
 interface GroupedProjects {
   [clientId: string]: {
@@ -90,9 +94,13 @@ export default function EntriesPage() {
     billingKind: "hourly" as "hourly" | "item",
     rateId: "",
     quantity: "",
+    adhocName: "",
+    adhocPrice: "",
+    saveItemToClient: false,
   });
   const [formTasks, setFormTasks] = useState<TaskOption[]>([]);
   const [formRates, setFormRates] = useState<ClientRate[]>([]);
+  const [ratesLoaded, setRatesLoaded] = useState(false);
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState<TimeEntry | null>(null);
@@ -103,6 +111,8 @@ export default function EntriesPage() {
     date?: string;
     duration?: string;
     description?: string;
+    adhocName?: string;
+    adhocPrice?: string;
   }>({});
   const [deleting, setDeleting] = useState(false);
   const [filters, setFilters] = useState({
@@ -260,9 +270,11 @@ export default function EntriesPage() {
     const clientId = projects.find((p) => p.id === formData.projectId)?.clientId;
     if (!clientId) {
       setFormRates([]);
+      setRatesLoaded(false);
       return;
     }
     let cancelled = false;
+    setRatesLoaded(false);
     (async () => {
       try {
         const res = await fetch(`/api/clients/${clientId}/rates`);
@@ -271,6 +283,8 @@ export default function EntriesPage() {
         setFormRates(data.rates as ClientRate[]);
       } catch (error) {
         console.error("Error fetching rates for entry:", error);
+      } finally {
+        if (!cancelled) setRatesLoaded(true);
       }
     })();
     return () => {
@@ -281,18 +295,35 @@ export default function EntriesPage() {
   // Preselect a rate/item once rates load (or kind changes). When editing, match
   // the entry's snapshotted label first; otherwise pick the default/first of the kind.
   useEffect(() => {
-    if (formRates.length === 0) return;
+    if (!ratesLoaded) return; // wait until we actually know this client's rates
     setFormData((p) => {
-      const pool = formRates.filter((r) => r.kind === p.billingKind);
-      if (pool.some((r) => r.id === p.rateId)) return p; // keep a still-valid selection
-      if (editingEntry?.rateLabel) {
-        const match = pool.find((r) => r.name === editingEntry.rateLabel);
-        if (match) return { ...p, rateId: match.id };
+      if (p.billingKind === "hourly") {
+        const pool = formRates.filter((r) => r.kind === "hourly");
+        if (pool.some((r) => r.id === p.rateId)) return p; // keep a still-valid selection
+        if (editingEntry?.rateLabel) {
+          const match = pool.find((r) => r.name === editingEntry.rateLabel);
+          if (match) return { ...p, rateId: match.id };
+        }
+        return { ...p, rateId: pickDefaultHourlyRate(formRates)?.id ?? "" };
       }
-      const pick = p.billingKind === "hourly" ? pickDefaultHourlyRate(formRates)?.id : pool[0]?.id;
-      return { ...p, rateId: pick ?? "" };
+      // item mode: keep a still-valid selection (including the ad-hoc sentinel)
+      const items = formRates.filter((r) => r.kind === "item");
+      if (p.rateId === ADHOC || items.some((r) => r.id === p.rateId)) return p;
+      // editing an item line: match the snapshot to a catalog item, else ad-hoc-prefill it
+      if (editingEntry?.billingKind === "item" && editingEntry.rateLabel) {
+        const match = items.find((r) => r.name === editingEntry.rateLabel);
+        if (match) return { ...p, rateId: match.id };
+        return {
+          ...p,
+          rateId: ADHOC,
+          adhocName: editingEntry.rateLabel ?? "",
+          adhocPrice: editingEntry.rate != null ? String(editingEntry.rate) : "",
+        };
+      }
+      // new item line: first catalog item, or ad-hoc when the client has none
+      return { ...p, rateId: items[0]?.id ?? ADHOC };
     });
-  }, [formRates, formData.billingKind, editingEntry]);
+  }, [formRates, ratesLoaded, formData.billingKind, editingEntry]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -322,6 +353,16 @@ export default function EntriesPage() {
       } else if (!formData.rateId) {
         errors.duration = "נא לבחור פריט";
       }
+      // Ad-hoc item: name + unit price are required.
+      if (formData.rateId === ADHOC) {
+        const price = parseFloat(formData.adhocPrice);
+        if (!formData.adhocName.trim()) {
+          errors.adhocName = "נא להזין שם פריט";
+        }
+        if (formData.adhocPrice === "" || isNaN(price) || price < 0) {
+          errors.adhocPrice = "נא להזין מחיר ליחידה";
+        }
+      }
     } else {
       const durationValidation = validateNumber(formData.duration, true, 1);
       if (!durationValidation.isValid) {
@@ -348,8 +389,12 @@ export default function EntriesPage() {
       const url = isEditing ? `/api/entries/${editingEntry.id}` : "/api/entries";
       const method = isEditing ? "PUT" : "POST";
 
-      const chosen = formRates.find((r) => r.id === formData.rateId);
       const isItem = formData.billingKind === "item";
+      const isAdhoc = isItem && formData.rateId === ADHOC;
+      const chosen = formRates.find((r) => r.id === formData.rateId);
+      // Ad-hoc lines carry typed name+price; catalog lines snapshot the chosen rate.
+      const itemRate = isAdhoc ? parseFloat(formData.adhocPrice) || 0 : chosen?.rate ?? null;
+      const itemLabel = isAdhoc ? formData.adhocName.trim() : chosen?.name ?? null;
 
       const response = await fetch(url, {
         method,
@@ -363,8 +408,8 @@ export default function EntriesPage() {
           billingKind: formData.billingKind,
           duration: isItem ? 0 : parseInt(formData.duration, 10),
           quantity: isItem ? parseFloat(formData.quantity) || 0 : null,
-          rate: chosen?.rate ?? null,
-          rateLabel: chosen?.name ?? null,
+          rate: isItem ? itemRate : null,
+          rateLabel: isItem ? itemLabel : null,
           description: formData.description,
           notes: formData.notes || undefined,
           isBillable: formData.isBillable,
@@ -382,6 +427,32 @@ export default function EntriesPage() {
           // Add the new entry to the list
           setEntries([data.entry, ...entries]);
         }
+
+        // Optionally persist an ad-hoc item to the client for reuse. Best-effort:
+        // the entry is already saved, so a failure here only warns — it never
+        // rolls back the entry.
+        if (isAdhoc && formData.saveItemToClient) {
+          const clientId = projects.find((p) => p.id === formData.projectId)?.clientId;
+          if (clientId) {
+            try {
+              const r = await fetch(`/api/clients/${clientId}/rates`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: itemLabel, rate: itemRate }),
+              });
+              const rd = await r.json();
+              if (rd.success) {
+                showSuccessToast(rd.created ? "הפריט נשמר ללקוח" : "הפריט כבר קיים אצל הלקוח");
+              } else {
+                showErrorToast("הרשומה נשמרה, אך הפריט לא נשמר ללקוח");
+              }
+            } catch (err) {
+              console.error("Error saving item to client:", err);
+              showErrorToast("הרשומה נשמרה, אך הפריט לא נשמר ללקוח");
+            }
+          }
+        }
+
         // Reset form and close
         setFormData({
           projectId: "",
@@ -394,6 +465,9 @@ export default function EntriesPage() {
           billingKind: "hourly",
           rateId: "",
           quantity: "",
+          adhocName: "",
+          adhocPrice: "",
+          saveItemToClient: false,
         });
         setShowForm(false);
         setEditingEntry(null);
@@ -420,8 +494,11 @@ export default function EntriesPage() {
       notes: entry.notes || "",
       isBillable: entry.isBillable,
       billingKind: entry.billingKind ?? "hourly",
-      rateId: "", // resolved by the preselect effect (matches rateLabel)
+      rateId: "", // resolved by the preselect effect (matches rateLabel, else ad-hoc)
       quantity: entry.quantity?.toString() ?? "",
+      adhocName: "", // filled by the preselect effect when the item isn't in the catalog
+      adhocPrice: "",
+      saveItemToClient: false,
     });
     setShowForm(true);
   };
@@ -439,6 +516,9 @@ export default function EntriesPage() {
       billingKind: "hourly",
       rateId: "",
       quantity: "",
+      adhocName: "",
+      adhocPrice: "",
+      saveItemToClient: false,
     });
     setShowForm(false);
   };
@@ -850,29 +930,80 @@ export default function EntriesPage() {
                       <label htmlFor="entryItem" className="block text-sm font-medium text-foreground">
                         פריט *
                       </label>
-                      {formRates.some((r) => r.kind === "item") ? (
-                        <select
-                          id="entryItem"
-                          value={formData.rateId}
-                          onChange={(e) => setFormData({ ...formData, rateId: e.target.value })}
-                          className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.duration ? "border border-destructive" : "border border-border/50"}`}
-                          disabled={submitting}
-                        >
-                          <option value="">בחר פריט</option>
-                          {formRates
-                            .filter((r) => r.kind === "item")
-                            .map((r) => (
-                              <option key={r.id} value={r.id}>
-                                {r.name} — {r.rate}/יח׳
-                              </option>
-                            ))}
-                        </select>
-                      ) : (
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          ללקוח זה אין פריטים מוגדרים. ניתן להוסיף פריטים בעמוד הלקוח.
-                        </p>
-                      )}
+                      <select
+                        id="entryItem"
+                        value={formData.rateId}
+                        onChange={(e) => setFormData({ ...formData, rateId: e.target.value })}
+                        className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.duration ? "border border-destructive" : "border border-border/50"}`}
+                        disabled={submitting}
+                      >
+                        <option value={ADHOC}>+ פריט חד-פעמי…</option>
+                        {formRates
+                          .filter((r) => r.kind === "item")
+                          .map((r) => (
+                            <option key={r.id} value={r.id}>
+                              {r.name} — {r.rate}/יח׳
+                            </option>
+                          ))}
+                      </select>
                     </div>
+
+                    {/* Ad-hoc item: typed name + unit price, optionally saved to the client */}
+                    {formData.rateId === ADHOC && (
+                      <>
+                        <div>
+                          <label htmlFor="adhocName" className="block text-sm font-medium text-foreground">
+                            שם הפריט *
+                          </label>
+                          <input
+                            type="text"
+                            id="adhocName"
+                            value={formData.adhocName}
+                            onChange={(e) => setFormData({ ...formData, adhocName: e.target.value })}
+                            className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.adhocName ? "border border-destructive" : "border border-border/50"}`}
+                            disabled={submitting}
+                            placeholder="לדוגמה: מכתב"
+                          />
+                          {fieldErrors.adhocName && (
+                            <p className="mt-1 text-xs text-destructive">{fieldErrors.adhocName}</p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label htmlFor="adhocPrice" className="block text-sm font-medium text-foreground">
+                            מחיר ליחידה (₪) *
+                          </label>
+                          <input
+                            type="number"
+                            id="adhocPrice"
+                            min="0"
+                            step="0.01"
+                            value={formData.adhocPrice}
+                            onChange={(e) => setFormData({ ...formData, adhocPrice: e.target.value })}
+                            className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.adhocPrice ? "border border-destructive" : "border border-border/50"}`}
+                            disabled={submitting}
+                            placeholder="לדוגמה: 250"
+                          />
+                          {fieldErrors.adhocPrice && (
+                            <p className="mt-1 text-xs text-destructive">{fieldErrors.adhocPrice}</p>
+                          )}
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <label htmlFor="saveItemToClient" className="flex items-center cursor-pointer min-h-[44px]">
+                            <input
+                              type="checkbox"
+                              id="saveItemToClient"
+                              checked={formData.saveItemToClient}
+                              onChange={(e) => setFormData({ ...formData, saveItemToClient: e.target.checked })}
+                              className="h-5 w-5 rounded border-border text-primary focus:ring-primary"
+                              disabled={submitting}
+                            />
+                            <span className="me-2 text-sm text-muted-foreground">שמור פריט זה ללקוח לשימוש חוזר</span>
+                          </label>
+                        </div>
+                      </>
+                    )}
 
                     <div>
                       <label htmlFor="quantity" className="block text-sm font-medium text-foreground">
@@ -912,7 +1043,7 @@ export default function EntriesPage() {
 
                 <div className="sm:col-span-2">
                   <label htmlFor="description" className="block text-sm font-medium text-foreground">
-                    תיאור *
+                    {formData.billingKind === "item" ? "פירוט *" : "תיאור *"}
                   </label>
                   <input
                     type="text"
@@ -922,7 +1053,11 @@ export default function EntriesPage() {
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.description ? "border border-destructive" : "border border-border/50"}`}
                     disabled={submitting}
-                    placeholder="מה עשית?"
+                    placeholder={
+                      formData.billingKind === "item"
+                        ? "נושא / פירוט — יופיע בתעודת החיוב (למשל: בנושא הסכם שכירות)"
+                        : "מה עשית?"
+                    }
                   />
                   {fieldErrors.description && (
                     <p className="mt-1 text-xs text-destructive">{fieldErrors.description}</p>
@@ -1071,7 +1206,12 @@ export default function EntriesPage() {
                             : formatDuration(entry.duration)}
                         </div>
                         {entry.rateLabel && (
-                          <div className="text-xs text-muted-foreground">{entry.rateLabel}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {entry.rateLabel}
+                            {entry.billingKind === "item" && entry.itemRef != null && (
+                              <span className="ms-1 font-mono tabular-nums">· אסמכתא {entry.itemRef}</span>
+                            )}
+                          </div>
                         )}
                         {entry.isBillable && (
                           <span className="inline-flex rounded-full bg-accent/20 text-accent px-2 py-0.5 text-xs font-semibold leading-5 me-2">
@@ -1141,7 +1281,12 @@ export default function EntriesPage() {
                             : formatDuration(entry.duration)}
                         </span>
                         {entry.rateLabel && (
-                          <span className="text-xs text-muted-foreground">{entry.rateLabel}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {entry.rateLabel}
+                            {entry.billingKind === "item" && entry.itemRef != null && (
+                              <span className="ms-1 font-mono tabular-nums">· אסמכתא {entry.itemRef}</span>
+                            )}
+                          </span>
                         )}
                         {entry.isBillable && (
                           <span className="inline-flex rounded-full bg-accent/20 text-accent px-2 py-0.5 text-xs font-semibold leading-5">

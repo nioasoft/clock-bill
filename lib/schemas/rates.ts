@@ -25,6 +25,15 @@ export const clientRateSchema: z.ZodType<ClientRateInput> = z.object({
 export const clientRatesSchema = z.array(clientRateSchema).max(100, "יותר מדי תעריפים");
 
 /**
+ * One item appended to a client from a time entry's "save to client" action
+ * (POST /api/clients/[id]/rates). kind is forced to 'item' server-side.
+ */
+export const addClientItemSchema = z.object({
+  name: z.string({ message: "נא להזין שם פריט" }).trim().min(1, "נא להזין שם פריט").max(100, "שם הפריט ארוך מדי"),
+  rate: z.number({ message: "נא להזין מחיר ליחידה" }).min(0, "המחיר לא יכול להיות שלילי"),
+});
+
+/**
  * Pick the hourly rate to preselect: the one flagged default, else the first
  * hourly rate, else null (client has no hourly rates -> fall back to default_rate).
  */

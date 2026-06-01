@@ -1,35 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
+import type { PoolClient } from "pg";
 import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
+import { entryBodySchema } from "@/lib/schemas/entries";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
-
-/** Body schema for updating a time entry. Mirrors prior inline checks. */
-const updateEntrySchema = z.object({
-  projectId: z.string({ message: "נא לבחור פרויקט" }).min(1, "נא לבחור פרויקט"),
-  taskId: z.string().nullish(),
-  date: z.string({ message: "נא לבחור תאריך" }).min(1, "נא לבחור תאריך"),
-  // hourly lines use duration (minutes); item lines use quantity with duration 0.
-  duration: z.number({ message: "נא להזין משך זמן תקין" }).min(0),
-  description: z
-    .string({ message: "נא להזין תיאור" })
-    .trim()
-    .min(1, "נא להזין תיאור")
-    .max(5000),
-  notes: z.string().max(5000).nullish(),
-  isBillable: z.boolean().nullish(),
-  tags: z.array(z.string().max(100)).nullish(),
-  billingKind: z.enum(["hourly", "item"]).nullish(),
-  rate: z.number().min(0).nullish(),
-  rateLabel: z.string().max(100).nullish(),
-  quantity: z.number().min(0).nullish(),
-}).refine(
-  (d) => (d.billingKind === "item" ? (d.quantity ?? 0) > 0 : d.duration > 0),
-  { message: "נא להזין כמות לפריט או משך זמן לשעות", path: ["duration"] }
-);
 
 /**
  * GET /api/entries/[id]
@@ -67,6 +44,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       rate: number | null;
       rate_label: string | null;
       quantity: number | null;
+      item_ref: number | null;
       project_name: string;
       client_name: string;
       client_id: string;
@@ -89,6 +67,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         te.rate,
         te.rate_label,
         te.quantity,
+        te.item_ref,
         p.name as project_name,
         c.name as client_name,
         c.id as client_id,
@@ -133,6 +112,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         rate: entry.rate,
         rateLabel: entry.rate_label,
         quantity: entry.quantity,
+        itemRef: entry.item_ref,
       },
     }, {
       headers: {
@@ -164,120 +144,97 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     }
 
     const { id } = await context.params;
-    const parsed = await parseBody(request, updateEntrySchema);
+    const parsed = await parseBody(request, entryBodySchema);
     if (!parsed.ok) return parsed.response;
     const { projectId, taskId, date, duration, description, notes, isBillable, tags, billingKind, rate, rateLabel, quantity } = parsed.data;
     const kind = billingKind ?? "hourly";
-    const effectiveDuration = kind === "item" ? 0 : duration;
+    const isItem = kind === "item";
+    const effectiveDuration = isItem ? 0 : duration;
 
-    const { query } = await import("@/lib/db");
+    const { withTransaction } = await import("@/lib/db");
 
-    // Verify entry belongs to user
-    const entryCheck = await query<{ id: string }>(
-      `SELECT id FROM time_entries WHERE id = $1 AND user_id = $2`,
-      [id, user.id]
-    );
+    const result = await withTransaction(async (client: PoolClient) => {
+      // Ownership + current item_ref (so we never reassign an existing one).
+      const entryCheck = await client.query<{ id: string; item_ref: number | null }>(
+        `SELECT id, item_ref FROM time_entries WHERE id = $1 AND user_id = $2`,
+        [id, user.id]
+      );
+      if (entryCheck.rows.length === 0) return { error: "entry" as const };
 
-    if (entryCheck.rows.length === 0) {
+      const projectCheck = await client.query<{ id: string }>(
+        `SELECT p.id FROM projects p
+         JOIN clients c ON p.client_id = c.id
+         WHERE p.id = $1 AND c.user_id = $2`,
+        [projectId, user.id]
+      );
+      if (projectCheck.rows.length === 0) return { error: "project" as const };
+
+      // Item lines carry a reference number: keep the existing one, assign a new
+      // one if this line is becoming an item and has none. Hourly lines clear it.
+      let itemRef: number | null = entryCheck.rows[0].item_ref;
+      if (!isItem) {
+        itemRef = null;
+      } else if (itemRef === null) {
+        const ref = await client.query<{ assigned: number }>(
+          `INSERT INTO user_profiles (id, user_id, next_item_ref)
+           VALUES (gen_random_uuid()::text, $1, 2)
+           ON CONFLICT (user_id) DO UPDATE SET next_item_ref = user_profiles.next_item_ref + 1
+           RETURNING (next_item_ref - 1) AS assigned`,
+          [user.id]
+        );
+        itemRef = ref.rows[0].assigned;
+      }
+
+      const updated = await client.query<UpdatedRow>(
+        `WITH upd AS (
+           UPDATE time_entries
+           SET project_id = $1, task_id = $2, description = $3, duration = $4, date = $5,
+               tags = $6, notes = $7, is_billable = $8, billing_kind = $9, rate = $10,
+               rate_label = $11, quantity = $12, item_ref = $13, updated_at = NOW()
+           WHERE id = $14 AND user_id = $15
+           RETURNING *
+         )
+         SELECT
+           upd.id, upd.project_id, upd.description, upd.start_time, upd.end_time,
+           upd.duration, upd.date, upd.tags, upd.notes, upd.is_billable, upd.created_at,
+           upd.task_id, upd.billing_kind, upd.rate, upd.rate_label, upd.quantity, upd.item_ref,
+           p.name as project_name, c.name as client_name, c.id as client_id, tk.name as task_name
+         FROM upd
+         JOIN projects p ON upd.project_id = p.id
+         JOIN clients c ON p.client_id = c.id
+         LEFT JOIN tasks tk ON upd.task_id = tk.id`,
+        [
+          projectId,
+          taskId || null,
+          description.trim(),
+          effectiveDuration,
+          date,
+          JSON.stringify(tags || []),
+          notes?.trim() || null,
+          isBillable !== undefined ? isBillable : true,
+          kind,
+          rate ?? null,
+          rateLabel?.trim() || null,
+          isItem ? (quantity ?? null) : null,
+          itemRef,
+          id,
+          user.id,
+        ]
+      );
+      return { row: updated.rows[0] };
+    });
+
+    if ("error" in result) {
       return NextResponse.json(
-        { success: false, message: "הרשומה לא נמצאה" },
+        {
+          success: false,
+          message: result.error === "entry" ? "הרשומה לא נמצאה" : "הפרויקט לא נמצא",
+        },
         { status: 404 }
       );
     }
 
-    // Verify project belongs to user
-    const projectCheck = await query<{ id: string }>(
-      `SELECT p.id FROM projects p
-       JOIN clients c ON p.client_id = c.id
-       WHERE p.id = $1 AND c.user_id = $2`,
-      [projectId, user.id]
-    );
-
-    if (projectCheck.rows.length === 0) {
-      return NextResponse.json(
-        { success: false, message: "הפרויקט לא נמצא" },
-        { status: 404 }
-      );
-    }
-
-    // Update time entry (snapshot billing fields; item lines force duration 0)
-    await query(
-      `UPDATE time_entries
-       SET project_id = $1, task_id = $2, description = $3, duration = $4, date = $5,
-           tags = $6, notes = $7, is_billable = $8, billing_kind = $9, rate = $10,
-           rate_label = $11, quantity = $12, updated_at = NOW()
-       WHERE id = $13 AND user_id = $14`,
-      [
-        projectId,
-        taskId || null,
-        description.trim(),
-        effectiveDuration,
-        date,
-        JSON.stringify(tags || []),
-        notes?.trim() || null,
-        isBillable !== undefined ? isBillable : true,
-        kind,
-        rate ?? null,
-        rateLabel?.trim() || null,
-        kind === "item" ? (quantity ?? null) : null,
-        id,
-        user.id,
-      ]
-    );
-
-    // Fetch the updated entry with project and client info
-    const entryResult = await query<{
-      id: string;
-      project_id: string;
-      description: string;
-      start_time: string | null;
-      end_time: string | null;
-      duration: number;
-      date: string;
-      tags: unknown;
-      notes: string | null;
-      is_billable: boolean;
-      created_at: string;
-      task_id: string | null;
-      billing_kind: string | null;
-      rate: number | null;
-      rate_label: string | null;
-      quantity: number | null;
-      project_name: string;
-      client_name: string;
-      client_id: string;
-      task_name: string | null;
-    }>(
-      `SELECT
-        te.id,
-        te.project_id,
-        te.description,
-        te.start_time,
-        te.end_time,
-        te.duration,
-        te.date,
-        te.tags,
-        te.notes,
-        te.is_billable,
-        te.created_at,
-        te.task_id,
-        te.billing_kind,
-        te.rate,
-        te.rate_label,
-        te.quantity,
-        p.name as project_name,
-        c.name as client_name,
-        c.id as client_id,
-        tk.name as task_name
-      FROM time_entries te
-      JOIN projects p ON te.project_id = p.id
-      JOIN clients c ON p.client_id = c.id
-      LEFT JOIN tasks tk ON te.task_id = tk.id
-      WHERE te.id = $1 AND te.user_id = $2`,
-      [id, user.id]
-    );
-
-    const entry = entryResult.rows[0];
+    const entry = result.row;
 
     return NextResponse.json({
       success: true,
@@ -302,6 +259,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         rate: entry.rate,
         rateLabel: entry.rate_label,
         quantity: entry.quantity,
+        itemRef: entry.item_ref,
       },
     });
   } catch (error) {
@@ -311,6 +269,31 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       { status: 500 }
     );
   }
+}
+
+/** Shape returned by the update CTE (time_entries.* + joined names). */
+interface UpdatedRow {
+  id: string;
+  project_id: string;
+  description: string;
+  start_time: string | null;
+  end_time: string | null;
+  duration: number;
+  date: string;
+  tags: unknown;
+  notes: string | null;
+  is_billable: boolean;
+  created_at: string;
+  task_id: string | null;
+  billing_kind: string | null;
+  rate: number | null;
+  rate_label: string | null;
+  quantity: number | null;
+  item_ref: number | null;
+  project_name: string;
+  client_name: string;
+  client_id: string;
+  task_name: string | null;
 }
 
 /**

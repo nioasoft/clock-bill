@@ -63,6 +63,7 @@ interface ReportEntry {
   billingKind?: "hourly" | "item";
   rateLabel?: string | null;
   quantity?: number | null;
+  itemRef?: number | null;
   amount?: number;
 }
 
@@ -1000,6 +1001,7 @@ export default function ReportsPage() {
                           <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>
                             {entry.description}{entry.notes ? ` (${entry.notes})` : ""}
                             {entry.rateLabel ? <span style={{ color: "#94a3b8" }}> · {entry.rateLabel}</span> : ""}
+                            {entry.billingKind === "item" && entry.itemRef != null ? <span style={{ color: "#94a3b8" }}> · אסמכתא {entry.itemRef}</span> : ""}
                           </td>
                           <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>
                             {entry.billingKind === "item" ? `${entry.quantity ?? 0} יח׳` : formatDuration(entry.duration)}
@@ -1460,8 +1462,14 @@ export default function ReportsPage() {
                           </td>
                           <td className="px-6 py-4 text-sm">
                             {entry.description}
+                            {entry.notes && (
+                              <span className="ms-1 text-xs text-muted-foreground">({entry.notes})</span>
+                            )}
                             {entry.rateLabel && (
                               <span className="ms-2 text-xs text-muted-foreground">· {entry.rateLabel}</span>
+                            )}
+                            {entry.billingKind === "item" && entry.itemRef != null && (
+                              <span className="ms-1 text-xs text-muted-foreground font-mono tabular-nums">· אסמכתא {entry.itemRef}</span>
                             )}
                           </td>
                           <td className="px-6 py-4 text-sm font-mono font-semibold">

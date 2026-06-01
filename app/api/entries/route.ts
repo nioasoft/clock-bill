@@ -1,31 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
+import type { PoolClient } from "pg";
 import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
-
-/** Body schema for creating a manual time entry. Mirrors prior inline checks. */
-const createEntrySchema = z.object({
-  projectId: z.string({ message: "נא לבחור פרויקט" }).min(1, "נא לבחור פרויקט"),
-  taskId: z.string().nullish(),
-  date: z.string({ message: "נא לבחור תאריך" }).min(1, "נא לבחור תאריך"),
-  // hourly lines use duration (minutes); item lines use quantity with duration 0.
-  duration: z.number({ message: "נא להזין משך זמן תקין" }).min(0),
-  description: z
-    .string({ message: "נא להזין תיאור" })
-    .trim()
-    .min(1, "נא להזין תיאור")
-    .max(5000),
-  notes: z.string().max(5000).nullish(),
-  isBillable: z.boolean().nullish(),
-  tags: z.array(z.string().max(100)).nullish(),
-  billingKind: z.enum(["hourly", "item"]).nullish(),
-  rate: z.number().min(0).nullish(),
-  rateLabel: z.string().max(100).nullish(),
-  quantity: z.number().min(0).nullish(),
-}).refine(
-  (d) => (d.billingKind === "item" ? (d.quantity ?? 0) > 0 : d.duration > 0),
-  { message: "נא להזין כמות לפריט או משך זמן לשעות", path: ["duration"] }
-);
+import { entryBodySchema } from "@/lib/schemas/entries";
 
 /** Default and maximum page size for the entries list to bound query cost. */
 const DEFAULT_LIMIT = 500;
@@ -124,6 +101,7 @@ export async function GET(request: NextRequest) {
         te.rate,
         te.rate_label,
         te.quantity,
+        te.item_ref,
         p.name as project_name,
         c.name as client_name,
         c.id as client_id,
@@ -157,6 +135,7 @@ export async function GET(request: NextRequest) {
       rate: number | null;
       rate_label: string | null;
       quantity: number | null;
+      item_ref: number | null;
       project_name: string;
       client_name: string;
       client_id: string;
@@ -186,6 +165,7 @@ export async function GET(request: NextRequest) {
       rate: entry.rate,
       rateLabel: entry.rate_label,
       quantity: entry.quantity,
+      itemRef: entry.item_ref,
     }));
 
     return NextResponse.json({
@@ -226,120 +206,95 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const parsed = await parseBody(request, createEntrySchema);
+    const parsed = await parseBody(request, entryBodySchema);
     if (!parsed.ok) return parsed.response;
     const { projectId, taskId, date, duration, description, notes, isBillable, tags, billingKind, rate, rateLabel, quantity } = parsed.data;
     const kind = billingKind ?? "hourly";
-    const effectiveDuration = kind === "item" ? 0 : duration;
+    const isItem = kind === "item";
+    const effectiveDuration = isItem ? 0 : duration;
 
-    const { query } = await import("@/lib/db");
+    // startTime = now, endTime = now + duration minutes (manual entries)
+    const now = new Date();
+    const endTime = new Date(now.getTime() + effectiveDuration * 60 * 1000);
 
-    // Verify project belongs to user
-    const projectCheck = await query<{ id: string }>(
-      `SELECT p.id FROM projects p
-       JOIN clients c ON p.client_id = c.id
-       WHERE p.id = $1 AND c.user_id = $2`,
-      [projectId, user.id]
-    );
+    const { withTransaction } = await import("@/lib/db");
 
-    if (projectCheck.rows.length === 0) {
+    // One transaction (one tenant-context bind): ownership check → assign the
+    // per-user item_ref (item lines only) → INSERT ... RETURNING joined names.
+    const result = await withTransaction(async (client: PoolClient) => {
+      const projectCheck = await client.query<{ id: string }>(
+        `SELECT p.id FROM projects p
+         JOIN clients c ON p.client_id = c.id
+         WHERE p.id = $1 AND c.user_id = $2`,
+        [projectId, user.id]
+      );
+      if (projectCheck.rows.length === 0) {
+        return { notFound: true as const };
+      }
+
+      // Item lines get a stable, per-user, never-reused reference number.
+      // Atomic upsert on the user's counter; creates a minimal profile row if
+      // none exists yet (id + user_id are the only required columns).
+      let itemRef: number | null = null;
+      if (isItem) {
+        const ref = await client.query<{ assigned: number }>(
+          `INSERT INTO user_profiles (id, user_id, next_item_ref)
+           VALUES (gen_random_uuid()::text, $1, 2)
+           ON CONFLICT (user_id) DO UPDATE SET next_item_ref = user_profiles.next_item_ref + 1
+           RETURNING (next_item_ref - 1) AS assigned`,
+          [user.id]
+        );
+        itemRef = ref.rows[0].assigned;
+      }
+
+      const inserted = await client.query<CreatedRow>(
+        `WITH ins AS (
+           INSERT INTO time_entries
+             (id, user_id, project_id, task_id, description, start_time, end_time, duration, date, tags, notes, is_billable, billing_kind, rate, rate_label, quantity, item_ref)
+           VALUES
+             (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+           RETURNING *
+         )
+         SELECT
+           ins.id, ins.project_id, ins.description, ins.start_time, ins.end_time,
+           ins.duration, ins.date, ins.tags, ins.notes, ins.is_billable, ins.created_at,
+           ins.paused_at, ins.total_paused_time, ins.task_id, ins.billing_kind,
+           ins.rate, ins.rate_label, ins.quantity, ins.item_ref,
+           p.name as project_name, c.name as client_name, c.id as client_id, tk.name as task_name
+         FROM ins
+         JOIN projects p ON ins.project_id = p.id
+         JOIN clients c ON p.client_id = c.id
+         LEFT JOIN tasks tk ON ins.task_id = tk.id`,
+        [
+          user.id,
+          projectId,
+          taskId || null,
+          description.trim(),
+          now.toISOString(),
+          endTime.toISOString(),
+          effectiveDuration,
+          date,
+          JSON.stringify(tags || []),
+          notes?.trim() || null,
+          isBillable !== undefined ? isBillable : true,
+          kind,
+          rate ?? null,
+          rateLabel?.trim() || null,
+          isItem ? (quantity ?? null) : null,
+          itemRef,
+        ]
+      );
+      return { row: inserted.rows[0] };
+    });
+
+    if ("notFound" in result) {
       return NextResponse.json(
         { success: false, message: "הפרויקט לא נמצא" },
         { status: 404 }
       );
     }
 
-    // Generate UUID for new entry
-    const entryIdResult = await query<{ id: string }>(
-      `SELECT gen_random_uuid()::text as id`
-    );
-    const entryId = entryIdResult.rows[0].id;
-
-    // Calculate start/end times for manual entries
-    // startTime = now, endTime = now + duration minutes
-    const now = new Date();
-    const endTime = new Date(now.getTime() + effectiveDuration * 60 * 1000);
-
-    await query(
-      `INSERT INTO time_entries (id, user_id, project_id, task_id, description, start_time, end_time, duration, date, tags, notes, is_billable, billing_kind, rate, rate_label, quantity)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
-      [
-        entryId,
-        user.id,
-        projectId,
-        taskId || null,
-        description.trim(),
-        now.toISOString(),
-        endTime.toISOString(),
-        effectiveDuration,
-        date,
-        JSON.stringify(tags || []),
-        notes?.trim() || null,
-        isBillable !== undefined ? isBillable : true,
-        kind,
-        rate ?? null,
-        rateLabel?.trim() || null,
-        kind === "item" ? (quantity ?? null) : null,
-      ]
-    );
-
-    // Fetch the created entry with project and client info
-    const entryResult = await query<{
-      id: string;
-      project_id: string;
-      description: string;
-      start_time: string | null;
-      end_time: string | null;
-      duration: number;
-      date: string;
-      tags: unknown;
-      notes: string | null;
-      is_billable: boolean;
-      created_at: string;
-      paused_at: string | null;
-      total_paused_time: number | null;
-      task_id: string | null;
-      billing_kind: string | null;
-      rate: number | null;
-      rate_label: string | null;
-      quantity: number | null;
-      project_name: string;
-      client_name: string;
-      client_id: string;
-      task_name: string | null;
-    }>(
-      `SELECT
-        te.id,
-        te.project_id,
-        te.description,
-        te.start_time,
-        te.end_time,
-        te.duration,
-        te.date,
-        te.tags,
-        te.notes,
-        te.is_billable,
-        te.created_at,
-        te.paused_at,
-        te.total_paused_time,
-        te.task_id,
-        te.billing_kind,
-        te.rate,
-        te.rate_label,
-        te.quantity,
-        p.name as project_name,
-        c.name as client_name,
-        c.id as client_id,
-        tk.name as task_name
-      FROM time_entries te
-      JOIN projects p ON te.project_id = p.id
-      JOIN clients c ON p.client_id = c.id
-      LEFT JOIN tasks tk ON te.task_id = tk.id
-      WHERE te.id = $1 AND te.user_id = $2`,
-      [entryId, user.id]
-    );
-
-    const entry = entryResult.rows[0];
+    const entry = result.row;
 
     return NextResponse.json({
       success: true,
@@ -366,6 +321,7 @@ export async function POST(request: NextRequest) {
         rate: entry.rate,
         rateLabel: entry.rate_label,
         quantity: entry.quantity,
+        itemRef: entry.item_ref,
       },
     });
   } catch (error) {
@@ -375,4 +331,31 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+/** Shape returned by the create CTE (time_entries.* + joined names). */
+interface CreatedRow {
+  id: string;
+  project_id: string;
+  description: string;
+  start_time: string | null;
+  end_time: string | null;
+  duration: number;
+  date: string;
+  tags: unknown;
+  notes: string | null;
+  is_billable: boolean;
+  created_at: string;
+  paused_at: string | null;
+  total_paused_time: number | null;
+  task_id: string | null;
+  billing_kind: string | null;
+  rate: number | null;
+  rate_label: string | null;
+  quantity: number | null;
+  item_ref: number | null;
+  project_name: string;
+  client_name: string;
+  client_id: string;
+  task_name: string | null;
 }

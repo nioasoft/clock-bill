@@ -78,3 +78,6 @@ public/uploads/
 *.db
 *.sqlite
 data/
+
+# Claude Code local files
+.claude/

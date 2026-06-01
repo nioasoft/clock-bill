@@ -131,6 +131,8 @@ export const userProfiles = pgTable("user_profiles", {
   // Invoice settings
   invoicePrefix: text("invoice_prefix"),
   nextInvoiceNumber: integer("next_invoice_number"),
+  // Per-user counter for item-line reference numbers (time_entries.item_ref).
+  nextItemRef: integer("next_item_ref").notNull().default(1),
   paymentTerms: text("payment_terms"),
   // Bank details
   bankName: text("bank_name"),
@@ -301,6 +303,9 @@ export const timeEntries = pgTable(
     rateLabel: text("rate_label"), // the rate/item name at log time
     billingKind: text("billing_kind"), // 'hourly' | 'item'; NULL => legacy hourly
     quantity: real("quantity"), // units for an item line; ignored for hourly
+    // Per-user monotonic reference number ("אסמכתא"), set ONLY on item lines at
+    // creation (NULL for hourly). Stable, never reused — see user_profiles.next_item_ref.
+    itemRef: integer("item_ref"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
