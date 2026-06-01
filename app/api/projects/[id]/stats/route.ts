@@ -22,39 +22,28 @@ export async function GET(
     const { query } = await import("@/lib/db");
     const { id: projectId } = await params;
 
-    // Verify project exists and belongs to user
-    const projectCheck = await query<{ exists: boolean }>(
-      `SELECT EXISTS(SELECT 1 FROM projects WHERE id = $1 AND user_id = $2) as exists`,
+    // One query: ownership (project row) + aggregates over its entries. A missing
+    // or non-owned project yields zero rows (→ 404); an owned project with no
+    // entries yields one row with 0/0.
+    const result = await query<{ total_minutes: number | null; count: string }>(
+      `SELECT COALESCE(SUM(te.duration), 0) AS total_minutes, COUNT(te.id) AS count
+       FROM projects p
+       LEFT JOIN time_entries te ON te.project_id = p.id AND te.user_id = $2
+       WHERE p.id = $1 AND p.user_id = $2
+       GROUP BY p.id`,
       [projectId, user.id]
     );
 
-    if (!projectCheck.rows[0].exists) {
+    if (result.rows.length === 0) {
       return NextResponse.json(
         { success: false, message: "הפרויקט לא נמצא" },
         { status: 404 }
       );
     }
 
-    // Get total duration (in minutes) for all time entries in this project
-    const durationResult = await query<{ total_minutes: number | null }>(
-      `SELECT COALESCE(SUM(duration), 0) as total_minutes
-       FROM time_entries
-       WHERE project_id = $1 AND user_id = $2`,
-      [projectId, user.id]
-    );
-
-    const totalMinutes = durationResult.rows[0].total_minutes || 0;
+    const totalMinutes = result.rows[0].total_minutes || 0;
     const totalHours = totalMinutes / 60; // Convert to hours
-
-    // Get entry count
-    const countResult = await query<{ count: number }>(
-      `SELECT COUNT(*) as count
-       FROM time_entries
-       WHERE project_id = $1 AND user_id = $2`,
-      [projectId, user.id]
-    );
-
-    const entryCount = countResult.rows[0].count;
+    const entryCount = parseInt(result.rows[0].count, 10) || 0;
 
     return NextResponse.json({
       success: true,

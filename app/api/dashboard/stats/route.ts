@@ -31,57 +31,39 @@ export async function GET(_request: NextRequest) {
     // Get upcoming deadlines date range
     const thirtyDaysStr = addDays(today, 30);
 
-    // Run all independent queries in parallel
+    // Run all independent queries in parallel. Several have been merged to cut
+    // DB round-trips (same response shape):
+    //  - the three time-period sums → one FILTER aggregate (one index scan)
+    //  - clients + projects counts → one row of scalar subqueries
+    //  - the user's default currency rides along on the earnings query
     const [
-      todayResult,
-      weekResult,
-      monthResult,
-      clientsResult,
-      projectsResult,
-      currencyResult,
+      timeSumsResult,
+      countsResult,
       earningsResult,
       recentEntriesResult,
       upcomingDeadlinesResult,
       fixedProjectsResult,
     ] = await Promise.all([
-      query<{ total: string }>(
-        `SELECT COALESCE(SUM(duration), 0) as total
+      query<{ today: string; week: string; month: string }>(
+        `SELECT
+            COALESCE(SUM(duration) FILTER (WHERE date = $2), 0) AS today,
+            COALESCE(SUM(duration) FILTER (WHERE date >= $3), 0) AS week,
+            COALESCE(SUM(duration) FILTER (WHERE date >= $4), 0) AS month
          FROM time_entries
-         WHERE user_id = $1 AND date = $2`,
-        [userId, today]
+         WHERE user_id = $1 AND date >= LEAST($3::date, $4::date)`,
+        [userId, today, startOfWeekStr, startOfMonthStr]
       ),
-      query<{ total: string }>(
-        `SELECT COALESCE(SUM(duration), 0) as total
-         FROM time_entries
-         WHERE user_id = $1 AND date >= $2`,
-        [userId, startOfWeekStr]
-      ),
-      query<{ total: string }>(
-        `SELECT COALESCE(SUM(duration), 0) as total
-         FROM time_entries
-         WHERE user_id = $1 AND date >= $2`,
-        [userId, startOfMonthStr]
-      ),
-      query<{ count: string }>(
-        `SELECT COUNT(*) as count
-         FROM clients
-         WHERE user_id = $1 AND is_active = TRUE`,
+      query<{ clients: string; projects: string }>(
+        `SELECT
+            (SELECT COUNT(*) FROM clients  WHERE user_id = $1 AND is_active = TRUE)   AS clients,
+            (SELECT COUNT(*) FROM projects WHERE user_id = $1 AND status = 'active')  AS projects`,
         [userId]
       ),
-      query<{ count: string }>(
-        `SELECT COUNT(*) as count
-         FROM projects
-         WHERE user_id = $1 AND status = 'active'`,
-        [userId]
-      ),
-      query<{ default_currency: string }>(
-        `SELECT default_currency FROM user_profiles WHERE user_id = $1`,
-        [userId]
-      ),
-      query<{ total: string }>(
+      query<{ total: string; default_currency: string | null }>(
         `SELECT COALESCE(SUM(
              (te.duration / 60.0) * COALESCE(c.default_rate, 0)
-           ), 0) as total
+           ), 0) as total,
+           (SELECT default_currency FROM user_profiles WHERE user_id = $1) AS default_currency
          FROM time_entries te
          JOIN projects p ON te.project_id = p.id
          JOIN clients c ON p.client_id = c.id
@@ -175,7 +157,7 @@ export async function GET(_request: NextRequest) {
       return acc;
     }, {} as Record<string, number>);
 
-    const userCurrency = currencyResult.rows[0]?.default_currency || 'ILS';
+    const userCurrency = earningsResult.rows[0]?.default_currency || 'ILS';
 
     // Get currency symbol
     const getCurrencySymbol = (currency: string) => {
@@ -206,19 +188,19 @@ export async function GET(_request: NextRequest) {
       success: true,
       stats: {
         today: {
-          hours: parseFloat(todayResult.rows[0]?.total || '0') / 60,
-          formatted: formatHours(parseFloat(todayResult.rows[0]?.total || '0'))
+          hours: parseFloat(timeSumsResult.rows[0]?.today || '0') / 60,
+          formatted: formatHours(parseFloat(timeSumsResult.rows[0]?.today || '0'))
         },
         week: {
-          hours: parseFloat(weekResult.rows[0]?.total || '0') / 60,
-          formatted: formatHours(parseFloat(weekResult.rows[0]?.total || '0'))
+          hours: parseFloat(timeSumsResult.rows[0]?.week || '0') / 60,
+          formatted: formatHours(parseFloat(timeSumsResult.rows[0]?.week || '0'))
         },
         month: {
-          hours: parseFloat(monthResult.rows[0]?.total || '0') / 60,
-          formatted: formatHours(parseFloat(monthResult.rows[0]?.total || '0'))
+          hours: parseFloat(timeSumsResult.rows[0]?.month || '0') / 60,
+          formatted: formatHours(parseFloat(timeSumsResult.rows[0]?.month || '0'))
         },
-        clientsCount: parseInt(clientsResult.rows[0]?.count || '0'),
-        projectsCount: parseInt(projectsResult.rows[0]?.count || '0'),
+        clientsCount: parseInt(countsResult.rows[0]?.clients || '0'),
+        projectsCount: parseInt(countsResult.rows[0]?.projects || '0'),
         earnings: {
           amount: totalEarnings,
           formatted: `${getCurrencySymbol(userCurrency)}${totalEarnings.toFixed(2)}`,
