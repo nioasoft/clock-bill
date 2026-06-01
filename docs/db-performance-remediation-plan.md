@@ -23,7 +23,7 @@ Nothing here is a data-leak risk. The items below are performance + future-proof
 
 ## P0 — Before public launch (high impact, low effort)
 
-### 1. Covering index on `time_entries`  `[~]` (dev applied 2026-06-01; **prod pending**)
+### 1. Covering index on `time_entries`  `[x]` (applied to dev AND prod 2026-06-01, verified)
 Every dashboard/report aggregate (`SUM(duration)`, earnings, billable totals) currently does an
 index scan **plus a heap fetch per row**. One online index removes the heap fetch.
 
