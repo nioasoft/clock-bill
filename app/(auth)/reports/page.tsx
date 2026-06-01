@@ -23,6 +23,9 @@ export default function SettlementPage() {
     if (typeof window === "undefined") return;
     const p = new URLSearchParams(window.location.search);
     if (p.has("clientId") || p.has("projectId") || p.has("startDate") || p.has("endDate")) {
+      // Intentional one-time, URL-driven tab selection on mount. Using an effect
+      // (not a lazy useState initializer) avoids an SSR hydration mismatch on shared links.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTab("report");
     }
   }, []);
