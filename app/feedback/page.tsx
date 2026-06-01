@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageSquare, CheckCircle2, Send } from "lucide-react";
+import { MessageSquare, Check, Send } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
@@ -40,6 +40,11 @@ export default function FeedbackPage() {
           message: message.trim(),
           // The page the user came from, for reproducing bugs.
           pageUrl: typeof document !== "undefined" ? document.referrer || undefined : undefined,
+          // Silently captured so we don't ask users to find their browser/console.
+          userAgent:
+            typeof navigator !== "undefined"
+              ? `${navigator.userAgent} · ${window.innerWidth}×${window.innerHeight}`
+              : undefined,
         }),
       });
       const data = await response.json();
@@ -61,27 +66,33 @@ export default function FeedbackPage() {
       <PageContainer maxWidth="max-w-4xl">
         <PageHeader
           title="פניות ודיווח תקלות"
-          subtitle="מצאת באג? יש לך הצעה לשיפור? המערכת בתקופת ניסוי — נשמח לשמוע ממך."
+          subtitle="המערכת בתקופת ניסוי. נתקלת בתקלה או יש לך רעיון לשיפור? כתוב לנו."
         />
 
         {sent ? (
           <div
-            className="mt-6 rounded-[var(--radius-card)] border border-success/30 bg-success/5 p-6 text-center motion-safe:animate-fade-up"
+            className="mt-6 rounded-[var(--radius-card)] border border-border bg-card p-6 motion-safe:animate-fade-up"
             role="status"
             aria-live="polite"
           >
-            <CheckCircle2 className="mx-auto h-12 w-12 text-success" />
-            <h3 className="mt-3 font-display text-xl font-semibold text-foreground">הפנייה נשלחה — תודה!</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              נחזור אליך במייל אם נצטרך פרטים נוספים.
-            </p>
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-success/15">
+                <Check className="h-4 w-4 text-success" aria-hidden="true" />
+              </div>
+              <div>
+                <h3 className="font-display text-base font-semibold text-foreground">הפנייה התקבלה</h3>
+                <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+                  אם נצטרך פרטים נוספים נחזור אליך למייל שאיתו נכנסת.
+                </p>
+              </div>
+            </div>
             <button
               type="button"
               onClick={() => setSent(false)}
-              className="mt-5 inline-flex items-center gap-2 rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+              className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
             >
               <MessageSquare className="h-4 w-4" />
-              שלח פנייה נוספת
+              כתוב פנייה נוספת
             </button>
           </div>
         ) : (

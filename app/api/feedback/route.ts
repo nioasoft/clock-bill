@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, message }, { status: 400 });
   }
 
-  const { category, message, pageUrl } = parsed.data;
+  const { category, message, pageUrl, userAgent } = parsed.data;
   const categoryLabel = CATEGORY_LABELS_HE[category];
 
   const sent = await sendEmail({
@@ -52,7 +52,8 @@ export async function POST(request: NextRequest) {
       bodyHtml: `
         <p style="margin:0 0 4px;font-size:14px;color:#71717a;">מאת: <span dir="ltr">${escapeHtml(user.email)}</span></p>
         ${pageUrl ? `<p style="margin:0 0 4px;font-size:14px;color:#71717a;">עמוד: <span dir="ltr">${escapeHtml(pageUrl)}</span></p>` : ""}
-        <p style="margin:12px 0 0;font-size:15px;line-height:1.7;white-space:pre-wrap;">${escapeHtml(message)}</p>`,
+        <p style="margin:12px 0 0;font-size:15px;line-height:1.7;white-space:pre-wrap;">${escapeHtml(message)}</p>
+        ${userAgent ? `<p style="margin:16px 0 0;padding-top:12px;border-top:1px solid #e4e4e7;font-size:12px;color:#a1a1aa;" dir="ltr">${escapeHtml(userAgent)}</p>` : ""}`,
     }),
   });
 

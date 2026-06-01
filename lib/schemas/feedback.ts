@@ -23,6 +23,8 @@ export const feedbackSchema = z.object({
     .max(5000, "ההודעה ארוכה מדי (עד 5000 תווים)"),
   // The page the user was on when reporting — helps reproduce bugs.
   pageUrl: z.string().max(500).optional(),
+  // Browser + viewport, captured silently client-side for debugging.
+  userAgent: z.string().max(600).optional(),
 });
 
 export type FeedbackInput = z.infer<typeof feedbackSchema>;

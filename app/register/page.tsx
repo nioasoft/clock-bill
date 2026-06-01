@@ -172,7 +172,7 @@ export default function RegisterPage() {
             <div className="rounded-[var(--radius-card)] border border-border bg-card p-6 text-center lg:text-start" role="status" aria-live="polite">
               <div className="w-12 h-1 bg-accent rounded-full mb-6 mx-auto lg:mx-0" />
               <h1 className="text-2xl font-display font-bold tracking-tight text-foreground">
-                בדוק את האימייל שלך 📧
+בדוק את האימייל שלך
               </h1>
               <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
                 שלחנו קישור אימות לכתובת{" "}

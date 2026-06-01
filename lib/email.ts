@@ -86,10 +86,10 @@ export function emailLayout(opts: { heading: string; bodyHtml: string }): string
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   </head>
   <body style="margin:0;padding:0;background-color:#f4f4f5;font-family:Arial,Helvetica,sans-serif;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f5;padding:24px 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" dir="rtl" style="background-color:#f4f4f5;padding:24px 0;">
       <tr>
-        <td align="center">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e4e4e7;">
+        <td align="center" style="text-align:center;">
+          <table role="presentation" align="center" width="520" cellpadding="0" cellspacing="0" dir="rtl" style="width:100%;max-width:520px;margin:0 auto;background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e4e4e7;text-align:right;">
             <tr>
               <td style="background-color:#0a0a0a;padding:20px 28px;">
                 <span style="color:#faff69;font-size:22px;font-weight:bold;">מוניט</span>

@@ -76,7 +76,7 @@ export const auth = betterAuth({
         html: emailLayout({
           heading: "אמת את כתובת האימייל שלך",
           bodyHtml: `
-            <p style="margin:0 0 8px;font-size:15px;line-height:1.6;">ברוך הבא למוניט! 🎉</p>
+            <p style="margin:0 0 8px;font-size:15px;line-height:1.6;">ברוך הבא למוניט.</p>
             <p style="margin:0;font-size:15px;line-height:1.6;">כדי להתחיל, אנא אמת את כתובת האימייל שלך בלחיצה על הכפתור.</p>
             ${emailButton(url, "אמת אימייל")}
             <p style="margin:0;font-size:13px;color:#71717a;line-height:1.6;">אם לא נרשמת למוניט, אפשר להתעלם מהודעה זו.</p>`,
