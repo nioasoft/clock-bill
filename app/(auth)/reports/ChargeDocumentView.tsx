@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { STATUS_META, type ChargeDocStatus } from "./statusMeta";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { formatDate } from "@/lib/format";
 import { formatCurrency } from "@/lib/currency";
@@ -15,13 +16,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { printPdfContent, type PdfTemplate } from "./printStyles";
-
-/** A status as Hebrew label + a design-token badge style. */
-const STATUS_META: Record<string, { label: string; className: string }> = {
-  pending: { label: "ממתין", className: "bg-primary/15 text-primary border-primary/30" },
-  paid: { label: "שולם", className: "bg-success/15 text-success border-success/30" },
-  canceled: { label: "בוטל", className: "bg-muted text-muted-foreground border-border" },
-};
 
 interface DocumentLine {
   id: string;
@@ -130,27 +124,36 @@ export default function ChargeDocumentView({
 
   const [actionBusy, setActionBusy] = useState(false);
 
-  const loadDocument = useCallback(async (): Promise<void> => {
-    try {
-      const res = await fetch(`/api/charge-documents/${documentId}`);
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        setState("error");
-        return;
-      }
-      const document = json.data.document as ChargeDocument;
-      setDoc(document);
-      setLines(json.data.lines as DocumentLine[]);
-      setNotesDraft(document.notes ?? "");
-      setState("ready");
-    } catch {
-      setState("error");
-    }
-  }, [documentId]);
+  // Bumped to force a refetch after a mutation. The fetch lives in an effect
+  // keyed on [documentId, reloadKey] with an `active` guard so an in-flight
+  // response from a previous document/key never overwrites newer state.
+  const [reloadKey, setReloadKey] = useState(0);
+  const refetch = useCallback((): void => setReloadKey((k) => k + 1), []);
 
   useEffect(() => {
-    void loadDocument();
-  }, [loadDocument]);
+    let active = true;
+    void (async () => {
+      try {
+        const res = await fetch(`/api/charge-documents/${documentId}`);
+        const json = await res.json();
+        if (!active) return;
+        if (!res.ok || !json.success) {
+          setState("error");
+          return;
+        }
+        const document = json.data.document as ChargeDocument;
+        setDoc(document);
+        setLines(json.data.lines as DocumentLine[]);
+        setNotesDraft(document.notes ?? "");
+        setState("ready");
+      } catch {
+        if (active) setState("error");
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [documentId, reloadKey]);
 
   useEffect(() => {
     let active = true;
@@ -186,11 +189,11 @@ export default function ChargeDocumentView({
         showErrorToast(json.message || "שגיאה בעדכון תעודה");
         return false;
       }
-      await loadDocument();
+      refetch();
       onChanged?.();
       return true;
     },
-    [documentId, loadDocument, onChanged]
+    [documentId, refetch, onChanged]
   );
 
   const handleSaveNotes = useCallback(async (): Promise<void> => {
@@ -258,7 +261,7 @@ export default function ChargeDocumentView({
           onChanged?.();
           onClose?.();
         } else {
-          await loadDocument();
+          refetch();
           onChanged?.();
         }
       } catch {
@@ -267,7 +270,7 @@ export default function ChargeDocumentView({
         setActionBusy(false);
       }
     },
-    [documentId, loadDocument, onChanged, onClose]
+    [documentId, refetch, onChanged, onClose]
   );
 
   const handleDelete = useCallback(async (): Promise<void> => {
@@ -304,7 +307,11 @@ export default function ChargeDocumentView({
     const template = asTemplate(doc?.pdf_template ?? profile?.preferredPdfTemplate);
     const primary = profile?.pdfPrimaryColor || "#A8622D";
     const accent = profile?.pdfAccentColor || "#347B52";
-    printPdfContent(template, primary, accent);
+    // Sanitize: collapse "/" and whitespace runs to "_" so it's a safe filename.
+    const filename = `תעודה_${doc?.doc_number ?? ""}_${doc?.client_name ?? ""}`
+      .replace(/[/\s]+/g, "_")
+      .trim();
+    printPdfContent(template, primary, accent, filename);
   }, [doc, profile]);
 
   // ── States ──────────────────────────────────────────────────────────────
@@ -328,7 +335,7 @@ export default function ChargeDocumentView({
         <p className="text-foreground font-medium">לא הצלחנו לטעון את התעודה</p>
         <p className="text-sm text-muted-foreground">ייתכן שהיא נמחקה או שאירעה תקלה.</p>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => void loadDocument()} className="min-h-[44px]">
+          <Button variant="outline" onClick={refetch} className="min-h-[44px]">
             נסה שוב
           </Button>
           {onClose && (
@@ -341,7 +348,7 @@ export default function ChargeDocumentView({
     );
   }
 
-  const status = STATUS_META[doc.status] ?? STATUS_META.pending;
+  const status = STATUS_META[doc.status as ChargeDocStatus] ?? STATUS_META.pending;
 
   return (
     <div dir="rtl" className="space-y-6">
@@ -353,7 +360,7 @@ export default function ChargeDocumentView({
               תעודה #{doc.doc_number}
             </h2>
             <span
-              className={`inline-flex items-center rounded-[var(--radius)] border px-2.5 py-0.5 text-xs font-medium ${status.className}`}
+              className={`inline-flex items-center rounded-[var(--radius)] border px-2.5 py-0.5 text-xs font-medium ${status.badge}`}
             >
               {status.label}
             </span>
@@ -419,6 +426,7 @@ export default function ChargeDocumentView({
                       <div className="space-y-2">
                         <input
                           type="text"
+                          aria-label="תיאור שורה"
                           value={lineDraft.description}
                           onChange={(e) =>
                             setLineDraft((d) => ({ ...d, description: e.target.value }))
@@ -428,6 +436,7 @@ export default function ChargeDocumentView({
                         />
                         <input
                           type="text"
+                          aria-label="הערה לשורה"
                           value={lineDraft.notes}
                           onChange={(e) =>
                             setLineDraft((d) => ({ ...d, notes: e.target.value }))

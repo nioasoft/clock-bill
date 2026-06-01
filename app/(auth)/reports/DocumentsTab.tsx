@@ -6,13 +6,7 @@ import { formatCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import ChargeDocumentView from "./ChargeDocumentView";
-
-/** A status as Hebrew label + design-token badge style (matches the detail view). */
-const STATUS_META: Record<string, { label: string; className: string }> = {
-  pending: { label: "ממתין", className: "bg-primary/15 text-primary border-primary/30" },
-  paid: { label: "שולם", className: "bg-success/15 text-success border-success/30" },
-  canceled: { label: "בוטל", className: "bg-muted text-muted-foreground border-border" },
-};
+import { STATUS_META, type ChargeDocStatus } from "./statusMeta";
 
 interface DocumentRow {
   id: string;
@@ -29,10 +23,10 @@ interface DocumentRow {
 type LoadState = "loading" | "error" | "ready";
 
 function StatusBadge({ status }: { status: string }) {
-  const meta = STATUS_META[status] ?? STATUS_META.pending;
+  const meta = STATUS_META[status as ChargeDocStatus] ?? STATUS_META.pending;
   return (
     <span
-      className={`inline-flex items-center rounded-[var(--radius)] border px-2.5 py-0.5 text-xs font-medium ${meta.className}`}
+      className={`inline-flex items-center rounded-[var(--radius)] border px-2.5 py-0.5 text-xs font-medium ${meta.badge}`}
     >
       {meta.label}
     </span>

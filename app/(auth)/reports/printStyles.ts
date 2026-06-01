@@ -136,8 +136,16 @@ export function buildPrintStyles(
 export function printPdfContent(
   template: PdfTemplate,
   primaryColor: string,
-  accentColor: string
+  accentColor: string,
+  filename?: string
 ): void {
+  // Optionally override the document title so the browser's "Save as PDF"
+  // dialog suggests a meaningful filename; restore it during cleanup.
+  const originalTitle = document.title;
+  if (filename !== undefined) {
+    document.title = filename;
+  }
+
   // Inject print styles dynamically.
   const styleId = "pdf-print-styles";
   let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
@@ -151,7 +159,10 @@ export function printPdfContent(
   // Clone #pdf-content and append directly to body so print CSS works reliably
   // (the original is nested deep in the React tree and gets hidden by ancestor rules).
   const pdfContent = document.getElementById("pdf-content");
-  if (!pdfContent) return;
+  if (!pdfContent) {
+    if (filename !== undefined) document.title = originalTitle;
+    return;
+  }
 
   const printContainer = pdfContent.cloneNode(true) as HTMLElement;
   printContainer.id = "pdf-print-container";
@@ -175,6 +186,9 @@ export function printPdfContent(
       printContainer.remove();
       if (styleElToClean.parentNode) {
         styleElToClean.parentNode.removeChild(styleElToClean);
+      }
+      if (filename !== undefined) {
+        document.title = originalTitle;
       }
     }, 1000);
   }, 100);
