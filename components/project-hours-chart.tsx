@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { HourglassSVG } from "@/components/ui/thematic-elements";
 
 interface ProjectHours {
@@ -11,33 +10,15 @@ interface ProjectHours {
   formatted: string;
 }
 
-export function ProjectHoursChart() {
-  const [projectHours, setProjectHours] = useState<ProjectHours[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface ProjectHoursChartProps {
+  /** Per-project hours for the current month (from the dashboard stats call). */
+  data: ProjectHours[];
+  /** Whether the parent is still loading the dashboard data. */
+  loading?: boolean;
+}
 
-  useEffect(() => {
-    const fetchProjectHours = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("/api/dashboard/project-hours");
-        const data = await response.json();
-
-        if (data.success) {
-          setProjectHours(data.projectHours || []);
-        } else {
-          setError(data.message || "שגיאה בטעינת הנתונים");
-        }
-      } catch (err) {
-        console.error("Error fetching project hours data:", err);
-        setError("שגיאה בטעינת הנתונים");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProjectHours();
-  }, []);
+export function ProjectHoursChart({ data, loading = false }: ProjectHoursChartProps) {
+  const projectHours = data;
 
   if (loading) {
     return (
@@ -50,14 +31,14 @@ export function ProjectHoursChart() {
     );
   }
 
-  if (error || projectHours.length === 0) {
+  if (projectHours.length === 0) {
     return (
       <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
         <h3 className="font-display text-lg font-semibold text-foreground mb-4">שעות לפי פרויקט - החודש</h3>
         <div className="h-48 flex flex-col items-center justify-center gap-3">
           <HourglassSVG size={64} className="text-muted-foreground/30" />
           <p className="text-sm text-muted-foreground text-center">
-            {error || "אין נתוני שעות זמינים עדיין"}
+            אין נתוני שעות זמינים עדיין
           </p>
         </div>
       </div>

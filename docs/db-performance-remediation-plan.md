@@ -60,11 +60,12 @@ Today: (1) ownership check, (2) `SELECT gen_random_uuid()` ⟵ needless, (3) INS
 - **Do this together with the ad-hoc-item feature** — same route is being touched anyway.
 - **Effort:** ~45 min. **Impact:** MEDIUM (every manual entry).
 
-### 5. Fold dashboard charts into one endpoint  `[ ]`
-`/dashboard` fires `stats` + `earnings-chart` + `project-hours` (3 DB-hitting calls). Merge the two
-chart aggregates into the `stats` `Promise.all` and rename to `GET /api/dashboard`. Keep
-`/api/timer/running` separate (must not be cached).
-- **Effort:** ~1–2 h. **Impact:** MEDIUM.
+### 5. Fold dashboard charts into one endpoint  `[x]` (done 2026-06-01)
+`/dashboard` fired `stats` + `earnings-chart` + `project-hours` (3 DB-hitting calls). The two chart
+aggregates were folded into `GET /api/dashboard/stats` (which now also returns `monthlyEarnings` +
+`projectHours`); `EarningsChart`/`ProjectHoursChart` became presentational (props instead of
+self-fetching); the two now-dead routes were deleted. `/api/timer/running` stays separate (real-time).
+Dashboard mount: 3 DB-hitting calls → 1. Folded query verified on dev.
 
 ### 6. Merge multi-query read routes into one statement  `[x]` (done 2026-06-01)
 - `[x]` `GET /api/dashboard/stats`: 3 time-period SUMs → one `FILTER` aggregate, clients+projects

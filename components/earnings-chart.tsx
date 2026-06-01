@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { HourglassSVG } from "@/components/ui/thematic-elements";
 
 interface MonthlyEarnings {
@@ -9,33 +8,15 @@ interface MonthlyEarnings {
   formatted: string;
 }
 
-export function EarningsChart() {
-  const [earningsData, setEarningsData] = useState<MonthlyEarnings[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface EarningsChartProps {
+  /** Monthly earnings rows (from the dashboard stats call). */
+  data: MonthlyEarnings[];
+  /** Whether the parent is still loading the dashboard data. */
+  loading?: boolean;
+}
 
-  useEffect(() => {
-    const fetchEarningsData = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("/api/dashboard/earnings-chart");
-        const data = await response.json();
-
-        if (data.success) {
-          setEarningsData(data.monthlyEarnings || []);
-        } else {
-          setError(data.message || "שגיאה בטעינת הנתונים");
-        }
-      } catch (err) {
-        console.error("Error fetching earnings chart data:", err);
-        setError("שגיאה בטעינת הנתונים");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEarningsData();
-  }, []);
+export function EarningsChart({ data, loading = false }: EarningsChartProps) {
+  const earningsData = data;
 
   if (loading) {
     return (
@@ -48,14 +29,14 @@ export function EarningsChart() {
     );
   }
 
-  if (error || earningsData.length === 0) {
+  if (earningsData.length === 0) {
     return (
       <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
         <h3 className="font-display text-lg font-semibold text-foreground mb-4">הכנסות חודשיות</h3>
         <div className="h-48 flex flex-col items-center justify-center gap-3">
           <HourglassSVG size={64} className="text-muted-foreground/30" />
           <p className="text-sm text-muted-foreground text-center">
-            {error || "התחל לעקוב אחרי הזמן שלך כדי לראות הכנסות"}
+            התחל לעקוב אחרי הזמן שלך כדי לראות הכנסות
           </p>
         </div>
       </div>

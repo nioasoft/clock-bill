@@ -43,6 +43,8 @@ export async function GET(_request: NextRequest) {
       recentEntriesResult,
       upcomingDeadlinesResult,
       fixedProjectsResult,
+      monthlyEarningsResult,
+      projectHoursResult,
     ] = await Promise.all([
       query<{ today: string; week: string; month: string }>(
         `SELECT
@@ -131,6 +133,38 @@ export async function GET(_request: NextRequest) {
            AND p.fixed_monthly_enabled = TRUE
            AND COALESCE(p.fixed_monthly_fee, 0) > 0`,
         [userId]
+      ),
+      // Monthly earnings for the chart (last 12 months) — folded in from the old
+      // /api/dashboard/earnings-chart endpoint so the dashboard loads in one call.
+      query<{ month: string; total: string }>(
+        `SELECT
+           TO_CHAR(te.date, 'YYYY-MM') as month,
+           COALESCE(SUM((te.duration / 60.0) * COALESCE(c.default_rate, 0)), 0) as total
+         FROM time_entries te
+         JOIN projects p ON te.project_id = p.id
+         JOIN clients c ON p.client_id = c.id
+         WHERE te.user_id = $1
+           AND te.is_billable = TRUE
+           AND te.date >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '11 months')
+         GROUP BY TO_CHAR(te.date, 'YYYY-MM')
+         ORDER BY month ASC`,
+        [userId]
+      ),
+      // Hours by project this month (folded in from /api/dashboard/project-hours).
+      query<{ project_id: string; project_name: string; total_minutes: string }>(
+        `SELECT
+           p.id as project_id,
+           p.name as project_name,
+           COALESCE(SUM(te.duration), 0) as total_minutes
+         FROM projects p
+         LEFT JOIN time_entries te ON te.project_id = p.id
+           AND te.user_id = $1
+           AND te.date >= $2
+         WHERE p.user_id = $1
+           AND p.status = 'active'
+         GROUP BY p.id, p.name
+         ORDER BY total_minutes DESC`,
+        [userId, startOfMonthStr]
       ),
     ]);
 
@@ -223,7 +257,26 @@ export async function GET(_request: NextRequest) {
         clientName: project.client_name,
         status: project.status,
         daysUntilDeadline: Math.ceil((new Date(project.end_date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-      }))
+      })),
+      // Chart datasets (same shapes the old earnings-chart/project-hours routes returned)
+      monthlyEarnings: monthlyEarningsResult.rows.map(row => {
+        const amount = parseFloat(row.total || '0');
+        return {
+          month: row.month,
+          amount,
+          formatted: `${getCurrencySymbol(userCurrency)}${amount.toFixed(0)}`
+        };
+      }),
+      projectHours: projectHoursResult.rows.map(row => {
+        const minutes = parseFloat(row.total_minutes || '0');
+        return {
+          projectId: row.project_id,
+          projectName: row.project_name,
+          totalMinutes: minutes,
+          totalHours: minutes / 60,
+          formatted: formatHours(minutes)
+        };
+      })
     }, {
       headers: {
         'Cache-Control': 'private, max-age=30, stale-while-revalidate=60'

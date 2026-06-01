@@ -44,11 +44,27 @@ interface RecentEntry {
   projectId: string;
 }
 
+interface MonthlyEarnings {
+  month: string;
+  amount: number;
+  formatted: string;
+}
+
+interface ProjectHours {
+  projectId: string;
+  projectName: string;
+  totalMinutes: number;
+  totalHours: number;
+  formatted: string;
+}
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState(false);
   const [recentEntries, setRecentEntries] = useState<RecentEntry[]>([]);
+  const [monthlyEarnings, setMonthlyEarnings] = useState<MonthlyEarnings[]>([]);
+  const [projectHours, setProjectHours] = useState<ProjectHours[]>([]);
 
   // Timer from global context
   const {
@@ -78,6 +94,8 @@ export default function DashboardPage() {
         if (data.success) {
           setStats(data.stats);
           setRecentEntries(data.recentEntries || []);
+          setMonthlyEarnings(data.monthlyEarnings || []);
+          setProjectHours(data.projectHours || []);
         }
       } catch (error) {
         console.error("Error fetching stats:", error);
@@ -358,8 +376,8 @@ export default function DashboardPage() {
         {/* Charts Grid */}
         {!isFirstTimeUser && (
           <div className="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <EarningsChart />
-            <ProjectHoursChart />
+            <EarningsChart data={monthlyEarnings} loading={statsLoading} />
+            <ProjectHoursChart data={projectHours} loading={statsLoading} />
           </div>
         )}
 
