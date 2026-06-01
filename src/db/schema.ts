@@ -315,6 +315,11 @@ export const timeEntries = pgTable(
     index("idx_time_entries_task_id").on(table.taskId),
     index("idx_time_entries_date").on(table.date),
     index("idx_time_entries_user_id_date").on(table.userId, table.date),
+    index("idx_time_entries_user_project").on(table.userId, table.projectId, table.date),
+    // Partial index for billable aggregates — see drizzle/0010_time_entries_perf_indexes.sql.
+    index("idx_time_entries_user_date_billable")
+      .on(table.userId, table.date)
+      .where(sql`${table.isBillable} = TRUE`),
     // NOTE: a covering index `idx_time_entries_user_date_covering` on
     // (user_id, date) INCLUDE (duration, is_billable, project_id) also exists in
     // the DB, created out-of-band via psql (Drizzle 0.45 can't express INCLUDE).

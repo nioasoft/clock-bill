@@ -53,7 +53,7 @@ under load. Prod is already on the `-pooler` endpoint, so only the size needs to
 
 ## P1 — Soon after launch (medium impact)
 
-### 4. Collapse `POST /api/entries` 4 queries → 2  `[ ]`
+### 4. Collapse `POST /api/entries` 4 queries → 2  `[x]` (done 2026-06-01 with the ad-hoc-item feature; PUT also now a single transaction + CTE)
 Today: (1) ownership check, (2) `SELECT gen_random_uuid()` ⟵ needless, (3) INSERT, (4) re-fetch JOIN.
 - Inline UUID into `INSERT … VALUES (gen_random_uuid()::text, …) RETURNING …`; fold the re-fetch into
   a CTE (`WITH ins AS (INSERT … RETURNING …) SELECT ins.*, p.name, c.name FROM ins JOIN projects p …`).
@@ -66,13 +66,13 @@ chart aggregates into the `stats` `Promise.all` and rename to `GET /api/dashboar
 `/api/timer/running` separate (must not be cached).
 - **Effort:** ~1–2 h. **Impact:** MEDIUM.
 
-### 6. Merge multi-query read routes into one statement  `[ ]`
-- `GET /api/dashboard/stats`: merge the 3 time-period SUMs into one `GROUP BY CASE`, and the
-  clients/projects COUNTs into one two-aggregate query (~10 → ~4 queries).
-- `GET /api/projects/[id]/stats`: collapse existence-check + SUM + COUNT into one query.
-- `GET /api/dashboard/earnings-chart`: JOIN `user_profiles` for currency instead of a separate lookup.
-- `GET /api/entries`: get total via `COUNT(*) OVER ()` window instead of a separate COUNT round-trip.
-- **Effort:** ~2–3 h total. **Impact:** MEDIUM.
+### 6. Merge multi-query read routes into one statement  `[~]` (partly done 2026-06-01)
+- `[x]` `GET /api/dashboard/stats`: 3 time-period SUMs → one `FILTER` aggregate, clients+projects
+  COUNTs → one scalar-subquery row, currency folded onto earnings (10 → 6 queries). FILTER equivalence
+  verified on dev.
+- `[x]` `GET /api/projects/[id]/stats`: ownership + SUM + COUNT → one LEFT JOIN aggregate (3 → 1).
+- `[ ]` `GET /api/dashboard/earnings-chart`: JOIN `user_profiles` for currency instead of a separate lookup.
+- `[ ]` `GET /api/entries`: get total via `COUNT(*) OVER ()` window instead of a separate COUNT round-trip.
 
 ---
 
@@ -88,11 +88,12 @@ Reference `auth.jwt()->'app_metadata'->>'user_id'` directly in RLS policies → 
 entirely, making authed queries 1 round-trip like unauthenticated ones. Requires re-issuing sessions
 with the claim + rewriting all policies. **Effort:** high. **Impact:** HIGH at scale. Evaluate later.
 
-### 9. Index/hardening tidy-ups  `[ ]`
-- `time_entries (user_id, project_id, date DESC)` for the project-filter bar.
-- Partial billable index `… (user_id, date) WHERE is_billable = TRUE` for earnings.
-- Optional `client_rates (user_id, client_id)` for defence-in-depth.
-- Append `AND user_id = $n` to the 3 cosmetic "fetch-after-write" reads (`clients/[id]:350`,
+### 9. Index/hardening tidy-ups  `[~]` (indexes done 2026-06-01)
+- `[x]` `time_entries (user_id, project_id, date DESC)` for the project-filter bar — applied dev+prod
+  (drizzle/0010), schema.ts updated.
+- `[x]` Partial billable index `… (user_id, date) WHERE is_billable = TRUE` — applied dev+prod.
+- `[ ]` Optional `client_rates (user_id, client_id)` for defence-in-depth.
+- `[ ]` Append `AND user_id = $n` to the 3 cosmetic "fetch-after-write" reads (`clients/[id]:350`,
   `currency-rates:110`, `reports/presets:108`) for a grep-clean, uniform pattern.
 
 ### 10. Hardening (not perf, tracked here for completeness)  `[ ]`
