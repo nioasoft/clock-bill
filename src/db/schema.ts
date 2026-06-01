@@ -112,6 +112,8 @@ export const userProfiles = pgTable("user_profiles", {
   // Invoice settings
   invoicePrefix: text("invoice_prefix"),
   nextInvoiceNumber: integer("next_invoice_number"),
+  // Per-user counter for charge-document (settlement) numbers.
+  nextChargeDocNumber: integer("next_charge_doc_number").default(1),
   // Per-user counter for item-line reference numbers (time_entries.item_ref).
   nextItemRef: integer("next_item_ref").notNull().default(1),
   paymentTerms: text("payment_terms"),
@@ -284,6 +286,9 @@ export const timeEntries = pgTable(
     rateLabel: text("rate_label"), // the rate/item name at log time
     billingKind: text("billing_kind"), // 'hourly' | 'item'; NULL => legacy hourly
     quantity: real("quantity"), // units for an item line; ignored for hourly
+    // FK to the charge document this entry was settled into (NULL => unbilled).
+    // Plain text column — the real FK is created in SQL (avoids a definition cycle).
+    chargeDocumentId: text("charge_document_id"),
     // Per-user monotonic reference number ("אסמכתא"), set ONLY on item lines at
     // creation (NULL for hourly). Stable, never reused — see user_profiles.next_item_ref.
     itemRef: integer("item_ref"),
@@ -311,6 +316,10 @@ export const timeEntries = pgTable(
     index("idx_running_timers_per_user")
       .on(table.userId)
       .where(sql`${table.startTime} IS NOT NULL AND ${table.endTime} IS NULL`),
+    index("idx_time_entries_charge_document_id").on(table.chargeDocumentId),
+    index("idx_time_entries_user_unbilled")
+      .on(table.userId, table.projectId)
+      .where(sql`${table.chargeDocumentId} IS NULL AND ${table.isBillable} = true`),
   ]
 );
 
@@ -374,5 +383,78 @@ export const currencyRates = pgTable(
   (table) => [
     unique().on(table.userId, table.fromCurrency, table.toCurrency),
     index("idx_currency_rates_user_id").on(table.userId),
+  ]
+);
+
+// ─── Charge Documents (internal settlement) ─────────────────────────
+
+export const chargeDocuments = pgTable(
+  "charge_documents",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "restrict" }),
+    docNumber: integer("doc_number").notNull(),
+    status: text("status").notNull().default("pending"),
+    currency: text("currency").notNull().default("ILS"),
+    total: real("total"),
+    notes: text("notes"),
+    pdfTemplate: text("pdf_template"),
+    issuedAt: timestamp("issued_at"),
+    paidAt: timestamp("paid_at"),
+    canceledAt: timestamp("canceled_at"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    unique().on(table.userId, table.docNumber),
+    index("idx_charge_documents_user_id").on(table.userId),
+    index("idx_charge_documents_user_id_client_id").on(table.userId, table.clientId),
+    index("idx_charge_documents_user_id_status").on(table.userId, table.status),
+    check(
+      "charge_documents_status_check",
+      sql`${table.status} IN ('pending', 'paid', 'canceled')`
+    ),
+  ]
+);
+
+export const chargeDocumentLines = pgTable(
+  "charge_document_lines",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => chargeDocuments.id, { onDelete: "cascade" }),
+    sourceType: text("source_type").notNull(),
+    timeEntryId: text("time_entry_id").references(() => timeEntries.id, {
+      onDelete: "set null",
+    }),
+    periodMonth: text("period_month"),
+    label: text("label").notNull(),
+    description: text("description"),
+    note: text("note"),
+    itemRef: integer("item_ref"),
+    billingKind: text("billing_kind"),
+    quantity: real("quantity"),
+    rate: real("rate"),
+    amount: real("amount"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_charge_document_lines_document_id").on(table.documentId),
+    index("idx_charge_document_lines_user_id").on(table.userId),
+    index("idx_charge_document_lines_time_entry_id").on(table.timeEntryId),
+    check(
+      "charge_document_lines_source_type_check",
+      sql`${table.sourceType} IN ('time_entry', 'fixed_monthly', 'retainer')`
+    ),
+    check(
+      "charge_document_lines_period_month_check",
+      sql`${table.periodMonth} IS NULL OR ${table.periodMonth} ~ '^\\d{4}-\\d{2}$'`
+    ),
   ]
 );
