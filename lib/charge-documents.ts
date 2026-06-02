@@ -4,6 +4,7 @@
  * compute totals, and gate status transitions.
  */
 import { calcHourlyAmount, calcItemAmount, sumMoney } from "./money";
+import { roundBillableMinutes, type RoundingMode } from "./rounding";
 
 export type ChargeStatus = "pending" | "paid" | "canceled";
 export type SourceType = "time_entry" | "fixed_monthly" | "retainer";
@@ -21,6 +22,9 @@ export interface BillableEntry {
   rate: number | null;
   rateLabel: string | null;
   itemRef: number | null;
+  // Effective hourly rounding mode (project override ?? client default).
+  // Optional so legacy callers/tests default to 'none'. Item lines ignore it.
+  billingRounding?: RoundingMode | null;
 }
 
 /** A snapshot line ready to INSERT into charge_document_lines (sans id/document_id). */
@@ -60,9 +64,11 @@ export function computeDocumentTotal(lines: Array<{ amount: number | null }>): n
 /** Build a snapshot line from an unbilled time entry. */
 export function buildLineFromEntry(entry: BillableEntry): ChargeLineDraft {
   const isItem = entry.billingKind === "item";
+  // Hourly lines bill on rounded minutes; items bill by quantity (never rounded).
+  const billedMinutes = roundBillableMinutes(entry.duration, entry.billingRounding ?? "none");
   const amount = isItem
     ? calcItemAmount(entry.quantity, entry.rate)
-    : calcHourlyAmount(entry.duration, entry.rate);
+    : calcHourlyAmount(billedMinutes, entry.rate);
   return {
     sourceType: "time_entry",
     timeEntryId: entry.id,

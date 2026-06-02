@@ -10,6 +10,7 @@ import { CURRENCY_SYMBOLS } from "@/lib/currency";
 import { ClientRatesEditor } from "@/components/client-rates-editor";
 import { cleanClientRates } from "@/lib/schemas/rates";
 import type { ClientRate, ClientRateInput } from "@/lib/schemas/rates";
+import { ROUNDING_LABELS, ROUNDING_MODES, asRoundingMode, type RoundingMode } from "@/lib/rounding";
 
 const CURRENCIES = [
   { value: "ILS", label: "₪ ILS" },
@@ -28,6 +29,7 @@ interface Client {
   address: string | null;
   defaultRate: number | null;
   currency: string;
+  billingRounding: string | null;
   isRetainer: boolean;
   retainerHours: number | null;
   retainerMonthlyFee: number | null;
@@ -47,6 +49,7 @@ function clientToFormData(client: Client) {
     phone: client.phone || "",
     address: client.address || "",
     currency: client.currency || "ILS",
+    billingRounding: asRoundingMode(client.billingRounding) as RoundingMode,
     isRetainer: !!client.isRetainer,
     retainerHours: client.retainerHours?.toString() || "",
     retainerMonthlyFee: client.retainerMonthlyFee?.toString() || "",
@@ -79,6 +82,7 @@ export default function ClientDetailsPage() {
     phone: "",
     address: "",
     currency: "ILS",
+    billingRounding: "none" as RoundingMode,
     isRetainer: false,
     retainerHours: "",
     retainerMonthlyFee: "",
@@ -92,15 +96,24 @@ export default function ClientDetailsPage() {
   const [clientProjects, setClientProjects] = useState<{id: string; name: string; status: string}[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(true);
   const editFormRef = useRef<HTMLDivElement>(null);
+  const ratesEditorRef = useRef<HTMLDivElement>(null);
+  // When the edit form is opened via "ערוך תעריפים", land on the rates editor
+  // rather than the top of the form.
+  const [focusRatesOnOpen, setFocusRatesOnOpen] = useState(false);
+
+  const openEditForm = (focusRates = false) => {
+    setFocusRatesOnOpen(focusRates);
+    setShowEditForm(true);
+  };
 
   // The edit form renders inline near the top of the page. The "ערוך תעריפים"
   // trigger lives far down in the rates section, so without this the form
   // opens off-screen and feels like nothing happened — scroll it into view.
   useEffect(() => {
-    if (showEditForm) {
-      editFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, [showEditForm]);
+    if (!showEditForm) return;
+    const target = focusRatesOnOpen ? ratesEditorRef.current : editFormRef.current;
+    target?.scrollIntoView({ behavior: "smooth", block: focusRatesOnOpen ? "center" : "start" });
+  }, [showEditForm, focusRatesOnOpen]);
 
   useEffect(() => {
     const fetchClient = async () => {
@@ -170,6 +183,7 @@ export default function ClientDetailsPage() {
           phone: formData.phone || undefined,
           address: formData.address || undefined,
           currency: formData.currency,
+          billingRounding: formData.billingRounding,
           isRetainer: formData.isRetainer,
           retainerHours: formData.isRetainer && formData.retainerHours ? parseFloat(formData.retainerHours) : undefined,
           retainerMonthlyFee: formData.isRetainer && formData.retainerMonthlyFee ? parseFloat(formData.retainerMonthlyFee) : undefined,
@@ -233,27 +247,8 @@ export default function ClientDetailsPage() {
               ]}
             />
           </div>
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">פרטי לקוח</h1>
-            {client && client.isActive && (
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowEditForm(true)}
-                  className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted"
-                >
-                  ערוך
-                </button>
-                <button
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="rounded-[var(--radius-card)] border border-destructive/30 px-4 py-2 text-destructive hover:bg-destructive/10"
-                >
-                  מחק
-                </button>
-              </div>
-            )}
-          </div>
         {showDeleteConfirm && (
-          <div className="mb-6 rounded-[var(--radius-card)] bg-destructive/10 p-6 border border-border/50 shadow-sm border border-destructive/20">
+          <div className="mb-6 rounded-[var(--radius-card)] bg-card p-6 border border-destructive/30">
             <h2 className="text-xl font-semibold text-destructive mb-4">מחק לקוח</h2>
             <p className="text-destructive mb-4">
               האם אתה בטוח שברצונך למחוק את הלקוח &quot;{client?.name}&quot;? לקוחות שנמחקים יועברו למצב &quot;לא פעיל&quot; ולא יוצגו ברשימה.
@@ -286,8 +281,8 @@ export default function ClientDetailsPage() {
         )}
 
         {showEditForm && (
-          <div ref={editFormRef} className="mb-6 rounded-[var(--radius-card)] bg-card p-6 border border-border/50 shadow-sm scroll-mt-20">
-            <h2 className="text-xl font-semibold text-foreground mb-4">ערוך לקוח</h2>
+          <div ref={editFormRef} className="mb-6 mx-auto max-w-2xl rounded-[var(--radius-card)] bg-card p-5 border border-border scroll-mt-20">
+            <h2 className="font-display text-lg font-semibold text-foreground mb-4">ערוך לקוח</h2>
             <form onSubmit={handleEdit} className="space-y-4">
               {formError && (
                 <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
@@ -295,7 +290,7 @@ export default function ClientDetailsPage() {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
                 <div>
                   <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-foreground">
                     שם הלקוח <span className="text-primary">*</span>
@@ -371,26 +366,48 @@ export default function ClientDetailsPage() {
                 </div>
               </div>
 
-              {/* Billing — currency, rates/items, retainer */}
+              {/* Billing — currency, rounding, rates/items, retainer */}
               <div className="space-y-4 border-t border-border pt-4">
-                <div className="sm:max-w-[calc(50%-0.5rem)]">
-                  <label htmlFor="currency" className="mb-1.5 block text-sm font-medium text-foreground">
-                    מטבע
-                  </label>
-                  <select
-                    id="currency"
-                    value={formData.currency}
-                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                    className={fieldClass(false)}
-                    disabled={submitting}
-                  >
-                    {CURRENCIES.map((c) => (
-                      <option key={c.value} value={c.value}>{c.label}</option>
-                    ))}
-                  </select>
+                <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="currency" className="mb-1.5 block text-sm font-medium text-foreground">
+                      מטבע
+                    </label>
+                    <select
+                      id="currency"
+                      value={formData.currency}
+                      onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                      className={fieldClass(false)}
+                      disabled={submitting}
+                    >
+                      {CURRENCIES.map((c) => (
+                        <option key={c.value} value={c.value}>{c.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="billingRounding" className="mb-1.5 block text-sm font-medium text-foreground">
+                      עיגול זמן לחיוב
+                    </label>
+                    <select
+                      id="billingRounding"
+                      value={formData.billingRounding}
+                      onChange={(e) => setFormData({ ...formData, billingRounding: e.target.value as RoundingMode })}
+                      className={fieldClass(false)}
+                      disabled={submitting}
+                    >
+                      {ROUNDING_MODES.map((m) => (
+                        <option key={m} value={m}>{ROUNDING_LABELS[m]}</option>
+                      ))}
+                    </select>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      שעתי בלבד · ניתן לדרוס לכל פרויקט
+                    </p>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
+                <div ref={ratesEditorRef} className="space-y-1.5 scroll-mt-20">
                   <span className="text-sm font-medium text-foreground">תעריפים ופריטים</span>
                   <ClientRatesEditor
                     rates={formData.rates}
@@ -401,7 +418,7 @@ export default function ClientDetailsPage() {
                 </div>
 
                 {/* Retainer toggle */}
-                <label className="flex cursor-pointer items-center justify-between rounded-[var(--radius)] border border-border bg-background px-4 py-3">
+                <label className="flex cursor-pointer items-center justify-between rounded-[var(--radius)] border border-border bg-background px-4 py-2.5">
                   <span className="text-sm font-medium text-foreground">לקוח בריטיינר</span>
                   <input
                     type="checkbox"
@@ -414,8 +431,8 @@ export default function ClientDetailsPage() {
 
                 {/* Retainer fields */}
                 {formData.isRetainer && (
-                  <div className="space-y-4 rounded-[var(--radius)] border border-border bg-background/50 p-4">
-                    <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+                  <div className="space-y-3 rounded-[var(--radius)] border border-border bg-background/50 p-4">
+                    <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
                       <div>
                         <label htmlFor="retainerHours" className="mb-1.5 block text-sm font-medium text-foreground">
                           שעות בריטיינר
@@ -525,83 +542,65 @@ export default function ClientDetailsPage() {
         )}
 
         {clientLoading ? (
-          <div className="rounded-[var(--radius-card)] bg-card p-8 border border-border/50 shadow-sm text-center text-muted-foreground">
+          <div className="rounded-[var(--radius-card)] bg-card p-8 border border-border text-center text-muted-foreground">
             טוען נתוני לקוח...
           </div>
         ) : error ? (
-          <div className="rounded-[var(--radius-card)] bg-card p-8 border border-border/50 shadow-sm">
+          <div className="rounded-[var(--radius-card)] bg-card p-8 border border-border">
             <div className="rounded-md bg-destructive/10 p-4 text-destructive">{error}</div>
           </div>
         ) : !client ? (
-          <div className="rounded-[var(--radius-card)] bg-card p-8 border border-border/50 shadow-sm text-center text-muted-foreground">
+          <div className="rounded-[var(--radius-card)] bg-card p-8 border border-border text-center text-muted-foreground">
             הלקוח לא נמצא
           </div>
         ) : (
-          <div className="rounded-[var(--radius-card)] bg-card p-6 border border-border/50 shadow-sm">
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-foreground">{client.name}</h2>
+          <div className="rounded-[var(--radius-card)] bg-card p-5 border border-border">
+            <div className="flex items-start justify-between gap-3 border-b border-border pb-4 mb-4">
+              <div className="min-w-0">
+                <h2 className="font-display text-2xl font-bold tracking-tight text-foreground truncate">{client.name}</h2>
                 {client.contactName && (
-                  <p className="text-muted-foreground mt-1">איש קשר: {client.contactName}</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">איש קשר: {client.contactName}</p>
                 )}
               </div>
-              {client.isActive ? (
-                <span className="inline-flex rounded-full bg-success/10 px-3 py-1 text-sm font-semibold leading-5 text-success">
-                  פעיל
-                </span>
-              ) : (
-                <span className="inline-flex rounded-full bg-muted px-3 py-1 text-sm font-semibold leading-5 text-foreground">
-                  לא פעיל
-                </span>
-              )}
+              <span className={`inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                client.isActive ? "bg-success/10 text-success" : "bg-muted text-foreground"
+              }`}>
+                {client.isActive ? "פעיל" : "לא פעיל"}
+              </span>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">אימייל</h3>
-                <p className="text-foreground">
-                  {client.email ? (
-                    <a href={`mailto:${client.email}`} className="text-primary hover:text-primary/90">
-                      {client.email}
-                    </a>
-                  ) : (
-                    <span className="text-muted-foreground">לא צוין</span>
-                  )}
-                </p>
+            <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 text-sm">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-muted-foreground">אימייל</span>
+                {client.email ? (
+                  <a href={`mailto:${client.email}`} dir="ltr" className="text-primary hover:text-primary/90">{client.email}</a>
+                ) : <span className="text-muted-foreground">—</span>}
               </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">טלפון</h3>
-                <p className="text-foreground">
-                  {client.phone ? (
-                    <a href={`tel:${client.phone}`} className="text-primary hover:text-primary/90">
-                      {client.phone}
-                    </a>
-                  ) : (
-                    <span className="text-muted-foreground">לא צוין</span>
-                  )}
-                </p>
+              <span className="text-border">|</span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-muted-foreground">טלפון</span>
+                {client.phone ? (
+                  <a href={`tel:${client.phone}`} dir="ltr" className="text-primary hover:text-primary/90">{client.phone}</a>
+                ) : <span className="text-muted-foreground">—</span>}
               </div>
-
-              <div className="md:col-span-2">
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">כתובת</h3>
-                <p className="text-foreground">
-                  {client.address || <span className="text-muted-foreground">לא צוינה</span>}
-                </p>
+              {client.address && (
+                <>
+                  <span className="text-border">|</span>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-muted-foreground">כתובת</span>
+                    <span className="text-foreground">{client.address}</span>
+                  </div>
+                </>
+              )}
+              <span className="text-border">|</span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-muted-foreground">מטבע</span>
+                <span className="text-foreground">{CURRENCIES.find((c) => c.value === client.currency)?.label || client.currency}</span>
               </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">מטבע</h3>
-                <p className="text-foreground">
-                  {CURRENCIES.find((c) => c.value === client.currency)?.label || client.currency}
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">נוצר בתאריך</h3>
-                <p className="text-foreground">
-                  {new Date(client.createdAt).toLocaleDateString('he-IL')}
-                </p>
+              <span className="text-border">|</span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-muted-foreground">נוצר</span>
+                <span className="text-foreground tabular-nums">{new Date(client.createdAt).toLocaleDateString('he-IL')}</span>
               </div>
             </div>
 
@@ -614,10 +613,17 @@ export default function ClientDetailsPage() {
               return (
                 <div className="mt-6 border-t border-border pt-6">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-display text-lg font-semibold text-foreground">תעריפים ופריטים</h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-display text-base font-semibold text-foreground">תעריפים ופריטים</h3>
+                      {asRoundingMode(client.billingRounding) !== "none" && (
+                        <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                          {ROUNDING_LABELS[asRoundingMode(client.billingRounding)]}
+                        </span>
+                      )}
+                    </div>
                     {client.isActive && (
                       <button
-                        onClick={() => setShowEditForm(true)}
+                        onClick={() => openEditForm(true)}
                         className="text-sm font-medium text-primary hover:text-primary/90"
                       >
                         ערוך תעריפים
@@ -632,21 +638,19 @@ export default function ClientDetailsPage() {
                     <div className="space-y-4">
                       {hourly.length > 0 && (
                         <div>
-                          <h4 className="text-sm font-medium text-muted-foreground mb-2">תעריפים שעתיים</h4>
-                          <ul className="space-y-1.5">
+                          <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">תעריפים שעתיים</h4>
+                          <ul className="space-y-1">
                             {hourly.map((r) => (
-                              <li key={r.id} className="flex items-center justify-between rounded-[var(--radius)] border border-border bg-background/50 px-3 py-2">
-                                <span className="flex items-center gap-2 text-sm text-foreground">
-                                  {r.name}
-                                  {r.isDefault && (
-                                    <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">
-                                      ברירת מחדל
-                                    </span>
-                                  )}
-                                </span>
+                              <li key={r.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-[var(--radius)] bg-background/40 px-3 py-2">
+                                <span className="text-sm font-medium text-foreground">{r.name}</span>
                                 <span className="font-mono text-sm tabular-nums text-foreground">
-                                  {symbol}{r.rate}/שעה
+                                  {symbol}{r.rate}<span className="text-muted-foreground">/שעה</span>
                                 </span>
+                                {r.isDefault && (
+                                  <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                                    ברירת מחדל
+                                  </span>
+                                )}
                               </li>
                             ))}
                           </ul>
@@ -654,13 +658,13 @@ export default function ClientDetailsPage() {
                       )}
                       {items.length > 0 && (
                         <div>
-                          <h4 className="text-sm font-medium text-muted-foreground mb-2">פריטים (מחיר ליחידה)</h4>
-                          <ul className="space-y-1.5">
+                          <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">פריטים (מחיר ליחידה)</h4>
+                          <ul className="space-y-1">
                             {items.map((r) => (
-                              <li key={r.id} className="flex items-center justify-between rounded-[var(--radius)] border border-border bg-background/50 px-3 py-2">
-                                <span className="text-sm text-foreground">{r.name}</span>
+                              <li key={r.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-[var(--radius)] bg-background/40 px-3 py-2">
+                                <span className="text-sm font-medium text-foreground">{r.name}</span>
                                 <span className="font-mono text-sm tabular-nums text-foreground">
-                                  {symbol}{r.rate}/יח׳
+                                  {symbol}{r.rate}<span className="text-muted-foreground">/יח׳</span>
                                 </span>
                               </li>
                             ))}
@@ -700,9 +704,9 @@ export default function ClientDetailsPage() {
         )}
 
         {client && (
-          <div className="mt-6 rounded-[var(--radius-card)] bg-card p-6 border border-border/50 shadow-sm">
+          <div className="mt-6 rounded-[var(--radius-card)] bg-card p-5 border border-border">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display text-lg font-semibold text-foreground">פרויקטים</h3>
+              <h3 className="font-display text-base font-semibold text-foreground">פרויקטים</h3>
               <a
                 href={`/projects?create=true&clientId=${clientId}`}
                 className="text-sm text-primary hover:text-primary/90 font-medium"
@@ -720,7 +724,7 @@ export default function ClientDetailsPage() {
                   <a
                     key={project.id}
                     href={`/projects/${project.id}`}
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors"
+                    className="flex items-center justify-between rounded-[var(--radius)] px-3 py-2.5 hover:bg-muted transition-colors"
                   >
                     <span className="text-sm font-medium text-foreground">{project.name}</span>
                     <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
@@ -738,6 +742,24 @@ export default function ClientDetailsPage() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Actions — kept at the bottom */}
+        {client && client.isActive && (
+          <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-border pt-5">
+            <button
+              onClick={() => openEditForm()}
+              className="rounded-[var(--radius)] border border-border px-3.5 py-2 text-sm text-foreground hover:bg-muted"
+            >
+              ערוך לקוח
+            </button>
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="rounded-[var(--radius)] px-3.5 py-2 text-sm text-destructive hover:bg-destructive/10"
+            >
+              מחק לקוח
+            </button>
           </div>
         )}
       </PageContainer>

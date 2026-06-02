@@ -11,6 +11,8 @@ import { Clock, Timer, Pencil, Trash2 } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { validateRequired, validateDate, validateNumber } from "@/lib/validation";
 import { pickDefaultHourlyRate, type ClientRate } from "@/lib/schemas/rates";
+import { calcHourlyAmount, calcItemAmount } from "@/lib/money";
+import { formatCurrency } from "@/lib/currency";
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
 import {
   Dialog,
@@ -62,6 +64,27 @@ interface TimeEntry {
   rateLabel?: string | null;
   quantity?: number | null;
   itemRef?: number | null;
+  currency?: string;
+}
+
+/** First/last day of a date's month + its YYYY-MM key, as local-date strings. */
+function monthRange(d: Date): { start: string; end: string; key: string } {
+  const y = d.getFullYear();
+  const m = d.getMonth();
+  const fmt = (x: Date) =>
+    `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
+  return {
+    start: fmt(new Date(y, m, 1)),
+    end: fmt(new Date(y, m + 1, 0)),
+    key: `${y}-${String(m + 1).padStart(2, "0")}`,
+  };
+}
+
+/** Un-rounded billed amount for an entry (records log shows actual worked value). */
+function entryAmount(entry: TimeEntry): number {
+  return entry.billingKind === "item"
+    ? calcItemAmount(entry.quantity, entry.rate)
+    : calcHourlyAmount(entry.duration, entry.rate);
 }
 
 /** Sentinel rateId for "+ פריט חד-פעמי…" (an ad-hoc, typed item not in the catalog). */
@@ -115,13 +138,20 @@ export default function EntriesPage() {
     adhocPrice?: string;
   }>({});
   const [deleting, setDeleting] = useState(false);
-  const [filters, setFilters] = useState({
-    clientId: "",
-    projectId: "",
-    startDate: "",
-    endDate: "",
+  // Default to the current month — the user can widen/change the range.
+  const [filters, setFilters] = useState(() => {
+    const { start, end } = monthRange(new Date());
+    return { clientId: "", projectId: "", startDate: start, endDate: end };
   });
   const [showFilters, setShowFilters] = useState(false);
+
+  /** Set the date range to a chosen month (YYYY-MM from <input type="month">). */
+  const handleMonthChange = (key: string) => {
+    if (!key) return;
+    const [y, m] = key.split("-").map(Number);
+    const { start, end } = monthRange(new Date(y, m - 1, 1));
+    setFilters((prev) => ({ ...prev, startDate: start, endDate: end }));
+  };
 
   // Handle keyboard shortcut for quick entry
   const handleQuickEntryShortcut = () => {
@@ -599,7 +629,8 @@ export default function EntriesPage() {
   };
 
   const clearFilters = () => {
-    setFilters({ clientId: "", projectId: "", startDate: "", endDate: "" });
+    const { start, end } = monthRange(new Date());
+    setFilters({ clientId: "", projectId: "", startDate: start, endDate: end });
   };
 
   const getFilteredProjects = () => {
@@ -632,7 +663,7 @@ export default function EntriesPage() {
   return (
     <AppLayout>
       <PageContainer>
-        <PageHeader title="רישום זמן">
+        <PageHeader title="רשומות חיוב">
           <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">N</kbd>
           {showForm ? (
             <button
@@ -660,21 +691,28 @@ export default function EntriesPage() {
         </PageHeader>
 
         {/* Filters Section */}
-        <div className="mb-6 rounded-[var(--radius-card)] border-secondary/30 bg-secondary/5 p-4 shadow">
-          <div className="flex items-center justify-between mb-4">
+        <div className="mb-6 rounded-[var(--radius-card)] border border-border bg-card p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold text-foreground">סינון</h2>
-              {(filters.clientId || filters.projectId || filters.startDate || filters.endDate) && (
+              <label htmlFor="filterMonth" className="text-sm font-medium text-foreground">חודש</label>
+              <input
+                type="month"
+                id="filterMonth"
+                value={filters.startDate ? filters.startDate.slice(0, 7) : ""}
+                onChange={(e) => handleMonthChange(e.target.value)}
+                className="rounded-[var(--radius)] border border-border bg-card px-3 py-2 text-sm tabular-nums focus:border-primary focus:outline-none focus:ring-primary"
+              />
+              {(filters.clientId || filters.projectId) && (
                 <span className="bg-secondary text-secondary-foreground rounded-full text-xs px-2 py-0.5 font-semibold">
-                  {[filters.clientId, filters.projectId, filters.startDate, filters.endDate].filter(Boolean).length}
+                  {[filters.clientId, filters.projectId].filter(Boolean).length}
                 </span>
               )}
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="min-h-[44px] min-w-[44px] px-4 py-2 text-sm font-medium text-primary hover:bg-primary-light rounded-[var(--radius-card)] transition-colors"
+              className="min-h-[44px] px-4 py-2 text-sm font-medium text-primary hover:bg-primary-light rounded-[var(--radius-card)] transition-colors"
             >
-              {showFilters ? "הסתר סינון" : "הצג סינון"}
+              {showFilters ? "הסתר סינון מתקדם" : "סינון מתקדם"}
             </button>
           </div>
 
@@ -760,52 +798,28 @@ export default function EntriesPage() {
             </div>
           )}
 
-          {/* Active filters display */}
-          {(filters.clientId || filters.projectId || filters.startDate || filters.endDate) && (
+          {/* Active filters — client/project only; the month picker owns the date range */}
+          {(filters.clientId || filters.projectId) && (
             <div className="mt-3 flex flex-wrap gap-2">
               {filters.clientId && (
-                <span className="inline-flex items-center rounded-full bg-primary-light px-3 py-1 text-sm text-primary">
-                  לקוח: {clients.find((c) => c.id === filters.clientId)?.name}
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 ps-3 pe-1.5 py-1 text-sm text-primary">
+                  {clients.find((c) => c.id === filters.clientId)?.name}
                   <button
                     onClick={() => handleFilterChange("clientId", "")}
-                    className="min-h-[44px] min-w-[44px] flex items-center justify-center me-1 text-primary hover:text-primary/80 rounded-full transition-colors"
-                    aria-label="הסתר סינון לקוח"
+                    className="flex h-5 w-5 items-center justify-center rounded-full text-primary/70 hover:bg-primary/20 hover:text-primary"
+                    aria-label="הסר סינון לקוח"
                   >
                     ×
                   </button>
                 </span>
               )}
               {filters.projectId && (
-                <span className="inline-flex items-center rounded-full bg-primary-light px-3 py-1 text-sm text-primary">
-                  פרויקט: {projects.find((p) => p.id === filters.projectId)?.name}
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 ps-3 pe-1.5 py-1 text-sm text-primary">
+                  {projects.find((p) => p.id === filters.projectId)?.name}
                   <button
                     onClick={() => handleFilterChange("projectId", "")}
-                    className="min-h-[44px] min-w-[44px] flex items-center justify-center me-1 text-primary hover:text-primary/80 rounded-full transition-colors"
-                    aria-label="הסתר סינון פרויקט"
-                  >
-                    ×
-                  </button>
-                </span>
-              )}
-              {filters.startDate && (
-                <span className="inline-flex items-center rounded-full bg-primary-light px-3 py-1 text-sm text-primary">
-                  מ: {new Date(filters.startDate).toLocaleDateString("he-IL")}
-                  <button
-                    onClick={() => handleFilterChange("startDate", "")}
-                    className="min-h-[44px] min-w-[44px] flex items-center justify-center me-1 text-primary hover:text-primary/80 rounded-full transition-colors"
-                    aria-label="הסתר סינון תאריך התחלה"
-                  >
-                    ×
-                  </button>
-                </span>
-              )}
-              {filters.endDate && (
-                <span className="inline-flex items-center rounded-full bg-primary-light px-3 py-1 text-sm text-primary">
-                  עד: {new Date(filters.endDate).toLocaleDateString("he-IL")}
-                  <button
-                    onClick={() => handleFilterChange("endDate", "")}
-                    className="min-h-[44px] min-w-[44px] flex items-center justify-center me-1 text-primary hover:text-primary/80 rounded-full transition-colors"
-                    aria-label="הסתר סינון תאריך סיום"
+                    className="flex h-5 w-5 items-center justify-center rounded-full text-primary/70 hover:bg-primary/20 hover:text-primary"
+                    aria-label="הסר סינון פרויקט"
                   >
                     ×
                   </button>
@@ -1204,7 +1218,10 @@ export default function EntriesPage() {
                         פרויקט
                       </th>
                       <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        משך זמן
+                        משך / כמות
+                      </th>
+                      <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        סכום
                       </th>
                       <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         פעולות
@@ -1219,36 +1236,34 @@ export default function EntriesPage() {
                             {new Date(entry.date).toLocaleDateString("he-IL")}
                           </div>
                         </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 max-w-sm">
                         <div className="flex items-center gap-2">
                           {isEntryRunning(entry) && (
-                            <div className="flex items-center gap-1.5 inline-flex items-center rounded-full bg-success/10 px-2 py-1 text-xs font-semibold text-success">
-                              <span className="relative flex h-2 w-2">
+                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-semibold text-success">
+                              <span className="relative flex h-1.5 w-1.5">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+                                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success"></span>
                               </span>
-                              <Timer className="h-3 w-3 me-1" />
                               פעיל
-                            </div>
+                            </span>
                           )}
-                          <div
-                            className={`text-sm max-w-xs truncate ${
-                              entry.billingKind === "item" && entry.rateLabel
-                                ? "font-semibold text-foreground"
-                                : "text-foreground"
-                            }`}
-                          >
-                            {entry.billingKind === "item" && entry.rateLabel
-                              ? entry.rateLabel
-                              : entry.description}
-                          </div>
+                          <span className="truncate text-sm font-medium text-foreground">
+                            {entry.billingKind === "item" && entry.rateLabel ? entry.rateLabel : entry.description}
+                          </span>
+                          {!entry.isBillable && (
+                            <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">לא לחיוב</span>
+                          )}
                         </div>
-                        {entry.billingKind === "item" && entry.rateLabel && (
-                          <div className="mt-0.5 text-xs text-muted-foreground truncate max-w-xs">{entry.description}</div>
-                        )}
-                        {entry.notes && (
-                          <div className="mt-0.5 text-xs text-muted-foreground truncate max-w-xs">{entry.notes}</div>
-                        )}
+                        {(() => {
+                          const sub: string[] = [];
+                          if (entry.billingKind === "item" && entry.rateLabel && entry.description) sub.push(entry.description);
+                          if (entry.billingKind !== "item" && entry.rateLabel) sub.push(entry.rateLabel);
+                          if (entry.notes) sub.push(entry.notes);
+                          if (entry.billingKind === "item" && entry.itemRef != null) sub.push(`אסמכתא ${entry.itemRef}`);
+                          return sub.length ? (
+                            <div className="mt-0.5 truncate text-xs text-muted-foreground">{sub.join(" · ")}</div>
+                          ) : null;
+                        })()}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <Link href={`/clients/${entry.clientId}`} className="text-sm text-foreground hover:text-primary hover:underline">
@@ -1261,33 +1276,25 @@ export default function EntriesPage() {
                         </Link>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm font-mono font-semibold text-foreground">
+                        <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
                           {entry.billingKind === "item"
                             ? `${entry.quantity ?? 0} יח׳`
                             : formatDuration(entry.duration)}
-                        </div>
-                        {entry.rateLabel && (
-                          <div className="text-xs text-muted-foreground">
-                            {entry.rateLabel}
-                            {entry.billingKind === "item" && entry.itemRef != null && (
-                              <span className="ms-1 font-mono tabular-nums">· אסמכתא {entry.itemRef}</span>
-                            )}
-                          </div>
-                        )}
-                        {entry.isBillable && (
-                          <span className="inline-flex rounded-full bg-accent/20 text-accent px-2 py-0.5 text-xs font-semibold leading-5 me-2">
-                            לחיוב
-                          </span>
-                        )}
+                        </span>
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm">
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
+                          {formatCurrency(entryAmount(entry), entry.currency || "ILS")}
+                        </span>
+                      </td>
+                      <td className="w-px whitespace-nowrap px-4 py-4 text-start">
                         <button
                           onClick={() => handleEdit(entry)}
-                          className="inline-flex items-center gap-1.5 rounded-[var(--radius)] border border-border px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
                           aria-label="ערוך רשומה"
+                          title="ערוך"
                         >
-                          <Pencil className="h-3.5 w-3.5" />
-                          ערוך
+                          <Pencil className="h-4 w-4" />
                         </button>
                       </td>
                     </tr>
@@ -1346,9 +1353,9 @@ export default function EntriesPage() {
                         <div className="text-xs text-muted-foreground mb-2">{entry.notes}</div>
                       )}
 
-                      {/* Duration and billable status */}
+                      {/* Duration / quantity, amount, billable status */}
                       <div className="flex items-center gap-2 mb-3">
-                        <span className="text-lg font-mono font-bold text-primary">
+                        <span className="text-lg font-mono font-bold text-primary tabular-nums">
                           {entry.billingKind === "item"
                             ? `${entry.quantity ?? 0} יח׳`
                             : formatDuration(entry.duration)}
@@ -1361,11 +1368,14 @@ export default function EntriesPage() {
                             )}
                           </span>
                         )}
-                        {entry.isBillable && (
-                          <span className="inline-flex rounded-full bg-accent/20 text-accent px-2 py-0.5 text-xs font-semibold leading-5">
-                            לחיוב
+                        {!entry.isBillable && (
+                          <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+                            לא לחיוב
                           </span>
                         )}
+                        <span className="ms-auto font-mono text-sm font-semibold tabular-nums text-foreground">
+                          {formatCurrency(entryAmount(entry), entry.currency || "ILS")}
+                        </span>
                       </div>
 
                       {/* Single quiet edit action — delete/duplicate live inside the edit form */}
@@ -1409,7 +1419,7 @@ export default function EntriesPage() {
             <button
               onClick={handleDeleteConfirm}
               disabled={deleting}
-              className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
+              className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
             >
               {deleting ? "מוחק..." : "מחק"}
             </button>

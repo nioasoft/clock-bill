@@ -97,6 +97,7 @@ export async function GET(request: NextRequest) {
         p.name as project_name,
         c.name as client_name,
         c.id as client_id,
+        c.currency as currency,
         tk.name as task_name
       FROM time_entries te
       JOIN projects p ON te.project_id = p.id
@@ -132,6 +133,7 @@ export async function GET(request: NextRequest) {
       project_name: string;
       client_name: string;
       client_id: string;
+      currency: string | null;
       task_name: string | null;
     }>(queryText, queryParams);
 
@@ -143,6 +145,7 @@ export async function GET(request: NextRequest) {
       projectName: entry.project_name,
       clientId: entry.client_id,
       clientName: entry.client_name,
+      currency: entry.currency || "ILS",
       description: entry.description,
       startTime: entry.start_time,
       endTime: entry.end_time,

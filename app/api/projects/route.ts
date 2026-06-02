@@ -18,6 +18,8 @@ const createProjectSchema = z.object({
   fixedMonthlyFee: z.number().nullish(),
   fixedMonthlyStartDate: z.string().nullish(),
   fixedMonthlyEndDate: z.string().nullish(),
+  // null/absent => inherit the client's rounding; otherwise overrides it.
+  billingRounding: z.enum(["none", "hour_up", "half_hour_up"]).nullish(),
   notes: z.string().max(5000).nullish(),
 });
 
@@ -67,13 +69,14 @@ export async function GET(request: NextRequest) {
       fixed_monthly_fee: number | null;
       fixed_monthly_start_date: string | null;
       fixed_monthly_end_date: string | null;
+      billing_rounding: string | null;
       notes: string | null;
       created_at: string;
     }>(
       `SELECT p.id, p.name, p.client_id, c.name as client_name,
               p.status, p.start_date, p.end_date,
               p.fixed_monthly_enabled, p.fixed_monthly_fee, p.fixed_monthly_start_date, p.fixed_monthly_end_date,
-              p.notes, p.created_at
+              p.billing_rounding, p.notes, p.created_at
        FROM projects p
        JOIN clients c ON p.client_id = c.id
        WHERE p.user_id = $1 ${whereClause}
@@ -93,6 +96,7 @@ export async function GET(request: NextRequest) {
       fixedMonthlyFee: project.fixed_monthly_fee,
       fixedMonthlyStartDate: project.fixed_monthly_start_date,
       fixedMonthlyEndDate: project.fixed_monthly_end_date,
+      billingRounding: project.billing_rounding,
       notes: project.notes,
       createdAt: project.created_at,
     }));
@@ -141,6 +145,7 @@ export async function POST(request: NextRequest) {
       fixedMonthlyFee,
       fixedMonthlyStartDate,
       fixedMonthlyEndDate,
+      billingRounding,
       notes,
     } = parsed.data;
 
@@ -178,9 +183,9 @@ export async function POST(request: NextRequest) {
       `INSERT INTO projects (
         id, user_id, client_id, name, status, start_date, end_date,
         fixed_monthly_enabled, fixed_monthly_fee, fixed_monthly_start_date, fixed_monthly_end_date,
-        notes
+        billing_rounding, notes
       )
-       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING id`,
       [
         user.id,
@@ -193,6 +198,7 @@ export async function POST(request: NextRequest) {
         fixedMonthlyEnabled ? fixedMonthlyFee : null,
         fixedMonthlyEnabled ? (fixedMonthlyStartDate || null) : null,
         fixedMonthlyEnabled ? (fixedMonthlyEndDate || null) : null,
+        billingRounding ?? null,
         notes?.trim() || null,
       ]
     );
@@ -212,13 +218,14 @@ export async function POST(request: NextRequest) {
       fixed_monthly_fee: number | null;
       fixed_monthly_start_date: string | null;
       fixed_monthly_end_date: string | null;
+      billing_rounding: string | null;
       notes: string | null;
       created_at: string;
     }>(
       `SELECT p.id, p.name, p.client_id, c.name as client_name,
               p.status, p.start_date, p.end_date,
               p.fixed_monthly_enabled, p.fixed_monthly_fee, p.fixed_monthly_start_date, p.fixed_monthly_end_date,
-              p.notes, p.created_at
+              p.billing_rounding, p.notes, p.created_at
        FROM projects p
        JOIN clients c ON p.client_id = c.id
        WHERE p.id = $1`,
@@ -241,6 +248,7 @@ export async function POST(request: NextRequest) {
         fixedMonthlyFee: project.fixed_monthly_fee,
         fixedMonthlyStartDate: project.fixed_monthly_start_date,
         fixedMonthlyEndDate: project.fixed_monthly_end_date,
+        billingRounding: project.billing_rounding,
         notes: project.notes,
         createdAt: project.created_at,
       },

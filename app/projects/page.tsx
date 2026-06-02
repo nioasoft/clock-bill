@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { FolderOpen } from "lucide-react";
 import { validateRequired, validateDateRange } from "@/lib/validation";
 import { fieldClass } from "@/lib/form-styles";
+import { ROUNDING_LABELS } from "@/lib/rounding";
 
 interface Client {
   id: string;
@@ -59,6 +60,7 @@ function ProjectsPageContent() {
     fixedMonthlyFee: "",
     fixedMonthlyStartDate: "",
     fixedMonthlyEndDate: "",
+    billingRounding: "" as "" | "none" | "hour_up" | "half_hour_up",
     notes: "",
   });
   const [formError, setFormError] = useState("");
@@ -197,6 +199,7 @@ function ProjectsPageContent() {
           fixedMonthlyFee: formData.fixedMonthlyEnabled ? parseFloat(formData.fixedMonthlyFee) : undefined,
           fixedMonthlyStartDate: formData.fixedMonthlyEnabled ? (formData.fixedMonthlyStartDate || undefined) : undefined,
           fixedMonthlyEndDate: formData.fixedMonthlyEnabled ? (formData.fixedMonthlyEndDate || undefined) : undefined,
+          billingRounding: formData.billingRounding === "" ? null : formData.billingRounding,
           notes: formData.notes || undefined,
         }),
       });
@@ -217,6 +220,7 @@ function ProjectsPageContent() {
           fixedMonthlyFee: "",
           fixedMonthlyStartDate: "",
           fixedMonthlyEndDate: "",
+          billingRounding: "" as "" | "none" | "hour_up" | "half_hour_up",
           notes: "",
         });
         setShowForm(false);
@@ -313,13 +317,13 @@ function ProjectsPageContent() {
         </div>
         {/* Add Project Form */}
         {showForm && (
-          <div className="mb-8 rounded-[var(--radius-card)] border border-border bg-card p-6 sm:p-8 motion-safe:animate-scale-in">
-            <div className="mb-6">
-              <h2 className="font-display text-xl font-semibold text-foreground">פרויקט חדש</h2>
-              <p className="mt-1 text-sm text-muted-foreground">שייך את הפרויקט ללקוח והגדר את מודל החיוב</p>
+          <div className="mb-8 mx-auto max-w-2xl rounded-[var(--radius-card)] border border-border bg-card p-6 motion-safe:animate-scale-in">
+            <div className="mb-5">
+              <h2 className="font-display text-lg font-semibold text-foreground">פרויקט חדש</h2>
+              <p className="mt-0.5 text-sm text-muted-foreground">שייך את הפרויקט ללקוח והגדר את מודל החיוב</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
               {formError && (
                 <div className="rounded-[var(--radius)] border border-destructive/30 bg-destructive/10 p-3.5 text-sm text-destructive">
                   {formError}
@@ -331,7 +335,7 @@ function ProjectsPageContent() {
                 <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                   פרטי הפרויקט
                 </legend>
-                <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
                   <div>
                     <label htmlFor="clientId" className="mb-1.5 block text-sm font-medium text-foreground">
                       לקוח <span className="text-primary">*</span>
@@ -444,13 +448,11 @@ function ProjectsPageContent() {
                 <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                   חיוב קבוע
                 </legend>
-                <label className="flex cursor-pointer items-start justify-between gap-4 rounded-[var(--radius)] border border-border bg-background px-4 py-3">
-                  <span>
-                    <span className="block text-sm font-medium text-foreground">חיוב קבוע חודשי</span>
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
-                      מתווסף לחיוב לפי שעות בדוחות
-                    </span>
-                  </span>
+                <label className="flex cursor-pointer items-center justify-between gap-4 rounded-[var(--radius)] border border-border bg-background px-4 py-3">
+                  <div>
+                    <div className="text-sm font-medium text-foreground">חיוב קבוע חודשי</div>
+                    <div className="text-xs text-muted-foreground">מתווסף לחיוב לפי שעות בדוחות</div>
+                  </div>
                   <input
                     type="checkbox"
                     checked={formData.fixedMonthlyEnabled}
@@ -465,13 +467,13 @@ function ProjectsPageContent() {
                         }),
                       })
                     }
-                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-primary"
+                    className="h-4 w-4 shrink-0 rounded border-border accent-primary"
                     disabled={submitting}
                   />
                 </label>
 
                 {formData.fixedMonthlyEnabled && (
-                  <div className="grid grid-cols-1 gap-x-4 gap-y-5 rounded-[var(--radius)] border border-border bg-background/50 p-4 sm:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-x-4 gap-y-4 rounded-[var(--radius)] border border-border bg-background/50 p-4 sm:grid-cols-3">
                     <div>
                       <label htmlFor="fixedMonthlyFee" className="mb-1.5 block text-sm font-medium text-foreground">
                         סכום חודשי <span className="text-primary">*</span>
@@ -526,6 +528,26 @@ function ProjectsPageContent() {
                 )}
               </fieldset>
 
+              {/* Section — billing rounding */}
+              <fieldset className="space-y-2">
+                <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  עיגול זמן לחיוב
+                </legend>
+                <select
+                  id="billingRounding"
+                  value={formData.billingRounding}
+                  onChange={(e) => setFormData({ ...formData, billingRounding: e.target.value as typeof formData.billingRounding })}
+                  className={fieldClass(false)}
+                  disabled={submitting}
+                >
+                  <option value="">ירושה מהלקוח</option>
+                  <option value="none">{ROUNDING_LABELS.none}</option>
+                  <option value="hour_up">{ROUNDING_LABELS.hour_up}</option>
+                  <option value="half_hour_up">{ROUNDING_LABELS.half_hour_up}</option>
+                </select>
+                <p className="text-xs text-muted-foreground">חל על תעריפים שעתיים בלבד.</p>
+              </fieldset>
+
               {/* Section — notes */}
               <fieldset className="space-y-4">
                 <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
@@ -557,6 +579,7 @@ function ProjectsPageContent() {
                       fixedMonthlyFee: "",
                       fixedMonthlyStartDate: "",
                       fixedMonthlyEndDate: "",
+                      billingRounding: "" as "" | "none" | "hour_up" | "half_hour_up",
                       notes: "",
                     });
                   }}

@@ -20,6 +20,7 @@ const createClientSchema = z.object({
     .min(0, "התעריף השעתי לא יכול להיות שלילי")
     .nullish(),
   currency: z.string().max(10).nullish(),
+  billingRounding: z.enum(["none", "hour_up", "half_hour_up"]).nullish(),
   isRetainer: z.boolean().nullish(),
   retainerHours: z.number().nullish(),
   retainerMonthlyFee: z.number().nullish(),
@@ -55,6 +56,7 @@ export async function GET(_request: NextRequest) {
       address: string | null;
       default_rate: number | null;
       currency: string | null;
+      billing_rounding: string | null;
       is_retainer: boolean | null;
       retainer_hours: number | null;
       retainer_monthly_fee: number | null;
@@ -66,7 +68,7 @@ export async function GET(_request: NextRequest) {
       total_hours: number | null;
     }>(
       `SELECT c.id, c.name, c.contact_name, c.email, c.phone, c.address, c.default_rate,
-              c.currency, c.is_retainer, c.retainer_hours, c.retainer_monthly_fee, c.overage_rate,
+              c.currency, c.billing_rounding, c.is_retainer, c.retainer_hours, c.retainer_monthly_fee, c.overage_rate,
               c.notes, c.is_active, c.created_at,
               COALESCE(SUM(
                 CASE
@@ -81,7 +83,7 @@ export async function GET(_request: NextRequest) {
        LEFT JOIN time_entries te ON te.project_id = p.id
        WHERE c.user_id = $1
        GROUP BY c.id, c.name, c.contact_name, c.email, c.phone, c.address, c.default_rate,
-              c.currency, c.is_retainer, c.retainer_hours, c.retainer_monthly_fee, c.overage_rate,
+              c.currency, c.billing_rounding, c.is_retainer, c.retainer_hours, c.retainer_monthly_fee, c.overage_rate,
               c.notes, c.is_active, c.created_at
        ORDER BY c.created_at DESC`,
       [user.id]
@@ -96,6 +98,7 @@ export async function GET(_request: NextRequest) {
       address: client.address,
       defaultRate: client.default_rate,
       currency: client.currency || "ILS",
+      billingRounding: client.billing_rounding || "none",
       isRetainer: client.is_retainer ?? false,
       retainerHours: client.retainer_hours,
       retainerMonthlyFee: client.retainer_monthly_fee,
@@ -143,7 +146,7 @@ export async function POST(request: NextRequest) {
 
     const parsed = await parseBody(request, createClientSchema);
     if (!parsed.ok) return parsed.response;
-    const { name, contactName, email, phone, address, defaultRate, currency, isRetainer, retainerHours, retainerMonthlyFee, overageRate, notes, rates } = parsed.data;
+    const { name, contactName, email, phone, address, defaultRate, currency, billingRounding, isRetainer, retainerHours, retainerMonthlyFee, overageRate, notes, rates } = parsed.data;
 
     const { withTransaction } = await import("@/lib/db");
 
@@ -165,6 +168,7 @@ export async function POST(request: NextRequest) {
         address: string | null;
         default_rate: number | null;
         currency: string | null;
+        billing_rounding: string | null;
         is_retainer: boolean | null;
         retainer_hours: number | null;
         retainer_monthly_fee: number | null;
@@ -173,9 +177,9 @@ export async function POST(request: NextRequest) {
         is_active: boolean;
         created_at: string;
       }>(
-        `INSERT INTO clients (id, user_id, name, contact_name, email, phone, address, default_rate, currency, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate, notes, is_active)
-         VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, TRUE)
-         RETURNING id, name, contact_name, email, phone, address, default_rate, currency, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate, notes, is_active, created_at`,
+        `INSERT INTO clients (id, user_id, name, contact_name, email, phone, address, default_rate, currency, billing_rounding, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate, notes, is_active)
+         VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, TRUE)
+         RETURNING id, name, contact_name, email, phone, address, default_rate, currency, billing_rounding, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate, notes, is_active, created_at`,
         [
           user.id,
           name.trim(),
@@ -185,6 +189,7 @@ export async function POST(request: NextRequest) {
           address?.trim() || null,
           effectiveDefaultRate,
           currency || "ILS",
+          billingRounding || "none",
           isRetainer ?? false,
           retainerHours || null,
           retainerMonthlyFee || null,
@@ -215,6 +220,7 @@ export async function POST(request: NextRequest) {
         address: client.address,
         defaultRate: client.default_rate,
         currency: client.currency || "ILS",
+        billingRounding: client.billing_rounding || "none",
         isRetainer: client.is_retainer ?? false,
         retainerHours: client.retainer_hours,
         retainerMonthlyFee: client.retainer_monthly_fee,

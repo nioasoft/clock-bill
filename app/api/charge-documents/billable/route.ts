@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { calculateFixedMonthlyCharges, type FixedChargeProject } from "@/lib/fixed-charges";
+import { resolveRounding } from "@/lib/rounding";
 
 /**
  * GET /api/charge-documents/billable?clientId=&periodMonth=YYYY-MM
@@ -23,15 +24,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, message: "נא לבחור לקוח" }, { status: 400 });
     }
 
-    const entries = await query<{
+    const entriesRaw = await query<{
       id: string; description: string; notes: string | null; date: string;
       billing_kind: string | null; duration: number; quantity: number | null;
       rate: number | null; rate_label: string | null; item_ref: number | null;
       project_name: string; currency: string;
+      project_rounding: string | null; client_rounding: string | null;
     }>(
       `SELECT te.id, te.description, te.notes, te.date, te.billing_kind, te.duration,
               te.quantity, te.rate, te.rate_label, te.item_ref,
-              p.name AS project_name, c.currency
+              p.name AS project_name, c.currency,
+              p.billing_rounding AS project_rounding, c.billing_rounding AS client_rounding
          FROM time_entries te
          JOIN projects p ON te.project_id = p.id
          JOIN clients  c ON p.client_id = c.id
@@ -42,6 +45,14 @@ export async function GET(request: NextRequest) {
         ORDER BY te.date DESC, te.created_at DESC`,
       [user.id, clientId]
     );
+    // Expose the resolved hourly rounding mode per entry so the client preview
+    // bills the same minutes the server will when the document is issued.
+    const entries = {
+      rows: entriesRaw.rows.map(({ project_rounding, client_rounding, ...e }) => ({
+        ...e,
+        billing_rounding: resolveRounding(project_rounding, client_rounding),
+      })),
+    };
 
     let computedLines: Array<{ sourceType: string; periodMonth: string; label: string; amount: number; currency: string; alreadyBilled: boolean }> = [];
     if (periodMonth && /^\d{4}-\d{2}$/.test(periodMonth)) {

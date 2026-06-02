@@ -16,6 +16,8 @@ const updateProjectSchema = z.object({
   fixedMonthlyFee: z.number().nullish(),
   fixedMonthlyStartDate: z.string().nullish(),
   fixedMonthlyEndDate: z.string().nullish(),
+  // Present (incl. null) => set the override (null = inherit client); absent => leave unchanged.
+  billingRounding: z.enum(["none", "hour_up", "half_hour_up"]).nullish(),
   notes: z.string().max(5000).nullish(),
 });
 
@@ -55,6 +57,8 @@ export async function GET(
       fixed_monthly_fee: number | null;
       fixed_monthly_start_date: string | null;
       fixed_monthly_end_date: string | null;
+      billing_rounding: string | null;
+      client_billing_rounding: string | null;
       notes: string | null;
       created_at: string;
     }>(
@@ -62,6 +66,7 @@ export async function GET(
               c.default_rate, c.currency,
               p.status, p.start_date, p.end_date,
               p.fixed_monthly_enabled, p.fixed_monthly_fee, p.fixed_monthly_start_date, p.fixed_monthly_end_date,
+              p.billing_rounding, c.billing_rounding as client_billing_rounding,
               p.notes, p.created_at
        FROM projects p
        JOIN clients c ON p.client_id = c.id
@@ -108,6 +113,8 @@ export async function GET(
         fixedMonthlyFee: project.fixed_monthly_fee,
         fixedMonthlyStartDate: project.fixed_monthly_start_date,
         fixedMonthlyEndDate: project.fixed_monthly_end_date,
+        billingRounding: project.billing_rounding,
+        clientBillingRounding: project.client_billing_rounding || "none",
         notes: project.notes,
         createdAt: project.created_at,
         totalHours,
@@ -153,6 +160,7 @@ export async function PUT(
       fixedMonthlyFee,
       fixedMonthlyStartDate,
       fixedMonthlyEndDate,
+      billingRounding,
       notes,
     } = parsed.data;
     const { id: projectId } = await params;
@@ -181,11 +189,12 @@ export async function PUT(
       fixed_monthly_fee: number | null;
       fixed_monthly_start_date: string | null;
       fixed_monthly_end_date: string | null;
+      billing_rounding: string | null;
       notes: string | null;
     }>(
       `SELECT name, status, start_date, end_date,
               fixed_monthly_enabled, fixed_monthly_fee, fixed_monthly_start_date, fixed_monthly_end_date,
-              notes
+              billing_rounding, notes
        FROM projects
        WHERE id = $1 AND user_id = $2`,
       [projectId, user.id]
@@ -207,6 +216,8 @@ export async function PUT(
       ? (fixedMonthlyEndDate !== undefined ? (fixedMonthlyEndDate || null) : current.fixed_monthly_end_date)
       : null;
     const nextNotes = notes !== undefined ? (notes?.trim() || null) : current.notes;
+    // Present (incl. explicit null = inherit client) updates; absent leaves as-is.
+    const nextBillingRounding = billingRounding !== undefined ? (billingRounding ?? null) : current.billing_rounding;
 
     if (!nextName || nextName.length === 0) {
       return NextResponse.json(
@@ -246,8 +257,8 @@ export async function PUT(
        SET name = $1, status = $2, start_date = $3, end_date = $4,
            fixed_monthly_enabled = $5, fixed_monthly_fee = $6,
            fixed_monthly_start_date = $7, fixed_monthly_end_date = $8,
-           notes = $9, updated_at = NOW()
-       WHERE id = $10 AND user_id = $11`,
+           notes = $9, billing_rounding = $10, updated_at = NOW()
+       WHERE id = $11 AND user_id = $12`,
       [
         nextName,
         nextStatus,
@@ -258,6 +269,7 @@ export async function PUT(
         nextFixedMonthlyStartDate,
         nextFixedMonthlyEndDate,
         nextNotes,
+        nextBillingRounding,
         projectId,
         user.id,
       ]
@@ -276,13 +288,14 @@ export async function PUT(
       fixed_monthly_fee: number | null;
       fixed_monthly_start_date: string | null;
       fixed_monthly_end_date: string | null;
+      billing_rounding: string | null;
       notes: string | null;
       created_at: string;
     }>(
       `SELECT p.id, p.name, p.client_id, c.name as client_name,
               p.status, p.start_date, p.end_date,
               p.fixed_monthly_enabled, p.fixed_monthly_fee, p.fixed_monthly_start_date, p.fixed_monthly_end_date,
-              p.notes, p.created_at
+              p.billing_rounding, p.notes, p.created_at
        FROM projects p
        JOIN clients c ON p.client_id = c.id
        WHERE p.id = $1`,
@@ -305,6 +318,7 @@ export async function PUT(
         fixedMonthlyFee: project.fixed_monthly_fee,
         fixedMonthlyStartDate: project.fixed_monthly_start_date,
         fixedMonthlyEndDate: project.fixed_monthly_end_date,
+        billingRounding: project.billing_rounding,
         notes: project.notes,
         createdAt: project.created_at,
       },

@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { validateRequired, validateDateRange } from "@/lib/validation";
+import { ROUNDING_LABELS, asRoundingMode, resolveRounding } from "@/lib/rounding";
 
 interface Project {
   id: string;
@@ -20,6 +21,8 @@ interface Project {
   fixedMonthlyFee: number | null;
   fixedMonthlyStartDate: string | null;
   fixedMonthlyEndDate: string | null;
+  billingRounding: string | null;
+  clientBillingRounding: string | null;
   notes: string | null;
   createdAt: string;
   totalHours?: number;
@@ -73,10 +76,20 @@ export default function ProjectDetailsPage() {
     fixedMonthlyFee: "",
     fixedMonthlyStartDate: "",
     fixedMonthlyEndDate: "",
+    billingRounding: "" as "" | "none" | "hour_up" | "half_hour_up",
     notes: "",
   });
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // The edit form / confirm dialogs render in the actions footer at the bottom.
+  // Scroll them into view when opened so the trigger feels connected to the result.
+  const actionsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (showEditForm || showDeleteConfirm || showArchiveConfirm) {
+      actionsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [showEditForm, showDeleteConfirm, showArchiveConfirm]);
 
   // Field validation errors
   const [fieldErrors, setFieldErrors] = useState<{
@@ -109,6 +122,7 @@ export default function ProjectDetailsPage() {
             fixedMonthlyFee: data.project.fixedMonthlyFee?.toString() || "",
             fixedMonthlyStartDate: data.project.fixedMonthlyStartDate || "",
             fixedMonthlyEndDate: data.project.fixedMonthlyEndDate || "",
+            billingRounding: (data.project.billingRounding ?? "") as "" | "none" | "hour_up" | "half_hour_up",
             notes: data.project.notes || "",
           });
         } else {
@@ -308,6 +322,7 @@ export default function ProjectDetailsPage() {
           fixedMonthlyFee: formData.fixedMonthlyEnabled ? parseFloat(formData.fixedMonthlyFee) : null,
           fixedMonthlyStartDate: formData.fixedMonthlyEnabled ? (formData.fixedMonthlyStartDate || null) : null,
           fixedMonthlyEndDate: formData.fixedMonthlyEnabled ? (formData.fixedMonthlyEndDate || null) : null,
+          billingRounding: formData.billingRounding === "" ? null : formData.billingRounding,
           notes: formData.notes || null,
         }),
       });
@@ -460,6 +475,8 @@ export default function ProjectDetailsPage() {
         return "הושלם";
       case "paused":
         return "מושהה";
+      case "archived":
+        return "בארכיון";
       default:
         return status;
     }
@@ -510,7 +527,8 @@ export default function ProjectDetailsPage() {
           <div className="mb-4">
             <Breadcrumb
               items={[
-                { label: "פרויקטים", href: "/projects" },
+                { label: "לקוחות", href: "/clients" },
+                { label: project.clientName, href: `/clients/${project.clientId}` },
                 { label: project.name },
               ]}
             />
@@ -520,61 +538,26 @@ export default function ProjectDetailsPage() {
               {formError}
             </div>
           )}
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">{project.name}</h1>
-            <div className="flex gap-2">
-              {project.status !== "archived" && (
-                <>
-                  <button
-                    onClick={() => setShowEditForm(!showEditForm)}
-                    className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-muted-foreground hover:bg-muted"
-                  >
-                    ערוך
-                  </button>
-                  <button
-                    onClick={handleDuplicate}
-                    disabled={duplicating}
-                    className="rounded-[var(--radius-card)] border border-secondary bg-secondary-light px-4 py-2 text-secondary hover:bg-secondary-light disabled:opacity-50"
-                  >
-                    {duplicating ? "מעתיק..." : "שכפל"}
-                  </button>
-                  <button
-                    onClick={() => setShowArchiveConfirm(true)}
-                    className="rounded-[var(--radius-card)] bg-foreground/70 px-4 py-2 text-white hover:bg-foreground/80"
-                  >
-                    ארכב
-                  </button>
-                  <button
-                    onClick={() => setShowDeleteConfirm(true)}
-                    className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-white hover:bg-destructive/90"
-                  >
-                    מחק
-                  </button>
-                </>
-              )}
-              {project.status === "archived" && (
-                <>
-                  <button
-                    onClick={handleDuplicate}
-                    disabled={duplicating}
-                    className="rounded-[var(--radius-card)] border border-secondary bg-secondary-light px-4 py-2 text-secondary hover:bg-secondary-light disabled:opacity-50"
-                  >
-                    {duplicating ? "מעתיק..." : "שכפל"}
-                  </button>
-                  <button
-                    onClick={() => handleUnarchive()}
-                    className="rounded-[var(--radius-card)] bg-success px-4 py-2 text-success-foreground hover:bg-success/90"
-                    disabled={submitting}
-                  >
-                    {submitting ? "משחזר..." : "שחזר פרויקט"}
-                  </button>
-                </>
-              )}
+          <div className="mb-6 flex flex-col gap-4 rounded-[var(--radius-card)] border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <div className="flex items-center gap-3">
+                <h1 className="font-display text-2xl font-bold tracking-tight text-foreground truncate">{project.name}</h1>
+                <span className={`inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusColor(project.status)}`}>
+                  {getStatusLabel(project.status)}
+                </span>
+              </div>
+              <Link
+                href={`/clients/${project.clientId}`}
+                className="mt-1 inline-block text-sm text-muted-foreground hover:text-foreground"
+              >
+                {project.clientName}
+              </Link>
             </div>
           </div>
+        <div ref={actionsRef} className="scroll-mt-20" />
         {/* Delete Confirmation Dialog */}
         {showDeleteConfirm && (
-          <div className="mb-8 rounded-[var(--radius-card)] bg-card p-6 shadow border-2 border-destructive/30">
+          <div className="mb-8 rounded-[var(--radius-card)] bg-card p-6 border border-destructive/30">
             <h2 className="text-xl font-semibold text-destructive mb-4">מחיקת פרויקט</h2>
             <p className="text-muted-foreground mb-4">
               האם למחוק את הפרויקט &quot;{project.name}&quot;? פעולה זו אינה הפיכה.
@@ -598,7 +581,7 @@ export default function ProjectDetailsPage() {
               <button
                 onClick={handleDelete}
                 disabled={submitting}
-                className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
+                className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
               >
                 {submitting ? "מוחק..." : "מחק פרויקט"}
               </button>
@@ -608,7 +591,7 @@ export default function ProjectDetailsPage() {
 
         {/* Archive Confirmation Dialog */}
         {showArchiveConfirm && (
-          <div className="mb-8 rounded-[var(--radius-card)] bg-card p-6 shadow border-2 border-border/50">
+          <div className="mb-8 rounded-[var(--radius-card)] bg-card p-6 border border-border">
             <h2 className="text-xl font-semibold text-foreground mb-4">ארכוב פרויקט</h2>
             <p className="text-muted-foreground mb-4">
               האם לארכב את הפרויקט &quot;{project.name}&quot;? הפרויקט יוסתר מרשימת הפרויקטים אך ניתן יהיה לשחזר אותו.
@@ -632,7 +615,7 @@ export default function ProjectDetailsPage() {
               <button
                 onClick={handleArchive}
                 disabled={submitting}
-                className="rounded-[var(--radius-card)] bg-foreground/70 px-4 py-2 text-white hover:bg-foreground/80 disabled:opacity-50"
+                className="rounded-[var(--radius-card)] bg-muted px-4 py-2 text-foreground hover:bg-muted/80 disabled:opacity-50"
               >
                 {submitting ? "מארכב..." : "ארכב פרויקט"}
               </button>
@@ -642,7 +625,7 @@ export default function ProjectDetailsPage() {
 
         {/* Edit Form */}
         {showEditForm && (
-          <div className="mb-8 rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
+          <div className="mb-8 mx-auto max-w-2xl rounded-[var(--radius-card)] bg-card border border-border p-5">
             <h2 className="font-display text-lg font-semibold text-foreground mb-4">ערוך פרויקט</h2>
             <form onSubmit={handleUpdate} className="space-y-4">
               {formError && (
@@ -725,6 +708,27 @@ export default function ProjectDetailsPage() {
                     disabled={submitting}
                   />
                   {fieldErrors.endDate && <p className="mt-1 text-xs text-destructive">{fieldErrors.endDate}</p>}
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label htmlFor="billingRounding" className="block text-sm font-medium text-muted-foreground">
+                    עיגול זמן לחיוב
+                  </label>
+                  <select
+                    id="billingRounding"
+                    value={formData.billingRounding}
+                    onChange={(e) => setFormData({ ...formData, billingRounding: e.target.value as typeof formData.billingRounding })}
+                    className="mt-1 block w-full rounded-[var(--radius-card)] border border-border bg-card px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary sm:max-w-[calc(50%-0.5rem)]"
+                    disabled={submitting}
+                  >
+                    <option value="">ירושה מהלקוח ({ROUNDING_LABELS[asRoundingMode(project.clientBillingRounding)]})</option>
+                    <option value="none">{ROUNDING_LABELS.none}</option>
+                    <option value="hour_up">{ROUNDING_LABELS.hour_up}</option>
+                    <option value="half_hour_up">{ROUNDING_LABELS.half_hour_up}</option>
+                  </select>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    דורס את הגדרת הלקוח לפרויקט זה. חל על תעריפים שעתיים בלבד.
+                  </p>
                 </div>
 
                 <div className="sm:col-span-2">
@@ -852,6 +856,7 @@ export default function ProjectDetailsPage() {
                       fixedMonthlyFee: project.fixedMonthlyFee?.toString() || "",
                       fixedMonthlyStartDate: project.fixedMonthlyStartDate || "",
                       fixedMonthlyEndDate: project.fixedMonthlyEndDate || "",
+                      billingRounding: (project.billingRounding ?? "") as "" | "none" | "hour_up" | "half_hour_up",
                       notes: project.notes || "",
                     });
                   }}
@@ -872,58 +877,67 @@ export default function ProjectDetailsPage() {
           </div>
         )}
 
-        {/* Project Details Card */}
-        <div className="rounded-[var(--radius-card)] bg-card border border-border/50 shadow-sm">
-          <div className="border-b border-border px-6 py-4">
-            <h2 className="font-display text-lg font-semibold text-foreground">פרטי פרויקט</h2>
+        {/* Summary stat tiles */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="rounded-[var(--radius-card)] border border-border bg-card p-4">
+            <dt className="text-xs font-medium text-muted-foreground">סה״כ שעות</dt>
+            <dd className="mt-1.5 font-mono text-2xl font-bold tabular-nums text-foreground">
+              {statsLoading ? "…" : projectStats?.totalHours?.toFixed(1) || "0.0"}
+            </dd>
           </div>
-          <div className="px-6 py-4">
-            <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <div>
-                <dt className="text-sm font-medium text-muted-foreground">שם הפרויקט</dt>
-                <dd className="mt-1 text-sm text-foreground">{project.name}</dd>
-              </div>
+          <div className="rounded-[var(--radius-card)] border border-border bg-card p-4">
+            <dt className="text-xs font-medium text-muted-foreground">מספר רשומות</dt>
+            <dd className="mt-1.5 font-mono text-2xl font-bold tabular-nums text-foreground">
+              {statsLoading ? "…" : projectStats?.entryCount || 0}
+            </dd>
+          </div>
+          <div className="rounded-[var(--radius-card)] border border-border bg-card p-4">
+            <dt className="text-xs font-medium text-muted-foreground">חיוב קבוע חודשי</dt>
+            <dd className="mt-1.5 font-mono text-2xl font-bold tabular-nums text-foreground">
+              {project.fixedMonthlyEnabled && project.fixedMonthlyFee
+                ? project.fixedMonthlyFee.toFixed(0)
+                : "—"}
+            </dd>
+          </div>
+          <div className="rounded-[var(--radius-card)] border border-border bg-card p-4">
+            <dt className="text-xs font-medium text-muted-foreground">עיגול זמן</dt>
+            <dd className="mt-1.5 text-sm font-semibold text-foreground">
+              {ROUNDING_LABELS[resolveRounding(project.billingRounding, project.clientBillingRounding)]}
+            </dd>
+          </div>
+        </div>
 
-              <div>
-                <dt className="text-sm font-medium text-muted-foreground">לקוח</dt>
-                <dd className="mt-1 text-sm text-foreground">{project.clientName}</dd>
-              </div>
-
-              <div>
-                <dt className="text-sm font-medium text-muted-foreground">סטטוס</dt>
-                <dd className="mt-1">
-                  <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${getStatusColor(project.status)}`}>
-                    {getStatusLabel(project.status)}
-                  </span>
+        {/* Project Details Card */}
+        <div className="mt-6 rounded-[var(--radius-card)] bg-card border border-border">
+          <div className="border-b border-border px-5 py-3.5">
+            <h2 className="font-display text-base font-semibold text-foreground">פרטי פרויקט</h2>
+          </div>
+          <div className="px-5 py-4">
+            <dl className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
+              <div className="flex items-center justify-between gap-4 sm:block">
+                <dt className="text-sm text-muted-foreground sm:mb-1">לקוח</dt>
+                <dd className="text-sm text-foreground">
+                  <Link href={`/clients/${project.clientId}`} className="hover:text-primary">{project.clientName}</Link>
                 </dd>
               </div>
 
-              <div>
-                <dt className="text-sm font-medium text-muted-foreground">תאריך התחלה</dt>
-                <dd className="mt-1 text-sm text-foreground">
+              <div className="flex items-center justify-between gap-4 sm:block">
+                <dt className="text-sm text-muted-foreground sm:mb-1">תאריך התחלה</dt>
+                <dd className="text-sm text-foreground tabular-nums">
                   {project.startDate ? new Date(project.startDate).toLocaleDateString("he-IL") : "-"}
                 </dd>
               </div>
 
-              <div>
-                <dt className="text-sm font-medium text-muted-foreground">תאריך סיום</dt>
-                <dd className="mt-1 text-sm text-foreground">
+              <div className="flex items-center justify-between gap-4 sm:block">
+                <dt className="text-sm text-muted-foreground sm:mb-1">תאריך סיום</dt>
+                <dd className="text-sm text-foreground tabular-nums">
                   {project.endDate ? new Date(project.endDate).toLocaleDateString("he-IL") : "-"}
                 </dd>
               </div>
 
-              <div>
-                <dt className="text-sm font-medium text-muted-foreground">חיוב קבוע חודשי</dt>
-                <dd className="mt-1 text-sm text-foreground">
-                  {project.fixedMonthlyEnabled && project.fixedMonthlyFee
-                    ? `${project.fixedMonthlyFee.toFixed(2)} לחודש`
-                    : "לא פעיל"}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-sm font-medium text-muted-foreground">תוקף חיוב קבוע</dt>
-                <dd className="mt-1 text-sm text-foreground">
+              <div className="flex items-center justify-between gap-4 sm:block">
+                <dt className="text-sm text-muted-foreground sm:mb-1">תוקף חיוב קבוע</dt>
+                <dd className="text-sm text-foreground tabular-nums">
                   {(project.fixedMonthlyStartDate || project.fixedMonthlyEndDate)
                     ? `${project.fixedMonthlyStartDate ? new Date(project.fixedMonthlyStartDate).toLocaleDateString("he-IL") : "-"} עד ${project.fixedMonthlyEndDate ? new Date(project.fixedMonthlyEndDate).toLocaleDateString("he-IL") : "ללא סיום"}`
                     : "ללא הגבלה"}
@@ -932,43 +946,17 @@ export default function ProjectDetailsPage() {
 
               {project.notes && (
                 <div className="sm:col-span-2">
-                  <dt className="text-sm font-medium text-muted-foreground">הערות</dt>
-                  <dd className="mt-1 text-sm text-foreground whitespace-pre-wrap">{project.notes}</dd>
+                  <dt className="text-sm text-muted-foreground mb-1">הערות</dt>
+                  <dd className="text-sm text-foreground whitespace-pre-wrap">{project.notes}</dd>
                 </div>
               )}
             </dl>
           </div>
         </div>
 
-        {/* Project Totals Card */}
-        <div className="mt-6 rounded-[var(--radius-card)] bg-card border border-border/50 shadow-sm">
-          <div className="border-b border-border px-6 py-4">
-            <h2 className="font-display text-lg font-semibold text-foreground">סיכום פרויקט</h2>
-          </div>
-          <div className="px-6 py-4">
-            <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <div className="rounded-[var(--radius-card)] bg-primary-light p-4 border-t-2 border-t-primary">
-                <dt className="text-sm font-medium text-primary">סה״כ שעות</dt>
-                <dd className="mt-2 font-mono text-3xl font-bold tabular-nums text-primary">
-                  {statsLoading ? "..." : projectStats?.totalHours?.toFixed(1) || "0.0"}
-                </dd>
-                <dt className="mt-2 text-xs text-primary">שעות רשומות בפרויקט</dt>
-              </div>
-
-              <div className="rounded-[var(--radius-card)] bg-success/10 p-4 border-t-2 border-t-success">
-                <dt className="text-sm font-medium text-success">מספר רשומות</dt>
-                <dd className="mt-2 font-mono text-3xl font-bold tabular-nums text-success">
-                  {statsLoading ? "..." : projectStats?.entryCount || 0}
-                </dd>
-                <dt className="mt-2 text-xs text-success">כמות רשומות זמן בפרויקט</dt>
-              </div>
-            </dl>
-          </div>
-        </div>
-
         {/* Tasks */}
-        <div className="mt-6 rounded-[var(--radius-card)] bg-card border border-border/50 shadow-sm">
-          <div className="border-b border-border px-6 py-4">
+        <div className="mt-6 rounded-[var(--radius-card)] bg-card border border-border">
+          <div className="border-b border-border px-5 py-3.5">
             <h2 className="font-display text-lg font-semibold text-foreground">משימות</h2>
           </div>
           <div className="px-6 py-4">
@@ -1057,8 +1045,8 @@ export default function ProjectDetailsPage() {
         </div>
 
         {/* Recent Entries */}
-        <div className="mt-6 rounded-[var(--radius-card)] bg-card border border-border/50 shadow-sm">
-          <div className="border-b border-border px-6 py-4">
+        <div className="mt-6 rounded-[var(--radius-card)] bg-card border border-border">
+          <div className="border-b border-border px-5 py-3.5">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-lg font-semibold text-foreground">רשומות אחרונות</h2>
               <div className="flex gap-3">
@@ -1094,6 +1082,56 @@ export default function ProjectDetailsPage() {
               </ul>
             )}
           </div>
+        </div>
+
+        {/* Actions — kept at the bottom, away from accidental clicks */}
+        <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-border pt-5">
+          {project.status !== "archived" ? (
+            <>
+              <button
+                onClick={() => setShowEditForm(!showEditForm)}
+                className="rounded-[var(--radius)] border border-border px-3.5 py-2 text-sm text-foreground hover:bg-muted"
+              >
+                ערוך
+              </button>
+              <button
+                onClick={handleDuplicate}
+                disabled={duplicating}
+                className="rounded-[var(--radius)] border border-border px-3.5 py-2 text-sm text-foreground hover:bg-muted disabled:opacity-50"
+              >
+                {duplicating ? "מעתיק..." : "שכפל"}
+              </button>
+              <button
+                onClick={() => setShowArchiveConfirm(true)}
+                className="rounded-[var(--radius)] border border-border px-3.5 py-2 text-sm text-muted-foreground hover:bg-muted"
+              >
+                ארכב
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="rounded-[var(--radius)] px-3.5 py-2 text-sm text-destructive hover:bg-destructive/10"
+              >
+                מחק
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={handleDuplicate}
+                disabled={duplicating}
+                className="rounded-[var(--radius)] border border-border px-3.5 py-2 text-sm text-foreground hover:bg-muted disabled:opacity-50"
+              >
+                {duplicating ? "מעתיק..." : "שכפל"}
+              </button>
+              <button
+                onClick={() => handleUnarchive()}
+                className="rounded-[var(--radius)] bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                disabled={submitting}
+              >
+                {submitting ? "משחזר..." : "שחזר פרויקט"}
+              </button>
+            </>
+          )}
         </div>
       </PageContainer>
     </AppLayout>

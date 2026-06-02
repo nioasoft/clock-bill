@@ -21,6 +21,9 @@ interface ClientRatesEditorProps {
  * emits it via `onChange`. Used by both the clients-list form and the client
  * detail page so the two stay in sync. Retainer fields live outside this editor
  * (they belong to the client row, not to client_rates).
+ *
+ * Layout is intentionally dense: each rate is a single compact row
+ * (default · name · price · remove), grouped under two slim section headers.
  */
 export function ClientRatesEditor({ rates, currency, onChange, disabled }: ClientRatesEditorProps) {
   const symbol = CURRENCY_SYMBOLS[currency] || "₪";
@@ -59,132 +62,96 @@ export function ClientRatesEditor({ rates, currency, onChange, disabled }: Clien
   const setDefault = (idx: number) =>
     onChange(rates.map((r, i) => ({ ...r, isDefault: i === idx && r.kind === "hourly" })));
 
+  const hourly = rates.some((r) => r.kind === "hourly");
+  const items = rates.some((r) => r.kind === "item");
+
+  /** One compact rate row. `showDefault` renders the default-radio cell (hourly only). */
+  const row = (r: ClientRateInput, idx: number, unit: string, showDefault: boolean) => (
+    <div key={idx} className="flex items-center gap-2">
+      {showDefault ? (
+        <input
+          type="radio"
+          name="defaultHourly"
+          checked={r.isDefault}
+          onChange={() => setDefault(idx)}
+          className="h-4 w-4 shrink-0 accent-primary"
+          disabled={disabled}
+          aria-label="תעריף ברירת מחדל"
+          title="ברירת מחדל"
+        />
+      ) : (
+        <span className="w-4 shrink-0" aria-hidden />
+      )}
+      <input
+        type="text"
+        value={r.name}
+        onChange={(e) => updateRate(idx, { name: e.target.value })}
+        placeholder={showDefault ? "שם (למשל תכנות)" : "שם (למשל כתיבת מכתב)"}
+        className={`${fieldClass(false)} min-w-0 flex-1`}
+        disabled={disabled}
+      />
+      <div className="relative w-32 shrink-0 sm:w-36">
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          value={r.rate || ""}
+          onChange={(e) => updateRate(idx, { rate: parseFloat(e.target.value) || 0 })}
+          className={`${fieldClass(false)} font-mono pe-12`}
+          disabled={disabled}
+          placeholder="0.00"
+        />
+        <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-muted-foreground">
+          {symbol}/{unit}
+        </span>
+      </div>
+      <button
+        type="button"
+        onClick={() => removeRate(idx)}
+        className="shrink-0 rounded-[var(--radius)] px-2 py-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+        disabled={disabled}
+        aria-label="הסר"
+        title="הסר"
+      >
+        ✕
+      </button>
+    </div>
+  );
+
+  const sectionHeader = (title: string, addLabel: string, kind: RateKind) => (
+    <div className="flex items-center justify-between">
+      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</span>
+      <button
+        type="button"
+        onClick={() => addRate(kind)}
+        className="rounded-[var(--radius)] px-2 py-1 text-sm font-medium text-primary hover:bg-primary/10"
+        disabled={disabled}
+      >
+        {addLabel}
+      </button>
+    </div>
+  );
+
   return (
-    <div className="space-y-4 rounded-[var(--radius)] border border-border bg-background/50 p-4">
+    <div className="divide-y divide-border rounded-[var(--radius)] border border-border bg-background/50">
       {/* Hourly rates */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-foreground">תעריפים שעתיים</span>
-          <button
-            type="button"
-            onClick={() => addRate("hourly")}
-            className="rounded-[var(--radius)] border border-primary/40 px-2.5 py-1 text-sm font-medium text-primary hover:bg-primary/10"
-            disabled={disabled}
-          >
-            + הוסף תעריף שעתי
-          </button>
-        </div>
-        {rates.some((r) => r.kind === "hourly") ? (
-          <div className="space-y-2">
-            {rates.map((r, idx) =>
-              r.kind !== "hourly" ? null : (
-                <div key={idx} className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="defaultHourly"
-                    checked={r.isDefault}
-                    onChange={() => setDefault(idx)}
-                    className="h-4 w-4 shrink-0 accent-primary"
-                    disabled={disabled}
-                    aria-label="תעריף ברירת מחדל"
-                    title="ברירת מחדל"
-                  />
-                  <input
-                    type="text"
-                    value={r.name}
-                    onChange={(e) => updateRate(idx, { name: e.target.value })}
-                    placeholder="שם (למשל תכנות)"
-                    className={fieldClass(false)}
-                    disabled={disabled}
-                  />
-                  <div className="relative w-44 shrink-0">
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={r.rate || ""}
-                      onChange={(e) => updateRate(idx, { rate: parseFloat(e.target.value) || 0 })}
-                      className={`${fieldClass(false)} font-mono pe-16`}
-                      disabled={disabled}
-                      placeholder="0.00"
-                    />
-                    <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-muted-foreground">
-                      {symbol}/שעה
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeRate(idx)}
-                    className="shrink-0 rounded-[var(--radius)] px-2 py-1 text-destructive hover:bg-destructive/10"
-                    disabled={disabled}
-                    aria-label="הסר תעריף"
-                  >
-                    ✕
-                  </button>
-                </div>
-              )
-            )}
+      <div className="space-y-2 p-3">
+        {sectionHeader("תעריפים שעתיים", "+ תעריף", "hourly")}
+        {hourly ? (
+          <div className="space-y-1.5">
+            {rates.map((r, idx) => (r.kind === "hourly" ? row(r, idx, "שעה", true) : null))}
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground">
-            לא הוגדרו תעריפים שעתיים — ייעשה שימוש בתעריף ברירת המחדל.
-          </p>
+          <p className="text-xs text-muted-foreground">לא הוגדרו תעריפים שעתיים — ייעשה שימוש בתעריף ברירת המחדל.</p>
         )}
       </div>
 
       {/* Items (price per unit) */}
-      <div className="space-y-2 border-t border-border pt-4">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-foreground">פריטים (מחיר ליחידה)</span>
-          <button
-            type="button"
-            onClick={() => addRate("item")}
-            className="rounded-[var(--radius)] border border-primary/40 px-2.5 py-1 text-sm font-medium text-primary hover:bg-primary/10"
-            disabled={disabled}
-          >
-            + הוסף פריט
-          </button>
-        </div>
-        {rates.some((r) => r.kind === "item") && (
-          <div className="space-y-2">
-            {rates.map((r, idx) =>
-              r.kind !== "item" ? null : (
-                <div key={idx} className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={r.name}
-                    onChange={(e) => updateRate(idx, { name: e.target.value })}
-                    placeholder="שם (למשל כתיבת מכתב)"
-                    className={fieldClass(false)}
-                    disabled={disabled}
-                  />
-                  <div className="relative w-44 shrink-0">
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={r.rate || ""}
-                      onChange={(e) => updateRate(idx, { rate: parseFloat(e.target.value) || 0 })}
-                      className={`${fieldClass(false)} font-mono pe-16`}
-                      disabled={disabled}
-                      placeholder="0.00"
-                    />
-                    <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-muted-foreground">
-                      {symbol}/יח׳
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeRate(idx)}
-                    className="shrink-0 rounded-[var(--radius)] px-2 py-1 text-destructive hover:bg-destructive/10"
-                    disabled={disabled}
-                    aria-label="הסר פריט"
-                  >
-                    ✕
-                  </button>
-                </div>
-              )
-            )}
+      <div className="space-y-2 p-3">
+        {sectionHeader("פריטים (מחיר ליחידה)", "+ פריט", "item")}
+        {items && (
+          <div className="space-y-1.5">
+            {rates.map((r, idx) => (r.kind === "item" ? row(r, idx, "יח׳", false) : null))}
           </div>
         )}
       </div>

@@ -12,6 +12,7 @@ import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { fieldClass } from "@/lib/form-styles";
 import { CURRENCY_SYMBOLS } from "@/lib/currency";
 import { ClientRatesEditor } from "@/components/client-rates-editor";
+import { ROUNDING_LABELS, ROUNDING_MODES, asRoundingMode, type RoundingMode } from "@/lib/rounding";
 import { cleanClientRates } from "@/lib/schemas/rates";
 import type { ClientRate, ClientRateInput } from "@/lib/schemas/rates";
 import {
@@ -36,6 +37,7 @@ interface Client {
   address: string | null;
   defaultRate: number | null;
   currency: string;
+  billingRounding: string | null;
   isRetainer: boolean;
   retainerHours: number | null;
   retainerMonthlyFee: number | null;
@@ -82,6 +84,7 @@ function ClientsPageContent() {
     address: "",
     defaultRate: "",
     currency: "ILS",
+    billingRounding: "none" as RoundingMode,
     isRetainer: false,
     retainerHours: "",
     retainerMonthlyFee: "",
@@ -196,6 +199,7 @@ function ClientsPageContent() {
           address: formData.address || undefined,
           defaultRate: formData.defaultRate ? parseFloat(formData.defaultRate) : undefined,
           currency: formData.currency,
+          billingRounding: formData.billingRounding,
           isRetainer: formData.isRetainer,
           retainerHours: formData.isRetainer && formData.retainerHours ? parseFloat(formData.retainerHours) : undefined,
           retainerMonthlyFee: formData.isRetainer && formData.retainerMonthlyFee ? parseFloat(formData.retainerMonthlyFee) : undefined,
@@ -224,6 +228,7 @@ function ClientsPageContent() {
           address: "",
           defaultRate: "",
           currency: "ILS",
+          billingRounding: "none" as RoundingMode,
           isRetainer: false,
           retainerHours: "",
           retainerMonthlyFee: "",
@@ -255,6 +260,7 @@ function ClientsPageContent() {
       address: client.address || "",
       defaultRate: client.defaultRate?.toString() || "",
       currency: client.currency || "ILS",
+      billingRounding: asRoundingMode(client.billingRounding) as RoundingMode,
       isRetainer: client.isRetainer ?? false,
       retainerHours: client.retainerHours?.toString() || "",
       retainerMonthlyFee: client.retainerMonthlyFee?.toString() || "",
@@ -293,6 +299,7 @@ function ClientsPageContent() {
       address: "",
       defaultRate: "",
       currency: "ILS",
+      billingRounding: "none" as RoundingMode,
       isRetainer: false,
       retainerHours: "",
       retainerMonthlyFee: "",
@@ -520,6 +527,23 @@ function ClientsPageContent() {
                     >
                       {CURRENCIES.map((c) => (
                         <option key={c.value} value={c.value}>{c.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="billingRounding" className="mb-1.5 block text-sm font-medium text-foreground">
+                      עיגול זמן לחיוב
+                    </label>
+                    <select
+                      id="billingRounding"
+                      value={formData.billingRounding}
+                      onChange={(e) => setFormData({ ...formData, billingRounding: e.target.value as RoundingMode })}
+                      className={fieldClass(false)}
+                      disabled={submitting}
+                    >
+                      {ROUNDING_MODES.map((m) => (
+                        <option key={m} value={m}>{ROUNDING_LABELS[m]}</option>
                       ))}
                     </select>
                   </div>

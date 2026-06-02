@@ -11,9 +11,8 @@ export interface NavItemDef {
 
 export const navItemDefs: NavItemDef[] = [
   { name: "דשבורד", href: "/", iconName: "Home" },
-  { name: "רשומות זמן", href: "/entries", iconName: "Clock" },
+  { name: "רשומות חיוב", href: "/entries", iconName: "Clock" },
   { name: "לקוחות", href: "/clients", iconName: "Users" },
-  { name: "פרויקטים", href: "/projects", iconName: "FolderKanban" },
   { name: "התחשבנות", href: "/reports", iconName: "FileText" },
   { name: "פניות", href: "/feedback", iconName: "MessageSquare" },
   { name: "הגדרות", href: "/settings", iconName: "Settings" },

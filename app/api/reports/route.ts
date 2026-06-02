@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { calculateFixedMonthlyCharges } from "@/lib/fixed-charges";
 import { addMoney, calcHourlyAmount, calcItemAmount } from "@/lib/money";
+import { resolveRounding, roundBillableMinutes } from "@/lib/rounding";
 
 /**
  * GET /api/reports
@@ -48,7 +49,9 @@ export async function GET(request: NextRequest) {
         te.quantity,
         te.item_ref,
         p.name as project_name,
+        p.billing_rounding as project_rounding,
         c.default_rate as hourly_rate,
+        c.billing_rounding as client_rounding,
         c.currency,
         c.name as client_name,
         c.id as client_id,
@@ -108,7 +111,9 @@ export async function GET(request: NextRequest) {
       quantity: number | null;
       item_ref: number | null;
       project_name: string;
+      project_rounding: string | null;
       hourly_rate: number | null;
+      client_rounding: string | null;
       currency: string;
       client_name: string;
       client_id: string;
@@ -122,9 +127,15 @@ export async function GET(request: NextRequest) {
       const isItem = entry.billing_kind === "item";
       // Hourly lines fall back to the client default_rate when no snapshot rate.
       const effectiveRate = entry.rate ?? entry.hourly_rate;
+      // Hourly time is billed on rounded minutes per the client/project policy;
+      // raw `duration` stays the worked time used for hours aggregates below.
+      const roundingMode = resolveRounding(entry.project_rounding, entry.client_rounding);
+      const billedMinutes = isItem
+        ? entry.duration
+        : roundBillableMinutes(entry.duration, roundingMode);
       const amount = isItem
         ? calcItemAmount(entry.quantity, entry.rate)
-        : calcHourlyAmount(entry.duration, effectiveRate);
+        : calcHourlyAmount(billedMinutes, effectiveRate);
 
       return {
         id: entry.id,
@@ -140,6 +151,7 @@ export async function GET(request: NextRequest) {
         startTime: entry.start_time,
         endTime: entry.end_time,
         duration: entry.duration,
+        billedMinutes,
         date: entry.date,
         tags: entry.tags || [],
         notes: entry.notes,

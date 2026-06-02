@@ -5,6 +5,7 @@ import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { formatDuration } from "@/lib/format";
 import { formatCurrency } from "@/lib/currency";
 import { calcHourlyAmount, calcItemAmount, sumMoney } from "@/lib/money";
+import { roundBillableMinutes, type RoundingMode } from "@/lib/rounding";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -33,6 +34,8 @@ interface BillableEntryRow {
   item_ref: number | null;
   project_name: string;
   currency: string;
+  // Resolved hourly rounding mode (project override ?? client default) from the API.
+  billing_rounding: RoundingMode;
 }
 
 interface ComputedRow {
@@ -51,15 +54,20 @@ interface BillableData {
 
 type LoadState = "idle" | "loading" | "error" | "ready";
 
+/** Minutes actually billed for an hourly entry after applying its rounding policy. */
+function billedMinutes(entry: BillableEntryRow): number {
+  return roundBillableMinutes(entry.duration, entry.billing_rounding);
+}
+
 /**
  * Per-entry billed amount, rounded to whole cents to match what the server
- * stores: item = quantity × rate, hourly = (minutes/60) × rate.
+ * stores: item = quantity × rate, hourly = (roundedMinutes/60) × rate.
  */
 function entryAmount(entry: BillableEntryRow): number {
   if (entry.billing_kind === "item") {
     return calcItemAmount(entry.quantity, entry.rate);
   }
-  return calcHourlyAmount(entry.duration, entry.rate);
+  return calcHourlyAmount(billedMinutes(entry), entry.rate);
 }
 
 export default function BillableTab({
@@ -341,8 +349,14 @@ export default function BillableTab({
                             <span>
                               {entry.billing_kind === "item"
                                 ? `${entry.quantity ?? 0} יח׳`
-                                : formatDuration(entry.duration)}
+                                : formatDuration(billedMinutes(entry))}
                             </span>
+                            {entry.billing_kind !== "item" &&
+                              billedMinutes(entry) !== entry.duration && (
+                                <span className="text-[11px]">
+                                  (בפועל {formatDuration(entry.duration)})
+                                </span>
+                              )}
                             {entry.rate_label && <span>· {entry.rate_label}</span>}
                             {entry.billing_kind === "item" &&
                               entry.item_ref != null && (

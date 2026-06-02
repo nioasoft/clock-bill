@@ -4,6 +4,7 @@ import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
 import { createChargeDocumentSchema } from "@/lib/schemas/charge-documents";
 import { buildLineFromEntry, computeDocumentTotal, type BillableEntry, type ChargeLineDraft } from "@/lib/charge-documents";
+import { resolveRounding } from "@/lib/rounding";
 
 /** GET /api/charge-documents?clientId=&status= — list documents for the user. */
 export async function GET(request: NextRequest) {
@@ -61,14 +62,23 @@ export async function POST(request: NextRequest) {
         const er = await client.query(
           `SELECT te.id, te.description, te.notes, te.billing_kind AS "billingKind",
                   te.duration, te.quantity, te.rate, te.rate_label AS "rateLabel",
-                  te.item_ref AS "itemRef"
+                  te.item_ref AS "itemRef",
+                  p.billing_rounding AS "projectRounding",
+                  c.billing_rounding AS "clientRounding"
              FROM time_entries te
              JOIN projects p ON te.project_id = p.id
+             JOIN clients  c ON p.client_id = c.id
             WHERE te.id = ANY($1::text[]) AND te.user_id = $2 AND p.client_id = $3
               AND te.charge_document_id IS NULL AND te.is_billable = true`,
           [timeEntryIds, user.id, clientId]
         );
-        entries = er.rows as BillableEntry[];
+        entries = er.rows.map((row) => ({
+          ...(row as BillableEntry),
+          billingRounding: resolveRounding(
+            (row as { projectRounding: string | null }).projectRounding,
+            (row as { clientRounding: string | null }).clientRounding
+          ),
+        }));
         if (entries.length !== timeEntryIds.length) throw new Error("ENTRY_STATE_CHANGED");
       }
 

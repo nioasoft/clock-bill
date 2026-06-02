@@ -158,6 +158,9 @@ export const clients = pgTable(
     address: text("address"),
     defaultRate: real("default_rate"),
     currency: text("currency").default("ILS"),
+    // Billing time-rounding policy for hourly lines: 'none' | 'hour_up' | 'half_hour_up'.
+    // Applied at billing time (report/charge-doc); never alters the raw worked duration.
+    billingRounding: text("billing_rounding").default("none"),
     isRetainer: boolean("is_retainer").default(false),
     retainerHours: real("retainer_hours"),
     retainerMonthlyFee: real("retainer_monthly_fee"),
@@ -170,6 +173,10 @@ export const clients = pgTable(
   (table) => [
     index("idx_clients_user_id").on(table.userId),
     index("idx_clients_user_id_is_active").on(table.userId, table.isActive),
+    check(
+      "clients_billing_rounding_check",
+      sql`${table.billingRounding} IN ('none', 'hour_up', 'half_hour_up')`
+    ),
   ]
 );
 
@@ -217,6 +224,9 @@ export const projects = pgTable(
     fixedMonthlyFee: real("fixed_monthly_fee"),
     fixedMonthlyStartDate: date("fixed_monthly_start_date"),
     fixedMonthlyEndDate: date("fixed_monthly_end_date"),
+    // Per-project override of the client's hourly time-rounding policy.
+    // NULL => inherit the client setting; otherwise 'none' | 'hour_up' | 'half_hour_up'.
+    billingRounding: text("billing_rounding"),
     notes: text("notes"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
@@ -228,6 +238,10 @@ export const projects = pgTable(
     check(
       "projects_status_check",
       sql`${table.status} IN ('active', 'completed', 'paused', 'archived')`
+    ),
+    check(
+      "projects_billing_rounding_check",
+      sql`${table.billingRounding} IS NULL OR ${table.billingRounding} IN ('none', 'hour_up', 'half_hour_up')`
     ),
   ]
 );

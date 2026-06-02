@@ -20,6 +20,7 @@ const updateClientSchema = z.object({
     .min(0, "התעריף השעתי לא יכול להיות שלילי")
     .nullish(),
   currency: z.string().max(10).nullish(),
+  billingRounding: z.enum(["none", "hour_up", "half_hour_up"]).nullish(),
   isRetainer: z.boolean().nullish(),
   retainerHours: z.number().nullish(),
   retainerMonthlyFee: z.number().nullish(),
@@ -59,6 +60,7 @@ export async function GET(
       address: string | null;
       default_rate: number | null;
       currency: string | null;
+      billing_rounding: string | null;
       is_retainer: boolean | null;
       retainer_hours: number | null;
       retainer_monthly_fee: number | null;
@@ -68,7 +70,7 @@ export async function GET(
       created_at: string;
     }>(
       `SELECT id, name, contact_name, email, phone, address, default_rate,
-              currency, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate,
+              currency, billing_rounding, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate,
               notes, is_active, created_at
        FROM clients
        WHERE id = $1 AND user_id = $2`,
@@ -107,6 +109,7 @@ export async function GET(
         address: client.address,
         defaultRate: client.default_rate,
         currency: client.currency || "ILS",
+        billingRounding: client.billing_rounding || "none",
         isRetainer: client.is_retainer ?? false,
         retainerHours: client.retainer_hours,
         retainerMonthlyFee: client.retainer_monthly_fee,
@@ -150,7 +153,7 @@ export async function PUT(
 
     const parsed = await parseBody(request, updateClientSchema);
     if (!parsed.ok) return parsed.response;
-    const { name, contactName, email, phone, address, defaultRate, currency, isRetainer, retainerHours, retainerMonthlyFee, overageRate, notes, rates } = parsed.data;
+    const { name, contactName, email, phone, address, defaultRate, currency, billingRounding, isRetainer, retainerHours, retainerMonthlyFee, overageRate, notes, rates } = parsed.data;
     const { id: clientId } = await params;
 
     const { query, withTransaction } = await import("@/lib/db");
@@ -188,8 +191,8 @@ export async function PUT(
         `UPDATE clients
          SET name = $1, contact_name = $2, email = $3, phone = $4, address = $5, default_rate = COALESCE($6, default_rate),
              currency = $7, is_retainer = $8, retainer_hours = $9, retainer_monthly_fee = $10, overage_rate = $11,
-             notes = $12
-         WHERE id = $13 AND user_id = $14`,
+             notes = $12, billing_rounding = COALESCE($13, billing_rounding)
+         WHERE id = $14 AND user_id = $15`,
         [
           name.trim(),
           contactName?.trim() || null,
@@ -203,6 +206,7 @@ export async function PUT(
           retainerMonthlyFee || null,
           overageRate || null,
           notes?.trim() || null,
+          billingRounding ?? null,
           clientId,
           user.id,
         ]
@@ -230,6 +234,7 @@ export async function PUT(
       address: string | null;
       default_rate: number | null;
       currency: string | null;
+      billing_rounding: string | null;
       is_retainer: boolean | null;
       retainer_hours: number | null;
       retainer_monthly_fee: number | null;
@@ -239,7 +244,7 @@ export async function PUT(
       created_at: string;
     }>(
       `SELECT id, name, contact_name, email, phone, address, default_rate,
-              currency, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate,
+              currency, billing_rounding, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate,
               notes, is_active, created_at
        FROM clients
        WHERE id = $1 AND user_id = $2`,
@@ -271,6 +276,7 @@ export async function PUT(
         address: client.address,
         defaultRate: client.default_rate,
         currency: client.currency || "ILS",
+        billingRounding: client.billing_rounding || "none",
         isRetainer: client.is_retainer ?? false,
         retainerHours: client.retainer_hours,
         retainerMonthlyFee: client.retainer_monthly_fee,
