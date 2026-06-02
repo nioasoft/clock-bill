@@ -280,14 +280,16 @@ export function TimerProvider({ children }: TimerProviderProps) {
     }
     const fetchTasks = async () => {
       try {
-        const response = await fetch(`/api/projects/${selectedProject}/tasks`);
+        // Tasks are now global (Kanban board), filtered by project. The old
+        // per-project /api/projects/[id]/tasks endpoint was removed.
+        const response = await fetch(`/api/tasks?projectId=${selectedProject}`);
         const data = await response.json();
         if (data.success) {
-          // Only show todo/in_progress tasks
+          // Only show todo/in_progress tasks; task `title` replaces the old `name`.
           setTimerTasks(
             (data.tasks || [])
               .filter((t: { status: string }) => t.status !== "done")
-              .map((t: { id: string; name: string }) => ({ id: t.id, name: t.name }))
+              .map((t: { id: string; title: string }) => ({ id: t.id, name: t.title }))
           );
         }
       } catch (error) {
