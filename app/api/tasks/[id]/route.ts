@@ -29,13 +29,35 @@ export async function PATCH(
     if (existing.rows.length === 0)
       return NextResponse.json({ success: false, message: "המשימה לא נמצאה" }, { status: 404 });
 
+    // Effective client: the new client_id if provided, otherwise the task's current one.
+    // Computed once and reused for FK ownership checks and rate re-validation.
+    const effectiveClientId = data.clientId ?? existing.rows[0].client_id;
+
+    // BOLA guard: never trust client_id/project_id from the body — verify ownership.
+    if (data.clientId !== undefined) {
+      const c = await query<{ id: string }>(
+        `SELECT id FROM clients WHERE id = $1 AND user_id = $2`,
+        [data.clientId, user.id]
+      );
+      if (c.rows.length === 0)
+        return NextResponse.json({ success: false, message: "הלקוח לא נמצא" }, { status: 404 });
+    }
+
+    if (data.projectId !== undefined) {
+      const p = await query<{ id: string }>(
+        `SELECT id FROM projects WHERE id = $1 AND client_id = $2 AND user_id = $3`,
+        [data.projectId, effectiveClientId, user.id]
+      );
+      if (p.rows.length === 0)
+        return NextResponse.json({ success: false, message: "הפרויקט לא נמצא" }, { status: 404 });
+    }
+
     let rateSnapshot: { id: string; rate: number; name: string } | null = null;
     if (data.rateId) {
-      const clientId = data.clientId ?? existing.rows[0].client_id;
       const r = await query<{ id: string; rate: number; name: string }>(
         `SELECT id, rate, name FROM client_rates
          WHERE id = $1 AND client_id = $2 AND user_id = $3 AND kind = 'hourly'`,
-        [data.rateId, clientId, user.id]
+        [data.rateId, effectiveClientId, user.id]
       );
       if (r.rows.length === 0)
         return NextResponse.json({ success: false, message: "התעריף לא נמצא" }, { status: 404 });
@@ -61,10 +83,12 @@ export async function PATCH(
 
     sets.push(`updated_at = NOW()`);
     vals.push(id, user.id);
-    await query(
-      `UPDATE tasks SET ${sets.join(", ")} WHERE id = $${i++} AND user_id = $${i++}`,
+    const updated = await query<{ id: string }>(
+      `UPDATE tasks SET ${sets.join(", ")} WHERE id = $${i++} AND user_id = $${i++} RETURNING id`,
       vals
     );
+    if (updated.rows.length === 0)
+      return NextResponse.json({ success: false, message: "המשימה לא נמצאה" }, { status: 404 });
 
     return NextResponse.json({ success: true, id });
   } catch (error) {
