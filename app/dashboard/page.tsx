@@ -220,7 +220,11 @@ export default function DashboardPage() {
             ].map((card) => (
               <div
                 key={card.label}
-                className={`bg-card border border-border rounded-[var(--radius-card)] p-3 sm:p-4 transition-colors hover:border-border-strong motion-safe:animate-fade-up ${card.stagger}`}
+                className={`rounded-[var(--radius-card)] border p-3 sm:p-4 transition-colors motion-safe:animate-fade-up ${card.stagger} ${
+                  card.accent
+                    ? "bg-primary/[0.06] border-primary/25 hover:border-primary/40"
+                    : "bg-card border-border hover:border-border-strong"
+                }`}
               >
                 <p className="text-[10px] sm:text-xs uppercase tracking-widest font-semibold text-muted-foreground">{card.label}</p>
                 <p className={`mt-2 font-mono text-xl sm:text-2xl font-bold tabular-nums ${card.accent ? "text-primary" : "text-foreground"}`}>
@@ -241,7 +245,7 @@ export default function DashboardPage() {
             </div>
           </div>
         ) : runningTimers.length > 0 ? (
-          <div className="mt-5 space-y-4">
+          <div className="mt-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">
                 טיימרים פעילים
@@ -260,59 +264,66 @@ export default function DashboardPage() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {/* Each running timer is a full-width horizontal band: big digits on
+                the leading (right) side, project/description/start in the middle,
+                actions on the trailing (left) side. Multiple timers stack. */}
+            <div className="space-y-3">
               {runningTimers.map((timer) => {
                 const project = projects.find((p) => p.id === timer.projectId) ?? null;
                 const isPaused = !!timer.pausedAt;
                 return (
                   <div
                     key={timer.id}
-                    className="bg-card border border-border/50 rounded-[var(--radius-card)] p-5 sm:p-6"
+                    className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4 sm:p-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6"
                   >
-                    <div className="flex items-center gap-2">
-                      {isPaused ? (
-                        <span className="inline-flex items-center rounded-full bg-amber-500/20 px-2.5 py-1 text-xs font-semibold text-amber-400">
-                          מושהה
-                        </span>
-                      ) : (
-                        <span className="relative flex h-2.5 w-2.5">
-                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                        </span>
-                      )}
-                      <span className="text-sm text-muted-foreground">
-                        {isPaused ? "טיימר מושהה" : "טיימר פעיל"}
-                      </span>
+                    {/* Status + digits */}
+                    <div className="flex flex-col gap-1 sm:min-w-[170px]">
+                      <div className="flex items-center gap-2">
+                        {isPaused ? (
+                          <span className="inline-flex items-center rounded-full bg-amber-500/20 px-2 py-0.5 text-[11px] font-semibold text-amber-400">
+                            מושהה
+                          </span>
+                        ) : (
+                          <>
+                            <span className="relative flex h-2.5 w-2.5">
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                            </span>
+                            <span className="text-xs font-medium text-muted-foreground">פעיל</span>
+                          </>
+                        )}
+                      </div>
+                      <p className="font-mono text-4xl sm:text-5xl font-bold tabular-nums leading-none text-primary">
+                        {elapsedTimes[timer.id] ?? "0:00"}
+                      </p>
                     </div>
 
-                    <p className="mt-3 font-mono timer-display font-bold text-primary">
-                      {elapsedTimes[timer.id] ?? "0:00"}
-                    </p>
-
-                    <div className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground">
+                    {/* Meta */}
+                    <div className="flex min-w-0 flex-1 flex-col gap-1.5 text-sm">
                       {project && (
                         <div className="flex items-center gap-2">
                           <FolderOpen className="h-4 w-4 shrink-0 text-muted-foreground" />
-                          <span className="text-foreground font-medium">{project.name}</span>
+                          <span className="truncate font-medium text-foreground">{project.name}</span>
                         </div>
                       )}
                       {timer.description && (
-                        <p className="text-foreground/90 leading-relaxed">{timer.description}</p>
+                        <p className="line-clamp-1 text-muted-foreground">{timer.description}</p>
                       )}
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Clock className="h-4 w-4 shrink-0" />
                         <span>
                           התחיל ב-{new Date(timer.startTime).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
                         </span>
                       </div>
                     </div>
 
-                    <div className="mt-5 flex gap-3">
+                    {/* Actions */}
+                    <div className="flex gap-2 sm:shrink-0">
                       {isPaused ? (
                         <button
                           onClick={() => handleResumeTimer(timer.id)}
                           disabled={resumingTimerId === timer.id}
-                          className="flex-1 rounded-md bg-success px-5 py-3 text-base font-semibold text-success-foreground hover:bg-success/90 disabled:opacity-50 transition-colors"
+                          className="flex-1 whitespace-nowrap rounded-md bg-success px-5 py-2.5 text-sm font-semibold text-success-foreground hover:bg-success/90 disabled:opacity-50 transition-colors sm:flex-initial"
                         >
                           {resumingTimerId === timer.id ? "מחדש..." : "חדש טיימר"}
                         </button>
@@ -320,14 +331,14 @@ export default function DashboardPage() {
                         <button
                           onClick={() => handlePauseTimer(timer.id)}
                           disabled={pausingTimerId === timer.id}
-                          className="flex-1 rounded-md bg-accent px-5 py-3 text-base font-semibold text-accent-foreground hover:bg-accent/90 disabled:opacity-50 transition-colors"
+                          className="flex-1 whitespace-nowrap rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground hover:bg-accent/90 disabled:opacity-50 transition-colors sm:flex-initial"
                         >
-                          {pausingTimerId === timer.id ? "משהה..." : "השהה טיימר"}
+                          {pausingTimerId === timer.id ? "משהה..." : "השהה"}
                         </button>
                       )}
                       <button
                         onClick={() => handleStopTimer(timer.id)}
-                        className="flex-1 rounded-md bg-destructive px-5 py-3 text-base font-semibold text-white hover:bg-destructive/90 transition-colors"
+                        className="flex-1 whitespace-nowrap rounded-md bg-destructive px-5 py-2.5 text-sm font-semibold text-white hover:bg-destructive/90 transition-colors sm:flex-initial"
                       >
                         עצור טיימר
                       </button>
@@ -338,7 +349,7 @@ export default function DashboardPage() {
             </div>
           </div>
         ) : (
-          <div className="mt-5 bg-card border border-border/50 rounded-[var(--radius-card)] p-5 sm:p-6 relative overflow-hidden">
+          <div className="mt-6 bg-card border border-border/50 rounded-[var(--radius-card)] p-5 sm:p-6 relative overflow-hidden">
             <div className="absolute inset-0 flex items-center justify-end pe-8 pointer-events-none">
               <ClockFaceMarks size={120} className="opacity-[0.07]" />
             </div>
@@ -377,7 +388,7 @@ export default function DashboardPage() {
 
         {/* Charts Grid */}
         {!isFirstTimeUser && (
-          <div className="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
             <EarningsChart data={monthlyEarnings} loading={statsLoading} />
             <ProjectHoursChart data={projectHours} loading={statsLoading} />
           </div>
@@ -385,7 +396,7 @@ export default function DashboardPage() {
 
         {/* Recent Entries */}
         {recentEntries.length > 0 && (
-          <div className="mt-5">
+          <div className="mt-8">
             <h3 className="font-display text-xl font-semibold text-foreground mb-4">רשומות אחרונות</h3>
             <div className="bg-card border border-border/50 rounded-[var(--radius-card)] shadow-sm overflow-hidden">
               <ul className="divide-y divide-border">
