@@ -17,6 +17,9 @@
     "verify:deployment": "node --import tsx scripts/verify-deployment.ts"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@sentry/nextjs": "^10.55.0",
     "better-auth": "^1.6.12",
     "class-variance-authority": "^0.7.1",
