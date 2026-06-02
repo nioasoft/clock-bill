@@ -44,19 +44,9 @@ jobs:
           BETTER_AUTH_URL: http://localhost:3000
           NEXT_PUBLIC_APP_URL: http://localhost:3000
 
-  deploy-preview:
-    needs: lint-and-test
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Deploy to Vercel (Preview)
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prebuilt'
+  # NOTE: Preview deployments are handled by Vercel's native Git integration,
+  # not GitHub Actions. The old `deploy-preview` job used amondnet/vercel-action
+  # with a VERCEL_TOKEN secret that was never configured, so it failed on every
+  # PR ("Input required and not supplied: vercel-token") — pure red-X noise.
+  # Removed. To re-enable an action-based preview, add VERCEL_TOKEN / VERCEL_ORG_ID
+  # / VERCEL_PROJECT_ID repo secrets and restore the job.
