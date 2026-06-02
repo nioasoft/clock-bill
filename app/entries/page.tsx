@@ -428,6 +428,10 @@ export default function EntriesPage() {
       // Ad-hoc lines carry typed name+price; catalog lines snapshot the chosen rate.
       const itemRate = isAdhoc ? parseFloat(formData.adhocPrice) || 0 : chosen?.rate ?? null;
       const itemLabel = isAdhoc ? formData.adhocName.trim() : chosen?.name ?? null;
+      // Hourly lines snapshot the chosen hourly rate/label so the amount survives
+      // create AND edit. Sending null here zeroes the entry's price (regression).
+      const hourlyRate = chosen?.rate ?? null;
+      const hourlyLabel = chosen?.name ?? null;
 
       const response = await fetch(url, {
         method,
@@ -441,8 +445,8 @@ export default function EntriesPage() {
           billingKind: formData.billingKind,
           duration: isItem ? 0 : parseInt(formData.duration, 10),
           quantity: isItem ? parseFloat(formData.quantity) || 0 : null,
-          rate: isItem ? itemRate : null,
-          rateLabel: isItem ? itemLabel : null,
+          rate: isItem ? itemRate : hourlyRate,
+          rateLabel: isItem ? itemLabel : hourlyLabel,
           description: formData.description,
           notes: formData.notes || undefined,
           isBillable: formData.isBillable,
