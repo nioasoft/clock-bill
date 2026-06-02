@@ -279,13 +279,16 @@ export default function EntriesPage() {
     }
     const fetchTasks = async () => {
       try {
-        const response = await fetch(`/api/projects/${formData.projectId}/tasks`);
+        // Tasks are now global (Kanban board), filtered by project. The old
+        // per-project /api/projects/[id]/tasks endpoint was removed.
+        const response = await fetch(`/api/tasks?projectId=${formData.projectId}`);
         const data = await response.json();
         if (data.success) {
+          // Only show todo/in_progress tasks; task `title` replaces the old `name`.
           setFormTasks(
             (data.tasks || [])
               .filter((t: { status: string }) => t.status !== "done")
-              .map((t: { id: string; name: string }) => ({ id: t.id, name: t.name }))
+              .map((t: { id: string; title: string }) => ({ id: t.id, name: t.title }))
           );
         }
       } catch (error) {

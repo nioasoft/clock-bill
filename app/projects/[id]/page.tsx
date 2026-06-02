@@ -53,20 +53,6 @@ export default function ProjectDetailsPage() {
   }[]>([]);
   const [entriesLoading, setEntriesLoading] = useState(true);
 
-  // Tasks state
-  interface Task {
-    id: string;
-    projectId: string;
-    name: string;
-    description: string | null;
-    status: string;
-    createdAt: string;
-    updatedAt: string;
-  }
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [tasksLoading, setTasksLoading] = useState(true);
-  const [newTaskName, setNewTaskName] = useState("");
-  const [creatingTask, setCreatingTask] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     status: "active",
@@ -183,79 +169,6 @@ export default function ProjectDetailsPage() {
     };
     fetchProjectEntries();
   }, [projectId]);
-
-  // Fetch tasks
-  useEffect(() => {
-    const fetchTasks = async () => {
-      if (!projectId) return;
-      try {
-        setTasksLoading(true);
-        const response = await fetch(`/api/projects/${projectId}/tasks`);
-        const data = await response.json();
-        if (data.success) {
-          setTasks(data.tasks || []);
-        }
-      } catch (error) {
-        console.error("Error fetching tasks:", error);
-      } finally {
-        setTasksLoading(false);
-      }
-    };
-    fetchTasks();
-  }, [projectId]);
-
-  const handleCreateTask = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTaskName.trim()) return;
-    setCreatingTask(true);
-    try {
-      const response = await fetch(`/api/projects/${projectId}/tasks`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newTaskName.trim() }),
-      });
-      const data = await response.json();
-      if (data.success) {
-        setTasks([data.task, ...tasks]);
-        setNewTaskName("");
-      }
-    } catch (error) {
-      console.error("Error creating task:", error);
-    } finally {
-      setCreatingTask(false);
-    }
-  };
-
-  const handleToggleTaskStatus = async (task: Task) => {
-    const nextStatus = task.status === "todo" ? "in_progress" : task.status === "in_progress" ? "done" : "todo";
-    try {
-      const response = await fetch(`/api/projects/${projectId}/tasks/${task.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: nextStatus }),
-      });
-      const data = await response.json();
-      if (data.success) {
-        setTasks(tasks.map((t) => (t.id === task.id ? data.task : t)));
-      }
-    } catch (error) {
-      console.error("Error updating task:", error);
-    }
-  };
-
-  const handleDeleteTask = async (taskId: string) => {
-    try {
-      const response = await fetch(`/api/projects/${projectId}/tasks/${taskId}`, {
-        method: "DELETE",
-      });
-      const data = await response.json();
-      if (data.success) {
-        setTasks(tasks.filter((t) => t.id !== taskId));
-      }
-    } catch (error) {
-      console.error("Error deleting task:", error);
-    }
-  };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -954,93 +867,19 @@ export default function ProjectDetailsPage() {
           </div>
         </div>
 
-        {/* Tasks */}
+        {/* Tasks moved to the global Kanban board */}
         <div className="mt-6 rounded-[var(--radius-card)] bg-card border border-border">
           <div className="border-b border-border px-5 py-3.5">
             <h2 className="font-display text-lg font-semibold text-foreground">משימות</h2>
           </div>
           <div className="px-6 py-4">
-            {/* Create Task Form */}
-            {project.status !== "archived" && (
-              <form onSubmit={handleCreateTask} className="mb-4 flex gap-2">
-                <input
-                  type="text"
-                  value={newTaskName}
-                  onChange={(e) => setNewTaskName(e.target.value)}
-                  placeholder="שם משימה חדשה..."
-                  className="flex-1 rounded-[var(--radius-card)] border border-border px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                  disabled={creatingTask}
-                />
-                <button
-                  type="submit"
-                  disabled={creatingTask || !newTaskName.trim()}
-                  className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-                >
-                  {creatingTask ? "מוסיף..." : "הוסף"}
-                </button>
-              </form>
-            )}
-
-            {/* Task List */}
-            {tasksLoading ? (
-              <p className="text-sm text-muted-foreground">טוען משימות...</p>
-            ) : tasks.length === 0 ? (
-              <p className="text-sm text-muted-foreground">אין משימות עדיין</p>
-            ) : (
-              <ul className="divide-y divide-border">
-                {tasks.map((task) => (
-                  <li key={task.id} className="py-3 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <button
-                        onClick={() => handleToggleTaskStatus(task)}
-                        title={task.status === "todo" ? "לביצוע" : task.status === "in_progress" ? "בתהליך" : "הושלם"}
-                        className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                          task.status === "done"
-                            ? "border-success bg-success text-success-foreground"
-                            : task.status === "in_progress"
-                            ? "border-primary bg-primary/10"
-                            : "border-border bg-transparent"
-                        }`}
-                      >
-                        {task.status === "done" && (
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                        {task.status === "in_progress" && (
-                          <div className="w-2 h-2 rounded-full bg-primary" />
-                        )}
-                      </button>
-                      <span className={`text-sm truncate ${task.status === "done" ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                        {task.name}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className={`text-xs rounded-full px-2 py-0.5 ${
-                        task.status === "done"
-                          ? "bg-success/10 text-success"
-                          : task.status === "in_progress"
-                          ? "bg-primary-light text-primary"
-                          : "bg-muted text-muted-foreground"
-                      }`}>
-                        {task.status === "todo" ? "לביצוע" : task.status === "in_progress" ? "בתהליך" : "הושלם"}
-                      </span>
-                      {project.status !== "archived" && (
-                        <button
-                          onClick={() => handleDeleteTask(task.id)}
-                          className="text-muted-foreground hover:text-destructive transition-colors"
-                          title="מחק משימה"
-                        >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <p className="text-sm text-muted-foreground">
+              ניהול המשימות עבר ל
+              <Link href="/tasks" className="text-primary hover:underline mx-1">
+                לוח המשימות
+              </Link>
+              המרכזי.
+            </p>
           </div>
         </div>
 
