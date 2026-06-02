@@ -44,6 +44,8 @@ interface TaskOption {
 interface TimerContextValue {
   /** All currently running timers (multiple allowed), newest first. */
   runningTimers: RunningTimer[];
+  /** The running timer's entry id for a given task, or null. */
+  runningTimerForTask: (taskId: string) => string | null;
   /** Live "M:SS" elapsed label per timer id. */
   elapsedTimes: Record<string, string>;
   timerLoading: boolean;
@@ -96,6 +98,7 @@ const asyncNoop = async () => {};
 
 const defaultTimerValue: TimerContextValue = {
   runningTimers: [],
+  runningTimerForTask: () => null,
   elapsedTimes: {},
   timerLoading: true,
   projects: [],
@@ -617,6 +620,12 @@ export function TimerProvider({ children }: TimerProviderProps) {
     await fetchRunningTimer();
   }, [fetchRunningTimer]);
 
+  const runningTimerForTask = useCallback(
+    (taskId: string): string | null =>
+      runningTimers.find((t) => t.taskId === taskId)?.id ?? null,
+    [runningTimers]
+  );
+
   // Let other screens (e.g. the entries list) react when a timer is stopped,
   // so the freshly-saved record shows up without a manual page refresh.
   const onTimerStopped = useCallback((cb: () => void) => {
@@ -628,6 +637,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
 
   const value: TimerContextValue = {
     runningTimers,
+    runningTimerForTask,
     elapsedTimes,
     timerLoading,
     projects,
