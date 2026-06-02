@@ -14,6 +14,7 @@ export const navItemDefs: NavItemDef[] = [
   { name: "רשומות חיוב", href: "/entries", iconName: "Clock" },
   { name: "לקוחות", href: "/clients", iconName: "Users" },
   { name: "התחשבנות", href: "/reports", iconName: "FileText" },
+  { name: "משימות", href: "/tasks", iconName: "FolderKanban" },
   { name: "פניות", href: "/feedback", iconName: "MessageSquare" },
   { name: "הגדרות", href: "/settings", iconName: "Settings" },
   { name: "ניהול", href: "/admin", iconName: "Shield", adminOnly: true },
