@@ -196,8 +196,8 @@ export default function DashboardPage() {
 
         {/* Stats Cards */}
         {statsLoading ? (
-          <div className="mt-5 grid grid-cols-3 gap-3 lg:grid-cols-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="bg-card border border-border rounded-[var(--radius-card)] p-3 sm:p-4">
                 <Skeleton className="h-3 w-1/2 mb-3" />
                 <Skeleton className="h-6 w-3/4" />
@@ -209,17 +209,18 @@ export default function DashboardPage() {
             <p className="text-destructive">שגיאה בטעינת הנתונים. נסה לרענן את הדף.</p>
           </div>
         ) : stats && !isFirstTimeUser ? (
-          <div className="mt-5 grid grid-cols-3 gap-3 lg:grid-cols-6">
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {[
               // RTL order: first item renders rightmost, last item leftmost.
-              // Total revenue (סך הכנסות) is placed last so it sits at the far left,
-              // grouped with its by-hours / by-items breakdown.
+              // "שעות השבוע" was removed — a Sun-start week crosses the month
+              // boundary and read as inconsistent with the month-scoped records
+              // view. Today + month are unambiguous. Total revenue (סך הכנסות)
+              // is placed last so it sits at the far left.
               { label: "שעות היום", value: stats.today.formatted, accent: false, stagger: "stagger-1" },
-              { label: "שעות השבוע", value: stats.week.formatted, accent: false, stagger: "stagger-2" },
-              { label: "שעות החודש", value: stats.month.formatted, accent: false, stagger: "stagger-3" },
-              { label: "לפי שעות", value: stats.earnings.byHours.formatted, accent: false, stagger: "stagger-4" },
-              { label: "לפי פריטים", value: stats.earnings.byItems.formatted, accent: false, stagger: "stagger-5" },
-              { label: "סך הכנסות", value: stats.earnings.formatted, accent: true, stagger: "stagger-6" },
+              { label: "שעות החודש", value: stats.month.formatted, accent: false, stagger: "stagger-2" },
+              { label: "לפי שעות", value: stats.earnings.byHours.formatted, accent: false, stagger: "stagger-3" },
+              { label: "לפי פריטים", value: stats.earnings.byItems.formatted, accent: false, stagger: "stagger-4" },
+              { label: "סך הכנסות", value: stats.earnings.formatted, accent: true, stagger: "stagger-5" },
             ].map((card) => (
               <div
                 key={card.label}
