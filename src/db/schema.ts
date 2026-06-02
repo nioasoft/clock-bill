@@ -252,23 +252,33 @@ export const tasks = pgTable(
   "tasks",
   {
     id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "cascade" }),
     projectId: text("project_id")
       .notNull()
       .references(() => projects.id, { onDelete: "cascade" }),
-    userId: text("user_id").notNull(),
-    name: text("name").notNull(),
-    description: text("description"),
-    status: text("status").default("todo"),
+    // Chosen hourly rate. SET NULL on rate delete (snapshot below keeps display).
+    rateId: text("rate_id").references(() => clientRates.id, { onDelete: "set null" }),
+    rate: real("rate"), // ₪/hour snapshot at assignment
+    rateLabel: text("rate_label"), // rate name snapshot
+    title: text("title").notNull(),
+    notes: text("notes"),
+    status: text("status").notNull().default("todo"),
+    priority: text("priority").notNull().default("normal"),
+    dueDate: date("due_date"),
+    position: real("position").notNull().default(1000),
+    tags: jsonb("tags").notNull().default([]),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
   (table) => [
     index("idx_tasks_project_id").on(table.projectId),
     index("idx_tasks_user_id").on(table.userId),
-    check(
-      "tasks_status_check",
-      sql`${table.status} IN ('todo', 'in_progress', 'done')`
-    ),
+    index("idx_tasks_user_status_position").on(table.userId, table.status, table.position),
+    check("tasks_status_check", sql`${table.status} IN ('todo', 'in_progress', 'done')`),
+    check("tasks_priority_check", sql`${table.priority} IN ('normal', 'high', 'urgent')`),
   ]
 );
 
