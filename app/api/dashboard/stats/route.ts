@@ -64,16 +64,23 @@ export async function GET(_request: NextRequest) {
       query<{ hours_total: string; items_total: string; default_currency: string | null }>(
         // Split monthly revenue by billing kind so the dashboard can show
         // hours vs. items separately. Hourly lines use the per-entry snapshot
-        // rate (legacy rows have NULL rate → fall back to the client default).
+        // rate; rows with NULL rate fall back to the client's CURRENT default
+        // hourly rate from client_rates (the single source of truth — not the
+        // legacy clients.default_rate mirror), so it agrees with the records list.
         `SELECT
            COALESCE(SUM(CASE WHEN te.billing_kind = 'item' THEN 0
-                ELSE (te.duration / 60.0) * COALESCE(te.rate, c.default_rate, 0) END), 0) AS hours_total,
+                ELSE (te.duration / 60.0) * COALESCE(te.rate, crd.rate, 0) END), 0) AS hours_total,
            COALESCE(SUM(CASE WHEN te.billing_kind = 'item'
                 THEN COALESCE(te.quantity, 0) * COALESCE(te.rate, 0) ELSE 0 END), 0) AS items_total,
            (SELECT default_currency FROM user_profiles WHERE user_id = $1) AS default_currency
          FROM time_entries te
          JOIN projects p ON te.project_id = p.id
-         JOIN clients c ON p.client_id = c.id
+         LEFT JOIN LATERAL (
+           SELECT cr.rate FROM client_rates cr
+           WHERE cr.client_id = p.client_id AND cr.user_id = $1
+             AND cr.kind = 'hourly' AND cr.is_default
+           LIMIT 1
+         ) crd ON TRUE
          WHERE te.user_id = $1
            AND te.date >= $2
            AND te.is_billable = TRUE`,
@@ -143,15 +150,21 @@ export async function GET(_request: NextRequest) {
       // /api/dashboard/earnings-chart endpoint so the dashboard loads in one call.
       query<{ month: string; total: string }>(
         // Same billing-kind split as the headline figure so the chart agrees
-        // with the "סך הכנסות" card (counts items, not just hours).
+        // with the "סך הכנסות" card (counts items, not just hours). Hourly NULL
+        // rates fall back to the client's current default rate from client_rates.
         `SELECT
            TO_CHAR(te.date, 'YYYY-MM') as month,
            COALESCE(SUM(CASE WHEN te.billing_kind = 'item'
                 THEN COALESCE(te.quantity, 0) * COALESCE(te.rate, 0)
-                ELSE (te.duration / 60.0) * COALESCE(te.rate, c.default_rate, 0) END), 0) as total
+                ELSE (te.duration / 60.0) * COALESCE(te.rate, crd.rate, 0) END), 0) as total
          FROM time_entries te
          JOIN projects p ON te.project_id = p.id
-         JOIN clients c ON p.client_id = c.id
+         LEFT JOIN LATERAL (
+           SELECT cr.rate FROM client_rates cr
+           WHERE cr.client_id = p.client_id AND cr.user_id = $1
+             AND cr.kind = 'hourly' AND cr.is_default
+           LIMIT 1
+         ) crd ON TRUE
          WHERE te.user_id = $1
            AND te.is_billable = TRUE
            AND te.date >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '11 months')
