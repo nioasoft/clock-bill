@@ -353,8 +353,8 @@ export default function DashboardPage() {
             </div>
           </div>
         ) : (
-          <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            {/* Quick timer half — start tracking time in one click */}
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {/* Quick timer — start tracking time in one click */}
             <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-5 sm:p-6 relative overflow-hidden flex flex-col">
               <div className="absolute inset-0 flex items-center justify-end pe-8 pointer-events-none">
                 <ClockFaceMarks size={120} className="opacity-[0.07]" />
@@ -372,14 +372,8 @@ export default function DashboardPage() {
               >
                 התחל טיימר חדש
               </button>
-              {/* Manual entry quick actions — for work that isn't timed (e.g. a billed item) */}
+              {/* Manual time entry — a record entered by hand, no live timer */}
               <div className="relative mt-3 flex flex-wrap gap-2">
-                <Link
-                  href="/entries?new=item"
-                  className="inline-flex items-center rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition-colors"
-                >
-                  + הזן פריט ידני
-                </Link>
                 <Link
                   href="/entries?new=manual"
                   className="inline-flex items-center rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition-colors"
@@ -389,7 +383,26 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Add task half — create a task (client/project/rate) for the Kanban board */}
+            {/* Manual item — log billable work that wasn't timed (fixed sum or qty × rate) */}
+            <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-5 sm:p-6 relative overflow-hidden flex flex-col">
+              <div className="absolute inset-0 flex items-center justify-end pe-8 pointer-events-none">
+                <ClockFaceMarks size={120} className="opacity-[0.07]" />
+              </div>
+              <div className="relative flex-1">
+                <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">פריט ידני</h3>
+                <p className="mt-1 text-sm text-muted-foreground">הוסף פריט לחיוב ללא מדידת זמן — סכום קבוע או כמות × תעריף</p>
+              </div>
+              <Link
+                href="/entries?new=item"
+                className="relative mt-4 w-full rounded-md bg-primary px-8 py-4 text-center text-lg font-semibold text-primary-foreground hover:bg-primary/90 transition-all hover:shadow-md"
+              >
+                + הזן פריט ידני
+              </Link>
+              {/* Invisible spacer keeps this CTA aligned with the timer/task cards' secondary-link row */}
+              <div className="relative mt-3 h-10" aria-hidden="true" />
+            </div>
+
+            {/* Add task — create a task (client/project/rate) for the Kanban board */}
             <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-5 sm:p-6 relative overflow-hidden flex flex-col">
               <div className="absolute inset-0 flex items-center justify-end pe-8 pointer-events-none">
                 <ClockFaceMarks size={120} className="opacity-[0.07]" />
