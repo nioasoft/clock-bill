@@ -44,6 +44,8 @@ runner.test("create: bad priority fails", () => {
   assertFalse(createTaskSchema.safeParse({ ...validCreate, priority: "later" }).success);
 });
 runner.test("create: dueDate omitted is allowed", () => {
+  // dueDate is destructured only to omit it from the rest object.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { dueDate, ...noDue } = validCreate;
   assertTrue(createTaskSchema.safeParse(noDue).success);
 });
