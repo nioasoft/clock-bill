@@ -211,12 +211,15 @@ export default function DashboardPage() {
         ) : stats && !isFirstTimeUser ? (
           <div className="mt-5 grid grid-cols-3 gap-3 lg:grid-cols-6">
             {[
+              // RTL order: first item renders rightmost, last item leftmost.
+              // Total revenue (סך הכנסות) is placed last so it sits at the far left,
+              // grouped with its by-hours / by-items breakdown.
               { label: "שעות היום", value: stats.today.formatted, accent: false, stagger: "stagger-1" },
               { label: "שעות השבוע", value: stats.week.formatted, accent: false, stagger: "stagger-2" },
               { label: "שעות החודש", value: stats.month.formatted, accent: false, stagger: "stagger-3" },
-              { label: "סך הכנסות", value: stats.earnings.formatted, accent: true, stagger: "stagger-4" },
-              { label: "לפי שעות", value: stats.earnings.byHours.formatted, accent: false, stagger: "stagger-5" },
-              { label: "לפי פריטים", value: stats.earnings.byItems.formatted, accent: false, stagger: "stagger-6" },
+              { label: "לפי שעות", value: stats.earnings.byHours.formatted, accent: false, stagger: "stagger-4" },
+              { label: "לפי פריטים", value: stats.earnings.byItems.formatted, accent: false, stagger: "stagger-5" },
+              { label: "סך הכנסות", value: stats.earnings.formatted, accent: true, stagger: "stagger-6" },
             ].map((card) => (
               <div
                 key={card.label}
@@ -349,12 +352,13 @@ export default function DashboardPage() {
             </div>
           </div>
         ) : (
-          <div className="mt-6 bg-card border border-border/50 rounded-[var(--radius-card)] p-5 sm:p-6 relative overflow-hidden">
-            <div className="absolute inset-0 flex items-center justify-end pe-8 pointer-events-none">
-              <ClockFaceMarks size={120} className="opacity-[0.07]" />
-            </div>
-            <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            {/* Quick timer half — start tracking time in one click */}
+            <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-5 sm:p-6 relative overflow-hidden flex flex-col">
+              <div className="absolute inset-0 flex items-center justify-end pe-8 pointer-events-none">
+                <ClockFaceMarks size={120} className="opacity-[0.07]" />
+              </div>
+              <div className="relative flex-1">
                 <div className="flex items-center gap-2">
                   <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">טיימר מהיר</h3>
                   <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">T</kbd>
@@ -363,25 +367,50 @@ export default function DashboardPage() {
               </div>
               <button
                 onClick={() => setShowTimerModal(true)}
-                className="w-full sm:w-auto rounded-md bg-primary px-8 py-4 text-lg font-semibold text-primary-foreground hover:bg-primary/90 transition-all hover:shadow-md"
+                className="relative mt-4 w-full rounded-md bg-primary px-8 py-4 text-lg font-semibold text-primary-foreground hover:bg-primary/90 transition-all hover:shadow-md"
               >
                 התחל טיימר חדש
               </button>
+              {/* Manual entry quick actions — for work that isn't timed (e.g. a billed item) */}
+              <div className="relative mt-3 flex flex-wrap gap-2">
+                <Link
+                  href="/entries?new=item"
+                  className="inline-flex items-center rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition-colors"
+                >
+                  + הזן פריט ידני
+                </Link>
+                <Link
+                  href="/entries?new=manual"
+                  className="inline-flex items-center rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition-colors"
+                >
+                  + הזן רשומת זמן
+                </Link>
+              </div>
             </div>
-            {/* Manual entry quick actions — for work that isn't timed (e.g. a billed item) */}
-            <div className="relative mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
+
+            {/* Add task half — create a task (client/project/rate) for the Kanban board */}
+            <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-5 sm:p-6 relative overflow-hidden flex flex-col">
+              <div className="absolute inset-0 flex items-center justify-end pe-8 pointer-events-none">
+                <ClockFaceMarks size={120} className="opacity-[0.07]" />
+              </div>
+              <div className="relative flex-1">
+                <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">הכנס משימה</h3>
+                <p className="mt-1 text-sm text-muted-foreground">צור משימה עם לקוח, פרויקט ותעריף — גרור אותה ל&quot;בעבודה&quot; כדי להפעיל טיימר</p>
+              </div>
               <Link
-                href="/entries?new=item"
-                className="inline-flex items-center rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition-colors"
+                href="/tasks?create=true"
+                className="relative mt-4 w-full rounded-md bg-primary px-8 py-4 text-center text-lg font-semibold text-primary-foreground hover:bg-primary/90 transition-all hover:shadow-md"
               >
-                + הזן פריט ידני
+                + משימה חדשה
               </Link>
-              <Link
-                href="/entries?new=manual"
-                className="inline-flex items-center rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition-colors"
-              >
-                + הזן רשומת זמן
-              </Link>
+              <div className="relative mt-3 flex flex-wrap gap-2">
+                <Link
+                  href="/tasks"
+                  className="inline-flex items-center rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition-colors"
+                >
+                  לכל המשימות
+                </Link>
+              </div>
             </div>
           </div>
         )}
