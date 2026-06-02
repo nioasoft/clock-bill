@@ -262,25 +262,48 @@ export async function POST(request: NextRequest) {
       // Import Tasks
       if (backup.tasks && Array.isArray(backup.tasks)) {
         for (const task of backup.tasks) {
+          const newTaskId = generateId("task");
+          // title is NOT NULL; fall back to legacy `name`, then a default.
+          const taskLabel = task.title || task.name || newTaskId;
           try {
             const newProjectId = projectIdMap.get(task.projectId);
             if (!newProjectId) {
-              stats.errors.push({ entity: "task", message: `${task.name}: פרויקט לא נמצא` });
+              stats.errors.push({ entity: "task", message: `${taskLabel}: פרויקט לא נמצא` });
               continue;
             }
 
-            const newTaskId = generateId("task");
+            // client_id is NOT NULL — derive it from the (new) project's client.
+            const projRow = await client.query<{ client_id: string }>(
+              `SELECT client_id FROM projects WHERE id = $1 AND user_id = $2`,
+              [newProjectId, userId]
+            );
+            if (projRow.rows.length === 0) {
+              stats.errors.push({ entity: "task", message: `${taskLabel}: לקוח לא נמצא` });
+              continue;
+            }
+            const newClientId = projRow.rows[0].client_id;
+
             await client.query(
               `INSERT INTO tasks (
-                id, project_id, user_id, name, description, status, created_at, updated_at
-              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+                id, project_id, user_id, client_id, rate_id, rate, rate_label,
+                title, notes, status, priority, due_date, position, tags,
+                created_at, updated_at
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14::jsonb, $15, $16)`,
               [
                 newTaskId,
                 newProjectId,
                 userId,
-                task.name as string,
-                task.description as string || null,
-                task.status as string || "active",
+                newClientId,
+                task.rateId || null,
+                task.rate ?? null,
+                task.rateLabel || null,
+                task.title || task.name || "משימה",
+                task.notes || task.description || null,
+                task.status || "todo",
+                task.priority || "normal",
+                task.dueDate || null,
+                task.position ?? 1000,
+                JSON.stringify(task.tags || []),
                 task.createdAt || new Date().toISOString(),
                 task.updatedAt || new Date().toISOString(),
               ]
@@ -289,7 +312,7 @@ export async function POST(request: NextRequest) {
             taskIdMap.set(task.id as string, newTaskId);
           } catch (error) {
             console.error("Error importing task:", error);
-            stats.errors.push({ entity: "task", message: `${task.name}: שגיאה בייבוא` });
+            stats.errors.push({ entity: "task", message: `${taskLabel}: שגיאה בייבוא` });
           }
         }
       }

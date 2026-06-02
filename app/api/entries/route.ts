@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
         c.name as client_name,
         c.id as client_id,
         c.currency as currency,
-        tk.name as task_name
+        tk.title as task_name
       FROM time_entries te
       JOIN projects p ON te.project_id = p.id
       JOIN clients c ON p.client_id = c.id
@@ -258,7 +258,7 @@ export async function POST(request: NextRequest) {
            ins.duration, ins.date, ins.tags, ins.notes, ins.is_billable, ins.created_at,
            ins.paused_at, ins.total_paused_time, ins.task_id, ins.billing_kind,
            ins.rate, ins.rate_label, ins.quantity, ins.item_ref,
-           p.name as project_name, c.name as client_name, c.id as client_id, tk.name as task_name
+           p.name as project_name, c.name as client_name, c.id as client_id, tk.title as task_name
          FROM ins
          JOIN projects p ON ins.project_id = p.id
          JOIN clients c ON p.client_id = c.id

@@ -71,7 +71,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         p.name as project_name,
         c.name as client_name,
         c.id as client_id,
-        tk.name as task_name
+        tk.title as task_name
       FROM time_entries te
       JOIN projects p ON te.project_id = p.id
       JOIN clients c ON p.client_id = c.id
@@ -198,7 +198,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
            upd.id, upd.project_id, upd.description, upd.start_time, upd.end_time,
            upd.duration, upd.date, upd.tags, upd.notes, upd.is_billable, upd.created_at,
            upd.task_id, upd.billing_kind, upd.rate, upd.rate_label, upd.quantity, upd.item_ref,
-           p.name as project_name, c.name as client_name, c.id as client_id, tk.name as task_name
+           p.name as project_name, c.name as client_name, c.id as client_id, tk.title as task_name
          FROM upd
          JOIN projects p ON upd.project_id = p.id
          JOIN clients c ON p.client_id = c.id

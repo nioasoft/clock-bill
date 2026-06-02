@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors, closestCorners, type DragEndEvent } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -33,6 +33,9 @@ export function KanbanBoard() {
   const { refreshTimer, runningTimerForTask, handleStopTimer, onTimerStopped } = useTimer();
   const [state, setState] = useState<BoardState>({ loading: true, error: false, tasks: [] });
   const [selected, setSelected] = useState<TaskRecord | null>(null);
+  // Holds the pending unsubscribe for an in-flight "drag out of in_progress → stop
+  // timer" subscription, so a new drag can replace a lingering (cancelled) one.
+  const pendingStopUnsubRef = useRef<(() => void) | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -98,11 +101,21 @@ export function KanbanBoard() {
     if (effect === "open_stop_modal") {
       const entryId = runningTimerForTask(task.id);
       if (entryId) {
+        // Drop any lingering subscription from a previous (cancelled) stop-drag.
+        if (pendingStopUnsubRef.current) {
+          pendingStopUnsubRef.current();
+          pendingStopUnsubRef.current = null;
+        }
         const unsub = onTimerStopped(async () => {
+          // Guard: onTimerStopped fires for ANY stopped timer. If OUR entry is
+          // still running, some other timer stopped — keep waiting (don't unsub).
+          if (runningTimerForTask(task.id) === entryId) return;
           unsub();
+          pendingStopUnsubRef.current = null;
           try { await persistMove(task.id, targetStatus, position); await load(); }
           catch { showErrorToast("שגיאה בעדכון המשימה"); }
         });
+        pendingStopUnsubRef.current = unsub;
         handleStopTimer(entryId);
       }
       return;

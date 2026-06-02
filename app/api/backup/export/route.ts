@@ -93,8 +93,10 @@ export async function GET(_request: NextRequest) {
       ),
       // Tasks
       query(
-        `SELECT id, project_id as "projectId", user_id as "userId", name, description,
-         status, created_at as "createdAt", updated_at as "updatedAt"
+        `SELECT id, project_id as "projectId", user_id as "userId", client_id as "clientId",
+         rate_id as "rateId", rate, rate_label as "rateLabel", title, notes,
+         status, priority, due_date as "dueDate", position, tags,
+         created_at as "createdAt", updated_at as "updatedAt"
          FROM tasks WHERE user_id = $1`,
         [userId]
       ),
