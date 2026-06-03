@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://www.clock-bill.com"),
   title: "מוניט - מעקב שעות עבודה לפרילנסרים",
   description: "מעקב שעות, ניהול לקוחות ודוחות מקצועיים בעברית. הכל במקום אחד, בחינם.",
-  keywords: ["מעקב זמן", "פרילנסר", "שעות עבודה", "ניהול פרויקטים", "דוחות", "מוניט"],
+  keywords: ["מעקב זמן", "פרילנסר", "שעות עבודה", "ניהול פרויקטים", "חיוב לפי פריטים", "תעודת התחשבנות", "ניהול לקוחות", "דוחות", "מוניט"],
   authors: [{ name: "מוניט" }],
   robots: {
     index: true,

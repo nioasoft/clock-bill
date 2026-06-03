@@ -61,6 +61,12 @@ export function LandingFooter() {
             >
               תנאי שימוש
             </Link>
+            <Link
+              href="/contact"
+              className="text-sidebar-foreground/80 hover:text-white transition-colors"
+            >
+              צור קשר
+            </Link>
           </nav>
         </div>
 

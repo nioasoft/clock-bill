@@ -43,7 +43,7 @@ export function Hero() {
             <span>התחל לעקוב &mdash; בחינם</span>
           </Link>
           <p className="text-sm text-muted-foreground">
-            ללא כרטיס אשראי. ללא התחייבות.
+            חינם בתקופת הבטא. ללא כרטיס אשראי, ללא התחייבות.
           </p>
         </div>
 

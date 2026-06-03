@@ -3,6 +3,7 @@ import { getUser } from "@/lib/auth";
 import { LandingNavbar } from "@/components/landing/navbar";
 import { Hero } from "@/components/landing/hero";
 import { FeaturesGrid } from "@/components/landing/features-grid";
+import { Highlights } from "@/components/landing/highlights";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { FAQ } from "@/components/landing/faq";
 import { CTASection } from "@/components/landing/cta-section";
@@ -24,6 +25,7 @@ export default async function Home() {
       <Hero />
       <HowItWorks />
       <FeaturesGrid />
+      <Highlights />
       <FAQ />
       <CTASection />
       <LandingFooter />

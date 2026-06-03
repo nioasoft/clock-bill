@@ -37,14 +37,15 @@ export function LegalPage({ title, updated, children }: LegalPageProps) {
 
         <footer className="mt-12 border-t border-border pt-6 text-sm text-muted-foreground">
           <p>
-            שאלות? כתבו לנו ל־
-            <a href="mailto:asaf@giggsi.co.il" className="text-primary underline underline-offset-4">
-              asaf@giggsi.co.il
-            </a>
+            שאלות?{" "}
+            <Link href="/contact" className="text-primary underline underline-offset-4">
+              צרו קשר
+            </Link>
           </p>
           <div className="mt-3 flex gap-4">
             <Link href="/privacy" className="hover:text-foreground">מדיניות פרטיות</Link>
             <Link href="/terms" className="hover:text-foreground">תנאי שימוש</Link>
+            <Link href="/contact" className="hover:text-foreground">יצירת קשר</Link>
           </div>
         </footer>
       </div>

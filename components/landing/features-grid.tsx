@@ -1,39 +1,54 @@
 "use client";
 
 import { useState, useEffect, useRef, MouseEvent } from "react";
-import { Timer, Users, Layers, ScrollText, CircleDollarSign, TrendingUp } from "lucide-react";
+import { Timer, Boxes, LayoutGrid, Layers, Users, FileText, Calculator, CircleDollarSign, TrendingUp } from "lucide-react";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 
 const features = [
   {
     icon: Timer,
-    title: "טיימר חכם",
-    description: "עקוב אחרי זמן העבודה בזמן אמת. התחל, השהה ועצור בלחיצה.",
+    title: "כמה טיימרים במקביל",
+    description: "עובד על כמה לקוחות באותו זמן? פתח טיימר לכל אחד. כל אחד רץ ונעצר בנפרד.",
   },
   {
-    icon: Users,
-    title: "ניהול לקוחות",
-    description: "נהל לקוחות במקום אחד -- פרטי קשר, פרויקטים והיסטוריה.",
+    icon: Boxes,
+    title: "חיוב לפי פריטים",
+    description: "לא רק שעות. כמות כפול מחיר ליחידה, מקטלוג הלקוח או פריט חד-פעמי.",
+  },
+  {
+    icon: LayoutGrid,
+    title: "לוח משימות (קנבן)",
+    description: "גרור משימה ל'בעבודה' והטיימר נדלק לבד. גרור החוצה, ונשמרת רשומה.",
   },
   {
     icon: Layers,
     title: "תמחור גמיש",
-    description: "שעתי, חבילה או משולב. לכל פרויקט בנפרד.",
+    description: "שעתי, ריטיינר, חודשי קבוע או לפי פריטים. תעריף לכל לקוח בנפרד.",
   },
   {
-    icon: ScrollText,
-    title: "דוחות PDF בעברית",
-    description: "6 עיצובים מקצועיים. הלוגו שלך, הסטייל שלך.",
+    icon: Users,
+    title: "לקוחות ופרויקטים",
+    description: "כל הלקוחות במקום אחד: פרטי קשר, תעריפים והיסטוריית חיוב.",
+  },
+  {
+    icon: FileText,
+    title: "תעודות התחשבנות",
+    description: "רכז שעות ופריטים לתעודה אחת, וייצא PDF בעברית מלאה עם הלוגו שלך.",
+  },
+  {
+    icon: Calculator,
+    title: "עיגול וכללי חיוב",
+    description: "עגל זמן לשעה או לחצי שעה, לכל לקוח או פרויקט. החישוב מדויק, בלי לאבד דקות.",
   },
   {
     icon: CircleDollarSign,
     title: "מטבעות מרובים",
-    description: "ILS, USD, USDT, BTC ו-ETH.",
+    description: "שקל, דולר, USDT, ביטקוין ואת'ריום. תעריף נפרד לכל לקוח.",
   },
   {
     icon: TrendingUp,
     title: "דשבורד ותובנות",
-    description: "גרפים של הכנסות לפי פרויקט ותקופה.",
+    description: "כמה נכנס החודש, לפי שעות, לפי פריטים ולפי פרויקט.",
   },
 ];
 
@@ -118,10 +133,10 @@ export function FeaturesGrid() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-display font-bold text-foreground">
-            הכל מה שצריך כדי לנהל את הזמן שלך
+            כל מה שצריך כדי לנהל זמן וחיוב
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            כלים מקצועיים לפרילנסרים ויועצים עצמאיים
+            כלים מקצועיים לפרילנסרים ולעצמאים, בעברית מלאה
           </p>
         </div>
 
