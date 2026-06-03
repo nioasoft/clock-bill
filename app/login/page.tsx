@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Gauge, LogIn } from "lucide-react";
 import { validateEmail, validateRequired } from "@/lib/validation";
 import { authClient } from "@/lib/auth/client";
-import { ClockFaceMarks, HourglassSVG, GrainOverlay } from "@/components/ui/thematic-elements";
+import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 
 export default function LoginPage() {
@@ -96,55 +96,36 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen" dir="rtl">
-      {/* Brand Panel */}
-      <div className="hidden lg:flex lg:w-[60%] bg-gradient-to-br from-sidebar via-sidebar/95 to-primary/20 relative overflow-hidden">
-        <GrainOverlay />
-        <div className="relative z-10 flex flex-col justify-center px-16 text-white">
-          <div className="flex items-center gap-3 mb-12">
-            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm relative">
-              <ClockFaceMarks size={56} color="rgba(212,160,74,0.3)" className="absolute inset-0 m-auto" />
-              <Gauge className="h-7 w-7 text-white relative z-10" />
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12" dir="rtl">
+      <div className="w-full max-w-md space-y-8">
+        {/* Logo + heading — centered, always visible */}
+        <div className="text-center">
+          <div className="inline-flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center relative">
+              <ClockFaceMarks size={32} color="rgba(168,98,45,0.2)" className="absolute inset-0 m-auto" />
+              <Gauge className="h-6 w-6 text-primary-foreground relative z-10" />
             </div>
-            <span className="text-3xl font-display font-bold">מוניט</span>
+            <span className="text-2xl font-display font-bold text-foreground">מוניט</span>
           </div>
-          <h2 className="text-4xl font-display font-bold leading-tight mb-4">ברוך הבא חזרה!</h2>
-          <p className="text-lg text-white/80 mb-12 max-w-md">התחבר כדי להמשיך לנהל את הזמן וההכנסות שלך</p>
-          <div className="space-y-4">
-            {["הטיימר שלך מחכה לך", "ראה את ההכנסות של החודש", "צור דוח ושלח ללקוח"].map((feature, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-accent flex-shrink-0" />
-                <span className="text-white/90">{feature}</span>
-              </div>
-            ))}
-          </div>
+          <div className="w-12 h-1 bg-accent rounded-full mb-5 mx-auto" />
+          <h1 className="text-2xl font-display font-bold tracking-tight text-foreground">התחבר לחשבון שלך</h1>
+          <p className="mt-2 text-sm text-muted-foreground">נהל את שעות העבודה והפרויקטים שלך</p>
         </div>
-        <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-white/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
-        </div>
-        <HourglassSVG size={200} className="absolute bottom-8 left-8 text-white opacity-[0.05] hidden lg:block" />
-      </div>
 
-      {/* Form Panel */}
-      <div className="flex-1 flex items-center justify-center bg-background px-4 lg:px-16">
-        <div className="w-full max-w-md space-y-8">
-          <div className="lg:hidden text-center mb-8">
-            <div className="inline-flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center relative">
-                <ClockFaceMarks size={32} color="rgba(168,98,45,0.2)" className="absolute inset-0 m-auto" />
-                <Gauge className="h-6 w-6 text-primary-foreground relative z-10" />
+        {/* Form card */}
+        <div className="rounded-[var(--radius-card)] border border-border bg-card p-6 sm:p-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <GoogleSignInButton label="התחבר עם Google" />
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                <div className="w-full border-t border-border" />
               </div>
-              <span className="text-2xl font-display font-bold text-foreground">מוניט</span>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-card px-3 text-muted-foreground">או התחבר עם אימייל</span>
+              </div>
             </div>
-          </div>
-          <div className="text-center lg:text-start">
-            <div className="w-12 h-1 bg-accent rounded-full mb-6 mx-auto lg:mx-0" />
-            <h1 className="text-3xl font-display font-bold tracking-tight text-foreground">התחבר לחשבון שלך</h1>
-            <p className="mt-2 text-sm text-muted-foreground">נהל את שעות העבודה והפרויקטים שלך</p>
-          </div>
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-6">
             <div className="space-y-4">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-foreground">
@@ -224,17 +205,6 @@ export default function LoginPage() {
                 {loading ? "מתחבר..." : "התחבר"}
               </button>
             </div>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                <div className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-background px-3 text-muted-foreground">או</span>
-              </div>
-            </div>
-
-            <GoogleSignInButton label="התחבר עם Google" />
 
             <div className="text-center space-y-2">
               <p className="text-sm text-muted-foreground">
