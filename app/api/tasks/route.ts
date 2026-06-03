@@ -70,42 +70,51 @@ export async function POST(request: NextRequest) {
     if (!parsed.ok) return parsed.response;
     const { clientId, projectId, rateId, title, notes, priority, dueDate, tags } = parsed.data;
 
-    const { query } = await import("@/lib/db");
+    const { withTransaction } = await import("@/lib/db");
 
-    const projectCheck = await query<{ id: string }>(
-      `SELECT id FROM projects WHERE id = $1 AND client_id = $2 AND user_id = $3`,
-      [projectId, clientId, user.id]
-    );
-    if (projectCheck.rows.length === 0)
-      return NextResponse.json({ success: false, message: "הפרויקט לא נמצא" }, { status: 404 });
+    // All reads + the insert share a single connection / begin-commit (one set of
+    // round-trips) instead of four separate authed `query()` calls. The two
+    // ownership SELECTs stay (needed for the per-field Hebrew 404s); the MIN(position)
+    // read is folded into the INSERT as a subselect, removing a statement and the
+    // read/write race on `position`.
+    const outcome = await withTransaction(
+      async (client): Promise<{ error: { message: string; status: number } } | { id: string }> => {
+      const projectCheck = await client.query<{ id: string }>(
+        `SELECT id FROM projects WHERE id = $1 AND client_id = $2 AND user_id = $3`,
+        [projectId, clientId, user.id]
+      );
+      if (projectCheck.rows.length === 0)
+        return { error: { message: "הפרויקט לא נמצא", status: 404 } as const };
 
-    const rateCheck = await query<{ id: string; rate: number; name: string }>(
-      `SELECT id, rate, name FROM client_rates
-       WHERE id = $1 AND client_id = $2 AND user_id = $3 AND kind = 'hourly'`,
-      [rateId, clientId, user.id]
-    );
-    if (rateCheck.rows.length === 0)
-      return NextResponse.json({ success: false, message: "התעריף לא נמצא" }, { status: 404 });
-    const chosen = rateCheck.rows[0];
+      const rateCheck = await client.query<{ id: string; rate: number; name: string }>(
+        `SELECT id, rate, name FROM client_rates
+         WHERE id = $1 AND client_id = $2 AND user_id = $3 AND kind = 'hourly'`,
+        [rateId, clientId, user.id]
+      );
+      if (rateCheck.rows.length === 0)
+        return { error: { message: "התעריף לא נמצא", status: 404 } as const };
+      const chosen = rateCheck.rows[0];
 
-    const minPos = await query<{ min: number | null }>(
-      `SELECT MIN(position) AS min FROM tasks WHERE user_id = $1 AND status = 'todo'`,
-      [user.id]
-    );
-    const position = (minPos.rows[0]?.min ?? 1000) - 1000;
+      const result = await client.query<{ id: string }>(
+        `INSERT INTO tasks
+           (id, user_id, client_id, project_id, rate_id, rate, rate_label, title, notes,
+            status, priority, due_date, position, tags)
+         VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8,
+                 'todo', $9, $10,
+                 (SELECT COALESCE(MIN(position), 1000) - 1000 FROM tasks WHERE user_id = $1 AND status = 'todo'),
+                 $11::jsonb)
+         RETURNING id`,
+        [user.id, clientId, projectId, chosen.id, chosen.rate, chosen.name,
+         title, notes ?? null, priority, dueDate ?? null, JSON.stringify(tags)]
+      );
 
-    const result = await query<{ id: string }>(
-      `INSERT INTO tasks
-         (id, user_id, client_id, project_id, rate_id, rate, rate_label, title, notes,
-          status, priority, due_date, position, tags)
-       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8,
-               'todo', $9, $10, $11, $12::jsonb)
-       RETURNING id`,
-      [user.id, clientId, projectId, chosen.id, chosen.rate, chosen.name,
-       title, notes ?? null, priority, dueDate ?? null, position, JSON.stringify(tags)]
-    );
+      return { id: result.rows[0].id };
+    });
 
-    return NextResponse.json({ success: true, id: result.rows[0].id });
+    if ("error" in outcome)
+      return NextResponse.json({ success: false, message: outcome.error.message }, { status: outcome.error.status });
+
+    return NextResponse.json({ success: true, id: outcome.id });
   } catch (error) {
     logger.error("Failed to create task", error);
     return NextResponse.json({ success: false, message: "שגיאה ביצירת המשימה" }, { status: 500 });

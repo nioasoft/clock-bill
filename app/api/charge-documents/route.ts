@@ -118,14 +118,35 @@ export async function POST(request: NextRequest) {
       );
       const documentId: string = doc.rows[0].id;
 
-      for (const l of allLines) {
+      if (allLines.length > 0) {
+        // Single multi-row INSERT via unnest() — one round-trip for N lines.
+        // id is generated per row in SQL; user_id/document_id are scalars repeated for every row.
         await client.query(
           `INSERT INTO charge_document_lines
              (id, user_id, document_id, source_type, time_entry_id, period_month, label,
               description, notes, item_ref, billing_kind, quantity, rate, amount)
-           VALUES (gen_random_uuid()::text, $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
-          [user.id, documentId, l.sourceType, l.timeEntryId, l.periodMonth, l.label,
-           l.description, l.notes, l.itemRef, l.billingKind, l.quantity, l.rate, l.amount]
+           SELECT gen_random_uuid()::text, $1, $2, t.source_type, t.time_entry_id, t.period_month,
+                  t.label, t.description, t.notes, t.item_ref, t.billing_kind, t.quantity, t.rate, t.amount
+             FROM unnest(
+               $3::text[], $4::text[], $5::text[], $6::text[], $7::text[],
+               $8::text[], $9::text[], $10::text[], $11::numeric[], $12::numeric[], $13::numeric[]
+             ) AS t(source_type, time_entry_id, period_month, label, description,
+                    notes, item_ref, billing_kind, quantity, rate, amount)`,
+          [
+            user.id,
+            documentId,
+            allLines.map((l) => l.sourceType),
+            allLines.map((l) => l.timeEntryId),
+            allLines.map((l) => l.periodMonth),
+            allLines.map((l) => l.label),
+            allLines.map((l) => l.description),
+            allLines.map((l) => l.notes),
+            allLines.map((l) => l.itemRef),
+            allLines.map((l) => l.billingKind),
+            allLines.map((l) => l.quantity),
+            allLines.map((l) => l.rate),
+            allLines.map((l) => l.amount),
+          ]
         );
       }
 

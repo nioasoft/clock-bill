@@ -36,17 +36,43 @@ export async function GET(request: NextRequest) {
 
     const { query } = await import("@/lib/db");
 
-    // Search clients
-    const clientsResult = await query<{ id: string; name: string }>(
-      `SELECT id, name
-       FROM clients
-       WHERE user_id = $1
-         AND is_active = true
-         AND name ILIKE $2
-       ORDER BY name
-       LIMIT 5`,
-      [user.id, searchTerm]
-    );
+    // The three searches are independent — run them concurrently so a typeahead
+    // keystroke pays one round-trip's latency, not three serialized ones.
+    const [clientsResult, projectsResult, entriesResult] = await Promise.all([
+      query<{ id: string; name: string }>(
+        `SELECT id, name
+         FROM clients
+         WHERE user_id = $1
+           AND is_active = true
+           AND name ILIKE $2
+         ORDER BY name
+         LIMIT 5`,
+        [user.id, searchTerm]
+      ),
+      query<{ id: string; name: string; client_name: string }>(
+        `SELECT p.id, p.name, c.name as client_name
+         FROM projects p
+         JOIN clients c ON p.client_id = c.id
+         WHERE p.user_id = $1
+           AND c.is_active = true
+           AND p.name ILIKE $2
+         ORDER BY p.name
+         LIMIT 5`,
+        [user.id, searchTerm]
+      ),
+      query<{ id: string; description: string; date: string; duration: number; project_name: string; client_name: string }>(
+        `SELECT e.id, e.description, e.date, e.duration, p.name as project_name, c.name as client_name
+         FROM time_entries e
+         JOIN projects p ON e.project_id = p.id
+         JOIN clients c ON p.client_id = c.id
+         WHERE e.user_id = $1
+           AND c.is_active = true
+           AND (e.description ILIKE $2 OR e.notes ILIKE $2 OR e.tags::text ILIKE $2)
+         ORDER BY e.date DESC, e.start_time DESC
+         LIMIT 5`,
+        [user.id, searchTerm]
+      ),
+    ]);
 
     for (const client of clientsResult.rows) {
       results.push({
@@ -57,19 +83,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Search projects (with client name)
-    const projectsResult = await query<{ id: string; name: string; client_name: string }>(
-      `SELECT p.id, p.name, c.name as client_name
-       FROM projects p
-       JOIN clients c ON p.client_id = c.id
-       WHERE p.user_id = $1
-         AND c.is_active = true
-         AND p.name ILIKE $2
-       ORDER BY p.name
-       LIMIT 5`,
-      [user.id, searchTerm]
-    );
-
     for (const project of projectsResult.rows) {
       results.push({
         id: project.id,
@@ -79,20 +92,6 @@ export async function GET(request: NextRequest) {
         url: `/projects/${project.id}`,
       });
     }
-
-    // Search time entries (by description, notes, and tags)
-    const entriesResult = await query<{ id: string; description: string; date: string; duration: number; project_name: string; client_name: string }>(
-      `SELECT e.id, e.description, e.date, e.duration, p.name as project_name, c.name as client_name
-       FROM time_entries e
-       JOIN projects p ON e.project_id = p.id
-       JOIN clients c ON p.client_id = c.id
-       WHERE e.user_id = $1
-         AND c.is_active = true
-         AND (e.description ILIKE $2 OR e.notes ILIKE $2 OR e.tags::text ILIKE $2)
-       ORDER BY e.date DESC, e.start_time DESC
-       LIMIT 5`,
-      [user.id, searchTerm]
-    );
 
     for (const entry of entriesResult.rows) {
       results.push({
