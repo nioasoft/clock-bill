@@ -7,7 +7,7 @@ import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Clock, Timer, Pencil, Trash2 } from "lucide-react";
+import { Clock, Pencil, Trash2 } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { validateRequired, validateDate, validateNumber } from "@/lib/validation";
 import { pickDefaultHourlyRate, type ClientRate } from "@/lib/schemas/rates";
@@ -1311,92 +1311,88 @@ export default function EntriesPage() {
             </div>
 
             {/* Mobile Card View */}
-            <div className="md:hidden space-y-4">
+            <div className="md:hidden space-y-3">
               {entries.map((entry) => (
-                <div key={entry.id} className="bg-card rounded-[var(--radius-card)] shadow p-4 border-s-4 border-primary">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1 min-w-0">
-                      {/* Header with date and status */}
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-muted-foreground">
-                          {new Date(entry.date).toLocaleDateString("he-IL")}
-                        </span>
-                        {isEntryRunning(entry) && (
-                          <div className="flex items-center gap-1.5 inline-flex items-center rounded-full bg-success/10 px-2 py-1 text-xs font-semibold text-success">
-                            <span className="relative flex h-2 w-2">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
-                            </span>
-                            <Timer className="h-3 w-3 me-1" />
-                            פעיל
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Project name prominent */}
-                      <div className="flex items-center gap-2 text-sm font-semibold text-foreground mb-2">
-                        <Link href={`/projects/${entry.projectId}`} className="hover:text-primary hover:underline">{entry.projectName}</Link>
-                        <span className="text-muted-foreground">•</span>
-                        <Link href={`/clients/${entry.clientId}`} className="text-muted-foreground hover:text-primary hover:underline">{entry.clientName}</Link>
-                      </div>
-
-                      {/* Item name (for item lines) shown prominently, then the detail */}
-                      {entry.billingKind === "item" && entry.rateLabel && (
-                        <div className="text-sm font-semibold text-foreground mb-0.5">
-                          {entry.rateLabel}
-                        </div>
-                      )}
-                      {/* Description */}
-                      <div
-                        className={`mb-1 ${
-                          entry.billingKind === "item" && entry.rateLabel
-                            ? "text-xs text-muted-foreground"
-                            : "text-sm text-foreground"
-                        }`}
-                      >
-                        {entry.description}
-                      </div>
-                      {entry.notes && (
-                        <div className="text-xs text-muted-foreground mb-2">{entry.notes}</div>
-                      )}
-
-                      {/* Duration / quantity, amount, billable status */}
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-lg font-mono font-bold text-primary tabular-nums">
-                          {entry.billingKind === "item"
-                            ? `${entry.quantity ?? 0} יח׳`
-                            : formatDuration(entry.duration)}
-                        </span>
-                        {entry.rateLabel && (
-                          <span className="text-xs text-muted-foreground">
-                            {entry.rateLabel}
-                            {entry.billingKind === "item" && entry.itemRef != null && (
-                              <span className="ms-1 font-mono tabular-nums">· אסמכתא {entry.itemRef}</span>
-                            )}
+                <div
+                  key={entry.id}
+                  className="rounded-[var(--radius-card)] border border-border/70 bg-card-elevated p-3.5 shadow-lg shadow-black/40"
+                >
+                  {/* Top row: date + badges (right) · amount + edit (left) */}
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                        {new Date(entry.date).toLocaleDateString("he-IL")}
+                      </span>
+                      {isEntryRunning(entry) && (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-semibold text-success">
+                          <span className="relative flex h-1.5 w-1.5">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75"></span>
+                            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success"></span>
                           </span>
-                        )}
-                        {!entry.isBillable && (
-                          <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
-                            לא לחיוב
-                          </span>
-                        )}
-                        <span className="ms-auto font-mono text-sm font-semibold tabular-nums text-foreground">
-                          {formatCurrency(entryAmount(entry), entry.currency || "ILS")}
+                          פעיל
                         </span>
-                      </div>
-
-                      {/* Single quiet edit action — delete/duplicate live inside the edit form */}
-                      <div className="flex justify-end">
-                        <button
-                          onClick={() => handleEdit(entry)}
-                          className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface active:bg-surface/80"
-                          aria-label="ערוך רשומה"
-                        >
-                          <Pencil className="h-4 w-4" />
-                          ערוך
-                        </button>
-                      </div>
+                      )}
+                      {!entry.isBillable && (
+                        <span className="inline-flex shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+                          לא לחיוב
+                        </span>
+                      )}
                     </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="font-mono text-base font-bold tabular-nums text-foreground">
+                        {formatCurrency(entryAmount(entry), entry.currency || "ILS")}
+                      </span>
+                      <button
+                        onClick={() => handleEdit(entry)}
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius)] border border-border text-muted-foreground transition-colors hover:bg-surface hover:text-foreground active:bg-surface/80"
+                        aria-label="ערוך רשומה"
+                        title="ערוך"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Project • client */}
+                  <div className="mb-1 flex min-w-0 items-center gap-1.5 text-sm font-semibold text-foreground">
+                    <Link href={`/projects/${entry.projectId}`} className="truncate hover:text-primary hover:underline">{entry.projectName}</Link>
+                    <span className="shrink-0 text-muted-foreground">•</span>
+                    <Link href={`/clients/${entry.clientId}`} className="truncate text-muted-foreground hover:text-primary hover:underline">{entry.clientName}</Link>
+                  </div>
+
+                  {/* Item name (item lines) shown prominently */}
+                  {entry.billingKind === "item" && entry.rateLabel && (
+                    <div className="text-sm font-semibold text-foreground">{entry.rateLabel}</div>
+                  )}
+                  {/* Description (clamped to keep cards short) */}
+                  {entry.description && (
+                    <div
+                      className={`line-clamp-2 ${
+                        entry.billingKind === "item" && entry.rateLabel
+                          ? "text-xs text-muted-foreground"
+                          : "text-sm text-foreground"
+                      }`}
+                    >
+                      {entry.description}
+                    </div>
+                  )}
+                  {entry.notes && (
+                    <div className="line-clamp-1 text-xs text-muted-foreground">{entry.notes}</div>
+                  )}
+
+                  {/* Bottom: duration / quantity + rate / reference */}
+                  <div className="mt-1.5 flex items-center gap-2">
+                    <span className="font-mono text-base font-bold tabular-nums text-primary">
+                      {entry.billingKind === "item"
+                        ? `${entry.quantity ?? 0} יח׳`
+                        : formatDuration(entry.duration)}
+                    </span>
+                    {entry.billingKind !== "item" && entry.rateLabel && (
+                      <span className="truncate text-xs text-muted-foreground">{entry.rateLabel}</span>
+                    )}
+                    {entry.billingKind === "item" && entry.itemRef != null && (
+                      <span className="font-mono text-xs tabular-nums text-muted-foreground">אסמכתא {entry.itemRef}</span>
+                    )}
                   </div>
                 </div>
               ))}

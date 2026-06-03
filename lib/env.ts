@@ -31,6 +31,17 @@ const ENV_SCHEMA: EnvVarSchema[] = [
     },
   },
   {
+    name: "DATABASE_URL_ADMIN",
+    required: false,
+    description:
+      "Privileged PostgreSQL connection (BYPASSRLS role) for admin-only cross-tenant aggregate queries (optional; falls back to DATABASE_URL)",
+    descriptionHe:
+      "חיבור PostgreSQL מורשה (רול BYPASSRLS) לשאילתות aggregate חוצות-משתמשים של אדמין בלבד (אופציונלי; נופל חזרה ל-DATABASE_URL)",
+    validator: (value) => {
+      return value.startsWith("postgres://") || value.startsWith("postgresql://");
+    },
+  },
+  {
     name: "BETTER_AUTH_SECRET",
     required: true,
     description: "Secret key for authentication (at least 32 characters)",
@@ -296,6 +307,17 @@ export function getDatabaseUrl(): string {
     throw new Error("DATABASE_URL environment variable is required");
   }
   return url;
+}
+
+/**
+ * Get the privileged admin database URL for cross-tenant aggregate queries.
+ *
+ * Returns DATABASE_URL_ADMIN (a BYPASSRLS role, e.g. neondb_owner) when set,
+ * otherwise falls back to DATABASE_URL so local dev keeps working. Callers MUST
+ * gate usage with getAdminUser(); this connection is not RLS-constrained.
+ */
+export function getAdminDatabaseUrl(): string {
+  return process.env.DATABASE_URL_ADMIN || getDatabaseUrl();
 }
 
 /**

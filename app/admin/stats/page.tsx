@@ -10,18 +10,17 @@ import { BarChart3, Coins, Image as ImageIcon, TrendingUp } from "lucide-react";
 
 interface SystemStats {
   topUsers: { userId: string; email: string; entryCount: number }[];
-  pricingModels: { model: string; count: number }[];
+  projectStatuses: { status: string; count: number }[];
   currencies: { currency: string; count: number }[];
   avgEntriesPerUser: number;
   totalLogos: number;
 }
 
-const pricingModelLabels: Record<string, string> = {
-  hourly: "שעתי",
-  package: "חבילה",
-  mixed: "משולב",
-  fixed: "קבוע",
-  retainer: "ריטיינר",
+const projectStatusLabels: Record<string, string> = {
+  active: "פעיל",
+  completed: "הושלם",
+  paused: "מושהה",
+  archived: "בארכיון",
 };
 
 export default function AdminStatsPage() {
@@ -143,35 +142,35 @@ export default function AdminStatsPage() {
               </div>
             </div>
 
-            {/* Pricing Model & Currency Distribution */}
+            {/* Project Status & Currency Distribution */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              {/* Pricing Models */}
+              {/* Project Statuses */}
               <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
                 <div className="flex items-center gap-2 mb-4">
                   <BarChart3 className="h-5 w-5 text-secondary" />
                   <h3 className="font-display text-lg font-semibold text-foreground">
-                    התפלגות מודלי תמחור
+                    התפלגות סטטוס פרויקטים
                   </h3>
                 </div>
                 <div className="space-y-3">
-                  {stats.pricingModels.map((pm) => {
-                    const total = stats.pricingModels.reduce((s, p) => s + p.count, 0);
-                    const pct = total > 0 ? ((pm.count / total) * 100).toFixed(0) : "0";
+                  {stats.projectStatuses.map((ps) => {
+                    const total = stats.projectStatuses.reduce((s, p) => s + p.count, 0);
+                    const pct = total > 0 ? ((ps.count / total) * 100).toFixed(0) : "0";
                     return (
-                      <div key={pm.model} className="flex items-center justify-between">
+                      <div key={ps.status} className="flex items-center justify-between">
                         <span className="text-sm text-foreground">
-                          {pricingModelLabels[pm.model] || pm.model}
+                          {projectStatusLabels[ps.status] || ps.status}
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-mono tabular-nums text-muted-foreground">
-                            {pm.count}
+                            {ps.count}
                           </span>
                           <span className="text-xs text-muted-foreground">({pct}%)</span>
                         </div>
                       </div>
                     );
                   })}
-                  {stats.pricingModels.length === 0 && (
+                  {stats.projectStatuses.length === 0 && (
                     <p className="text-sm text-muted-foreground text-center py-4">אין נתונים</p>
                   )}
                 </div>

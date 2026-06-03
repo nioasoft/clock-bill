@@ -53,7 +53,7 @@ export function PersistentTimerBar() {
     // active-timer state doesn't pop in with a layout shift.
     return (
       <div className="border-b border-border bg-muted/20" aria-hidden="true">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-2.5 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 min-w-0">
             <span className="h-2.5 w-2.5 rounded-full bg-muted animate-pulse" />
             <span className="h-4 w-32 rounded bg-muted animate-pulse" />
@@ -71,7 +71,7 @@ export function PersistentTimerBar() {
   if (runningTimers.length === 0) {
     return (
       <div className="border-b border-border bg-muted/20">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
             <Clock className="h-4 w-4 opacity-60" />
             <span>התחל לעקוב אחרי הזמן שלך</span>
@@ -91,7 +91,7 @@ export function PersistentTimerBar() {
   return (
     <div aria-live="polite" className="border-b border-border bg-muted/10">
       {/* Horizontally scrollable row of running-timer chips. */}
-      <div className="mx-auto flex w-full max-w-6xl items-center gap-2 overflow-x-auto px-4 py-2 sm:px-6 lg:px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-2 overflow-x-auto px-4 sm:px-6 lg:px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {runningTimers.map((timer) => {
           const isPaused = !!timer.pausedAt;
           const pausing = pausingTimerId === timer.id;

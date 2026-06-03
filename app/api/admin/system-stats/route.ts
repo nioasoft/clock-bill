@@ -3,7 +3,7 @@
  * Returns deep system analytics
  */
 import { NextResponse } from "next/server";
-import { query } from "@/lib/db";
+import { adminQuery } from "@/lib/db";
 import { getAdminUser } from "@/lib/admin";
 
 export async function GET(): Promise<NextResponse> {
@@ -16,11 +16,12 @@ export async function GET(): Promise<NextResponse> {
     const [
       topUsersResult,
       statusResult,
+      currencyResult,
       avgEntriesResult,
       logosResult,
     ] = await Promise.all([
       // Top 10 most active users by entry count
-      query<{ user_id: string; email: string; entry_count: string }>(
+      adminQuery<{ user_id: string; email: string; entry_count: string }>(
         `SELECT u.id as user_id, u.email, COUNT(te.id) as entry_count
          FROM "user" u
          LEFT JOIN time_entries te ON u.id = te.user_id
@@ -28,15 +29,22 @@ export async function GET(): Promise<NextResponse> {
          ORDER BY entry_count DESC
          LIMIT 10`
       ),
-      // Status distribution
-      query<{ status: string; count: string }>(
+      // Project status distribution
+      adminQuery<{ status: string; count: string }>(
         `SELECT status, COUNT(*) as count
          FROM projects
          GROUP BY status
          ORDER BY count DESC`
       ),
+      // Default-currency distribution across user profiles
+      adminQuery<{ currency: string; count: string }>(
+        `SELECT COALESCE(default_currency, 'ILS') as currency, COUNT(*) as count
+         FROM user_profiles
+         GROUP BY COALESCE(default_currency, 'ILS')
+         ORDER BY count DESC`
+      ),
       // Average entries per user
-      query<{ avg: string }>(
+      adminQuery<{ avg: string }>(
         `SELECT COALESCE(AVG(entry_count), 0) as avg
          FROM (
            SELECT COUNT(*) as entry_count
@@ -45,7 +53,7 @@ export async function GET(): Promise<NextResponse> {
          ) sub`
       ),
       // Total logos uploaded
-      query<{ count: string }>(
+      adminQuery<{ count: string }>(
         "SELECT COUNT(*) as count FROM user_profiles WHERE logo_url IS NOT NULL AND logo_url != ''"
       ),
     ]);
@@ -60,6 +68,10 @@ export async function GET(): Promise<NextResponse> {
         })),
         projectStatuses: statusResult.rows.map((r) => ({
           status: r.status,
+          count: parseInt(r.count),
+        })),
+        currencies: currencyResult.rows.map((r) => ({
+          currency: r.currency,
           count: parseInt(r.count),
         })),
         avgEntriesPerUser: parseFloat(parseFloat(avgEntriesResult.rows[0]?.avg || "0").toFixed(1)),

@@ -4,7 +4,7 @@
  */
 import { AsyncLocalStorage } from "async_hooks";
 import { Pool, PoolClient, QueryResult, types } from "pg";
-import { getDatabaseUrl } from "./env";
+import { getAdminDatabaseUrl, getDatabaseUrl } from "./env";
 
 // `timestamp without time zone` (OID 1114) is parsed by node-postgres using the
 // Node PROCESS's local timezone. The same stored value therefore reads correctly
@@ -19,6 +19,7 @@ types.setTypeParser(types.builtins.TIMESTAMP, (value: string | null) =>
 );
 
 let pool: Pool | null = null;
+let adminPool: Pool | null = null;
 
 /**
  * Request-scoped tenant context for Row-Level Security.
@@ -76,6 +77,38 @@ export function getPool(): Pool {
     });
   }
   return pool;
+}
+
+/**
+ * Get or create the privileged admin connection pool (BYPASSRLS role).
+ * Used ONLY by adminQuery() for cross-tenant aggregate reads.
+ */
+function getAdminPool(): Pool {
+  if (!adminPool) {
+    adminPool = new Pool({
+      connectionString: getAdminDatabaseUrl(),
+      // Admin reads are infrequent (one operator), keep the pool tiny.
+      max: 2,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
+    });
+  }
+  return adminPool;
+}
+
+/**
+ * Execute a parameterized query on the PRIVILEGED admin connection, bypassing
+ * Row-Level Security. Use ONLY for admin-scoped, cross-tenant aggregate reads
+ * (system stats / user management) from a route that has already passed
+ * getAdminUser(). NEVER pass unsanitised user input here — there is no tenant
+ * filter. Unlike query(), this does not bind app.current_user_id, so RLS
+ * policies do not restrict the result set.
+ */
+export async function adminQuery<T extends Record<string, unknown> = Record<string, unknown>>(
+  text: string,
+  params?: unknown[]
+): Promise<QueryResult<T>> {
+  return getAdminPool().query<T>(text, params);
 }
 
 /**
@@ -170,6 +203,10 @@ export async function closeDb(): Promise<void> {
   if (pool) {
     await pool.end();
     pool = null;
+  }
+  if (adminPool) {
+    await adminPool.end();
+    adminPool = null;
   }
 }
 

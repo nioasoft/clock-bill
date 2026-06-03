@@ -3,7 +3,7 @@
  * Returns admin dashboard overview statistics
  */
 import { NextResponse } from "next/server";
-import { query } from "@/lib/db";
+import { adminQuery } from "@/lib/db";
 import { getAdminUser } from "@/lib/admin";
 
 export async function GET(): Promise<NextResponse> {
@@ -38,17 +38,17 @@ export async function GET(): Promise<NextResponse> {
       totalProjectsResult,
       registrationTrendResult,
     ] = await Promise.all([
-      query<{ count: string }>('SELECT COUNT(*) as count FROM "user"'),
-      query<{ count: string }>('SELECT COUNT(*) as count FROM "user" WHERE created_at::date = $1', [today]),
-      query<{ count: string }>("SELECT COUNT(*) as count FROM time_entries"),
-      query<{ count: string }>("SELECT COUNT(*) as count FROM time_entries WHERE date = $1", [today]),
-      query<{ count: string }>(
+      adminQuery<{ count: string }>('SELECT COUNT(*) as count FROM "user"'),
+      adminQuery<{ count: string }>('SELECT COUNT(*) as count FROM "user" WHERE created_at::date = $1', [today]),
+      adminQuery<{ count: string }>("SELECT COUNT(*) as count FROM time_entries"),
+      adminQuery<{ count: string }>("SELECT COUNT(*) as count FROM time_entries WHERE date = $1", [today]),
+      adminQuery<{ count: string }>(
         "SELECT COUNT(*) as count FROM time_entries WHERE start_time IS NOT NULL AND end_time IS NULL"
       ),
-      query<{ count: string }>('SELECT COUNT(*) as count FROM "user" WHERE created_at::date >= $1', [sevenDaysAgoStr]),
-      query<{ count: string }>('SELECT COUNT(*) as count FROM "user" WHERE created_at::date >= $1', [startOfMonthStr]),
-      query<{ count: string }>("SELECT COUNT(*) as count FROM projects"),
-      query<{ day: string; count: string }>(
+      adminQuery<{ count: string }>('SELECT COUNT(*) as count FROM "user" WHERE created_at::date >= $1', [sevenDaysAgoStr]),
+      adminQuery<{ count: string }>('SELECT COUNT(*) as count FROM "user" WHERE created_at::date >= $1', [startOfMonthStr]),
+      adminQuery<{ count: string }>("SELECT COUNT(*) as count FROM projects"),
+      adminQuery<{ day: string; count: string }>(
         `SELECT created_at::date as day, COUNT(*) as count
          FROM "user"
          WHERE created_at::date >= $1

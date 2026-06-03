@@ -41,7 +41,7 @@ export function LandingNavbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <div className="relative w-9 h-9 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center">
-              <ClockFaceMarks size={24} className="absolute inset-0 text-primary-foreground/20" />
+              <ClockFaceMarks size={24} className="absolute inset-0 m-auto text-primary-foreground/20" />
               <Gauge className="relative h-5 w-5 text-primary-foreground" aria-hidden="true" />
             </div>
             <span className="text-xl font-display font-bold text-foreground">

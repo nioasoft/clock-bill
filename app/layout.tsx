@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Heebo, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Toaster } from "@/components/ui/toaster";
 import { Providers } from "@/components/providers";
 import { PwaProvider } from "@/components/pwa-provider";
@@ -78,6 +80,8 @@ export default function RootLayout({
         </Providers>
         <PwaProvider />
         <Toaster />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

@@ -80,7 +80,7 @@ export function Sidebar({
       dir="rtl"
     >
       {/* Logo/Brand with gradient */}
-      <div className={`border-b border-white/10 bg-gradient-to-b from-white/5 to-transparent ${isCollapsed ? "p-3" : "p-4"}`}>
+      <div className={`flex items-center h-16 border-b border-white/10 bg-gradient-to-b from-white/5 to-transparent ${isCollapsed ? "px-3" : "px-4"}`}>
         <Link href="/" className="flex items-center gap-3">
           <div className="w-12 h-12 relative flex items-center justify-center shrink-0">
             <ClockFaceMarks size={40} color="#D4A04A" className="absolute inset-0 m-auto" />
