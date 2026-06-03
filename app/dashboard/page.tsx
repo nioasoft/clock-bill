@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
@@ -80,35 +80,43 @@ export default function DashboardPage() {
     handlePauseTimer,
     handleResumeTimer,
     handleStopTimer,
+    onTimerStopped,
   } = useTimer();
 
   // Daily reminder notification
   const { checkDailyReminder } = useNotifications();
 
-  // Fetch dashboard stats
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setStatsLoading(true);
-        const response = await fetch("/api/dashboard/stats");
-        const data = await response.json();
+  // Fetch dashboard stats. `silent` skips the skeleton for background refreshes
+  // (e.g. after a timer stops) so the numbers update in place without a flash.
+  const fetchStats = useCallback(async (opts?: { silent?: boolean }) => {
+    try {
+      if (!opts?.silent) setStatsLoading(true);
+      const response = await fetch("/api/dashboard/stats");
+      const data = await response.json();
 
-        if (data.success) {
-          setStats(data.stats);
-          setRecentEntries(data.recentEntries || []);
-          setMonthlyEarnings(data.monthlyEarnings || []);
-          setProjectHours(data.projectHours || []);
-        }
-      } catch (error) {
-        console.error("Error fetching stats:", error);
-        setStatsError(true);
-      } finally {
-        setStatsLoading(false);
+      if (data.success) {
+        setStats(data.stats);
+        setRecentEntries(data.recentEntries || []);
+        setMonthlyEarnings(data.monthlyEarnings || []);
+        setProjectHours(data.projectHours || []);
+        setStatsError(false);
       }
-    };
-
-    fetchStats();
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+      setStatsError(true);
+    } finally {
+      if (!opts?.silent) setStatsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  // Stopping a timer creates a new time entry, so the dashboard numbers change.
+  // Re-fetch (silently) when the timer context signals a stop — same pattern the
+  // entries page and kanban board use. Returns the unsubscribe fn for cleanup.
+  useEffect(() => onTimerStopped(() => fetchStats({ silent: true })), [onTimerStopped, fetchStats]);
 
   // Check for daily reminder every minute
   useEffect(() => {
