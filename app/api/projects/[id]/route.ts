@@ -42,37 +42,49 @@ export async function GET(
     const { query } = await import("@/lib/db");
     const { id: projectId } = await params;
 
-    // Get project and verify ownership
-    const result = await query<{
-      id: string;
-      name: string;
-      client_id: string;
-      client_name: string;
-      default_rate: number | null;
-      currency: string | null;
-      status: string;
-      start_date: string | null;
-      end_date: string | null;
-      fixed_monthly_enabled: boolean;
-      fixed_monthly_fee: number | null;
-      fixed_monthly_start_date: string | null;
-      fixed_monthly_end_date: string | null;
-      billing_rounding: string | null;
-      client_billing_rounding: string | null;
-      notes: string | null;
-      created_at: string;
-    }>(
-      `SELECT p.id, p.name, p.client_id, c.name as client_name,
-              c.default_rate, c.currency,
-              p.status, p.start_date, p.end_date,
-              p.fixed_monthly_enabled, p.fixed_monthly_fee, p.fixed_monthly_start_date, p.fixed_monthly_end_date,
-              p.billing_rounding, c.billing_rounding as client_billing_rounding,
-              p.notes, p.created_at
-       FROM projects p
-       JOIN clients c ON p.client_id = c.id
-       WHERE p.id = $1 AND p.user_id = $2`,
-      [projectId, user.id]
-    );
+    // Get project (verify ownership) and time-entry stats concurrently.
+    // The stats query filters by projectId + user.id directly, so it does not
+    // depend on the project SELECT result — run both in parallel (~3 RTT total).
+    const [result, statsResult] = await Promise.all([
+      query<{
+        id: string;
+        name: string;
+        client_id: string;
+        client_name: string;
+        default_rate: number | null;
+        currency: string | null;
+        status: string;
+        start_date: string | null;
+        end_date: string | null;
+        fixed_monthly_enabled: boolean;
+        fixed_monthly_fee: number | null;
+        fixed_monthly_start_date: string | null;
+        fixed_monthly_end_date: string | null;
+        billing_rounding: string | null;
+        client_billing_rounding: string | null;
+        notes: string | null;
+        created_at: string;
+      }>(
+        `SELECT p.id, p.name, p.client_id, c.name as client_name,
+                c.default_rate, c.currency,
+                p.status, p.start_date, p.end_date,
+                p.fixed_monthly_enabled, p.fixed_monthly_fee, p.fixed_monthly_start_date, p.fixed_monthly_end_date,
+                p.billing_rounding, c.billing_rounding as client_billing_rounding,
+                p.notes, p.created_at
+         FROM projects p
+         JOIN clients c ON p.client_id = c.id
+         WHERE p.id = $1 AND p.user_id = $2`,
+        [projectId, user.id]
+      ),
+      query<{
+        total_duration: number;
+      }>(
+        `SELECT COALESCE(SUM(duration), 0) as total_duration
+         FROM time_entries
+         WHERE project_id = $1 AND user_id = $2`,
+        [projectId, user.id]
+      ),
+    ]);
 
     if (result.rows.length === 0) {
       return NextResponse.json(
@@ -84,15 +96,6 @@ export async function GET(
     const project = result.rows[0];
 
     // Calculate total hours and amount from time entries
-    const statsResult = await query<{
-      total_duration: number;
-    }>(
-      `SELECT COALESCE(SUM(duration), 0) as total_duration
-       FROM time_entries
-       WHERE project_id = $1 AND user_id = $2`,
-      [projectId, user.id]
-    );
-
     const totalDuration = statsResult.rows[0].total_duration || 0;
     const totalHours = totalDuration / 60;
 
@@ -165,144 +168,163 @@ export async function PUT(
     } = parsed.data;
     const { id: projectId } = await params;
 
-    const { query } = await import("@/lib/db");
+    const { withTransaction } = await import("@/lib/db");
 
-    // Verify project exists and belongs to user
-    const checkResult = await query<{ exists: boolean }>(
-      `SELECT EXISTS(SELECT 1 FROM projects WHERE id = $1 AND user_id = $2) as exists`,
-      [projectId, user.id]
-    );
+    // Read current row, UPDATE, and re-SELECT (joined for client_name) all share
+    // ONE connection / ONE begin-commit. The current-row SELECT doubles as the
+    // existence/ownership check (0 rows => 404), removing the redundant EXISTS query.
+    const result = await withTransaction(async (client) => {
+      const currentResult = await client.query<{
+        name: string;
+        status: string;
+        start_date: string | null;
+        end_date: string | null;
+        fixed_monthly_enabled: boolean;
+        fixed_monthly_fee: number | null;
+        fixed_monthly_start_date: string | null;
+        fixed_monthly_end_date: string | null;
+        billing_rounding: string | null;
+        notes: string | null;
+      }>(
+        `SELECT name, status, start_date, end_date,
+                fixed_monthly_enabled, fixed_monthly_fee, fixed_monthly_start_date, fixed_monthly_end_date,
+                billing_rounding, notes
+         FROM projects
+         WHERE id = $1 AND user_id = $2`,
+        [projectId, user.id]
+      );
 
-    if (!checkResult.rows[0].exists) {
+      if (currentResult.rows.length === 0) {
+        return { notFound: true as const };
+      }
+
+      const current = currentResult.rows[0];
+      const nextName = (name ?? current.name).trim();
+      const nextStatus = status || current.status || "active";
+      const nextStartDate = startDate !== undefined ? (startDate || null) : current.start_date;
+      const nextEndDate = endDate !== undefined ? (endDate || null) : current.end_date;
+      const nextFixedMonthlyEnabled = fixedMonthlyEnabled ?? current.fixed_monthly_enabled;
+      const nextFixedMonthlyFee = nextFixedMonthlyEnabled
+        ? (fixedMonthlyFee !== undefined ? fixedMonthlyFee : current.fixed_monthly_fee)
+        : null;
+      const nextFixedMonthlyStartDate = nextFixedMonthlyEnabled
+        ? (fixedMonthlyStartDate !== undefined ? (fixedMonthlyStartDate || null) : current.fixed_monthly_start_date)
+        : null;
+      const nextFixedMonthlyEndDate = nextFixedMonthlyEnabled
+        ? (fixedMonthlyEndDate !== undefined ? (fixedMonthlyEndDate || null) : current.fixed_monthly_end_date)
+        : null;
+      const nextNotes = notes !== undefined ? (notes?.trim() || null) : current.notes;
+      // Present (incl. explicit null = inherit client) updates; absent leaves as-is.
+      const nextBillingRounding = billingRounding !== undefined ? (billingRounding ?? null) : current.billing_rounding;
+
+      // Validation errors are returned as structured results and converted to
+      // 400 responses outside the transaction (which rolls back automatically).
+      if (!nextName || nextName.length === 0) {
+        return { validationError: "יש להזין שם פרויקט" as const };
+      }
+
+      if (nextName.length > 200) {
+        return { validationError: "שם הפרויקט ארוך מדי (מקסימום 200 תווים)" as const };
+      }
+
+      if (nextFixedMonthlyEnabled && (!(typeof nextFixedMonthlyFee === "number") || nextFixedMonthlyFee <= 0)) {
+        return { validationError: "כאשר חיוב חודשי פעיל, יש להזין סכום גדול מ-0" as const };
+      }
+
+      if (
+        nextFixedMonthlyStartDate &&
+        nextFixedMonthlyEndDate &&
+        nextFixedMonthlyStartDate > nextFixedMonthlyEndDate
+      ) {
+        return { validationError: "תאריך התחלה של חיוב חודשי חייב להיות לפני תאריך הסיום" as const };
+      }
+
+      // Update project, returning the updated row.
+      const updateResult = await client.query<{
+        id: string;
+        name: string;
+        client_id: string;
+        status: string;
+        start_date: string | null;
+        end_date: string | null;
+        fixed_monthly_enabled: boolean;
+        fixed_monthly_fee: number | null;
+        fixed_monthly_start_date: string | null;
+        fixed_monthly_end_date: string | null;
+        billing_rounding: string | null;
+        notes: string | null;
+        created_at: string;
+      }>(
+        `UPDATE projects
+         SET name = $1, status = $2, start_date = $3, end_date = $4,
+             fixed_monthly_enabled = $5, fixed_monthly_fee = $6,
+             fixed_monthly_start_date = $7, fixed_monthly_end_date = $8,
+             notes = $9, billing_rounding = $10, updated_at = NOW()
+         WHERE id = $11 AND user_id = $12
+         RETURNING id, client_id, name, status, start_date, end_date,
+                   fixed_monthly_enabled, fixed_monthly_fee, fixed_monthly_start_date, fixed_monthly_end_date,
+                   billing_rounding, notes, created_at`,
+        [
+          nextName,
+          nextStatus,
+          nextStartDate,
+          nextEndDate,
+          nextFixedMonthlyEnabled,
+          nextFixedMonthlyFee,
+          nextFixedMonthlyStartDate,
+          nextFixedMonthlyEndDate,
+          nextNotes,
+          nextBillingRounding,
+          projectId,
+          user.id,
+        ]
+      );
+
+      const updated = updateResult.rows[0];
+
+      // Resolve client_name (JOIN) within the same connection/transaction.
+      const clientResult = await client.query<{ client_name: string }>(
+        `SELECT c.name as client_name
+         FROM clients c
+         WHERE c.id = $1`,
+        [updated.client_id]
+      );
+
+      return {
+        project: {
+          id: updated.id,
+          name: updated.name,
+          client_id: updated.client_id,
+          client_name: clientResult.rows[0].client_name,
+          status: updated.status,
+          start_date: updated.start_date,
+          end_date: updated.end_date,
+          fixed_monthly_enabled: updated.fixed_monthly_enabled,
+          fixed_monthly_fee: updated.fixed_monthly_fee,
+          fixed_monthly_start_date: updated.fixed_monthly_start_date,
+          fixed_monthly_end_date: updated.fixed_monthly_end_date,
+          billing_rounding: updated.billing_rounding,
+          notes: updated.notes,
+          created_at: updated.created_at,
+        },
+      };
+    });
+
+    if ("notFound" in result) {
       return NextResponse.json(
         { success: false, message: "הפרויקט לא נמצא" },
         { status: 404 }
       );
     }
 
-    const currentResult = await query<{
-      name: string;
-      status: string;
-      start_date: string | null;
-      end_date: string | null;
-      fixed_monthly_enabled: boolean;
-      fixed_monthly_fee: number | null;
-      fixed_monthly_start_date: string | null;
-      fixed_monthly_end_date: string | null;
-      billing_rounding: string | null;
-      notes: string | null;
-    }>(
-      `SELECT name, status, start_date, end_date,
-              fixed_monthly_enabled, fixed_monthly_fee, fixed_monthly_start_date, fixed_monthly_end_date,
-              billing_rounding, notes
-       FROM projects
-       WHERE id = $1 AND user_id = $2`,
-      [projectId, user.id]
-    );
-
-    const current = currentResult.rows[0];
-    const nextName = (name ?? current.name).trim();
-    const nextStatus = status || current.status || "active";
-    const nextStartDate = startDate !== undefined ? (startDate || null) : current.start_date;
-    const nextEndDate = endDate !== undefined ? (endDate || null) : current.end_date;
-    const nextFixedMonthlyEnabled = fixedMonthlyEnabled ?? current.fixed_monthly_enabled;
-    const nextFixedMonthlyFee = nextFixedMonthlyEnabled
-      ? (fixedMonthlyFee !== undefined ? fixedMonthlyFee : current.fixed_monthly_fee)
-      : null;
-    const nextFixedMonthlyStartDate = nextFixedMonthlyEnabled
-      ? (fixedMonthlyStartDate !== undefined ? (fixedMonthlyStartDate || null) : current.fixed_monthly_start_date)
-      : null;
-    const nextFixedMonthlyEndDate = nextFixedMonthlyEnabled
-      ? (fixedMonthlyEndDate !== undefined ? (fixedMonthlyEndDate || null) : current.fixed_monthly_end_date)
-      : null;
-    const nextNotes = notes !== undefined ? (notes?.trim() || null) : current.notes;
-    // Present (incl. explicit null = inherit client) updates; absent leaves as-is.
-    const nextBillingRounding = billingRounding !== undefined ? (billingRounding ?? null) : current.billing_rounding;
-
-    if (!nextName || nextName.length === 0) {
+    if ("validationError" in result) {
       return NextResponse.json(
-        { success: false, message: "יש להזין שם פרויקט" },
+        { success: false, message: result.validationError },
         { status: 400 }
       );
     }
 
-    if (nextName.length > 200) {
-      return NextResponse.json(
-        { success: false, message: "שם הפרויקט ארוך מדי (מקסימום 200 תווים)" },
-        { status: 400 }
-      );
-    }
-
-    if (nextFixedMonthlyEnabled && (!(typeof nextFixedMonthlyFee === "number") || nextFixedMonthlyFee <= 0)) {
-      return NextResponse.json(
-        { success: false, message: "כאשר חיוב חודשי פעיל, יש להזין סכום גדול מ-0" },
-        { status: 400 }
-      );
-    }
-
-    if (
-      nextFixedMonthlyStartDate &&
-      nextFixedMonthlyEndDate &&
-      nextFixedMonthlyStartDate > nextFixedMonthlyEndDate
-    ) {
-      return NextResponse.json(
-        { success: false, message: "תאריך התחלה של חיוב חודשי חייב להיות לפני תאריך הסיום" },
-        { status: 400 }
-      );
-    }
-
-    // Update project
-    await query(
-      `UPDATE projects
-       SET name = $1, status = $2, start_date = $3, end_date = $4,
-           fixed_monthly_enabled = $5, fixed_monthly_fee = $6,
-           fixed_monthly_start_date = $7, fixed_monthly_end_date = $8,
-           notes = $9, billing_rounding = $10, updated_at = NOW()
-       WHERE id = $11 AND user_id = $12`,
-      [
-        nextName,
-        nextStatus,
-        nextStartDate,
-        nextEndDate,
-        nextFixedMonthlyEnabled,
-        nextFixedMonthlyFee,
-        nextFixedMonthlyStartDate,
-        nextFixedMonthlyEndDate,
-        nextNotes,
-        nextBillingRounding,
-        projectId,
-        user.id,
-      ]
-    );
-
-    // Fetch the updated project with client info
-    const projectResult = await query<{
-      id: string;
-      name: string;
-      client_id: string;
-      client_name: string;
-      status: string;
-      start_date: string | null;
-      end_date: string | null;
-      fixed_monthly_enabled: boolean;
-      fixed_monthly_fee: number | null;
-      fixed_monthly_start_date: string | null;
-      fixed_monthly_end_date: string | null;
-      billing_rounding: string | null;
-      notes: string | null;
-      created_at: string;
-    }>(
-      `SELECT p.id, p.name, p.client_id, c.name as client_name,
-              p.status, p.start_date, p.end_date,
-              p.fixed_monthly_enabled, p.fixed_monthly_fee, p.fixed_monthly_start_date, p.fixed_monthly_end_date,
-              p.billing_rounding, p.notes, p.created_at
-       FROM projects p
-       JOIN clients c ON p.client_id = c.id
-       WHERE p.id = $1`,
-      [projectId]
-    );
-
-    const project = projectResult.rows[0];
+    const project = result.project;
 
     return NextResponse.json({
       success: true,

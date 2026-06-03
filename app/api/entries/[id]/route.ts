@@ -315,21 +315,18 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     const { query } = await import("@/lib/db");
 
-    // Verify entry belongs to user
-    const entryCheck = await query<{ id: string }>(
-      `SELECT id FROM time_entries WHERE id = $1 AND user_id = $2`,
+    // Delete the entry, scoped to the user; RETURNING lets us detect not-found in one round-trip
+    const deleted = await query<{ id: string }>(
+      `DELETE FROM time_entries WHERE id = $1 AND user_id = $2 RETURNING id`,
       [id, user.id]
     );
 
-    if (entryCheck.rows.length === 0) {
+    if (deleted.rows.length === 0) {
       return NextResponse.json(
         { success: false, message: "הרשומה לא נמצאה" },
         { status: 404 }
       );
     }
-
-    // Delete the entry
-    await query(`DELETE FROM time_entries WHERE id = $1 AND user_id = $2`, [id, user.id]);
 
     return NextResponse.json({
       success: true,

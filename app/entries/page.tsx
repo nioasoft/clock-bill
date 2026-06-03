@@ -691,7 +691,7 @@ export default function EntriesPage() {
                 onClick={() => openManualEntry("item")}
                 className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-surface"
               >
-                + הזנת פריט ידני
+                + הזנת פריט חיוב
               </button>
             </>
           )}

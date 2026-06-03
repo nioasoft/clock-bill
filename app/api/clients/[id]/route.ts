@@ -50,32 +50,44 @@ export async function GET(
     const { query } = await import("@/lib/db");
     const { id: clientId } = await params;
 
-    // Get client and verify ownership
-    const result = await query<{
-      id: string;
-      name: string;
-      contact_name: string | null;
-      email: string | null;
-      phone: string | null;
-      address: string | null;
-      default_rate: number | null;
-      currency: string | null;
-      billing_rounding: string | null;
-      is_retainer: boolean | null;
-      retainer_hours: number | null;
-      retainer_monthly_fee: number | null;
-      overage_rate: number | null;
-      notes: string | null;
-      is_active: boolean;
-      created_at: string;
-    }>(
-      `SELECT id, name, contact_name, email, phone, address, default_rate,
-              currency, billing_rounding, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate,
-              notes, is_active, created_at
-       FROM clients
-       WHERE id = $1 AND user_id = $2`,
-      [clientId, user.id]
-    );
+    // Get client (+ verify ownership) and rates in parallel — both key off
+    // clientId + user.id, so they're independent. A non-owned id just returns
+    // empty rows for both; the 404 below is driven by the client result.
+    const [result, ratesResult] = await Promise.all([
+      query<{
+        id: string;
+        name: string;
+        contact_name: string | null;
+        email: string | null;
+        phone: string | null;
+        address: string | null;
+        default_rate: number | null;
+        currency: string | null;
+        billing_rounding: string | null;
+        is_retainer: boolean | null;
+        retainer_hours: number | null;
+        retainer_monthly_fee: number | null;
+        overage_rate: number | null;
+        notes: string | null;
+        is_active: boolean;
+        created_at: string;
+      }>(
+        `SELECT id, name, contact_name, email, phone, address, default_rate,
+                currency, billing_rounding, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate,
+                notes, is_active, created_at
+         FROM clients
+         WHERE id = $1 AND user_id = $2`,
+        [clientId, user.id]
+      ),
+      query<{
+        id: string; kind: string; name: string; rate: number; is_default: boolean;
+      }>(
+        `SELECT id, kind, name, rate, is_default
+         FROM client_rates WHERE client_id = $1 AND user_id = $2
+         ORDER BY kind, is_default DESC, name`,
+        [clientId, user.id]
+      ),
+    ]);
 
     if (result.rows.length === 0) {
       return NextResponse.json(
@@ -86,14 +98,6 @@ export async function GET(
 
     const client = result.rows[0];
 
-    const ratesResult = await query<{
-      id: string; kind: string; name: string; rate: number; is_default: boolean;
-    }>(
-      `SELECT id, kind, name, rate, is_default
-       FROM client_rates WHERE client_id = $1 AND user_id = $2
-       ORDER BY kind, is_default DESC, name`,
-      [clientId, user.id]
-    );
     const rates = ratesResult.rows.map((r) => ({
       id: r.id, kind: r.kind as "hourly" | "item", name: r.name, rate: r.rate, isDefault: r.is_default,
     }));
@@ -156,20 +160,7 @@ export async function PUT(
     const { name, contactName, email, phone, address, defaultRate, currency, billingRounding, isRetainer, retainerHours, retainerMonthlyFee, overageRate, notes, rates } = parsed.data;
     const { id: clientId } = await params;
 
-    const { query, withTransaction } = await import("@/lib/db");
-
-    // Verify ownership BEFORE mutating
-    const ownershipCheck = await query<{ exists: boolean }>(
-      `SELECT EXISTS(SELECT 1 FROM clients WHERE id = $1 AND user_id = $2) as exists`,
-      [clientId, user.id]
-    );
-
-    if (!ownershipCheck.rows[0].exists) {
-      return NextResponse.json(
-        { success: false, message: "הלקוח לא נמצא" },
-        { status: 404 }
-      );
-    }
+    const { withTransaction } = await import("@/lib/db");
 
     // rates === undefined (key absent) => caller didn't manage rates; leave them
     // untouched (the [id] detail form PUTs without rates). An explicit [] wipes them.
@@ -185,14 +176,38 @@ export async function PUT(
       ? (defaultHourly ? defaultHourly.rate : null)
       : (defaultRate ?? null);
 
-    // Update client + replace rates atomically (still scoped by user_id; RLS bound).
-    await withTransaction(async (db) => {
-      await db.query(
+    type ClientRow = {
+      id: string;
+      name: string;
+      contact_name: string | null;
+      email: string | null;
+      phone: string | null;
+      address: string | null;
+      default_rate: number | null;
+      currency: string | null;
+      billing_rounding: string | null;
+      is_retainer: boolean | null;
+      retainer_hours: number | null;
+      retainer_monthly_fee: number | null;
+      overage_rate: number | null;
+      notes: string | null;
+      is_active: boolean;
+      created_at: string;
+    };
+    type RateRow = { id: string; kind: string; name: string; rate: number; is_default: boolean };
+
+    // Update client + replace rates + re-read both, all in ONE transaction
+    // (single connection, single begin/commit; still scoped by user_id; RLS bound).
+    const txResult = await withTransaction(async (db) => {
+      const updateResult = await db.query<ClientRow>(
         `UPDATE clients
          SET name = $1, contact_name = $2, email = $3, phone = $4, address = $5, default_rate = COALESCE($6, default_rate),
              currency = $7, is_retainer = $8, retainer_hours = $9, retainer_monthly_fee = $10, overage_rate = $11,
              notes = $12, billing_rounding = COALESCE($13, billing_rounding)
-         WHERE id = $14 AND user_id = $15`,
+         WHERE id = $14 AND user_id = $15
+         RETURNING id, name, contact_name, email, phone, address, default_rate,
+                   currency, billing_rounding, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate,
+                   notes, is_active, created_at`,
         [
           name.trim(),
           contactName?.trim() || null,
@@ -212,56 +227,49 @@ export async function PUT(
         ]
       );
 
+      // 404 driven by the UPDATE's RETURNING (no separate EXISTS round-trip).
+      if (updateResult.rows.length === 0) {
+        return { notFound: true as const };
+      }
+
       if (ratesList !== null) {
         await db.query(`DELETE FROM client_rates WHERE client_id = $1 AND user_id = $2`, [clientId, user.id]);
-        for (const r of ratesList) {
+        if (ratesList.length > 0) {
+          // One multi-row INSERT via unnest over parallel arrays — preserves the
+          // exact per-rate field mapping of the old per-row INSERT.
+          const kinds = ratesList.map((r) => r.kind);
+          const names = ratesList.map((r) => r.name.trim());
+          const rateValues = ratesList.map((r) => r.rate);
+          const isDefaults = ratesList.map((r) => (r.kind === "hourly" ? r.isDefault : false));
           await db.query(
             `INSERT INTO client_rates (id, user_id, client_id, kind, name, rate, is_default)
-             VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6)`,
-            [user.id, clientId, r.kind, r.name.trim(), r.rate, r.kind === "hourly" ? r.isDefault : false]
+             SELECT gen_random_uuid()::text, $1, $2, k, n, rt, d
+             FROM unnest($3::text[], $4::text[], $5::numeric[], $6::boolean[]) AS t(k, n, rt, d)`,
+            [user.id, clientId, kinds, names, rateValues, isDefaults]
           );
         }
       }
+
+      // Re-read rates inside the same transaction (reuses the one connection).
+      const ratesResult = await db.query<RateRow>(
+        `SELECT id, kind, name, rate, is_default
+         FROM client_rates WHERE client_id = $1 AND user_id = $2
+         ORDER BY kind, is_default DESC, name`,
+        [clientId, user.id]
+      );
+
+      return { notFound: false as const, client: updateResult.rows[0], rateRows: ratesResult.rows };
     });
 
-    // Fetch the updated client (scoped by user_id)
-    const clientResult = await query<{
-      id: string;
-      name: string;
-      contact_name: string | null;
-      email: string | null;
-      phone: string | null;
-      address: string | null;
-      default_rate: number | null;
-      currency: string | null;
-      billing_rounding: string | null;
-      is_retainer: boolean | null;
-      retainer_hours: number | null;
-      retainer_monthly_fee: number | null;
-      overage_rate: number | null;
-      notes: string | null;
-      is_active: boolean;
-      created_at: string;
-    }>(
-      `SELECT id, name, contact_name, email, phone, address, default_rate,
-              currency, billing_rounding, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate,
-              notes, is_active, created_at
-       FROM clients
-       WHERE id = $1 AND user_id = $2`,
-      [clientId, user.id]
-    );
+    if (txResult.notFound) {
+      return NextResponse.json(
+        { success: false, message: "הלקוח לא נמצא" },
+        { status: 404 }
+      );
+    }
 
-    const client = clientResult.rows[0];
-
-    const ratesResult = await query<{
-      id: string; kind: string; name: string; rate: number; is_default: boolean;
-    }>(
-      `SELECT id, kind, name, rate, is_default
-       FROM client_rates WHERE client_id = $1 AND user_id = $2
-       ORDER BY kind, is_default DESC, name`,
-      [clientId, user.id]
-    );
-    const updatedRates = ratesResult.rows.map((r) => ({
+    const client = txResult.client;
+    const updatedRates = txResult.rateRows.map((r) => ({
       id: r.id, kind: r.kind as "hourly" | "item", name: r.name, rate: r.rate, isDefault: r.is_default,
     }));
 
@@ -317,28 +325,8 @@ export async function PATCH(
     const { query } = await import("@/lib/db");
     const { id: clientId } = await params;
 
-    // Restore - set is_active to TRUE
-    await query(
-      `UPDATE clients
-       SET is_active = TRUE
-       WHERE id = $1 AND user_id = $2`,
-      [clientId, user.id]
-    );
-
-    // Check if client exists and was updated
-    const checkResult = await query<{ exists: boolean }>(
-      `SELECT EXISTS(SELECT 1 FROM clients WHERE id = $1 AND user_id = $2) as exists`,
-      [clientId, user.id]
-    );
-
-    if (!checkResult.rows[0].exists) {
-      return NextResponse.json(
-        { success: false, message: "הלקוח לא נמצא" },
-        { status: 404 }
-      );
-    }
-
-    // Fetch the restored client
+    // Restore - set is_active to TRUE; RETURNING the needed cols collapses the
+    // update + existence check + re-read into one round-trip.
     const clientResult = await query<{
       id: string;
       name: string;
@@ -351,11 +339,19 @@ export async function PATCH(
       is_active: boolean;
       created_at: string;
     }>(
-      `SELECT id, name, contact_name, email, phone, address, default_rate, notes, is_active, created_at
-       FROM clients
-       WHERE id = $1 AND user_id = $2`,
+      `UPDATE clients
+       SET is_active = TRUE
+       WHERE id = $1 AND user_id = $2
+       RETURNING id, name, contact_name, email, phone, address, default_rate, notes, is_active, created_at`,
       [clientId, user.id]
     );
+
+    if (clientResult.rows.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "הלקוח לא נמצא" },
+        { status: 404 }
+      );
+    }
 
     const client = clientResult.rows[0];
 
@@ -405,21 +401,17 @@ export async function DELETE(
     const { query } = await import("@/lib/db");
     const { id: clientId } = await params;
 
-    // Soft delete - set is_active to FALSE
-    await query(
+    // Soft delete - set is_active to FALSE; RETURNING id collapses the update +
+    // existence check into one round-trip (404 when no row matched).
+    const deleteResult = await query<{ id: string }>(
       `UPDATE clients
        SET is_active = FALSE
-       WHERE id = $1 AND user_id = $2`,
+       WHERE id = $1 AND user_id = $2
+       RETURNING id`,
       [clientId, user.id]
     );
 
-    // Check if client exists and was updated
-    const checkResult = await query<{ exists: boolean }>(
-      `SELECT EXISTS(SELECT 1 FROM clients WHERE id = $1 AND user_id = $2) as exists`,
-      [clientId, user.id]
-    );
-
-    if (!checkResult.rows[0].exists) {
+    if (deleteResult.rows.length === 0) {
       return NextResponse.json(
         { success: false, message: "הלקוח לא נמצא" },
         { status: 404 }

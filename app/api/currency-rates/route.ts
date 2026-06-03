@@ -79,36 +79,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if rate already exists
-    const existing = await query(
-      `SELECT id FROM currency_rates WHERE user_id = $1 AND from_currency = $2 AND to_currency = $3`,
-      [user.id, fromCurrency, toCurrency]
-    );
-
-    let rateId;
-
-    if (existing.rows.length > 0) {
-      // Update existing rate
-      rateId = existing.rows[0].id;
-      await query(
-        `UPDATE currency_rates SET rate = $1, updated_at = NOW() WHERE id = $2`,
-        [rate, rateId]
-      );
-    } else {
-      // Create new rate
-      rateId = crypto.randomUUID();
-      await query(
-        `INSERT INTO currency_rates (id, user_id, from_currency, to_currency, rate) VALUES ($1, $2, $3, $4, $5)`,
-        [rateId, user.id, fromCurrency, toCurrency, rate]
-      );
-    }
-
-    // Return the created/updated rate
+    // Atomic upsert keyed on the (user_id, from_currency, to_currency) unique
+    // constraint — collapses the old read-modify-write (existence check +
+    // UPDATE/INSERT + re-SELECT) into a single statement and removes the race.
     const result = await query(
-      `SELECT id, user_id, from_currency as "fromCurrency", to_currency as "toCurrency", rate, created_at as "createdAt", updated_at as "updatedAt"
-       FROM currency_rates
-       WHERE id = $1 AND user_id = $2`,
-      [rateId, user.id]
+      `INSERT INTO currency_rates (id, user_id, from_currency, to_currency, rate)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (user_id, from_currency, to_currency)
+       DO UPDATE SET rate = EXCLUDED.rate, updated_at = NOW()
+       RETURNING id, user_id, from_currency as "fromCurrency", to_currency as "toCurrency", rate, created_at as "createdAt", updated_at as "updatedAt"`,
+      [crypto.randomUUID(), user.id, fromCurrency, toCurrency, rate]
     );
 
     return NextResponse.json({
