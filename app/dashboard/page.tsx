@@ -259,13 +259,21 @@ export default function DashboardPage() {
                   </span>
                 )}
               </h3>
-              <button
-                onClick={() => setShowTimerModal(true)}
-                className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-              >
-                <Clock className="h-4 w-4" />
-                טיימר חדש
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowTimerModal(true)}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  <Clock className="h-4 w-4" />
+                  טיימר חדש
+                </button>
+                <Link
+                  href="/entries?new=item"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface transition-colors"
+                >
+                  + פריט חיוב
+                </Link>
+              </div>
             </div>
 
             {/* Each running timer is a full-width horizontal band: big digits on
@@ -389,14 +397,14 @@ export default function DashboardPage() {
                 <ClockFaceMarks size={120} className="opacity-[0.07]" />
               </div>
               <div className="relative flex-1">
-                <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">פריט ידני</h3>
+                <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">פריט חיוב</h3>
                 <p className="mt-1 text-sm text-muted-foreground">הוסף פריט לחיוב ללא מדידת זמן — סכום קבוע או כמות × תעריף</p>
               </div>
               <Link
                 href="/entries?new=item"
                 className="relative mt-4 w-full rounded-md bg-primary px-8 py-4 text-center text-lg font-semibold text-primary-foreground hover:bg-primary/90 transition-all hover:shadow-md"
               >
-                + הזן פריט ידני
+                + פריט חיוב
               </Link>
               {/* Invisible spacer keeps this CTA aligned with the timer/task cards' secondary-link row */}
               <div className="relative mt-3 h-10" aria-hidden="true" />
