@@ -726,7 +726,8 @@ function ClientsPageContent() {
               onAction={() => setShowForm(true)}
             />
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            <div className="hidden md:block overflow-x-auto">
               <table className="min-w-full divide-y divide-border">
                 <thead className="bg-surface">
                   <tr>
@@ -824,6 +825,65 @@ function ClientsPageContent() {
                 </tbody>
               </table>
             </div>
+
+            <div className="md:hidden divide-y divide-border">
+              {clients.map((client) => (
+                <div key={client.id} className="p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <Link
+                      href={`/clients/${client.id}`}
+                      className="text-sm font-semibold text-primary hover:text-primary/90"
+                    >
+                      {client.name}
+                    </Link>
+                    {client.isActive ? (
+                      <span className="inline-flex shrink-0 rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-semibold text-success">פעיל</span>
+                    ) : (
+                      <span className="inline-flex shrink-0 rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">לא פעיל</span>
+                    )}
+                  </div>
+
+                  {(client.contactName || client.email || client.phone) && (
+                    <div className="mt-1 space-y-0.5 text-sm text-muted-foreground">
+                      {client.contactName && <div>{client.contactName}</div>}
+                      {client.email && <div className="truncate">{client.email}</div>}
+                      {client.phone && <div className="tabular-nums">{client.phone}</div>}
+                    </div>
+                  )}
+
+                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                    <span className="text-muted-foreground">
+                      תעריף:{" "}
+                      <span className="text-foreground">
+                        {client.defaultRate ? `${CURRENCY_SYMBOLS[client.currency] || "₪"}${client.defaultRate}/שעה` : "-"}
+                      </span>
+                    </span>
+                    <span className="text-muted-foreground">
+                      חויב:{" "}
+                      <span className="font-medium text-foreground">
+                        {Number(client.totalBilled) > 0 ? `₪${Number(client.totalBilled).toFixed(2)}` : "₪0"}
+                      </span>
+                    </span>
+                    <span className="text-muted-foreground">
+                      שעות:{" "}
+                      <span className="text-foreground tabular-nums">
+                        {Number(client.totalHours) > 0 ? `${Number(client.totalHours).toFixed(1)}` : "0"}
+                      </span>
+                    </span>
+                  </div>
+
+                  <div className="mt-3">
+                    <button
+                      onClick={() => handleEdit(client)}
+                      className="min-h-[44px] rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface"
+                    >
+                      ערוך
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            </>
           )}
         </div>
       </PageContainer>
