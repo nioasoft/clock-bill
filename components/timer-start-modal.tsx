@@ -124,23 +124,25 @@ export function TimerStartModal() {
                 </div>
               )}
 
-              <div>
-                <label
-                  htmlFor="timer-description"
-                  className="block text-sm font-medium text-foreground mb-1"
-                >
-                  תיאור
-                </label>
-                <input
-                  type="text"
-                  id="timer-description"
-                  value={timerDescription}
-                  onChange={(e) => setTimerDescription(e.target.value)}
-                  placeholder="מה אתה עובד עליו?"
-                  className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
-                  disabled={startingTimer}
-                />
-              </div>
+              {!selectedTask && (
+                <div>
+                  <label
+                    htmlFor="timer-description"
+                    className="block text-sm font-medium text-foreground mb-1"
+                  >
+                    תיאור
+                  </label>
+                  <input
+                    type="text"
+                    id="timer-description"
+                    value={timerDescription}
+                    onChange={(e) => setTimerDescription(e.target.value)}
+                    placeholder="מה אתה עובד עליו?"
+                    className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
+                    disabled={startingTimer}
+                  />
+                </div>
+              )}
 
               <div className="flex gap-3 justify-end">
                 <button

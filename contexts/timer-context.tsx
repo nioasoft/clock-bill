@@ -403,7 +403,11 @@ export function TimerProvider({ children }: TimerProviderProps) {
         body: JSON.stringify({
           projectId: selectedProject,
           taskId: selectedTask || null,
-          description: timerDescription || null,
+          // A selected task IS the "what am I working on" — default the
+          // description to its title (matches the Kanban move-to-in_progress path).
+          description:
+            timerDescription ||
+            (selectedTask ? timerTasks.find((t) => t.id === selectedTask)?.name ?? null : null),
           rate: timerRates.find((r) => r.id === selectedRateId)?.rate ?? null,
           rateLabel: timerRates.find((r) => r.id === selectedRateId)?.name ?? null,
         }),
@@ -429,7 +433,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
     } finally {
       setStartingTimer(false);
     }
-  }, [selectedProject, selectedTask, timerDescription, timerRates, selectedRateId, fetchRunningTimer]);
+  }, [selectedProject, selectedTask, timerDescription, timerTasks, timerRates, selectedRateId, fetchRunningTimer]);
 
   const handleStopTimer = useCallback(
     (entryId: string) => {
