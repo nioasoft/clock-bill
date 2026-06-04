@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ImportContent } from "@/components/import-content";
 import { DeleteAccountSection } from "@/components/delete-account-section";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
@@ -63,7 +62,7 @@ interface CurrencyRate {
 
 export default function SettingsPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"profile" | "security" | "currencies" | "notifications" | "import">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "security" | "currencies" | "notifications">("profile");
   const [sessions, setSessions] = useState<Session[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [currencyRates, setCurrencyRates] = useState<CurrencyRate[]>([]);
@@ -98,39 +97,6 @@ export default function SettingsPage() {
   const [rateSaving, setRateSaving] = useState(false);
   const [rateError, setRateError] = useState("");
   const [rateSuccess, setRateSuccess] = useState("");
-
-  // Import state
-  const [importType, setImportType] = useState<"clients" | "entries">("clients");
-  const [importFile, setImportFile] = useState<File | null>(null);
-  const [importLoading, setImportLoading] = useState(false);
-  const [importError, setImportError] = useState("");
-  const [importSuccess, setImportSuccess] = useState("");
-  const [importResults, setImportResults] = useState<{ imported: number; errors?: Array<{ row: number; message: string }> } | null>(null);
-  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
-  const [csvPreview, setCsvPreview] = useState<Record<string, string>[]>([]);
-  const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
-  const [showMappingStep, setShowMappingStep] = useState(false);
-  const importClientsRef = useRef<HTMLInputElement>(null);
-  const importEntriesRef = useRef<HTMLInputElement>(null);
-
-  // JSON Backup/Restore state
-  const [backupFile, setBackupFile] = useState<File | null>(null);
-  const [backupLoading, setBackupLoading] = useState(false);
-  const [backupError, setBackupError] = useState("");
-  const [backupSuccess, setBackupSuccess] = useState("");
-  const [backupImportResults, setBackupImportResults] = useState<{
-    profile: number;
-    clients: number;
-    projects: number;
-    timeEntries: number;
-    customTags: number;
-    currencyRates: number;
-    tasks: number;
-    errors: Array<{ entity: string; message: string }>;
-  } | null>(null);
-  const [importMode, setImportMode] = useState<"merge" | "replace">("merge");
-  const [showImportConfirm, setShowImportConfirm] = useState(false);
-  const backupInputRef = useRef<HTMLInputElement>(null);
 
   // Profile form state
   const [businessName, setBusinessName] = useState("");
@@ -659,101 +625,6 @@ export default function SettingsPage() {
     }
   };
 
-  // Handle JSON backup export
-  const handleExportBackup = async () => {
-    setBackupLoading(true);
-    setBackupError("");
-    setBackupSuccess("");
-
-    try {
-      const response = await fetch("/api/backup/export");
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "שגיאה ביצירת הגיבוי");
-      }
-
-      // Download the file
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = response.headers
-        .get("Content-Disposition")
-        ?.split('filename="')[1]
-        .replace(/"/g, "") || `clockbill-backup-${new Date().toISOString().split("T")[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      setBackupSuccess("הגיבוי נוצר בהצלחה!");
-      setTimeout(() => setBackupSuccess(""), 3000);
-    } catch (error) {
-      console.error("Error exporting backup:", error);
-      setBackupError(error instanceof Error ? error.message : "שגיאה ביצירת הגיבוי");
-    } finally {
-      setBackupLoading(false);
-    }
-  };
-
-  // Handle JSON backup import
-  const handleImportBackup = async () => {
-    if (!backupFile) {
-      setBackupError("יש לבחור קובץ גיבוי");
-      return;
-    }
-
-    setBackupLoading(true);
-    setBackupError("");
-    setBackupSuccess("");
-    setBackupImportResults(null);
-
-    try {
-      // Read and parse the backup file
-      const text = await backupFile.text();
-      const backup = JSON.parse(text);
-
-      // Show confirmation dialog
-      if (!showImportConfirm) {
-        setShowImportConfirm(true);
-        setBackupLoading(false);
-        return;
-      }
-
-      // Import the backup
-      const response = await fetch("/api/backup/import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ backup, mode: importMode }),
-      });
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message || "שגיאה בייבוא הגיבוי");
-      }
-
-      setBackupImportResults(data.stats);
-      setBackupSuccess(`הגיבוי יובא בהצלחה!`);
-      setShowImportConfirm(false);
-      setBackupFile(null);
-
-      // Reset file input
-      if (backupInputRef.current) {
-        backupInputRef.current.value = "";
-      }
-
-      setTimeout(() => setBackupSuccess(""), 5000);
-    } catch (error) {
-      console.error("Error importing backup:", error);
-      setBackupError(error instanceof Error ? error.message : "שגיאה בייבוא הגיבוי");
-      setShowImportConfirm(false);
-    } finally {
-      setBackupLoading(false);
-    }
-  };
-
   return (
     <AppLayout>
       <PageContainer maxWidth="max-w-3xl">
@@ -809,18 +680,6 @@ export default function SettingsPage() {
               aria-selected={activeTab === "security"}
             >
               אבטחה
-            </button>
-            <button
-              onClick={() => setActiveTab("import")}
-              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-                activeTab === "import"
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-              role="tab"
-              aria-selected={activeTab === "import"}
-            >
-              ייבוא נתונים
             </button>
           </nav>
         </div>
@@ -1903,50 +1762,6 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Import Tab Content */}
-        {activeTab === "import" && (
-          <div role="tabpanel">
-            <ImportContent
-            importType={importType}
-            setImportType={setImportType}
-            importFile={importFile}
-            setImportFile={setImportFile}
-            importLoading={importLoading}
-            setImportLoading={setImportLoading}
-            importError={importError}
-            setImportError={setImportError}
-            importSuccess={importSuccess}
-            setImportSuccess={setImportSuccess}
-            importResults={importResults}
-            setImportResults={setImportResults}
-            csvHeaders={csvHeaders}
-            setCsvHeaders={setCsvHeaders}
-            csvPreview={csvPreview}
-            setCsvPreview={setCsvPreview}
-            columnMapping={columnMapping}
-            setColumnMapping={setColumnMapping}
-            showMappingStep={showMappingStep}
-            setShowMappingStep={setShowMappingStep}
-            importClientsRef={importClientsRef}
-            importEntriesRef={importEntriesRef}
-            backupFile={backupFile}
-            setBackupFile={setBackupFile}
-            backupLoading={backupLoading}
-            backupError={backupError}
-            setBackupError={setBackupError}
-            backupSuccess={backupSuccess}
-            setBackupSuccess={setBackupSuccess}
-            backupImportResults={backupImportResults}
-            setBackupImportResults={setBackupImportResults}
-            importMode={importMode}
-            setImportMode={setImportMode}
-            backupInputRef={backupInputRef}
-            handleExportBackup={handleExportBackup}
-            handleImportBackup={handleImportBackup}
-          />
-          </div>
-        )}
-
       </PageContainer>
 
       {/* Confirmation Dialog */}
@@ -1979,59 +1794,6 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* Import Confirmation Dialog */}
-      {showImportConfirm && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-card rounded-[var(--radius-card)] border border-border-strong p-6 max-w-md w-full mx-4 motion-safe:animate-scale-in" dir="rtl">
-            <h3 className="text-lg font-semibold text-foreground mb-4">
-              אישור שחזור גיבוי
-            </h3>
-            <div className="space-y-3 mb-6">
-              <p className="text-muted-foreground">
-                אתה עומד לשחזר נתונים מקובץ הגיבוי:
-              </p>
-              <p className="text-sm font-medium text-foreground">{backupFile?.name}</p>
-              <div className={`p-3 rounded-[var(--radius-card)] ${
-                importMode === "replace"
-                  ? "bg-destructive/10 border border-destructive/20"
-                  : "bg-secondary-light border border-secondary/20"
-              }`}>
-                <p className="text-sm font-medium mb-1">
-                  {importMode === "replace" ? "⚠️ מצב החלפה" : "📥 מצב מיזוג"}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {importMode === "replace"
-                    ? "כל הנתונים הקיימים יימחקו לפני השחזור. פעולה זו אינה הפיכה!"
-                    : "נתונים חדשים יתווספו. נתונים קיימים עם אותו שם לא יוחלפו."}
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => {
-                  setShowImportConfirm(false);
-                  setBackupLoading(false);
-                }}
-                disabled={backupLoading}
-                className="px-4 py-2 border border-border bg-card text-foreground rounded-[var(--radius)] hover:bg-muted disabled:opacity-50 transition-colors"
-              >
-                ביטול
-              </button>
-              <button
-                onClick={() => handleImportBackup()}
-                disabled={backupLoading}
-                className={`px-4 py-2 rounded-[var(--radius)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
-                  importMode === "replace"
-                    ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    : "bg-success text-success-foreground hover:bg-success/90"
-                }`}
-              >
-                {backupLoading ? "משחזר..." : "אשר שחזור"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </AppLayout>
   );
 }
