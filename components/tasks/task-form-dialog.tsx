@@ -257,7 +257,7 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
           <button
             type="button"
             onClick={() => setShowAdvanced((v) => !v)}
-            className="sm:hidden text-sm font-medium text-primary"
+            className="sm:hidden min-h-[44px] py-2 text-start text-sm font-medium text-primary"
             aria-expanded={showAdvanced}
             aria-controls="task-advanced"
           >

@@ -64,6 +64,7 @@ export function MobileTaskList({ board }: { board: UseTasksBoardReturn }) {
           return (
             <button
               key={s}
+              id={`tab-${s}`}
               role="tab"
               aria-selected={isActive}
               onClick={() => setActive(s)}
@@ -78,7 +79,7 @@ export function MobileTaskList({ board }: { board: UseTasksBoardReturn }) {
         })}
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div role="tabpanel" aria-labelledby={`tab-${tab}`} className="flex flex-col gap-2">
         {tasks.length === 0 ? (
           <p className="px-2 py-10 text-center text-sm text-muted-foreground">{EMPTY_LABEL[tab]}</p>
         ) : (
