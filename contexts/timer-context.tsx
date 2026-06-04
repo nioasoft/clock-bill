@@ -81,7 +81,10 @@ interface TimerContextValue {
   setStopTimerHours: (hours: string) => void;
   setStopTimerMinutes: (minutes: string) => void;
   handleStartTimer: () => Promise<void>;
-  handleStopTimer: (entryId: string) => void;
+  handleStopTimer: (entryId: string, opts?: { managed?: boolean }) => void;
+  stopTimerCanComplete: boolean;
+  stopTimerMarkDone: boolean;
+  setStopTimerMarkDone: (value: boolean) => void;
   confirmStopTimer: () => Promise<void>;
   cancelStopTimer: () => void;
   handlePauseTimer: (entryId: string) => Promise<void>;
@@ -91,6 +94,8 @@ interface TimerContextValue {
   refreshTimer: () => Promise<void>;
   /** Subscribe to "a timer was stopped" events; returns an unsubscribe fn. */
   onTimerStopped: (cb: () => void) => () => void;
+  /** Subscribe to "a timer was started" events; returns an unsubscribe fn. */
+  onTimerStarted: (cb: () => void) => () => void;
 }
 
 const noop = () => {};
@@ -131,6 +136,9 @@ const defaultTimerValue: TimerContextValue = {
   setStopTimerMinutes: noop,
   handleStartTimer: asyncNoop,
   handleStopTimer: noop,
+  stopTimerCanComplete: false,
+  stopTimerMarkDone: true,
+  setStopTimerMarkDone: noop,
   confirmStopTimer: asyncNoop,
   cancelStopTimer: noop,
   handlePauseTimer: asyncNoop,
@@ -138,6 +146,7 @@ const defaultTimerValue: TimerContextValue = {
   handleUpdateTimerNotes: async () => false,
   refreshTimer: asyncNoop,
   onTimerStopped: () => () => {},
+  onTimerStarted: () => () => {},
 };
 
 const TimerContext = createContext<TimerContextValue>(defaultTimerValue);
@@ -203,9 +212,12 @@ export function TimerProvider({ children }: TimerProviderProps) {
   const [stopTimerNotes, setStopTimerNotes] = useState("");
   const [stopTimerHours, setStopTimerHours] = useState("");
   const [stopTimerMinutes, setStopTimerMinutes] = useState("");
+  const [stopTimerCanComplete, setStopTimerCanComplete] = useState(false);
+  const [stopTimerMarkDone, setStopTimerMarkDone] = useState(true);
 
   // Callback listeners for when a timer stops (e.g. dashboard refreshes stats)
   const onTimerStoppedRef = useRef<Array<() => void>>([]);
+  const onTimerStartedRef = useRef<Array<() => void>>([]);
 
   const { checkLongTimer, resetLongTimerNotification } = useNotifications();
 
@@ -424,6 +436,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
         haptic("success");
         showSuccessToast("הטיימר הופעל בהצלחה");
         await fetchRunningTimer();
+        onTimerStartedRef.current.forEach((cb) => cb());
       } else {
         showErrorToast(data.message || "שגיאה בהתחלת הטיימר");
       }
@@ -436,7 +449,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
   }, [selectedProject, selectedTask, timerDescription, timerTasks, timerRates, selectedRateId, fetchRunningTimer]);
 
   const handleStopTimer = useCallback(
-    (entryId: string) => {
+    (entryId: string, opts?: { managed?: boolean }) => {
       const timer = runningTimers.find((t) => t.id === entryId);
       if (!timer) return;
 
@@ -452,6 +465,10 @@ export function TimerProvider({ children }: TimerProviderProps) {
       setStopTimerNotes(timer.notes || "");
       setStopTimerHours(hours.toString());
       setStopTimerMinutes(minutes.toString());
+      // Offer "mark task done" only for task-attached timers stopped directly
+      // (not via a Kanban move, which already sets the destination status).
+      setStopTimerCanComplete(Boolean(timer.taskId) && !opts?.managed);
+      setStopTimerMarkDone(true);
       setShowStopTimerModal(true);
     },
     [runningTimers]
@@ -477,6 +494,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
           // so editing is authoritative: keep, append, or clear all behave as shown.
           notes: stopTimerNotes,
           duration: totalDuration,
+          markTaskDone: stopTimerCanComplete && stopTimerMarkDone,
         }),
       });
 
@@ -514,7 +532,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
     } finally {
       setStoppingTimer(false);
     }
-  }, [stopTimerTargetId, stopTimerDescription, stopTimerNotes, stopTimerHours, stopTimerMinutes]);
+  }, [stopTimerTargetId, stopTimerDescription, stopTimerNotes, stopTimerHours, stopTimerMinutes, stopTimerCanComplete, stopTimerMarkDone]);
 
   const cancelStopTimer = useCallback(() => {
     setShowStopTimerModal(false);
@@ -641,6 +659,13 @@ export function TimerProvider({ children }: TimerProviderProps) {
     };
   }, []);
 
+  const onTimerStarted = useCallback((cb: () => void) => {
+    onTimerStartedRef.current.push(cb);
+    return () => {
+      onTimerStartedRef.current = onTimerStartedRef.current.filter((c) => c !== cb);
+    };
+  }, []);
+
   const value: TimerContextValue = {
     runningTimers,
     runningTimerForTask,
@@ -676,6 +701,9 @@ export function TimerProvider({ children }: TimerProviderProps) {
     setStopTimerMinutes,
     handleStartTimer,
     handleStopTimer,
+    stopTimerCanComplete,
+    stopTimerMarkDone,
+    setStopTimerMarkDone,
     confirmStopTimer,
     cancelStopTimer,
     handlePauseTimer,
@@ -683,6 +711,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
     handleUpdateTimerNotes,
     refreshTimer,
     onTimerStopped,
+    onTimerStarted,
   };
 
   return (

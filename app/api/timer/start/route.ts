@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { query } from "@/lib/db";
+import { withTransaction } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
 import { createLogger } from "@/lib/logger";
@@ -18,52 +18,66 @@ const startTimerSchema = z.object({
 
 /**
  * POST /api/timer/start
- * Starts a new timer by creating a time entry with start_time
+ * Starts a timer (creates a running time entry). When the timer is attached to
+ * a task, that task is moved to "in_progress" in the SAME transaction (mirrors
+ * the Kanban drag-to-in_progress behavior).
  */
 export async function POST(request: NextRequest) {
   let userId: string | undefined;
   let projectId: string | undefined;
   try {
-    // Get authenticated user
     const user = await getUser();
     if (!user) {
       return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
     }
-
     userId = user.id;
 
-    // Parse request body
     const parsed = await parseBody(request, startTimerSchema);
     if (!parsed.ok) return parsed.response;
     const { description, taskId, rate, rateLabel } = parsed.data;
     projectId = parsed.data.projectId;
 
-    // Verify the project belongs to the user
-    const projectCheck = await query<{ id: string }>(
-      `SELECT id FROM projects WHERE id = $1 AND user_id = $2`,
-      [projectId, userId]
-    );
-
-    if (projectCheck.rows.length === 0) {
-      return NextResponse.json(
-        { success: false, message: "הפרויקט לא נמצא" },
-        { status: 404 }
-      );
-    }
-
-    // Create new time entry with start_time. Multiple concurrent running timers
-    // per user are allowed (e.g. working on two projects at once).
     const now = new Date();
-    const today = now.toISOString().split('T')[0];
+    const today = now.toISOString().split("T")[0];
 
-    const result = await query<{ id: string }>(
-      `INSERT INTO time_entries (id, user_id, project_id, task_id, description, start_time, date, duration, is_billable, billing_kind, rate, rate_label)
-       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, 0, TRUE, 'hourly', $7, $8)
-       RETURNING id`,
-      [userId, projectId, taskId || null, description || '', now.toISOString(), today, rate ?? null, rateLabel?.trim() || null]
-    );
+    const newEntry = await withTransaction(async (client) => {
+      // Verify the project belongs to the user.
+      const projectCheck = await client.query<{ id: string }>(
+        `SELECT id FROM projects WHERE id = $1 AND user_id = $2`,
+        [projectId, userId]
+      );
+      if (projectCheck.rows.length === 0) return null;
 
-    const newEntry = result.rows[0];
+      // Create the running time entry. Multiple concurrent running timers per
+      // user are allowed (e.g. two projects at once).
+      const result = await client.query<{ id: string }>(
+        `INSERT INTO time_entries (id, user_id, project_id, task_id, description, start_time, date, duration, is_billable, billing_kind, rate, rate_label)
+         VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, 0, TRUE, 'hourly', $7, $8)
+         RETURNING id`,
+        [userId, projectId, taskId || null, description || "", now.toISOString(), today, rate ?? null, rateLabel?.trim() || null]
+      );
+
+      // Starting a timer ON a task = you're working on it → move it to
+      // "in_progress" (append to the end of that column). Skips tasks already
+      // in progress so their position isn't disturbed.
+      if (taskId) {
+        const pos = await client.query<{ next: number }>(
+          `SELECT COALESCE(MAX(position), 0) + 1000 AS next FROM tasks WHERE user_id = $1 AND status = 'in_progress'`,
+          [userId]
+        );
+        await client.query(
+          `UPDATE tasks SET status = 'in_progress', position = $1, updated_at = NOW()
+           WHERE id = $2 AND user_id = $3 AND status <> 'in_progress'`,
+          [pos.rows[0].next, taskId, userId]
+        );
+      }
+
+      return result.rows[0];
+    });
+
+    if (!newEntry) {
+      return NextResponse.json({ success: false, message: "הפרויקט לא נמצא" }, { status: 404 });
+    }
 
     return NextResponse.json({
       success: true,
@@ -71,14 +85,11 @@ export async function POST(request: NextRequest) {
         id: newEntry.id,
         projectId,
         description: description || null,
-        startTime: now.toISOString()
-      }
+        startTime: now.toISOString(),
+      },
     });
   } catch (error) {
     logger.error("Failed to start timer", error, userId && projectId ? { userId, projectId } : undefined);
-    return NextResponse.json(
-      { success: false, message: "שגיאה בהתחלת הטיימר" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: "שגיאה בהתחלת הטיימר" }, { status: 500 });
   }
 }

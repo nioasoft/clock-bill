@@ -10,6 +10,7 @@ const stopTimerSchema = z.object({
   description: z.string().max(5000).nullish(),
   notes: z.string().max(5000).nullish(),
   duration: z.number().nullish(),
+  markTaskDone: z.boolean().nullish(),
 });
 
 /**
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
     // Parse request body
     const parsed = await parseBody(request, stopTimerSchema);
     if (!parsed.ok) return parsed.response;
-    const { entryId, description, notes, duration: customDuration } = parsed.data;
+    const { entryId, description, notes, duration: customDuration, markTaskDone } = parsed.data;
 
     const result = await withTransaction(async (client) => {
       // Lock the running entry for the duration of the transaction so a
@@ -42,8 +43,9 @@ export async function POST(request: NextRequest) {
         description: string;
         total_paused_time: number;
         paused_at: string | null;
+        task_id: string | null;
       }>(
-        `SELECT id, start_time, description, total_paused_time, paused_at
+        `SELECT id, start_time, description, total_paused_time, paused_at, task_id
          FROM time_entries
          WHERE id = $1 AND user_id = $2 AND start_time IS NOT NULL AND end_time IS NULL
          FOR UPDATE`,
@@ -97,6 +99,20 @@ export async function POST(request: NextRequest) {
           entryId,
         ]
       );
+
+      // Optionally mark the attached task as done (the stop modal's
+      // "סמן כהושלמה" checkbox). Append to the end of the done column.
+      if (markTaskDone && entry.task_id) {
+        const pos = await client.query<{ next: number }>(
+          `SELECT COALESCE(MAX(position), 0) + 1000 AS next FROM tasks WHERE user_id = $1 AND status = 'done'`,
+          [userId]
+        );
+        await client.query(
+          `UPDATE tasks SET status = 'done', position = $1, updated_at = NOW()
+           WHERE id = $2 AND user_id = $3 AND status <> 'done'`,
+          [pos.rows[0].next, entry.task_id, userId]
+        );
+      }
 
       return { durationMinutes, endTime };
     });

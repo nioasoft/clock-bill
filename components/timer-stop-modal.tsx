@@ -25,6 +25,9 @@ export function TimerStopModal() {
     stoppingTimer,
     confirmStopTimer,
     cancelStopTimer,
+    stopTimerCanComplete,
+    stopTimerMarkDone,
+    setStopTimerMarkDone,
   } = useTimer();
 
   // Elapsed for the specific timer being stopped.
@@ -122,6 +125,19 @@ export function TimerStopModal() {
               </div>
             </div>
           </div>
+
+          {stopTimerCanComplete && (
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={stopTimerMarkDone}
+                onChange={(e) => setStopTimerMarkDone(e.target.checked)}
+                disabled={stoppingTimer}
+                className="h-4 w-4 rounded border-border accent-primary"
+              />
+              <span className="text-sm text-foreground">סמן את המשימה כהושלמה</span>
+            </label>
+          )}
 
           <div className="flex gap-3 justify-end">
             <button

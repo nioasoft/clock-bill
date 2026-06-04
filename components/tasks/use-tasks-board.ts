@@ -25,7 +25,7 @@ export interface UseTasksBoardReturn {
 /** Shared task board data + timer-aware status moves. Consumed by both the
  *  desktop Kanban and the mobile list so side-effects stay identical. */
 export function useTasksBoard(): UseTasksBoardReturn {
-  const { refreshTimer, runningTimerForTask, handleStopTimer, onTimerStopped } = useTimer();
+  const { refreshTimer, runningTimerForTask, handleStopTimer, onTimerStopped, onTimerStarted } = useTimer();
   const [state, setState] = useState<BoardState>({ loading: true, error: false, tasks: [] });
   // Pending unsubscribe for an in-flight "drag/move out of in_progress → stop
   // timer" subscription, so a new move can replace a lingering (cancelled) one.
@@ -48,6 +48,7 @@ export function useTasksBoard(): UseTasksBoardReturn {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load(); }, [load]);
   useEffect(() => onTimerStopped(() => load()), [onTimerStopped, load]);
+  useEffect(() => onTimerStarted(() => load()), [onTimerStarted, load]);
 
   const byStatus = useCallback(
     (status: TaskStatus) =>
@@ -98,7 +99,7 @@ export function useTasksBoard(): UseTasksBoardReturn {
           catch { showErrorToast("שגיאה בעדכון המשימה"); }
         });
         pendingStopUnsubRef.current = unsub;
-        handleStopTimer(entryId);
+        handleStopTimer(entryId, { managed: true });
       }
       return;
     }
