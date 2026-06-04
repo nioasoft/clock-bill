@@ -11,21 +11,37 @@ import {
 import { useTimer } from "@/contexts/timer-context";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { TASK_PRIORITY_LABEL, type TaskRecord } from "@/lib/tasks-types";
+import { allowedTransitions } from "@/lib/tasks-transitions";
+import type { TaskStatus } from "@/lib/tasks-types";
 import { TaskFormDialog } from "./task-form-dialog";
 
 interface TaskDetailSheetProps {
   task: TaskRecord;
+  moveTask: (taskId: string, toStatus: TaskStatus) => Promise<void>;
   onClose: () => void;
   onChanged: () => void;
 }
 
 const rowLabelClass = "text-xs font-semibold uppercase tracking-widest text-muted-foreground";
 
-export function TaskDetailSheet({ task, onClose, onChanged }: TaskDetailSheetProps) {
+export function TaskDetailSheet({ task, moveTask, onClose, onChanged }: TaskDetailSheetProps) {
   const { runningTimerForTask } = useTimer();
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [moving, setMoving] = useState(false);
+
+  const handleMove = async (toStatus: TaskStatus) => {
+    setMoving(true);
+    try {
+      await moveTask(task.id, toStatus);
+      // moveTask updates the board itself; just close the sheet. (For the
+      // running-timer case it opens the stop modal and commits after stop.)
+      onClose();
+    } finally {
+      setMoving(false);
+    }
+  };
 
   const isTimerRunning = Boolean(runningTimerForTask(task.id));
 
@@ -62,7 +78,7 @@ export function TaskDetailSheet({ task, onClose, onChanged }: TaskDetailSheetPro
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent>
+      <DialogContent variant="sheet">
         <DialogHeader>
           <DialogTitle>{task.title}</DialogTitle>
           <DialogDescription>
@@ -76,6 +92,24 @@ export function TaskDetailSheet({ task, onClose, onChanged }: TaskDetailSheetPro
               טיימר רץ למשימה זו
             </div>
           )}
+
+          <div className="flex flex-wrap gap-2">
+            {allowedTransitions(task.status).map((tr) => (
+              <button
+                key={tr.to}
+                type="button"
+                onClick={() => handleMove(tr.to)}
+                disabled={moving}
+                className={`min-h-[44px] flex-1 rounded-[var(--radius)] px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  tr.primary
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                    : "border border-border text-foreground hover:bg-muted"
+                }`}
+              >
+                {tr.label}
+              </button>
+            ))}
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>

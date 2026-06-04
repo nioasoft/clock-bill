@@ -46,6 +46,13 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
 
   const [submitting, setSubmitting] = useState(false);
 
+  // Mobile progressive disclosure: advanced fields collapse on mobile create.
+  // On sm+ they're always shown via CSS; this state only gates the mobile view.
+  const hasAdvancedValues = Boolean(
+    task?.dueDate || (task?.tags && task.tags.length > 0) || task?.notes || (task?.priority && task.priority !== "normal")
+  );
+  const [showAdvanced, setShowAdvanced] = useState<boolean>(isEdit && hasAdvancedValues);
+
   // Load clients + projects once on mount.
   useEffect(() => {
     let cancelled = false;
@@ -164,7 +171,7 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) props.onClose(); }}>
-      <DialogContent>
+      <DialogContent variant="sheet">
         <DialogHeader>
           <DialogTitle>{isEdit ? "עריכת משימה" : "משימה חדשה"}</DialogTitle>
           <DialogDescription>
@@ -230,21 +237,6 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
                 ))}
               </select>
             </div>
-
-            <div>
-              <label htmlFor="task-priority" className={labelClass}>דחיפות</label>
-              <select
-                id="task-priority"
-                value={priority}
-                onChange={(e) => setPriority(e.target.value as TaskPriority)}
-                className={fieldClass(false)}
-                disabled={submitting}
-              >
-                {TASK_PRIORITIES.map((p) => (
-                  <option key={p} value={p}>{TASK_PRIORITY_LABEL[p]}</option>
-                ))}
-              </select>
-            </div>
           </div>
 
           <div>
@@ -262,67 +254,93 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
             />
           </div>
 
-          <div>
-            <label htmlFor="task-due" className={labelClass}>תאריך יעד</label>
-            <input
-              id="task-due"
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              className={`${fieldClass(false)} font-mono`}
-              disabled={submitting}
-            />
-          </div>
+          <button
+            type="button"
+            onClick={() => setShowAdvanced((v) => !v)}
+            className="sm:hidden text-sm font-medium text-primary"
+            aria-expanded={showAdvanced}
+          >
+            {showAdvanced ? "הסתר פרטים נוספים" : "+ פרטים נוספים"}
+          </button>
 
-          <div>
-            <label htmlFor="task-tags" className={labelClass}>תגיות</label>
-            {tags.length > 0 && (
-              <div className="mb-2 flex flex-wrap gap-2">
-                {tags.map((t) => (
-                  <span
-                    key={t}
-                    className="inline-flex items-center gap-1 rounded-[var(--radius)] border border-border bg-background px-2 py-1 text-xs text-foreground"
-                  >
-                    {t}
-                    <button
-                      type="button"
-                      onClick={() => setTags((prev) => prev.filter((x) => x !== t))}
-                      className="text-muted-foreground hover:text-foreground"
-                      aria-label={`הסר תגית ${t}`}
-                    >
-                      ×
-                    </button>
-                  </span>
+          <div className={`${showAdvanced ? "" : "hidden"} sm:block space-y-4`}>
+            <div>
+              <label htmlFor="task-priority" className={labelClass}>דחיפות</label>
+              <select
+                id="task-priority"
+                value={priority}
+                onChange={(e) => setPriority(e.target.value as TaskPriority)}
+                className={fieldClass(false)}
+                disabled={submitting}
+              >
+                {TASK_PRIORITIES.map((p) => (
+                  <option key={p} value={p}>{TASK_PRIORITY_LABEL[p]}</option>
                 ))}
-              </div>
-            )}
-            <input
-              id="task-tags"
-              type="text"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={handleTagKeyDown}
-              onBlur={addTag}
-              className={fieldClass(false)}
-              disabled={submitting}
-              placeholder="הקלד תגית ולחץ Enter"
-            />
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="task-due" className={labelClass}>תאריך יעד</label>
+              <input
+                id="task-due"
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className={`${fieldClass(false)} font-mono`}
+                disabled={submitting}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="task-tags" className={labelClass}>תגיות</label>
+              {tags.length > 0 && (
+                <div className="mb-2 flex flex-wrap gap-2">
+                  {tags.map((t) => (
+                    <span
+                      key={t}
+                      className="inline-flex items-center gap-1 rounded-[var(--radius)] border border-border bg-background px-2 py-1 text-xs text-foreground"
+                    >
+                      {t}
+                      <button
+                        type="button"
+                        onClick={() => setTags((prev) => prev.filter((x) => x !== t))}
+                        className="text-muted-foreground hover:text-foreground"
+                        aria-label={`הסר תגית ${t}`}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <input
+                id="task-tags"
+                type="text"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={handleTagKeyDown}
+                onBlur={addTag}
+                className={fieldClass(false)}
+                disabled={submitting}
+                placeholder="הקלד תגית ולחץ Enter"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="task-notes" className={labelClass}>הערות</label>
+              <textarea
+                id="task-notes"
+                rows={3}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className={`${fieldClass(false)} resize-y`}
+                disabled={submitting}
+                placeholder="מידע נוסף על המשימה (אופציונלי)"
+              />
+            </div>
           </div>
 
-          <div>
-            <label htmlFor="task-notes" className={labelClass}>הערות</label>
-            <textarea
-              id="task-notes"
-              rows={3}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className={`${fieldClass(false)} resize-y`}
-              disabled={submitting}
-              placeholder="מידע נוסף על המשימה (אופציונלי)"
-            />
-          </div>
-
-          <div className="flex justify-end gap-3 border-t border-border pt-4">
+          <div className="sticky bottom-0 z-10 -mx-5 -mb-5 flex justify-end gap-3 border-t border-border bg-card px-5 py-4 sm:-mx-6 sm:-mb-6 sm:px-6">
             <button
               type="button"
               onClick={props.onClose}
