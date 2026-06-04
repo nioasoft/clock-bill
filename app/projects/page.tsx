@@ -619,7 +619,8 @@ function ProjectsPageContent() {
               onAction={statusFilter === "archived" ? undefined : () => setShowForm(true)}
             />
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            <div className="hidden md:block overflow-x-auto">
               <table className="min-w-full divide-y divide-border">
                 <thead className="bg-surface">
                   <tr>
@@ -719,6 +720,52 @@ function ProjectsPageContent() {
                 </tbody>
               </table>
             </div>
+
+            <div className="md:hidden divide-y divide-border">
+              {projects.map((project) => (
+                <div
+                  key={project.id}
+                  className="cursor-pointer p-4"
+                  onClick={() => router.push(`/projects/${project.id}`)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") router.push(`/projects/${project.id}`); }}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="text-sm font-semibold text-primary">{project.name}</div>
+                    {project.status === "active" ? (
+                      <span className="inline-flex shrink-0 rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-semibold text-success">{getStatusLabel(project.status)}</span>
+                    ) : project.status === "completed" ? (
+                      <span className="inline-flex shrink-0 rounded-full bg-secondary/10 px-2.5 py-0.5 text-xs font-semibold text-secondary">{getStatusLabel(project.status)}</span>
+                    ) : project.status === "paused" ? (
+                      <span className="inline-flex shrink-0 rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-semibold text-amber-700">{getStatusLabel(project.status)}</span>
+                    ) : (
+                      <span className="inline-flex shrink-0 rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">{getStatusLabel(project.status)}</span>
+                    )}
+                  </div>
+
+                  <div className="mt-1 text-sm text-muted-foreground">{project.clientName}</div>
+
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {project.startDate ? new Date(project.startDate).toLocaleDateString("he-IL") : "-"}
+                    {" - "}
+                    {project.endDate ? new Date(project.endDate).toLocaleDateString("he-IL") : "ללא תאריך סיום"}
+                  </div>
+
+                  {statusFilter === "archived" && (
+                    <div className="mt-3">
+                      <button
+                        onClick={(e) => handleRestore(project.id, e)}
+                        className="min-h-[44px] rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-success transition-colors hover:bg-surface"
+                      >
+                        שחזר
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            </>
           )}
         </div>
       </PageContainer>
