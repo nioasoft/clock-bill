@@ -1,5 +1,6 @@
 "use client";
 
+import { fieldClass } from "@/lib/form-styles";
 
 interface ImportContentProps {
   importType: "clients" | "entries";
@@ -246,7 +247,7 @@ export function ImportContent({
   return (
     <div className="space-y-8">
       {/* JSON Backup/Restore Section */}
-      <div className="bg-card rounded-lg shadow p-6">
+      <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
         <h2 className="text-xl font-semibold text-foreground mb-4">
           גיבוי ושחזור נתונים
         </h2>
@@ -275,11 +276,11 @@ export function ImportContent({
           <button
             onClick={handleExportBackup}
             disabled={backupLoading}
-            className="flex items-center gap-2 px-4 py-2 bg-secondary text-white text-sm font-medium rounded-lg hover:bg-secondary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-4 py-2 border border-border bg-card text-foreground text-sm font-medium rounded-[var(--radius)] hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {backupLoading ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-foreground border-t-transparent"></div>
                 יוצר גיבוי...
               </>
             ) : (
@@ -319,10 +320,10 @@ export function ImportContent({
             <div className="flex gap-4">
               <button
                 onClick={() => setImportMode("merge")}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`px-4 py-2 rounded-[var(--radius)] font-medium transition-colors ${
                   importMode === "merge"
                     ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-foreground hover:bg-muted"
+                    : "bg-muted text-foreground hover:bg-card-elevated"
                 }`}
               >
                 מיזוג
@@ -330,10 +331,10 @@ export function ImportContent({
               </button>
               <button
                 onClick={() => setImportMode("replace")}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`px-4 py-2 rounded-[var(--radius)] font-medium transition-colors ${
                   importMode === "replace"
                     ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-foreground hover:bg-muted"
+                    : "bg-muted text-foreground hover:bg-card-elevated"
                 }`}
               >
                 החלפה
@@ -371,7 +372,7 @@ export function ImportContent({
             <button
               onClick={() => backupInputRef.current?.click()}
               disabled={backupLoading}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-[var(--radius)] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <svg
                 className="w-4 h-4"
@@ -399,11 +400,11 @@ export function ImportContent({
             <button
               onClick={handleImportBackup}
               disabled={backupLoading}
-              className="px-6 py-2 bg-success text-success-foreground font-medium rounded-lg hover:bg-success/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-6 py-2 bg-success text-success-foreground font-medium rounded-[var(--radius)] hover:bg-success/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {backupLoading ? (
                 <span className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-success-foreground border-t-transparent"></div>
                   משחזר...
                 </span>
               ) : (
@@ -414,7 +415,7 @@ export function ImportContent({
 
           {/* Import Results */}
           {backupImportResults && (
-            <div className="mt-6 border border-border rounded-lg p-4 bg-muted/50">
+            <div className="mt-6 border border-border rounded-[var(--radius-card)] p-4 bg-muted/50">
               <h4 className="font-semibold text-foreground mb-3">תוצאות השחזור</h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                 <div className="text-center">
@@ -471,7 +472,7 @@ export function ImportContent({
       </div>
 
       {/* CSV Import Section */}
-      <div className="bg-card rounded-lg shadow p-6">
+      <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
         <h2 className="text-xl font-semibold text-foreground mb-4">
           ייבוא נתונים מ-CSV
         </h2>
@@ -509,10 +510,10 @@ export function ImportContent({
                 setImportError("");
                 setImportSuccess("");
               }}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-4 py-2 rounded-[var(--radius)] font-medium transition-colors ${
                 importType === "clients"
                   ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-foreground hover:bg-muted"
+                  : "bg-muted text-foreground hover:bg-card-elevated"
               }`}
             >
               לקוחות
@@ -529,10 +530,10 @@ export function ImportContent({
                 setImportError("");
                 setImportSuccess("");
               }}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-4 py-2 rounded-[var(--radius)] font-medium transition-colors ${
                 importType === "entries"
                   ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-foreground hover:bg-muted"
+                  : "bg-muted text-foreground hover:bg-card-elevated"
               }`}
             >
               רשומות זמן
@@ -563,7 +564,7 @@ export function ImportContent({
                   }
                 }}
                 disabled={importLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-[var(--radius)] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <svg
                   className="w-4 h-4"
@@ -587,7 +588,7 @@ export function ImportContent({
             </div>
 
             {/* Help Text */}
-            <div className="bg-secondary-light border border-secondary/20 rounded-lg p-4">
+            <div className="bg-secondary-light border border-secondary/20 rounded-[var(--radius-card)] p-4">
               <h4 className="text-sm font-medium text-foreground mb-2">
                 פורמט הקובץ לייבוא {importType === "clients" ? "לקוחות" : "רשומות זמן"}
               </h4>
@@ -687,7 +688,7 @@ export function ImportContent({
                           <select
                             value={columnMapping.name || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, name: e.target.value })}
-                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                            className={fieldClass()}
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -704,7 +705,7 @@ export function ImportContent({
                           <select
                             value={columnMapping.contactName || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, contactName: e.target.value })}
-                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                            className={fieldClass()}
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -721,7 +722,7 @@ export function ImportContent({
                           <select
                             value={columnMapping.email || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, email: e.target.value })}
-                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                            className={fieldClass()}
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -738,7 +739,7 @@ export function ImportContent({
                           <select
                             value={columnMapping.phone || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, phone: e.target.value })}
-                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                            className={fieldClass()}
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -755,7 +756,7 @@ export function ImportContent({
                           <select
                             value={columnMapping.address || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, address: e.target.value })}
-                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                            className={fieldClass()}
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -772,7 +773,7 @@ export function ImportContent({
                           <select
                             value={columnMapping.defaultRate || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, defaultRate: e.target.value })}
-                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                            className={fieldClass()}
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -790,7 +791,7 @@ export function ImportContent({
                         <select
                           value={columnMapping.notes || ""}
                           onChange={(e) => setColumnMapping({ ...columnMapping, notes: e.target.value })}
-                          className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                          className={fieldClass()}
                         >
                           <option value="">בחר עמודה</option>
                           {csvHeaders.map((header) => (
@@ -811,7 +812,7 @@ export function ImportContent({
                           <select
                             value={columnMapping.projectName || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, projectName: e.target.value })}
-                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                            className={fieldClass()}
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -828,7 +829,7 @@ export function ImportContent({
                           <select
                             value={columnMapping.description || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, description: e.target.value })}
-                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                            className={fieldClass()}
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -845,7 +846,7 @@ export function ImportContent({
                           <select
                             value={columnMapping.date || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, date: e.target.value })}
-                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                            className={fieldClass()}
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -862,7 +863,7 @@ export function ImportContent({
                           <select
                             value={columnMapping.duration || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, duration: e.target.value })}
-                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                            className={fieldClass()}
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -879,7 +880,7 @@ export function ImportContent({
                           <select
                             value={columnMapping.startTime || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, startTime: e.target.value })}
-                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                            className={fieldClass()}
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -896,7 +897,7 @@ export function ImportContent({
                           <select
                             value={columnMapping.endTime || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, endTime: e.target.value })}
-                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                            className={fieldClass()}
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -913,7 +914,7 @@ export function ImportContent({
                           <select
                             value={columnMapping.tags || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, tags: e.target.value })}
-                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                            className={fieldClass()}
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -930,7 +931,7 @@ export function ImportContent({
                           <select
                             value={columnMapping.notes || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, notes: e.target.value })}
-                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                            className={fieldClass()}
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -947,7 +948,7 @@ export function ImportContent({
                           <select
                             value={columnMapping.isBillable || ""}
                             onChange={(e) => setColumnMapping({ ...columnMapping, isBillable: e.target.value })}
-                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                            className={fieldClass()}
                           >
                             <option value="">בחר עמודה</option>
                             {csvHeaders.map((header) => (
@@ -974,18 +975,18 @@ export function ImportContent({
                     setColumnMapping({});
                   }}
                   disabled={importLoading}
-                  className="px-4 py-2 text-foreground bg-muted rounded-lg hover:bg-muted disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 border border-border bg-card text-foreground rounded-[var(--radius)] hover:bg-muted disabled:opacity-50 transition-colors"
                 >
                   חזור
                 </button>
                 <button
                   onClick={handleImport}
                   disabled={importLoading}
-                  className="px-6 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-6 py-2 bg-primary text-primary-foreground font-medium rounded-[var(--radius)] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {importLoading ? (
                     <span className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-foreground border-t-transparent"></div>
                       מייבא...
                     </span>
                   ) : (
@@ -996,7 +997,7 @@ export function ImportContent({
 
               {/* Import Results */}
               {importResults && (
-                <div className="mt-6 border border-border rounded-lg p-4 bg-muted/50">
+                <div className="mt-6 border border-border rounded-[var(--radius-card)] p-4 bg-muted/50">
                   <h4 className="font-semibold text-foreground mb-2">תוצאות הייבוא</h4>
                   <p className="text-sm text-foreground">
                     ✅ יובאו בהצלחה <strong>{importResults.imported}</strong> רשומות

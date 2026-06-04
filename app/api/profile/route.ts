@@ -16,32 +16,37 @@ const logger = createLogger("api:profile");
  * Body schema for updating the user profile. Every field is optional; only the
  * keys present in the body get applied (partial update), matching prior behavior.
  */
+// All user_profiles columns are nullable, and the settings form sends `null`
+// to clear an empty field (e.g. `businessName || null`). The schema therefore
+// accepts `null` (clears the column) as well as `undefined` (field omitted →
+// left untouched). Without `.nullable()` an empty field fails with
+// "expected string, received null" and the whole save is rejected.
 const updateProfileSchema = z.object({
-  businessName: z.string().max(500).optional(),
-  phone: z.string().max(100).optional(),
-  email: z.string().max(200).optional(),
-  address: z.string().max(1000).optional(),
-  taxId: z.string().max(100).optional(),
-  website: z.string().max(500).optional(),
-  defaultCurrency: z.string().max(10).optional(),
-  preferredPdfTemplate: z.string().max(100).optional(),
-  invoicePrefix: z.string().max(100).optional(),
-  nextInvoiceNumber: z.number().optional(),
-  paymentTerms: z.string().max(2000).optional(),
-  bankName: z.string().max(200).optional(),
-  bankAccountNumber: z.string().max(100).optional(),
-  bankBranch: z.string().max(100).optional(),
-  bankSwift: z.string().max(100).optional(),
-  pdfPrimaryColor: z.string().max(50).optional(),
-  pdfAccentColor: z.string().max(50).optional(),
+  businessName: z.string().max(500).nullable().optional(),
+  phone: z.string().max(100).nullable().optional(),
+  email: z.string().max(200).nullable().optional(),
+  address: z.string().max(1000).nullable().optional(),
+  taxId: z.string().max(100).nullable().optional(),
+  website: z.string().max(500).nullable().optional(),
+  defaultCurrency: z.string().max(10).nullable().optional(),
+  preferredPdfTemplate: z.string().max(100).nullable().optional(),
+  invoicePrefix: z.string().max(100).nullable().optional(),
+  nextInvoiceNumber: z.number().nullable().optional(),
+  paymentTerms: z.string().max(2000).nullable().optional(),
+  bankName: z.string().max(200).nullable().optional(),
+  bankAccountNumber: z.string().max(100).nullable().optional(),
+  bankBranch: z.string().max(100).nullable().optional(),
+  bankSwift: z.string().max(100).nullable().optional(),
+  pdfPrimaryColor: z.string().max(50).nullable().optional(),
+  pdfAccentColor: z.string().max(50).nullable().optional(),
   longTimerEnabled: z.boolean().optional(),
   longTimerThreshold: z.number().optional(),
   dailyReminderEnabled: z.boolean().optional(),
-  dailyReminderTime: z.string().max(50).optional(),
+  dailyReminderTime: z.string().max(50).nullable().optional(),
   workingHours: z.number().optional(),
-  dateFormat: z.string().max(50).optional(),
-  timeFormat: z.string().max(50).optional(),
-  firstDayOfWeek: z.string().max(50).optional(),
+  dateFormat: z.string().max(50).nullable().optional(),
+  timeFormat: z.string().max(50).nullable().optional(),
+  firstDayOfWeek: z.string().max(50).nullable().optional(),
 });
 
 export interface Profile {
@@ -83,34 +88,6 @@ export interface ProfileResponse {
   success: boolean;
   message?: string;
   profile?: Profile;
-}
-
-export interface ProfileUpdateRequest {
-  businessName?: string;
-  phone?: string;
-  email?: string;
-  address?: string;
-  taxId?: string;
-  website?: string;
-  defaultCurrency?: string;
-  preferredPdfTemplate?: string;
-  invoicePrefix?: string;
-  nextInvoiceNumber?: number;
-  paymentTerms?: string;
-  bankName?: string;
-  bankAccountNumber?: string;
-  bankBranch?: string;
-  bankSwift?: string;
-  pdfPrimaryColor?: string;
-  pdfAccentColor?: string;
-  longTimerEnabled?: boolean;
-  longTimerThreshold?: number;
-  dailyReminderEnabled?: boolean;
-  dailyReminderTime?: string;
-  workingHours?: number;
-  dateFormat?: string;
-  timeFormat?: string;
-  firstDayOfWeek?: string;
 }
 
 /**
@@ -196,7 +173,8 @@ export async function PATCH(request: Request): Promise<NextResponse> {
 
     const parsed = await parseBody(request, updateProfileSchema);
     if (!parsed.ok) return parsed.response;
-    const body: ProfileUpdateRequest = parsed.data;
+    // Inferred from the Zod schema (fields may be string | null | undefined).
+    const body = parsed.data;
 
     // Build update query dynamically based on provided fields
     const updates: string[] = [];
