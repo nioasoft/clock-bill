@@ -160,7 +160,7 @@ export function TaskDetailSheet({ task, moveTask, onClose, onChanged }: TaskDeta
                   type="button"
                   onClick={() => setConfirmingDelete(false)}
                   disabled={deleting}
-                  className="rounded-[var(--radius)] border border-border px-4 py-2 text-sm text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+                  className="min-h-[44px] rounded-[var(--radius)] border border-border px-4 py-2 text-sm text-foreground transition-colors hover:bg-muted disabled:opacity-50"
                 >
                   ביטול
                 </button>
@@ -168,7 +168,7 @@ export function TaskDetailSheet({ task, moveTask, onClose, onChanged }: TaskDeta
                   type="button"
                   onClick={handleDelete}
                   disabled={deleting}
-                  className="rounded-[var(--radius)] bg-destructive px-4 py-2 text-sm text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-50"
+                  className="min-h-[44px] rounded-[var(--radius)] bg-destructive px-4 py-2 text-sm text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-50"
                 >
                   {deleting ? "מוחק..." : "מחק"}
                 </button>
@@ -179,14 +179,14 @@ export function TaskDetailSheet({ task, moveTask, onClose, onChanged }: TaskDeta
               <button
                 type="button"
                 onClick={() => setConfirmingDelete(true)}
-                className="rounded-[var(--radius)] border border-destructive/30 px-4 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
+                className="min-h-[44px] rounded-[var(--radius)] border border-destructive/30 px-4 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
               >
                 מחיקה
               </button>
               <button
                 type="button"
                 onClick={() => setEditing(true)}
-                className="rounded-[var(--radius)] bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                className="min-h-[44px] rounded-[var(--radius)] bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 עריכה
               </button>

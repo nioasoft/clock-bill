@@ -259,11 +259,12 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
             onClick={() => setShowAdvanced((v) => !v)}
             className="sm:hidden text-sm font-medium text-primary"
             aria-expanded={showAdvanced}
+            aria-controls="task-advanced"
           >
             {showAdvanced ? "הסתר פרטים נוספים" : "+ פרטים נוספים"}
           </button>
 
-          <div className={`${showAdvanced ? "" : "hidden"} sm:block space-y-4`}>
+          <div id="task-advanced" className={`${showAdvanced ? "" : "hidden"} sm:block space-y-4`}>
             <div>
               <label htmlFor="task-priority" className={labelClass}>דחיפות</label>
               <select
