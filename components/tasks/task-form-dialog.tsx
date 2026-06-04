@@ -183,7 +183,7 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
           onSubmit={(e) => { e.preventDefault(); void handleSubmit(); }}
           className="space-y-4"
         >
-          <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-3">
             <div>
               <label htmlFor="task-client" className={labelClass}>
                 לקוח <span className="text-primary">*</span>
