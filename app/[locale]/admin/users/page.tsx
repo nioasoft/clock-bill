@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/src/i18n/navigation";
 import { Link } from "@/src/i18n/navigation";
 import { AppLayout } from "@/components/app-layout";
@@ -28,6 +29,7 @@ interface Pagination {
 }
 
 export default function AdminUsersPage() {
+  const t = useTranslations("Admin");
   const router = useRouter();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
@@ -74,7 +76,7 @@ export default function AdminUsersPage() {
   return (
     <AppLayout>
       <PageContainer>
-        <PageHeader title="ניהול משתמשים" subtitle="צפה וניהל את כל המשתמשים במערכת" />
+        <PageHeader title={t("users.title")} subtitle={t("users.subtitle")} />
 
         {/* Search */}
         <form onSubmit={handleSearch} className="mb-6">
@@ -84,9 +86,9 @@ export default function AdminUsersPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="חיפוש לפי אימייל או שם עסק..."
+              placeholder={t("users.searchPlaceholder")}
               className="w-full rounded-lg border border-border bg-card pe-10 ps-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              aria-label="חיפוש משתמשים"
+              aria-label={t("users.searchAriaLabel")}
             />
           </div>
         </form>
@@ -105,13 +107,13 @@ export default function AdminUsersPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/50">
-                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">אימייל</th>
-                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">שם עסק</th>
-                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">תאריך רישום</th>
-                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">פעילות אחרונה</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">רשומות</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">פרויקטים</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">תפקיד</th>
+                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">{t("users.colEmail")}</th>
+                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">{t("users.colBusinessName")}</th>
+                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">{t("users.colRegistrationDate")}</th>
+                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">{t("users.colLastActivity")}</th>
+                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">{t("users.colEntries")}</th>
+                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">{t("users.colProjects")}</th>
+                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">{t("users.colRole")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -140,10 +142,10 @@ export default function AdminUsersPage() {
                         {user.role === "admin" ? (
                           <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
                             <Shield className="h-3 w-3" />
-                            מנהל
+                            {t("users.roleAdmin")}
                           </span>
                         ) : (
-                          <span className="text-xs text-muted-foreground">משתמש</span>
+                          <span className="text-xs text-muted-foreground">{t("users.roleUser")}</span>
                         )}
                       </td>
                     </tr>
@@ -151,7 +153,7 @@ export default function AdminUsersPage() {
                   {users.length === 0 && (
                     <tr>
                       <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
-                        לא נמצאו משתמשים
+                        {t("users.empty")}
                       </td>
                     </tr>
                   )}
@@ -172,7 +174,7 @@ export default function AdminUsersPage() {
                     {user.role === "admin" && (
                       <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
                         <Shield className="h-3 w-3" />
-                        מנהל
+                        {t("users.roleAdmin")}
                       </span>
                     )}
                   </div>
@@ -180,14 +182,14 @@ export default function AdminUsersPage() {
                     <p className="text-xs text-muted-foreground mb-1">{user.businessName}</p>
                   )}
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span>{user.entryCount} רשומות</span>
-                    <span>{user.projectCount} פרויקטים</span>
+                    <span>{t("users.entriesCount", { count: user.entryCount })}</span>
+                    <span>{t("users.projectsCount", { count: user.projectCount })}</span>
                     <span>{new Date(user.createdAt).toLocaleDateString("he-IL")}</span>
                   </div>
                 </Link>
               ))}
               {users.length === 0 && (
-                <div className="p-8 text-center text-muted-foreground">לא נמצאו משתמשים</div>
+                <div className="p-8 text-center text-muted-foreground">{t("users.empty")}</div>
               )}
             </div>
           </div>
@@ -202,17 +204,17 @@ export default function AdminUsersPage() {
               className="flex items-center gap-1 px-3 py-2 text-sm rounded-lg border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight className="h-4 w-4" />
-              הקודם
+              {t("users.prev")}
             </button>
             <span className="text-sm text-muted-foreground">
-              עמוד {pagination.page} מתוך {pagination.totalPages}
+              {t("users.pageOf", { page: pagination.page, total: pagination.totalPages })}
             </span>
             <button
               onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
               disabled={page >= pagination.totalPages}
               className="flex items-center gap-1 px-3 py-2 text-sm rounded-lg border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              הבא
+              {t("users.next")}
               <ChevronLeft className="h-4 w-4" />
             </button>
           </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useTimer } from "@/contexts/timer-context";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import {
@@ -10,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 
 export function TimerStopModal() {
+  const t = useTranslations("Timer");
   const {
     showStopTimerModal,
     elapsedTimes,
@@ -41,13 +43,13 @@ export function TimerStopModal() {
             size={32}
             className="absolute top-0 end-0 opacity-10 text-foreground"
           />
-          <DialogTitle className="font-display">עצור טיימר ושמור רשומה</DialogTitle>
+          <DialogTitle className="font-display">{t("stop.title")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* Current elapsed time */}
           <div className="bg-accent/10 rounded-[var(--radius-card)] border border-accent/20 p-3">
-            <p className="text-sm text-muted-foreground mb-1">זמן שעבר:</p>
+            <p className="text-sm text-muted-foreground mb-1">{t("stop.elapsedLabel")}</p>
             <p className="font-mono text-2xl font-bold text-accent">
               {elapsedTime}
             </p>
@@ -59,14 +61,14 @@ export function TimerStopModal() {
               htmlFor="stop-description"
               className="block text-sm font-medium text-foreground mb-1"
             >
-              תיאור
+              {t("stop.descriptionLabel")}
             </label>
             <input
               type="text"
               id="stop-description"
               value={stopTimerDescription}
               onChange={(e) => setStopTimerDescription(e.target.value)}
-              placeholder="מה עשית?"
+              placeholder={t("stop.descriptionPlaceholder")}
               className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
               disabled={stoppingTimer}
             />
@@ -78,14 +80,14 @@ export function TimerStopModal() {
               htmlFor="stop-notes"
               className="block text-sm font-medium text-foreground mb-1"
             >
-              הערות (יופיעו בדוח)
+              {t("stop.notesLabel")}
             </label>
             <textarea
               id="stop-notes"
               rows={3}
               value={stopTimerNotes}
               onChange={(e) => setStopTimerNotes(e.target.value)}
-              placeholder="פירוט מה נעשה בעבודה (אופציונלי)"
+              placeholder={t("stop.notesPlaceholder")}
               className="w-full resize-y rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm placeholder:text-muted-foreground/50 focus:border-primary focus:ring-1 focus:ring-primary"
               disabled={stoppingTimer}
             />
@@ -94,7 +96,7 @@ export function TimerStopModal() {
           {/* Duration adjustment */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
-              התאם את משך הזמן (אופציונלי)
+              {t("stop.adjustDuration")}
             </label>
             <div className="flex gap-2 items-center">
               <div className="flex-1">
@@ -107,7 +109,7 @@ export function TimerStopModal() {
                   className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary font-mono"
                   disabled={stoppingTimer}
                 />
-                <p className="text-xs text-muted-foreground mt-1">שעות</p>
+                <p className="text-xs text-muted-foreground mt-1">{t("stop.hours")}</p>
               </div>
               <span className="text-muted-foreground text-lg">:</span>
               <div className="flex-1">
@@ -121,7 +123,7 @@ export function TimerStopModal() {
                   className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary font-mono"
                   disabled={stoppingTimer}
                 />
-                <p className="text-xs text-muted-foreground mt-1">דקות</p>
+                <p className="text-xs text-muted-foreground mt-1">{t("stop.minutes")}</p>
               </div>
             </div>
           </div>
@@ -135,7 +137,7 @@ export function TimerStopModal() {
                 disabled={stoppingTimer}
                 className="h-4 w-4 rounded border-border accent-primary"
               />
-              <span className="text-sm text-foreground">סמן את המשימה כהושלמה</span>
+              <span className="text-sm text-foreground">{t("stop.markDone")}</span>
             </label>
           )}
 
@@ -145,14 +147,14 @@ export function TimerStopModal() {
               disabled={stoppingTimer}
               className="px-4 py-2.5 text-sm font-medium text-muted-foreground bg-muted rounded-[var(--radius)] hover:bg-muted/80 disabled:opacity-50 min-h-[44px]"
             >
-              ביטול
+              {t("stop.cancel")}
             </button>
             <button
               onClick={confirmStopTimer}
               disabled={stoppingTimer}
               className="px-4 py-2.5 text-sm font-medium text-white bg-destructive rounded-[var(--radius)] hover:bg-destructive/90 disabled:opacity-50 min-h-[44px]"
             >
-              {stoppingTimer ? "שומר..." : "עצור ושמור"}
+              {stoppingTimer ? t("stop.saving") : t("stop.saveButton")}
             </button>
           </div>
         </div>

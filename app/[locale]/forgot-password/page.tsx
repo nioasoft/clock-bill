@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/src/i18n/navigation";
 import { Gauge, CheckCircle2 } from "lucide-react";
 import { authClient } from "@/lib/auth/client";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 
 export default function ForgotPasswordPage() {
+  const t = useTranslations("Auth");
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -25,12 +27,12 @@ export default function ForgotPasswordPage() {
       });
 
       if (authError) {
-        setError(authError.message || "שגיאה בשליחת בקשת איפוס הסיסמה");
+        setError(authError.message || t("forgot.errors.requestFailed"));
       } else {
         setSuccess(true);
       }
     } catch {
-      setError("שגיאת תקשורת. אנא נסה שוב.");
+      setError(t("common.networkError"));
     } finally {
       setLoading(false);
     }
@@ -46,13 +48,13 @@ export default function ForgotPasswordPage() {
                 <ClockFaceMarks size={40} color="rgba(212,160,74,0.4)" className="absolute inset-0 m-auto" />
                 <Gauge className="h-6 w-6 text-accent relative z-10" />
               </div>
-              <span className="text-2xl font-display font-bold text-foreground">מוניט</span>
+              <span className="text-2xl font-display font-bold text-foreground">{t("common.appName")}</span>
             </div>
             <h1 className="text-3xl font-display font-bold tracking-tight text-foreground">
-              איפוס סיסמה
+              {t("forgot.title")}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              הזן את כתובת האימייל שלך ונשלח לך קישור לאיפוס הסיסמה
+              {t("forgot.subtitle")}
             </p>
           </div>
 
@@ -62,7 +64,7 @@ export default function ForgotPasswordPage() {
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
                   <p className="text-sm text-foreground">
-                    אם קיים חשבון עם כתובת האימייל הזו, שלחנו הוראות לאיפוס הסיסמה.
+                    {t("forgot.successMessage")}
                   </p>
                 </div>
               </div>
@@ -71,7 +73,7 @@ export default function ForgotPasswordPage() {
                   href="/login"
                   className="font-medium text-primary hover:text-primary/80"
                 >
-                  חזרה לדף ההתחברות
+                  {t("common.backToLogin")}
                 </Link>
               </div>
             </div>
@@ -79,7 +81,7 @@ export default function ForgotPasswordPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
-                  כתובת אימייל
+                  {t("common.emailLabel")}
                 </label>
                 <input
                   id="email"
@@ -89,7 +91,7 @@ export default function ForgotPasswordPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="block w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
-                  placeholder="הכנס כתובת אימייל"
+                  placeholder={t("common.emailPlaceholder")}
                 />
               </div>
 
@@ -104,17 +106,17 @@ export default function ForgotPasswordPage() {
                 disabled={loading}
                 className="w-full rounded-[var(--radius)] bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
               >
-                {loading ? "שולח..." : "שלח קישור לאיפוס סיסמה"}
+                {loading ? t("common.sending") : t("forgot.submit")}
               </button>
 
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">
-                  נזכרת בסיסמה?{" "}
+                  {t("forgot.rememberedPassword")}{" "}
                   <Link
                     href="/login"
                     className="font-medium text-primary hover:text-primary/80"
                   >
-                    התחבר כאן
+                    {t("common.signInHere")}
                   </Link>
                 </p>
               </div>

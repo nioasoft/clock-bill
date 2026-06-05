@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { Search, Users, FolderKanban, Clock, X } from "lucide-react";
 import { useRouter } from "@/src/i18n/navigation";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
@@ -18,6 +19,7 @@ interface SearchResult {
 }
 
 export function GlobalSearch() {
+  const t = useTranslations("Timer");
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -94,7 +96,7 @@ export function GlobalSearch() {
           className="flex items-center gap-2 w-full px-4 py-2 rounded-lg text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
         >
           <Search className="h-4 w-4" />
-          <span>חיפוש...</span>
+          <span>{t("search.trigger")}</span>
           <kbd className="ms-auto hidden sm:inline-block px-2 py-0.5 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">
             ⌘K
           </kbd>
@@ -109,9 +111,9 @@ export function GlobalSearch() {
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           {/* Radix requires a Title/Description for screen readers; hidden visually. */}
-          <DialogPrimitive.Title className="sr-only">חיפוש גלובלי</DialogPrimitive.Title>
+          <DialogPrimitive.Title className="sr-only">{t("search.dialogTitle")}</DialogPrimitive.Title>
           <DialogPrimitive.Description className="sr-only">
-            חיפוש לקוחות, פרויקטים ורשומות
+            {t("search.dialogDescription")}
           </DialogPrimitive.Description>
           {/* Search Modal */}
           <div
@@ -126,15 +128,15 @@ export function GlobalSearch() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="חפש לקוחות, פרויקטים, רשומות זמן..."
+                placeholder={t("search.placeholder")}
                 className="flex-1 text-lg text-foreground placeholder-muted-foreground/50 focus:outline-none"
-                aria-label="חיפוש"
+                aria-label={t("search.inputAriaLabel")}
               />
               {query && (
                 <button
                   onClick={() => setQuery("")}
                   className="flex-shrink-0 p-1 text-muted-foreground hover:text-muted-foreground"
-                  aria-label="נקה חיפוש"
+                  aria-label={t("search.clear")}
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -149,19 +151,19 @@ export function GlobalSearch() {
               {query.length < 2 ? (
                 <div className="px-4 py-12 text-center text-muted-foreground">
                   <HourglassSVG size={48} className="mx-auto mb-3 text-muted-foreground/30" />
-                  <p className="text-lg font-medium">התחל להקליד לחיפוש</p>
-                  <p className="text-sm mt-1">חפש לקוחות, פרויקטים ורשומות זמן לפי שם</p>
+                  <p className="text-lg font-medium">{t("search.startTyping")}</p>
+                  <p className="text-sm mt-1">{t("search.startTypingHint")}</p>
                 </div>
               ) : loading ? (
                 <div className="px-4 py-12 text-center text-muted-foreground">
                   <div className="inline-block animate-spin rounded-full h-8 w-8 border-3 border-border border-t-primary" />
-                  <p className="mt-3">מחפש...</p>
+                  <p className="mt-3">{t("search.searching")}</p>
                 </div>
               ) : results.length === 0 ? (
                 <div className="px-4 py-12 text-center text-muted-foreground">
                   <HourglassSVG size={48} className="mx-auto mb-3 text-muted-foreground/30" />
-                  <p className="text-lg font-medium">לא נמצאו תוצאות</p>
-                  <p className="text-sm mt-1">נסה לחפש מילים אחרות</p>
+                  <p className="text-lg font-medium">{t("search.noResults")}</p>
+                  <p className="text-sm mt-1">{t("search.noResultsHint")}</p>
                 </div>
               ) : (
                 <div className="py-2">
@@ -169,7 +171,7 @@ export function GlobalSearch() {
                   {results.filter((r) => r.type === "client").length > 0 && (
                     <div className="px-4 py-2">
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                        לקוחות
+                        {t("search.groupClients")}
                       </p>
                       {results
                         .filter((r) => r.type === "client")
@@ -196,7 +198,7 @@ export function GlobalSearch() {
                   {results.filter((r) => r.type === "project").length > 0 && (
                     <div className="px-4 py-2 mt-2">
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                        פרויקטים
+                        {t("search.groupProjects")}
                       </p>
                       {results
                         .filter((r) => r.type === "project")
@@ -228,7 +230,7 @@ export function GlobalSearch() {
                   {results.filter((r) => r.type === "entry").length > 0 && (
                     <div className="px-4 py-2 mt-2">
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                        רשומות זמן
+                        {t("search.groupEntries")}
                       </p>
                       {results
                         .filter((r) => r.type === "entry")
@@ -285,23 +287,23 @@ export function GlobalSearch() {
                     <kbd className="px-1.5 py-0.5 bg-card border border-border rounded">
                       ↑↓
                     </kbd>
-                    לנווט
+                    {t("search.hintNavigate")}
                   </span>
                   <span className="flex items-center gap-1">
                     <kbd className="px-1.5 py-0.5 bg-card border border-border rounded">
                       ↵
                     </kbd>
-                    לבחור
+                    {t("search.hintSelect")}
                   </span>
                   <span className="flex items-center gap-1">
                     <kbd className="px-1.5 py-0.5 bg-card border border-border rounded">
                       ESC
                     </kbd>
-                    לסגור
+                    {t("search.hintClose")}
                   </span>
                 </div>
                 {results.length > 0 && (
-                  <span>{results.length} תוצאות</span>
+                  <span>{t("search.resultCount", { count: results.length })}</span>
                 )}
               </div>
             </div>

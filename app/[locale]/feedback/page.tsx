@@ -15,6 +15,7 @@ import {
 const MAX_MESSAGE = 5000;
 
 export default function FeedbackPage() {
+  const t = useTranslations("Feedback");
   const tCategory = useTranslations("Feedback.category");
   const [category, setCategory] = useState<FeedbackCategory>("bug");
   const [message, setMessage] = useState("");
@@ -27,7 +28,7 @@ export default function FeedbackPage() {
     setError("");
 
     if (message.trim().length < 5) {
-      setError("אנא כתוב לפחות כמה מילים");
+      setError(t("errors.tooShort"));
       return;
     }
 
@@ -53,10 +54,10 @@ export default function FeedbackPage() {
         setSent(true);
         setMessage("");
       } else {
-        setError(data.message || "שליחת הפנייה נכשלה. נסה שוב.");
+        setError(data.message || t("errors.submitFailed"));
       }
     } catch {
-      setError("שגיאת תקשורת. אנא נסה שוב.");
+      setError(t("errors.network"));
     } finally {
       setSubmitting(false);
     }
@@ -66,8 +67,8 @@ export default function FeedbackPage() {
     <AppLayout>
       <PageContainer maxWidth="max-w-4xl">
         <PageHeader
-          title="פניות ודיווח תקלות"
-          subtitle="המערכת בתקופת ניסוי. נתקלת בתקלה או יש לך רעיון לשיפור? כתוב לנו."
+          title={t("title")}
+          subtitle={t("subtitle")}
         />
 
         {sent ? (
@@ -81,9 +82,9 @@ export default function FeedbackPage() {
                 <Check className="h-4 w-4 text-success" aria-hidden="true" />
               </div>
               <div>
-                <h3 className="font-display text-base font-semibold text-foreground">הפנייה התקבלה</h3>
+                <h3 className="font-display text-base font-semibold text-foreground">{t("success.title")}</h3>
                 <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
-                  אם נצטרך פרטים נוספים נחזור אליך למייל שאיתו נכנסת.
+                  {t("success.description")}
                 </p>
               </div>
             </div>
@@ -93,7 +94,7 @@ export default function FeedbackPage() {
               className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
             >
               <MessageSquare className="h-4 w-4" />
-              כתוב פנייה נוספת
+              {t("success.writeAnother")}
             </button>
           </div>
         ) : (
@@ -103,7 +104,7 @@ export default function FeedbackPage() {
           >
             <div>
               <label htmlFor="category" className="mb-1.5 block text-sm font-medium text-foreground">
-                סוג הפנייה
+                {t("fields.category")}
               </label>
               <select
                 id="category"
@@ -122,7 +123,7 @@ export default function FeedbackPage() {
 
             <div>
               <label htmlFor="message" className="mb-1.5 block text-sm font-medium text-foreground">
-                תיאור
+                {t("fields.message")}
               </label>
               <textarea
                 id="message"
@@ -133,7 +134,7 @@ export default function FeedbackPage() {
                 }}
                 rows={6}
                 required
-                placeholder="ספר לנו מה קרה, מה ציפית שיקרה, ואיך אפשר לשחזר..."
+                placeholder={t("fields.messagePlaceholder")}
                 className={`${fieldClass(Boolean(error))} resize-y`}
                 disabled={submitting}
                 aria-describedby="message-count"
@@ -155,7 +156,7 @@ export default function FeedbackPage() {
               className="inline-flex w-full items-center justify-center gap-2 rounded-[var(--radius)] bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Send className="h-4 w-4" />
-              {submitting ? "שולח..." : "שלח פנייה"}
+              {submitting ? t("submitting") : t("submit")}
             </button>
           </form>
         )}

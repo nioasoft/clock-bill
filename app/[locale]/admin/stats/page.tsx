@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/src/i18n/navigation";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
@@ -16,15 +17,15 @@ interface SystemStats {
   totalLogos: number;
 }
 
-const projectStatusLabels: Record<string, string> = {
-  active: "פעיל",
-  completed: "הושלם",
-  paused: "מושהה",
-  archived: "בארכיון",
-};
-
 export default function AdminStatsPage() {
+  const t = useTranslations("Admin");
   const router = useRouter();
+  const projectStatusLabels: Record<string, string> = {
+    active: t("stats.projectStatus.active"),
+    completed: t("stats.projectStatus.completed"),
+    paused: t("stats.projectStatus.paused"),
+    archived: t("stats.projectStatus.archived"),
+  };
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -59,7 +60,7 @@ export default function AdminStatsPage() {
   return (
     <AppLayout>
       <PageContainer>
-        <PageHeader title="סטטיסטיקות מערכת" subtitle="ניתוח מעמיק של השימוש במערכת" />
+        <PageHeader title={t("stats.title")} subtitle={t("stats.subtitle")} />
 
         {loading ? (
           <div className="space-y-6">
@@ -69,7 +70,7 @@ export default function AdminStatsPage() {
           </div>
         ) : error ? (
           <div className="rounded-[var(--radius-card)] bg-destructive/10 p-6 text-center">
-            <p className="text-destructive">שגיאה בטעינת הנתונים</p>
+            <p className="text-destructive">{t("stats.loadError")}</p>
           </div>
         ) : stats ? (
           <div className="space-y-6">
@@ -79,7 +80,7 @@ export default function AdminStatsPage() {
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    ממוצע רשומות למשתמש
+                    {t("stats.avgEntriesPerUser")}
                   </p>
                 </div>
                 <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">
@@ -91,7 +92,7 @@ export default function AdminStatsPage() {
                 <div className="flex items-center gap-2">
                   <ImageIcon className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    לוגואים שהועלו
+                    {t("stats.totalLogos")}
                   </p>
                 </div>
                 <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">
@@ -105,7 +106,7 @@ export default function AdminStatsPage() {
               <div className="flex items-center gap-2 mb-4">
                 <BarChart3 className="h-5 w-5 text-primary" />
                 <h3 className="font-display text-lg font-semibold text-foreground">
-                  10 המשתמשים הפעילים ביותר
+                  {t("stats.topUsersTitle")}
                 </h3>
               </div>
               <div className="space-y-3">
@@ -137,7 +138,7 @@ export default function AdminStatsPage() {
                   );
                 })}
                 {stats.topUsers.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-4">אין נתונים</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">{t("stats.noData")}</p>
                 )}
               </div>
             </div>
@@ -149,7 +150,7 @@ export default function AdminStatsPage() {
                 <div className="flex items-center gap-2 mb-4">
                   <BarChart3 className="h-5 w-5 text-secondary" />
                   <h3 className="font-display text-lg font-semibold text-foreground">
-                    התפלגות סטטוס פרויקטים
+                    {t("stats.projectStatusTitle")}
                   </h3>
                 </div>
                 <div className="space-y-3">
@@ -171,7 +172,7 @@ export default function AdminStatsPage() {
                     );
                   })}
                   {stats.projectStatuses.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-4">אין נתונים</p>
+                    <p className="text-sm text-muted-foreground text-center py-4">{t("stats.noData")}</p>
                   )}
                 </div>
               </div>
@@ -181,7 +182,7 @@ export default function AdminStatsPage() {
                 <div className="flex items-center gap-2 mb-4">
                   <Coins className="h-5 w-5 text-accent" />
                   <h3 className="font-display text-lg font-semibold text-foreground">
-                    התפלגות מטבעות
+                    {t("stats.currencyTitle")}
                   </h3>
                 </div>
                 <div className="space-y-3">
@@ -201,7 +202,7 @@ export default function AdminStatsPage() {
                     );
                   })}
                   {stats.currencies.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-4">אין נתונים</p>
+                    <p className="text-sm text-muted-foreground text-center py-4">{t("stats.noData")}</p>
                   )}
                 </div>
               </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/src/i18n/navigation";
 import { Link } from "@/src/i18n/navigation";
 import { Gauge, LogIn } from "lucide-react";
@@ -10,6 +11,7 @@ import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 
 export default function LoginPage() {
+  const t = useTranslations("Auth");
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -67,16 +69,16 @@ export default function LoginPage() {
         // Email/password account that hasn't confirmed its address yet.
         if (authError.status === 403 || authError.code === "EMAIL_NOT_VERIFIED") {
           setNeedsVerification(true);
-          setError("עליך לאמת את כתובת האימייל לפני ההתחברות. בדוק את תיבת הדואר שלך.");
+          setError(t("login.errors.notVerified"));
         } else {
-          setError(authError.message || "שגיאה בהתחברות");
+          setError(authError.message || t("login.errors.signInFailed"));
         }
       } else {
         router.push("/dashboard");
         router.refresh();
       }
     } catch {
-      setError("שגיאת תקשורת. אנא נסה שוב.");
+      setError(t("common.networkError"));
     } finally {
       setLoading(false);
     }
@@ -87,9 +89,9 @@ export default function LoginPage() {
     setResendNote("");
     try {
       await authClient.sendVerificationEmail({ email, callbackURL: "/dashboard" });
-      setResendNote("שלחנו מייל אימות חדש.");
+      setResendNote(t("login.resendSuccess"));
     } catch {
-      setResendNote("שליחה נכשלה. נסה שוב בעוד רגע.");
+      setResendNote(t("common.resendFailed"));
     } finally {
       setResending(false);
     }
@@ -105,31 +107,31 @@ export default function LoginPage() {
               <ClockFaceMarks size={32} color="rgba(168,98,45,0.2)" className="absolute inset-0 m-auto" />
               <Gauge className="h-6 w-6 text-primary-foreground relative z-10" />
             </div>
-            <span className="text-2xl font-display font-bold text-foreground">מוניט</span>
+            <span className="text-2xl font-display font-bold text-foreground">{t("common.appName")}</span>
           </div>
           <div className="w-12 h-1 bg-accent rounded-full mb-5 mx-auto" />
-          <h1 className="text-2xl font-display font-bold tracking-tight text-foreground">התחבר לחשבון שלך</h1>
-          <p className="mt-2 text-sm text-muted-foreground">נהל את שעות העבודה והפרויקטים שלך</p>
+          <h1 className="text-2xl font-display font-bold tracking-tight text-foreground">{t("login.title")}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{t("login.subtitle")}</p>
         </div>
 
         {/* Form card */}
         <div className="rounded-[var(--radius-card)] border border-border bg-card p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <GoogleSignInButton label="התחבר עם Google" />
+            <GoogleSignInButton label={t("login.googleSignIn")} />
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center" aria-hidden="true">
                 <div className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-card px-3 text-muted-foreground">או התחבר עם אימייל</span>
+                <span className="bg-card px-3 text-muted-foreground">{t("login.orWithEmail")}</span>
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-foreground">
-                  כתובת אימייל
+                  {t("common.emailLabel")}
                 </label>
                 <input
                   id="email"
@@ -153,7 +155,7 @@ export default function LoginPage() {
 
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-foreground">
-                  סיסמה
+                  {t("common.passwordLabel")}
                 </label>
                 <input
                   id="password"
@@ -170,7 +172,7 @@ export default function LoginPage() {
                       ? "border-destructive focus:border-destructive focus:ring-destructive/20"
                       : "border-border focus:border-primary focus:ring-primary/50"
                   }`}
-                  placeholder="הסיסמה שלך"
+                  placeholder={t("login.passwordPlaceholder")}
                 />
                 {passwordError && <p className="mt-1 text-sm text-destructive">{passwordError}</p>}
               </div>
@@ -187,7 +189,7 @@ export default function LoginPage() {
                       disabled={resending}
                       className="text-sm font-medium text-primary hover:text-primary/80 disabled:opacity-50"
                     >
-                      {resending ? "שולח..." : "שלח מייל אימות מחדש"}
+                      {resending ? t("common.sending") : t("login.resendVerification")}
                     </button>
                     {resendNote && <p className="mt-1 text-sm text-muted-foreground">{resendNote}</p>}
                   </div>
@@ -202,7 +204,7 @@ export default function LoginPage() {
                 className="group relative flex w-full items-center justify-center gap-2 rounded-[var(--radius)] border border-transparent bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
               >
                 <LogIn className="h-4 w-4" />
-                {loading ? "מתחבר..." : "התחבר"}
+                {loading ? t("login.submitting") : t("login.submit")}
               </button>
             </div>
 
@@ -212,22 +214,22 @@ export default function LoginPage() {
                   href="/forgot-password"
                   className="font-medium text-primary hover:text-primary/80"
                 >
-                  שכחת סיסמה?
+                  {t("login.forgotPassword")}
                 </Link>
               </p>
               <p className="text-sm text-muted-foreground">
-                אין לך חשבון עדיין?{" "}
+                {t("login.noAccount")}{" "}
                 <Link
                   href="/register"
                   className="font-medium text-primary hover:text-primary/80"
                 >
-                  הירשם כאן
+                  {t("login.registerHere")}
                 </Link>
               </p>
               <p className="pt-2 text-xs text-muted-foreground">
-                <Link href="/privacy" className="hover:text-foreground">מדיניות פרטיות</Link>
+                <Link href="/privacy" className="hover:text-foreground">{t("common.privacyPolicy")}</Link>
                 <span className="mx-2">·</span>
-                <Link href="/terms" className="hover:text-foreground">תנאי שימוש</Link>
+                <Link href="/terms" className="hover:text-foreground">{t("common.termsOfService")}</Link>
               </p>
             </div>
           </form>

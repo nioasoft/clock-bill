@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/src/i18n/navigation";
 import { Link } from "@/src/i18n/navigation";
 import { Gauge, UserPlus } from "lucide-react";
@@ -11,6 +12,7 @@ import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 
 export default function RegisterPage() {
+  const t = useTranslations("Auth");
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -67,7 +69,7 @@ export default function RegisterPage() {
       });
 
       if (authError) {
-        setError(authError.message || "שגיאה בהרשמה");
+        setError(authError.message || t("register.errors.signUpFailed"));
       } else if (data?.token) {
         // A session was created (email verification is disabled) — sign straight in.
         if (businessName.trim()) {
@@ -92,7 +94,7 @@ export default function RegisterPage() {
         setVerificationSent(true);
       }
     } catch {
-      setError("שגיאת תקשורת. אנא נסה שוב.");
+      setError(t("common.networkError"));
     } finally {
       setLoading(false);
     }
@@ -103,9 +105,9 @@ export default function RegisterPage() {
     setResendNote("");
     try {
       await authClient.sendVerificationEmail({ email, callbackURL: "/dashboard" });
-      setResendNote("שלחנו שוב את מייל האימות.");
+      setResendNote(t("register.resendSuccess"));
     } catch {
-      setResendNote("שליחה נכשלה. נסה שוב בעוד רגע.");
+      setResendNote(t("common.resendFailed"));
     } finally {
       setResending(false);
     }
@@ -121,7 +123,7 @@ export default function RegisterPage() {
               <ClockFaceMarks size={32} color="rgba(168,98,45,0.2)" className="absolute inset-0 m-auto" />
               <Gauge className="h-6 w-6 text-primary-foreground relative z-10" />
             </div>
-            <span className="text-2xl font-display font-bold text-foreground">מוניט</span>
+            <span className="text-2xl font-display font-bold text-foreground">{t("common.appName")}</span>
           </div>
         </div>
 
@@ -129,15 +131,15 @@ export default function RegisterPage() {
             <div className="rounded-[var(--radius-card)] border border-border bg-card p-6 text-center" role="status" aria-live="polite">
               <div className="w-12 h-1 bg-accent rounded-full mb-6 mx-auto" />
               <h1 className="text-2xl font-display font-bold tracking-tight text-foreground">
-בדוק את האימייל שלך
+                {t("register.verify.title")}
               </h1>
               <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-                שלחנו קישור אימות לכתובת{" "}
-                <span className="font-medium text-foreground" dir="ltr">{email}</span>.
-                לחץ על הקישור במייל כדי להפעיל את החשבון ולהתחיל לעבוד.
+                {t("register.verify.sentTo")}{" "}
+                <span className="font-medium text-foreground" dir="ltr">{email}</span>.{" "}
+                {t("register.verify.instructions")}
               </p>
               <p className="mt-2 text-xs text-muted-foreground">
-                לא קיבלת? בדוק את תיקיית הספאם, או שלח שוב.
+                {t("register.verify.notReceived")}
               </p>
               <button
                 type="button"
@@ -145,15 +147,15 @@ export default function RegisterPage() {
                 disabled={resending}
                 className="mt-5 w-full rounded-[var(--radius)] border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50 transition-colors"
               >
-                {resending ? "שולח..." : "שלח מייל אימות שוב"}
+                {resending ? t("common.sending") : t("register.resendVerification")}
               </button>
               {resendNote && (
                 <p className="mt-2 text-sm text-muted-foreground">{resendNote}</p>
               )}
               <p className="mt-5 text-sm text-muted-foreground">
-                כבר אימתת?{" "}
+                {t("register.alreadyVerified")}{" "}
                 <Link href="/login" className="font-medium text-primary hover:text-primary/80">
-                  התחבר כאן
+                  {t("register.signInHere")}
                 </Link>
               </p>
             </div>
@@ -162,30 +164,30 @@ export default function RegisterPage() {
           <div className="text-center">
             <div className="w-12 h-1 bg-accent rounded-full mb-5 mx-auto" />
             <h1 className="text-2xl font-display font-bold tracking-tight text-foreground">
-              צור חשבון חדש
+              {t("register.title")}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              התחל לנהל את שעות העבודה שלך
+              {t("register.subtitle")}
             </p>
           </div>
 
           <div className="rounded-[var(--radius-card)] border border-border bg-card p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <GoogleSignInButton label="הירשם עם Google" />
+            <GoogleSignInButton label={t("register.googleSignUp")} />
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center" aria-hidden="true">
                 <div className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-card px-3 text-muted-foreground">או הירשם עם אימייל</span>
+                <span className="bg-card px-3 text-muted-foreground">{t("register.orWithEmail")}</span>
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-foreground">
-                  כתובת אימייל
+                  {t("common.emailLabel")}
                 </label>
                 <input
                   id="email"
@@ -202,14 +204,14 @@ export default function RegisterPage() {
                       ? "border-destructive focus:border-destructive focus:ring-destructive/20"
                       : "border-border focus:border-primary focus:ring-primary/50"
                   }`}
-                  placeholder="הכנס כתובת אימייל"
+                  placeholder={t("common.emailPlaceholder")}
                 />
                 {emailError && <p className="mt-1 text-sm text-destructive">{emailError}</p>}
               </div>
 
               <div>
                 <label htmlFor="businessName" className="block text-sm font-medium text-foreground">
-                  שם העסק (אופציונלי)
+                  {t("register.businessNameLabel")}
                 </label>
                 <input
                   id="businessName"
@@ -218,13 +220,13 @@ export default function RegisterPage() {
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
                   className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
-                  placeholder="שם העסק שלך"
+                  placeholder={t("register.businessNamePlaceholder")}
                 />
               </div>
 
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-foreground">
-                  סיסמה
+                  {t("common.passwordLabel")}
                 </label>
                 <input
                   id="password"
@@ -241,7 +243,7 @@ export default function RegisterPage() {
                       ? "border-destructive focus:border-destructive focus:ring-destructive/20"
                       : "border-border focus:border-primary focus:ring-primary/50"
                   }`}
-                  placeholder="לפחות 8 תווים"
+                  placeholder={t("common.minCharsPlaceholder")}
                 />
                 <PasswordStrengthIndicator password={password} />
                 {passwordError && <p className="mt-1 text-sm text-destructive">{passwordError}</p>}
@@ -249,7 +251,7 @@ export default function RegisterPage() {
 
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground">
-                  אימות סיסמה
+                  {t("common.confirmPasswordLabel")}
                 </label>
                 <input
                   id="confirmPassword"
@@ -266,7 +268,7 @@ export default function RegisterPage() {
                       ? "border-destructive focus:border-destructive focus:ring-destructive/20"
                       : "border-border focus:border-primary focus:ring-primary/50"
                   }`}
-                  placeholder="הקלד את הסיסמה שוב"
+                  placeholder={t("register.confirmPasswordPlaceholder")}
                 />
                 {confirmPasswordError && (
                   <p className="mt-1 text-sm text-destructive">{confirmPasswordError}</p>
@@ -287,25 +289,29 @@ export default function RegisterPage() {
                 className="group relative flex w-full items-center justify-center gap-2 rounded-[var(--radius)] border border-transparent bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
               >
                 <UserPlus className="h-4 w-4" />
-                {loading ? "נרשם..." : "הרשם"}
+                {loading ? t("register.submitting") : t("register.submit")}
               </button>
             </div>
 
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
-                יש לך כבר חשבון?{" "}
+                {t("register.haveAccount")}{" "}
                 <Link
                   href="/login"
                   className="font-medium text-primary hover:text-primary/80"
                 >
-                  התחבר כאן
+                  {t("register.signInHere")}
                 </Link>
               </p>
               <p className="pt-2 text-xs text-muted-foreground">
-                בהרשמה אתה מסכים ל
-                <Link href="/terms" className="text-primary hover:text-primary/80">תנאי השימוש</Link>
-                {" "}ול
-                <Link href="/privacy" className="text-primary hover:text-primary/80">מדיניות הפרטיות</Link>
+                {t.rich("register.termsAgreement", {
+                  terms: (chunks) => (
+                    <Link href="/terms" className="text-primary hover:text-primary/80">{chunks}</Link>
+                  ),
+                  privacy: (chunks) => (
+                    <Link href="/privacy" className="text-primary hover:text-primary/80">{chunks}</Link>
+                  ),
+                })}
               </p>
             </div>
           </form>

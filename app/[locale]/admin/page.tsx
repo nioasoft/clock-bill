@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/src/i18n/navigation";
 import { Link } from "@/src/i18n/navigation";
 import { AppLayout } from "@/components/app-layout";
@@ -22,6 +23,7 @@ interface AdminStats {
 }
 
 export default function AdminDashboardPage() {
+  const t = useTranslations("Admin");
   const router = useRouter();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,8 +67,8 @@ export default function AdminDashboardPage() {
     <AppLayout>
       <PageContainer>
         <PageHeader
-          title="ניהול מערכת"
-          subtitle="סקירה כללית של המערכת"
+          title={t("dashboard.title")}
+          subtitle={t("dashboard.subtitle")}
         />
 
         {/* Stat Cards */}
@@ -81,7 +83,7 @@ export default function AdminDashboardPage() {
           </div>
         ) : error ? (
           <div className="rounded-[var(--radius-card)] bg-destructive/10 p-6 text-center">
-            <p className="text-destructive">שגיאה בטעינת הנתונים</p>
+            <p className="text-destructive">{t("dashboard.loadError")}</p>
           </div>
         ) : stats ? (
           <>
@@ -90,12 +92,12 @@ export default function AdminDashboardPage() {
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    סה&quot;כ משתמשים
+                    {t("dashboard.totalUsers")}
                   </p>
                 </div>
                 <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">{stats.totalUsers}</p>
                 {stats.newToday > 0 && (
-                  <p className="mt-1 text-xs text-success">+{stats.newToday} היום</p>
+                  <p className="mt-1 text-xs text-success">{t("dashboard.newTodayDelta", { count: stats.newToday })}</p>
                 )}
               </div>
 
@@ -103,12 +105,12 @@ export default function AdminDashboardPage() {
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    רשומות זמן
+                    {t("dashboard.totalEntries")}
                   </p>
                 </div>
                 <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">{stats.totalEntries}</p>
                 {stats.entriesToday > 0 && (
-                  <p className="mt-1 text-xs text-success">+{stats.entriesToday} היום</p>
+                  <p className="mt-1 text-xs text-success">{t("dashboard.newTodayDelta", { count: stats.entriesToday })}</p>
                 )}
               </div>
 
@@ -116,7 +118,7 @@ export default function AdminDashboardPage() {
                 <div className="flex items-center gap-2">
                   <Activity className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    טיימרים פעילים
+                    {t("dashboard.activeTimers")}
                   </p>
                 </div>
                 <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">{stats.activeTimers}</p>
@@ -126,7 +128,7 @@ export default function AdminDashboardPage() {
                 <div className="flex items-center gap-2">
                   <UserPlus className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    חדשים השבוע
+                    {t("dashboard.newThisWeek")}
                   </p>
                 </div>
                 <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">{stats.newThisWeek}</p>
@@ -136,7 +138,7 @@ export default function AdminDashboardPage() {
                 <div className="flex items-center gap-2">
                   <UserPlus className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    חדשים החודש
+                    {t("dashboard.newThisMonth")}
                   </p>
                 </div>
                 <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">{stats.newThisMonth}</p>
@@ -146,7 +148,7 @@ export default function AdminDashboardPage() {
                 <div className="flex items-center gap-2">
                   <FolderKanban className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    סה&quot;כ פרויקטים
+                    {t("dashboard.totalProjects")}
                   </p>
                 </div>
                 <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">{stats.totalProjects}</p>
@@ -157,7 +159,7 @@ export default function AdminDashboardPage() {
             {stats.registrationTrend.length > 0 && (
               <div className="mt-6 rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
                 <h3 className="font-display text-lg font-semibold text-foreground mb-4">
-                  הרשמות - 30 ימים אחרונים
+                  {t("dashboard.registrationsTrend")}
                 </h3>
                 <div className="h-48 flex items-end gap-1">
                   {stats.registrationTrend.map((d) => {
@@ -170,7 +172,7 @@ export default function AdminDashboardPage() {
                       <div
                         key={d.day}
                         className="flex-1 flex flex-col items-center gap-1"
-                        title={`${dateStr}: ${d.count} הרשמות`}
+                        title={t("dashboard.registrationsTooltip", { date: dateStr, count: d.count })}
                       >
                         <span className="text-[10px] text-muted-foreground">{d.count}</span>
                         <div
@@ -196,8 +198,8 @@ export default function AdminDashboardPage() {
                 <div className="flex items-center gap-3">
                   <Users className="h-5 w-5 text-primary" />
                   <div>
-                    <h3 className="font-display text-lg font-semibold text-foreground">ניהול משתמשים</h3>
-                    <p className="text-sm text-muted-foreground">צפה וניהל את כל המשתמשים</p>
+                    <h3 className="font-display text-lg font-semibold text-foreground">{t("dashboard.usersLinkTitle")}</h3>
+                    <p className="text-sm text-muted-foreground">{t("dashboard.usersLinkSubtitle")}</p>
                   </div>
                 </div>
               </Link>
@@ -208,8 +210,8 @@ export default function AdminDashboardPage() {
                 <div className="flex items-center gap-3">
                   <BarChart3 className="h-5 w-5 text-accent" />
                   <div>
-                    <h3 className="font-display text-lg font-semibold text-foreground">סטטיסטיקות</h3>
-                    <p className="text-sm text-muted-foreground">ניתוח מעמיק של המערכת</p>
+                    <h3 className="font-display text-lg font-semibold text-foreground">{t("dashboard.statsLinkTitle")}</h3>
+                    <p className="text-sm text-muted-foreground">{t("dashboard.statsLinkSubtitle")}</p>
                   </div>
                 </div>
               </Link>

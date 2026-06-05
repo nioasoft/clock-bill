@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Link } from "@/src/i18n/navigation";
 import { Gauge, CheckCircle2 } from "lucide-react";
@@ -8,6 +9,7 @@ import { authClient } from "@/lib/auth/client";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 
 function ResetPasswordForm() {
+  const t = useTranslations("Auth");
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
@@ -19,9 +21,9 @@ function ResetPasswordForm() {
 
   useEffect(() => {
     if (!token) {
-      setError("קישור לאיפוס סיסמה לא תקין או שפג תוקפו.");
+      setError(t("reset.errors.invalidToken"));
     }
-  }, [token]);
+  }, [token, t]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,13 +31,13 @@ function ResetPasswordForm() {
 
     // Validate passwords match
     if (password !== confirmPassword) {
-      setError("הסיסמאות אינן תואמות");
+      setError(t("reset.errors.passwordsMismatch"));
       return;
     }
 
     // Validate password length
     if (password.length < 8) {
-      setError("הסיסמה חייבת להכיל לפחות 8 תווים");
+      setError(t("reset.errors.passwordTooShort"));
       return;
     }
 
@@ -48,12 +50,12 @@ function ResetPasswordForm() {
       });
 
       if (authError) {
-        setError(authError.message || "שגיאה באיפוס הסיסמה");
+        setError(authError.message || t("reset.errors.resetFailed"));
       } else {
         setSuccess(true);
       }
     } catch {
-      setError("שגיאת תקשורת. אנא נסה שוב.");
+      setError(t("common.networkError"));
     } finally {
       setLoading(false);
     }
@@ -66,7 +68,7 @@ function ResetPasswordForm() {
           <div className="flex items-start gap-3">
             <CheckCircle2 className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
             <p className="text-sm text-foreground">
-              הסיסמה אופסה בהצלחה! כעת תוכל להתחבר עם הסיסמה החדשה.
+              {t("reset.successMessage")}
             </p>
           </div>
         </div>
@@ -75,7 +77,7 @@ function ResetPasswordForm() {
             href="/login"
             className="font-medium text-primary hover:text-primary/80"
           >
-            מעבר לדף ההתחברות
+            {t("reset.goToLogin")}
           </Link>
         </div>
       </div>
@@ -87,7 +89,7 @@ function ResetPasswordForm() {
       <div className="space-y-4">
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
-            סיסמה חדשה
+            {t("reset.newPasswordLabel")}
           </label>
           <input
             id="password"
@@ -97,14 +99,14 @@ function ResetPasswordForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="block w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
-            placeholder="לפחות 8 תווים"
+            placeholder={t("common.minCharsPlaceholder")}
             disabled={!token}
           />
         </div>
 
         <div>
           <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground mb-2">
-            אימות סיסמה
+            {t("common.confirmPasswordLabel")}
           </label>
           <input
             id="confirmPassword"
@@ -114,7 +116,7 @@ function ResetPasswordForm() {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             className="block w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
-            placeholder="הזן את הסיסמה שוב"
+            placeholder={t("reset.confirmPasswordPlaceholder")}
             disabled={!token}
           />
         </div>
@@ -131,7 +133,7 @@ function ResetPasswordForm() {
         disabled={loading || !token}
         className="w-full rounded-[var(--radius)] bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
       >
-        {loading ? "מאפס סיסמה..." : "אפס סיסמה"}
+        {loading ? t("reset.submitting") : t("reset.submit")}
       </button>
 
       <div className="text-center">
@@ -140,7 +142,7 @@ function ResetPasswordForm() {
             href="/login"
             className="font-medium text-primary hover:text-primary/80"
           >
-            חזרה לדף ההתחברות
+            {t("common.backToLogin")}
           </Link>
         </p>
       </div>
@@ -149,6 +151,7 @@ function ResetPasswordForm() {
 }
 
 export default function ResetPasswordPage() {
+  const t = useTranslations("Auth");
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface px-4" dir="rtl">
       <div className="w-full max-w-md">
@@ -159,17 +162,17 @@ export default function ResetPasswordPage() {
                 <ClockFaceMarks size={40} color="rgba(212,160,74,0.4)" className="absolute inset-0 m-auto" />
                 <Gauge className="h-6 w-6 text-accent relative z-10" />
               </div>
-              <span className="text-2xl font-display font-bold text-foreground">מוניט</span>
+              <span className="text-2xl font-display font-bold text-foreground">{t("common.appName")}</span>
             </div>
             <h1 className="text-3xl font-display font-bold tracking-tight text-foreground">
-              איפוס סיסמה
+              {t("reset.title")}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              הזן את הסיסמה החדשה שלך
+              {t("reset.subtitle")}
             </p>
           </div>
 
-          <Suspense fallback={<div className="text-center">טוען...</div>}>
+          <Suspense fallback={<div className="text-center">{t("common.loading")}</div>}>
             <ResetPasswordForm />
           </Suspense>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/src/i18n/navigation";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
@@ -74,14 +75,7 @@ interface Session {
 
 type TabId = "profile" | "clients" | "projects" | "entries" | "sessions" | "actions";
 
-const tabs: { id: TabId; label: string }[] = [
-  { id: "profile", label: "פרופיל" },
-  { id: "clients", label: "לקוחות" },
-  { id: "projects", label: "פרויקטים" },
-  { id: "entries", label: "רשומות" },
-  { id: "sessions", label: "הפעלות" },
-  { id: "actions", label: "פעולות" },
-];
+const tabIds: TabId[] = ["profile", "clients", "projects", "entries", "sessions", "actions"];
 
 function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600);
@@ -95,6 +89,7 @@ export default function AdminUserDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id: userId } = use(params);
+  const t = useTranslations("Admin");
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>("profile");
   const [loading, setLoading] = useState(true);
@@ -170,7 +165,7 @@ export default function AdminUserDetailPage({
       }
     } catch (err) {
       console.error("Action error:", err);
-      setActionResult({ type: "error", message: "שגיאה בביצוע הפעולה" });
+      setActionResult({ type: "error", message: t("detail.actionError") });
     } finally {
       setActionLoading(null);
     }
@@ -198,9 +193,9 @@ export default function AdminUserDetailPage({
       <AppLayout>
         <PageContainer>
           <div className="text-center py-12">
-            <p className="text-muted-foreground">משתמש לא נמצא</p>
+            <p className="text-muted-foreground">{t("detail.notFound")}</p>
             <Link href="/admin/users" className="text-primary text-sm mt-2 inline-block">
-              חזרה לרשימת המשתמשים
+              {t("detail.backToUsers")}
             </Link>
           </div>
         </PageContainer>
@@ -217,14 +212,14 @@ export default function AdminUserDetailPage({
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
         >
           <ArrowRight className="h-4 w-4" />
-          חזרה לרשימת המשתמשים
+          {t("detail.backToUsers")}
         </Link>
 
         <PageHeader title={user.email}>
           {user.role === "admin" && (
             <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
               <Shield className="h-3 w-3" />
-              מנהל
+              {t("detail.roleAdmin")}
             </span>
           )}
         </PageHeader>
@@ -232,19 +227,19 @@ export default function AdminUserDetailPage({
         {/* Tabs */}
         <div className="border-b border-border mb-6 overflow-x-auto">
           <div className="flex gap-0 min-w-max" role="tablist">
-            {tabs.map((tab) => (
+            {tabIds.map((tabId) => (
               <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                key={tabId}
+                onClick={() => setActiveTab(tabId)}
                 className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                  activeTab === tab.id
+                  activeTab === tabId
                     ? "border-primary text-primary"
                     : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
                 role="tab"
-                aria-selected={activeTab === tab.id}
+                aria-selected={activeTab === tabId}
               >
-                {tab.label}
+                {t(`detail.tabs.${tabId}`)}
               </button>
             ))}
           </div>
@@ -255,19 +250,19 @@ export default function AdminUserDetailPage({
           <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">אימייל</p>
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">{t("detail.profile.email")}</p>
                 <p className="text-sm text-foreground">{user.email}</p>
               </div>
               <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">אימייל מאומת</p>
-                <p className="text-sm text-foreground">{user.emailVerified ? "כן" : "לא"}</p>
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">{t("detail.profile.emailVerified")}</p>
+                <p className="text-sm text-foreground">{user.emailVerified ? t("detail.yes") : t("detail.no")}</p>
               </div>
               <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">תפקיד</p>
-                <p className="text-sm text-foreground">{user.role === "admin" ? "מנהל" : "משתמש"}</p>
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">{t("detail.profile.role")}</p>
+                <p className="text-sm text-foreground">{user.role === "admin" ? t("detail.roleAdmin") : t("detail.roleUser")}</p>
               </div>
               <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">תאריך רישום</p>
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">{t("detail.profile.registrationDate")}</p>
                 <p className="text-sm text-foreground">
                   {new Date(user.createdAt).toLocaleDateString("he-IL", {
                     year: "numeric",
@@ -279,35 +274,35 @@ export default function AdminUserDetailPage({
               {profile && (
                 <>
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">שם עסק</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">{t("detail.profile.businessName")}</p>
                     <p className="text-sm text-foreground">{profile.business_name || "—"}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">טלפון</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">{t("detail.profile.phone")}</p>
                     <p className="text-sm text-foreground">{profile.phone || "—"}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">כתובת</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">{t("detail.profile.address")}</p>
                     <p className="text-sm text-foreground">{profile.address || "—"}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">ח.פ / ע.מ</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">{t("detail.profile.taxId")}</p>
                     <p className="text-sm text-foreground">{profile.tax_id || "—"}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">מטבע</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">{t("detail.profile.currency")}</p>
                     <p className="text-sm text-foreground">{profile.default_currency || "ILS"}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">תבנית PDF</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">{t("detail.profile.pdfTemplate")}</p>
                     <p className="text-sm text-foreground">{profile.preferred_pdf_template || "modern"}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">לוגו</p>
-                    <p className="text-sm text-foreground">{profile.logo_url ? "הועלה" : "לא הועלה"}</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">{t("detail.profile.logo")}</p>
+                    <p className="text-sm text-foreground">{profile.logo_url ? t("detail.profile.logoUploaded") : t("detail.profile.logoNotUploaded")}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">אתר</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">{t("detail.profile.website")}</p>
                     <p className="text-sm text-foreground">{profile.website || "—"}</p>
                   </div>
                 </>
@@ -319,15 +314,15 @@ export default function AdminUserDetailPage({
         {activeTab === "clients" && (
           <div className="rounded-[var(--radius-card)] bg-card border border-border/50 shadow-sm overflow-hidden">
             {clients.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">אין לקוחות</div>
+              <div className="p-8 text-center text-muted-foreground">{t("detail.clients.empty")}</div>
             ) : (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/50">
-                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">שם</th>
-                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">איש קשר</th>
-                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">אימייל</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">סטטוס</th>
+                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">{t("detail.clients.colName")}</th>
+                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">{t("detail.clients.colContact")}</th>
+                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">{t("detail.clients.colEmail")}</th>
+                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">{t("detail.clients.colStatus")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -338,7 +333,7 @@ export default function AdminUserDetailPage({
                       <td className="px-4 py-3 text-muted-foreground">{c.email || "—"}</td>
                       <td className="px-4 py-3 text-center">
                         <span className={`text-xs px-2 py-0.5 rounded-full ${c.is_active ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>
-                          {c.is_active ? "פעיל" : "לא פעיל"}
+                          {c.is_active ? t("detail.clients.active") : t("detail.clients.inactive")}
                         </span>
                       </td>
                     </tr>
@@ -352,13 +347,13 @@ export default function AdminUserDetailPage({
         {activeTab === "projects" && (
           <div className="rounded-[var(--radius-card)] bg-card border border-border/50 shadow-sm overflow-hidden">
             {projects.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">אין פרויקטים</div>
+              <div className="p-8 text-center text-muted-foreground">{t("detail.projects.empty")}</div>
             ) : (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/50">
-                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">שם</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">סטטוס</th>
+                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">{t("detail.projects.colName")}</th>
+                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">{t("detail.projects.colStatus")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -385,14 +380,14 @@ export default function AdminUserDetailPage({
         {activeTab === "entries" && (
           <div className="rounded-[var(--radius-card)] bg-card border border-border/50 shadow-sm overflow-hidden">
             {entries.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">אין רשומות זמן</div>
+              <div className="p-8 text-center text-muted-foreground">{t("detail.entries.empty")}</div>
             ) : (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/50">
-                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">תיאור</th>
-                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">תאריך</th>
-                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">משך</th>
+                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">{t("detail.entries.colDescription")}</th>
+                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">{t("detail.entries.colDate")}</th>
+                    <th className="text-center px-4 py-3 font-medium text-muted-foreground">{t("detail.entries.colDuration")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -417,14 +412,14 @@ export default function AdminUserDetailPage({
           <div className="space-y-4">
             <div className="rounded-[var(--radius-card)] bg-card border border-border/50 shadow-sm overflow-hidden">
               {sessions.length === 0 ? (
-                <div className="p-8 text-center text-muted-foreground">אין הפעלות</div>
+                <div className="p-8 text-center text-muted-foreground">{t("detail.sessions.empty")}</div>
               ) : (
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border bg-muted/50">
-                      <th className="text-start px-4 py-3 font-medium text-muted-foreground">נוצר</th>
-                      <th className="text-start px-4 py-3 font-medium text-muted-foreground">פג תוקף</th>
-                      <th className="text-center px-4 py-3 font-medium text-muted-foreground">סטטוס</th>
+                      <th className="text-start px-4 py-3 font-medium text-muted-foreground">{t("detail.sessions.colCreated")}</th>
+                      <th className="text-start px-4 py-3 font-medium text-muted-foreground">{t("detail.sessions.colExpires")}</th>
+                      <th className="text-center px-4 py-3 font-medium text-muted-foreground">{t("detail.sessions.colStatus")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -452,7 +447,7 @@ export default function AdminUserDetailPage({
                           <span className={`text-xs px-2 py-0.5 rounded-full ${
                             s.isExpired ? "bg-muted text-muted-foreground" : "bg-success/10 text-success"
                           }`}>
-                            {s.isExpired ? "פג תוקף" : "פעיל"}
+                            {s.isExpired ? t("detail.sessions.expired") : t("detail.sessions.active")}
                           </span>
                         </td>
                       </tr>
@@ -480,7 +475,7 @@ export default function AdminUserDetailPage({
             {/* Temp password display */}
             {tempPassword && (
               <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
-                <p className="text-sm font-medium text-foreground mb-2">סיסמה זמנית:</p>
+                <p className="text-sm font-medium text-foreground mb-2">{t("detail.actions.tempPasswordLabel")}</p>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 bg-muted px-3 py-2 rounded text-sm font-mono" dir="ltr">
                     {tempPassword}
@@ -488,12 +483,12 @@ export default function AdminUserDetailPage({
                   <button
                     onClick={() => copyToClipboard(tempPassword)}
                     className="p-2 rounded-lg border border-border hover:bg-muted transition-colors"
-                    title="העתק"
+                    title={t("detail.actions.copy")}
                   >
                     {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
                   </button>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">שמור את הסיסמה - היא לא תוצג שוב</p>
+                <p className="text-xs text-muted-foreground mt-2">{t("detail.actions.tempPasswordHint")}</p>
               </div>
             )}
 
@@ -501,8 +496,8 @@ export default function AdminUserDetailPage({
               {/* Reset password */}
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-foreground">איפוס סיסמה</p>
-                  <p className="text-xs text-muted-foreground">יצירת סיסמה זמנית חדשה וניתוק כל ההפעלות</p>
+                  <p className="text-sm font-medium text-foreground">{t("detail.actions.resetPassword.title")}</p>
+                  <p className="text-xs text-muted-foreground">{t("detail.actions.resetPassword.description")}</p>
                 </div>
                 <button
                   onClick={() => performAction("reset_password")}
@@ -510,7 +505,7 @@ export default function AdminUserDetailPage({
                   className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted disabled:opacity-50 transition-colors"
                 >
                   <KeyRound className="h-4 w-4" />
-                  {actionLoading === "reset_password" ? "מאפס..." : "איפוס"}
+                  {actionLoading === "reset_password" ? t("detail.actions.resetPassword.loading") : t("detail.actions.resetPassword.button")}
                 </button>
               </div>
 
@@ -518,8 +513,8 @@ export default function AdminUserDetailPage({
               {!user.emailVerified && (
                 <div className="flex items-center justify-between border-t border-border pt-4">
                   <div>
-                    <p className="text-sm font-medium text-foreground">אימות אימייל</p>
-                    <p className="text-xs text-muted-foreground">סימון האימייל כמאומת ידנית</p>
+                    <p className="text-sm font-medium text-foreground">{t("detail.actions.verifyEmail.title")}</p>
+                    <p className="text-xs text-muted-foreground">{t("detail.actions.verifyEmail.description")}</p>
                   </div>
                   <button
                     onClick={() => performAction("verify_email")}
@@ -527,7 +522,7 @@ export default function AdminUserDetailPage({
                     className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted disabled:opacity-50 transition-colors"
                   >
                     <MailCheck className="h-4 w-4" />
-                    {actionLoading === "verify_email" ? "מאמת..." : "אמת"}
+                    {actionLoading === "verify_email" ? t("detail.actions.verifyEmail.loading") : t("detail.actions.verifyEmail.button")}
                   </button>
                 </div>
               )}
@@ -535,8 +530,8 @@ export default function AdminUserDetailPage({
               {/* Delete sessions */}
               <div className="flex items-center justify-between border-t border-border pt-4">
                 <div>
-                  <p className="text-sm font-medium text-foreground">ניתוק הפעלות</p>
-                  <p className="text-xs text-muted-foreground">מחיקת כל ההפעלות הפעילות</p>
+                  <p className="text-sm font-medium text-foreground">{t("detail.actions.deleteSessions.title")}</p>
+                  <p className="text-xs text-muted-foreground">{t("detail.actions.deleteSessions.description")}</p>
                 </div>
                 <button
                   onClick={() => performAction("delete_sessions")}
@@ -544,16 +539,16 @@ export default function AdminUserDetailPage({
                   className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted disabled:opacity-50 transition-colors"
                 >
                   <LogOut className="h-4 w-4" />
-                  {actionLoading === "delete_sessions" ? "מנתק..." : "נתק הכל"}
+                  {actionLoading === "delete_sessions" ? t("detail.actions.deleteSessions.loading") : t("detail.actions.deleteSessions.button")}
                 </button>
               </div>
 
               {/* Toggle role */}
               <div className="flex items-center justify-between border-t border-border pt-4">
                 <div>
-                  <p className="text-sm font-medium text-foreground">שינוי תפקיד</p>
+                  <p className="text-sm font-medium text-foreground">{t("detail.actions.toggleRole.title")}</p>
                   <p className="text-xs text-muted-foreground">
-                    {user.role === "admin" ? "הורדה למשתמש רגיל" : "הפיכה למנהל"}
+                    {user.role === "admin" ? t("detail.actions.toggleRole.demoteDescription") : t("detail.actions.toggleRole.promoteDescription")}
                   </p>
                 </div>
                 <button
@@ -562,15 +557,15 @@ export default function AdminUserDetailPage({
                   className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted disabled:opacity-50 transition-colors"
                 >
                   <Shield className="h-4 w-4" />
-                  {actionLoading === "toggle_role" ? "משנה..." : user.role === "admin" ? "הורד" : "הפוך למנהל"}
+                  {actionLoading === "toggle_role" ? t("detail.actions.toggleRole.loading") : user.role === "admin" ? t("detail.actions.toggleRole.demoteButton") : t("detail.actions.toggleRole.promoteButton")}
                 </button>
               </div>
 
               {/* Delete user */}
               <div className="flex items-center justify-between border-t border-destructive/30 pt-4">
                 <div>
-                  <p className="text-sm font-medium text-destructive">מחיקת משתמש</p>
-                  <p className="text-xs text-muted-foreground">מחיקת המשתמש וכל הנתונים שלו לצמיתות</p>
+                  <p className="text-sm font-medium text-destructive">{t("detail.actions.deleteUser.title")}</p>
+                  <p className="text-xs text-muted-foreground">{t("detail.actions.deleteUser.description")}</p>
                 </div>
                 {deleteConfirm ? (
                   <div className="flex items-center gap-2">
@@ -582,13 +577,13 @@ export default function AdminUserDetailPage({
                       disabled={actionLoading !== null}
                       className="px-4 py-2 text-sm rounded-lg bg-destructive text-white hover:bg-destructive/90 disabled:opacity-50 transition-colors"
                     >
-                      {actionLoading === "delete_user" ? "מוחק..." : "אישור מחיקה"}
+                      {actionLoading === "delete_user" ? t("detail.actions.deleteUser.loading") : t("detail.actions.deleteUser.confirmButton")}
                     </button>
                     <button
                       onClick={() => setDeleteConfirm(false)}
                       className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted transition-colors"
                     >
-                      ביטול
+                      {t("detail.actions.deleteUser.cancel")}
                     </button>
                   </div>
                 ) : (
@@ -598,7 +593,7 @@ export default function AdminUserDetailPage({
                     className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 disabled:opacity-50 transition-colors"
                   >
                     <Trash2 className="h-4 w-4" />
-                    מחק
+                    {t("detail.actions.deleteUser.button")}
                   </button>
                 )}
               </div>
