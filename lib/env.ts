@@ -1,7 +1,7 @@
 /**
  * Environment variable validation
  * Validates all required environment variables on startup
- * Throws clear errors in Hebrew and English for missing/invalid variables
+ * Throws clear English errors for missing/invalid variables
  */
 
 /**
@@ -11,7 +11,6 @@ interface EnvVarSchema {
   name: string;
   required: boolean;
   description: string;
-  descriptionHe: string;
   validator?: (value: string) => boolean;
   defaultValue?: string;
 }
@@ -24,7 +23,6 @@ const ENV_SCHEMA: EnvVarSchema[] = [
     name: "DATABASE_URL",
     required: true,
     description: "PostgreSQL database connection string",
-    descriptionHe: "מחרוזת חיבור למסד נתונים PostgreSQL",
     validator: (value) => {
       // Should be a valid postgres:// or postgresql:// URL
       return value.startsWith("postgres://") || value.startsWith("postgresql://");
@@ -35,8 +33,6 @@ const ENV_SCHEMA: EnvVarSchema[] = [
     required: false,
     description:
       "Privileged PostgreSQL connection (BYPASSRLS role) for admin-only cross-tenant aggregate queries (optional; falls back to DATABASE_URL)",
-    descriptionHe:
-      "חיבור PostgreSQL מורשה (רול BYPASSRLS) לשאילתות aggregate חוצות-משתמשים של אדמין בלבד (אופציונלי; נופל חזרה ל-DATABASE_URL)",
     validator: (value) => {
       return value.startsWith("postgres://") || value.startsWith("postgresql://");
     },
@@ -45,7 +41,6 @@ const ENV_SCHEMA: EnvVarSchema[] = [
     name: "BETTER_AUTH_SECRET",
     required: true,
     description: "Secret key for authentication (at least 32 characters)",
-    descriptionHe: "מפתח סודי לאימות (לפחות 32 תווים)",
     validator: (value) => {
       // Should be at least 32 characters for security
       return value.length >= 32;
@@ -55,7 +50,6 @@ const ENV_SCHEMA: EnvVarSchema[] = [
     name: "BETTER_AUTH_URL",
     required: true,
     description: "Base URL for the application (e.g., http://localhost:3000)",
-    descriptionHe: "כתובת בסיס לאפליקציה (לדוגמה: http://localhost:3000)",
     validator: (value) => {
       // Should be a valid URL
       try {
@@ -70,7 +64,6 @@ const ENV_SCHEMA: EnvVarSchema[] = [
     name: "NODE_ENV",
     required: false,
     description: "Environment (development, production, test)",
-    descriptionHe: "סביבת עבודה (פיתוח, ייצור, בדיקה)",
     defaultValue: "development",
     validator: (value) => {
       return ["development", "production", "test"].includes(value);
@@ -81,73 +74,61 @@ const ENV_SCHEMA: EnvVarSchema[] = [
     name: "GITHUB_CLIENT_ID",
     required: false,
     description: "GitHub OAuth client ID (optional)",
-    descriptionHe: "מזהה לקוח GitHub OAuth (אופציונלי)",
   },
   {
     name: "GITHUB_CLIENT_SECRET",
     required: false,
     description: "GitHub OAuth client secret (optional)",
-    descriptionHe: "מפתח סודי לקוח GitHub OAuth (אופציונלי)",
   },
   {
     name: "GOOGLE_CLIENT_ID",
     required: false,
     description: "Google OAuth client ID (optional)",
-    descriptionHe: "מזהה לקוח Google OAuth (אופציונלי)",
   },
   {
     name: "GOOGLE_CLIENT_SECRET",
     required: false,
     description: "Google OAuth client secret (optional)",
-    descriptionHe: "מפתח סודי לקוח Google OAuth (אופציונלי)",
   },
   {
     name: "RESEND_API_KEY",
     required: false,
     description: "Resend email service API key (optional)",
-    descriptionHe: "מפתח API לשירות דוא״ל Resend (אופציונלי)",
   },
   {
     name: "EMAIL_FROM",
     required: false,
-    description: 'Verified Resend sender, e.g. "מוניט <noreply@clock-bill.com>" (optional)',
-    descriptionHe: "כתובת שולח מאומתת ב-Resend (אופציונלי)",
+    description: 'Verified Resend sender, e.g. "Monit <noreply@clock-bill.com>" (optional)',
   },
   {
     name: "R2_BUCKET_NAME",
     required: false,
     description: "Cloudflare R2 bucket name (optional)",
-    descriptionHe: "שם דלי Cloudflare R2 (אופציונלי)",
   },
   {
     name: "R2_ACCOUNT_ID",
     required: false,
     description: "Cloudflare R2 account ID (optional)",
-    descriptionHe: "מזהה חשבון Cloudflare R2 (אופציונלי)",
   },
   {
     name: "R2_ACCESS_KEY_ID",
     required: false,
     description: "Cloudflare R2 access key ID (optional)",
-    descriptionHe: "מזהה מפתח גישה Cloudflare R2 (אופציונלי)",
   },
   {
     name: "R2_SECRET_ACCESS_KEY",
     required: false,
     description: "Cloudflare R2 secret access key (optional)",
-    descriptionHe: "מפתח סודי גישה Cloudflare R2 (אופציונלי)",
   },
   {
     name: "R2_PUBLIC_URL",
     required: false,
     description: "Cloudflare R2 public URL (optional)",
-    descriptionHe: "כתובת ציבורית Cloudflare R2 (אופציונלי)",
   },
   {
     name: "BLOB_READ_WRITE_TOKEN",
     required: false,
     description: "Vercel Blob storage read-write token (required in production for file uploads)",
-    descriptionHe: "אסימון קריאה/כתיבה לאחסון Vercel Blob (נדרש בייצור להעלאת קבצים)",
     validator: (value) => {
       // Should start with vercel_blob_rw_
       return value.startsWith("vercel_blob_rw_");
@@ -161,7 +142,6 @@ const ENV_SCHEMA: EnvVarSchema[] = [
 interface ValidationError {
   varName: string;
   message: string;
-  messageHe: string;
 }
 
 /**
@@ -180,7 +160,6 @@ export function validateEnv(): void {
       errors.push({
         varName: schema.name,
         message: `Missing required environment variable: ${schema.name}`,
-        messageHe: `משתנה סביבה נדרש חסר: ${schema.name}`,
       });
       continue;
     }
@@ -202,13 +181,11 @@ export function validateEnv(): void {
         errors.push({
           varName: schema.name,
           message: `Invalid value for ${schema.name}: ${schema.description}`,
-          messageHe: `ערך לא תקין עבור ${schema.name}: ${schema.descriptionHe}`,
         });
       } else {
         warnings.push({
           varName: schema.name,
           message: `Warning: ${schema.name} has invalid value: ${schema.description}`,
-          messageHe: `אזהרה: ל-${schema.name} יש ערך לא תקין: ${schema.descriptionHe}`,
         });
       }
     }
@@ -217,7 +194,6 @@ export function validateEnv(): void {
   // Log warnings
   for (const warning of warnings) {
     console.warn(`⚠️  ${warning.message}`);
-    console.warn(`⚠️  ${warning.messageHe}`);
   }
 
   // If there are errors, throw with detailed message
@@ -225,22 +201,17 @@ export function validateEnv(): void {
     const errorMessage = [
       "",
       "❌ Environment Variable Validation Failed",
-      "❌ אימות משתני סביבה נכשל",
       "",
       "Required environment variables are missing or invalid:",
-      "משתני סביבה נדרשים חסרים או לא תקינים:",
       "",
       ...errors.flatMap((error) => [
         `❌ ${error.varName}`,
         `   ${error.message}`,
-        `   ${error.messageHe}`,
         "",
       ]),
       "Please set these environment variables before starting the server.",
-      "יש להגדיר משתני סביבה אלו לפני הפעלת השרת.",
       "",
       "You can copy .env.template to .env and fill in the values.",
-      "ניתן להעתיק את .env.template ל-.env ולמלא את הערכים.",
       "",
     ].join("\n");
 
@@ -249,7 +220,6 @@ export function validateEnv(): void {
 
   // Success message
   console.log("✅ Environment variables validated successfully");
-  console.log("✅ משתני סביבה אומתו בהצלחה");
 }
 
 /**

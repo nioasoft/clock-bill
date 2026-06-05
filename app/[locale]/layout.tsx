@@ -122,8 +122,8 @@ export default async function LocaleLayout({ children, params }: Props) {
           <Providers>
             <main id="main-content">{children}</main>
           </Providers>
+          <PwaProvider />
         </NextIntlClientProvider>
-        <PwaProvider />
         <Toaster />
         <Analytics />
         <SpeedInsights />

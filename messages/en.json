@@ -256,6 +256,15 @@
         "bodyWithHours": "Hi! You haven't logged any time entries today. So far you've logged {hours} hours today.",
         "bodyNoHours": "Hi! You haven't logged any time entries today. Start logging your time."
       }
+    },
+    "upcomingDeadlines": {
+      "title": "Upcoming deadlines",
+      "empty": "No projects with upcoming deadlines",
+      "allProjects": "All projects →",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "inDays": "In {days} days",
+      "deadlineLabel": "Deadline: {date}"
     }
   },
   "Entries": {
@@ -1599,5 +1608,14 @@
     "SELF_ACTION_FORBIDDEN": "You cannot perform this action on yourself",
     "PASSWORD_RESET_UNSUPPORTED": "Manual password reset is not supported. Direct the user to the 'forgot password' flow.",
     "UNKNOWN_ACTION": "Unknown action"
+  },
+  "Pwa": {
+    "dialogLabel": "Install the app",
+    "close": "Close",
+    "installTitle": "Install Monit",
+    "installSubtitle": "Quick access from your home screen, even without a browser.",
+    "installButton": "Install app",
+    "iosInstructions": "Tap the share button <icon></icon> in the browser bar, then choose \"Add to Home Screen\".",
+    "shareIconLabel": "Share"
   }
 }

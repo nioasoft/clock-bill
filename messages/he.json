@@ -256,6 +256,15 @@
         "bodyWithHours": "שלום! עדיין לא הזנת רשומות זמן היום. למשל, רשמת היום {hours} שעות",
         "bodyNoHours": "שלום! עדיין לא הזנת רשומות זמן היום. למשל, התחל לרשום זמן."
       }
+    },
+    "upcomingDeadlines": {
+      "title": "יעדים קרובים",
+      "empty": "אין פרויקטים עם יעדים קרובים",
+      "allProjects": "לכל הפרויקטים →",
+      "today": "היום",
+      "tomorrow": "מחר",
+      "inDays": "בעוד {days} ימים",
+      "deadlineLabel": "תאריך יעד: {date}"
     }
   },
   "Entries": {
@@ -1599,5 +1608,14 @@
     "SELF_ACTION_FORBIDDEN": "לא ניתן לבצע פעולה זו על עצמך",
     "PASSWORD_RESET_UNSUPPORTED": "איפוס סיסמה ידני אינו נתמך. יש להפנות את המשתמש לתהליך 'שכחתי סיסמה'.",
     "UNKNOWN_ACTION": "פעולה לא מוכרת"
+  },
+  "Pwa": {
+    "dialogLabel": "התקנת האפליקציה",
+    "close": "סגור",
+    "installTitle": "התקן את מוניט",
+    "installSubtitle": "גישה מהירה ממסך הבית, גם ללא דפדפן.",
+    "installButton": "התקן אפליקציה",
+    "iosInstructions": "הקש על כפתור השיתוף <icon></icon> בסרגל הדפדפן, ואז בחר \"הוסף למסך הבית\".",
+    "shareIconLabel": "שיתוף"
   }
 }

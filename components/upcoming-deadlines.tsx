@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/src/i18n/navigation";
 import { Calendar } from "lucide-react";
 
@@ -18,6 +18,7 @@ interface UpcomingDeadlinesProps {
 }
 
 export function UpcomingDeadlines({ userId }: UpcomingDeadlinesProps) {
+  const t = useTranslations("Dashboard.upcomingDeadlines");
   const intlLocale = useLocale() === "en" ? "en-US" : "he-IL";
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +46,7 @@ export function UpcomingDeadlines({ userId }: UpcomingDeadlinesProps) {
       <div className="rounded-lg bg-card p-6 shadow">
         <div className="flex items-center gap-2 mb-4">
           <Calendar className="h-5 w-5 text-muted-foreground" />
-          <h3 className="text-lg font-medium text-foreground">יעדים קרובים</h3>
+          <h3 className="text-lg font-medium text-foreground">{t("title")}</h3>
         </div>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -64,10 +65,10 @@ export function UpcomingDeadlines({ userId }: UpcomingDeadlinesProps) {
       <div className="rounded-lg bg-card p-6 shadow">
         <div className="flex items-center gap-2 mb-4">
           <Calendar className="h-5 w-5 text-muted-foreground" />
-          <h3 className="text-lg font-medium text-foreground">יעדים קרובים</h3>
+          <h3 className="text-lg font-medium text-foreground">{t("title")}</h3>
         </div>
         <p className="text-sm text-muted-foreground">
-          אין פרויקטים עם יעדים קרובים
+          {t("empty")}
         </p>
       </div>
     );
@@ -81,9 +82,9 @@ export function UpcomingDeadlines({ userId }: UpcomingDeadlinesProps) {
   };
 
   const getUrgencyText = (days: number) => {
-    if (days === 0) return "היום";
-    if (days === 1) return "מחר";
-    return `בעוד ${days} ימים`;
+    if (days === 0) return t("today");
+    if (days === 1) return t("tomorrow");
+    return t("inDays", { days });
   };
 
   return (
@@ -91,13 +92,13 @@ export function UpcomingDeadlines({ userId }: UpcomingDeadlinesProps) {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Calendar className="h-5 w-5 text-muted-foreground" />
-          <h3 className="text-lg font-medium text-foreground">יעדים קרובים</h3>
+          <h3 className="text-lg font-medium text-foreground">{t("title")}</h3>
         </div>
         <Link
           href="/projects"
           className="text-sm text-primary hover:text-primary/80"
         >
-          לכל הפרויקטים →
+          {t("allProjects")}
         </Link>
       </div>
 
@@ -122,7 +123,9 @@ export function UpcomingDeadlines({ userId }: UpcomingDeadlinesProps) {
               </div>
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              תאריך יעד: {new Date(deadline.endDate).toLocaleDateString(intlLocale)}
+              {t("deadlineLabel", {
+                date: new Date(deadline.endDate).toLocaleDateString(intlLocale),
+              })}
             </p>
           </Link>
         ))}
