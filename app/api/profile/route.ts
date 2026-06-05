@@ -101,7 +101,7 @@ export async function GET(): Promise<NextResponse> {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -131,7 +131,7 @@ export async function GET(): Promise<NextResponse> {
 
     if (result.rows.length === 0) {
       return NextResponse.json(
-        { success: false, message: "פרופיל לא נמצא" },
+        { success: false, error_code: "PROFILE_NOT_FOUND", message: "פרופיל לא נמצא" },
         { status: 404 }
       );
     }
@@ -147,7 +147,7 @@ export async function GET(): Promise<NextResponse> {
   } catch (error) {
     logger.error("Failed to get profile", error, userId ? { userId } : undefined);
     return NextResponse.json(
-      { success: false, message: "Internal server error" },
+      { success: false, error_code: "SERVER_ERROR", message: "Internal server error" },
       { status: 500 }
     );
   }
@@ -164,7 +164,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -308,7 +308,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
 
     if (updates.length === 0) {
       return NextResponse.json(
-        { success: false, message: "No fields to update" },
+        { success: false, error_code: "NO_FIELDS_TO_UPDATE", message: "No fields to update" },
         { status: 400 }
       );
     }
@@ -342,7 +342,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
 
     if (result.rows.length === 0) {
       return NextResponse.json(
-        { success: false, message: "פרופיל לא נמצא" },
+        { success: false, error_code: "PROFILE_NOT_FOUND", message: "פרופיל לא נמצא" },
         { status: 404 }
       );
     }
@@ -355,7 +355,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
   } catch (error) {
     logger.error("Failed to update profile", error, userId ? { userId } : undefined);
     return NextResponse.json(
-      { success: false, message: "Internal server error" },
+      { success: false, error_code: "SERVER_ERROR", message: "Internal server error" },
       { status: 500 }
     );
   }

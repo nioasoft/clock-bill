@@ -30,7 +30,7 @@ export async function GET(_request: NextRequest) {
     const user = await getUser();
 
     if (!user) {
-      return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+      return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
     }
 
     // Get all rates for this user
@@ -53,7 +53,7 @@ export async function GET(_request: NextRequest) {
   } catch (error) {
     console.error("Error fetching currency rates:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה בטעינת שערי חליפין" },
+      { success: false, error_code: "CURRENCY_RATES_LOAD_ERROR", message: "שגיאה בטעינת שערי חליפין" },
       { status: 500 }
     );
   }
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     const user = await getUser();
 
     if (!user) {
-      return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+      return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
     }
 
     const parsed = await parseBody(request, upsertRateSchema);
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     if (fromCurrency === toCurrency) {
       return NextResponse.json(
-        { success: false, message: "מטבע המקור ומטבע היעד לא יכולים להיות זהים" },
+        { success: false, error_code: "CURRENCY_SAME_SOURCE_TARGET", message: "מטבע המקור ומטבע היעד לא יכולים להיות זהים" },
         { status: 400 }
       );
     }
@@ -101,13 +101,13 @@ export async function POST(request: NextRequest) {
     // Check if table doesn't exist error
     if (error && typeof error === "object" && "code" in error && error.code === "42P01") {
       return NextResponse.json(
-        { success: false, message: "טבלת שערי חליפין אינה קיימת. יש ליצור אותה תחילה." },
+        { success: false, error_code: "CURRENCY_RATES_TABLE_MISSING", message: "טבלת שערי חליפין אינה קיימת. יש ליצור אותה תחילה." },
         { status: 500 }
       );
     }
 
     return NextResponse.json(
-      { success: false, message: "שגיאה בשמירת שער חליפין" },
+      { success: false, error_code: "CURRENCY_RATE_SAVE_ERROR", message: "שגיאה בשמירת שער חליפין" },
       { status: 500 }
     );
   }
@@ -119,7 +119,7 @@ export async function DELETE(request: NextRequest) {
     const user = await getUser();
 
     if (!user) {
-      return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+      return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
     }
 
     const parsed = await parseBody(request, deleteRateSchema);
@@ -134,7 +134,7 @@ export async function DELETE(request: NextRequest) {
 
     if (result.rows.length === 0) {
       return NextResponse.json(
-        { success: false, message: "שער חליפין לא נמצא" },
+        { success: false, error_code: "CURRENCY_RATE_NOT_FOUND", message: "שער חליפין לא נמצא" },
         { status: 404 }
       );
     }
@@ -146,7 +146,7 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     console.error("Error deleting currency rate:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה במחיקת שער חליפין" },
+      { success: false, error_code: "CURRENCY_RATE_DELETE_ERROR", message: "שגיאה במחיקת שער חליפין" },
       { status: 500 }
     );
   }

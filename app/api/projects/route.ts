@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Error fetching projects:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה בטעינת הפרויקטים" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת הפרויקטים" },
       { status: 500 }
     );
   }
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -151,14 +151,14 @@ export async function POST(request: NextRequest) {
 
     if (fixedMonthlyEnabled && (!(typeof fixedMonthlyFee === "number") || fixedMonthlyFee <= 0)) {
       return NextResponse.json(
-        { success: false, message: "כאשר חיוב חודשי פעיל, יש להזין סכום גדול מ-0" },
+        { success: false, error_code: "FIXED_MONTHLY_FEE_REQUIRED", message: "כאשר חיוב חודשי פעיל, יש להזין סכום גדול מ-0" },
         { status: 400 }
       );
     }
 
     if (fixedMonthlyStartDate && fixedMonthlyEndDate && fixedMonthlyStartDate > fixedMonthlyEndDate) {
       return NextResponse.json(
-        { success: false, message: "תאריך התחלה של חיוב חודשי חייב להיות לפני תאריך הסיום" },
+        { success: false, error_code: "FIXED_MONTHLY_DATE_RANGE_INVALID", message: "תאריך התחלה של חיוב חודשי חייב להיות לפני תאריך הסיום" },
         { status: 400 }
       );
     }
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
 
     if (clientCheck.rows.length === 0) {
       return NextResponse.json(
-        { success: false, message: "הלקוח לא נמצא" },
+        { success: false, error_code: "CLIENT_NOT_FOUND", message: "הלקוח לא נמצא" },
         { status: 404 }
       );
     }
@@ -256,7 +256,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error creating project:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה ביצירת הפרויקט" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה ביצירת הפרויקט" },
       { status: 500 }
     );
   }

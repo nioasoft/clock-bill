@@ -42,7 +42,7 @@ export async function GET(
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -91,7 +91,7 @@ export async function GET(
 
     if (result.rows.length === 0) {
       return NextResponse.json(
-        { success: false, message: "הלקוח לא נמצא" },
+        { success: false, error_code: "CLIENT_NOT_FOUND", message: "הלקוח לא נמצא" },
         { status: 404 }
       );
     }
@@ -131,7 +131,7 @@ export async function GET(
   } catch (error) {
     console.error("Error fetching client:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה בטעינת הלקוח" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת הלקוח" },
       { status: 500 }
     );
   }
@@ -150,7 +150,7 @@ export async function PUT(
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -263,7 +263,7 @@ export async function PUT(
 
     if (txResult.notFound) {
       return NextResponse.json(
-        { success: false, message: "הלקוח לא נמצא" },
+        { success: false, error_code: "CLIENT_NOT_FOUND", message: "הלקוח לא נמצא" },
         { status: 404 }
       );
     }
@@ -298,7 +298,7 @@ export async function PUT(
   } catch (error) {
     console.error("Error updating client:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה בעדכון הלקוח" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה בעדכון הלקוח" },
       { status: 500 }
     );
   }
@@ -317,7 +317,7 @@ export async function PATCH(
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -348,7 +348,7 @@ export async function PATCH(
 
     if (clientResult.rows.length === 0) {
       return NextResponse.json(
-        { success: false, message: "הלקוח לא נמצא" },
+        { success: false, error_code: "CLIENT_NOT_FOUND", message: "הלקוח לא נמצא" },
         { status: 404 }
       );
     }
@@ -374,7 +374,7 @@ export async function PATCH(
   } catch (error) {
     console.error("Error restoring client:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה בשחזור הלקוח" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה בשחזור הלקוח" },
       { status: 500 }
     );
   }
@@ -393,7 +393,7 @@ export async function DELETE(
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -413,7 +413,7 @@ export async function DELETE(
 
     if (deleteResult.rows.length === 0) {
       return NextResponse.json(
-        { success: false, message: "הלקוח לא נמצא" },
+        { success: false, error_code: "CLIENT_NOT_FOUND", message: "הלקוח לא נמצא" },
         { status: 404 }
       );
     }
@@ -425,7 +425,7 @@ export async function DELETE(
   } catch (error) {
     console.error("Error deleting client:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה במחיקת הלקוח" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה במחיקת הלקוח" },
       { status: 500 }
     );
   }

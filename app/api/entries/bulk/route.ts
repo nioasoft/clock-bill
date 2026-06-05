@@ -35,7 +35,7 @@ export async function PATCH(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -47,7 +47,7 @@ export async function PATCH(request: NextRequest) {
     // Check if at least one field is being updated
     if (!projectId && !date && isBillable === undefined) {
       return NextResponse.json(
-        { success: false, message: "יש לבחור לפחות שדה אחד לעדכון" },
+        { success: false, error_code: "NO_FIELDS_TO_UPDATE", message: "יש לבחור לפחות שדה אחד לעדכון" },
         { status: 400 }
       );
     }
@@ -65,7 +65,7 @@ export async function PATCH(request: NextRequest) {
 
       if (projectCheck.rows.length === 0) {
         return NextResponse.json(
-          { success: false, message: "הפרויקט לא נמצא" },
+          { success: false, error_code: "PROJECT_NOT_FOUND", message: "הפרויקט לא נמצא" },
           { status: 404 }
         );
       }
@@ -115,7 +115,7 @@ export async function PATCH(request: NextRequest) {
   } catch (error) {
     console.error("Error bulk updating entries:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה בעדכון הרשומות" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה בעדכון הרשומות" },
       { status: 500 }
     );
   }
@@ -131,7 +131,7 @@ export async function DELETE(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -161,7 +161,7 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     console.error("Error bulk deleting entries:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה במחיקת הרשומות" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה במחיקת הרשומות" },
       { status: 500 }
     );
   }

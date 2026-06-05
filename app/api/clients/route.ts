@@ -39,7 +39,7 @@ export async function GET(_request: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -123,7 +123,7 @@ export async function GET(_request: NextRequest) {
   } catch (error) {
     console.error("Error fetching clients:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה בטעינת הלקוחות" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת הלקוחות" },
       { status: 500 }
     );
   }
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -243,7 +243,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error creating client:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה ביצירת הלקוח" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה ביצירת הלקוח" },
       { status: 500 }
     );
   }

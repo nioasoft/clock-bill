@@ -23,7 +23,7 @@ export async function GET(): Promise<NextResponse> {
   try {
     const user = await getUser();
     if (!user) {
-      return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+      return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
     }
     userId = user.id;
 
@@ -163,7 +163,7 @@ export async function GET(): Promise<NextResponse> {
   } catch (error) {
     logger.error("Failed to load reports init", error, userId ? { userId } : undefined);
     return NextResponse.json(
-      { success: false, message: "שגיאה בטעינת נתוני הדוחות" },
+      { success: false, error_code: "REPORTS_INIT_LOAD_ERROR", message: "שגיאה בטעינת נתוני הדוחות" },
       { status: 500 }
     );
   }

@@ -36,7 +36,7 @@ export async function GET(): Promise<NextResponse> {
     const currentSession = await auth.api.getSession({ headers: requestHeaders });
     if (!currentSession?.user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -66,7 +66,7 @@ export async function GET(): Promise<NextResponse> {
   } catch (error) {
     console.error("Get sessions error:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאת שרת" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאת שרת" },
       { status: 500 }
     );
   }
@@ -87,7 +87,7 @@ export async function DELETE(): Promise<NextResponse> {
     const currentSession = await auth.api.getSession({ headers: requestHeaders });
     if (!currentSession?.user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -116,7 +116,7 @@ export async function DELETE(): Promise<NextResponse> {
   } catch (error) {
     console.error("Logout all devices error:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאת שרת" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאת שרת" },
       { status: 500 }
     );
   }

@@ -14,7 +14,7 @@ export async function GET(
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -36,7 +36,7 @@ export async function GET(
 
     if (result.rows.length === 0) {
       return NextResponse.json(
-        { success: false, message: "הפרויקט לא נמצא" },
+        { success: false, error_code: "PROJECT_NOT_FOUND", message: "הפרויקט לא נמצא" },
         { status: 404 }
       );
     }
@@ -60,7 +60,7 @@ export async function GET(
   } catch (error) {
     console.error("Error fetching project stats:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה בטעינת נתוני הפרויקט" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת נתוני הפרויקט" },
       { status: 500 }
     );
   }

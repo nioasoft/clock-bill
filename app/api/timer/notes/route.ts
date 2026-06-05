@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getUser();
     if (!user) {
-      return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+      return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
     }
 
     const parsed = await parseBody(request, updateNotesSchema);
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     if (result.rowCount === 0) {
       return NextResponse.json(
-        { success: false, message: "הטיימר לא נמצא או כבר הופסק" },
+        { success: false, error_code: "TIMER_NOT_FOUND", message: "הטיימר לא נמצא או כבר הופסק" },
         { status: 404 }
       );
     }
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error updating timer notes:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה בשמירת ההערות" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה בשמירת ההערות" },
       { status: 500 }
     );
   }

@@ -23,7 +23,7 @@ export async function GET(_req: NextRequest) {
     const user = await getUser();
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מאומת" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מאומת" },
         { status: 401 }
       );
     }
@@ -63,7 +63,7 @@ export async function GET(_req: NextRequest) {
   } catch (error) {
     logger.error("Error fetching report presets", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה בטעינת הפריסטים" },
+      { success: false, error_code: "PRESETS_LOAD_ERROR", message: "שגיאה בטעינת הפריסטים" },
       { status: 500 }
     );
   }
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
     const user = await getUser();
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מאומת" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מאומת" },
         { status: 401 }
       );
     }
@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     logger.error("Error creating report preset", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה בשמירת הפריסט" },
+      { success: false, error_code: "PRESET_SAVE_ERROR", message: "שגיאה בשמירת הפריסט" },
       { status: 500 }
     );
   }

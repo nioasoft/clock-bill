@@ -13,7 +13,7 @@ export async function PATCH(
 ) {
   try {
     const user = await getUser();
-    if (!user) return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+    if (!user) return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
 
     const { id } = await params;
     const parsed = await parseBody(request, updateTaskSchema);
@@ -32,7 +32,7 @@ export async function PATCH(
         [id, user.id]
       );
       if (existing.rows.length === 0)
-        return NextResponse.json({ success: false, message: "המשימה לא נמצאה" }, { status: 404 });
+        return NextResponse.json({ success: false, error_code: "TASK_NOT_FOUND", message: "המשימה לא נמצאה" }, { status: 404 });
 
       // Effective client: the new client_id if provided, otherwise the task's current one.
       // Computed once and reused for FK ownership checks and rate re-validation.
@@ -45,7 +45,7 @@ export async function PATCH(
           [data.clientId, user.id]
         );
         if (c.rows.length === 0)
-          return NextResponse.json({ success: false, message: "הלקוח לא נמצא" }, { status: 404 });
+          return NextResponse.json({ success: false, error_code: "CLIENT_NOT_FOUND", message: "הלקוח לא נמצא" }, { status: 404 });
       }
 
       if (data.projectId !== undefined) {
@@ -54,7 +54,7 @@ export async function PATCH(
           [data.projectId, effectiveClientId, user.id]
         );
         if (p.rows.length === 0)
-          return NextResponse.json({ success: false, message: "הפרויקט לא נמצא" }, { status: 404 });
+          return NextResponse.json({ success: false, error_code: "PROJECT_NOT_FOUND", message: "הפרויקט לא נמצא" }, { status: 404 });
       }
 
       let rateSnapshot: { id: string; rate: number; name: string } | null = null;
@@ -65,7 +65,7 @@ export async function PATCH(
           [data.rateId, effectiveClientId, user.id]
         );
         if (r.rows.length === 0)
-          return NextResponse.json({ success: false, message: "התעריף לא נמצא" }, { status: 404 });
+          return NextResponse.json({ success: false, error_code: "RATE_NOT_FOUND", message: "התעריף לא נמצא" }, { status: 404 });
         rateSnapshot = r.rows[0];
       }
 
@@ -93,13 +93,13 @@ export async function PATCH(
         vals
       );
       if (updated.rows.length === 0)
-        return NextResponse.json({ success: false, message: "המשימה לא נמצאה" }, { status: 404 });
+        return NextResponse.json({ success: false, error_code: "TASK_NOT_FOUND", message: "המשימה לא נמצאה" }, { status: 404 });
 
       return NextResponse.json({ success: true, id });
     });
   } catch (error) {
     logger.error("Failed to update task", error);
-    return NextResponse.json({ success: false, message: "שגיאה בעדכון המשימה" }, { status: 500 });
+    return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בעדכון המשימה" }, { status: 500 });
   }
 }
 
@@ -110,7 +110,7 @@ export async function DELETE(
 ) {
   try {
     const user = await getUser();
-    if (!user) return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+    if (!user) return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
 
     const { id } = await params;
     const { query } = await import("@/lib/db");
@@ -120,11 +120,11 @@ export async function DELETE(
       [id, user.id]
     );
     if (result.rows.length === 0)
-      return NextResponse.json({ success: false, message: "המשימה לא נמצאה" }, { status: 404 });
+      return NextResponse.json({ success: false, error_code: "TASK_NOT_FOUND", message: "המשימה לא נמצאה" }, { status: 404 });
 
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error("Failed to delete task", error);
-    return NextResponse.json({ success: false, message: "שגיאה במחיקת המשימה" }, { status: 500 });
+    return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה במחיקת המשימה" }, { status: 500 });
   }
 }

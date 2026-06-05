@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     // Get authenticated user
     const user = await getUser();
     if (!user) {
-      return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+      return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
     }
 
     const userId = user.id;
@@ -43,14 +43,14 @@ export async function POST(request: NextRequest) {
       );
 
       if (entryResult.rows.length === 0) {
-        return { status: 404 as const, message: "הטיימר לא נמצא" };
+        return { status: 404 as const, error_code: "TIMER_NOT_FOUND" as const, message: "הטיימר לא נמצא" };
       }
 
       const entry = entryResult.rows[0];
 
       // Check if already paused
       if (entry.paused_at) {
-        return { status: 400 as const, message: "הטיימר כבר מושהה" };
+        return { status: 400 as const, error_code: "TIMER_ALREADY_PAUSED" as const, message: "הטיימר כבר מושהה" };
       }
 
       // Set paused_at to current time
@@ -61,12 +61,12 @@ export async function POST(request: NextRequest) {
         [entry.id]
       );
 
-      return { status: 200 as const, id: entry.id };
+      return { status: 200 as const, error_code: null, message: "", id: entry.id };
     });
 
     if (result.status !== 200) {
       return NextResponse.json(
-        { success: false, message: result.message },
+        { success: false, error_code: result.error_code, message: result.message },
         { status: result.status }
       );
     }
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error pausing timer:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה בהשהיית הטיימר" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה בהשהיית הטיימר" },
       { status: 500 }
     );
   }

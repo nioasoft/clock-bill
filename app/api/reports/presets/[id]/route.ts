@@ -15,7 +15,7 @@ export async function DELETE(
     const user = await getUser();
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מאומת" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מאומת" },
         { status: 401 }
       );
     }
@@ -34,7 +34,7 @@ export async function DELETE(
 
     if (checkResult.rows.length === 0) {
       return NextResponse.json(
-        { success: false, message: "הפריסט לא נמצא" },
+        { success: false, error_code: "PRESET_NOT_FOUND", message: "הפריסט לא נמצא" },
         { status: 404 }
       );
     }
@@ -55,7 +55,7 @@ export async function DELETE(
   } catch (error) {
     logger.error("Error deleting report preset", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה במחיקת הפריסט" },
+      { success: false, error_code: "PRESET_DELETE_ERROR", message: "שגיאה במחיקת הפריסט" },
       { status: 500 }
     );
   }

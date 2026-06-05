@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   try {
     const user = await getUser();
     if (!user) {
-      return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+      return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
     }
     const { query } = await import("@/lib/db");
     const { searchParams } = new URL(request.url);
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const periodMonth = searchParams.get("periodMonth"); // YYYY-MM
 
     if (!clientId) {
-      return NextResponse.json({ success: false, message: "נא לבחור לקוח" }, { status: 400 });
+      return NextResponse.json({ success: false, error_code: "CLIENT_REQUIRED", message: "נא לבחור לקוח" }, { status: 400 });
     }
 
     const entriesRaw = await query<{
@@ -95,6 +95,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data: { entries: entries.rows, computedLines } });
   } catch (error) {
     console.error("GET /api/charge-documents/billable failed:", error);
-    return NextResponse.json({ success: false, message: "שגיאה בטעינת פריטים לחיוב" }, { status: 500 });
+    return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת פריטים לחיוב" }, { status: 500 });
   }
 }

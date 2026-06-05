@@ -35,7 +35,7 @@ export async function POST(
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -142,7 +142,7 @@ export async function POST(
 
     if (result.notFound) {
       return NextResponse.json(
-        { success: false, message: "הפרויקט לא נמצא" },
+        { success: false, error_code: "PROJECT_NOT_FOUND", message: "הפרויקט לא נמצא" },
         { status: 404 }
       );
     }
@@ -170,7 +170,7 @@ export async function POST(
   } catch (error) {
     console.error("Error duplicating project:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה בשכפול הפרויקט" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה בשכפול הפרויקט" },
       { status: 500 }
     );
   }

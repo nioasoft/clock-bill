@@ -15,7 +15,7 @@ export async function GET(
   try {
     const user = await getUser();
     if (!user) {
-      return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+      return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
     }
     const { query } = await import("@/lib/db");
     const { id: clientId } = await params;
@@ -37,7 +37,7 @@ export async function GET(
     }, { headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=60" } });
   } catch (error) {
     console.error("Error fetching client rates:", error);
-    return NextResponse.json({ success: false, message: "שגיאה בטעינת התעריפים" }, { status: 500 });
+    return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת התעריפים" }, { status: 500 });
   }
 }
 
@@ -55,7 +55,7 @@ export async function POST(
   try {
     const user = await getUser();
     if (!user) {
-      return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+      return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
     }
     const { id: clientId } = await params;
 
@@ -94,7 +94,7 @@ export async function POST(
     });
 
     if ("notFound" in result) {
-      return NextResponse.json({ success: false, message: "הלקוח לא נמצא" }, { status: 404 });
+      return NextResponse.json({ success: false, error_code: "CLIENT_NOT_FOUND", message: "הלקוח לא נמצא" }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -104,6 +104,6 @@ export async function POST(
     });
   } catch (error) {
     console.error("Error adding client item:", error);
-    return NextResponse.json({ success: false, message: "שגיאה בשמירת הפריט" }, { status: 500 });
+    return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בשמירת הפריט" }, { status: 500 });
   }
 }

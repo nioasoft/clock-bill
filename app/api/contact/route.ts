@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
 
   if (isRateLimited(ip)) {
     return NextResponse.json(
-      { success: false, message: "נשלחו יותר מדי הודעות. נסה שוב מאוחר יותר." },
+      { success: false, error_code: "RATE_LIMIT", message: "נשלחו יותר מדי הודעות. נסה שוב מאוחר יותר." },
       { status: 429 }
     );
   }
@@ -57,13 +57,13 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ success: false, message: "בקשה לא תקינה" }, { status: 400 });
+    return NextResponse.json({ success: false, error_code: "INVALID_REQUEST", message: "בקשה לא תקינה" }, { status: 400 });
   }
 
   const parsed = contactSchema.safeParse(body);
   if (!parsed.success) {
     const message = parsed.error.issues[0]?.message || "נתונים לא תקינים";
-    return NextResponse.json({ success: false, message }, { status: 400 });
+    return NextResponse.json({ success: false, error_code: "VALIDATION_ERROR", message }, { status: 400 });
   }
 
   const { name, email, message, website } = parsed.data;
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
 
   if (!sent) {
     return NextResponse.json(
-      { success: false, message: "שליחת ההודעה נכשלה. נסה שוב מאוחר יותר." },
+      { success: false, error_code: "EMAIL_SEND_FAILED", message: "שליחת ההודעה נכשלה. נסה שוב מאוחר יותר." },
       { status: 502 }
     );
   }

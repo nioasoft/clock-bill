@@ -29,7 +29,7 @@ export async function POST(
   try {
     const admin = await getAdminUser();
     if (!admin) {
-      return NextResponse.json({ success: false, message: "אין הרשאה" }, { status: 403 });
+      return NextResponse.json({ success: false, error_code: "FORBIDDEN", message: "אין הרשאה" }, { status: 403 });
     }
 
     const { id: userId } = await params;
@@ -44,7 +44,7 @@ export async function POST(
     );
 
     if (userResult.rows.length === 0) {
-      return NextResponse.json({ success: false, message: "משתמש לא נמצא" }, { status: 404 });
+      return NextResponse.json({ success: false, error_code: "USER_NOT_FOUND", message: "משתמש לא נמצא" }, { status: 404 });
     }
 
     const targetUser = userResult.rows[0];
@@ -52,7 +52,7 @@ export async function POST(
     // Prevent admin from modifying themselves with dangerous actions
     if (targetUser.id === admin.id && (body.action === "delete_user" || body.action === "toggle_role")) {
       return NextResponse.json(
-        { success: false, message: "לא ניתן לבצע פעולה זו על עצמך" },
+        { success: false, error_code: "SELF_ACTION_FORBIDDEN", message: "לא ניתן לבצע פעולה זו על עצמך" },
         { status: 400 }
       );
     }
@@ -67,6 +67,7 @@ export async function POST(
         return NextResponse.json(
           {
             success: false,
+            error_code: "PASSWORD_RESET_UNSUPPORTED",
             message:
               "איפוס סיסמה ידני אינו נתמך. יש להפנות את המשתמש לתהליך 'שכחתי סיסמה'.",
           },
@@ -113,10 +114,10 @@ export async function POST(
       }
 
       default:
-        return NextResponse.json({ success: false, message: "פעולה לא מוכרת" }, { status: 400 });
+        return NextResponse.json({ success: false, error_code: "UNKNOWN_ACTION", message: "פעולה לא מוכרת" }, { status: 400 });
     }
   } catch (error) {
     console.error("Admin action error:", error);
-    return NextResponse.json({ success: false, message: "שגיאת שרת" }, { status: 500 });
+    return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאת שרת" }, { status: 500 });
   }
 }

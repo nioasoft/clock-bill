@@ -13,7 +13,7 @@ export async function GET(
   try {
     const admin = await getAdminUser();
     if (!admin) {
-      return NextResponse.json({ success: false, message: "אין הרשאה" }, { status: 403 });
+      return NextResponse.json({ success: false, error_code: "FORBIDDEN", message: "אין הרשאה" }, { status: 403 });
     }
 
     const { id: userId } = await params;
@@ -28,7 +28,7 @@ export async function GET(
     }>('SELECT id, email, email_verified, role, created_at FROM "user" WHERE id = $1', [userId]);
 
     if (userResult.rows.length === 0) {
-      return NextResponse.json({ success: false, message: "משתמש לא נמצא" }, { status: 404 });
+      return NextResponse.json({ success: false, error_code: "USER_NOT_FOUND", message: "משתמש לא נמצא" }, { status: 404 });
     }
 
     const user = userResult.rows[0];
@@ -114,6 +114,6 @@ export async function GET(
     });
   } catch (error) {
     console.error("Admin user detail error:", error);
-    return NextResponse.json({ success: false, message: "שגיאת שרת" }, { status: 500 });
+    return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאת שרת" }, { status: 500 });
   }
 }

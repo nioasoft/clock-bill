@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -183,7 +183,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Error fetching entries:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה בטעינת הרשומות" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת הרשומות" },
       { status: 500 }
     );
   }
@@ -199,7 +199,7 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -287,7 +287,7 @@ export async function POST(request: NextRequest) {
 
     if ("notFound" in result) {
       return NextResponse.json(
-        { success: false, message: "הפרויקט לא נמצא" },
+        { success: false, error_code: "PROJECT_NOT_FOUND", message: "הפרויקט לא נמצא" },
         { status: 404 }
       );
     }
@@ -325,7 +325,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error creating entry:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה ביצירת הרשומה" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה ביצירת הרשומה" },
       { status: 500 }
     );
   }

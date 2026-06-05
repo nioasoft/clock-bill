@@ -10,7 +10,7 @@ import { resolveRounding } from "@/lib/rounding";
 export async function GET(request: NextRequest) {
   try {
     const user = await getUser();
-    if (!user) return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+    if (!user) return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
     const { query } = await import("@/lib/db");
     const { searchParams } = new URL(request.url);
     const clientId = searchParams.get("clientId");
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data: rows.rows });
   } catch (error) {
     console.error("GET /api/charge-documents failed:", error);
-    return NextResponse.json({ success: false, message: "שגיאה בטעינת תעודות" }, { status: 500 });
+    return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת תעודות" }, { status: 500 });
   }
 }
 
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const user = await getUser();
-    if (!user) return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+    if (!user) return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
 
     const parsed = await parseBody(request, createChargeDocumentSchema);
     if (!parsed.ok) return parsed.response;
@@ -164,9 +164,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: result }, { status: 201 });
   } catch (error) {
     const msg = error instanceof Error ? error.message : "";
-    if (msg === "CLIENT_NOT_FOUND") return NextResponse.json({ success: false, message: "לקוח לא נמצא" }, { status: 404 });
-    if (msg === "ENTRY_STATE_CHANGED") return NextResponse.json({ success: false, message: "חלק מהפריטים כבר חויבו או השתנו — רענן ונסה שוב" }, { status: 409 });
+    if (msg === "CLIENT_NOT_FOUND") return NextResponse.json({ success: false, error_code: "CLIENT_NOT_FOUND", message: "לקוח לא נמצא" }, { status: 404 });
+    if (msg === "ENTRY_STATE_CHANGED") return NextResponse.json({ success: false, error_code: "ENTRY_STATE_CHANGED", message: "חלק מהפריטים כבר חויבו או השתנו — רענן ונסה שוב" }, { status: 409 });
     console.error("POST /api/charge-documents failed:", error);
-    return NextResponse.json({ success: false, message: "שגיאה ביצירת תעודה" }, { status: 500 });
+    return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה ביצירת תעודה" }, { status: 500 });
   }
 }
