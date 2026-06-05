@@ -12,7 +12,8 @@ import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { fieldClass } from "@/lib/form-styles";
 import { CURRENCY_SYMBOLS } from "@/lib/currency";
 import { ClientRatesEditor } from "@/components/client-rates-editor";
-import { ROUNDING_LABELS, ROUNDING_MODES, asRoundingMode, type RoundingMode } from "@/lib/rounding";
+import { ROUNDING_MODES, asRoundingMode, type RoundingMode } from "@/lib/rounding";
+import { useTranslations } from "next-intl";
 import { cleanClientRates } from "@/lib/schemas/rates";
 import type { ClientRate, ClientRateInput } from "@/lib/schemas/rates";
 import {
@@ -71,6 +72,7 @@ export default function ClientsPage() {
 }
 
 function ClientsPageContent() {
+  const tRounding = useTranslations("Rounding");
   const searchParams = useSearchParams();
   const [clients, setClients] = useState<Client[]>([]);
   const [clientsLoading, setClientsLoading] = useState(true);
@@ -543,7 +545,7 @@ function ClientsPageContent() {
                       disabled={submitting}
                     >
                       {ROUNDING_MODES.map((m) => (
-                        <option key={m} value={m}>{ROUNDING_LABELS[m]}</option>
+                        <option key={m} value={m}>{tRounding(m)}</option>
                       ))}
                     </select>
                   </div>

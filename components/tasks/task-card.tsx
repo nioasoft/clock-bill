@@ -1,6 +1,7 @@
 "use client";
 
-import { TASK_PRIORITY_LABEL, type TaskRecord } from "@/lib/tasks-types";
+import { useTranslations } from "next-intl";
+import { type TaskRecord } from "@/lib/tasks-types";
 
 interface TaskCardProps {
   task: TaskRecord;
@@ -21,6 +22,7 @@ function isOverdue(dueDate: string | null): boolean {
 }
 
 export function TaskCard({ task, isTimerRunning, onClick }: TaskCardProps) {
+  const tPriority = useTranslations("Tasks.priority");
   return (
     <button
       type="button"
@@ -52,7 +54,7 @@ export function TaskCard({ task, isTimerRunning, onClick }: TaskCardProps) {
                 יעד: {task.dueDate}
               </span>
             )}
-            {task.priority !== "normal" && <span>{TASK_PRIORITY_LABEL[task.priority]}</span>}
+            {task.priority !== "normal" && <span>{tPriority(task.priority)}</span>}
             {task.tags.map((t) => (
               <span key={t} className="rounded-[var(--radius)] border border-border px-1.5 py-0.5">{t}</span>
             ))}

@@ -11,7 +11,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { FolderOpen } from "lucide-react";
 import { validateRequired, validateDateRange } from "@/lib/validation";
 import { fieldClass } from "@/lib/form-styles";
-import { ROUNDING_LABELS } from "@/lib/rounding";
+import { useTranslations } from "next-intl";
 
 interface Client {
   id: string;
@@ -44,6 +44,7 @@ export default function ProjectsPage() {
 }
 
 function ProjectsPageContent() {
+  const tRounding = useTranslations("Rounding");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [clients, setClients] = useState<Client[]>([]);
@@ -542,9 +543,9 @@ function ProjectsPageContent() {
                   disabled={submitting}
                 >
                   <option value="">ירושה מהלקוח</option>
-                  <option value="none">{ROUNDING_LABELS.none}</option>
-                  <option value="hour_up">{ROUNDING_LABELS.hour_up}</option>
-                  <option value="half_hour_up">{ROUNDING_LABELS.half_hour_up}</option>
+                  <option value="none">{tRounding("none")}</option>
+                  <option value="hour_up">{tRounding("hour_up")}</option>
+                  <option value="half_hour_up">{tRounding("half_hour_up")}</option>
                 </select>
                 <p className="text-xs text-muted-foreground">חל על תעריפים שעתיים בלבד.</p>
               </fieldset>

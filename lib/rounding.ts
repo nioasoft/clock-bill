@@ -15,12 +15,9 @@ export type RoundingMode = "none" | "hour_up" | "half_hour_up";
 /** All valid modes — handy for Zod enums and exhaustive UI lists. */
 export const ROUNDING_MODES: readonly RoundingMode[] = ["none", "hour_up", "half_hour_up"];
 
-/** Hebrew labels for the settings UI. */
-export const ROUNDING_LABELS: Record<RoundingMode, string> = {
-  none: "ללא עיגול",
-  hour_up: "עיגול לשעה מלאה (כלפי מעלה)",
-  half_hour_up: "עיגול לחצי שעה (כלפי מעלה)",
-};
+// Labels live in the message catalogs under the `Rounding` namespace. A mode
+// value IS its own message key, so resolve at the call site with
+// `useTranslations("Rounding")(mode)`.
 
 /** Narrow an arbitrary string to a RoundingMode, falling back to 'none'. */
 export function asRoundingMode(value: string | null | undefined): RoundingMode {

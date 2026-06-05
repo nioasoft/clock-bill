@@ -8,7 +8,8 @@ import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { validateRequired, validateDateRange } from "@/lib/validation";
-import { ROUNDING_LABELS, asRoundingMode, resolveRounding } from "@/lib/rounding";
+import { asRoundingMode, resolveRounding } from "@/lib/rounding";
+import { useTranslations } from "next-intl";
 
 interface Project {
   id: string;
@@ -31,6 +32,7 @@ interface Project {
 }
 
 export default function ProjectDetailsPage() {
+  const tRounding = useTranslations("Rounding");
   const router = useRouter();
   const params = useParams();
   const projectId = params.id as string;
@@ -635,10 +637,10 @@ export default function ProjectDetailsPage() {
                     className="mt-1 block w-full rounded-[var(--radius-card)] border border-border bg-card px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary sm:max-w-[calc(50%-0.5rem)]"
                     disabled={submitting}
                   >
-                    <option value="">ירושה מהלקוח ({ROUNDING_LABELS[asRoundingMode(project.clientBillingRounding)]})</option>
-                    <option value="none">{ROUNDING_LABELS.none}</option>
-                    <option value="hour_up">{ROUNDING_LABELS.hour_up}</option>
-                    <option value="half_hour_up">{ROUNDING_LABELS.half_hour_up}</option>
+                    <option value="">ירושה מהלקוח ({tRounding(asRoundingMode(project.clientBillingRounding))})</option>
+                    <option value="none">{tRounding("none")}</option>
+                    <option value="hour_up">{tRounding("hour_up")}</option>
+                    <option value="half_hour_up">{tRounding("half_hour_up")}</option>
                   </select>
                   <p className="mt-1 text-xs text-muted-foreground">
                     דורס את הגדרת הלקוח לפרויקט זה. חל על תעריפים שעתיים בלבד.
@@ -816,7 +818,7 @@ export default function ProjectDetailsPage() {
           <div className="rounded-[var(--radius-card)] border border-border bg-card p-4">
             <dt className="text-xs font-medium text-muted-foreground">עיגול זמן</dt>
             <dd className="mt-1.5 text-sm font-semibold text-foreground">
-              {ROUNDING_LABELS[resolveRounding(project.billingRounding, project.clientBillingRounding)]}
+              {tRounding(resolveRounding(project.billingRounding, project.clientBillingRounding))}
             </dd>
           </div>
         </div>

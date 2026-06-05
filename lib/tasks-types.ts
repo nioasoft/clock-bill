@@ -6,18 +6,9 @@ export type TaskPriority = "normal" | "high" | "urgent";
 export const TASK_STATUSES: readonly TaskStatus[] = ["todo", "in_progress", "done"];
 export const TASK_PRIORITIES: readonly TaskPriority[] = ["normal", "high", "urgent"];
 
-/** Hebrew column labels, in board (RTL) order. */
-export const TASK_STATUS_LABEL: Record<TaskStatus, string> = {
-  todo: "חדש",
-  in_progress: "בעבודה",
-  done: "הושלם",
-};
-
-export const TASK_PRIORITY_LABEL: Record<TaskPriority, string> = {
-  normal: "רגילה",
-  high: "גבוהה",
-  urgent: "דחוף",
-};
+// Labels live in the message catalogs (`Tasks.status.*`, `Tasks.priority.*`).
+// A status/priority value IS its own message key, so resolve at the call site
+// with `useTranslations("Tasks.status")(status)` / `("Tasks.priority")(priority)`.
 
 /** A task row as returned to the client by /api/tasks. */
 export interface TaskRecord {

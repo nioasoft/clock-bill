@@ -11,7 +11,8 @@ import { CURRENCY_SYMBOLS } from "@/lib/currency";
 import { ClientRatesEditor } from "@/components/client-rates-editor";
 import { cleanClientRates } from "@/lib/schemas/rates";
 import type { ClientRate, ClientRateInput } from "@/lib/schemas/rates";
-import { ROUNDING_LABELS, ROUNDING_MODES, asRoundingMode, type RoundingMode } from "@/lib/rounding";
+import { ROUNDING_MODES, asRoundingMode, type RoundingMode } from "@/lib/rounding";
+import { useTranslations } from "next-intl";
 
 const CURRENCIES = [
   { value: "ILS", label: "₪ ILS" },
@@ -67,6 +68,7 @@ function clientToFormData(client: Client) {
 }
 
 export default function ClientDetailsPage() {
+  const tRounding = useTranslations("Rounding");
   const router = useRouter();
   const params = useParams();
   const clientId = params.id as string;
@@ -399,7 +401,7 @@ export default function ClientDetailsPage() {
                       disabled={submitting}
                     >
                       {ROUNDING_MODES.map((m) => (
-                        <option key={m} value={m}>{ROUNDING_LABELS[m]}</option>
+                        <option key={m} value={m}>{tRounding(m)}</option>
                       ))}
                     </select>
                     <p className="mt-1 text-xs text-muted-foreground">
@@ -618,7 +620,7 @@ export default function ClientDetailsPage() {
                       <h3 className="font-display text-base font-semibold text-foreground">תעריפים ופריטים</h3>
                       {asRoundingMode(client.billingRounding) !== "none" && (
                         <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-                          {ROUNDING_LABELS[asRoundingMode(client.billingRounding)]}
+                          {tRounding(asRoundingMode(client.billingRounding))}
                         </span>
                       )}
                     </div>

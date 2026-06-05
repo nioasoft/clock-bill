@@ -1,19 +1,16 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useTimer } from "@/contexts/timer-context";
-import { TASK_STATUSES, TASK_STATUS_LABEL, type TaskRecord, type TaskStatus } from "@/lib/tasks-types";
+import { TASK_STATUSES, type TaskRecord, type TaskStatus } from "@/lib/tasks-types";
 import { TaskCard } from "./task-card";
 import { TaskDetailSheet } from "./task-detail-sheet";
 import type { UseTasksBoardReturn } from "./use-tasks-board";
 
-const EMPTY_LABEL: Record<TaskStatus, string> = {
-  todo: "אין משימות חדשות",
-  in_progress: "אין משימות בעבודה",
-  done: "אין משימות שהושלמו",
-};
-
 export function MobileTaskList({ board }: { board: UseTasksBoardReturn }) {
+  const tStatus = useTranslations("Tasks.status");
+  const tEmpty = useTranslations("Tasks.empty");
   const { runningTimerForTask } = useTimer();
   const { state, load, byStatus, moveTask } = board;
   // null = "follow the default tab"; a value = user's explicit choice.
@@ -72,7 +69,7 @@ export function MobileTaskList({ board }: { board: UseTasksBoardReturn }) {
                 isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {TASK_STATUS_LABEL[s]}{" "}
+              {tStatus(s)}{" "}
               <span className="tabular-nums">{byStatus(s).length}</span>
             </button>
           );
@@ -81,7 +78,7 @@ export function MobileTaskList({ board }: { board: UseTasksBoardReturn }) {
 
       <div role="tabpanel" aria-labelledby={`tab-${tab}`} className="flex flex-col gap-2">
         {tasks.length === 0 ? (
-          <p className="px-2 py-10 text-center text-sm text-muted-foreground">{EMPTY_LABEL[tab]}</p>
+          <p className="px-2 py-10 text-center text-sm text-muted-foreground">{tEmpty(tab)}</p>
         ) : (
           tasks.map((task) => (
             <TaskCard

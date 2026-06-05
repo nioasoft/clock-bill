@@ -2,7 +2,8 @@
 
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { TASK_STATUS_LABEL, type TaskRecord, type TaskStatus } from "@/lib/tasks-types";
+import { useTranslations } from "next-intl";
+import { type TaskRecord, type TaskStatus } from "@/lib/tasks-types";
 import { SortableTaskCard } from "./kanban-board";
 
 interface KanbanColumnProps {
@@ -12,18 +13,14 @@ interface KanbanColumnProps {
   onCardClick: (task: TaskRecord) => void;
 }
 
-const EMPTY_LABEL: Record<TaskStatus, string> = {
-  todo: "אין משימות חדשות",
-  in_progress: "אין משימות בעבודה",
-  done: "אין משימות שהושלמו",
-};
-
 export function KanbanColumn({ status, tasks, runningTimerForTask, onCardClick }: KanbanColumnProps) {
+  const tStatus = useTranslations("Tasks.status");
+  const tEmpty = useTranslations("Tasks.empty");
   const { setNodeRef, isOver } = useDroppable({ id: status });
   return (
     <div className="flex min-w-72 flex-1 flex-col">
       <div className="mb-2 flex items-center justify-between px-1">
-        <span className="font-sans font-medium text-foreground">{TASK_STATUS_LABEL[status]}</span>
+        <span className="font-sans font-medium text-foreground">{tStatus(status)}</span>
         <span className="text-sm text-muted-foreground tabular-nums">{tasks.length}</span>
       </div>
       <div
@@ -32,7 +29,7 @@ export function KanbanColumn({ status, tasks, runningTimerForTask, onCardClick }
       >
         <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
           {tasks.length === 0 ? (
-            <p className="px-2 py-6 text-center text-sm text-muted-foreground">{EMPTY_LABEL[status]}</p>
+            <p className="px-2 py-6 text-center text-sm text-muted-foreground">{tEmpty(status)}</p>
           ) : (
             tasks.map((task) => (
               <SortableTaskCard

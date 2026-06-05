@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { useTimer } from "@/contexts/timer-context";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
-import { TASK_PRIORITY_LABEL, type TaskRecord } from "@/lib/tasks-types";
+import { type TaskRecord } from "@/lib/tasks-types";
 import { allowedTransitions } from "@/lib/tasks-transitions";
 import type { TaskStatus } from "@/lib/tasks-types";
 import { TaskFormDialog } from "./task-form-dialog";
@@ -25,6 +26,8 @@ interface TaskDetailSheetProps {
 const rowLabelClass = "text-xs font-semibold uppercase tracking-widest text-muted-foreground";
 
 export function TaskDetailSheet({ task, moveTask, onClose, onChanged }: TaskDetailSheetProps) {
+  const tPriority = useTranslations("Tasks.priority");
+  const tTransitions = useTranslations("Tasks.transitions");
   const { runningTimerForTask } = useTimer();
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -106,7 +109,7 @@ export function TaskDetailSheet({ task, moveTask, onClose, onChanged }: TaskDeta
                     : "border border-border text-foreground hover:bg-muted"
                 }`}
               >
-                {tr.label}
+                {tTransitions(tr.labelKey)}
               </button>
             ))}
           </div>
@@ -120,7 +123,7 @@ export function TaskDetailSheet({ task, moveTask, onClose, onChanged }: TaskDeta
             </div>
             <div>
               <p className={rowLabelClass}>דחיפות</p>
-              <p className="mt-1 text-sm text-foreground">{TASK_PRIORITY_LABEL[task.priority]}</p>
+              <p className="mt-1 text-sm text-foreground">{tPriority(task.priority)}</p>
             </div>
             <div>
               <p className={rowLabelClass}>תאריך יעד</p>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { MessageSquare, Check, Send } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
@@ -8,13 +9,13 @@ import { PageHeader } from "@/components/page-header";
 import { fieldClass } from "@/lib/form-styles";
 import {
   FEEDBACK_CATEGORIES,
-  CATEGORY_LABELS_HE,
   type FeedbackCategory,
 } from "@/lib/schemas/feedback";
 
 const MAX_MESSAGE = 5000;
 
 export default function FeedbackPage() {
+  const tCategory = useTranslations("Feedback.category");
   const [category, setCategory] = useState<FeedbackCategory>("bug");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -113,7 +114,7 @@ export default function FeedbackPage() {
               >
                 {FEEDBACK_CATEGORIES.map((c) => (
                   <option key={c} value={c}>
-                    {CATEGORY_LABELS_HE[c]}
+                    {tCategory(c)}
                   </option>
                 ))}
               </select>

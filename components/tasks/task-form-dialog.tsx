@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +12,7 @@ import {
 import { fieldClass } from "@/lib/form-styles";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { pickDefaultHourlyRate, type ClientRate } from "@/lib/schemas/rates";
-import { TASK_PRIORITIES, TASK_PRIORITY_LABEL, type TaskPriority, type TaskRecord } from "@/lib/tasks-types";
+import { TASK_PRIORITIES, type TaskPriority, type TaskRecord } from "@/lib/tasks-types";
 
 interface ClientOption { id: string; name: string }
 interface ProjectOption { id: string; name: string; clientId: string }
@@ -27,6 +28,7 @@ type TaskFormDialogProps = (
 const labelClass = "mb-1.5 block text-sm font-medium text-foreground";
 
 export function TaskFormDialog(props: TaskFormDialogProps) {
+  const tPriority = useTranslations("Tasks.priority");
   const isEdit = props.mode === "edit";
   const task = isEdit ? props.task : null;
 
@@ -275,7 +277,7 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
                 disabled={submitting}
               >
                 {TASK_PRIORITIES.map((p) => (
-                  <option key={p} value={p}>{TASK_PRIORITY_LABEL[p]}</option>
+                  <option key={p} value={p}>{tPriority(p)}</option>
                 ))}
               </select>
             </div>
