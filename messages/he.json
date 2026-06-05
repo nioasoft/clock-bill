@@ -137,6 +137,25 @@
       "suggestion": "הצעה לשיפור",
       "question": "שאלה",
       "other": "אחר"
+    },
+    "title": "פניות ודיווח תקלות",
+    "subtitle": "המערכת בתקופת ניסוי. נתקלת בתקלה או יש לך רעיון לשיפור? כתוב לנו.",
+    "submit": "שלח פנייה",
+    "submitting": "שולח...",
+    "fields": {
+      "category": "סוג הפנייה",
+      "message": "תיאור",
+      "messagePlaceholder": "ספר לנו מה קרה, מה ציפית שיקרה, ואיך אפשר לשחזר..."
+    },
+    "success": {
+      "title": "הפנייה התקבלה",
+      "description": "אם נצטרך פרטים נוספים נחזור אליך למייל שאיתו נכנסת.",
+      "writeAnother": "כתוב פנייה נוספת"
+    },
+    "errors": {
+      "tooShort": "אנא כתוב לפחות כמה מילים",
+      "submitFailed": "שליחת הפנייה נכשלה. נסה שוב.",
+      "network": "שגיאת תקשורת. אנא נסה שוב."
     }
   },
   "Dashboard": {
@@ -807,5 +826,335 @@
       "rateDeleted": "שער החליפין נמחק בהצלחה!",
       "deleteRateError": "שגיאה במחיקת שער חליפין"
     }
+  },
+  "Auth": {
+    "common": {
+      "appName": "מוניט",
+      "emailLabel": "כתובת אימייל",
+      "passwordLabel": "סיסמה",
+      "confirmPasswordLabel": "אימות סיסמה",
+      "emailPlaceholder": "הכנס כתובת אימייל",
+      "minCharsPlaceholder": "לפחות 8 תווים",
+      "sending": "שולח...",
+      "networkError": "שגיאת תקשורת. אנא נסה שוב.",
+      "resendFailed": "שליחה נכשלה. נסה שוב בעוד רגע.",
+      "signInHere": "התחבר כאן",
+      "backToLogin": "חזרה לדף ההתחברות",
+      "privacyPolicy": "מדיניות פרטיות",
+      "termsOfService": "תנאי שימוש",
+      "loading": "טוען..."
+    },
+    "login": {
+      "title": "התחבר לחשבון שלך",
+      "subtitle": "נהל את שעות העבודה והפרויקטים שלך",
+      "googleSignIn": "התחבר עם Google",
+      "orWithEmail": "או התחבר עם אימייל",
+      "passwordPlaceholder": "הסיסמה שלך",
+      "submit": "התחבר",
+      "submitting": "מתחבר...",
+      "forgotPassword": "שכחת סיסמה?",
+      "noAccount": "אין לך חשבון עדיין?",
+      "registerHere": "הירשם כאן",
+      "resendVerification": "שלח מייל אימות מחדש",
+      "resendSuccess": "שלחנו מייל אימות חדש.",
+      "errors": {
+        "notVerified": "עליך לאמת את כתובת האימייל לפני ההתחברות. בדוק את תיבת הדואר שלך.",
+        "signInFailed": "שגיאה בהתחברות"
+      }
+    },
+    "register": {
+      "title": "צור חשבון חדש",
+      "subtitle": "התחל לנהל את שעות העבודה שלך",
+      "googleSignUp": "הירשם עם Google",
+      "orWithEmail": "או הירשם עם אימייל",
+      "businessNameLabel": "שם העסק (אופציונלי)",
+      "businessNamePlaceholder": "שם העסק שלך",
+      "confirmPasswordPlaceholder": "הקלד את הסיסמה שוב",
+      "submit": "הרשם",
+      "submitting": "נרשם...",
+      "haveAccount": "יש לך כבר חשבון?",
+      "signInHere": "התחבר כאן",
+      "termsAgreement": "בהרשמה אתה מסכים ל<terms>תנאי השימוש</terms> ול<privacy>מדיניות הפרטיות</privacy>",
+      "resendVerification": "שלח מייל אימות שוב",
+      "resendSuccess": "שלחנו שוב את מייל האימות.",
+      "alreadyVerified": "כבר אימתת?",
+      "verify": {
+        "title": "בדוק את האימייל שלך",
+        "sentTo": "שלחנו קישור אימות לכתובת",
+        "instructions": "לחץ על הקישור במייל כדי להפעיל את החשבון ולהתחיל לעבוד.",
+        "notReceived": "לא קיבלת? בדוק את תיקיית הספאם, או שלח שוב."
+      },
+      "errors": {
+        "signUpFailed": "שגיאה בהרשמה"
+      }
+    },
+    "forgot": {
+      "title": "איפוס סיסמה",
+      "subtitle": "הזן את כתובת האימייל שלך ונשלח לך קישור לאיפוס הסיסמה",
+      "submit": "שלח קישור לאיפוס סיסמה",
+      "successMessage": "אם קיים חשבון עם כתובת האימייל הזו, שלחנו הוראות לאיפוס הסיסמה.",
+      "rememberedPassword": "נזכרת בסיסמה?",
+      "errors": {
+        "requestFailed": "שגיאה בשליחת בקשת איפוס הסיסמה"
+      }
+    },
+    "reset": {
+      "title": "איפוס סיסמה",
+      "subtitle": "הזן את הסיסמה החדשה שלך",
+      "newPasswordLabel": "סיסמה חדשה",
+      "confirmPasswordPlaceholder": "הזן את הסיסמה שוב",
+      "submit": "אפס סיסמה",
+      "submitting": "מאפס סיסמה...",
+      "successMessage": "הסיסמה אופסה בהצלחה! כעת תוכל להתחבר עם הסיסמה החדשה.",
+      "goToLogin": "מעבר לדף ההתחברות",
+      "errors": {
+        "invalidToken": "קישור לאיפוס סיסמה לא תקין או שפג תוקפו.",
+        "passwordsMismatch": "הסיסמאות אינן תואמות",
+        "passwordTooShort": "הסיסמה חייבת להכיל לפחות 8 תווים",
+        "resetFailed": "שגיאה באיפוס הסיסמה"
+      }
+    }
+  },
+  "Admin": {
+    "dashboard": {
+      "title": "ניהול מערכת",
+      "subtitle": "סקירה כללית של המערכת",
+      "loadError": "שגיאה בטעינת הנתונים",
+      "totalUsers": "סה\"כ משתמשים",
+      "totalEntries": "רשומות זמן",
+      "activeTimers": "טיימרים פעילים",
+      "newThisWeek": "חדשים השבוע",
+      "newThisMonth": "חדשים החודש",
+      "totalProjects": "סה\"כ פרויקטים",
+      "newTodayDelta": "+{count} היום",
+      "registrationsTrend": "הרשמות - 30 ימים אחרונים",
+      "registrationsTooltip": "{date}: {count} הרשמות",
+      "usersLinkTitle": "ניהול משתמשים",
+      "usersLinkSubtitle": "צפה וניהל את כל המשתמשים",
+      "statsLinkTitle": "סטטיסטיקות",
+      "statsLinkSubtitle": "ניתוח מעמיק של המערכת"
+    },
+    "users": {
+      "title": "ניהול משתמשים",
+      "subtitle": "צפה וניהל את כל המשתמשים במערכת",
+      "searchPlaceholder": "חיפוש לפי אימייל או שם עסק...",
+      "searchAriaLabel": "חיפוש משתמשים",
+      "colEmail": "אימייל",
+      "colBusinessName": "שם עסק",
+      "colRegistrationDate": "תאריך רישום",
+      "colLastActivity": "פעילות אחרונה",
+      "colEntries": "רשומות",
+      "colProjects": "פרויקטים",
+      "colRole": "תפקיד",
+      "roleAdmin": "מנהל",
+      "roleUser": "משתמש",
+      "empty": "לא נמצאו משתמשים",
+      "entriesCount": "{count} רשומות",
+      "projectsCount": "{count} פרויקטים",
+      "prev": "הקודם",
+      "next": "הבא",
+      "pageOf": "עמוד {page} מתוך {total}"
+    },
+    "stats": {
+      "title": "סטטיסטיקות מערכת",
+      "subtitle": "ניתוח מעמיק של השימוש במערכת",
+      "loadError": "שגיאה בטעינת הנתונים",
+      "avgEntriesPerUser": "ממוצע רשומות למשתמש",
+      "totalLogos": "לוגואים שהועלו",
+      "topUsersTitle": "10 המשתמשים הפעילים ביותר",
+      "projectStatusTitle": "התפלגות סטטוס פרויקטים",
+      "currencyTitle": "התפלגות מטבעות",
+      "noData": "אין נתונים",
+      "projectStatus": {
+        "active": "פעיל",
+        "completed": "הושלם",
+        "paused": "מושהה",
+        "archived": "בארכיון"
+      }
+    },
+    "detail": {
+      "notFound": "משתמש לא נמצא",
+      "backToUsers": "חזרה לרשימת המשתמשים",
+      "roleAdmin": "מנהל",
+      "roleUser": "משתמש",
+      "yes": "כן",
+      "no": "לא",
+      "actionError": "שגיאה בביצוע הפעולה",
+      "tabs": {
+        "profile": "פרופיל",
+        "clients": "לקוחות",
+        "projects": "פרויקטים",
+        "entries": "רשומות",
+        "sessions": "הפעלות",
+        "actions": "פעולות"
+      },
+      "profile": {
+        "email": "אימייל",
+        "emailVerified": "אימייל מאומת",
+        "role": "תפקיד",
+        "registrationDate": "תאריך רישום",
+        "businessName": "שם עסק",
+        "phone": "טלפון",
+        "address": "כתובת",
+        "taxId": "ח.פ / ע.מ",
+        "currency": "מטבע",
+        "pdfTemplate": "תבנית PDF",
+        "logo": "לוגו",
+        "logoUploaded": "הועלה",
+        "logoNotUploaded": "לא הועלה",
+        "website": "אתר"
+      },
+      "clients": {
+        "empty": "אין לקוחות",
+        "colName": "שם",
+        "colContact": "איש קשר",
+        "colEmail": "אימייל",
+        "colStatus": "סטטוס",
+        "active": "פעיל",
+        "inactive": "לא פעיל"
+      },
+      "projects": {
+        "empty": "אין פרויקטים",
+        "colName": "שם",
+        "colStatus": "סטטוס"
+      },
+      "entries": {
+        "empty": "אין רשומות זמן",
+        "colDescription": "תיאור",
+        "colDate": "תאריך",
+        "colDuration": "משך"
+      },
+      "sessions": {
+        "empty": "אין הפעלות",
+        "colCreated": "נוצר",
+        "colExpires": "פג תוקף",
+        "colStatus": "סטטוס",
+        "expired": "פג תוקף",
+        "active": "פעיל"
+      },
+      "actions": {
+        "tempPasswordLabel": "סיסמה זמנית:",
+        "copy": "העתק",
+        "tempPasswordHint": "שמור את הסיסמה - היא לא תוצג שוב",
+        "resetPassword": {
+          "title": "איפוס סיסמה",
+          "description": "יצירת סיסמה זמנית חדשה וניתוק כל ההפעלות",
+          "loading": "מאפס...",
+          "button": "איפוס"
+        },
+        "verifyEmail": {
+          "title": "אימות אימייל",
+          "description": "סימון האימייל כמאומת ידנית",
+          "loading": "מאמת...",
+          "button": "אמת"
+        },
+        "deleteSessions": {
+          "title": "ניתוק הפעלות",
+          "description": "מחיקת כל ההפעלות הפעילות",
+          "loading": "מנתק...",
+          "button": "נתק הכל"
+        },
+        "toggleRole": {
+          "title": "שינוי תפקיד",
+          "demoteDescription": "הורדה למשתמש רגיל",
+          "promoteDescription": "הפיכה למנהל",
+          "loading": "משנה...",
+          "demoteButton": "הורד",
+          "promoteButton": "הפוך למנהל"
+        },
+        "deleteUser": {
+          "title": "מחיקת משתמש",
+          "description": "מחיקת המשתמש וכל הנתונים שלו לצמיתות",
+          "loading": "מוחק...",
+          "confirmButton": "אישור מחיקה",
+          "cancel": "ביטול",
+          "button": "מחק"
+        }
+      }
+    }
+  },
+  "Timer": {
+    "bar": {
+      "startTracking": "התחל לעקוב אחרי הזמן שלך",
+      "startTimer": "התחל טיימר",
+      "paused": "מושהה",
+      "activeTimer": "טיימר פעיל",
+      "editNotes": "ערוך הערות",
+      "addNotes": "הוסף הערות",
+      "noteShort": "הערה",
+      "notes": "הערות",
+      "resumeTimer": "חדש טיימר",
+      "pauseTimer": "השהה טיימר",
+      "stopTimer": "עצור טיימר",
+      "startAnotherTimer": "התחל טיימר נוסף",
+      "anotherTimer": "טיימר נוסף",
+      "notesLabel": "הערות לטיימר (יישמרו על הרשומה ויופיעו בדוח)",
+      "notesPlaceholder": "מה נעשה עד עכשיו? אפשר לעדכן בכל רגע.",
+      "saving": "שומר...",
+      "save": "שמור",
+      "cancel": "ביטול"
+    },
+    "start": {
+      "title": "התחל טיימר חדש",
+      "projectLabel": "פרויקט *",
+      "projectPlaceholder": "בחר פרויקט",
+      "taskLabel": "משימה",
+      "noTask": "ללא משימה",
+      "rateLabel": "תעריף",
+      "rateOption": "{name} — {rate}/שעה",
+      "descriptionLabel": "תיאור",
+      "descriptionPlaceholder": "מה אתה עובד עליו?",
+      "cancel": "ביטול",
+      "starting": "מתחיל...",
+      "startButton": "התחל טיימר",
+      "noProjects": "אין פרויקטים עדיין",
+      "noProjectsHint": "כדי להתחיל לעקוב אחר זמן, צור קודם פרויקט",
+      "createProject": "+ צור פרויקט חדש",
+      "createClient": "+ צור לקוח חדש"
+    },
+    "stop": {
+      "title": "עצור טיימר ושמור רשומה",
+      "elapsedLabel": "זמן שעבר:",
+      "descriptionLabel": "תיאור",
+      "descriptionPlaceholder": "מה עשית?",
+      "notesLabel": "הערות (יופיעו בדוח)",
+      "notesPlaceholder": "פירוט מה נעשה בעבודה (אופציונלי)",
+      "adjustDuration": "התאם את משך הזמן (אופציונלי)",
+      "hours": "שעות",
+      "minutes": "דקות",
+      "markDone": "סמן את המשימה כהושלמה",
+      "cancel": "ביטול",
+      "saving": "שומר...",
+      "saveButton": "עצור ושמור"
+    },
+    "search": {
+      "trigger": "חיפוש...",
+      "dialogTitle": "חיפוש גלובלי",
+      "dialogDescription": "חיפוש לקוחות, פרויקטים ורשומות",
+      "placeholder": "חפש לקוחות, פרויקטים, רשומות זמן...",
+      "inputAriaLabel": "חיפוש",
+      "clear": "נקה חיפוש",
+      "startTyping": "התחל להקליד לחיפוש",
+      "startTypingHint": "חפש לקוחות, פרויקטים ורשומות זמן לפי שם",
+      "searching": "מחפש...",
+      "noResults": "לא נמצאו תוצאות",
+      "noResultsHint": "נסה לחפש מילים אחרות",
+      "groupClients": "לקוחות",
+      "groupProjects": "פרויקטים",
+      "groupEntries": "רשומות זמן",
+      "hintNavigate": "לנווט",
+      "hintSelect": "לבחור",
+      "hintClose": "לסגור",
+      "resultCount": "{count} תוצאות"
+    }
+  },
+  "Contact": {
+    "meta": {
+      "title": "יצירת קשר | {brand}",
+      "description": "יצירת קשר עם {brand}. נשמח לשאלות, הצעות או דיווחי תקלה."
+    },
+    "back": "חזרה ל{brand}",
+    "title": "יצירת קשר",
+    "description": "שאלה, הצעה לשיפור או תקלה? כתבו לנו ונחזור אליכם לאימייל שתשאירו."
   }
 }

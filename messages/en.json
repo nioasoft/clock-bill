@@ -137,6 +137,25 @@
       "suggestion": "Suggestion",
       "question": "Question",
       "other": "Other"
+    },
+    "title": "Feedback & Bug Reports",
+    "subtitle": "The app is in trial. Hit a bug or have an idea to improve it? Let us know.",
+    "submit": "Send feedback",
+    "submitting": "Sending...",
+    "fields": {
+      "category": "Type",
+      "message": "Description",
+      "messagePlaceholder": "Tell us what happened, what you expected, and how to reproduce it..."
+    },
+    "success": {
+      "title": "Feedback received",
+      "description": "If we need more details we'll reach out to the email you signed in with.",
+      "writeAnother": "Write another"
+    },
+    "errors": {
+      "tooShort": "Please write at least a few words",
+      "submitFailed": "Failed to send feedback. Try again.",
+      "network": "Network error. Please try again."
     }
   },
   "Dashboard": {
@@ -807,5 +826,335 @@
       "rateDeleted": "Exchange rate deleted successfully!",
       "deleteRateError": "Failed to delete exchange rate"
     }
+  },
+  "Auth": {
+    "common": {
+      "appName": "Monit",
+      "emailLabel": "Email address",
+      "passwordLabel": "Password",
+      "confirmPasswordLabel": "Confirm password",
+      "emailPlaceholder": "Enter your email address",
+      "minCharsPlaceholder": "At least 8 characters",
+      "sending": "Sending...",
+      "networkError": "Connection error. Please try again.",
+      "resendFailed": "Sending failed. Try again in a moment.",
+      "signInHere": "Sign in here",
+      "backToLogin": "Back to login",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Terms of Service",
+      "loading": "Loading..."
+    },
+    "login": {
+      "title": "Sign in to your account",
+      "subtitle": "Manage your work hours and projects",
+      "googleSignIn": "Sign in with Google",
+      "orWithEmail": "or sign in with email",
+      "passwordPlaceholder": "Your password",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "forgotPassword": "Forgot password?",
+      "noAccount": "Don't have an account yet?",
+      "registerHere": "Register here",
+      "resendVerification": "Resend verification email",
+      "resendSuccess": "We sent a new verification email.",
+      "errors": {
+        "notVerified": "You must verify your email address before signing in. Check your inbox.",
+        "signInFailed": "Sign-in error"
+      }
+    },
+    "register": {
+      "title": "Create a new account",
+      "subtitle": "Start managing your work hours",
+      "googleSignUp": "Sign up with Google",
+      "orWithEmail": "or sign up with email",
+      "businessNameLabel": "Business name (optional)",
+      "businessNamePlaceholder": "Your business name",
+      "confirmPasswordPlaceholder": "Re-enter your password",
+      "submit": "Sign up",
+      "submitting": "Signing up...",
+      "haveAccount": "Already have an account?",
+      "signInHere": "Sign in here",
+      "termsAgreement": "By signing up you agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>",
+      "resendVerification": "Resend verification email",
+      "resendSuccess": "We resent the verification email.",
+      "alreadyVerified": "Already verified?",
+      "verify": {
+        "title": "Check your email",
+        "sentTo": "We sent a verification link to",
+        "instructions": "Click the link in the email to activate your account and get started.",
+        "notReceived": "Didn't receive it? Check your spam folder, or resend."
+      },
+      "errors": {
+        "signUpFailed": "Sign-up error"
+      }
+    },
+    "forgot": {
+      "title": "Reset password",
+      "subtitle": "Enter your email address and we'll send you a link to reset your password",
+      "submit": "Send password reset link",
+      "successMessage": "If an account exists with this email address, we've sent password reset instructions.",
+      "rememberedPassword": "Remembered your password?",
+      "errors": {
+        "requestFailed": "Error sending the password reset request"
+      }
+    },
+    "reset": {
+      "title": "Reset password",
+      "subtitle": "Enter your new password",
+      "newPasswordLabel": "New password",
+      "confirmPasswordPlaceholder": "Re-enter your password",
+      "submit": "Reset password",
+      "submitting": "Resetting password...",
+      "successMessage": "Your password has been reset successfully! You can now sign in with your new password.",
+      "goToLogin": "Go to login",
+      "errors": {
+        "invalidToken": "The password reset link is invalid or has expired.",
+        "passwordsMismatch": "Passwords do not match",
+        "passwordTooShort": "Password must contain at least 8 characters",
+        "resetFailed": "Error resetting the password"
+      }
+    }
+  },
+  "Admin": {
+    "dashboard": {
+      "title": "System Administration",
+      "subtitle": "System overview",
+      "loadError": "Failed to load data",
+      "totalUsers": "Total Users",
+      "totalEntries": "Time Entries",
+      "activeTimers": "Active Timers",
+      "newThisWeek": "New This Week",
+      "newThisMonth": "New This Month",
+      "totalProjects": "Total Projects",
+      "newTodayDelta": "+{count} today",
+      "registrationsTrend": "Registrations - Last 30 Days",
+      "registrationsTooltip": "{date}: {count} registrations",
+      "usersLinkTitle": "User Management",
+      "usersLinkSubtitle": "View and manage all users",
+      "statsLinkTitle": "Statistics",
+      "statsLinkSubtitle": "In-depth system analysis"
+    },
+    "users": {
+      "title": "User Management",
+      "subtitle": "View and manage all users in the system",
+      "searchPlaceholder": "Search by email or business name...",
+      "searchAriaLabel": "Search users",
+      "colEmail": "Email",
+      "colBusinessName": "Business Name",
+      "colRegistrationDate": "Registered",
+      "colLastActivity": "Last Activity",
+      "colEntries": "Entries",
+      "colProjects": "Projects",
+      "colRole": "Role",
+      "roleAdmin": "Admin",
+      "roleUser": "User",
+      "empty": "No users found",
+      "entriesCount": "{count} entries",
+      "projectsCount": "{count} projects",
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}"
+    },
+    "stats": {
+      "title": "System Statistics",
+      "subtitle": "In-depth analysis of system usage",
+      "loadError": "Failed to load data",
+      "avgEntriesPerUser": "Avg Entries Per User",
+      "totalLogos": "Logos Uploaded",
+      "topUsersTitle": "Top 10 Most Active Users",
+      "projectStatusTitle": "Project Status Distribution",
+      "currencyTitle": "Currency Distribution",
+      "noData": "No data",
+      "projectStatus": {
+        "active": "Active",
+        "completed": "Completed",
+        "paused": "Paused",
+        "archived": "Archived"
+      }
+    },
+    "detail": {
+      "notFound": "User not found",
+      "backToUsers": "Back to user list",
+      "roleAdmin": "Admin",
+      "roleUser": "User",
+      "yes": "Yes",
+      "no": "No",
+      "actionError": "Failed to perform action",
+      "tabs": {
+        "profile": "Profile",
+        "clients": "Clients",
+        "projects": "Projects",
+        "entries": "Entries",
+        "sessions": "Sessions",
+        "actions": "Actions"
+      },
+      "profile": {
+        "email": "Email",
+        "emailVerified": "Email Verified",
+        "role": "Role",
+        "registrationDate": "Registered",
+        "businessName": "Business Name",
+        "phone": "Phone",
+        "address": "Address",
+        "taxId": "Tax ID",
+        "currency": "Currency",
+        "pdfTemplate": "PDF Template",
+        "logo": "Logo",
+        "logoUploaded": "Uploaded",
+        "logoNotUploaded": "Not uploaded",
+        "website": "Website"
+      },
+      "clients": {
+        "empty": "No clients",
+        "colName": "Name",
+        "colContact": "Contact",
+        "colEmail": "Email",
+        "colStatus": "Status",
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "projects": {
+        "empty": "No projects",
+        "colName": "Name",
+        "colStatus": "Status"
+      },
+      "entries": {
+        "empty": "No time entries",
+        "colDescription": "Description",
+        "colDate": "Date",
+        "colDuration": "Duration"
+      },
+      "sessions": {
+        "empty": "No sessions",
+        "colCreated": "Created",
+        "colExpires": "Expires",
+        "colStatus": "Status",
+        "expired": "Expired",
+        "active": "Active"
+      },
+      "actions": {
+        "tempPasswordLabel": "Temporary password:",
+        "copy": "Copy",
+        "tempPasswordHint": "Save the password - it won't be shown again",
+        "resetPassword": {
+          "title": "Reset Password",
+          "description": "Generate a new temporary password and sign out all sessions",
+          "loading": "Resetting...",
+          "button": "Reset"
+        },
+        "verifyEmail": {
+          "title": "Verify Email",
+          "description": "Manually mark the email as verified",
+          "loading": "Verifying...",
+          "button": "Verify"
+        },
+        "deleteSessions": {
+          "title": "Sign Out Sessions",
+          "description": "Delete all active sessions",
+          "loading": "Signing out...",
+          "button": "Sign Out All"
+        },
+        "toggleRole": {
+          "title": "Change Role",
+          "demoteDescription": "Demote to regular user",
+          "promoteDescription": "Promote to admin",
+          "loading": "Changing...",
+          "demoteButton": "Demote",
+          "promoteButton": "Make Admin"
+        },
+        "deleteUser": {
+          "title": "Delete User",
+          "description": "Permanently delete the user and all their data",
+          "loading": "Deleting...",
+          "confirmButton": "Confirm Delete",
+          "cancel": "Cancel",
+          "button": "Delete"
+        }
+      }
+    }
+  },
+  "Timer": {
+    "bar": {
+      "startTracking": "Start tracking your time",
+      "startTimer": "Start timer",
+      "paused": "Paused",
+      "activeTimer": "Active timer",
+      "editNotes": "Edit notes",
+      "addNotes": "Add notes",
+      "noteShort": "Note",
+      "notes": "Notes",
+      "resumeTimer": "Resume timer",
+      "pauseTimer": "Pause timer",
+      "stopTimer": "Stop timer",
+      "startAnotherTimer": "Start another timer",
+      "anotherTimer": "Another timer",
+      "notesLabel": "Timer notes (saved to the entry and shown in the report)",
+      "notesPlaceholder": "What's been done so far? You can update anytime.",
+      "saving": "Saving...",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "start": {
+      "title": "Start a new timer",
+      "projectLabel": "Project *",
+      "projectPlaceholder": "Select a project",
+      "taskLabel": "Task",
+      "noTask": "No task",
+      "rateLabel": "Rate",
+      "rateOption": "{name} — {rate}/hr",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "What are you working on?",
+      "cancel": "Cancel",
+      "starting": "Starting...",
+      "startButton": "Start timer",
+      "noProjects": "No projects yet",
+      "noProjectsHint": "To start tracking time, create a project first",
+      "createProject": "+ Create new project",
+      "createClient": "+ Create new client"
+    },
+    "stop": {
+      "title": "Stop timer and save entry",
+      "elapsedLabel": "Elapsed time:",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "What did you do?",
+      "notesLabel": "Notes (shown in the report)",
+      "notesPlaceholder": "Details of what was done (optional)",
+      "adjustDuration": "Adjust the duration (optional)",
+      "hours": "Hours",
+      "minutes": "Minutes",
+      "markDone": "Mark the task as done",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "saveButton": "Stop and save"
+    },
+    "search": {
+      "trigger": "Search...",
+      "dialogTitle": "Global search",
+      "dialogDescription": "Search clients, projects and entries",
+      "placeholder": "Search clients, projects, time entries...",
+      "inputAriaLabel": "Search",
+      "clear": "Clear search",
+      "startTyping": "Start typing to search",
+      "startTypingHint": "Search clients, projects and time entries by name",
+      "searching": "Searching...",
+      "noResults": "No results found",
+      "noResultsHint": "Try searching for different words",
+      "groupClients": "Clients",
+      "groupProjects": "Projects",
+      "groupEntries": "Time entries",
+      "hintNavigate": "Navigate",
+      "hintSelect": "Select",
+      "hintClose": "Close",
+      "resultCount": "{count} results"
+    }
+  },
+  "Contact": {
+    "meta": {
+      "title": "Contact | {brand}",
+      "description": "Contact {brand}. We're happy to hear questions, suggestions, or bug reports."
+    },
+    "back": "Back to {brand}",
+    "title": "Contact",
+    "description": "A question, an improvement idea, or a bug? Write to us and we'll get back to the email you leave."
   }
 }
