@@ -71,5 +71,105 @@
       "question": "Question",
       "other": "Other"
     }
+  },
+  "Dashboard": {
+    "pageTitle": "Welcome!",
+    "pageSubtitle": "This is your dashboard. Here you can manage your work hours and projects.",
+    "gettingStarted": {
+      "title": "Let's get started!",
+      "subtitle": "Three quick steps to get up and running",
+      "createClient": {
+        "title": "Create your first client",
+        "subtitle": "Add your first client"
+      },
+      "createProject": {
+        "title": "Create your first project",
+        "subtitle": "Set up a project with a pricing model"
+      },
+      "logTime": {
+        "title": "Log time or start a timer",
+        "subtitle": "Start tracking your work hours"
+      }
+    },
+    "stats": {
+      "error": "Failed to load data. Try refreshing the page.",
+      "todayHours": "Today's hours",
+      "monthHours": "This month's hours",
+      "earningsByHours": "By hours",
+      "earningsByItems": "By items",
+      "totalEarnings": "Total earnings"
+    },
+    "activeTimers": {
+      "title": "Active timers",
+      "newTimerButton": "New timer",
+      "newBillingItemButton": "+ Billing item",
+      "statusPaused": "Paused",
+      "statusActive": "Active",
+      "startedAt": "Started at {time}",
+      "resumeButton": "Resume timer",
+      "resumingButton": "Resuming…",
+      "pauseButton": "Pause",
+      "pausingButton": "Pausing…",
+      "stopButton": "Stop timer"
+    },
+    "quickTimer": {
+      "title": "Quick timer",
+      "subtitle": "Start tracking time in one click",
+      "startButton": "Start new timer",
+      "manualEntryButton": "+ Add time entry"
+    },
+    "billingItem": {
+      "title": "Billing item",
+      "subtitle": "Add a billable item without time tracking — fixed amount or quantity × rate",
+      "addButton": "+ Billing item"
+    },
+    "task": {
+      "title": "Add a task",
+      "subtitle": "Create a task with a client, project and rate — drag it to \"In progress\" to start a timer",
+      "createButton": "+ New task",
+      "allTasksLink": "All tasks"
+    },
+    "recentEntries": {
+      "title": "Recent entries"
+    },
+    "earningsChart": {
+      "title": "Monthly earnings",
+      "loading": "Loading data…",
+      "empty": "Start tracking your time to see earnings",
+      "subtitle": "Total billable earnings over the past {count} months",
+      "months": {
+        "jan": "Jan",
+        "feb": "Feb",
+        "mar": "Mar",
+        "apr": "Apr",
+        "may": "May",
+        "jun": "Jun",
+        "jul": "Jul",
+        "aug": "Aug",
+        "sep": "Sep",
+        "oct": "Oct",
+        "nov": "Nov",
+        "dec": "Dec"
+      }
+    },
+    "projectHoursChart": {
+      "titleLoading": "Hours by project – this month",
+      "loading": "Loading data…",
+      "empty": "No hours data available yet",
+      "title": "Hours by project",
+      "subtitle": "Breakdown of hours logged this month, by project"
+    },
+    "notifications": {
+      "longTimer": {
+        "title": "Timer has been running for a long time",
+        "bodyWithHours": "The timer has been running for {hours} hours and {mins} minutes. Maybe take a break?",
+        "bodyMinutesOnly": "The timer has been running for {minutes} minutes. Maybe take a break?"
+      },
+      "dailyReminder": {
+        "title": "Daily reminder",
+        "bodyWithHours": "Hi! You haven't logged any time entries today. So far you've logged {hours} hours today.",
+        "bodyNoHours": "Hi! You haven't logged any time entries today. Start logging your time."
+      }
+    }
   }
 }

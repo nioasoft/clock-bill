@@ -71,5 +71,105 @@
       "question": "שאלה",
       "other": "אחר"
     }
+  },
+  "Dashboard": {
+    "pageTitle": "ברוך הבא!",
+    "pageSubtitle": "זהו הדשבורד שלך. כאן תוכל לנהל את שעות העבודה והפרויקטים שלך.",
+    "gettingStarted": {
+      "title": "בוא נתחיל!",
+      "subtitle": "שלושה צעדים קצרים כדי להתחיל לעבוד",
+      "createClient": {
+        "title": "צור לקוח ראשון",
+        "subtitle": "הוסף את הלקוח הראשון שלך"
+      },
+      "createProject": {
+        "title": "צור פרויקט ראשון",
+        "subtitle": "הגדר פרויקט עם מודל תמחור"
+      },
+      "logTime": {
+        "title": "רשום זמן או הפעל טיימר",
+        "subtitle": "התחל לעקוב אחר שעות העבודה שלך"
+      }
+    },
+    "stats": {
+      "error": "שגיאה בטעינת הנתונים. נסה לרענן את הדף.",
+      "todayHours": "שעות היום",
+      "monthHours": "שעות החודש",
+      "earningsByHours": "לפי שעות",
+      "earningsByItems": "לפי פריטים",
+      "totalEarnings": "סך הכנסות"
+    },
+    "activeTimers": {
+      "title": "טיימרים פעילים",
+      "newTimerButton": "טיימר חדש",
+      "newBillingItemButton": "+ פריט חיוב",
+      "statusPaused": "מושהה",
+      "statusActive": "פעיל",
+      "startedAt": "התחיל ב-{time}",
+      "resumeButton": "חדש טיימר",
+      "resumingButton": "מחדש...",
+      "pauseButton": "השהה",
+      "pausingButton": "משהה...",
+      "stopButton": "עצור טיימר"
+    },
+    "quickTimer": {
+      "title": "טיימר מהיר",
+      "subtitle": "התחל לעקוב אחר הזמן בלחיצה אחת",
+      "startButton": "התחל טיימר חדש",
+      "manualEntryButton": "+ הזן רשומת זמן"
+    },
+    "billingItem": {
+      "title": "פריט חיוב",
+      "subtitle": "הוסף פריט לחיוב ללא מדידת זמן — סכום קבוע או כמות × תעריף",
+      "addButton": "+ פריט חיוב"
+    },
+    "task": {
+      "title": "הכנס משימה",
+      "subtitle": "צור משימה עם לקוח, פרויקט ותעריף — גרור אותה ל\"בעבודה\" כדי להפעיל טיימר",
+      "createButton": "+ משימה חדשה",
+      "allTasksLink": "לכל המשימות"
+    },
+    "recentEntries": {
+      "title": "רשומות אחרונות"
+    },
+    "earningsChart": {
+      "title": "הכנסות חודשיות",
+      "loading": "טוען נתונים...",
+      "empty": "התחל לעקוב אחרי הזמן שלך כדי לראות הכנסות",
+      "subtitle": "סך ההכנסות לחיוב ב-{count} החודשים האחרונים",
+      "months": {
+        "jan": "ינו׳",
+        "feb": "פבר׳",
+        "mar": "מרץ",
+        "apr": "אפר׳",
+        "may": "מאי",
+        "jun": "יונ׳",
+        "jul": "יול׳",
+        "aug": "אוג׳",
+        "sep": "ספט׳",
+        "oct": "אוק׳",
+        "nov": "נוב׳",
+        "dec": "דצמ׳"
+      }
+    },
+    "projectHoursChart": {
+      "titleLoading": "שעות לפי פרויקט - החודש",
+      "loading": "טוען נתונים...",
+      "empty": "אין נתוני שעות זמינים עדיין",
+      "title": "שעות לפי פרויקט",
+      "subtitle": "פילוח השעות שנרשמו החודש, לפי פרויקט"
+    },
+    "notifications": {
+      "longTimer": {
+        "title": "הטיימר רץ זמן רב",
+        "bodyWithHours": "הטיימר רץ כבר {hours} שעות ו-{mins} דקות. אולי כדאי לקחת הפסקה?",
+        "bodyMinutesOnly": "הטיימר רץ כבר {minutes} דקות. אולי כדאי לקחת הפסקה?"
+      },
+      "dailyReminder": {
+        "title": "תזכורת יומית",
+        "bodyWithHours": "שלום! עדיין לא הזנת רשומות זמן היום. למשל, רשמת היום {hours} שעות",
+        "bodyNoHours": "שלום! עדיין לא הזנת רשומות זמן היום. למשל, התחל לרשום זמן."
+      }
+    }
   }
 }
