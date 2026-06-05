@@ -9,6 +9,7 @@ import { PageContainer } from "@/components/page-container";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { validateRequired, validateDateRange } from "@/lib/validation";
 import { asRoundingMode, resolveRounding } from "@/lib/rounding";
+import { messageForError } from "@/lib/api-error";
 import { useTranslations, useLocale } from "next-intl";
 
 interface Project {
@@ -33,6 +34,7 @@ interface Project {
 
 export default function ProjectDetailsPage() {
   const t = useTranslations("Projects");
+  const tRoot = useTranslations();
   const tRounding = useTranslations("Rounding");
   const intlLocale = useLocale() === "en" ? "en-US" : "he-IL";
   const router = useRouter();
@@ -253,7 +255,7 @@ export default function ProjectDetailsPage() {
         setShowEditForm(false);
         setFieldErrors({});
       } else {
-        setFormError(data.message || t("errors.updateFailed"));
+        setFormError(data.error_code ? messageForError(data, tRoot) : t("errors.updateFailed"));
       }
     } catch (error) {
       console.error("Error updating project:", error);
@@ -278,7 +280,7 @@ export default function ProjectDetailsPage() {
         // Redirect to projects list
         router.push("/projects");
       } else {
-        setFormError(data.message || t("errors.deleteFailed"));
+        setFormError(data.error_code ? messageForError(data, tRoot) : t("errors.deleteFailed"));
         setShowDeleteConfirm(false);
       }
     } catch (error) {
@@ -313,7 +315,7 @@ export default function ProjectDetailsPage() {
         // Redirect to projects list
         router.push("/projects");
       } else {
-        setFormError(data.message || t("errors.archiveFailed"));
+        setFormError(data.error_code ? messageForError(data, tRoot) : t("errors.archiveFailed"));
         setShowArchiveConfirm(false);
       }
     } catch (error) {
@@ -348,7 +350,7 @@ export default function ProjectDetailsPage() {
         // Update the project in state
         setProject(data.project);
       } else {
-        setFormError(data.message || t("errors.restoreFailed"));
+        setFormError(data.error_code ? messageForError(data, tRoot) : t("errors.restoreFailed"));
       }
     } catch (error) {
       console.error("Error unarchiving project:", error);
@@ -375,7 +377,7 @@ export default function ProjectDetailsPage() {
         // Redirect to the duplicated project
         router.push(`/projects/${data.project.id}`);
       } else {
-        setFormError(data.message || t("errors.duplicateFailed"));
+        setFormError(data.error_code ? messageForError(data, tRoot) : t("errors.duplicateFailed"));
       }
     } catch (error) {
       console.error("Error duplicating project:", error);

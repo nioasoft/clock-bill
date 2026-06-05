@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { fieldClass } from "@/lib/form-styles";
+import { messageForError } from "@/lib/api-error";
 
 interface Session {
   id: string;
@@ -63,6 +64,7 @@ interface CurrencyRate {
 
 export default function SettingsPage() {
   const t = useTranslations("Settings");
+  const tRoot = useTranslations();
   const locale = useLocale();
   const intlLocale = locale === "en" ? "en-US" : "he-IL";
   const router = useRouter();
@@ -204,7 +206,7 @@ export default function SettingsPage() {
         setDateFormat(data.profile.dateFormat || "DD/MM/YYYY");
         setTimeFormat(data.profile.timeFormat || "24h");
       } else {
-        setProfileError(data.message || t("toasts.loadProfileError"));
+        setProfileError(data.error_code ? messageForError(data, tRoot) : t("toasts.loadProfileError"));
       }
     } catch {
       setProfileError(t("toasts.networkError"));
@@ -223,7 +225,7 @@ export default function SettingsPage() {
       if (data.success) {
         setSessions(data.sessions || []);
       } else {
-        setError(data.message || t("toasts.loadSessionsError"));
+        setError(data.error_code ? messageForError(data, tRoot) : t("toasts.loadSessionsError"));
       }
     } catch {
       setError(t("toasts.networkError"));
@@ -263,7 +265,7 @@ export default function SettingsPage() {
         // Redirect to login page after successful logout
         router.push("/login");
       } else {
-        setError(data.message || t("toasts.logoutAllError"));
+        setError(data.error_code ? messageForError(data, tRoot) : t("toasts.logoutAllError"));
         setShowConfirmDialog(false);
       }
     } catch {
@@ -316,7 +318,7 @@ export default function SettingsPage() {
         // Clear success message after 3 seconds
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
-        setProfileError(data.message || t("toasts.saveProfileError"));
+        setProfileError(data.error_code ? messageForError(data, tRoot) : t("toasts.saveProfileError"));
       }
     } catch {
       setProfileError(t("toasts.networkError"));
@@ -352,7 +354,7 @@ export default function SettingsPage() {
         setSuccessMessage(t("toasts.notificationSettingsSaved"));
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
-        setProfileError(data.message || t("toasts.saveSettingsError"));
+        setProfileError(data.error_code ? messageForError(data, tRoot) : t("toasts.saveSettingsError"));
       }
     } catch {
       setProfileError(t("toasts.networkError"));
@@ -416,7 +418,7 @@ export default function SettingsPage() {
         setSuccessMessage(t("toasts.logoUploaded"));
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
-        setLogoError(data.message || t("toasts.uploadLogoError"));
+        setLogoError(data.error_code ? messageForError(data, tRoot) : t("toasts.uploadLogoError"));
       }
     } catch {
       setLogoError(t("toasts.networkError"));
@@ -449,7 +451,7 @@ export default function SettingsPage() {
         setSuccessMessage(t("toasts.logoRemoved"));
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
-        setLogoError(data.message || t("toasts.removeLogoError"));
+        setLogoError(data.error_code ? messageForError(data, tRoot) : t("toasts.removeLogoError"));
       }
     } catch {
       setLogoError(t("toasts.networkError"));
@@ -483,7 +485,7 @@ export default function SettingsPage() {
         setSuccessMessage(t("toasts.signatureUploaded"));
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
-        setSignatureError(data.message || t("toasts.uploadSignatureError"));
+        setSignatureError(data.error_code ? messageForError(data, tRoot) : t("toasts.uploadSignatureError"));
       }
     } catch {
       setSignatureError(t("toasts.networkError"));
@@ -516,7 +518,7 @@ export default function SettingsPage() {
         setSuccessMessage(t("toasts.signatureRemoved"));
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
-        setSignatureError(data.message || t("toasts.removeSignatureError"));
+        setSignatureError(data.error_code ? messageForError(data, tRoot) : t("toasts.removeSignatureError"));
       }
     } catch {
       setSignatureError(t("toasts.networkError"));
@@ -536,7 +538,7 @@ export default function SettingsPage() {
       if (data.success) {
         setCurrencyRates(data.rates || []);
       } else {
-        setRateError(data.message || t("toasts.loadRatesError"));
+        setRateError(data.error_code ? messageForError(data, tRoot) : t("toasts.loadRatesError"));
       }
     } catch {
       setRateError(t("toasts.networkError"));
@@ -575,7 +577,7 @@ export default function SettingsPage() {
         setToCurrency("ILS");
         setRate("");
       } else {
-        setRateError(data.message || t("toasts.saveRateError"));
+        setRateError(data.error_code ? messageForError(data, tRoot) : t("toasts.saveRateError"));
       }
     } catch {
       setRateError(t("toasts.networkError"));
@@ -606,7 +608,7 @@ export default function SettingsPage() {
         // Refresh rates list
         fetchCurrencyRates();
       } else {
-        setRateError(data.message || t("toasts.deleteRateError"));
+        setRateError(data.error_code ? messageForError(data, tRoot) : t("toasts.deleteRateError"));
       }
     } catch {
       setRateError(t("toasts.networkError"));

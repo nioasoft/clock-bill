@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { MessageSquare, Check, Send } from "lucide-react";
+import { messageForError } from "@/lib/api-error";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
@@ -17,6 +18,7 @@ const MAX_MESSAGE = 5000;
 export default function FeedbackPage() {
   const t = useTranslations("Feedback");
   const tCategory = useTranslations("Feedback.category");
+  const tRoot = useTranslations();
   const [category, setCategory] = useState<FeedbackCategory>("bug");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -54,7 +56,7 @@ export default function FeedbackPage() {
         setSent(true);
         setMessage("");
       } else {
-        setError(data.message || t("errors.submitFailed"));
+        setError(data.error_code ? messageForError(data, tRoot) : t("errors.submitFailed"));
       }
     } catch {
       setError(t("errors.network"));

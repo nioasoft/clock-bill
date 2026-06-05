@@ -12,6 +12,7 @@ import { ClientRatesEditor } from "@/components/client-rates-editor";
 import { cleanClientRates } from "@/lib/schemas/rates";
 import type { ClientRate, ClientRateInput } from "@/lib/schemas/rates";
 import { ROUNDING_MODES, asRoundingMode, type RoundingMode } from "@/lib/rounding";
+import { messageForError } from "@/lib/api-error";
 import { useTranslations, useLocale } from "next-intl";
 
 const CURRENCIES = [
@@ -69,6 +70,7 @@ function clientToFormData(client: Client) {
 
 export default function ClientDetailsPage() {
   const t = useTranslations("Clients");
+  const tRoot = useTranslations();
   const tRounding = useTranslations("Rounding");
   const intlLocale = useLocale() === "en" ? "en-US" : "he-IL";
   const router = useRouter();
@@ -131,7 +133,7 @@ export default function ClientDetailsPage() {
           setClient(data.client);
           setFormData(clientToFormData(data.client));
         } else {
-          setError(data.message || t("errorLoadClient"));
+          setError(data.error_code ? messageForError(data, tRoot) : t("errorLoadClient"));
         }
       } catch (error) {
         console.error("Error fetching client:", error);
@@ -141,7 +143,7 @@ export default function ClientDetailsPage() {
       }
     };
     fetchClient();
-  }, [clientId, t]);
+  }, [clientId, t, tRoot]);
 
   useEffect(() => {
     const fetchClientProjects = async () => {
@@ -205,7 +207,7 @@ export default function ClientDetailsPage() {
         setFormData(clientToFormData(data.client));
         setShowEditForm(false);
       } else {
-        setFormError(data.message || t("errorUpdateClient"));
+        setFormError(data.error_code ? messageForError(data, tRoot) : t("errorUpdateClient"));
       }
     } catch (error) {
       console.error("Error updating client:", error);
@@ -229,7 +231,7 @@ export default function ClientDetailsPage() {
       if (data.success) {
         router.push("/clients");
       } else {
-        setFormError(data.message || t("errorDeleteClient"));
+        setFormError(data.error_code ? messageForError(data, tRoot) : t("errorDeleteClient"));
         setShowDeleteConfirm(false);
       }
     } catch (error) {

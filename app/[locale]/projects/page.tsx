@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { FolderOpen } from "lucide-react";
 import { validateRequired, validateDateRange } from "@/lib/validation";
 import { useValidationMessage } from "@/lib/validation-messages";
+import { messageForError } from "@/lib/api-error";
 import { fieldClass } from "@/lib/form-styles";
 import { useTranslations, useLocale } from "next-intl";
 
@@ -46,6 +47,7 @@ export default function ProjectsPage() {
 
 function ProjectsPageContent() {
   const t = useTranslations("Projects");
+  const tRoot = useTranslations();
   const tRounding = useTranslations("Rounding");
   const intlLocale = useLocale() === "en" ? "en-US" : "he-IL";
   const resolveValidation = useValidationMessage();
@@ -231,7 +233,7 @@ function ProjectsPageContent() {
         });
         setShowForm(false);
       } else {
-        setFormError(data.message || t("errors.createFailed"));
+        setFormError(data.error_code ? messageForError(data, tRoot) : t("errors.createFailed"));
       }
     } catch (error) {
       console.error("Error saving project:", error);
@@ -276,7 +278,7 @@ function ProjectsPageContent() {
         // Remove the restored project from the list
         setProjects(projects.filter((p) => p.id !== projectId));
       } else {
-        alert(data.message || t("errors.restoreFailed"));
+        alert(data.error_code ? messageForError(data, tRoot) : t("errors.restoreFailed"));
       }
     } catch (error) {
       console.error("Error restoring project:", error);

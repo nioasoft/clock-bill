@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { messageForError } from "@/lib/api-error";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +31,7 @@ export function TaskDetailSheet({ task, moveTask, onClose, onChanged }: TaskDeta
   const tTransitions = useTranslations("Tasks.transitions");
   const t = useTranslations("Tasks.detail");
   const tToasts = useTranslations("Tasks.toasts");
+  const tRoot = useTranslations();
   const { runningTimerForTask } = useTimer();
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -59,7 +61,7 @@ export function TaskDetailSheet({ task, moveTask, onClose, onChanged }: TaskDeta
         showSuccessToast(tToasts("deleted"));
         onChanged();
       } else {
-        showErrorToast(data.message || tToasts("deleteError"));
+        showErrorToast(data.error_code ? messageForError(data, tRoot) : tToasts("deleteError"));
       }
     } catch (error) {
       console.error("Error deleting task:", error);

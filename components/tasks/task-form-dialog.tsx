@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
+import { messageForError } from "@/lib/api-error";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +32,7 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
   const tPriority = useTranslations("Tasks.priority");
   const t = useTranslations("Tasks.form");
   const tToasts = useTranslations("Tasks.toasts");
+  const tRoot = useTranslations();
   const isEdit = props.mode === "edit";
   const task = isEdit ? props.task : null;
 
@@ -164,7 +166,7 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
         showSuccessToast(isEdit ? tToasts("updated") : tToasts("created"));
         props.onSaved();
       } else {
-        showErrorToast(data.message || (isEdit ? tToasts("updateError") : tToasts("createError")));
+        showErrorToast(data.error_code ? messageForError(data, tRoot) : (isEdit ? tToasts("updateError") : tToasts("createError")));
       }
     } catch (error) {
       console.error("Error saving task:", error);

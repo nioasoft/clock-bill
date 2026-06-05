@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Clock, Pencil, Trash2 } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
+import { messageForError } from "@/lib/api-error";
 import { validateRequired, validateDate, validateNumber } from "@/lib/validation";
 import { useValidationMessage } from "@/lib/validation-messages";
 import { pickDefaultHourlyRate, type ClientRate } from "@/lib/schemas/rates";
@@ -101,6 +102,7 @@ interface GroupedProjects {
 
 export default function EntriesPage() {
   const t = useTranslations("Entries");
+  const tRoot = useTranslations();
   const locale = useLocale();
   const intlLocale = locale === "en" ? "en-US" : "he-IL";
   const resolveValidation = useValidationMessage();
@@ -516,7 +518,13 @@ export default function EntriesPage() {
         setEditingEntry(null);
         setFieldErrors({});
       } else {
-        setFormError(data.message || isEditing ? t("error.update") : t("error.create"));
+        setFormError(
+          data.error_code
+            ? messageForError(data, tRoot)
+            : isEditing
+              ? t("error.update")
+              : t("error.create")
+        );
       }
     } catch (error) {
       console.error("Error saving entry:", error);
@@ -623,7 +631,7 @@ export default function EntriesPage() {
         setEditingEntry(null);
         showSuccessToast(t("toast.deleted"));
       } else {
-        showErrorToast(data.message || t("error.delete"));
+        showErrorToast(data.error_code ? messageForError(data, tRoot) : t("error.delete"));
       }
     } catch (error) {
       console.error("Error deleting entry:", error);

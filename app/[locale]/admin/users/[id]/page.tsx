@@ -18,6 +18,7 @@ import {
   Check,
 } from "lucide-react";
 import { Link } from "@/src/i18n/navigation";
+import { messageForError } from "@/lib/api-error";
 
 interface UserDetail {
   id: string;
@@ -90,6 +91,7 @@ export default function AdminUserDetailPage({
 }) {
   const { id: userId } = use(params);
   const t = useTranslations("Admin");
+  const tRoot = useTranslations();
   const intlLocale = useLocale() === "en" ? "en-US" : "he-IL";
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>("profile");
@@ -162,7 +164,7 @@ export default function AdminUserDetailPage({
           setSessions([]);
         }
       } else {
-        setActionResult({ type: "error", message: data.message });
+        setActionResult({ type: "error", message: data.error_code ? messageForError(data, tRoot) : (data.message || t("detail.actionError")) });
       }
     } catch (err) {
       console.error("Action error:", err);

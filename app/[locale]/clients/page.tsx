@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Users } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
+import { messageForError } from "@/lib/api-error";
 import { fieldClass } from "@/lib/form-styles";
 import { CURRENCY_SYMBOLS } from "@/lib/currency";
 import { ClientRatesEditor } from "@/components/client-rates-editor";
@@ -77,6 +78,7 @@ export default function ClientsPage() {
 
 function ClientsPageContent() {
   const t = useTranslations("Clients");
+  const tRoot = useTranslations();
   const tRounding = useTranslations("Rounding");
   const resolveValidation = useValidationMessage();
   const searchParams = useSearchParams();
@@ -248,7 +250,13 @@ function ClientsPageContent() {
         setShowForm(false);
         setEditingClient(null);
       } else {
-        setFormError(data.message || isEditing ? t("errorUpdateClient") : t("errorCreateClient"));
+        setFormError(
+          data.error_code
+            ? messageForError(data, tRoot)
+            : isEditing
+              ? t("errorUpdateClient")
+              : t("errorCreateClient")
+        );
       }
     } catch (error) {
       console.error("Error saving client:", error);
@@ -343,7 +351,7 @@ function ClientsPageContent() {
         setEditingClient(null);
         showSuccessToast(t("toastArchived"));
       } else {
-        showErrorToast(data.message || t("errorDeleteClient"));
+        showErrorToast(data.error_code ? messageForError(data, tRoot) : t("errorDeleteClient"));
       }
     } catch (error) {
       console.error("Error deleting client:", error);
@@ -369,7 +377,7 @@ function ClientsPageContent() {
         setEditingClient(null);
         showSuccessToast(t("toastRestored"));
       } else {
-        showErrorToast(data.message || t("errorRestoreClient"));
+        showErrorToast(data.error_code ? messageForError(data, tRoot) : t("errorRestoreClient"));
       }
     } catch (error) {
       console.error("Error restoring client:", error);
