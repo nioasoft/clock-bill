@@ -139,7 +139,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
         <div
           className={`flex-1 min-h-screen flex flex-col transition-[margin] duration-200 ${
-            sidebarCollapsed ? "me-16" : "me-64"
+            sidebarCollapsed ? "ms-16" : "ms-64"
           }`}
         >
           <PersistentTimerBar />
