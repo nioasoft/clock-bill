@@ -1,0 +1,14 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "skipToMain": "Skip to main content"
+  },
+  "Meta": {
+    "title": "Monit - Time Tracking for Freelancers",
+    "description": "Time tracking, client management, and professional reports. All in one place, for free."
+  }
+}

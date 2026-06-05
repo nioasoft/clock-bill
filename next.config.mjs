@@ -1,4 +1,7 @@
 import { withSentryConfig } from "@sentry/nextjs";
+import createNextIntlPlugin from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -20,7 +23,7 @@ const nextConfig = {
 // Wrap with Sentry. Build-safe without any Sentry env: source maps upload only
 // when SENTRY_AUTH_TOKEN (+ org/project) are present; the runtime SDK stays inert
 // unless NEXT_PUBLIC_SENTRY_DSN is set.
-export default withSentryConfig(nextConfig, {
+export default withSentryConfig(withNextIntl(nextConfig), {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
