@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Clock, Pencil, Trash2 } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { validateRequired, validateDate, validateNumber } from "@/lib/validation";
+import { useValidationMessage } from "@/lib/validation-messages";
 import { pickDefaultHourlyRate, type ClientRate } from "@/lib/schemas/rates";
 import { calcHourlyAmount, calcItemAmount } from "@/lib/money";
 import { formatCurrency } from "@/lib/currency";
@@ -100,6 +101,7 @@ interface GroupedProjects {
 
 export default function EntriesPage() {
   const t = useTranslations("Entries");
+  const resolveValidation = useValidationMessage();
   const [entries, setEntries] = useState<TimeEntry[]>([]);
   const [entriesLoading, setEntriesLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -369,15 +371,15 @@ export default function EntriesPage() {
     const errors: typeof fieldErrors = {};
 
     // Validate project
-    const projectValidation = validateRequired(formData.projectId, "פרויקט");
+    const projectValidation = validateRequired(formData.projectId, "project");
     if (!projectValidation.isValid) {
-      errors.projectId = projectValidation.error;
+      errors.projectId = resolveValidation(projectValidation.code);
     }
 
     // Validate date
     const dateValidation = validateDate(formData.date, true);
     if (!dateValidation.isValid) {
-      errors.date = dateValidation.error;
+      errors.date = resolveValidation(dateValidation.code);
     }
 
     // Validate duration (hours) or quantity + item selection (item)
@@ -401,14 +403,14 @@ export default function EntriesPage() {
     } else {
       const durationValidation = validateNumber(formData.duration, true, 1);
       if (!durationValidation.isValid) {
-        errors.duration = durationValidation.error;
+        errors.duration = resolveValidation(durationValidation.code);
       }
     }
 
     // Validate description
-    const descValidation = validateRequired(formData.description, "תיאור");
+    const descValidation = validateRequired(formData.description, "description");
     if (!descValidation.isValid) {
-      errors.description = descValidation.error;
+      errors.description = resolveValidation(descValidation.code);
     }
 
     // If there are errors, display them and don't submit

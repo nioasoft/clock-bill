@@ -21,6 +21,7 @@ import {
   validateEmail,
   validatePhone,
 } from "@/lib/validation";
+import { useValidationMessage } from "@/lib/validation-messages";
 import {
   Dialog,
   DialogContent,
@@ -77,6 +78,7 @@ export default function ClientsPage() {
 function ClientsPageContent() {
   const t = useTranslations("Clients");
   const tRounding = useTranslations("Rounding");
+  const resolveValidation = useValidationMessage();
   const searchParams = useSearchParams();
   const [clients, setClients] = useState<Client[]>([]);
   const [clientsLoading, setClientsLoading] = useState(true);
@@ -149,16 +151,16 @@ function ClientsPageContent() {
     const errors: typeof fieldErrors = {};
 
     // Name is required
-    const nameValidation = validateRequired(formData.name, t("clientNameLabel"));
+    const nameValidation = validateRequired(formData.name, "clientName");
     if (!nameValidation.isValid) {
-      errors.name = nameValidation.error;
+      errors.name = resolveValidation(nameValidation.code);
     }
 
     // Email is optional but must be valid if provided
     if (formData.email && formData.email.trim()) {
       const emailValidation = validateEmail(formData.email, false);
       if (!emailValidation.isValid) {
-        errors.email = emailValidation.error;
+        errors.email = resolveValidation(emailValidation.code);
       }
     }
 
@@ -166,7 +168,7 @@ function ClientsPageContent() {
     if (formData.phone && formData.phone.trim()) {
       const phoneValidation = validatePhone(formData.phone, false);
       if (!phoneValidation.isValid) {
-        errors.phone = phoneValidation.error;
+        errors.phone = resolveValidation(phoneValidation.code);
       }
     }
 

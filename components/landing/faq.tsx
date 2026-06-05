@@ -1,58 +1,50 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Plus, Minus } from "lucide-react";
 import { GrainOverlay } from "@/components/ui/thematic-elements";
 
-const faqItems = [
-  {
-    question: "מי יכול להשתמש במוניט?",
-    answer:
-      "מוניט מיועד לפרילנסרים, ליועצים עצמאיים ולבעלי עסקים קטנים שצריכים לעקוב אחרי שעות עבודה, לנהל לקוחות, ולהוציא חיוב מסודר.",
-  },
-  {
-    question: "זה באמת בחינם?",
-    answer:
-      "כן, היום זה חינם. מוניט בתקופת בטא, והשימוש כרגע לא עולה כלום, בלי כרטיס אשראי. גם בהמשך, ניהול של עד שלושה לקוחות יישאר חינם. אם נוסיף תוכניות בתשלום לשימוש מורחב, נודיע על כך מראש ולא נחייב אף אחד בלי שיבחר בזה.",
-  },
-  {
-    question: "אפשר להפעיל כמה טיימרים במקביל?",
-    answer:
-      "בהחלט. אם אתה עובד על כמה לקוחות באותו זמן, פתח טיימר לכל אחד. כל טיימר רץ ונעצר בנפרד, וכל רשומה נכנסת ללקוח ולפרויקט הנכונים.",
-  },
-  {
-    question: "מה זה חיוב לפי פריטים?",
-    answer:
-      "מעבר לחיוב שעתי, אפשר לחייב לפי פריטים: כמות כפול מחיר ליחידה. שומרים פריטים קבועים בקטלוג של כל לקוח, או מוסיפים פריט חד-פעמי תוך כדי. מתאים לתיקונים, רישיונות או כל עבודה שלא נמדדת בשעות.",
-  },
-  {
-    question: "תעודת ההתחשבנות היא חשבונית מס?",
-    answer:
-      "לא. תעודת ההתחשבנות היא סיכום פנימי שמרכז את השעות והפריטים לחיוב, לנוחות שלך ושל הלקוח. היא לא מהווה חשבונית מס או קבלה. את מסמכי המס הרשמיים אתה ממשיך להפיק כרגיל דרך מערכת החשבוניות שלך.",
-  },
-  {
-    question: "האם הנתונים שלי מאובטחים?",
-    answer:
-      "בהחלט. הנתונים מאוחסנים בשרתים מוצפנים באיחוד האירופי, וכל משתמש רואה אך ורק את המידע שלו, גם ברמת מסד הנתונים. איננו מוכרים מידע ולא משתפים אותו עם מפרסמים.",
-  },
-  {
-    question: "האם אפשר לייצא דוחות בעברית?",
-    answer:
-      "כן. מוניט מייצא דוחות ותעודות PDF בעברית מלאה עם תמיכת RTL. יש כמה עיצובים לבחירה, ואפשר להעלות לוגו אישי.",
-  },
-  {
-    question: "האם יש אפליקציה לנייד?",
-    answer:
-      "מוניט עובד מעולה בדפדפן הנייד ותומך בהתקנה כאפליקציה (PWA). אפשר להוסיף אותו למסך הבית ולהשתמש בו כמו אפליקציה רגילה.",
-  },
-  {
-    question: "איך מגדירים מודלי תמחור?",
-    answer:
-      "כל לקוח מקבל תעריף משלו: שעתי, ריטיינר חודשי, חיוב חודשי קבוע או חיוב לפי פריטים. אפשר גם לקבוע עיגול זמן לכל לקוח או פרויקט.",
-  },
-];
-
 export function FAQ() {
+  const t = useTranslations("Landing");
+  const faqItems = [
+    {
+      question: t("faq.q1.question"),
+      answer: t("faq.q1.answer"),
+    },
+    {
+      question: t("faq.q2.question"),
+      answer: t("faq.q2.answer"),
+    },
+    {
+      question: t("faq.q3.question"),
+      answer: t("faq.q3.answer"),
+    },
+    {
+      question: t("faq.q4.question"),
+      answer: t("faq.q4.answer"),
+    },
+    {
+      question: t("faq.q5.question"),
+      answer: t("faq.q5.answer"),
+    },
+    {
+      question: t("faq.q6.question"),
+      answer: t("faq.q6.answer"),
+    },
+    {
+      question: t("faq.q7.question"),
+      answer: t("faq.q7.answer"),
+    },
+    {
+      question: t("faq.q8.question"),
+      answer: t("faq.q8.answer"),
+    },
+    {
+      question: t("faq.q9.question"),
+      answer: t("faq.q9.answer"),
+    },
+  ];
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
@@ -61,7 +53,7 @@ export function FAQ() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-display font-bold text-foreground">
-            שאלות נפוצות
+            {t("faq.heading")}
           </h2>
         </div>
 

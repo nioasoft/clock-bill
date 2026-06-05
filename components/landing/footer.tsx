@@ -1,8 +1,10 @@
 import { Link } from "@/src/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { BRAND } from "@/lib/brand";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 
 export function LandingFooter() {
+  const t = useTranslations("Landing");
   const year = new Date().getFullYear();
 
   return (
@@ -19,53 +21,53 @@ export function LandingFooter() {
               </span>
             </div>
             <p className="text-sm text-sidebar-foreground/70">
-              {BRAND.tagline}
+              {t("footer.tagline")}
             </p>
           </div>
 
           {/* Navigation links */}
-          <nav aria-label="ניווט תחתון" className="flex flex-wrap gap-6 text-sm">
+          <nav aria-label={t("footer.navAriaLabel")} className="flex flex-wrap gap-6 text-sm">
             <a
               href="#how-it-works"
               className="text-sidebar-foreground/80 hover:text-white transition-colors"
             >
-              איך זה עובד
+              {t("footer.howItWorks")}
             </a>
             <a
               href="#features"
               className="text-sidebar-foreground/80 hover:text-white transition-colors"
             >
-              פיצ&apos;רים
+              {t("footer.features")}
             </a>
             <a
               href="#faq"
               className="text-sidebar-foreground/80 hover:text-white transition-colors"
             >
-              שאלות נפוצות
+              {t("footer.faq")}
             </a>
             <Link
               href="/login"
               className="text-sidebar-foreground/80 hover:text-white transition-colors"
             >
-              התחבר
+              {t("footer.login")}
             </Link>
             <Link
               href="/privacy"
               className="text-sidebar-foreground/80 hover:text-white transition-colors"
             >
-              פרטיות
+              {t("footer.privacy")}
             </Link>
             <Link
               href="/terms"
               className="text-sidebar-foreground/80 hover:text-white transition-colors"
             >
-              תנאי שימוש
+              {t("footer.terms")}
             </Link>
             <Link
               href="/contact"
               className="text-sidebar-foreground/80 hover:text-white transition-colors"
             >
-              צור קשר
+              {t("footer.contact")}
             </Link>
           </nav>
         </div>
@@ -78,9 +80,9 @@ export function LandingFooter() {
         {/* Copyright */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-sidebar-foreground/60">
           <p>
-            {year} &copy; {BRAND.name} &middot; נבנה עם &#9829; בישראל
+            {year} &copy; {BRAND.name} &middot; {t("footer.builtWith")}
           </p>
-          <p className="text-xs">כל הזכויות שמורות</p>
+          <p className="text-xs">{t("footer.rightsReserved")}</p>
         </div>
       </div>
     </footer>

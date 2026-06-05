@@ -178,7 +178,7 @@ runner.test('validateField: custom validation pass', () => {
   const result = validateField({
     value: 'test@example.com',
     required: true,
-    custom: (v: string) => v.includes('@') ? null : 'Missing @'
+    custom: (v: string) => v.includes('@') ? null : { code: 'INVALID_EMAIL' }
   });
   assertTrue(result.isValid);
 });
@@ -187,10 +187,13 @@ runner.test('validateField: custom validation fail', () => {
   const result = validateField({
     value: 'testexample.com',
     required: true,
-    custom: (v: string) => v.includes('@') ? null : 'Missing @'
+    custom: (v: string) => v.includes('@') ? null : { code: 'INVALID_EMAIL' }
   });
   assertFalse(result.isValid);
-  assertEqual(result.error, 'Missing @');
+  // Custom validators now return a stable ValidationError descriptor; the code
+  // is surfaced on `result.code` and resolved to a localized string via the
+  // Validation namespace (lib/validation-messages.ts).
+  assertEqual(result.code?.code, 'INVALID_EMAIL');
 });
 
 // validateEmail tests

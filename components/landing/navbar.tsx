@@ -1,12 +1,14 @@
 "use client";
 
 import { Link } from "@/src/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { useState, useEffect } from "react";
 import { Gauge, Clock } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 
 export function LandingNavbar() {
+  const t = useTranslations("Landing");
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
@@ -31,7 +33,7 @@ export function LandingNavbar() {
 
   return (
     <nav
-      aria-label="ניווט ראשי"
+      aria-label={t("nav.ariaLabel")}
       className={`fixed top-4 left-1/2 -translate-x-1/2 max-w-5xl w-[calc(100%-2rem)] rounded-full bg-background/70 backdrop-blur-xl border border-border/50 shadow-sm z-50 transition-transform duration-300 ${
         isVisible ? "translate-y-0" : "translate-y-[-120%]"
       }`}
@@ -55,19 +57,19 @@ export function LandingNavbar() {
               href="#how-it-works"
               className="rounded-full px-4 py-1.5 text-sm text-muted-foreground hover:bg-foreground/5 hover:text-foreground transition-colors"
             >
-              איך זה עובד
+              {t("nav.howItWorks")}
             </a>
             <a
               href="#features"
               className="rounded-full px-4 py-1.5 text-sm text-muted-foreground hover:bg-foreground/5 hover:text-foreground transition-colors"
             >
-              פיצ&apos;רים
+              {t("nav.features")}
             </a>
             <a
               href="#faq"
               className="rounded-full px-4 py-1.5 text-sm text-muted-foreground hover:bg-foreground/5 hover:text-foreground transition-colors"
             >
-              שאלות נפוצות
+              {t("nav.faq")}
             </a>
           </div>
 
@@ -77,14 +79,14 @@ export function LandingNavbar() {
               href="/login"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              התחבר
+              {t("nav.login")}
             </Link>
             <Link
               href="/register"
               className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
             >
               <Clock className="h-4 w-4" aria-hidden="true" />
-              <span>התחל בחינם</span>
+              <span>{t("nav.ctaStart")}</span>
             </Link>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { Clock, Boxes, LayoutGrid, ArrowLeft } from "lucide-react";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 
@@ -18,17 +19,17 @@ interface Highlight {
 }
 
 /** Parallel timers running for several clients at once. */
-function TimersMock() {
+function TimersMock({ t }: { t: ReturnType<typeof useTranslations> }) {
   const rows = [
-    { client: "סטודיו אורן", time: "01:24", live: true },
-    { client: 'עו"ד לוי', time: "00:47", live: true },
-    { client: "חברת נוֹבָה", time: "02:08", live: false },
+    { client: t("highlights.timers.mock.client1"), time: "01:24", live: true },
+    { client: t("highlights.timers.mock.client2"), time: "00:47", live: true },
+    { client: t("highlights.timers.mock.client3"), time: "02:08", live: false },
   ];
   return (
     <div className="w-full rounded-[var(--radius-card)] border border-border bg-card p-5">
       <div className="mb-4 flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">טיימרים פעילים</span>
-        <span className="text-xs font-medium text-primary">3 רצים</span>
+        <span className="text-xs text-muted-foreground">{t("highlights.timers.mock.activeTimers")}</span>
+        <span className="text-xs font-medium text-primary">{t("highlights.timers.mock.running", { count: 3 })}</span>
       </div>
       <div className="space-y-3">
         {rows.map((row) => (
@@ -55,17 +56,17 @@ function TimersMock() {
 }
 
 /** Item-based billing: quantity × unit price → line total. */
-function ItemsMock() {
+function ItemsMock({ t }: { t: ReturnType<typeof useTranslations> }) {
   const items = [
-    { name: "רישיון שימוש", qty: "2", unit: "₪450", total: "₪900" },
-    { name: "תיקון תקלה", qty: "1", unit: "₪320", total: "₪320" },
-    { name: "ייעוץ נקודתי", qty: "3", unit: "₪200", total: "₪600" },
+    { name: t("highlights.items.mock.item1"), qty: "2", unit: "₪450", total: "₪900" },
+    { name: t("highlights.items.mock.item2"), qty: "1", unit: "₪320", total: "₪320" },
+    { name: t("highlights.items.mock.item3"), qty: "3", unit: "₪200", total: "₪600" },
   ];
   return (
     <div className="w-full rounded-[var(--radius-card)] border border-border bg-card p-5">
       <div className="mb-4 flex items-center justify-between text-xs text-muted-foreground">
-        <span>פריט</span>
-        <span>כמות × יחידה</span>
+        <span>{t("highlights.items.mock.itemLabel")}</span>
+        <span>{t("highlights.items.mock.qtyUnitLabel")}</span>
       </div>
       <div className="space-y-3">
         {items.map((item) => (
@@ -83,7 +84,7 @@ function ItemsMock() {
         ))}
       </div>
       <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
-        <span className="text-sm font-medium text-foreground">סך הכל</span>
+        <span className="text-sm font-medium text-foreground">{t("highlights.items.mock.total")}</span>
         <span className="font-mono text-base font-bold tabular-nums text-primary">
           ₪1,820
         </span>
@@ -93,11 +94,11 @@ function ItemsMock() {
 }
 
 /** Task → timer → settlement document → PDF flow. */
-function FlowMock() {
+function FlowMock({ t }: { t: ReturnType<typeof useTranslations> }) {
   const steps = [
-    { label: "משימה ל'בעבודה'", note: "הטיימר נדלק לבד" },
-    { label: "רשומת זמן נשמרת", note: "ללקוח הנכון" },
-    { label: "תעודת התחשבנות", note: "ייצוא PDF בעברית" },
+    { label: t("highlights.flow.mock.step1.label"), note: t("highlights.flow.mock.step1.note") },
+    { label: t("highlights.flow.mock.step2.label"), note: t("highlights.flow.mock.step2.note") },
+    { label: t("highlights.flow.mock.step3.label"), note: t("highlights.flow.mock.step3.note") },
   ];
   return (
     <div className="w-full rounded-[var(--radius-card)] border border-border bg-card p-5">
@@ -125,39 +126,39 @@ function FlowMock() {
   );
 }
 
-const highlights: Highlight[] = [
-  {
-    eyebrow: "טיימרים מקבילים",
-    title: "כמה טיימרים, בו-זמנית",
-    body: "עובד על שלושה לקוחות באותו בוקר? הפעל טיימר לכל אחד. כל אחד רץ בנפרד, נעצר בנפרד, ונכנס לרשומות הנכונות. בלי לחשב הכל בראש בסוף היום.",
-    visual: <TimersMock />,
-  },
-  {
-    eyebrow: "חיוב לפי פריטים",
-    title: "לא הכל נמדד בשעות",
-    body: "יש עבודות שמחויבות לפי פריט: רישיון, תיקון, ייעוץ נקודתי. מוסיפים כמות ומחיר ליחידה, שומרים בקטלוג של הלקוח, ומוציאים לחיוב בדיוק כמו שעה.",
-    visual: <ItemsMock />,
-  },
-  {
-    eyebrow: "ממשימה לחיוב",
-    title: "בלי להעתיק כלום ביד",
-    body: "גרור משימה בלוח הקנבן ל'בעבודה', והטיימר נדלק לבד. סיימת? הרשומה כבר מחכה. בסוף החודש מרכזים הכל לתעודת התחשבנות ומוציאים PDF בעברית.",
-    visual: <FlowMock />,
-  },
-];
-
 const icons = [Clock, Boxes, LayoutGrid];
 
 export function Highlights() {
+  const t = useTranslations("Landing");
+  const highlights: Highlight[] = [
+    {
+      eyebrow: t("highlights.timers.eyebrow"),
+      title: t("highlights.timers.title"),
+      body: t("highlights.timers.body"),
+      visual: <TimersMock t={t} />,
+    },
+    {
+      eyebrow: t("highlights.items.eyebrow"),
+      title: t("highlights.items.title"),
+      body: t("highlights.items.body"),
+      visual: <ItemsMock t={t} />,
+    },
+    {
+      eyebrow: t("highlights.flow.eyebrow"),
+      title: t("highlights.flow.title"),
+      body: t("highlights.flow.body"),
+      visual: <FlowMock t={t} />,
+    },
+  ];
   return (
     <section className="py-20 sm:py-28 bg-background">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-display font-bold text-foreground">
-            לא עוד טיימר. כלי חיוב שלם.
+            {t("highlights.heading")}
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            מהרגע שהתחלת לעבוד ועד שהחיוב מוכן
+            {t("highlights.subheading")}
           </p>
         </div>
 

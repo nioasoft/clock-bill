@@ -1,127 +1,151 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { LegalPage } from "@/components/legal-page";
 import { BRAND } from "@/lib/brand";
 import { Link } from "@/src/i18n/navigation";
 
-export const metadata: Metadata = {
-  title: `מדיניות פרטיות | ${BRAND.name}`,
-  description: `מדיניות הפרטיות של ${BRAND.name}: אילו נתונים אנו אוספים, כיצד אנו משתמשים בהם, ומהן זכויותיך.`,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("Legal.privacy");
+  return {
+    title: `${t("metaTitle")} | ${BRAND.name}`,
+    description: t("metaDescription", { brand: BRAND.name }),
+  };
+}
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  const t = await getTranslations("Legal.privacy");
+
   return (
-    <LegalPage title="מדיניות פרטיות" updated="3 ביוני 2026">
+    <LegalPage title={t("title")} updated={t("updated")}>
       <section>
-        <p>
-          מדיניות זו מסבירה אילו נתונים אישיים {BRAND.name} (להלן: &quot;אנו&quot; או
-          &quot;השירות&quot;) אוסף אודותיך, כיצד אנו משתמשים בהם ושומרים אותם, ומהן הזכויות העומדות
-          לרשותך. אנו פועלים כבעלי השליטה במאגר המידע ומעבדים את המידע בהתאם לחוק הגנת הפרטיות,
-          התשמ&quot;א-1981, לרבות תיקון מס&apos; 13 לחוק. השימוש בשירות מהווה הסכמה למדיניות זו.
-        </p>
+        <p>{t("intro", { brand: BRAND.name })}</p>
       </section>
 
       <section>
-        <h2>אילו נתונים אנו אוספים</h2>
+        <h2>{t("collect.heading")}</h2>
         <ul>
-          <li><strong>פרטי חשבון:</strong> כתובת אימייל ושם, המתקבלים בעת הרשמה או בהתחברות עם Google.</li>
-          <li><strong>נתוני שימוש שאתה מזין:</strong> לקוחות, פרויקטים, משימות, רשומות זמן, פריטים, תעריפים, מסמכי חיוב והערות שאתה יוצר בשירות.</li>
-          <li><strong>נתונים טכניים:</strong> עוגיית הפעלה (session) לצורך התחברות, וכן לוגים תפעוליים בסיסיים (כתובת IP, סוג דפדפן, זמני בקשה) המשמשים לאבטחה וליציבות.</li>
+          <li>
+            {t.rich("collect.item1", {
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
+          </li>
+          <li>
+            {t.rich("collect.item2", {
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
+          </li>
+          <li>
+            {t.rich("collect.item3", {
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
+          </li>
         </ul>
       </section>
 
       <section>
-        <h2>כיצד אנו משתמשים בנתונים</h2>
-        <p>אנו מעבדים את המידע למטרות הבאות בלבד:</p>
+        <h2>{t("use.heading")}</h2>
+        <p>{t("use.intro")}</p>
         <ul>
-          <li>כדי לספק את השירות, לשמור ולהציג את הלקוחות, הפרויקטים, השעות והחיובים שלך.</li>
-          <li>כדי לאמת אותך ולשמור על אבטחת החשבון.</li>
-          <li>כדי לתחזק, לנטר ולשפר את יציבות וביצועי המערכת.</li>
-          <li>כדי לתקשר איתך בעניינים הנוגעים לחשבונך בלבד.</li>
+          <li>{t("use.item1")}</li>
+          <li>{t("use.item2")}</li>
+          <li>{t("use.item3")}</li>
+          <li>{t("use.item4")}</li>
         </ul>
-        <p>איננו מוכרים את הנתונים שלך, ואיננו משתמשים בהם לפרסום או למסירה לצד שלישי לשם פרסום.</p>
+        <p>{t("use.note")}</p>
       </section>
 
       <section>
-        <h2>שיתוף עם ספקי שירות</h2>
-        <p>אנו נעזרים בספקי תשתית בלבד, המעבדים מידע מטעמנו לצורך הפעלת השירות:</p>
+        <h2>{t("providers.heading")}</h2>
+        <p>{t("providers.intro")}</p>
         <ul>
-          <li><strong>Neon / AWS:</strong> אחסון מסד הנתונים (אזור פרנקפורט, האיחוד האירופי).</li>
-          <li><strong>Vercel:</strong> אירוח האפליקציה.</li>
-          <li><strong>Google:</strong> התחברות אופציונלית באמצעות חשבון Google (OAuth).</li>
+          <li>
+            {t.rich("providers.item1", {
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
+          </li>
+          <li>
+            {t.rich("providers.item2", {
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
+          </li>
+          <li>
+            {t.rich("providers.item3", {
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
+          </li>
         </ul>
-        <p>ספקים אלה מעבדים נתונים מטעמנו בלבד ובכפוף להתחייבויות אבטחה ופרטיות. למעט ספקים אלה, איננו מוסרים את המידע לצדדים שלישיים, אלא אם נדרש לכך על פי דין או צו של רשות מוסמכת.</p>
+        <p>{t("providers.note")}</p>
       </section>
 
       <section>
-        <h2>אחסון והעברת מידע מחוץ לישראל</h2>
-        <p>
-          המידע מאוחסן ומעובד בשרתים הממוקמים באיחוד האירופי (פרנקפורט, גרמניה). בעצם השימוש בשירות
-          אתה מסכים להעברת המידע ולאחסונו מחוץ לגבולות ישראל, באזור המקיים רמת הגנה מקובלת על מידע.
-        </p>
+        <h2>{t("storage.heading")}</h2>
+        <p>{t("storage.body")}</p>
       </section>
 
       <section>
-        <h2>אבטחת מידע</h2>
-        <p>
-          התעבורה מוצפנת (HTTPS/TLS), והגישה לנתונים מבודדת ברמת מסד הנתונים כך שכל משתמש רואה אך ורק
-          את המידע שלו (Row-Level Security). אנו נוקטים באמצעים סבירים ומקובלים להגנה על המידע, אך אף
-          אמצעי אינו מספק אבטחה מוחלטת. אתה האחראי לשמירת סודיות פרטי ההתחברות שלך.
-        </p>
+        <h2>{t("security.heading")}</h2>
+        <p>{t("security.body")}</p>
       </section>
 
       <section>
-        <h2>אירוע אבטחה</h2>
-        <p>
-          במקרה של אירוע אבטחה מהותי הנוגע למידע שלך, נפעל בהתאם להוראות הדין החלות, לרבות יידוע ככל
-          שנדרש על פי דין.
-        </p>
+        <h2>{t("incident.heading")}</h2>
+        <p>{t("incident.body")}</p>
       </section>
 
       <section>
-        <h2>עוגיות</h2>
-        <p>
-          אנו עושים שימוש בעוגיות הכרחיות בלבד, בעיקר עוגיית ההפעלה ששומרת על ההתחברות שלך. איננו
-          משתמשים בעוגיות פרסום או מעקב צד שלישי, ואיננו מפעילים כלי ניתוח (analytics) המתחקים אחר
-          פעילותך.
-        </p>
+        <h2>{t("cookies.heading")}</h2>
+        <p>{t("cookies.body")}</p>
       </section>
 
       <section>
-        <h2>הזכויות שלך</h2>
-        <p>בהתאם לחוק הגנת הפרטיות, התשמ&quot;א-1981 ולתקנותיו, עומדות לרשותך הזכויות הבאות:</p>
+        <h2>{t("rights.heading")}</h2>
+        <p>{t("rights.intro")}</p>
         <ul>
-          <li><strong>עיון:</strong> לצפות בנתונים שאנו מחזיקים עליך.</li>
-          <li><strong>ייצוא:</strong> להוריד עותק של כל הנתונים שלך מתוך הגדרות החשבון.</li>
-          <li><strong>תיקון:</strong> לעדכן או לתקן את פרטיך בכל עת.</li>
-          <li><strong>מחיקה:</strong> למחוק את חשבונך ואת כל הנתונים שלו לצמיתות, מתוך הגדרות החשבון.</li>
+          <li>
+            {t.rich("rights.item1", {
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
+          </li>
+          <li>
+            {t.rich("rights.item2", {
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
+          </li>
+          <li>
+            {t.rich("rights.item3", {
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
+          </li>
+          <li>
+            {t.rich("rights.item4", {
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
+          </li>
         </ul>
-        <p>למימוש זכויות אלה ניתן להשתמש בכלים שבהגדרות החשבון או לפנות אלינו דרך טופס יצירת הקשר.</p>
+        <p>{t("rights.note")}</p>
       </section>
 
       <section>
-        <h2>שמירה ומחיקת נתונים</h2>
+        <h2>{t("retention.heading")}</h2>
+        <p>{t("retention.body")}</p>
+      </section>
+
+      <section>
+        <h2>{t("minors.heading")}</h2>
+        <p>{t("minors.body")}</p>
+      </section>
+
+      <section>
+        <h2>{t("changes.heading")}</h2>
+        <p>{t("changes.body")}</p>
+      </section>
+
+      <section>
+        <h2>{t("contact.heading")}</h2>
         <p>
-          אנו שומרים את הנתונים שלך כל עוד חשבונך פעיל. בעת מחיקת החשבון, כלל נתוני המשתמש שלך נמחקים
-          מהמערכת באופן בלתי הפיך, למעט לוגים תפעוליים המתאפסים מעצמם לאחר זמן קצר, ולמעט מידע שאנו
-          נדרשים לשמור על פי דין.
-        </p>
-      </section>
-
-      <section>
-        <h2>קטינים</h2>
-        <p>השירות אינו מיועד לשימוש על ידי קטינים מתחת לגיל 18, ואיננו אוספים ביודעין מידע אודותיהם.</p>
-      </section>
-
-      <section>
-        <h2>שינויים במדיניות</h2>
-        <p>אנו עשויים לעדכן מדיניות זו מעת לעת. במקרה של שינוי מהותי נעדכן את תאריך העדכון ונודיע במידת הצורך. המשך השימוש בשירות לאחר העדכון מהווה הסכמה למדיניות המעודכנת.</p>
-      </section>
-
-      <section>
-        <h2>יצירת קשר</h2>
-        <p>
-          בכל שאלה או בקשה הנוגעת לפרטיות, ניתן לפנות אלינו דרך{" "}
-          <Link href="/contact">טופס יצירת הקשר</Link>.
+          {t.rich("contact.body", {
+            contactLink: (chunks) => <Link href="/contact">{chunks}</Link>,
+          })}
         </p>
       </section>
     </LegalPage>

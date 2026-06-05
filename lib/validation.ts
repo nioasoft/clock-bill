@@ -18,7 +18,14 @@ export enum PasswordStrength {
 export interface PasswordStrengthResult {
   strength: PasswordStrength;
   score: number; // 0-100
+  /**
+   * @deprecated Legacy hard-coded Hebrew feedback. Prefer `feedbackCode` +
+   * the i18n resolver (`Validation.passwordStrength.<code>`). Kept for
+   * backward compatibility with the un-migrated strength indicator.
+   */
   feedback: string;
+  /** Stable code for the feedback message: WEAK | FAIR | GOOD | STRONG. */
+  feedbackCode: "WEAK" | "FAIR" | "GOOD" | "STRONG";
   checks: {
     length: boolean;
     lowercase: boolean;
@@ -61,18 +68,23 @@ export function calculatePasswordStrength(password: string): PasswordStrengthRes
   // Determine strength level and feedback
   let strength: PasswordStrength;
   let feedback: string;
+  let feedbackCode: PasswordStrengthResult["feedbackCode"];
 
   if (score < 40) {
     strength = PasswordStrength.WEAK;
+    feedbackCode = "WEAK";
     feedback = "סיסמה חלשה - כדאי לחזק אותה";
   } else if (score < 60) {
     strength = PasswordStrength.FAIR;
+    feedbackCode = "FAIR";
     feedback = "סיסמה בינונית - עדיין יכולה להיות חזקה יותר";
   } else if (score < 80) {
     strength = PasswordStrength.GOOD;
+    feedbackCode = "GOOD";
     feedback = "סיסמה טובה - כמעט שם";
   } else {
     strength = PasswordStrength.STRONG;
+    feedbackCode = "STRONG";
     feedback = "סיסמה חזקה מצוינת!";
   }
 
@@ -80,8 +92,27 @@ export function calculatePasswordStrength(password: string): PasswordStrengthRes
     strength,
     score,
     feedback,
+    feedbackCode,
     checks,
   };
+}
+
+/**
+ * Stable, locale-independent description of a validation failure.
+ *
+ * `code` maps 1:1 to a key under the `Validation` i18n namespace
+ * (e.g. `Validation.REQUIRED`). `params` carries ICU interpolation values
+ * (e.g. `{ min }`, `{ max }`, `{ field }`). Resolve to a localized string with
+ * `resolveValidationError` / `useValidationMessage` from `lib/validation-messages.ts`.
+ *
+ * Field names are themselves passed as codes under `Validation.fields.*` and are
+ * resolved by the same helper, so callers never embed raw Hebrew/English strings.
+ */
+export type ValidationParams = Record<string, string | number>;
+
+export interface ValidationError {
+  code: string;
+  params?: ValidationParams;
 }
 
 export interface ValidationRule {
@@ -90,12 +121,37 @@ export interface ValidationRule {
   minLength?: number;
   maxLength?: number;
   pattern?: RegExp;
-  custom?: (value: string) => string | null;
+  /**
+   * Optional field code resolved under `Validation.fields.*` for messages that
+   * embed the field name (currently the `REQUIRED_NAMED` code).
+   */
+  fieldCode?: string;
+  custom?: (value: string) => ValidationError | null;
 }
 
 export interface ValidationResult {
   isValid: boolean;
+  /**
+   * Stable error descriptor (code + params), or `undefined` when valid.
+   * Resolve via `lib/validation-messages.ts`. The legacy Hebrew `error` string
+   * is kept alongside for callers not yet migrated to the i18n path.
+   */
+  code: ValidationError | undefined;
+  /**
+   * @deprecated Legacy hard-coded Hebrew message. Prefer `code` + the i18n
+   * resolver. Kept for backward compatibility with un-migrated call sites.
+   */
   error: string | undefined;
+}
+
+/** Helper: build a valid result. */
+function ok(): ValidationResult {
+  return { isValid: true, code: undefined, error: undefined };
+}
+
+/** Helper: build a failed result from a code + legacy Hebrew fallback string. */
+function fail(code: string, error: string, params?: ValidationParams): ValidationResult {
+  return { isValid: false, code: { code, params }, error };
 }
 
 /**
@@ -113,57 +169,61 @@ const PHONE_PATTERN = /^(\+972|0)?[2-9]\d{7,8}$/;
  * Validate a single field
  */
 export function validateField(rule: ValidationRule): ValidationResult {
-  const { value, required, minLength, maxLength, pattern, custom } = rule;
+  const { value, required, minLength, maxLength, pattern, fieldCode, custom } = rule;
 
   // Check required
   if (required && (!value || value.trim() === "")) {
-    return {
-      isValid: false,
-      error: "שדה חובה",
-    };
+    return fieldCode
+      ? fail("REQUIRED_NAMED", "שדה חובה", { field: fieldCode })
+      : fail("REQUIRED", "שדה חובה");
   }
 
   // Skip other validations if field is empty and not required
   if (!value || value.trim() === "") {
-    return { isValid: true, error: undefined };
+    return ok();
   }
 
   // Check minimum length
   if (minLength && value.length < minLength) {
-    return {
-      isValid: false,
-      error: `חייב להכיל לפחות ${minLength} תווים`,
-    };
+    return fail("MIN_LENGTH", `חייב להכיל לפחות ${minLength} תווים`, { min: minLength });
   }
 
   // Check maximum length
   if (maxLength && value.length > maxLength) {
-    return {
-      isValid: false,
-      error: `חייב להכיל לכל היותר ${maxLength} תווים`,
-    };
+    return fail("MAX_LENGTH", `חייב להכיל לכל היותר ${maxLength} תווים`, { max: maxLength });
   }
 
   // Check pattern
   if (pattern && !pattern.test(value)) {
-    return {
-      isValid: false,
-      error: "פורמט לא תקין",
-    };
+    return fail("INVALID_FORMAT", "פורמט לא תקין");
   }
 
   // Custom validation
   if (custom) {
     const customError = custom(value);
     if (customError) {
-      return {
-        isValid: false,
-        error: customError,
-      };
+      // Re-derive a legacy Hebrew fallback for the custom code so the
+      // deprecated `error` field stays populated for un-migrated callers.
+      return { isValid: false, code: customError, error: legacyHebrew(customError) };
     }
   }
 
-  return { isValid: true, error: undefined };
+  return ok();
+}
+
+/**
+ * Legacy Hebrew fallback for a handful of custom codes, so the deprecated
+ * `error` string stays meaningful for call sites not yet on the i18n path.
+ */
+function legacyHebrew(err: ValidationError): string {
+  switch (err.code) {
+    case "INVALID_EMAIL":
+      return "כתובת אימייל לא תקינה";
+    case "PASSWORD_TOO_SHORT":
+      return "הסיסמה חייבת להכיל לפחות 8 תווים";
+    default:
+      return "פורמט לא תקין";
+  }
 }
 
 /**
@@ -177,7 +237,7 @@ export function validateEmail(value: string, required = true): ValidationResult 
     required,
     custom: (v) => {
       if (!EMAIL_PATTERN.test(v)) {
-        return "כתובת אימייל לא תקינה";
+        return { code: "INVALID_EMAIL" };
       }
       return null;
     },
@@ -189,22 +249,17 @@ export function validateEmail(value: string, required = true): ValidationResult 
  */
 export function validatePhone(value: string, required = false): ValidationResult {
   if (!value || value.trim() === "") {
-    return required
-      ? { isValid: false, error: "שדה חובה" }
-      : { isValid: true, error: undefined };
+    return required ? fail("REQUIRED", "שדה חובה") : ok();
   }
 
   // Remove spaces and dashes for validation
   const cleanedPhone = value.replace(/[\s-]/g, "");
 
   if (!PHONE_PATTERN.test(cleanedPhone)) {
-    return {
-      isValid: false,
-      error: "מספר טלפון לא תקין",
-    };
+    return fail("INVALID_PHONE", "מספר טלפון לא תקין");
   }
 
-  return { isValid: true, error: undefined };
+  return ok();
 }
 
 /**
@@ -217,7 +272,7 @@ export function validatePassword(value: string): ValidationResult {
     minLength: 8,
     custom: (v) => {
       if (v.length < 8) {
-        return "הסיסמה חייבת להכיל לפחות 8 תווים";
+        return { code: "PASSWORD_TOO_SHORT" };
       }
       return null;
     },
@@ -230,20 +285,14 @@ export function validatePassword(value: string): ValidationResult {
  */
 export function validatePasswordConfirm(password: string, confirmPassword: string): ValidationResult {
   if (!confirmPassword || confirmPassword.trim() === "") {
-    return {
-      isValid: false,
-      error: "שדה חובה",
-    };
+    return fail("REQUIRED", "שדה חובה");
   }
 
   if (password !== confirmPassword) {
-    return {
-      isValid: false,
-      error: "הסיסמאות אינן תואמות",
-    };
+    return fail("PASSWORD_MISMATCH", "הסיסמאות אינן תואמות");
   }
 
-  return { isValid: true, error: undefined };
+  return ok();
 }
 
 /**
@@ -251,42 +300,43 @@ export function validatePasswordConfirm(password: string, confirmPassword: strin
  */
 export function validateNumber(value: string, required = false, min = 0): ValidationResult {
   if (!value || value.trim() === "") {
-    return required
-      ? { isValid: false, error: "שדה חובה" }
-      : { isValid: true, error: undefined };
+    return required ? fail("REQUIRED", "שדה חובה") : ok();
   }
 
   const num = parseFloat(value);
 
   if (isNaN(num)) {
-    return {
-      isValid: false,
-      error: "חייב להיות מספר",
-    };
+    return fail("NOT_A_NUMBER", "חייב להיות מספר");
   }
 
   if (num < min) {
-    return {
-      isValid: false,
-      error: `חייב להיות גדול או שווה ל-${min}`,
-    };
+    return fail("MIN_VALUE", `חייב להיות גדול או שווה ל-${min}`, { min });
   }
 
-  return { isValid: true, error: undefined };
+  return ok();
 }
 
 /**
  * Validate required text field
  */
-export function validateRequired(value: string, fieldName?: string): ValidationResult {
+/**
+ * Validate required text field.
+ *
+ * @param value      The field value.
+ * @param fieldCode  Optional field code resolved under `Validation.fields.*`
+ *                   (e.g. "project", "description"). When provided, the
+ *                   `REQUIRED_NAMED` code is used so the message embeds the
+ *                   localized field name. The deprecated `error` string keeps a
+ *                   raw fallback (the code itself, not a localized name).
+ */
+export function validateRequired(value: string, fieldCode?: string): ValidationResult {
   if (!value || value.trim() === "") {
-    return {
-      isValid: false,
-      error: fieldName ? `${fieldName} הוא שדה חובה` : "שדה חובה",
-    };
+    return fieldCode
+      ? fail("REQUIRED_NAMED", `${fieldCode} הוא שדה חובה`, { field: fieldCode })
+      : fail("REQUIRED", "שדה חובה");
   }
 
-  return { isValid: true, error: undefined };
+  return ok();
 }
 
 /**
@@ -294,19 +344,14 @@ export function validateRequired(value: string, fieldName?: string): ValidationR
  */
 export function validateUrl(value: string, required = false): ValidationResult {
   if (!value || value.trim() === "") {
-    return required
-      ? { isValid: false, error: "שדה חובה" }
-      : { isValid: true, error: undefined };
+    return required ? fail("REQUIRED", "שדה חובה") : ok();
   }
 
   try {
     new URL(value.startsWith("http") ? value : `https://${value}`);
-    return { isValid: true, error: undefined };
+    return ok();
   } catch {
-    return {
-      isValid: false,
-      error: "כתובת אתר לא תקינה",
-    };
+    return fail("INVALID_URL", "כתובת אתר לא תקינה");
   }
 }
 
@@ -317,23 +362,29 @@ export interface FormErrors {
   [key: string]: string | undefined;
 }
 
+export interface FormErrorCodes {
+  [key: string]: ValidationError | undefined;
+}
+
 export function validateForm(
   values: Record<string, string>,
   validations: Record<string, (value: string) => ValidationResult>
-): { isValid: boolean; errors: FormErrors } {
+): { isValid: boolean; errors: FormErrors; codes: FormErrorCodes } {
   const errors: FormErrors = {};
+  const codes: FormErrorCodes = {};
   let isValid = true;
 
   for (const [field, validationFn] of Object.entries(validations)) {
     const result = validationFn(values[field] || "");
     errors[field] = result.error;
+    codes[field] = result.code;
 
     if (!result.isValid) {
       isValid = false;
     }
   }
 
-  return { isValid, errors };
+  return { isValid, errors, codes };
 }
 
 /**
@@ -341,27 +392,19 @@ export function validateForm(
  */
 export function validateDate(value: string, required = false): ValidationResult {
   if (!value || value.trim() === "") {
-    return required
-      ? { isValid: false, error: "שדה חובה" }
-      : { isValid: true, error: undefined };
+    return required ? fail("REQUIRED", "שדה חובה") : ok();
   }
 
   // Check if it matches YYYY-MM-DD format
   const datePattern = /^\d{4}-\d{2}-\d{2}$/;
   if (!datePattern.test(value)) {
-    return {
-      isValid: false,
-      error: "פורמט תאריך לא תקין (YYYY-MM-DD)",
-    };
+    return fail("INVALID_DATE_FORMAT", "פורמט תאריך לא תקין (YYYY-MM-DD)");
   }
 
   // Check if it's a valid date
   const date = new Date(value);
   if (isNaN(date.getTime())) {
-    return {
-      isValid: false,
-      error: "תאריך לא תקין",
-    };
+    return fail("INVALID_DATE", "תאריך לא תקין");
   }
 
   // Additional validation: check if the date components match
@@ -374,13 +417,10 @@ export function validateDate(value: string, required = false): ValidationResult 
     constructedDate.getMonth() !== month - 1 ||
     constructedDate.getDate() !== day
   ) {
-    return {
-      isValid: false,
-      error: "תאריך לא תקין",
-    };
+    return fail("INVALID_DATE", "תאריך לא תקין");
   }
 
-  return { isValid: true, error: undefined };
+  return ok();
 }
 
 /**
@@ -389,7 +429,7 @@ export function validateDate(value: string, required = false): ValidationResult 
 export function validateDateRange(startDate: string, endDate: string, required = false): ValidationResult {
   // If not required and either field is empty, skip validation
   if (!required && (!startDate || !endDate)) {
-    return { isValid: true, error: undefined };
+    return ok();
   }
 
   // Validate individual dates first
@@ -409,14 +449,11 @@ export function validateDateRange(startDate: string, endDate: string, required =
     const end = new Date(endDate);
 
     if (start > end) {
-      return {
-        isValid: false,
-        error: "תאריך התחלה חייב להיות לפני תאריך הסיום",
-      };
+      return fail("DATE_RANGE_ORDER", "תאריך התחלה חייב להיות לפני תאריך הסיום");
     }
   }
 
-  return { isValid: true, error: undefined };
+  return ok();
 }
 
 /**
@@ -424,9 +461,7 @@ export function validateDateRange(startDate: string, endDate: string, required =
  */
 export function validatePastDate(value: string, required = false): ValidationResult {
   if (!value || value.trim() === "") {
-    return required
-      ? { isValid: false, error: "שדה חובה" }
-      : { isValid: true, error: undefined };
+    return required ? fail("REQUIRED", "שדה חובה") : ok();
   }
 
   // First validate it's a proper date
@@ -441,13 +476,10 @@ export function validatePastDate(value: string, required = false): ValidationRes
   today.setHours(0, 0, 0, 0); // Reset time part for accurate comparison
 
   if (inputDate > today) {
-    return {
-      isValid: false,
-      error: "תאריך לא יכול להיות בעתיד",
-    };
+    return fail("DATE_NOT_FUTURE", "תאריך לא יכול להיות בעתיד");
   }
 
-  return { isValid: true, error: undefined };
+  return ok();
 }
 
 /**
@@ -455,9 +487,7 @@ export function validatePastDate(value: string, required = false): ValidationRes
  */
 export function validateFutureDate(value: string, required = false): ValidationResult {
   if (!value || value.trim() === "") {
-    return required
-      ? { isValid: false, error: "שדה חובה" }
-      : { isValid: true, error: undefined };
+    return required ? fail("REQUIRED", "שדה חובה") : ok();
   }
 
   // First validate it's a proper date
@@ -472,11 +502,8 @@ export function validateFutureDate(value: string, required = false): ValidationR
   today.setHours(0, 0, 0, 0); // Reset time part for accurate comparison
 
   if (inputDate < today) {
-    return {
-      isValid: false,
-      error: "תאריך לא יכול להיות בעבר",
-    };
+    return fail("DATE_NOT_PAST", "תאריך לא יכול להיות בעבר");
   }
 
-  return { isValid: true, error: undefined };
+  return ok();
 }

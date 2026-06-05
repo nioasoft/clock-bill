@@ -1,7 +1,9 @@
 import { Link } from "@/src/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { GrainOverlay, RadialLines, HourglassSVG } from "@/components/ui/thematic-elements";
 
 export function CTASection() {
+  const t = useTranslations("Landing");
   return (
     <section className="relative py-20 sm:py-28 overflow-hidden bg-gradient-to-br from-primary to-primary/85">
       <GrainOverlay />
@@ -14,10 +16,10 @@ export function CTASection() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
         <h2 className="text-3xl sm:text-4xl font-display font-bold text-primary-foreground">
-          מוכן לנהל את הזמן שלך בצורה חכמה?
+          {t("cta.heading")}
         </h2>
         <p className="mt-4 text-lg text-primary-foreground/80 max-w-xl mx-auto">
-          הצטרפו ל-500+ פרילנסרים שכבר משתמשים במוניט
+          {t("cta.subheading")}
         </p>
 
         {/* Social proof avatars */}
@@ -32,7 +34,7 @@ export function CTASection() {
               </div>
             ))}
           </div>
-          <span className="text-sm text-primary-foreground/70 ms-3">הצטרפו ל-500+ פרילנסרים</span>
+          <span className="text-sm text-primary-foreground/70 ms-3">{t("cta.socialProof")}</span>
         </div>
 
         <div className="mt-10">
@@ -40,7 +42,7 @@ export function CTASection() {
             href="/register"
             className="inline-flex items-center justify-center rounded-full bg-background text-foreground px-10 py-4 text-base font-bold hover:bg-background/90 hover:scale-105 transition-all"
           >
-            צור חשבון בחינם
+            {t("cta.button")}
           </Link>
         </div>
       </div>

@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FolderOpen } from "lucide-react";
 import { validateRequired, validateDateRange } from "@/lib/validation";
+import { useValidationMessage } from "@/lib/validation-messages";
 import { fieldClass } from "@/lib/form-styles";
 import { useTranslations } from "next-intl";
 
@@ -46,6 +47,7 @@ export default function ProjectsPage() {
 function ProjectsPageContent() {
   const t = useTranslations("Projects");
   const tRounding = useTranslations("Rounding");
+  const resolveValidation = useValidationMessage();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [clients, setClients] = useState<Client[]>([]);
@@ -145,17 +147,17 @@ function ProjectsPageContent() {
     }
 
     // Name is required
-    const nameValidation = validateRequired(formData.name, "שם הפרויקט");
+    const nameValidation = validateRequired(formData.name, "projectName");
     if (!nameValidation.isValid) {
-      errors.name = nameValidation.error;
+      errors.name = resolveValidation(nameValidation.code);
     }
 
     // Validate date fields (optional but must be valid if provided)
     if (formData.startDate || formData.endDate) {
       const dateRangeValidation = validateDateRange(formData.startDate, formData.endDate, false);
       if (!dateRangeValidation.isValid) {
-        errors.startDate = dateRangeValidation.error;
-        errors.endDate = dateRangeValidation.error;
+        errors.startDate = resolveValidation(dateRangeValidation.code);
+        errors.endDate = resolveValidation(dateRangeValidation.code);
       }
     }
 
@@ -172,8 +174,8 @@ function ProjectsPageContent() {
           false
         );
         if (!fixedDateValidation.isValid) {
-          errors.fixedMonthlyStartDate = fixedDateValidation.error;
-          errors.fixedMonthlyEndDate = fixedDateValidation.error;
+          errors.fixedMonthlyStartDate = resolveValidation(fixedDateValidation.code);
+          errors.fixedMonthlyEndDate = resolveValidation(fixedDateValidation.code);
         }
       }
     }
