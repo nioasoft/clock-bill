@@ -27,6 +27,103 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
     const includeFixedCharges = searchParams.get("includeFixedCharges") !== "0";
+    const locale = searchParams.get("locale") === "en" ? "en" : "he";
+
+    // Inline bilingual labels (server-side, intentionally NOT in the message catalog).
+    const L =
+      locale === "en"
+        ? {
+            creator: "Monit - Time Tracking System",
+            sheetEntries: "Time Entries",
+            sheetFixed: "Fixed Charges",
+            sheetSummary: "Summary",
+            sheetByClient: "Summary by Client",
+            sheetByLabel: "Breakdown by Label",
+            colDate: "Date",
+            colClient: "Client",
+            colProject: "Project",
+            colKind: "Type",
+            colRateLabel: "Label",
+            colDescription: "Description",
+            colDurationMinutes: "Duration (min)",
+            colDurationHours: "Duration (hours)",
+            colQuantity: "Quantity",
+            colRate: "Rate",
+            colCurrency: "Currency",
+            colAmount: "Amount",
+            colIsBillable: "Billable",
+            colTags: "Tags",
+            colNotes: "Notes",
+            colMonth: "Month",
+            colSummaryDescription: "Description",
+            colSummaryValue: "Value",
+            colTotalHours: "Total Hours",
+            colTotalEntries: "Total Entries",
+            colMeasure: "Hours / Quantity",
+            kindItem: "Item",
+            kindHourly: "Hours",
+            yes: "Yes",
+            no: "No",
+            fixedMonthlyType: "Fixed Monthly Charge",
+            totalEntries: "Total Entries",
+            totalHours: "Total Hours",
+            totalMinutes: "Total Minutes",
+            totalHoursByCurrency: (c: string) => `Total Hours (${c})`,
+            totalFixedByCurrency: (c: string) => `Total Fixed Charges (${c})`,
+            grandTotalByCurrency: (c: string) => `Grand Total (${c})`,
+            reportPeriod: "Report Period",
+            fromDate: "From Date",
+            toDate: "To Date",
+            units: "units",
+            emptyLabel: "—",
+            readingOrder: "ltr" as const,
+          }
+        : {
+            creator: "מוניט - מערכת למעקב שעות",
+            sheetEntries: "רשומות זמן",
+            sheetFixed: "חיובים קבועים",
+            sheetSummary: "סיכום",
+            sheetByClient: "סיכום לפי לקוח",
+            sheetByLabel: "פירוט לפי תווית",
+            colDate: "תאריך",
+            colClient: "לקוח",
+            colProject: "פרויקט",
+            colKind: "סוג",
+            colRateLabel: "תווית",
+            colDescription: "תיאור",
+            colDurationMinutes: "משך (דקות)",
+            colDurationHours: "משך (שעות)",
+            colQuantity: "כמות",
+            colRate: "תעריף",
+            colCurrency: "מטבע",
+            colAmount: "סכום",
+            colIsBillable: "ניתן לחיוב",
+            colTags: "תגיות",
+            colNotes: "הערות",
+            colMonth: "חודש",
+            colSummaryDescription: "תיאור",
+            colSummaryValue: "ערך",
+            colTotalHours: "סה״כ שעות",
+            colTotalEntries: "סה״כ רשומות",
+            colMeasure: "שעות / כמות",
+            kindItem: "פריט",
+            kindHourly: "שעות",
+            yes: "כן",
+            no: "לא",
+            fixedMonthlyType: "חיוב קבוע חודשי",
+            totalEntries: "סה״כ רשומות",
+            totalHours: "סה״כ שעות",
+            totalMinutes: "סה״כ דקות",
+            totalHoursByCurrency: (c: string) => `סה״כ שעות (${c})`,
+            totalFixedByCurrency: (c: string) => `סה״כ חיובים קבועים (${c})`,
+            grandTotalByCurrency: (c: string) => `סה״כ כולל (${c})`,
+            reportPeriod: "תקופת הדוח",
+            fromDate: "מתאריך",
+            toDate: "עד תאריך",
+            units: "יח׳",
+            emptyLabel: "—",
+            readingOrder: "rtl" as const,
+          };
 
     let queryText = `
       SELECT
@@ -116,26 +213,26 @@ export async function GET(request: NextRequest) {
     }>(queryText, queryParams);
 
     const workbook = new ExcelJS.Workbook();
-    workbook.creator = "מוניט - מערכת למעקב שעות";
+    workbook.creator = L.creator;
     workbook.created = new Date();
 
-    const worksheet = workbook.addWorksheet("רשומות זמן");
+    const worksheet = workbook.addWorksheet(L.sheetEntries);
     worksheet.columns = [
-      { header: "תאריך", key: "date", width: 15 },
-      { header: "לקוח", key: "clientName", width: 20 },
-      { header: "פרויקט", key: "projectName", width: 20 },
-      { header: "סוג", key: "kind", width: 10 },
-      { header: "תווית", key: "rateLabel", width: 18 },
-      { header: "תיאור", key: "description", width: 40 },
-      { header: "משך (דקות)", key: "durationMinutes", width: 15 },
-      { header: "משך (שעות)", key: "durationHours", width: 15 },
-      { header: "כמות", key: "quantity", width: 10 },
-      { header: "תעריף", key: "hourlyRate", width: 15 },
-      { header: "מטבע", key: "currency", width: 10 },
-      { header: "סכום", key: "amount", width: 15 },
-      { header: "ניתן לחיוב", key: "isBillable", width: 12 },
-      { header: "תגיות", key: "tags", width: 20 },
-      { header: "הערות", key: "notes", width: 30 },
+      { header: L.colDate, key: "date", width: 15 },
+      { header: L.colClient, key: "clientName", width: 20 },
+      { header: L.colProject, key: "projectName", width: 20 },
+      { header: L.colKind, key: "kind", width: 10 },
+      { header: L.colRateLabel, key: "rateLabel", width: 18 },
+      { header: L.colDescription, key: "description", width: 40 },
+      { header: L.colDurationMinutes, key: "durationMinutes", width: 15 },
+      { header: L.colDurationHours, key: "durationHours", width: 15 },
+      { header: L.colQuantity, key: "quantity", width: 10 },
+      { header: L.colRate, key: "hourlyRate", width: 15 },
+      { header: L.colCurrency, key: "currency", width: 10 },
+      { header: L.colAmount, key: "amount", width: 15 },
+      { header: L.colIsBillable, key: "isBillable", width: 12 },
+      { header: L.colTags, key: "tags", width: 20 },
+      { header: L.colNotes, key: "notes", width: 30 },
     ];
 
     const headerRow = worksheet.getRow(1);
@@ -145,7 +242,7 @@ export async function GET(request: NextRequest) {
       pattern: "solid",
       fgColor: { argb: "FFE85D04" },
     };
-    headerRow.alignment = { vertical: "middle", horizontal: "center", readingOrder: "rtl" };
+    headerRow.alignment = { vertical: "middle", horizontal: "center", readingOrder: L.readingOrder };
     headerRow.height = 25;
 
     let totalMinutes = 0;
@@ -171,7 +268,7 @@ export async function GET(request: NextRequest) {
         date: entry.date,
         clientName: entry.client_name,
         projectName: entry.project_name,
-        kind: isItem ? "פריט" : "שעות",
+        kind: isItem ? L.kindItem : L.kindHourly,
         rateLabel: entry.rate_label || "",
         description: entry.description,
         durationMinutes: isItem ? "" : durationMinutes,
@@ -180,14 +277,14 @@ export async function GET(request: NextRequest) {
         hourlyRate: effectiveRate || "",
         currency,
         amount: amount > 0 ? amount.toFixed(2) : "",
-        isBillable: entry.is_billable ? "כן" : "לא",
+        isBillable: entry.is_billable ? L.yes : L.no,
         tags: Array.isArray(entry.tags) ? entry.tags.join(", ") : "",
         notes: entry.notes || "",
       });
     });
 
     worksheet.eachRow((row: ExcelJS.Row) => {
-      row.alignment = { readingOrder: "rtl" };
+      row.alignment = { readingOrder: L.readingOrder };
     });
 
     let fixedCharges: ReturnType<typeof calculateFixedMonthlyCharges> = [];
@@ -260,14 +357,14 @@ export async function GET(request: NextRequest) {
     }
 
     if (fixedCharges.length > 0) {
-      const fixedSheet = workbook.addWorksheet("חיובים קבועים");
+      const fixedSheet = workbook.addWorksheet(L.sheetFixed);
       fixedSheet.columns = [
-        { header: "חודש", key: "month", width: 15 },
-        { header: "לקוח", key: "clientName", width: 20 },
-        { header: "פרויקט", key: "projectName", width: 20 },
-        { header: "סוג", key: "type", width: 18 },
-        { header: "מטבע", key: "currency", width: 10 },
-        { header: "סכום", key: "amount", width: 15 },
+        { header: L.colMonth, key: "month", width: 15 },
+        { header: L.colClient, key: "clientName", width: 20 },
+        { header: L.colProject, key: "projectName", width: 20 },
+        { header: L.colKind, key: "type", width: 18 },
+        { header: L.colCurrency, key: "currency", width: 10 },
+        { header: L.colAmount, key: "amount", width: 15 },
       ];
 
       const fixedHeader = fixedSheet.getRow(1);
@@ -277,7 +374,7 @@ export async function GET(request: NextRequest) {
         pattern: "solid",
         fgColor: { argb: "FF2563EB" },
       };
-      fixedHeader.alignment = { vertical: "middle", horizontal: "center", readingOrder: "rtl" };
+      fixedHeader.alignment = { vertical: "middle", horizontal: "center", readingOrder: L.readingOrder };
       fixedHeader.height = 25;
 
       fixedCharges.forEach((line) => {
@@ -285,21 +382,21 @@ export async function GET(request: NextRequest) {
           month: line.month,
           clientName: line.clientName,
           projectName: line.projectName,
-          type: "חיוב קבוע חודשי",
+          type: L.fixedMonthlyType,
           currency: line.currency,
           amount: line.amount.toFixed(2),
         });
       });
 
       fixedSheet.eachRow((row: ExcelJS.Row) => {
-        row.alignment = { readingOrder: "rtl" };
+        row.alignment = { readingOrder: L.readingOrder };
       });
     }
 
-    const summarySheet = workbook.addWorksheet("סיכום");
+    const summarySheet = workbook.addWorksheet(L.sheetSummary);
     summarySheet.columns = [
-      { header: "תיאור", key: "description", width: 30 },
-      { header: "ערך", key: "value", width: 20 },
+      { header: L.colSummaryDescription, key: "description", width: 30 },
+      { header: L.colSummaryValue, key: "value", width: 20 },
     ];
 
     const summaryHeaderRow = summarySheet.getRow(1);
@@ -309,23 +406,23 @@ export async function GET(request: NextRequest) {
       pattern: "solid",
       fgColor: { argb: "FF4A5568" },
     };
-    summaryHeaderRow.alignment = { vertical: "middle", horizontal: "center", readingOrder: "rtl" };
+    summaryHeaderRow.alignment = { vertical: "middle", horizontal: "center", readingOrder: L.readingOrder };
     summaryHeaderRow.height = 25;
 
-    summarySheet.addRow({ description: "סה״כ רשומות", value: result.rows.length });
-    summarySheet.addRow({ description: "סה״כ שעות", value: (totalMinutes / 60).toFixed(2) });
-    summarySheet.addRow({ description: "סה״כ דקות", value: totalMinutes });
+    summarySheet.addRow({ description: L.totalEntries, value: result.rows.length });
+    summarySheet.addRow({ description: L.totalHours, value: (totalMinutes / 60).toFixed(2) });
+    summarySheet.addRow({ description: L.totalMinutes, value: totalMinutes });
 
     Object.entries(timeAmounts).forEach(([currency, amount]) => {
       summarySheet.addRow({
-        description: `סה״כ שעות (${currency})`,
+        description: L.totalHoursByCurrency(currency),
         value: amount.toFixed(2),
       });
     });
 
     Object.entries(fixedAmounts).forEach(([currency, amount]) => {
       summarySheet.addRow({
-        description: `סה״כ חיובים קבועים (${currency})`,
+        description: L.totalFixedByCurrency(currency),
         value: amount.toFixed(2),
       });
     });
@@ -334,31 +431,31 @@ export async function GET(request: NextRequest) {
     allCurrencies.forEach((currency) => {
       const total = (timeAmounts[currency] || 0) + (fixedAmounts[currency] || 0);
       summarySheet.addRow({
-        description: `סה״כ כולל (${currency})`,
+        description: L.grandTotalByCurrency(currency),
         value: total.toFixed(2),
       });
     });
 
     if (startDate || endDate) {
       summarySheet.addRow({});
-      summarySheet.addRow({ description: "תקופת הדוח", value: "" });
+      summarySheet.addRow({ description: L.reportPeriod, value: "" });
       if (startDate) {
-        summarySheet.addRow({ description: "מתאריך", value: startDate });
+        summarySheet.addRow({ description: L.fromDate, value: startDate });
       }
       if (endDate) {
-        summarySheet.addRow({ description: "עד תאריך", value: endDate });
+        summarySheet.addRow({ description: L.toDate, value: endDate });
       }
     }
 
     summarySheet.eachRow((row: ExcelJS.Row) => {
-      row.alignment = { readingOrder: "rtl" };
+      row.alignment = { readingOrder: L.readingOrder };
     });
 
-    const clientSummarySheet = workbook.addWorksheet("סיכום לפי לקוח");
+    const clientSummarySheet = workbook.addWorksheet(L.sheetByClient);
     clientSummarySheet.columns = [
-      { header: "לקוח", key: "clientName", width: 30 },
-      { header: "סה״כ שעות", key: "totalHours", width: 15 },
-      { header: "סה״כ רשומות", key: "totalEntries", width: 15 },
+      { header: L.colClient, key: "clientName", width: 30 },
+      { header: L.colTotalHours, key: "totalHours", width: 15 },
+      { header: L.colTotalEntries, key: "totalEntries", width: 15 },
     ];
 
     const clientHeaderRow = clientSummarySheet.getRow(1);
@@ -368,7 +465,7 @@ export async function GET(request: NextRequest) {
       pattern: "solid",
       fgColor: { argb: "FF059669" },
     };
-    clientHeaderRow.alignment = { vertical: "middle", horizontal: "center", readingOrder: "rtl" };
+    clientHeaderRow.alignment = { vertical: "middle", horizontal: "center", readingOrder: L.readingOrder };
     clientHeaderRow.height = 25;
 
     const byClient: Record<string, { totalMinutes: number; entries: number }> = {};
@@ -393,7 +490,7 @@ export async function GET(request: NextRequest) {
     });
 
     clientSummarySheet.eachRow((row: ExcelJS.Row) => {
-      row.alignment = { readingOrder: "rtl" };
+      row.alignment = { readingOrder: L.readingOrder };
     });
 
     // Breakdown by rate/item label ("פירוט לפי תווית").
@@ -403,7 +500,7 @@ export async function GET(request: NextRequest) {
     }> = {};
     result.rows.forEach((entry) => {
       const isItem = entry.billing_kind === "item";
-      const label = entry.rate_label || "—";
+      const label = entry.rate_label || L.emptyLabel;
       const currency = entry.currency || "ILS";
       const key = `${label}|${currency}`;
       const effectiveRate = entry.rate ?? entry.hourly_rate;
@@ -419,30 +516,30 @@ export async function GET(request: NextRequest) {
     });
 
     if (Object.keys(byLabel).length > 0) {
-      const labelSheet = workbook.addWorksheet("פירוט לפי תווית");
+      const labelSheet = workbook.addWorksheet(L.sheetByLabel);
       labelSheet.columns = [
-        { header: "תווית", key: "label", width: 25 },
-        { header: "סוג", key: "kind", width: 10 },
-        { header: "שעות / כמות", key: "measure", width: 15 },
-        { header: "מטבע", key: "currency", width: 10 },
-        { header: "סכום", key: "amount", width: 15 },
+        { header: L.colRateLabel, key: "label", width: 25 },
+        { header: L.colKind, key: "kind", width: 10 },
+        { header: L.colMeasure, key: "measure", width: 15 },
+        { header: L.colCurrency, key: "currency", width: 10 },
+        { header: L.colAmount, key: "amount", width: 15 },
       ];
       const labelHeader = labelSheet.getRow(1);
       labelHeader.font = { bold: true, size: 12 };
       labelHeader.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE85D04" } };
-      labelHeader.alignment = { vertical: "middle", horizontal: "center", readingOrder: "rtl" };
+      labelHeader.alignment = { vertical: "middle", horizontal: "center", readingOrder: L.readingOrder };
       labelHeader.height = 25;
       Object.values(byLabel).forEach((l) => {
         labelSheet.addRow({
           label: l.label,
-          kind: l.kind === "item" ? "פריט" : "שעות",
-          measure: l.kind === "item" ? `${l.totalQuantity} יח׳` : (l.totalMinutes / 60).toFixed(2),
+          kind: l.kind === "item" ? L.kindItem : L.kindHourly,
+          measure: l.kind === "item" ? `${l.totalQuantity} ${L.units}` : (l.totalMinutes / 60).toFixed(2),
           currency: l.currency,
           amount: l.totalAmount.toFixed(2),
         });
       });
       labelSheet.eachRow((row: ExcelJS.Row) => {
-        row.alignment = { readingOrder: "rtl" };
+        row.alignment = { readingOrder: L.readingOrder };
       });
     }
 
