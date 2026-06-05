@@ -4,6 +4,7 @@
  */
 import { AsyncLocalStorage } from "async_hooks";
 import { Pool, PoolClient, QueryResult, types } from "pg";
+import { withConnRetry } from "./db-retry";
 import { getAdminDatabaseUrl, getDatabaseUrl } from "./env";
 
 // `timestamp without time zone` (OID 1114) is parsed by node-postgres using the
@@ -75,6 +76,14 @@ export function getPool(): Pool {
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,
     });
+    // Neon/PgBouncer closes idle connections; pg then emits 'error' on the idle
+    // client. Without this listener Node escalates it to an uncaughtException —
+    // FATAL on Vercel Fluid Compute, where one instance serves concurrent
+    // requests. Swallow + log so it stays a recoverable event (the next query
+    // gets a fresh connection via withConnRetry).
+    pool.on("error", (err) => {
+      console.error("[db] idle client error (recovered):", err.message);
+    });
   }
   return pool;
 }
@@ -92,6 +101,10 @@ function getAdminPool(): Pool {
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,
     });
+    // See getPool(): swallow idle-client errors so they never crash the process.
+    adminPool.on("error", (err) => {
+      console.error("[db-admin] idle client error (recovered):", err.message);
+    });
   }
   return adminPool;
 }
@@ -108,7 +121,7 @@ export async function adminQuery<T extends Record<string, unknown> = Record<stri
   text: string,
   params?: unknown[]
 ): Promise<QueryResult<T>> {
-  return getAdminPool().query<T>(text, params);
+  return withConnRetry(() => getAdminPool().query<T>(text, params));
 }
 
 /**
@@ -146,28 +159,32 @@ export async function query<T extends Record<string, unknown> = Record<string, u
 ): Promise<QueryResult<T>> {
   const userId = await resolveTenantUserId();
   if (!userId) {
-    return getPool().query<T>(text, params);
+    return withConnRetry(() => getPool().query<T>(text, params));
   }
 
   // Validate before checking out a connection so a bad id fails fast.
   const begin = beginWithTenant(userId);
 
-  const client = await getPool().connect();
-  try {
-    await client.query(begin); // 1 round-trip: BEGIN + set_config(local)
-    const result = await client.query<T>(text, params); // parameterized
-    await client.query("COMMIT");
-    return result;
-  } catch (error) {
+  // Each retry checks out a fresh client; the transaction is a single read or
+  // one atomic write, so re-running it on a stale connection is safe.
+  return withConnRetry(async () => {
+    const client = await getPool().connect();
     try {
-      await client.query("ROLLBACK");
-    } catch {
-      // ignore rollback failure
+      await client.query(begin); // 1 round-trip: BEGIN + set_config(local)
+      const result = await client.query<T>(text, params); // parameterized
+      await client.query("COMMIT");
+      return result;
+    } catch (error) {
+      try {
+        await client.query("ROLLBACK");
+      } catch {
+        // ignore rollback failure
+      }
+      throw error;
+    } finally {
+      client.release();
     }
-    throw error;
-  } finally {
-    client.release();
-  }
+  });
 }
 
 /**
@@ -182,18 +199,27 @@ export async function withTransaction<T>(
   // Validate before checking out a connection so a bad id fails fast.
   const begin = userId ? beginWithTenant(userId) : "BEGIN";
 
-  const client = await getPool().connect();
-  try {
-    await client.query(begin); // 1 round-trip (BEGIN [+ set_config] when authed)
-    const result = await callback(client);
-    await client.query("COMMIT");
-    return result;
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
+  // A transient connection error fires at connect()/BEGIN — before the callback
+  // does meaningful work — so retrying the whole block recovers a stale
+  // connection without partial-effect risk.
+  return withConnRetry(async () => {
+    const client = await getPool().connect();
+    try {
+      await client.query(begin); // 1 round-trip (BEGIN [+ set_config] when authed)
+      const result = await callback(client);
+      await client.query("COMMIT");
+      return result;
+    } catch (error) {
+      try {
+        await client.query("ROLLBACK");
+      } catch {
+        // ignore rollback failure (e.g. connection already dead)
+      }
+      throw error;
+    } finally {
+      client.release();
+    }
+  });
 }
 
 /**
