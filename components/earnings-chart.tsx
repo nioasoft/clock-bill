@@ -1,6 +1,12 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { HourglassSVG } from "@/components/ui/thematic-elements";
+
+const MONTH_KEYS = [
+  "jan", "feb", "mar", "apr", "may", "jun",
+  "jul", "aug", "sep", "oct", "nov", "dec",
+] as const;
 
 interface MonthlyEarnings {
   month: string;
@@ -16,14 +22,15 @@ interface EarningsChartProps {
 }
 
 export function EarningsChart({ data, loading = false }: EarningsChartProps) {
+  const t = useTranslations("Dashboard.earningsChart");
   const earningsData = data;
 
   if (loading) {
     return (
       <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
-        <h3 className="font-display text-lg font-semibold text-foreground mb-4">הכנסות חודשיות</h3>
+        <h3 className="font-display text-lg font-semibold text-foreground mb-4">{t("title")}</h3>
         <div className="h-48 flex items-center justify-center">
-          <div className="animate-pulse text-muted-foreground">טוען נתונים...</div>
+          <div className="animate-pulse text-muted-foreground">{t("loading")}</div>
         </div>
       </div>
     );
@@ -32,11 +39,11 @@ export function EarningsChart({ data, loading = false }: EarningsChartProps) {
   if (earningsData.length === 0) {
     return (
       <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
-        <h3 className="font-display text-lg font-semibold text-foreground mb-4">הכנסות חודשיות</h3>
+        <h3 className="font-display text-lg font-semibold text-foreground mb-4">{t("title")}</h3>
         <div className="h-48 flex flex-col items-center justify-center gap-3">
           <HourglassSVG size={64} className="text-muted-foreground/30" />
           <p className="text-sm text-muted-foreground text-center">
-            התחל לעקוב אחרי הזמן שלך כדי לראות הכנסות
+            {t("empty")}
           </p>
         </div>
       </div>
@@ -45,23 +52,19 @@ export function EarningsChart({ data, loading = false }: EarningsChartProps) {
 
   const maxAmount = Math.max(...earningsData.map((d) => d.amount));
 
-  // Format Hebrew month name
+  // Format the localized month abbreviation from a "YYYY-MM" string.
   const formatMonthName = (monthStr: string) => {
     const [, month] = monthStr.split('-');
-    const monthNames = [
-      'ינו׳', 'פבר׳', 'מרץ', 'אפר׳',
-      'מאי', 'יונ׳', 'יול׳', 'אוג׳',
-      'ספט׳', 'אוק׳', 'נוב׳', 'דצמ׳'
-    ];
     const monthIndex = parseInt(month) - 1;
-    return monthNames[monthIndex];
+    const key = MONTH_KEYS[monthIndex];
+    return key ? t(`months.${key}`) : "";
   };
 
   return (
     <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
-      <h3 className="font-display text-lg font-semibold text-foreground">הכנסות חודשיות</h3>
+      <h3 className="font-display text-lg font-semibold text-foreground">{t("title")}</h3>
       <p className="mt-0.5 mb-5 text-xs text-muted-foreground">
-        סך ההכנסות לחיוב ב-{earningsData.length} החודשים האחרונים
+        {t("subtitle", { count: earningsData.length })}
       </p>
 
       {/* Vertical bars in plain flex — responsive and RTL-native, no fixed SVG

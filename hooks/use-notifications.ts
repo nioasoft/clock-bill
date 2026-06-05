@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   checkNotificationPermission,
   requestNotificationPermission,
@@ -25,6 +26,7 @@ export interface NotificationSettings {
 }
 
 export function useNotifications() {
+  const t = useTranslations("Dashboard.notifications");
   const pathname = usePathname();
   const isPublicRoute = PUBLIC_ROUTES.some((route) =>
     route === "/" ? pathname === "/" : pathname.startsWith(route)
@@ -65,10 +67,17 @@ export function useNotifications() {
     }
 
     if (elapsedMinutes >= settings.longTimerThreshold && !longTimerNotified) {
-      showLongTimerNotification(elapsedMinutes);
+      // Localize the body here (in the hook) and pass it into the plain util.
+      const hours = Math.floor(elapsedMinutes / 60);
+      const mins = elapsedMinutes % 60;
+      const body =
+        hours > 0
+          ? t("longTimer.bodyWithHours", { hours, mins })
+          : t("longTimer.bodyMinutesOnly", { minutes: elapsedMinutes });
+      showLongTimerNotification(t("longTimer.title"), body);
       setLongTimerNotified(true);
     }
-  }, [settings, permission, longTimerNotified]);
+  }, [settings, permission, longTimerNotified, t]);
 
   /**
    * Reset long timer notification flag (when timer stops)
@@ -93,7 +102,12 @@ export function useNotifications() {
       return false; // Not the right time yet
     }
 
-    showDailyReminderNotification(todayHours);
+    // Localize the body here (in the hook) and pass it into the plain util.
+    const reminderBody =
+      todayHours > 0
+        ? t("dailyReminder.bodyWithHours", { hours: todayHours.toFixed(1) })
+        : t("dailyReminder.bodyNoHours");
+    showDailyReminderNotification(t("dailyReminder.title"), reminderBody);
 
     // Update last reminder date in the database
     try {
@@ -108,7 +122,7 @@ export function useNotifications() {
     }
 
     return true; // Notification was shown
-  }, [settings, permission]);
+  }, [settings, permission, t]);
 
   /**
    * Update notification settings

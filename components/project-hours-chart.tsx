@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { HourglassSVG } from "@/components/ui/thematic-elements";
 
 interface ProjectHours {
@@ -18,14 +19,15 @@ interface ProjectHoursChartProps {
 }
 
 export function ProjectHoursChart({ data, loading = false }: ProjectHoursChartProps) {
+  const t = useTranslations("Dashboard.projectHoursChart");
   const projectHours = data;
 
   if (loading) {
     return (
       <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
-        <h3 className="font-display text-lg font-semibold text-foreground mb-4">שעות לפי פרויקט - החודש</h3>
+        <h3 className="font-display text-lg font-semibold text-foreground mb-4">{t("titleLoading")}</h3>
         <div className="h-48 flex items-center justify-center">
-          <div className="animate-pulse text-muted-foreground">טוען נתונים...</div>
+          <div className="animate-pulse text-muted-foreground">{t("loading")}</div>
         </div>
       </div>
     );
@@ -34,11 +36,11 @@ export function ProjectHoursChart({ data, loading = false }: ProjectHoursChartPr
   if (projectHours.length === 0) {
     return (
       <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
-        <h3 className="font-display text-lg font-semibold text-foreground mb-4">שעות לפי פרויקט - החודש</h3>
+        <h3 className="font-display text-lg font-semibold text-foreground mb-4">{t("titleLoading")}</h3>
         <div className="h-48 flex flex-col items-center justify-center gap-3">
           <HourglassSVG size={64} className="text-muted-foreground/30" />
           <p className="text-sm text-muted-foreground text-center">
-            אין נתוני שעות זמינים עדיין
+            {t("empty")}
           </p>
         </div>
       </div>
@@ -51,8 +53,8 @@ export function ProjectHoursChart({ data, loading = false }: ProjectHoursChartPr
 
   return (
     <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
-      <h3 className="font-display text-lg font-semibold text-foreground">שעות לפי פרויקט</h3>
-      <p className="mt-0.5 mb-5 text-xs text-muted-foreground">פילוח השעות שנרשמו החודש, לפי פרויקט</p>
+      <h3 className="font-display text-lg font-semibold text-foreground">{t("title")}</h3>
+      <p className="mt-0.5 mb-5 text-xs text-muted-foreground">{t("subtitle")}</p>
 
       {/* RTL-native horizontal bars: each fills from the inline-start (right). */}
       <div className="space-y-4">

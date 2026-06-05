@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/src/i18n/navigation";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
@@ -61,6 +62,7 @@ interface ProjectHours {
 }
 
 export default function DashboardPage() {
+  const t = useTranslations("Dashboard");
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState(false);
@@ -143,15 +145,15 @@ export default function DashboardPage() {
     <AppLayout>
       <PageContainer>
         <PageHeader
-          title="ברוך הבא!"
-          subtitle="זהו הדשבורד שלך. כאן תוכל לנהל את שעות העבודה והפרויקטים שלך."
+          title={t("pageTitle")}
+          subtitle={t("pageSubtitle")}
         />
 
         {/* First-time user checklist */}
         {!statsLoading && !statsError && isFirstTimeUser && (
           <div className="mt-6 rounded-[var(--radius-card)] bg-accent/5 border border-accent/20 p-5 sm:p-6 motion-safe:animate-fade-up">
-            <h3 className="font-display text-xl font-semibold text-foreground mb-1">בוא נתחיל!</h3>
-            <p className="text-sm text-muted-foreground mb-5">שלושה צעדים קצרים כדי להתחיל לעבוד</p>
+            <h3 className="font-display text-xl font-semibold text-foreground mb-1">{t("gettingStarted.title")}</h3>
+            <p className="text-sm text-muted-foreground mb-5">{t("gettingStarted.subtitle")}</p>
             <div className="grid gap-3 sm:grid-cols-3">
               <Link
                 href="/clients?create=true"
@@ -164,8 +166,8 @@ export default function DashboardPage() {
                   <span className="text-primary text-lg transition-transform group-hover:-translate-x-1">←</span>
                 </div>
                 <div>
-                  <p className="text-base font-semibold text-foreground">צור לקוח ראשון</p>
-                  <p className="text-sm text-muted-foreground">הוסף את הלקוח הראשון שלך</p>
+                  <p className="text-base font-semibold text-foreground">{t("gettingStarted.createClient.title")}</p>
+                  <p className="text-sm text-muted-foreground">{t("gettingStarted.createClient.subtitle")}</p>
                 </div>
               </Link>
               <Link
@@ -179,8 +181,8 @@ export default function DashboardPage() {
                   <span className="text-primary text-lg transition-transform group-hover:-translate-x-1">←</span>
                 </div>
                 <div>
-                  <p className="text-base font-semibold text-foreground">צור פרויקט ראשון</p>
-                  <p className="text-sm text-muted-foreground">הגדר פרויקט עם מודל תמחור</p>
+                  <p className="text-base font-semibold text-foreground">{t("gettingStarted.createProject.title")}</p>
+                  <p className="text-sm text-muted-foreground">{t("gettingStarted.createProject.subtitle")}</p>
                 </div>
               </Link>
               <Link
@@ -194,8 +196,8 @@ export default function DashboardPage() {
                   <span className="text-primary text-lg transition-transform group-hover:-translate-x-1">←</span>
                 </div>
                 <div>
-                  <p className="text-base font-semibold text-foreground">רשום זמן או הפעל טיימר</p>
-                  <p className="text-sm text-muted-foreground">התחל לעקוב אחר שעות העבודה שלך</p>
+                  <p className="text-base font-semibold text-foreground">{t("gettingStarted.logTime.title")}</p>
+                  <p className="text-sm text-muted-foreground">{t("gettingStarted.logTime.subtitle")}</p>
                 </div>
               </Link>
             </div>
@@ -214,7 +216,7 @@ export default function DashboardPage() {
           </div>
         ) : statsError ? (
           <div className="mt-5 rounded-[var(--radius-card)] bg-destructive/10 border border-destructive/20 p-6 text-center">
-            <p className="text-destructive">שגיאה בטעינת הנתונים. נסה לרענן את הדף.</p>
+            <p className="text-destructive">{t("stats.error")}</p>
           </div>
         ) : stats && !isFirstTimeUser ? (
           <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -224,11 +226,11 @@ export default function DashboardPage() {
               // boundary and read as inconsistent with the month-scoped records
               // view. Today + month are unambiguous. Total revenue (סך הכנסות)
               // is placed last so it sits at the far left.
-              { label: "שעות היום", value: stats.today.formatted, accent: false, stagger: "stagger-1" },
-              { label: "שעות החודש", value: stats.month.formatted, accent: false, stagger: "stagger-2" },
-              { label: "לפי שעות", value: stats.earnings.byHours.formatted, accent: false, stagger: "stagger-3" },
-              { label: "לפי פריטים", value: stats.earnings.byItems.formatted, accent: false, stagger: "stagger-4" },
-              { label: "סך הכנסות", value: stats.earnings.formatted, accent: true, stagger: "stagger-5" },
+              { label: t("stats.todayHours"), value: stats.today.formatted, accent: false, stagger: "stagger-1" },
+              { label: t("stats.monthHours"), value: stats.month.formatted, accent: false, stagger: "stagger-2" },
+              { label: t("stats.earningsByHours"), value: stats.earnings.byHours.formatted, accent: false, stagger: "stagger-3" },
+              { label: t("stats.earningsByItems"), value: stats.earnings.byItems.formatted, accent: false, stagger: "stagger-4" },
+              { label: t("stats.totalEarnings"), value: stats.earnings.formatted, accent: true, stagger: "stagger-5" },
             ].map((card) => (
               <div
                 key={card.label}
@@ -260,7 +262,7 @@ export default function DashboardPage() {
           <div className="mt-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">
-                טיימרים פעילים
+                {t("activeTimers.title")}
                 {runningTimers.length > 1 && (
                   <span className="ms-2 inline-flex items-center rounded-full bg-primary/15 px-2.5 py-0.5 text-sm font-semibold text-primary align-middle">
                     {runningTimers.length}
@@ -273,13 +275,13 @@ export default function DashboardPage() {
                   className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
                   <Clock className="h-4 w-4" />
-                  טיימר חדש
+                  {t("activeTimers.newTimerButton")}
                 </button>
                 <Link
                   href="/entries?new=item"
                   className="inline-flex items-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface transition-colors"
                 >
-                  + פריט חיוב
+                  {t("activeTimers.newBillingItemButton")}
                 </Link>
               </div>
             </div>
@@ -301,7 +303,7 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-2">
                         {isPaused ? (
                           <span className="inline-flex items-center rounded-full bg-amber-500/20 px-2 py-0.5 text-[11px] font-semibold text-amber-400">
-                            מושהה
+                            {t("activeTimers.statusPaused")}
                           </span>
                         ) : (
                           <>
@@ -309,7 +311,7 @@ export default function DashboardPage() {
                               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
                             </span>
-                            <span className="text-xs font-medium text-muted-foreground">פעיל</span>
+                            <span className="text-xs font-medium text-muted-foreground">{t("activeTimers.statusActive")}</span>
                           </>
                         )}
                       </div>
@@ -332,7 +334,9 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Clock className="h-4 w-4 shrink-0" />
                         <span>
-                          התחיל ב-{new Date(timer.startTime).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                          {t("activeTimers.startedAt", {
+                            time: new Date(timer.startTime).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" }),
+                          })}
                         </span>
                       </div>
                     </div>
@@ -345,7 +349,7 @@ export default function DashboardPage() {
                           disabled={resumingTimerId === timer.id}
                           className="flex-1 whitespace-nowrap rounded-md bg-success px-5 py-2.5 text-sm font-semibold text-success-foreground hover:bg-success/90 disabled:opacity-50 transition-colors sm:flex-initial"
                         >
-                          {resumingTimerId === timer.id ? "מחדש..." : "חדש טיימר"}
+                          {resumingTimerId === timer.id ? t("activeTimers.resumingButton") : t("activeTimers.resumeButton")}
                         </button>
                       ) : (
                         <button
@@ -353,14 +357,14 @@ export default function DashboardPage() {
                           disabled={pausingTimerId === timer.id}
                           className="flex-1 whitespace-nowrap rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground hover:bg-accent/90 disabled:opacity-50 transition-colors sm:flex-initial"
                         >
-                          {pausingTimerId === timer.id ? "משהה..." : "השהה"}
+                          {pausingTimerId === timer.id ? t("activeTimers.pausingButton") : t("activeTimers.pauseButton")}
                         </button>
                       )}
                       <button
                         onClick={() => handleStopTimer(timer.id)}
                         className="flex-1 whitespace-nowrap rounded-md bg-destructive px-5 py-2.5 text-sm font-semibold text-white hover:bg-destructive/90 transition-colors sm:flex-initial"
                       >
-                        עצור טיימר
+                        {t("activeTimers.stopButton")}
                       </button>
                     </div>
                   </div>
@@ -377,16 +381,16 @@ export default function DashboardPage() {
               </div>
               <div className="relative flex-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">טיימר מהיר</h3>
+                  <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">{t("quickTimer.title")}</h3>
                   <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">T</kbd>
                 </div>
-                <p className="mt-1 text-sm text-muted-foreground">התחל לעקוב אחר הזמן בלחיצה אחת</p>
+                <p className="mt-1 text-sm text-muted-foreground">{t("quickTimer.subtitle")}</p>
               </div>
               <button
                 onClick={() => setShowTimerModal(true)}
                 className="relative mt-4 w-full rounded-md bg-primary px-8 py-4 text-lg font-semibold text-primary-foreground hover:bg-primary/90 transition-all hover:shadow-md"
               >
-                התחל טיימר חדש
+                {t("quickTimer.startButton")}
               </button>
               {/* Manual time entry — a record entered by hand, no live timer */}
               <div className="relative mt-3 flex flex-wrap gap-2">
@@ -394,7 +398,7 @@ export default function DashboardPage() {
                   href="/entries?new=manual"
                   className="inline-flex items-center rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition-colors"
                 >
-                  + הזן רשומת זמן
+                  {t("quickTimer.manualEntryButton")}
                 </Link>
               </div>
             </div>
@@ -405,14 +409,14 @@ export default function DashboardPage() {
                 <ClockFaceMarks size={120} className="opacity-[0.07]" />
               </div>
               <div className="relative flex-1">
-                <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">פריט חיוב</h3>
-                <p className="mt-1 text-sm text-muted-foreground">הוסף פריט לחיוב ללא מדידת זמן — סכום קבוע או כמות × תעריף</p>
+                <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">{t("billingItem.title")}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{t("billingItem.subtitle")}</p>
               </div>
               <Link
                 href="/entries?new=item"
                 className="relative mt-4 w-full rounded-md bg-primary px-8 py-4 text-center text-lg font-semibold text-primary-foreground hover:bg-primary/90 transition-all hover:shadow-md"
               >
-                + פריט חיוב
+                {t("billingItem.addButton")}
               </Link>
               {/* Invisible spacer keeps this CTA aligned with the timer/task cards' secondary-link row */}
               <div className="relative mt-3 h-10" aria-hidden="true" />
@@ -424,21 +428,21 @@ export default function DashboardPage() {
                 <ClockFaceMarks size={120} className="opacity-[0.07]" />
               </div>
               <div className="relative flex-1">
-                <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">הכנס משימה</h3>
-                <p className="mt-1 text-sm text-muted-foreground">צור משימה עם לקוח, פרויקט ותעריף — גרור אותה ל&quot;בעבודה&quot; כדי להפעיל טיימר</p>
+                <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">{t("task.title")}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{t("task.subtitle")}</p>
               </div>
               <Link
                 href="/tasks?create=true"
                 className="relative mt-4 w-full rounded-md bg-primary px-8 py-4 text-center text-lg font-semibold text-primary-foreground hover:bg-primary/90 transition-all hover:shadow-md"
               >
-                + משימה חדשה
+                {t("task.createButton")}
               </Link>
               <div className="relative mt-3 flex flex-wrap gap-2">
                 <Link
                   href="/tasks"
                   className="inline-flex items-center rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition-colors"
                 >
-                  לכל המשימות
+                  {t("task.allTasksLink")}
                 </Link>
               </div>
             </div>
@@ -456,7 +460,7 @@ export default function DashboardPage() {
         {/* Recent Entries */}
         {recentEntries.length > 0 && (
           <div className="mt-8">
-            <h3 className="font-display text-xl font-semibold text-foreground mb-4">רשומות אחרונות</h3>
+            <h3 className="font-display text-xl font-semibold text-foreground mb-4">{t("recentEntries.title")}</h3>
             <div className="bg-card border border-border/50 rounded-[var(--radius-card)] shadow-sm overflow-hidden">
               <ul className="divide-y divide-border">
                 {recentEntries.map((entry) => (

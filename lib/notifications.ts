@@ -65,33 +65,28 @@ export function showNotification(title: string, body: string, icon?: string): vo
 }
 
 /**
- * Show a long timer notification
- * @param minutes - Number of minutes the timer has been running
+ * Show a long timer notification.
+ *
+ * Title/body are pre-localized by the React caller (next-intl resolves the ICU
+ * `bodyWithHours` / `bodyMinutesOnly` strings), so this util stays hook-free.
+ *
+ * @param title - Localized notification title
+ * @param body - Localized notification body (already formatted with hours/minutes)
  */
-export function showLongTimerNotification(minutes: number): void {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-
-  const title = "הטיימר רץ זמן רב";
-  let body = "";
-
-  if (hours > 0) {
-    body = `הטיימר רץ כבר ${hours} שעות ו-${mins} דקות. אולי כדאי לקחת הפסקה?`;
-  } else {
-    body = `הטיימר רץ כבר ${minutes} דקות. אולי כדאי לקחת הפסקה?`;
-  }
-
+export function showLongTimerNotification(title: string, body: string): void {
   showNotification(title, body);
 }
 
 /**
- * Show a daily reminder notification
- * @param todayHours - Number of hours logged today
+ * Show a daily reminder notification.
+ *
+ * Title/body are pre-localized by the React caller, which picks between the
+ * `bodyWithHours` and `bodyNoHours` strings based on hours logged today.
+ *
+ * @param title - Localized notification title
+ * @param body - Localized notification body
  */
-export function showDailyReminderNotification(todayHours: number): void {
-  const title = "תזכורת יומית";
-  const body = `שלום! עדיין לא הזנת רשומות זמן היום. למשל, ${todayHours > 0 ? `רשמת היום ${todayHours.toFixed(1)} שעות` : "התחל לרשום זמן"}.`;
-
+export function showDailyReminderNotification(title: string, body: string): void {
   showNotification(title, body);
 }
 
