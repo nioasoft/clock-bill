@@ -40,13 +40,17 @@ const publicRoutes = [
  * canonical path. Hebrew is prefix-less, so only non-default locales appear.
  */
 function stripLocale(pathname: string): { locale: string; rest: string } {
+  // Normalize a trailing slash off any path except the root "/", so both the
+  // prefix-less (Hebrew) and prefixed (English) branches behave identically.
+  const normalize = (path: string): string =>
+    path === "/" ? "/" : path.replace(/\/$/, "");
+
   const segments = pathname.split("/"); // ["", "en", "dashboard"]
   const maybeLocale = segments[1];
   if ((routing.locales as readonly string[]).includes(maybeLocale)) {
-    const rest = "/" + segments.slice(2).join("/");
-    return { locale: maybeLocale, rest: rest === "/" ? "/" : rest.replace(/\/$/, "") };
+    return { locale: maybeLocale, rest: normalize("/" + segments.slice(2).join("/")) };
   }
-  return { locale: routing.defaultLocale, rest: pathname };
+  return { locale: routing.defaultLocale, rest: normalize(pathname) };
 }
 
 export function proxy(request: NextRequest) {
