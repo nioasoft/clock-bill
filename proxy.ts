@@ -1,57 +1,94 @@
 /**
- * Next.js proxy (formerly "middleware" — renamed in Next.js 16) for
- * authentication gating.
+ * Next.js proxy (formerly "middleware" — renamed in Next.js 16).
  *
- * Auth state is detected via Better Auth's session cookie using
- * `getSessionCookie` rather than a hardcoded cookie name, so it stays correct
- * across cookie-name/prefix changes (e.g. secure-prefix in production).
+ * Composes two concerns:
+ *  1. next-intl locale routing (`createMiddleware`) — resolves the active
+ *     locale from URL/cookie/Accept-Language and rewrites/redirects to the
+ *     `[locale]` segment. Hebrew (defaultLocale) stays prefix-less.
+ *  2. Authentication gating — optimistic check via Better Auth's session
+ *     cookie. Runs AFTER i18n so we reason about the locale-stripped pathname
+ *     and keep any `/en` prefix on redirects.
  *
- * Note: this is an optimistic check — it only verifies a session cookie is
- * present, not that it is valid. Full validation happens server-side via
- * `getUser()` in the protected routes/pages.
+ * Auth state is detected via `getSessionCookie` (not a hardcoded cookie name),
+ * so it stays correct across cookie-name/prefix changes. This is an optimistic
+ * check — it only verifies a session cookie is present, not that it is valid.
+ * Full validation happens server-side via `getUser()` in protected routes.
  */
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
+import createMiddleware from "next-intl/middleware";
+import { routing } from "./src/i18n/routing";
 
-// Routes that don't require authentication
-const publicRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/offline", "/privacy", "/terms", "/contact", "/monitoring"];
+const handleI18nRouting = createMiddleware(routing);
+
+// Routes that don't require authentication (locale prefix is stripped before matching)
+const publicRoutes = [
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+  "/offline",
+  "/privacy",
+  "/terms",
+  "/contact",
+  "/monitoring",
+];
+
+/**
+ * Strip a leading locale prefix (`/en`) so route checks reason about the
+ * canonical path. Hebrew is prefix-less, so only non-default locales appear.
+ */
+function stripLocale(pathname: string): { locale: string; rest: string } {
+  const segments = pathname.split("/"); // ["", "en", "dashboard"]
+  const maybeLocale = segments[1];
+  if ((routing.locales as readonly string[]).includes(maybeLocale)) {
+    const rest = "/" + segments.slice(2).join("/");
+    return { locale: maybeLocale, rest: rest === "/" ? "/" : rest.replace(/\/$/, "") };
+  }
+  return { locale: routing.defaultLocale, rest: pathname };
+}
 
 export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  const sessionCookie = getSessionCookie(request);
+  // Step 1: let next-intl resolve the locale and produce the base response.
+  const response = handleI18nRouting(request);
 
-  // Landing page "/" is handled by the page itself (server component checks session)
-  if (pathname === "/") {
-    return NextResponse.next();
+  // Step 2: layer auth gating on top, using the locale-stripped path.
+  const { locale, rest } = stripLocale(request.nextUrl.pathname);
+  const localePrefix = locale === routing.defaultLocale ? "" : `/${locale}`;
+
+  // Landing page "/" is handled by the page itself (server component checks session).
+  if (rest === "/") {
+    return response;
   }
 
-  // Check if the route is public
-  const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
+  const isPublicRoute = publicRoutes.some((route) => rest.startsWith(route));
+  const sessionCookie = getSessionCookie(request);
 
-  // If user is not authenticated and trying to access protected routes, redirect to login.
+  // Unauthenticated user hitting a protected route -> redirect to login,
+  // preserving the active locale prefix.
   if (!sessionCookie && !isPublicRoute) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(new URL(`${localePrefix}/login`, request.url));
   }
 
   // NOTE: we intentionally do NOT redirect authenticated users away from public
   // routes here. `getSessionCookie` only confirms a cookie is PRESENT, not valid;
-  // doing so caused a redirect loop (login -> dashboard -> client-check-fails ->
-  // login -> ...) for stale/expired cookies. The login page does its own valid-
-  // session check client-side and redirects to /dashboard when truly signed in.
-  return NextResponse.next();
+  // doing so caused a redirect loop for stale/expired cookies. The login page does
+  // its own valid-session check client-side and redirects to /dashboard.
+  return response;
 }
 
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
+     * Match all request paths except:
+     * - api (API routes, including Better Auth)
+     * - _next/static, _next/image (Next internals)
+     * - _vercel
+     * - monitoring (Sentry tunnelRoute)
+     * - favicon.ico, sw.js, manifest.webmanifest
+     * - any file with an extension (.png, .svg, etc.)
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|sw\\.js|manifest\\.webmanifest|.*\\.png$|.*\\.svg$).*)",
+    "/((?!api|_next/static|_next/image|_vercel|monitoring|favicon.ico|sw\\.js|manifest\\.webmanifest|.*\\..*).*)",
   ],
 };
