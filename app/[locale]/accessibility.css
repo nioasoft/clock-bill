@@ -184,7 +184,7 @@ th {
   color: var(--color-foreground);
   border-bottom: 2px solid var(--color-border);
   padding: 0.75rem;
-  text-align: right; /* RTL alignment */
+  text-align: start; /* follows document direction (right in RTL, left in LTR) */
 }
 
 /* Ensure table cells have sufficient padding */
@@ -342,16 +342,16 @@ progress::-moz-progress-bar {
 }
 
 /* ============================================================================
-   RTL FOCUS ADJUSTMENTS
+   FOCUS ADJUSTMENTS (direction-neutral)
    ============================================================================ */
 
-[dir="rtl"] :focus-visible {
+:focus-visible {
   outline-offset: 2px;
 }
 
-[dir="rtl"] input:focus,
-[dir="rtl"] textarea:focus,
-[dir="rtl"] select:focus {
+input:focus,
+textarea:focus,
+select:focus {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 25%, transparent);
 }
 

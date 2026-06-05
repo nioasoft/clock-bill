@@ -17,7 +17,7 @@ export default async function OfflinePage() {
   const t = await getTranslations("Offline");
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 text-center" dir="rtl">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 text-center">
       <div className="w-12 h-1 bg-primary rounded-full mb-6" />
       <h1 className="font-display text-3xl font-bold text-foreground">{t("title")}</h1>
       <p className="mt-3 max-w-sm text-sm text-muted-foreground">{t("body")}</p>

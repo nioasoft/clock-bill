@@ -107,7 +107,7 @@ export function HowItWorks() {
             >
               {/* Vertical line */}
               {index < steps.length - 1 && (
-                <div className="absolute top-16 right-8 w-0 h-full border-r-2 border-dashed border-primary/20" />
+                <div className="absolute top-16 start-8 w-0 h-full border-s-2 border-dashed border-primary/20" />
               )}
 
               {/* Step circle with clock marks */}

@@ -81,7 +81,7 @@ export default function AdminUsersPage() {
         {/* Search */}
         <form onSubmit={handleSearch} className="mb-6">
           <div className="relative">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute end-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="text"
               value={search}

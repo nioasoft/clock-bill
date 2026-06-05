@@ -128,7 +128,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     <div className="min-h-screen bg-background">
       <MobileNav userEmail={user.email} onLogout={handleLogout} userRole={user.role} />
       <div className="hidden lg:flex">
-        <div className="fixed right-0 top-0 h-screen z-30">
+        <div className="fixed ltr:left-0 rtl:right-0 top-0 h-screen z-30">
           <Sidebar
             isCollapsed={sidebarCollapsed}
             onToggle={handleSidebarToggle}
@@ -139,7 +139,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
         <div
           className={`flex-1 min-h-screen flex flex-col transition-[margin] duration-200 ${
-            sidebarCollapsed ? "mr-16" : "mr-64"
+            sidebarCollapsed ? "me-16" : "me-64"
           }`}
         >
           <PersistentTimerBar />

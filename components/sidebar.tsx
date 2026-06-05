@@ -14,9 +14,11 @@ import {
   LogOut,
   PanelRightClose,
   PanelRightOpen,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { GlobalSearch } from "./global-search";
 import { LocaleSwitcher } from "./locale-switcher";
 import { navItemDefs } from "@/lib/nav-items";
@@ -43,6 +45,12 @@ export function Sidebar({
   userEmail,
 }: SidebarProps) {
   const t = useTranslations("Nav");
+  const locale = useLocale();
+  const isRtl = locale === "he";
+  // Sidebar sits at the inline-end edge (right in RTL, left in LTR), so the
+  // collapse chevrons must point toward that edge in each direction.
+  const CollapseIcon = isRtl ? PanelRightClose : PanelLeftClose;
+  const ExpandIcon = isRtl ? PanelRightOpen : PanelLeftOpen;
   // Prefer the real name; fall back to the local-part of the email, then a
   // generic label. The avatar shows the first letter of whichever we land on.
   const displayName =
@@ -80,7 +88,6 @@ export function Sidebar({
       className={`flex flex-col bg-sidebar text-sidebar-foreground h-full transition-all duration-200 ${
         isCollapsed ? "w-16" : "w-64"
       } ${className}`}
-      dir="rtl"
     >
       {/* Logo/Brand with gradient */}
       <div className={`flex items-center h-16 border-b border-white/10 bg-gradient-to-b from-white/5 to-transparent ${isCollapsed ? "px-3" : "px-4"}`}>
@@ -151,10 +158,10 @@ export function Sidebar({
             title={isCollapsed ? t("expandSidebar") : t("collapseSidebar")}
           >
             {isCollapsed ? (
-              <PanelRightOpen className="h-5 w-5 shrink-0" />
+              <ExpandIcon className="h-5 w-5 shrink-0" />
             ) : (
               <>
-                <PanelRightClose className="h-5 w-5 shrink-0" />
+                <CollapseIcon className="h-5 w-5 shrink-0" />
                 <span>{t("collapse")}</span>
               </>
             )}

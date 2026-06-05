@@ -153,7 +153,7 @@ function ResetPasswordForm() {
 export default function ResetPasswordPage() {
   const t = useTranslations("Auth");
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface px-4" dir="rtl">
+    <div className="flex min-h-screen items-center justify-center bg-surface px-4">
       <div className="w-full max-w-md">
         <div className="bg-card rounded-[var(--radius-card)] border border-border p-8 shadow-sm">
           <div className="text-center mb-8">

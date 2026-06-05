@@ -118,7 +118,6 @@ export function GlobalSearch() {
           {/* Search Modal */}
           <div
             className="relative w-full max-w-2xl bg-card rounded-[var(--radius-card)] shadow-2xl overflow-hidden motion-safe:animate-scale-in border border-border/50"
-            dir="rtl"
           >
             {/* Search Input */}
             <div className="flex items-center gap-3 px-4 py-4 border-b border-border/50">
