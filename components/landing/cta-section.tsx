@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/src/i18n/navigation";
 import { GrainOverlay, RadialLines, HourglassSVG } from "@/components/ui/thematic-elements";
 
 export function CTASection() {

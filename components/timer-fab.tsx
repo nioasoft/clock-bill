@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "@/src/i18n/navigation";
 import { Play } from "lucide-react";
 import { useTimer } from "@/contexts/timer-context";
 import { haptic } from "@/lib/haptics";

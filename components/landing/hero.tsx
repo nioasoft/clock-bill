@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/src/i18n/navigation";
 import { BRAND } from "@/lib/brand";
 import { GrainOverlay, RadialLines, HourglassSVG, ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { Clock, DollarSign } from "lucide-react";

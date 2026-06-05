@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/src/i18n/navigation";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
@@ -16,7 +16,7 @@ import {
   Copy,
   Check,
 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/src/i18n/navigation";
 
 interface UserDetail {
   id: string;

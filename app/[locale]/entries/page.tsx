@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
+import { Link } from "@/src/i18n/navigation";
 import { useTimer } from "@/contexts/timer-context";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";

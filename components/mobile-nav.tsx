@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/src/i18n/navigation";
 import { Gauge } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 

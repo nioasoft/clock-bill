@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link } from "@/src/i18n/navigation";
+import { usePathname } from "@/src/i18n/navigation";
 import { Home, Clock, Users, FolderKanban, FileText, MessageSquare, Settings, Shield } from "lucide-react";
 import { navItemDefs } from "@/lib/nav-items";
 

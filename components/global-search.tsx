@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Search, Users, FolderKanban, Clock, X } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/src/i18n/navigation";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { HourglassSVG } from "@/components/ui/thematic-elements";
 

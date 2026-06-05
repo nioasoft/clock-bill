@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/src/i18n/navigation";
 import { BRAND } from "@/lib/brand";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 

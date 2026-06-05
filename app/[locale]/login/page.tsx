@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useRouter } from "@/src/i18n/navigation";
+import { Link } from "@/src/i18n/navigation";
 import { Gauge, LogIn } from "lucide-react";
 import { validateEmail, validateRequired } from "@/lib/validation";
 import { authClient } from "@/lib/auth/client";

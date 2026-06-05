@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/src/i18n/navigation";
 import { ChevronLeft } from "lucide-react";
 
 export interface BreadcrumbItem {

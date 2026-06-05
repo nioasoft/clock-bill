@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/src/i18n/navigation";
 import { useState, useEffect } from "react";
 import { Gauge, Clock } from "lucide-react";
 import { BRAND } from "@/lib/brand";

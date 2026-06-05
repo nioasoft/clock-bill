@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/src/i18n/navigation";
 import { useTimer } from "@/contexts/timer-context";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import {

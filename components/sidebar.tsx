@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { Link } from "@/src/i18n/navigation";
+import { usePathname, useRouter } from "@/src/i18n/navigation";
 import {
   Home,
   Gauge,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { Link } from "@/src/i18n/navigation";
 import { Gauge, CheckCircle2 } from "lucide-react";
 import { authClient } from "@/lib/auth/client";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
