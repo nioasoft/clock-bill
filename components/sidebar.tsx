@@ -16,7 +16,9 @@ import {
   PanelRightOpen,
 } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { GlobalSearch } from "./global-search";
+import { LocaleSwitcher } from "./locale-switcher";
 import { navItemDefs } from "@/lib/nav-items";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { BRAND } from "@/lib/brand";
@@ -40,10 +42,11 @@ export function Sidebar({
   userName,
   userEmail,
 }: SidebarProps) {
+  const t = useTranslations("Nav");
   // Prefer the real name; fall back to the local-part of the email, then a
   // generic label. The avatar shows the first letter of whichever we land on.
   const displayName =
-    userName?.trim() || userEmail?.split("@")[0] || "הפרופיל שלי";
+    userName?.trim() || userEmail?.split("@")[0] || t("profileFallback");
   const avatarInitial = displayName.charAt(0).toUpperCase();
   const pathname = usePathname();
   const router = useRouter();
@@ -73,7 +76,7 @@ export function Sidebar({
 
   return (
     <aside
-      aria-label="סרגל צד"
+      aria-label={t("sidebarLabel")}
       className={`flex flex-col bg-sidebar text-sidebar-foreground h-full transition-all duration-200 ${
         isCollapsed ? "w-16" : "w-64"
       } ${className}`}
@@ -109,12 +112,14 @@ export function Sidebar({
           const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
           const Icon = iconMap[item.iconName];
 
+          const label = t(item.labelKey);
+
           return (
             <Link
               key={item.href}
               href={item.href}
-              title={isCollapsed ? item.name : undefined}
-              aria-label={isCollapsed ? item.name : undefined}
+              title={isCollapsed ? label : undefined}
+              aria-label={isCollapsed ? label : undefined}
               className={`
                 flex items-center gap-3 rounded-lg text-sm font-medium transition-colors relative
                 ${isCollapsed ? "justify-center px-2 py-2.5" : "px-4 py-2.5"}
@@ -129,7 +134,7 @@ export function Sidebar({
                 <span className="absolute start-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-accent" aria-hidden="true" />
               )}
               <Icon className="h-5 w-5 shrink-0" />
-              {!isCollapsed && <span>{item.name}</span>}
+              {!isCollapsed && <span>{label}</span>}
             </Link>
           );
         })}
@@ -143,19 +148,24 @@ export function Sidebar({
             className={`flex items-center gap-3 rounded-lg text-sm font-medium text-white/40 hover:bg-white/6 hover:text-white transition-colors w-full ${
               isCollapsed ? "justify-center px-2 py-2.5" : "px-4 py-2.5"
             }`}
-            title={isCollapsed ? "הרחב סרגל צד" : "כווץ סרגל צד"}
+            title={isCollapsed ? t("expandSidebar") : t("collapseSidebar")}
           >
             {isCollapsed ? (
               <PanelRightOpen className="h-5 w-5 shrink-0" />
             ) : (
               <>
                 <PanelRightClose className="h-5 w-5 shrink-0" />
-                <span>כווץ</span>
+                <span>{t("collapse")}</span>
               </>
             )}
           </button>
         </div>
       )}
+
+      {/* Locale switcher */}
+      <div className={`${isCollapsed ? "px-1.5 pb-2" : "px-3 pb-2"}`}>
+        <LocaleSwitcher isCollapsed={isCollapsed} />
+      </div>
 
       {/* User info section */}
       <div className={`border-t border-white/10 space-y-1 ${isCollapsed ? "p-1.5" : "p-4"}`}>
@@ -182,8 +192,8 @@ export function Sidebar({
         <button
           onClick={handleLogout}
           disabled={logoutLoading}
-          title={isCollapsed ? "התנתק" : undefined}
-          aria-label={isCollapsed ? (logoutLoading ? "מתנתק..." : "התנתק") : undefined}
+          title={isCollapsed ? t("logout") : undefined}
+          aria-label={isCollapsed ? (logoutLoading ? t("loggingOut") : t("logout")) : undefined}
           className={`flex items-center gap-3 rounded-lg text-sm font-medium text-destructive/80 hover:bg-destructive/10 transition-colors w-full disabled:opacity-50 disabled:cursor-not-allowed ${
             isCollapsed ? "justify-center px-2 py-2.5" : "px-4 py-2.5"
           }`}
@@ -194,7 +204,7 @@ export function Sidebar({
             <LogOut className="h-4 w-4 shrink-0" />
           )}
           {!isCollapsed && (
-            <span>{logoutLoading ? "מתנתק..." : "התנתק"}</span>
+            <span>{logoutLoading ? t("loggingOut") : t("logout")}</span>
           )}
         </button>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Link } from "@/src/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { ChevronLeft } from "lucide-react";
 
 export interface BreadcrumbItem {
@@ -14,9 +15,10 @@ interface BreadcrumbProps {
 }
 
 export function Breadcrumb({ items, className = "" }: BreadcrumbProps) {
+  const t = useTranslations("Nav");
   return (
     <nav
-      aria-label="ניווט מיקום"
+      aria-label={t("breadcrumbLabel")}
       className={`flex items-center gap-2 text-sm ${className}`}
       dir="rtl"
     >

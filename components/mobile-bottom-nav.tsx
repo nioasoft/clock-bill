@@ -2,20 +2,22 @@
 
 import { Link } from "@/src/i18n/navigation";
 import { usePathname } from "@/src/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { Home, Clock, Users, FolderKanban, FileText, MessageSquare, Settings, Shield } from "lucide-react";
 import { navItemDefs } from "@/lib/nav-items";
 
 const iconMap = { Home, Clock, Users, FolderKanban, FileText, MessageSquare, Settings, Shield } as const;
 
-const navItems = navItemDefs
-  .filter((item) => !item.adminOnly)
-  .map((item) => {
-    const Icon = iconMap[item.iconName];
-    return { name: item.name, href: item.href, icon: <Icon className="h-5 w-5" /> };
-  });
+const visibleNavItems = navItemDefs.filter((item) => !item.adminOnly);
 
 export function MobileBottomNav() {
   const pathname = usePathname();
+  const t = useTranslations("Nav");
+
+  const navItems = visibleNavItems.map((item) => {
+    const Icon = iconMap[item.iconName];
+    return { name: t(item.labelKey), href: item.href, icon: <Icon className="h-5 w-5" /> };
+  });
 
   return (
     <nav

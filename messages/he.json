@@ -11,5 +11,65 @@
     "title": "מוניט - מעקב שעות עבודה לפרילנסרים",
     "description": "מעקב שעות, ניהול לקוחות ודוחות מקצועיים בעברית. הכל במקום אחד, בחינם.",
     "keywords": "מעקב זמן,פרילנסר,שעות עבודה,ניהול פרויקטים,חיוב לפי פריטים,תעודת התחשבנות,ניהול לקוחות,דוחות,מוניט"
+  },
+  "Nav": {
+    "sidebarLabel": "סרגל צד",
+    "breadcrumbLabel": "ניווט מיקום",
+    "dashboard": "דשבורד",
+    "entries": "רשומות חיוב",
+    "tasks": "משימות",
+    "clients": "לקוחות",
+    "reports": "התחשבנות",
+    "feedback": "פניות",
+    "settings": "הגדרות",
+    "admin": "ניהול",
+    "expandSidebar": "הרחב סרגל צד",
+    "collapseSidebar": "כווץ סרגל צד",
+    "collapse": "כווץ",
+    "profileFallback": "הפרופיל שלי",
+    "logout": "התנתק",
+    "loggingOut": "מתנתק..."
+  },
+  "LocaleSwitcher": {
+    "label": "שפה",
+    "he": "עברית",
+    "en": "English"
+  },
+  "Tasks": {
+    "status": {
+      "todo": "חדש",
+      "in_progress": "בעבודה",
+      "done": "הושלם"
+    },
+    "priority": {
+      "normal": "רגילה",
+      "high": "גבוהה",
+      "urgent": "דחוף"
+    },
+    "empty": {
+      "todo": "אין משימות חדשות",
+      "in_progress": "אין משימות בעבודה",
+      "done": "אין משימות שהושלמו"
+    },
+    "transitions": {
+      "start": "התחל",
+      "markDone": "סמן כהושלם",
+      "finish": "סיים",
+      "backToTodo": "החזר לחדש",
+      "backToInProgress": "החזר לעבודה"
+    }
+  },
+  "Rounding": {
+    "none": "ללא עיגול",
+    "hour_up": "עיגול לשעה מלאה (כלפי מעלה)",
+    "half_hour_up": "עיגול לחצי שעה (כלפי מעלה)"
+  },
+  "Feedback": {
+    "category": {
+      "bug": "תקלה / באג",
+      "suggestion": "הצעה לשיפור",
+      "question": "שאלה",
+      "other": "אחר"
+    }
   }
 }

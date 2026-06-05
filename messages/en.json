@@ -11,5 +11,65 @@
     "title": "Monit - Time Tracking for Freelancers",
     "description": "Time tracking, client management, and professional reports. All in one place, for free.",
     "keywords": "time tracking,freelancer,work hours,project management,itemized billing,settlement statement,client management,reports,Monit"
+  },
+  "Nav": {
+    "sidebarLabel": "Sidebar",
+    "breadcrumbLabel": "Breadcrumb",
+    "dashboard": "Dashboard",
+    "entries": "Billing Entries",
+    "tasks": "Tasks",
+    "clients": "Clients",
+    "reports": "Settlements",
+    "feedback": "Feedback",
+    "settings": "Settings",
+    "admin": "Admin",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar",
+    "collapse": "Collapse",
+    "profileFallback": "My Profile",
+    "logout": "Log out",
+    "loggingOut": "Logging out..."
+  },
+  "LocaleSwitcher": {
+    "label": "Language",
+    "he": "עברית",
+    "en": "English"
+  },
+  "Tasks": {
+    "status": {
+      "todo": "To Do",
+      "in_progress": "In Progress",
+      "done": "Done"
+    },
+    "priority": {
+      "normal": "Normal",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "empty": {
+      "todo": "No new tasks",
+      "in_progress": "No tasks in progress",
+      "done": "No completed tasks"
+    },
+    "transitions": {
+      "start": "Start",
+      "markDone": "Mark as done",
+      "finish": "Finish",
+      "backToTodo": "Move back to To Do",
+      "backToInProgress": "Move back to In Progress"
+    }
+  },
+  "Rounding": {
+    "none": "No rounding",
+    "hour_up": "Round up to a full hour",
+    "half_hour_up": "Round up to a half hour"
+  },
+  "Feedback": {
+    "category": {
+      "bug": "Bug / Issue",
+      "suggestion": "Suggestion",
+      "question": "Question",
+      "other": "Other"
+    }
   }
 }
