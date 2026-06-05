@@ -83,12 +83,12 @@ export const config = {
     /*
      * Match all request paths except:
      * - api (API routes, including Better Auth)
-     * - _next/static, _next/image (Next internals)
+     * - _next (all Next internals: static, image, and dev HMR endpoints)
      * - _vercel
      * - monitoring (Sentry tunnelRoute)
      * - favicon.ico, sw.js, manifest.webmanifest
      * - any file with an extension (.png, .svg, etc.)
      */
-    "/((?!api|_next/static|_next/image|_vercel|monitoring|favicon.ico|sw\\.js|manifest\\.webmanifest|.*\\..*).*)",
+    "/((?!api|_next|_vercel|monitoring|favicon.ico|sw\\.js|manifest\\.webmanifest|.*\\..*).*)",
   ],
 };

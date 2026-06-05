@@ -453,6 +453,8 @@ git commit -m "test(i18n): add he/en message-key parity guard"
 
 > SCOPE-CHECK NOTE: ~1,600 strings across ~92 files is mechanical repetition, not 1,600 unique design decisions. Per the writing-plans scope guidance, this phase is specified as a **precise recipe + a worked example + a file inventory with namespaces**, not as 1,600 enumerated steps. Each file is one commit. The parity test (Task 0.7) is the safety net.
 
+**IMPORT ALIAS CORRECTION (post Phase-0):** this tsconfig maps `@/*` → repo root, and the i18n files live in `src/i18n/`. So everywhere below, use **`@/src/i18n/navigation`** and **`@/src/i18n/routing`** (NOT `@/i18n/...`). Middleware lives in **`proxy.ts`** (Next.js 16 renamed middleware→proxy; next-intl is composed into the existing auth-gating proxy). `locale-switcher.tsx` and `tests/e2e/locale-routing.spec.ts` were deferred from Phase 0: build the switcher early in this phase (it needs translated strings), and the E2E spec lands in Phase 6.
+
 **Namespace convention:** one namespace per screen/feature, dot-nested. Examples: `Dashboard.*`, `Timer.*`, `Tasks.*`, `Clients.*`, `Projects.*`, `Entries.*`, `Settings.*`, `Auth.login.*`, `Nav.*`, `common.*`. Enum label maps that already exist as Hebrew records (`lib/tasks-types.ts` `TASK_STATUS_LABEL`, `lib/rounding.ts` `ROUNDING_LABELS`, `lib/schemas/feedback.ts` `CATEGORY_LABELS_HE`, `lib/tasks-transitions.ts`) become message keys (`Tasks.status.todo`, etc.).
 
 ### The Recipe (apply per file)
@@ -461,7 +463,7 @@ git commit -m "test(i18n): add he/en message-key parity guard"
 2. For a **Server Component**: `const t = await getTranslations('Settings')`. For a **Client Component**: `import {useTranslations} from 'next-intl'; const t = useTranslations('Settings')`.
 3. Replace each inline Hebrew string with `{t('key')}`; move the Hebrew text to `messages/he.json` under that namespace and add the English to `messages/en.json`.
 4. **Interpolation:** `` `${count} משימות` `` → `t('taskCount', {count})` with ICU plural in the catalog (see plural rule below).
-5. **Swap navigation imports:** in any file using `next/link` or `next/navigation`, change to `@/i18n/navigation` (`Link`, `useRouter`, `usePathname`, `redirect`). Paths stay written as `/dashboard`.
+5. **Swap navigation imports:** in any file using `next/link` or `next/navigation`, change to `@/src/i18n/navigation` (`Link`, `useRouter`, `usePathname`, `redirect`). Paths stay written as `/dashboard`.
 6. Run the parity test + build. Commit.
 
 ### ICU Plural rule (Hebrew needs `one`/`two`/`many`/`other`)
@@ -520,7 +522,7 @@ Run: `npx tsx tests/unit/messages-parity.test.ts` → must stay PASS (parity mai
 ```tsx
 'use client';
 import {useTranslations} from 'next-intl';
-import {Link, useRouter} from '@/i18n/navigation'; // was next/link, next/navigation
+import {Link, useRouter} from '@/src/i18n/navigation'; // was next/link, next/navigation
 
 export default function SettingsPage() {
   const t = useTranslations('Settings');
