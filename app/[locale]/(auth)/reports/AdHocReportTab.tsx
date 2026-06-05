@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Link } from "@/src/i18n/navigation";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import {
   Dialog,
@@ -1486,12 +1487,12 @@ export default function AdHocReportTab() {
                   לא נמצאו רשומות לתקופה שנבחרה
                 </p>
                 <div className="flex gap-3 justify-center">
-                  <a
+                  <Link
                     href="/entries"
                     className="rounded-full bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90"
                   >
                     רשום זמן עכשיו
-                  </a>
+                  </Link>
                 </div>
               </div>
             )}

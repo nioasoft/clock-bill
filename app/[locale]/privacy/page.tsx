@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";
 import { BRAND } from "@/lib/brand";
+import { Link } from "@/src/i18n/navigation";
 
 export const metadata: Metadata = {
   title: `מדיניות פרטיות | ${BRAND.name}`,
@@ -120,7 +121,7 @@ export default function PrivacyPage() {
         <h2>יצירת קשר</h2>
         <p>
           בכל שאלה או בקשה הנוגעת לפרטיות, ניתן לפנות אלינו דרך{" "}
-          <a href="/contact">טופס יצירת הקשר</a>.
+          <Link href="/contact">טופס יצירת הקשר</Link>.
         </p>
       </section>
     </LegalPage>
