@@ -10,6 +10,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Providers } from "@/components/providers";
 import { PwaProvider } from "@/components/pwa-provider";
 import { routing } from "@/src/i18n/routing";
+import type { Locale } from "@/src/i18n/routing";
+import { THEME_COLOR } from "@/lib/brand";
+
+/** Exhaustive map of app locales → Open Graph locale codes. */
+const OG_LOCALE: Record<Locale, string> = { he: "he_IL", en: "en_US" };
+/** Exhaustive map of app locales → text direction. */
+const DIR: Record<Locale, "rtl" | "ltr"> = { he: "rtl", en: "ltr" };
 
 // Validate environment variables on server startup
 import "@/lib/env";
@@ -31,7 +38,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: "#0a0a0a",
+  themeColor: THEME_COLOR,
 };
 
 type Props = {
@@ -44,27 +51,21 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+export async function generateMetadata({ params }: Pick<Props, "params">): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "Meta" });
   const title = t("title");
   const description = t("description");
+  const keywords = t("keywords")
+    .split(",")
+    .map((k) => k.trim())
+    .filter(Boolean);
 
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://www.clock-bill.com"),
     title,
     description,
-    keywords: [
-      "מעקב זמן",
-      "פרילנסר",
-      "שעות עבודה",
-      "ניהול פרויקטים",
-      "חיוב לפי פריטים",
-      "תעודת התחשבנות",
-      "ניהול לקוחות",
-      "דוחות",
-      "מוניט",
-    ],
+    keywords,
     authors: [{ name: "מוניט" }],
     robots: {
       index: true,
@@ -81,7 +82,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       title,
       description,
       type: "website",
-      locale: locale === "he" ? "he_IL" : "en_US",
+      locale: OG_LOCALE[locale as Locale],
       siteName: "מוניט",
     },
     twitter: {
@@ -108,7 +109,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   setRequestLocale(locale);
 
   const t = await getTranslations("common");
-  const dir = locale === "he" ? "rtl" : "ltr";
+  const dir = DIR[locale as Locale];
 
   return (
     <html lang={locale} dir={dir}>
