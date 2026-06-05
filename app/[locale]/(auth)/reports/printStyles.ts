@@ -17,25 +17,32 @@ export type PdfTemplate =
   | "nature"
   | "ocean";
 
+/** Print document direction. Hebrew documents print RTL, English LTR. */
+export type PrintDirection = "rtl" | "ltr";
+
 /**
  * Build the `@media print` CSS for a template. Colors come from the user's
  * profile (with the same defaults the ad-hoc report uses).
  * @param template - which of the 6 PDF templates to style for
  * @param primaryColor - profile pdfPrimaryColor (hex)
  * @param accentColor - profile pdfAccentColor (hex)
+ * @param direction - document direction ("rtl" for Hebrew, "ltr" for English)
  * @returns the full CSS string to inject into a <style> element
  */
 export function buildPrintStyles(
   template: PdfTemplate,
   primaryColor: string,
-  accentColor: string
+  accentColor: string,
+  direction: PrintDirection = "rtl"
 ): string {
+  // Logical `text-align: start` follows the document direction, so the same
+  // table styles render right-aligned in RTL and left-aligned in LTR.
   const baseStyles = `
     @media print {
       body > *:not(#pdf-content) { display: none !important; }
       #pdf-content {
         display: block !important;
-        direction: rtl !important;
+        direction: ${direction} !important;
         font-family: -apple-system, 'Segoe UI', Arial, sans-serif;
         font-size: 13px;
         color: #1a1a1a;
@@ -46,8 +53,8 @@ export function buildPrintStyles(
       .pdf-header { margin-bottom: 1.5rem; }
       .pdf-section { margin-bottom: 1.25rem; }
       .pdf-table { width: 100%; border-collapse: collapse; }
-      .pdf-table th { padding: 8px 10px; text-align: right; font-size: 11px; font-weight: 600; }
-      .pdf-table td { padding: 7px 10px; text-align: right; font-size: 12px; }
+      .pdf-table th { padding: 8px 10px; text-align: start; font-size: 11px; font-weight: 600; }
+      .pdf-table td { padding: 7px 10px; text-align: start; font-size: 12px; }
       .pdf-table tfoot td { font-weight: 600; }
       .pdf-section-title { font-size: 14px; font-weight: 700; margin: 0; }
     }
@@ -132,12 +139,14 @@ export function buildPrintStyles(
  * trigger the browser print dialog, and clean up afterwards. Behavior is
  * identical to the original inline routine in AdHocReportTab.confirmExportPdf.
  * Caller must have an element with id `pdf-content` mounted in the DOM.
+ * @param direction - document direction ("rtl" for Hebrew, "ltr" for English)
  */
 export function printPdfContent(
   template: PdfTemplate,
   primaryColor: string,
   accentColor: string,
-  filename?: string
+  filename?: string,
+  direction: PrintDirection = "rtl"
 ): void {
   // Optionally override the document title so the browser's "Save as PDF"
   // dialog suggests a meaningful filename; restore it during cleanup.
@@ -154,7 +163,7 @@ export function printPdfContent(
     styleEl.id = styleId;
     document.head.appendChild(styleEl);
   }
-  styleEl.textContent = buildPrintStyles(template, primaryColor, accentColor);
+  styleEl.textContent = buildPrintStyles(template, primaryColor, accentColor, direction);
 
   // Clone #pdf-content and append directly to body so print CSS works reliably
   // (the original is nested deep in the React tree and gets hidden by ancestor rules).
@@ -166,7 +175,7 @@ export function printPdfContent(
 
   const printContainer = pdfContent.cloneNode(true) as HTMLElement;
   printContainer.id = "pdf-print-container";
-  printContainer.setAttribute("dir", "rtl");
+  printContainer.setAttribute("dir", direction);
   printContainer.style.display = "none";
   document.body.appendChild(printContainer);
 

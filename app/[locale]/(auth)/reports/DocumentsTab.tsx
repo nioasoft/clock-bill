@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { formatDate } from "@/lib/format";
 import { formatCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
@@ -23,12 +24,13 @@ interface DocumentRow {
 type LoadState = "loading" | "error" | "ready";
 
 function StatusBadge({ status }: { status: string }) {
+  const t = useTranslations("Reports");
   const meta = STATUS_META[status as ChargeDocStatus] ?? STATUS_META.pending;
   return (
     <span
       className={`inline-flex items-center rounded-[var(--radius)] border px-2.5 py-0.5 text-xs font-medium ${meta.badge}`}
     >
-      {meta.label}
+      {t(meta.labelKey)}
     </span>
   );
 }
@@ -61,6 +63,8 @@ export default function DocumentsTab({
   initialOpenId,
   onConsumedInitialOpen,
 }: DocumentsTabProps = {}) {
+  const t = useTranslations("Reports");
+  const locale = useLocale();
   const [state, setState] = useState<LoadState>("loading");
   const [docs, setDocs] = useState<DocumentRow[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -123,7 +127,7 @@ export default function DocumentsTab({
   // ── Loading ───────────────────────────────────────────────────────────────
   if (state === "loading") {
     return (
-      <div className="space-y-3" dir="rtl">
+      <div className="space-y-3">
         {[0, 1, 2].map((i) => (
           <Skeleton key={i} className="h-20 w-full rounded-[var(--radius-card)]" />
         ))}
@@ -134,11 +138,11 @@ export default function DocumentsTab({
   // ── Error ─────────────────────────────────────────────────────────────────
   if (state === "error") {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 p-8 text-center" dir="rtl">
-        <p className="text-foreground font-medium">לא הצלחנו לטעון את התעודות</p>
-        <p className="text-sm text-muted-foreground">אירעה תקלה בטעינת הנתונים.</p>
+      <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
+        <p className="text-foreground font-medium">{t("documents.loadErrorTitle")}</p>
+        <p className="text-sm text-muted-foreground">{t("documents.loadErrorBody")}</p>
         <Button variant="outline" onClick={retry} className="min-h-[44px]">
-          נסה שוב
+          {t("actions.retry")}
         </Button>
       </div>
     );
@@ -147,10 +151,12 @@ export default function DocumentsTab({
   // ── Empty ─────────────────────────────────────────────────────────────────
   if (docs.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-2 p-10 text-center" dir="rtl">
-        <p className="text-lg font-medium text-foreground">עדיין לא הפקת תעודות</p>
+      <div className="flex flex-col items-center justify-center gap-2 p-10 text-center">
+        <p className="text-lg font-medium text-foreground">{t("documents.emptyTitle")}</p>
         <p className="text-sm text-muted-foreground max-w-sm">
-          הפק תעודת התחשבנות מתוך לשונית <span className="text-foreground">לחיוב</span> והיא תופיע כאן.
+          {t.rich("documents.emptyBody", {
+            tab: (chunks) => <span className="text-foreground">{chunks}</span>,
+          })}
         </p>
       </div>
     );
@@ -158,7 +164,7 @@ export default function DocumentsTab({
 
   // ── Success ───────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-3" dir="rtl">
+    <div className="space-y-3">
       {docs.map((d) => {
         const meta = STATUS_META[d.status as ChargeDocStatus] ?? STATUS_META.pending;
         return (
@@ -170,15 +176,15 @@ export default function DocumentsTab({
         >
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="font-medium text-foreground">תעודה #{d.doc_number}</span>
+              <span className="font-medium text-foreground">{t("documents.docNumber", { number: d.doc_number })}</span>
               <StatusBadge status={d.status} />
             </div>
             <div className="text-sm text-muted-foreground">
-              {d.client_name} · {formatDate(d.issued_at)}
+              <bdi>{d.client_name}</bdi> · {formatDate(d.issued_at, undefined, locale)}
             </div>
           </div>
           <div className="font-mono text-lg font-semibold tabular-nums text-foreground">
-            {formatCurrency(d.total, d.currency)}
+            {formatCurrency(d.total, d.currency, locale)}
           </div>
         </button>
         );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
@@ -10,13 +11,14 @@ import DocumentsTab from "./DocumentsTab";
 
 type Tab = "billable" | "documents" | "report";
 
-const TABS: [Tab, string][] = [
-  ["billable", "לחיוב"],
-  ["documents", "תעודות"],
-  ["report", "דוח חד-פעמי"],
+const TAB_KEYS: [Tab, string][] = [
+  ["billable", "tabs.billable"],
+  ["documents", "tabs.documents"],
+  ["report", "tabs.report"],
 ];
 
 export default function SettlementPage() {
+  const t = useTranslations("Reports");
   const [tab, setTab] = useState<Tab>("billable");
   // Set when a document is freshly issued so the documents tab auto-opens it
   // (and prompts for a PDF). Cleared once the documents tab consumes it.
@@ -36,11 +38,11 @@ export default function SettlementPage() {
   return (
     <AppLayout>
       <PageContainer>
-        <PageHeader title="התחשבנות" />
+        <PageHeader title={t("pageTitle")} />
 
         {/* Tab bar */}
         <div className="flex gap-2 border-b border-border mb-6">
-          {TABS.map(([key, label]) => (
+          {TAB_KEYS.map(([key, labelKey]) => (
             <button
               key={key}
               type="button"
@@ -51,7 +53,7 @@ export default function SettlementPage() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {label}
+              {t(labelKey)}
             </button>
           ))}
         </div>

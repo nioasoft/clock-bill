@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
-import { formatDuration } from "@/lib/format";
+import { formatDuration, formatDate } from "@/lib/format";
 import { formatCurrency } from "@/lib/currency";
 import { calcHourlyAmount, calcItemAmount, sumMoney } from "@/lib/money";
 import { roundBillableMinutes, type RoundingMode } from "@/lib/rounding";
@@ -75,6 +76,8 @@ export default function BillableTab({
 }: {
   onIssued?: (documentId: string) => void;
 }) {
+  const t = useTranslations("Reports");
+  const locale = useLocale();
   const [clients, setClients] = useState<Client[]>([]);
   const [clientsLoading, setClientsLoading] = useState(true);
   const [clientId, setClientId] = useState<string>("");
@@ -218,18 +221,18 @@ export default function BillableTab({
       const json = await response.json();
 
       if (json.success) {
-        showSuccessToast(`תעודה #${json.data.docNumber} נוצרה`);
+        showSuccessToast(t("billable.issuedToast", { number: json.data.docNumber }));
         setSelectedEntryIds(new Set());
         setSelectedComputed(new Set());
         onIssued?.(json.data.id);
         // Re-fetch so the just-billed entries drop off the list (a second issue would 409).
         reloadBillable();
       } else {
-        showErrorToast(json.message || "שגיאה ביצירת התעודה");
+        showErrorToast(json.message || t("billable.issueError"));
       }
     } catch (error) {
       console.error("Error issuing charge document:", error);
-      showErrorToast("שגיאה ביצירת התעודה");
+      showErrorToast(t("billable.issueError"));
     } finally {
       setIssuing(false);
     }
@@ -244,17 +247,17 @@ export default function BillableTab({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-6">
         <div>
           <label className="block text-sm font-medium mb-2 text-muted-foreground">
-            לקוח
+            {t("billable.clientLabel")}
           </label>
           <Select
-            dir="rtl"
+            dir={locale === "he" ? "rtl" : "ltr"}
             value={clientId}
             onValueChange={setClientId}
             disabled={clientsLoading}
           >
             <SelectTrigger className="min-h-[44px] text-start">
               <SelectValue
-                placeholder={clientsLoading ? "טוען לקוחות..." : "בחר לקוח"}
+                placeholder={clientsLoading ? t("billable.clientLoading") : t("billable.clientPlaceholder")}
               />
             </SelectTrigger>
             <SelectContent>
@@ -269,7 +272,7 @@ export default function BillableTab({
 
         <div>
           <label className="block text-sm font-medium mb-2 text-muted-foreground">
-            חודש חיוב
+            {t("billable.monthLabel")}
           </label>
           <input
             type="month"
@@ -283,7 +286,7 @@ export default function BillableTab({
       {/* States */}
       {!clientId && (
         <div className="rounded-[var(--radius-card)] border border-border bg-card p-8 text-center">
-          <p className="text-muted-foreground">בחר לקוח כדי לראות פריטים לחיוב.</p>
+          <p className="text-muted-foreground">{t("billable.pickClientPrompt")}</p>
         </div>
       )}
 
@@ -291,18 +294,18 @@ export default function BillableTab({
 
       {clientId && state === "error" && (
         <div className="rounded-[var(--radius-card)] border border-destructive/40 bg-destructive/10 p-6 text-center">
-          <p className="text-destructive mb-4">שגיאה בטעינת פריטים לחיוב.</p>
+          <p className="text-destructive mb-4">{t("billable.loadError")}</p>
           <Button variant="outline" onClick={reloadBillable} className="min-h-[44px]">
-            נסה שוב
+            {t("actions.retry")}
           </Button>
         </div>
       )}
 
       {clientId && state === "ready" && !hasItems && (
         <div className="rounded-[var(--radius-card)] border border-border bg-card p-8 text-center">
-          <p className="text-foreground text-lg mb-1">אין פריטים לחיוב ללקוח הזה 🎉</p>
+          <p className="text-foreground text-lg mb-1">{t("billable.emptyTitle")}</p>
           <p className="text-muted-foreground text-sm">
-            כל הרשומות והחיובים הקבועים כבר טופלו או שאין כאלה לחודש שנבחר.
+            {t("billable.emptyBody")}
           </p>
         </div>
       )}
@@ -313,7 +316,7 @@ export default function BillableTab({
           {data.entries.length > 0 && (
             <div className="rounded-[var(--radius-card)] border border-border bg-card overflow-hidden">
               <div className="px-4 py-3 border-b border-border">
-                <h3 className="font-semibold">רשומות לחיוב</h3>
+                <h3 className="font-semibold">{t("billable.entriesHeading")}</h3>
               </div>
               <ul className="divide-y divide-border">
                 {data.entries.map((entry) => {
@@ -331,41 +334,41 @@ export default function BillableTab({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-baseline gap-2 flex-wrap">
                             <span className="text-sm text-muted-foreground tabular-nums">
-                              {new Date(entry.date).toLocaleDateString("he-IL")}
+                              {formatDate(entry.date, undefined, locale)}
                             </span>
                             <span className="text-sm font-medium text-foreground">
-                              {entry.project_name}
+                              <bdi>{entry.project_name}</bdi>
                             </span>
                           </div>
                           <p className="text-sm text-foreground mt-0.5">
-                            {entry.description}
+                            <bdi>{entry.description}</bdi>
                           </p>
                           {entry.notes && (
                             <p className="text-xs text-muted-foreground mt-0.5">
-                              {entry.notes}
+                              <bdi>{entry.notes}</bdi>
                             </p>
                           )}
                           <div className="flex items-center gap-2 flex-wrap mt-1 text-xs text-muted-foreground">
                             <span>
                               {entry.billing_kind === "item"
-                                ? `${entry.quantity ?? 0} יח׳`
-                                : formatDuration(billedMinutes(entry))}
+                                ? t("units.items", { count: entry.quantity ?? 0 })
+                                : formatDuration(billedMinutes(entry), locale)}
                             </span>
                             {entry.billing_kind !== "item" &&
                               billedMinutes(entry) !== entry.duration && (
                                 <span className="text-[11px]">
-                                  (בפועל {formatDuration(entry.duration)})
+                                  {t("billable.actualDuration", { duration: formatDuration(entry.duration, locale) })}
                                 </span>
                               )}
-                            {entry.rate_label && <span>· {entry.rate_label}</span>}
+                            {entry.rate_label && <span>· <bdi>{entry.rate_label}</bdi></span>}
                             {entry.billing_kind === "item" &&
                               entry.item_ref != null && (
-                                <span>· אסמכתא {entry.item_ref}</span>
+                                <span>· {t("units.ref", { ref: entry.item_ref })}</span>
                               )}
                           </div>
                         </div>
                         <span className="text-sm font-semibold text-foreground tabular-nums whitespace-nowrap">
-                          {formatCurrency(amount, entry.currency)}
+                          {formatCurrency(amount, entry.currency, locale)}
                         </span>
                       </label>
                     </li>
@@ -379,7 +382,7 @@ export default function BillableTab({
           {data.computedLines.length > 0 && (
             <div className="rounded-[var(--radius-card)] border border-border bg-card overflow-hidden">
               <div className="px-4 py-3 border-b border-border">
-                <h3 className="font-semibold">חיובים קבועים</h3>
+                <h3 className="font-semibold">{t("billable.fixedHeading")}</h3>
               </div>
               <ul className="divide-y divide-border">
                 {data.computedLines.map((line) => {
@@ -396,16 +399,16 @@ export default function BillableTab({
                         />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-foreground">
-                            {line.label}
+                            <bdi>{line.label}</bdi>
                           </p>
                           {line.alreadyBilled && (
                             <span className="inline-block mt-1 rounded-[var(--radius)] bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                              כבר חויב החודש
+                              {t("billable.alreadyBilled")}
                             </span>
                           )}
                         </div>
                         <span className="text-sm font-semibold text-foreground tabular-nums whitespace-nowrap">
-                          {formatCurrency(line.amount, line.currency)}
+                          {formatCurrency(line.amount, line.currency, locale)}
                         </span>
                       </label>
                     </li>
@@ -424,9 +427,9 @@ export default function BillableTab({
       >
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
           <div className="min-w-0">
-            <p className="text-xs text-muted-foreground">סה״כ נבחר</p>
+            <p className="text-xs text-muted-foreground">{t("billable.selectedTotal")}</p>
             <p className="text-lg font-bold text-foreground tabular-nums">
-              {formatCurrency(selectedTotal, clientCurrency)}
+              {formatCurrency(selectedTotal, clientCurrency, locale)}
             </p>
           </div>
           <Button
@@ -437,10 +440,10 @@ export default function BillableTab({
             {issuing ? (
               <span className="flex items-center gap-2">
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                מפיק...
+                {t("billable.issuing")}
               </span>
             ) : (
-              "הפק תעודת התחשבנות"
+              t("billable.issueButton")
             )}
           </Button>
         </div>

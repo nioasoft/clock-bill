@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/src/i18n/navigation";
+import { formatDuration as formatDurationLib, formatDate as formatDateLib } from "@/lib/format";
+import { formatCurrency as formatCurrencyLib } from "@/lib/currency";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
+import { printPdfContent } from "./printStyles";
 import {
   Dialog,
   DialogContent,
@@ -166,6 +170,8 @@ interface ReportPreset {
 
 
 export default function AdHocReportTab() {
+  const t = useTranslations("Reports");
+  const locale = useLocale();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(true);
@@ -297,11 +303,11 @@ export default function AdHocReportTab() {
       if (data.success) {
         setReportData(data.report);
       } else {
-        setError(data.message || "שגיאה ביצירת הדוח");
+        setError(data.message || t("report.generateError"));
       }
     } catch (error) {
       console.error("Error generating report:", error);
-      setError("שגיאה ביצירת הדוח");
+      setError(t("report.generateError"));
     } finally {
       setReportLoading(false);
     }
@@ -309,7 +315,7 @@ export default function AdHocReportTab() {
 
   const handleSavePreset = async () => {
     if (!presetName.trim()) {
-      showErrorToast("נא להזין שם לפריסט");
+      showErrorToast(t("preset.nameRequired"));
       return;
     }
 
@@ -329,7 +335,7 @@ export default function AdHocReportTab() {
       const data = await response.json();
 
       if (data.success) {
-        showSuccessToast("הפריסט נשמר בהצלחה");
+        showSuccessToast(t("preset.saved"));
         setPresetName("");
         setShowSavePresetDialog(false);
 
@@ -340,11 +346,11 @@ export default function AdHocReportTab() {
           setPresets(presetsData.presets || []);
         }
       } else {
-        showErrorToast(data.message || "שגיאה בשמירת הפריסט");
+        showErrorToast(data.message || t("preset.saveError"));
       }
     } catch (error) {
       console.error("Error saving preset:", error);
-      showErrorToast("שגיאה בשמירת הפריסט");
+      showErrorToast(t("preset.saveError"));
     }
   };
 
@@ -359,7 +365,7 @@ export default function AdHocReportTab() {
       includeFixedCharges: true,
     });
     setShowLoadPresetDialog(false);
-    showSuccessToast("הפריסט נטען בהצלחה");
+    showSuccessToast(t("preset.loaded"));
   };
 
   const handleDeletePreset = async (presetId: string) => {
@@ -371,7 +377,7 @@ export default function AdHocReportTab() {
       const data = await response.json();
 
       if (data.success) {
-        showSuccessToast("הפריסט נמחק בהצלחה");
+        showSuccessToast(t("preset.deleted"));
 
         // Refresh presets list
         const presetsResponse = await fetch("/api/reports/presets");
@@ -380,11 +386,11 @@ export default function AdHocReportTab() {
           setPresets(presetsData.presets || []);
         }
       } else {
-        showErrorToast(data.message || "שגיאה במחיקת הפריסט");
+        showErrorToast(data.message || t("preset.deleteError"));
       }
     } catch (error) {
       console.error("Error deleting preset:", error);
-      showErrorToast("שגיאה במחיקת הפריסט");
+      showErrorToast(t("preset.deleteError"));
     }
   };
 
@@ -397,13 +403,8 @@ export default function AdHocReportTab() {
     return projects.filter((p) => p.clientId === filters.clientId);
   };
 
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours === 0) return `${mins} דק׳`;
-    if (mins === 0) return `${hours} שע׳`;
-    return `${hours} שע׳ ${mins} דק׳`;
-  };
+  // Locale-aware duration ("2 שע׳ 30 דק׳" / "2h 30m").
+  const formatDuration = (minutes: number) => formatDurationLib(minutes, locale);
 
   // Per-entry billed amount, honoring the item vs hourly snapshot.
   const entryAmount = (entry: ReportEntry): number => {
@@ -412,20 +413,18 @@ export default function AdHocReportTab() {
     return (entry.duration / 60) * (entry.hourlyRate ?? 0);
   };
 
-  // "3.0ש׳" for hourly, "3 יח׳" for item — used in the by-label breakdown.
+  // Item count ("3 יח׳" / "3 items") vs an hours measure for the by-label breakdown.
   const formatMeasure = (row: RateLabelSummary): string =>
-    row.kind === "item" ? `${row.totalQuantity} יח׳` : `${(row.totalMinutes / 60).toFixed(1)}ש׳`;
+    row.kind === "item"
+      ? t("units.items", { count: row.totalQuantity })
+      : t("units.hoursMeasure", { hours: (row.totalMinutes / 60).toFixed(1) });
 
-  const formatCurrency = (amount: number, currency: string) => {
-    const symbols: Record<string, string> = {
-      ILS: "₪",
-      USD: "$",
-      USDT: "₮",
-      BTC: "₿",
-      ETH: "Ξ",
-    };
-    return `${symbols[currency] || currency}${amount.toFixed(2)}`;
-  };
+  // Locale-aware currency (grouping + symbol placement per locale).
+  const formatCurrency = (amount: number, currency: string) =>
+    formatCurrencyLib(amount, currency, locale);
+
+  // Locale-aware short date for tables/labels.
+  const formatDate = (date: string | Date) => formatDateLib(date, undefined, locale);
 
   // Convert amount from one currency to another using stored rates
   const convertCurrency = (amount: number, fromCurrency: string, toCurrency: string): number => {
@@ -455,158 +454,23 @@ export default function AdHocReportTab() {
   };
 
   const confirmExportPdf = (template: PdfTemplate) => {
-    // Set document title for PDF filename (date + client name)
-    const originalTitle = document.title;
+    // Delegate to the shared, direction-aware print helper (same routine the
+    // charge-document view uses) so RTL/LTR and template styling stay consistent.
     const clientName = filters.clientId
       ? clients.find((c) => c.id === filters.clientId)?.name || "all-clients"
       : "all-clients";
     const dateRange = `${filters.startDate}_to_${filters.endDate}`;
-    // Sanitize filename: remove spaces, use Hebrew-friendly format
     const pdfFilename = `report_${dateRange}_${clientName}`;
-    document.title = pdfFilename;
-
-    // Inject print styles dynamically
-    const styleId = 'pdf-print-styles';
-    let styleEl = document.getElementById(styleId) as HTMLStyleElement;
-    if (!styleEl) {
-      styleEl = document.createElement('style');
-      styleEl.id = styleId;
-      document.head.appendChild(styleEl);
-    }
-
-    // Define print styles for the selected template
-    const getTemplateStyles = (t: PdfTemplate) => {
-      // Get custom colors from user profile, with fallback defaults
-      const primaryColor = userProfile?.pdfPrimaryColor || '#A8622D';
-      const accentColor = userProfile?.pdfAccentColor || '#347B52';
-
-      const baseStyles = `
-        @media print {
-          body > *:not(#pdf-content) { display: none !important; }
-          #pdf-content {
-            display: block !important;
-            direction: rtl !important;
-            font-family: -apple-system, 'Segoe UI', Arial, sans-serif;
-            font-size: 13px;
-            color: #1a1a1a;
-            line-height: 1.5;
-          }
-          @page { size: A4; margin: 18mm 15mm; }
-          body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-          .pdf-header { margin-bottom: 1.5rem; }
-          .pdf-section { margin-bottom: 1.25rem; }
-          .pdf-table { width: 100%; border-collapse: collapse; }
-          .pdf-table th { padding: 8px 10px; text-align: right; font-size: 11px; font-weight: 600; }
-          .pdf-table td { padding: 7px 10px; text-align: right; font-size: 12px; }
-          .pdf-table tfoot td { font-weight: 600; }
-          .pdf-section-title { font-size: 14px; font-weight: 700; margin: 0; }
-        }
-      `;
-
-      const templateStyles: Record<PdfTemplate, string> = {
-        modern: `
-          ${baseStyles}
-          @media print {
-            .pdf-header { border-bottom: 3px solid ${primaryColor}; padding-bottom: 1.25rem; }
-            .pdf-business-name { color: ${primaryColor}; font-size: 20px; }
-            .pdf-section-title { color: ${primaryColor}; border-bottom: 1px solid #e5e5e5; padding-bottom: 6px; margin-bottom: 8px; }
-            .pdf-table th { background: #f5f5f0 !important; color: #555; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid ${primaryColor}; }
-            .pdf-table td { border-bottom: 1px solid #eee; }
-            .pdf-table tfoot td { border-top: 2px solid ${primaryColor}; background: #faf9f7 !important; }
-          }
-        `,
-        classic: `
-          ${baseStyles}
-          @media print {
-            .pdf-header { border-bottom: 1px solid #333; padding-bottom: 1.25rem; }
-            .pdf-business-name { font-size: 22px; font-weight: 700; font-family: Georgia, 'Times New Roman', serif; }
-            .pdf-section-title { font-family: Georgia, serif; border-bottom: 1px double #999; padding-bottom: 4px; margin-bottom: 8px; }
-            .pdf-table th { background: #f8f8f8 !important; color: #333; border-bottom: 2px solid #333; font-family: Georgia, serif; }
-            .pdf-table td { border-bottom: 1px solid #ddd; }
-            .pdf-table tfoot td { border-top: 2px solid #333; }
-          }
-        `,
-        bold: `
-          ${baseStyles}
-          @media print {
-            .pdf-header { border-right: 5px solid ${primaryColor}; padding-right: 1rem; padding-bottom: 1rem; }
-            .pdf-business-name { font-size: 24px; font-weight: 900; color: ${primaryColor}; }
-            .pdf-section-title { color: #1a1a1a; background: #f0ebe4 !important; padding: 6px 10px; margin-bottom: 0; }
-            .pdf-table th { background: ${primaryColor} !important; color: white !important; text-transform: uppercase; letter-spacing: 0.5px; }
-            .pdf-table td { border-bottom: 1px solid #e8e4de; }
-            .pdf-table tfoot td { background: #f0ebe4 !important; border-top: 3px solid ${primaryColor}; }
-          }
-        `,
-        elegant: `
-          ${baseStyles}
-          @media print {
-            .pdf-header { border-bottom: 1px solid #d4c5b0; padding-bottom: 1.25rem; }
-            .pdf-business-name { font-size: 20px; font-weight: 400; letter-spacing: 1px; color: #4a3728; }
-            .pdf-section-title { color: #4a3728; font-weight: 400; letter-spacing: 0.5px; border-bottom: 1px solid #e8dfd4; padding-bottom: 4px; margin-bottom: 8px; }
-            .pdf-table th { color: #8a7560; font-weight: 400; text-transform: uppercase; letter-spacing: 0.8px; font-size: 10px; border-bottom: 1px solid #d4c5b0; }
-            .pdf-table td { border-bottom: 1px solid #f0ebe4; }
-            .pdf-table tfoot td { border-top: 1px solid #d4c5b0; }
-          }
-        `,
-        nature: `
-          ${baseStyles}
-          @media print {
-            .pdf-header { border-bottom: 3px solid ${accentColor}; padding-bottom: 1.25rem; }
-            .pdf-business-name { color: ${accentColor}; font-size: 20px; }
-            .pdf-section-title { color: ${accentColor}; border-bottom: 1px solid #c8e6d5; padding-bottom: 6px; margin-bottom: 8px; }
-            .pdf-table th { background: #eef7f1 !important; color: #2d5a3e; border-bottom: 2px solid ${accentColor}; }
-            .pdf-table td { border-bottom: 1px solid #e8f4ec; }
-            .pdf-table tbody tr:nth-child(even) td { background: #f7fbf9 !important; }
-            .pdf-table tfoot td { border-top: 2px solid ${accentColor}; background: #eef7f1 !important; }
-          }
-        `,
-        ocean: `
-          ${baseStyles}
-          @media print {
-            .pdf-header { border-bottom: 3px solid #2563EB; padding-bottom: 1.25rem; }
-            .pdf-business-name { color: #1e40af; font-size: 20px; }
-            .pdf-section-title { color: #1e40af; border-bottom: 1px solid #dbeafe; padding-bottom: 6px; margin-bottom: 8px; }
-            .pdf-table th { background: #eff6ff !important; color: #1e40af; border-bottom: 2px solid #2563EB; }
-            .pdf-table td { border-bottom: 1px solid #e8f0fe; }
-            .pdf-table tbody tr:nth-child(even) td { background: #f8fbff !important; }
-            .pdf-table tfoot td { border-top: 2px solid #2563EB; background: #eff6ff !important; }
-          }
-        `
-      };
-
-      return templateStyles[t] || templateStyles.modern;
-    };
-
-    styleEl.textContent = getTemplateStyles(template);
-
-    // Clone #pdf-content and append directly to body so print CSS works reliably
-    // (the original is nested deep in the React tree and gets hidden by ancestor rules)
-    const pdfContent = document.getElementById('pdf-content');
-    if (!pdfContent) return;
-
-    const printContainer = pdfContent.cloneNode(true) as HTMLElement;
-    printContainer.id = 'pdf-print-container';
-    printContainer.setAttribute('dir', 'rtl');
-    printContainer.style.display = 'none';
-    document.body.appendChild(printContainer);
-
-    // Update print styles to target the body-level clone
-    styleEl.textContent = (styleEl.textContent || '')
-      .replace(/#pdf-content/g, '#pdf-print-container');
-
-    // Trigger browser print (which allows "Save as PDF")
-    setTimeout(() => {
-      printContainer.style.display = 'block';
-      window.print();
-      // Clean up after print
-      setTimeout(() => {
-        printContainer.remove();
-        if (styleEl && styleEl.parentNode) {
-          styleEl.parentNode.removeChild(styleEl);
-        }
-        document.title = originalTitle;
-      }, 1000);
-    }, 100);
+    const primaryColor = userProfile?.pdfPrimaryColor || "#A8622D";
+    const accentColor = userProfile?.pdfAccentColor || "#347B52";
+    // Hebrew documents print RTL, English LTR.
+    printPdfContent(
+      template,
+      primaryColor,
+      accentColor,
+      pdfFilename,
+      locale === "he" ? "rtl" : "ltr"
+    );
   };
 
   const handleExportExcel = async () => {
@@ -618,12 +482,13 @@ export default function AdHocReportTab() {
       if (filters.startDate) params.append("startDate", filters.startDate);
       if (filters.endDate) params.append("endDate", filters.endDate);
       params.append("includeFixedCharges", filters.includeFixedCharges ? "1" : "0");
+      params.append("locale", locale);
 
       // Fetch Excel file from API
       const response = await fetch(`/api/reports/excel?${params.toString()}`);
 
       if (!response.ok) {
-        throw new Error("שגיאה ביצירת קובץ Excel");
+        throw new Error(t("excel.error"));
       }
 
       // Get blob and create download link
@@ -647,10 +512,10 @@ export default function AdHocReportTab() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      showSuccessToast("קובץ Excel יוצא בהצלחה");
+      showSuccessToast(t("excel.success"));
     } catch (error) {
       console.error("Error exporting Excel:", error);
-      showErrorToast("שגיאה ביציאת קובץ Excel");
+      showErrorToast(t("excel.error"));
     }
   };
 
@@ -669,13 +534,13 @@ export default function AdHocReportTab() {
 
       // Copy to clipboard
       await navigator.clipboard.writeText(shareUrl);
-      showSuccessToast("קישור לדוח הועתק ללוח");
+      showSuccessToast(t("share.copied"));
 
       // Optional: Auto-generate report when shared link is opened
       // This will be handled by useEffect that reads URL params on mount
     } catch (error) {
       console.error("Error copying link:", error);
-      showErrorToast("שגיאה בהעתקת הקישור");
+      showErrorToast(t("share.error"));
     }
   };
   return (
@@ -683,12 +548,12 @@ export default function AdHocReportTab() {
         {/* Filters Section */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display font-bold text-lg">פילטרים</h2>
+            <h2 className="font-display font-bold text-lg">{t("filters.title")}</h2>
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="min-h-[44px] min-w-[44px] px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-[0.625rem] transition-colors"
             >
-              {showFilters ? "הסתר" : "הצג"}
+              {showFilters ? t("filters.hide") : t("filters.show")}
             </button>
           </div>
 
@@ -697,7 +562,7 @@ export default function AdHocReportTab() {
               {/* Date Range */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
-                  <label className="block text-sm font-medium mb-2">תאריך התחלה</label>
+                  <label className="block text-sm font-medium mb-2">{t("filters.startDate")}</label>
                   <input
                     type="date"
                     value={filters.startDate}
@@ -708,7 +573,7 @@ export default function AdHocReportTab() {
                   />
                 </div>
                 <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
-                  <label className="block text-sm font-medium mb-2">תאריך סיום</label>
+                  <label className="block text-sm font-medium mb-2">{t("filters.endDate")}</label>
                   <input
                     type="date"
                     value={filters.endDate}
@@ -722,14 +587,14 @@ export default function AdHocReportTab() {
 
               {/* Client Filter */}
               <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
-                <label className="block text-sm font-medium mb-2">לקוח</label>
+                <label className="block text-sm font-medium mb-2">{t("filters.client")}</label>
                 <select
                   value={filters.clientId}
                   onChange={(e) => handleClientChange(e.target.value)}
                   className="w-full px-3 py-2 border rounded-[0.625rem] bg-background"
                   disabled={clientsLoading}
                 >
-                  <option value="">כל הלקוחות</option>
+                  <option value="">{t("filters.allClients")}</option>
                   {clients.map((client) => (
                     <option key={client.id} value={client.id}>
                       {client.name}
@@ -740,7 +605,7 @@ export default function AdHocReportTab() {
 
               {/* Project Filter */}
               <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
-                <label className="block text-sm font-medium mb-2">פרויקט</label>
+                <label className="block text-sm font-medium mb-2">{t("filters.project")}</label>
                 <select
                   value={filters.projectId}
                   onChange={(e) =>
@@ -749,7 +614,7 @@ export default function AdHocReportTab() {
                   className="w-full px-3 py-2 border rounded-[0.625rem] bg-background"
                   disabled={projectsLoading || !filters.clientId}
                 >
-                  <option value="">כל הפרויקטים</option>
+                  <option value="">{t("filters.allProjects")}</option>
                   {getFilteredProjects().map((project) => (
                     <option key={project.id} value={project.id}>
                       {project.name}
@@ -769,10 +634,10 @@ export default function AdHocReportTab() {
                     }
                     className="h-4 w-4 rounded border-border"
                   />
-                  לכלול חיובים קבועים
+                  {t("filters.includeFixed")}
                 </label>
                 <p className="text-xs text-muted-foreground">
-                  מוסיף לדוח רכיבי חיוב חודשי קבועים ברמת פרויקט.
+                  {t("filters.includeFixedHint")}
                 </p>
               </div>
 
@@ -784,30 +649,30 @@ export default function AdHocReportTab() {
                     onChange={(e) => setShowWorkTimes(e.target.checked)}
                     className="h-4 w-4 rounded border-border"
                   />
-                  הצג שעות עבודה (ממתי עד מתי)
+                  {t("filters.showWorkTimes")}
                 </label>
                 <p className="text-xs text-muted-foreground">
-                  מוסיף לדוח את שעת ההתחלה והסיום של כל רשומת עבודה.
+                  {t("filters.showWorkTimesHint")}
                 </p>
               </div>
 
               <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
-                <label className="block text-sm font-medium mb-2">הצג סכומים במטבע</label>
+                <label className="block text-sm font-medium mb-2">{t("filters.displayCurrency")}</label>
                 <select
                   value={displayCurrency}
                   onChange={(e) => setDisplayCurrency(e.target.value)}
                   className="w-full px-3 py-2 border rounded-[0.625rem] bg-background"
                 >
-                  <option value="original">מטבע מקורי (מרובה)</option>
-                  <option value="ILS">₪ - שקל ישראלי (ILS)</option>
-                  <option value="USD">$ - דולר אמריקני (USD)</option>
-                  <option value="USDT">₮ - טתר (USDT)</option>
-                  <option value="BTC">₿ - ביטקוין (BTC)</option>
-                  <option value="ETH">Ξ - אתריום (ETH)</option>
+                  <option value="original">{t("filters.currencyOriginal")}</option>
+                  <option value="ILS">{t("filters.currencyILS")}</option>
+                  <option value="USD">{t("filters.currencyUSD")}</option>
+                  <option value="USDT">{t("filters.currencyUSDT")}</option>
+                  <option value="BTC">{t("filters.currencyBTC")}</option>
+                  <option value="ETH">{t("filters.currencyETH")}</option>
                 </select>
                 {displayCurrency !== "original" && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    {!Object.keys(currencyRates).length ? "⚠️ לא הוגדרו שערי חליפין" : "✓ שערי חליפין זמינים"}
+                    {!Object.keys(currencyRates).length ? t("filters.ratesMissing") : t("filters.ratesAvailable")}
                   </p>
                 )}
               </div>
@@ -818,23 +683,23 @@ export default function AdHocReportTab() {
                   onClick={() => setShowLoadPresetDialog(true)}
                   disabled={presetsLoading || presets.length === 0}
                   className="px-4 py-2 bg-secondary text-white rounded-full hover:bg-secondary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  title={presets.length === 0 ? "אין פריסטים שמורים" : "טען פריסט"}
+                  title={presets.length === 0 ? t("preset.noneSaved") : t("preset.load")}
                 >
-                  📂 טען פריסט
+                  📂 {t("preset.load")}
                 </button>
                 <button
                   onClick={() => setShowSavePresetDialog(true)}
                   className="px-4 py-2 bg-accent text-accent-foreground rounded-full hover:bg-accent/90 transition-colors"
-                  title="שמור פריסט"
+                  title={t("preset.save")}
                 >
-                  💾 שמור פריסט
+                  💾 {t("preset.save")}
                 </button>
                 <button
                   onClick={generateReport}
                   disabled={reportLoading}
                   className="px-6 py-2 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {reportLoading ? "יוצר דוח..." : "צור דוח"}
+                  {reportLoading ? t("report.generating") : t("report.generate")}
                 </button>
                 <button
                   onClick={() =>
@@ -854,7 +719,7 @@ export default function AdHocReportTab() {
                   }
                   className="px-6 py-2 border border-border rounded-full hover:bg-accent transition-colors"
                 >
-                  נקה פילטרים
+                  {t("filters.clear")}
                 </button>
               </div>
             </div>
@@ -876,12 +741,12 @@ export default function AdHocReportTab() {
               <button
                 onClick={handleShareReport}
                 className="flex items-center gap-2 px-6 py-3 bg-accent text-accent-foreground rounded-full hover:bg-accent/90 transition-colors shadow-md"
-                title="העתק קישור לדוח"
+                title={t("share.copyTooltip")}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                 </svg>
-                שתף דוח
+                {t("share.button")}
               </button>
               <button
                 onClick={handleExportExcel}
@@ -890,7 +755,7 @@ export default function AdHocReportTab() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                יצא ל-Excel
+                {t("excel.button")}
               </button>
               <button
                 onClick={handleExportPdf}
@@ -899,16 +764,16 @@ export default function AdHocReportTab() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                יצא ל-PDF
+                {t("pdf.button")}
               </button>
             </div>
 
             {/* PDF Content (for printing) - hidden on screen, cloned to body before print */}
-            <div id="pdf-content" className="print-only" dir="rtl">
+            <div id="pdf-content" className="print-only" dir={locale === "he" ? "rtl" : "ltr"}>
               {/* ── Header: Business → Client ── */}
               <div className="pdf-header" style={{ marginBottom: "2rem", paddingBottom: "1.5rem", borderBottom: "2px solid #e2e8f0" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  {/* Business info (right side in RTL) */}
+                  {/* Business info (inline-start side) */}
                   <div style={{ flex: 1 }}>
                     {userProfile?.logoUrl && (
                       // This block is cloned into a print container for PDF export;
@@ -918,22 +783,22 @@ export default function AdHocReportTab() {
                       <img src={userProfile.logoUrl} alt="Logo" style={{ maxHeight: "50px", marginBottom: "10px" }} />
                     )}
                     <h1 className="pdf-business-name" style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "0.25rem" }}>
-                      {userProfile?.businessName || "דוח שעות עבודה"}
+                      {userProfile?.businessName ? <bdi>{userProfile.businessName}</bdi> : t("report.docTitle")}
                     </h1>
                     <div style={{ fontSize: "12px", color: "#64748b", lineHeight: 1.6 }}>
-                      {userProfile?.taxId && <div>ע.מ / ח.פ: {userProfile.taxId}</div>}
-                      {userProfile?.address && <div>{userProfile.address}</div>}
-                      {userProfile?.phone && <div>{userProfile.phone}</div>}
-                      {userProfile?.email && <div>{userProfile.email}</div>}
+                      {userProfile?.taxId && <div>{t("pdf.taxId")}: <bdi>{userProfile.taxId}</bdi></div>}
+                      {userProfile?.address && <div><bdi>{userProfile.address}</bdi></div>}
+                      {userProfile?.phone && <div><bdi>{userProfile.phone}</bdi></div>}
+                      {userProfile?.email && <div><bdi>{userProfile.email}</bdi></div>}
                     </div>
                   </div>
-                  {/* Report title + date range (left side in RTL) */}
+                  {/* Report title + date range (inline-end side) */}
                   <div style={{ textAlign: "start" }}>
-                    <h2 style={{ fontSize: "26px", fontWeight: "bold", marginBottom: "0.5rem" }}>דוח עבודה</h2>
+                    <h2 style={{ fontSize: "26px", fontWeight: "bold", marginBottom: "0.5rem" }}>{t("report.headerTitle")}</h2>
                     <div style={{ fontSize: "13px", color: "#64748b" }}>
-                      <div>מתאריך: {new Date(filters.startDate).toLocaleDateString('he-IL')}</div>
-                      <div>עד תאריך: {new Date(filters.endDate).toLocaleDateString('he-IL')}</div>
-                      <div style={{ marginTop: "0.5rem" }}>תאריך הפקה: {new Date().toLocaleDateString('he-IL')}</div>
+                      <div>{t("report.fromDate", { date: formatDate(filters.startDate) })}</div>
+                      <div>{t("report.toDate", { date: formatDate(filters.endDate) })}</div>
+                      <div style={{ marginTop: "0.5rem" }}>{t("report.issueDate", { date: formatDate(new Date()) })}</div>
                     </div>
                   </div>
                 </div>
@@ -941,13 +806,13 @@ export default function AdHocReportTab() {
                 {/* Client details (if filtered to specific client) */}
                 {reportData.byClient.length === 1 && (
                   <div style={{ marginTop: "1.5rem", padding: "1rem", backgroundColor: "#f8fafc", borderRadius: "8px" }}>
-                    <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "0.25rem", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>עבור</div>
-                    <div style={{ fontWeight: "600", fontSize: "16px" }}>{reportData.byClient[0].clientName}</div>
+                    <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "0.25rem", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>{t("report.for")}</div>
+                    <div style={{ fontWeight: "600", fontSize: "16px" }}><bdi>{reportData.byClient[0].clientName}</bdi></div>
                     <div style={{ fontSize: "12px", color: "#64748b", lineHeight: 1.6 }}>
-                      {reportData.byClient[0].clientContactName && <span>{reportData.byClient[0].clientContactName} &middot; </span>}
-                      {reportData.byClient[0].clientEmail && <span>{reportData.byClient[0].clientEmail} &middot; </span>}
-                      {reportData.byClient[0].clientPhone && <span>{reportData.byClient[0].clientPhone}</span>}
-                      {reportData.byClient[0].clientAddress && <div>{reportData.byClient[0].clientAddress}</div>}
+                      {reportData.byClient[0].clientContactName && <span><bdi>{reportData.byClient[0].clientContactName}</bdi> &middot; </span>}
+                      {reportData.byClient[0].clientEmail && <span><bdi>{reportData.byClient[0].clientEmail}</bdi> &middot; </span>}
+                      {reportData.byClient[0].clientPhone && <span><bdi>{reportData.byClient[0].clientPhone}</bdi></span>}
+                      {reportData.byClient[0].clientAddress && <div><bdi>{reportData.byClient[0].clientAddress}</bdi></div>}
                     </div>
                   </div>
                 )}
@@ -958,53 +823,53 @@ export default function AdHocReportTab() {
                 <div key={project.projectId} className="pdf-section" style={{ marginBottom: "1.5rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "0.75rem", borderBottom: "1px solid #e2e8f0", paddingBottom: "0.5rem" }}>
                     <h2 className="pdf-section-title" style={{ fontSize: "16px", fontWeight: "bold", margin: 0 }}>
-                      {project.projectName}
+                      <bdi>{project.projectName}</bdi>
                       {reportData.byClient.length > 1 && (
-                        <span style={{ fontWeight: "normal", fontSize: "13px", color: "#64748b" }}> — {project.clientName}</span>
+                        <span style={{ fontWeight: "normal", fontSize: "13px", color: "#64748b" }}> — <bdi>{project.clientName}</bdi></span>
                       )}
                     </h2>
                     <div style={{ fontSize: "13px", color: "#64748b" }}>
-                      {project.hourlyRate ? `${formatCurrency(project.hourlyRate, project.currency)}/שעה` : ""}
+                      {project.hourlyRate ? t("report.perHour", { amount: formatCurrency(project.hourlyRate, project.currency) }) : ""}
                     </div>
                   </div>
 
                   <table className="pdf-table" style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead>
                       <tr style={{ backgroundColor: "#f8fafc" }}>
-                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>תאריך</th>
+                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>{t("columns.date")}</th>
                         {showWorkTimes && (
-                          <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>שעות</th>
+                          <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>{t("columns.hours")}</th>
                         )}
-                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>תיאור עבודה</th>
-                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>משך</th>
-                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>סכום</th>
+                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>{t("columns.workDescription")}</th>
+                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>{t("columns.duration")}</th>
+                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>{t("columns.amount")}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {project.entries.map((entry) => (
                         <tr key={entry.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>{new Date(entry.date).toLocaleDateString('he-IL')}</td>
+                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>{formatDate(entry.date)}</td>
                           {showWorkTimes && (
                             <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>
                               {entry.startTime && entry.endTime
-                                ? `${new Date(entry.startTime).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })} - ${new Date(entry.endTime).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}`
+                                ? `${new Date(entry.startTime).toLocaleTimeString(locale === "he" ? "he-IL" : "en-US", { hour: '2-digit', minute: '2-digit' })} - ${new Date(entry.endTime).toLocaleTimeString(locale === "he" ? "he-IL" : "en-US", { hour: '2-digit', minute: '2-digit' })}`
                                 : entry.startTime
-                                  ? `${new Date(entry.startTime).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })} -`
+                                  ? `${new Date(entry.startTime).toLocaleTimeString(locale === "he" ? "he-IL" : "en-US", { hour: '2-digit', minute: '2-digit' })} -`
                                   : "-"}
                             </td>
                           )}
                           <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>
-                            {entry.description}{entry.notes ? ` (${entry.notes})` : ""}
-                            {entry.rateLabel ? <span style={{ color: "#94a3b8" }}> · {entry.rateLabel}</span> : ""}
-                            {entry.billingKind === "item" && entry.itemRef != null ? <span style={{ color: "#94a3b8" }}> · אסמכתא {entry.itemRef}</span> : ""}
+                            <bdi>{entry.description}{entry.notes ? ` (${entry.notes})` : ""}</bdi>
+                            {entry.rateLabel ? <span style={{ color: "#94a3b8" }}> · <bdi>{entry.rateLabel}</bdi></span> : ""}
+                            {entry.billingKind === "item" && entry.itemRef != null ? <span style={{ color: "#94a3b8" }}> · {t("units.ref", { ref: entry.itemRef })}</span> : ""}
                           </td>
                           <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>
-                            {entry.billingKind === "item" ? `${entry.quantity ?? 0} יח׳` : formatDuration(entry.duration)}
+                            {entry.billingKind === "item" ? t("units.items", { count: entry.quantity ?? 0 }) : formatDuration(entry.duration)}
                           </td>
                           <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>
                             {entry.isBillable
                               ? (entryAmount(entry) > 0 ? formatCurrency(entryAmount(entry), entry.currency) : "-")
-                              : "לא לחיוב"}
+                              : t("report.notBillable")}
                           </td>
                         </tr>
                       ))}
@@ -1013,7 +878,7 @@ export default function AdHocReportTab() {
                       <tr style={{ borderTop: "2px solid #e2e8f0", fontWeight: "600" }}>
                         <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}></td>
                         {showWorkTimes && <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}></td>}
-                        <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>סה״כ {project.projectName}</td>
+                        <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>{t("report.projectTotal", { project: project.projectName })}</td>
                         <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>{formatDuration(project.totalMinutes)}</td>
                         <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>
                           {project.totalAmount > 0 ? formatCurrency(project.totalAmount, project.currency) : "-"}
@@ -1028,21 +893,21 @@ export default function AdHocReportTab() {
               {reportData.fixedCharges && reportData.fixedCharges.length > 0 && (
                 <div className="pdf-section" style={{ marginBottom: "1.5rem" }}>
                   <h2 className="pdf-section-title" style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "0.75rem", borderBottom: "1px solid #e2e8f0", paddingBottom: "0.5rem" }}>
-                    חיובים קבועים
+                    {t("sections.fixedCharges")}
                   </h2>
                   <table className="pdf-table" style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead>
                       <tr style={{ backgroundColor: "#f8fafc" }}>
-                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b" }}>חודש</th>
-                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b" }}>פרויקט</th>
-                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b" }}>סכום</th>
+                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b" }}>{t("columns.month")}</th>
+                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b" }}>{t("columns.project")}</th>
+                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b" }}>{t("columns.amount")}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {reportData.fixedCharges.map((line, i) => (
                         <tr key={`${line.projectId}-${line.month}-${i}`} style={{ borderBottom: "1px solid #f1f5f9" }}>
                           <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>{line.month}</td>
-                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>{line.projectName}</td>
+                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}><bdi>{line.projectName}</bdi></td>
                           <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", fontWeight: "500" }}>{formatCurrency(line.amount, line.currency)}</td>
                         </tr>
                       ))}
@@ -1055,22 +920,22 @@ export default function AdHocReportTab() {
               {reportData.byRateLabel && reportData.byRateLabel.length > 0 && (
                 <div className="pdf-section" style={{ marginBottom: "1.5rem" }}>
                   <h2 className="pdf-section-title" style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "0.75rem", borderBottom: "1px solid #e2e8f0", paddingBottom: "0.5rem" }}>
-                    פירוט לפי תווית
+                    {t("sections.byLabel")}
                   </h2>
                   <table className="pdf-table" style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead>
                       <tr style={{ backgroundColor: "#f8fafc" }}>
-                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b" }}>תווית</th>
-                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b" }}>סוג</th>
-                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b" }}>שעות / כמות</th>
-                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b" }}>סכום</th>
+                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b" }}>{t("columns.label")}</th>
+                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b" }}>{t("columns.type")}</th>
+                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b" }}>{t("columns.hoursOrQty")}</th>
+                        <th style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: "600", fontSize: "11px", color: "#64748b" }}>{t("columns.amount")}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {reportData.byRateLabel.map((row, i) => (
                         <tr key={`${row.label}-${row.currency}-${i}`} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>{row.label}</td>
-                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>{row.kind === "item" ? "פריט" : "שעות"}</td>
+                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}><bdi>{row.label}</bdi></td>
+                          <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>{row.kind === "item" ? t("kind.item") : t("kind.hours")}</td>
                           <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>{formatMeasure(row)}</td>
                           <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", fontWeight: "500" }}>{formatCurrency(row.totalAmount, row.currency)}</td>
                         </tr>
@@ -1084,12 +949,12 @@ export default function AdHocReportTab() {
               <div style={{ marginTop: "1.5rem", padding: "1.25rem", backgroundColor: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
-                    <div style={{ fontSize: "13px", color: "#64748b" }}>סה״כ שעות</div>
-                    <div style={{ fontSize: "20px", fontWeight: "bold" }}>{reportData.summary.totalHours.toFixed(1)} שע׳</div>
+                    <div style={{ fontSize: "13px", color: "#64748b" }}>{t("summary.totalHours")}</div>
+                    <div style={{ fontSize: "20px", fontWeight: "bold" }}>{t("summary.hoursValue", { hours: reportData.summary.totalHours.toFixed(1) })}</div>
                   </div>
                   {Object.keys(reportData.summary.totalAmounts).length > 0 && (
                     <div style={{ textAlign: "start" }}>
-                      <div style={{ fontSize: "13px", color: "#64748b" }}>סה״כ לתשלום</div>
+                      <div style={{ fontSize: "13px", color: "#64748b" }}>{t("summary.totalDue")}</div>
                       <div style={{ fontSize: "24px", fontWeight: "bold" }}>
                         {Object.entries(reportData.summary.totalAmounts).map(
                           ([currency, amount]) => formatCurrency(amount, currency)
@@ -1102,7 +967,7 @@ export default function AdHocReportTab() {
 
               {/* ── Footer ── */}
               <div style={{ marginTop: "2rem", paddingTop: "1rem", borderTop: "1px solid #e2e8f0", fontSize: "11px", color: "#94a3b8", textAlign: "center" }}>
-                {userProfile?.businessName || "מוניט"} &middot; נוצר בתאריך {new Date().toLocaleDateString('he-IL')}
+                <bdi>{userProfile?.businessName || t("report.appName")}</bdi> &middot; {t("report.generatedOn", { date: formatDate(new Date()) })}
               </div>
             </div>
 
@@ -1110,15 +975,15 @@ export default function AdHocReportTab() {
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-accent shadow-sm">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
-                  סה״כ שעות
+                  {t("summary.totalHours")}
                 </h3>
                 <p className="font-mono text-2xl font-bold tabular-nums">
-                  {reportData.summary.totalHours.toFixed(1)} שע׳
+                  {t("summary.hoursValue", { hours: reportData.summary.totalHours.toFixed(1) })}
                 </p>
               </div>
               <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-secondary shadow-sm">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
-                  סה״כ רשומות
+                  {t("summary.totalEntries")}
                 </h3>
                 <p className="font-mono text-2xl font-bold tabular-nums">
                   {reportData.summary.totalEntries}
@@ -1126,7 +991,7 @@ export default function AdHocReportTab() {
               </div>
               <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-primary shadow-sm">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
-                  סה״כ סכום {displayCurrency !== "original" && `(${displayCurrency})`}
+                  {t("summary.totalAmount")} {displayCurrency !== "original" && `(${displayCurrency})`}
                 </h3>
                 {Object.keys(reportData.summary.totalAmounts).length > 0 ? (
                   displayCurrency === "original" ? (
@@ -1151,12 +1016,12 @@ export default function AdHocReportTab() {
                     </p>
                   )
                 ) : (
-                  <p className="text-lg text-muted-foreground">לא זמין</p>
+                  <p className="text-lg text-muted-foreground">{t("summary.notAvailable")}</p>
                 )}
               </div>
               <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-accent shadow-sm">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
-                  חיובים קבועים {displayCurrency !== "original" && `(${displayCurrency})`}
+                  {t("sections.fixedCharges")} {displayCurrency !== "original" && `(${displayCurrency})`}
                 </h3>
                 {Object.keys(reportData.summary.fixedAmounts || {}).length > 0 ? (
                   displayCurrency === "original" ? (
@@ -1186,10 +1051,10 @@ export default function AdHocReportTab() {
               </div>
               <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-success shadow-sm">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
-                  תקופה
+                  {t("summary.period")}
                 </h3>
                 <p className="text-lg font-semibold">
-                  {filters.startDate} עד {filters.endDate}
+                  {t("summary.periodRange", { start: filters.startDate, end: filters.endDate })}
                 </p>
               </div>
             </div>
@@ -1197,7 +1062,7 @@ export default function AdHocReportTab() {
             {/* By Client Summary */}
             {reportData.byClient.length > 0 && (
               <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 shadow-sm">
-                <h3 className="font-display text-lg font-bold mb-4">סיכום לפי לקוח</h3>
+                <h3 className="font-display text-lg font-bold mb-4">{t("sections.byClient")}</h3>
                 <div className="space-y-3">
                   {reportData.byClient.map((client) => (
                     <div
@@ -1205,9 +1070,9 @@ export default function AdHocReportTab() {
                       className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[0.625rem] border border-border/30 transition-colors"
                     >
                       <div className="flex-1">
-                        <p className="font-medium">{client.clientName}</p>
+                        <p className="font-medium"><bdi>{client.clientName}</bdi></p>
                         <p className="text-sm text-muted-foreground">
-                          {client.entries.length} רשומות
+                          {t("summary.recordCount", { count: client.entries.length })}
                         </p>
                       </div>
                       <div className="text-end">
@@ -1238,7 +1103,7 @@ export default function AdHocReportTab() {
             {/* By Project Summary */}
             {reportData.byProject.length > 0 && (
               <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 shadow-sm">
-                <h3 className="font-display text-lg font-bold mb-4">סיכום לפי פרויקט</h3>
+                <h3 className="font-display text-lg font-bold mb-4">{t("sections.byProject")}</h3>
                 <div className="space-y-3">
                   {reportData.byProject.map((project) => (
                     <div
@@ -1246,14 +1111,13 @@ export default function AdHocReportTab() {
                       className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[0.625rem] border border-border/30 transition-colors"
                     >
                       <div className="flex-1">
-                        <p className="font-medium">{project.projectName}</p>
+                        <p className="font-medium"><bdi>{project.projectName}</bdi></p>
                         <p className="text-sm text-muted-foreground">
-                          {project.clientName} • {project.pricingModel}
+                          <bdi>{project.clientName}</bdi> • {project.pricingModel}
                         </p>
                         {project.hourlyRate && (
                           <p className="text-sm text-muted-foreground">
-                            {formatCurrency(project.hourlyRate, project.currency)} /
-                            שעה
+                            {t("report.perHour", { amount: formatCurrency(project.hourlyRate, project.currency) })}
                           </p>
                         )}
                       </div>
@@ -1262,7 +1126,7 @@ export default function AdHocReportTab() {
                           {formatDuration(project.totalMinutes)}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {project.entries.length} רשומות
+                          {t("summary.recordCount", { count: project.entries.length })}
                         </p>
                         {project.totalAmount > 0 && (
                           <p className="text-sm font-medium">
@@ -1279,7 +1143,7 @@ export default function AdHocReportTab() {
             {/* By Rate Label Summary (breakdown by work-type / item) */}
             {reportData.byRateLabel && reportData.byRateLabel.length > 0 && (
               <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 shadow-sm">
-                <h3 className="font-display text-lg font-bold mb-4">פירוט לפי תווית</h3>
+                <h3 className="font-display text-lg font-bold mb-4">{t("sections.byLabel")}</h3>
                 <div className="space-y-3">
                   {reportData.byRateLabel.map((row, index) => (
                     <div
@@ -1288,12 +1152,12 @@ export default function AdHocReportTab() {
                     >
                       <div className="flex-1">
                         <p className="font-medium">
-                          {row.label}
+                          <bdi>{row.label}</bdi>
                           <span className="ms-2 text-xs text-muted-foreground">
-                            {row.kind === "item" ? "פריט" : "שעות"}
+                            {row.kind === "item" ? t("kind.item") : t("kind.hours")}
                           </span>
                         </p>
-                        <p className="text-sm text-muted-foreground">{row.entryCount} רשומות</p>
+                        <p className="text-sm text-muted-foreground">{t("summary.recordCount", { count: row.entryCount })}</p>
                       </div>
                       <div className="text-end">
                         <p className="font-mono text-lg font-semibold">{formatMeasure(row)}</p>
@@ -1309,7 +1173,7 @@ export default function AdHocReportTab() {
 
             {reportData.fixedCharges && reportData.fixedCharges.length > 0 && (
               <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 shadow-sm">
-                <h3 className="font-display text-lg font-bold mb-4">חיובים קבועים</h3>
+                <h3 className="font-display text-lg font-bold mb-4">{t("sections.fixedCharges")}</h3>
                 <div className="space-y-3">
                   {reportData.fixedCharges.map((line, index) => (
                     <div
@@ -1317,16 +1181,16 @@ export default function AdHocReportTab() {
                       className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[0.625rem] border border-border/30 transition-colors"
                     >
                       <div className="flex-1">
-                        <p className="font-medium">{line.projectName}</p>
+                        <p className="font-medium"><bdi>{line.projectName}</bdi></p>
                         <p className="text-sm text-muted-foreground">
-                          {line.clientName} • {line.month}
+                          <bdi>{line.clientName}</bdi> • {line.month}
                         </p>
                       </div>
                       <div className="text-end">
                         <p className="font-mono text-lg font-semibold">
                           {formatCurrency(line.amount, line.currency)}
                         </p>
-                        <p className="text-sm text-muted-foreground">חיוב חודשי קבוע</p>
+                        <p className="text-sm text-muted-foreground">{t("report.fixedMonthly")}</p>
                       </div>
                     </div>
                   ))}
@@ -1337,7 +1201,7 @@ export default function AdHocReportTab() {
             {/* By Date Summary (Daily Breakdown) */}
             {reportData.byDate && reportData.byDate.length > 0 && (
               <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 shadow-sm">
-                <h3 className="font-display text-lg font-bold mb-4">סיכום לפי תאריך (יומי)</h3>
+                <h3 className="font-display text-lg font-bold mb-4">{t("sections.byDate")}</h3>
                 <div className="space-y-2">
                   {reportData.byDate.map((dateSummary) => (
                     <div
@@ -1345,9 +1209,9 @@ export default function AdHocReportTab() {
                       className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[0.625rem] border border-border/30 transition-colors"
                     >
                       <div className="flex-1">
-                        <p className="font-medium">{new Date(dateSummary.date).toLocaleDateString('he-IL')}</p>
+                        <p className="font-medium">{formatDate(dateSummary.date)}</p>
                         <p className="text-sm text-muted-foreground">
-                          {dateSummary.entryCount} רשומות
+                          {t("summary.recordCount", { count: dateSummary.entryCount })}
                         </p>
                       </div>
                       <div className="text-end">
@@ -1378,7 +1242,7 @@ export default function AdHocReportTab() {
             {/* By Week Summary (Weekly Breakdown) */}
             {reportData.byWeek && reportData.byWeek.length > 0 && (
               <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 shadow-sm">
-                <h3 className="font-display text-lg font-bold mb-4">סיכום לפי שבוע</h3>
+                <h3 className="font-display text-lg font-bold mb-4">{t("sections.byWeek")}</h3>
                 <div className="space-y-2">
                   {reportData.byWeek.map((weekSummary) => (
                     <div
@@ -1387,10 +1251,10 @@ export default function AdHocReportTab() {
                     >
                       <div className="flex-1">
                         <p className="font-medium">
-                          {weekSummary.weekStart} עד {weekSummary.weekEnd}
+                          {t("summary.weekRange", { start: weekSummary.weekStart, end: weekSummary.weekEnd })}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {weekSummary.entryCount} רשומות
+                          {t("summary.recordCount", { count: weekSummary.entryCount })}
                         </p>
                       </div>
                       <div className="text-end">
@@ -1422,54 +1286,54 @@ export default function AdHocReportTab() {
             {reportData.entries.length > 0 && (
               <div className="bg-card border border-border/50 rounded-[0.875rem] overflow-hidden shadow-sm">
                 <div className="p-6 border-b border-border">
-                  <h3 className="font-display text-lg font-bold">רשומות מפורטות</h3>
+                  <h3 className="font-display text-lg font-bold">{t("sections.detailedEntries")}</h3>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead className="bg-surface">
                       <tr>
                         <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-muted-foreground">
-                          תאריך
+                          {t("columns.date")}
                         </th>
                         <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-muted-foreground">
-                          לקוח
+                          {t("columns.client")}
                         </th>
                         <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-muted-foreground">
-                          פרויקט
+                          {t("columns.project")}
                         </th>
                         <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-muted-foreground">
-                          תיאור
+                          {t("columns.description")}
                         </th>
                         <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-muted-foreground">
-                          משך
+                          {t("columns.duration")}
                         </th>
                       </tr>
                     </thead>
                     <tbody>
                       {reportData.entries.map((entry, index) => (
                         <tr key={entry.id} className={`hover:bg-surface transition-colors ${index % 2 === 0 ? '' : 'even:bg-surface/50'}`}>
-                          <td className="px-6 py-4 text-sm">{new Date(entry.date).toLocaleDateString('he-IL')}</td>
+                          <td className="px-6 py-4 text-sm">{formatDate(entry.date)}</td>
                           <td className="px-6 py-4 text-sm">
-                            {entry.clientName}
+                            <bdi>{entry.clientName}</bdi>
                           </td>
                           <td className="px-6 py-4 text-sm">
-                            {entry.projectName}
+                            <bdi>{entry.projectName}</bdi>
                           </td>
                           <td className="px-6 py-4 text-sm">
-                            {entry.description}
+                            <bdi>{entry.description}</bdi>
                             {entry.notes && (
-                              <span className="ms-1 text-xs text-muted-foreground">({entry.notes})</span>
+                              <span className="ms-1 text-xs text-muted-foreground">(<bdi>{entry.notes}</bdi>)</span>
                             )}
                             {entry.rateLabel && (
-                              <span className="ms-2 text-xs text-muted-foreground">· {entry.rateLabel}</span>
+                              <span className="ms-2 text-xs text-muted-foreground">· <bdi>{entry.rateLabel}</bdi></span>
                             )}
                             {entry.billingKind === "item" && entry.itemRef != null && (
-                              <span className="ms-1 text-xs text-muted-foreground font-mono tabular-nums">· אסמכתא {entry.itemRef}</span>
+                              <span className="ms-1 text-xs text-muted-foreground font-mono tabular-nums">· {t("units.ref", { ref: entry.itemRef })}</span>
                             )}
                           </td>
                           <td className="px-6 py-4 text-sm font-mono font-semibold">
                             {entry.billingKind === "item"
-                              ? `${entry.quantity ?? 0} יח׳`
+                              ? t("units.items", { count: entry.quantity ?? 0 })
                               : formatDuration(entry.duration)}
                           </td>
                         </tr>
@@ -1484,14 +1348,14 @@ export default function AdHocReportTab() {
             {reportData.entries.length === 0 && (!reportData.fixedCharges || reportData.fixedCharges.length === 0) && (
               <div className="bg-card border rounded-[0.875rem] p-12 text-center">
                 <p className="text-muted-foreground text-lg mb-4">
-                  לא נמצאו רשומות לתקופה שנבחרה
+                  {t("report.noEntries")}
                 </p>
                 <div className="flex gap-3 justify-center">
                   <Link
                     href="/entries"
                     className="rounded-full bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90"
                   >
-                    רשום זמן עכשיו
+                    {t("report.logTimeNow")}
                   </Link>
                 </div>
               </div>
@@ -1503,7 +1367,7 @@ export default function AdHocReportTab() {
         {!reportData && !reportLoading && (
           <div className="bg-card border rounded-[0.875rem] p-12 text-center">
             <p className="text-muted-foreground text-lg mb-4">
-              בחר פילטרים ולחץ על &quot;צור דוח&quot; להצגת הדוח
+              {t("report.noReportYet")}
             </p>
           </div>
         )}
@@ -1512,21 +1376,21 @@ export default function AdHocReportTab() {
         <DialogContent className="p-0">
           <div className="border-b p-6">
             <DialogHeader>
-              <DialogTitle className="font-mono text-2xl font-bold tabular-nums">שמור פריסט</DialogTitle>
+              <DialogTitle className="font-mono text-2xl font-bold tabular-nums">{t("preset.saveTitle")}</DialogTitle>
               <DialogDescription>
-                שמור את הגדרות הפילטרים הנוכחיות כפריסט
+                {t("preset.saveDescription")}
               </DialogDescription>
             </DialogHeader>
           </div>
 
           <div className="p-6 space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">שם הפריסט</label>
+              <label className="block text-sm font-medium mb-2">{t("preset.nameLabel")}</label>
               <input
                 type="text"
                 value={presetName}
                 onChange={(e) => setPresetName(e.target.value)}
-                placeholder="לדוגמה: דוח חודשי - לקוח הייטק"
+                placeholder={t("preset.namePlaceholder")}
                 className="w-full px-3 py-2 border rounded-[0.625rem] bg-background"
                 autoFocus
                 onKeyDown={(e) => {
@@ -1538,23 +1402,23 @@ export default function AdHocReportTab() {
             </div>
 
             <div className="bg-muted/50 rounded-[0.625rem] p-4 space-y-2 text-sm">
-              <p className="font-medium">הגדרות הפילטר:</p>
+              <p className="font-medium">{t("preset.filterSettings")}</p>
               <div className="grid grid-cols-2 gap-2 text-muted-foreground">
-                <div>תאריך התחלה:</div>
-                <div className="text-end">{filters.startDate || "לא נבחר"}</div>
-                <div>תאריך סיום:</div>
-                <div className="text-end">{filters.endDate || "לא נבחר"}</div>
-                <div>לקוח:</div>
+                <div>{t("preset.startDateLabel")}</div>
+                <div className="text-end">{filters.startDate || t("preset.notSelected")}</div>
+                <div>{t("preset.endDateLabel")}</div>
+                <div className="text-end">{filters.endDate || t("preset.notSelected")}</div>
+                <div>{t("preset.clientLabel")}</div>
                 <div className="text-end">
                   {filters.clientId
-                    ? clients.find((c) => c.id === filters.clientId)?.name || "לא נבחר"
-                    : "כל הלקוחות"}
+                    ? clients.find((c) => c.id === filters.clientId)?.name || t("preset.notSelected")
+                    : t("filters.allClients")}
                 </div>
-                <div>פרויקט:</div>
+                <div>{t("preset.projectLabel")}</div>
                 <div className="text-end">
                   {filters.projectId
-                    ? projects.find((p) => p.id === filters.projectId)?.name || "לא נבחר"
-                    : "כל הפרויקטים"}
+                    ? projects.find((p) => p.id === filters.projectId)?.name || t("preset.notSelected")
+                    : t("filters.allProjects")}
                 </div>
               </div>
             </div>
@@ -1566,13 +1430,13 @@ export default function AdHocReportTab() {
               disabled={!presetName.trim()}
               className="flex-1 px-6 py-2 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              שמור
+              {t("actions.save")}
             </button>
             <DialogClose asChild>
               <button
                 className="px-6 py-2 border border-border rounded-full hover:bg-accent transition-colors"
               >
-                ביטול
+                {t("actions.cancel")}
               </button>
             </DialogClose>
           </div>
@@ -1584,9 +1448,9 @@ export default function AdHocReportTab() {
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto p-0">
           <div className="sticky top-0 bg-card border-b p-6 z-10">
             <DialogHeader>
-              <DialogTitle className="font-mono text-2xl font-bold tabular-nums">טען פריסט</DialogTitle>
+              <DialogTitle className="font-mono text-2xl font-bold tabular-nums">{t("preset.loadTitle")}</DialogTitle>
               <DialogDescription>
-                בחר פריסט שמור לטעינה
+                {t("preset.loadDescription")}
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -1594,8 +1458,8 @@ export default function AdHocReportTab() {
           <div className="p-6">
             {presets.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                <p>לא נמצאו פריסטים שמורים</p>
-                <p className="text-sm mt-2">שמור פריסט כדי שיופיע כאן</p>
+                <p>{t("preset.noneSaved")}</p>
+                <p className="text-sm mt-2">{t("preset.noneSavedHint")}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -1606,23 +1470,23 @@ export default function AdHocReportTab() {
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-lg mb-2">{preset.name}</h3>
+                        <h3 className="font-semibold text-lg mb-2"><bdi>{preset.name}</bdi></h3>
                         <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-                          <div>תאריך התחלה:</div>
-                          <div className="text-end">{preset.startDate || "לא נבחר"}</div>
-                          <div>תאריך סיום:</div>
-                          <div className="text-end">{preset.endDate || "לא נבחר"}</div>
-                          <div>לקוח:</div>
+                          <div>{t("preset.startDateLabel")}</div>
+                          <div className="text-end">{preset.startDate || t("preset.notSelected")}</div>
+                          <div>{t("preset.endDateLabel")}</div>
+                          <div className="text-end">{preset.endDate || t("preset.notSelected")}</div>
+                          <div>{t("preset.clientLabel")}</div>
                           <div className="text-end">
                             {preset.clientId
-                              ? clients.find((c) => c.id === preset.clientId)?.name || "לא נבחר"
-                              : "כל הלקוחות"}
+                              ? clients.find((c) => c.id === preset.clientId)?.name || t("preset.notSelected")
+                              : t("filters.allClients")}
                           </div>
-                          <div>פרויקט:</div>
+                          <div>{t("preset.projectLabel")}</div>
                           <div className="text-end">
                             {preset.projectId
-                              ? projects.find((p) => p.id === preset.projectId)?.name || "לא נבחר"
-                              : "כל הפרויקטים"}
+                              ? projects.find((p) => p.id === preset.projectId)?.name || t("preset.notSelected")
+                              : t("filters.allProjects")}
                           </div>
                         </div>
                       </div>
@@ -1631,13 +1495,13 @@ export default function AdHocReportTab() {
                           onClick={() => handleLoadPreset(preset)}
                           className="px-4 py-2 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors text-sm"
                         >
-                          טען
+                          {t("preset.loadAction")}
                         </button>
                         <button
                           onClick={() => handleDeletePreset(preset.id)}
                           className="px-4 py-2 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90 transition-colors text-sm"
                         >
-                          מחק
+                          {t("preset.deleteAction")}
                         </button>
                       </div>
                     </div>
@@ -1652,7 +1516,7 @@ export default function AdHocReportTab() {
               <button
                 className="w-full px-6 py-2 border border-border rounded-full hover:bg-accent transition-colors"
               >
-                סגור
+                {t("actions.close")}
               </button>
             </DialogClose>
           </div>

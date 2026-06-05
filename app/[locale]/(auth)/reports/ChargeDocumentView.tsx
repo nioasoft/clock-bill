@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { STATUS_META, type ChargeDocStatus } from "./statusMeta";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { formatDate } from "@/lib/format";
@@ -75,7 +76,7 @@ function asTemplate(value: string | null | undefined): PdfTemplate {
     : "modern";
 }
 
-/** True for lines that came from an "item"-type time entry (have an אסמכתא). */
+/** True for lines that came from an "item"-type time entry (have a reference number). */
 function isItemLine(line: DocumentLine): boolean {
   return line.billing_kind === "item";
 }
@@ -98,6 +99,8 @@ export default function ChargeDocumentView({
   onClose,
   autoPromptPdf = false,
 }: ChargeDocumentViewProps) {
+  const t = useTranslations("Reports");
+  const locale = useLocale();
   const [state, setState] = useState<LoadState>("loading");
   const [doc, setDoc] = useState<ChargeDocument | null>(null);
   const [lines, setLines] = useState<DocumentLine[]>([]);
@@ -199,23 +202,23 @@ export default function ChargeDocumentView({
       });
       const json = await res.json();
       if (!res.ok || !json.success) {
-        showErrorToast(json.message || "שגיאה בעדכון תעודה");
+        showErrorToast(json.message || t("doc.updateError"));
         return false;
       }
       refetch();
       onChanged?.();
       return true;
     },
-    [documentId, refetch, onChanged]
+    [documentId, refetch, onChanged, t]
   );
 
   const handleSaveNotes = useCallback(async (): Promise<void> => {
     if (!isPending) return;
     setSavingNotes(true);
     const ok = await patchDocument({ notes: notesDraft });
-    if (ok) showSuccessToast("ההערות נשמרו");
+    if (ok) showSuccessToast(t("doc.notesSaved"));
     setSavingNotes(false);
-  }, [isPending, notesDraft, patchDocument]);
+  }, [isPending, notesDraft, patchDocument, t]);
 
   const startEditLine = useCallback((line: DocumentLine): void => {
     setEditingLineId(line.id);
@@ -233,28 +236,28 @@ export default function ChargeDocumentView({
         },
       });
       if (ok) {
-        showSuccessToast("השורה עודכנה");
+        showSuccessToast(t("doc.lineUpdated"));
         setEditingLineId(null);
       }
       setSavingLine(false);
     },
-    [lineDraft, patchDocument]
+    [lineDraft, patchDocument, t]
   );
 
   const requestRemoveLine = useCallback(
     (line: DocumentLine): void => {
       setConfirm({
-        title: "הסרת שורה",
-        description: `להסיר את "${line.label}" מהתעודה? פריט שמקורו ברישום זמן יחזור לרשימת הפריטים לחיוב.`,
-        actionLabel: "הסר",
+        title: t("doc.removeLineTitle"),
+        description: t("doc.removeLineBody", { label: line.label }),
+        actionLabel: t("doc.removeLineAction"),
         destructive: true,
         run: async () => {
           const ok = await patchDocument({ removeLineId: line.id });
-          if (ok) showSuccessToast("השורה הוסרה");
+          if (ok) showSuccessToast(t("doc.lineRemoved"));
         },
       });
     },
-    [patchDocument]
+    [patchDocument, t]
   );
 
   const postAction = useCallback(
@@ -266,7 +269,7 @@ export default function ChargeDocumentView({
         });
         const json = await res.json();
         if (!res.ok || !json.success) {
-          showErrorToast(json.message || "הפעולה נכשלה");
+          showErrorToast(json.message || t("doc.actionFailed"));
           return;
         }
         showSuccessToast(successMessage);
@@ -278,12 +281,12 @@ export default function ChargeDocumentView({
           onChanged?.();
         }
       } catch {
-        showErrorToast("הפעולה נכשלה");
+        showErrorToast(t("doc.actionFailed"));
       } finally {
         setActionBusy(false);
       }
     },
-    [documentId, refetch, onChanged, onClose]
+    [documentId, refetch, onChanged, onClose, t]
   );
 
   const handleDelete = useCallback(async (): Promise<void> => {
@@ -292,18 +295,18 @@ export default function ChargeDocumentView({
       const res = await fetch(`/api/charge-documents/${documentId}`, { method: "DELETE" });
       const json = await res.json();
       if (!res.ok || !json.success) {
-        showErrorToast(json.message || "מחיקה נכשלה");
+        showErrorToast(json.message || t("doc.deleteFailed"));
         return;
       }
-      showSuccessToast("התעודה נמחקה");
+      showSuccessToast(t("doc.deleted"));
       onChanged?.();
       onClose?.();
     } catch {
-      showErrorToast("מחיקה נכשלה");
+      showErrorToast(t("doc.deleteFailed"));
     } finally {
       setActionBusy(false);
     }
-  }, [documentId, onChanged, onClose]);
+  }, [documentId, onChanged, onClose, t]);
 
   const runConfirm = useCallback(async (): Promise<void> => {
     if (!confirm) return;
@@ -321,11 +324,12 @@ export default function ChargeDocumentView({
     const primary = profile?.pdfPrimaryColor || "#A8622D";
     const accent = profile?.pdfAccentColor || "#347B52";
     // Sanitize: collapse "/" and whitespace runs to "_" so it's a safe filename.
-    const filename = `תעודה_${doc?.doc_number ?? ""}_${doc?.client_name ?? ""}`
+    const filename = `${t("doc.pdfFilenamePrefix")}_${doc?.doc_number ?? ""}_${doc?.client_name ?? ""}`
       .replace(/[/\s]+/g, "_")
       .trim();
-    printPdfContent(template, primary, accent, filename);
-  }, [doc, profile]);
+    // Hebrew documents print RTL, English LTR.
+    printPdfContent(template, primary, accent, filename, locale === "he" ? "rtl" : "ltr");
+  }, [doc, profile, t, locale]);
 
   // ── States ──────────────────────────────────────────────────────────────
   if (state === "loading") {
@@ -344,16 +348,16 @@ export default function ChargeDocumentView({
 
   if (state === "error" || !doc) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 p-8 text-center" dir="rtl">
-        <p className="text-foreground font-medium">לא הצלחנו לטעון את התעודה</p>
-        <p className="text-sm text-muted-foreground">ייתכן שהיא נמחקה או שאירעה תקלה.</p>
+      <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
+        <p className="text-foreground font-medium">{t("doc.loadErrorTitle")}</p>
+        <p className="text-sm text-muted-foreground">{t("doc.loadErrorBody")}</p>
         <div className="flex gap-2">
           <Button variant="outline" onClick={refetch} className="min-h-[44px]">
-            נסה שוב
+            {t("actions.retry")}
           </Button>
           {onClose && (
             <Button variant="ghost" onClick={onClose} className="min-h-[44px]">
-              חזרה
+              {t("actions.back")}
             </Button>
           )}
         </div>
@@ -364,43 +368,43 @@ export default function ChargeDocumentView({
   const status = STATUS_META[doc.status as ChargeDocStatus] ?? STATUS_META.pending;
 
   return (
-    <div dir="rtl" className="space-y-6">
+    <div className="space-y-6">
       {/* ── Header ── */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
             <h2 className="text-xl font-semibold text-foreground">
-              תעודה #{doc.doc_number}
+              {t("documents.docNumber", { number: doc.doc_number })}
             </h2>
             <span
               className={`inline-flex items-center rounded-[var(--radius)] border px-2.5 py-0.5 text-xs font-medium ${status.badge}`}
             >
-              {status.label}
+              {t(status.labelKey)}
             </span>
           </div>
-          <p className="text-muted-foreground">{doc.client_name}</p>
+          <p className="text-muted-foreground"><bdi>{doc.client_name}</bdi></p>
           <p className="text-sm text-muted-foreground">
-            הופקה: {formatDate(doc.issued_at)}
-            {doc.paid_at ? ` · שולם: ${formatDate(doc.paid_at)}` : ""}
+            {t("doc.issuedOn", { date: formatDate(doc.issued_at, undefined, locale) })}
+            {doc.paid_at ? ` · ${t("doc.paidOn", { date: formatDate(doc.paid_at, undefined, locale) })}` : ""}
           </p>
         </div>
         <div className="text-end">
-          <div className="text-xs text-muted-foreground">סה״כ</div>
+          <div className="text-xs text-muted-foreground">{t("doc.total")}</div>
           <div className="font-mono text-2xl font-bold tabular-nums text-foreground">
-            {formatCurrency(doc.total, doc.currency)}
+            {formatCurrency(doc.total, doc.currency, locale)}
           </div>
         </div>
       </div>
 
       {onClose && (
         <Button variant="ghost" onClick={onClose} className="min-h-[44px] -ms-2">
-          ← חזרה לרשימה
+          {t("doc.backToList")}
         </Button>
       )}
 
       {isPaid && (
         <p className="rounded-[var(--radius)] border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-          התעודה נעולה — בטל תשלום כדי לערוך.
+          {t("doc.lockedNotice")}
         </p>
       )}
 
@@ -409,18 +413,18 @@ export default function ChargeDocumentView({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-card-elevated text-muted-foreground">
-              <th className="px-3 py-2 text-start font-medium">פריט</th>
-              <th className="px-3 py-2 text-start font-medium">פירוט</th>
-              <th className="px-3 py-2 text-start font-medium">כמות / תעריף</th>
-              <th className="px-3 py-2 text-end font-medium">סכום</th>
-              {isPending && <th className="px-3 py-2 text-end font-medium sr-only">פעולות</th>}
+              <th className="px-3 py-2 text-start font-medium">{t("doc.colItem")}</th>
+              <th className="px-3 py-2 text-start font-medium">{t("doc.colDetails")}</th>
+              <th className="px-3 py-2 text-start font-medium">{t("doc.colQtyRate")}</th>
+              <th className="px-3 py-2 text-end font-medium">{t("doc.colAmount")}</th>
+              {isPending && <th className="px-3 py-2 text-end font-medium sr-only">{t("doc.colActions")}</th>}
             </tr>
           </thead>
           <tbody>
             {lines.length === 0 && (
               <tr>
                 <td colSpan={isPending ? 5 : 4} className="px-3 py-6 text-center text-muted-foreground">
-                  אין שורות בתעודה.
+                  {t("doc.noLines")}
                 </td>
               </tr>
             )}
@@ -429,9 +433,9 @@ export default function ChargeDocumentView({
               return (
                 <tr key={line.id} className="border-b border-border last:border-b-0 align-top">
                   <td className="px-3 py-3 text-foreground">
-                    {line.label}
+                    <bdi>{line.label}</bdi>
                     {isItemLine(line) && line.item_ref != null && (
-                      <div className="text-xs text-muted-foreground">אסמכתא {line.item_ref}</div>
+                      <div className="text-xs text-muted-foreground">{t("units.ref", { ref: line.item_ref })}</div>
                     )}
                   </td>
                   <td className="px-3 py-3">
@@ -439,30 +443,30 @@ export default function ChargeDocumentView({
                       <div className="space-y-2">
                         <input
                           type="text"
-                          aria-label="תיאור שורה"
+                          aria-label={t("doc.lineDescriptionAria")}
                           value={lineDraft.description}
                           onChange={(e) =>
                             setLineDraft((d) => ({ ...d, description: e.target.value }))
                           }
-                          placeholder="תיאור"
+                          placeholder={t("doc.descriptionPlaceholder")}
                           className="w-full rounded-[var(--radius)] border border-border bg-background px-2 py-1.5 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                         />
                         <input
                           type="text"
-                          aria-label="הערה לשורה"
+                          aria-label={t("doc.lineNoteAria")}
                           value={lineDraft.notes}
                           onChange={(e) =>
                             setLineDraft((d) => ({ ...d, notes: e.target.value }))
                           }
-                          placeholder="הערה"
+                          placeholder={t("doc.notePlaceholder")}
                           className="w-full rounded-[var(--radius)] border border-border bg-background px-2 py-1.5 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                         />
                       </div>
                     ) : (
                       <div>
-                        <div className="text-foreground">{line.description || "—"}</div>
+                        <div className="text-foreground"><bdi>{line.description || "—"}</bdi></div>
                         {line.notes && (
-                          <div className="text-xs text-muted-foreground">{line.notes}</div>
+                          <div className="text-xs text-muted-foreground"><bdi>{line.notes}</bdi></div>
                         )}
                       </div>
                     )}
@@ -470,14 +474,14 @@ export default function ChargeDocumentView({
                   <td className="px-3 py-3 text-muted-foreground">
                     {isItemLine(line) && line.quantity != null && line.rate != null ? (
                       <span className="font-mono tabular-nums">
-                        {line.quantity} × {formatCurrency(line.rate, doc.currency)}
+                        {line.quantity} × {formatCurrency(line.rate, doc.currency, locale)}
                       </span>
                     ) : (
                       "—"
                     )}
                   </td>
                   <td className="px-3 py-3 text-end font-mono tabular-nums text-foreground">
-                    {formatCurrency(line.amount, doc.currency)}
+                    {formatCurrency(line.amount, doc.currency, locale)}
                   </td>
                   {isPending && (
                     <td className="px-3 py-3 text-end">
@@ -489,7 +493,7 @@ export default function ChargeDocumentView({
                             disabled={savingLine}
                             className="min-h-[44px]"
                           >
-                            {savingLine ? "שומר…" : "שמור"}
+                            {savingLine ? t("actions.saving") : t("actions.save")}
                           </Button>
                           <Button
                             size="sm"
@@ -498,7 +502,7 @@ export default function ChargeDocumentView({
                             disabled={savingLine}
                             className="min-h-[44px]"
                           >
-                            ביטול
+                            {t("actions.cancel")}
                           </Button>
                         </div>
                       ) : (
@@ -509,7 +513,7 @@ export default function ChargeDocumentView({
                             onClick={() => startEditLine(line)}
                             className="min-h-[44px]"
                           >
-                            ערוך
+                            {t("actions.edit")}
                           </Button>
                           <Button
                             size="sm"
@@ -517,7 +521,7 @@ export default function ChargeDocumentView({
                             onClick={() => requestRemoveLine(line)}
                             className="min-h-[44px] text-destructive hover:text-destructive"
                           >
-                            הסר
+                            {t("doc.removeLineAction")}
                           </Button>
                         </div>
                       )}
@@ -533,7 +537,7 @@ export default function ChargeDocumentView({
       {/* ── Document notes ── */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-foreground" htmlFor="doc-notes">
-          הערות לתעודה
+          {t("doc.notesLabel")}
         </label>
         {isPending ? (
           <div className="space-y-2">
@@ -543,7 +547,7 @@ export default function ChargeDocumentView({
               onChange={(e) => setNotesDraft(e.target.value)}
               rows={3}
               className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="הערות פנימיות…"
+              placeholder={t("doc.notesPlaceholder")}
             />
             <Button
               variant="outline"
@@ -551,18 +555,18 @@ export default function ChargeDocumentView({
               disabled={savingNotes || notesDraft === (doc.notes ?? "")}
               className="min-h-[44px]"
             >
-              {savingNotes ? "שומר…" : "שמור הערות"}
+              {savingNotes ? t("actions.saving") : t("doc.saveNotes")}
             </Button>
           </div>
         ) : (
-          <p className="text-muted-foreground">{doc.notes || "—"}</p>
+          <p className="text-muted-foreground">{doc.notes ? <bdi>{doc.notes}</bdi> : "—"}</p>
         )}
       </div>
 
       {/* ── Actions ── */}
       <div className="flex flex-wrap gap-3 border-t border-border pt-4">
         <Button onClick={handleExportPdf} variant="secondary" className="min-h-[44px]">
-          ייצוא PDF
+          {t("doc.exportPdf")}
         </Button>
 
         {isPending && (
@@ -570,34 +574,33 @@ export default function ChargeDocumentView({
             <Button
               onClick={() =>
                 setConfirm({
-                  title: "סימון כשולם",
-                  description: "לסמן את התעודה כשולמה? היא תינעל לעריכה עד שתבטל את התשלום.",
-                  actionLabel: "סמן כשולם",
+                  title: t("doc.markPaidTitle"),
+                  description: t("doc.markPaidBody"),
+                  actionLabel: t("doc.markPaidAction"),
                   destructive: false,
-                  run: () => postAction("pay", "סומן כשולם", false),
+                  run: () => postAction("pay", t("doc.markedPaid"), false),
                 })
               }
               disabled={actionBusy}
               className="min-h-[44px]"
             >
-              סמן כשולם
+              {t("doc.markPaidAction")}
             </Button>
             <Button
               variant="destructive"
               onClick={() =>
                 setConfirm({
-                  title: "ביטול תעודה",
-                  description:
-                    "לבטל את התעודה? הפעולה אינה הפיכה. הפריטים שמקורם ברישום זמן יחזרו לרשימת הפריטים לחיוב.",
-                  actionLabel: "בטל תעודה",
+                  title: t("doc.cancelDocTitle"),
+                  description: t("doc.cancelDocBody"),
+                  actionLabel: t("doc.cancelDocAction"),
                   destructive: true,
-                  run: () => postAction("cancel", "התעודה בוטלה", true),
+                  run: () => postAction("cancel", t("doc.docCanceled"), true),
                 })
               }
               disabled={actionBusy}
               className="min-h-[44px]"
             >
-              בטל תעודה
+              {t("doc.cancelDocAction")}
             </Button>
           </>
         )}
@@ -607,17 +610,17 @@ export default function ChargeDocumentView({
             variant="outline"
             onClick={() =>
               setConfirm({
-                title: "ביטול תשלום",
-                description: "לבטל את סימון התשלום ולפתוח את התעודה לעריכה מחדש?",
-                actionLabel: "בטל תשלום",
+                title: t("doc.unpayTitle"),
+                description: t("doc.unpayBody"),
+                actionLabel: t("doc.unpayAction"),
                 destructive: false,
-                run: () => postAction("unpay", "התשלום בוטל", false),
+                run: () => postAction("unpay", t("doc.unpaid"), false),
               })
             }
             disabled={actionBusy}
             className="min-h-[44px]"
           >
-            בטל תשלום
+            {t("doc.unpayAction")}
           </Button>
         )}
 
@@ -626,9 +629,9 @@ export default function ChargeDocumentView({
             variant="ghost"
             onClick={() =>
               setConfirm({
-                title: "מחיקת תעודה",
-                description: "למחוק לצמיתות את התעודה המבוטלת? לא ניתן לשחזר.",
-                actionLabel: "מחק תעודה",
+                title: t("doc.deleteDocTitle"),
+                description: t("doc.deleteDocBody"),
+                actionLabel: t("doc.deleteDocAction"),
                 destructive: true,
                 run: handleDelete,
               })
@@ -636,7 +639,7 @@ export default function ChargeDocumentView({
             disabled={actionBusy}
             className="min-h-[44px] text-destructive hover:text-destructive"
           >
-            מחק תעודה
+            {t("doc.deleteDocAction")}
           </Button>
         )}
       </div>
@@ -655,7 +658,7 @@ export default function ChargeDocumentView({
               disabled={confirmBusy}
               className="min-h-[44px]"
             >
-              ביטול
+              {t("actions.cancel")}
             </Button>
             <Button
               variant={confirm?.destructive ? "destructive" : "default"}
@@ -663,7 +666,7 @@ export default function ChargeDocumentView({
               disabled={confirmBusy}
               className="min-h-[44px]"
             >
-              {confirmBusy ? "מבצע…" : confirm?.actionLabel}
+              {confirmBusy ? t("actions.working") : confirm?.actionLabel}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -673,8 +676,8 @@ export default function ChargeDocumentView({
       <Dialog open={pdfPromptOpen} onOpenChange={setPdfPromptOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>התעודה נוצרה בהצלחה</DialogTitle>
-            <DialogDescription>להפיק PDF עכשיו?</DialogDescription>
+            <DialogTitle>{t("doc.pdfPromptTitle")}</DialogTitle>
+            <DialogDescription>{t("doc.pdfPromptBody")}</DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
             <Button
@@ -682,7 +685,7 @@ export default function ChargeDocumentView({
               onClick={() => setPdfPromptOpen(false)}
               className="min-h-[44px]"
             >
-              לא עכשיו
+              {t("doc.pdfPromptLater")}
             </Button>
             <Button
               onClick={() => {
@@ -691,14 +694,14 @@ export default function ChargeDocumentView({
               }}
               className="min-h-[44px]"
             >
-              הפק PDF
+              {t("doc.pdfPromptConfirm")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* ── Hidden PDF print block (light/print styling) ── */}
-      <div id="pdf-content" className="print-only" dir="rtl">
+      <div id="pdf-content" className="print-only" dir={locale === "he" ? "rtl" : "ltr"}>
         <div
           className="pdf-header"
           style={{
@@ -726,26 +729,26 @@ export default function ChargeDocumentView({
                     className="pdf-business-name"
                     style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "0.25rem" }}
                   >
-                    {profile.businessName}
+                    <bdi>{profile.businessName}</bdi>
                   </h1>
                   <div style={{ fontSize: "12px", color: "#64748b", lineHeight: 1.6 }}>
-                    {profile.taxId && <div>ע.מ / ח.פ: {profile.taxId}</div>}
-                    {profile.address && <div>{profile.address}</div>}
-                    {profile.phone && <div>{profile.phone}</div>}
-                    {profile.email && <div>{profile.email}</div>}
+                    {profile.taxId && <div>{t("pdf.taxId")}: <bdi>{profile.taxId}</bdi></div>}
+                    {profile.address && <div><bdi>{profile.address}</bdi></div>}
+                    {profile.phone && <div><bdi>{profile.phone}</bdi></div>}
+                    {profile.email && <div><bdi>{profile.email}</bdi></div>}
                   </div>
                 </>
               )}
             </div>
             <div style={{ textAlign: "start" }}>
               <h2 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "0.5rem" }}>
-                תעודת התחשבנות פנימית
+                {t("doc.settlementDocTitle")}
               </h2>
               <div style={{ fontSize: "13px", color: "#64748b" }}>
-                <div>מספר {doc.doc_number}</div>
-                <div>סטטוס: {status.label}</div>
+                <div>{t("doc.pdfNumber", { number: doc.doc_number })}</div>
+                <div>{t("doc.pdfStatus", { status: t(status.labelKey) })}</div>
                 <div style={{ marginTop: "0.5rem" }}>
-                  תאריך הפקה: {new Date(doc.issued_at).toLocaleDateString("he-IL")}
+                  {t("doc.pdfIssueDate", { date: formatDate(doc.issued_at, undefined, locale) })}
                 </div>
               </div>
             </div>
@@ -769,41 +772,40 @@ export default function ChargeDocumentView({
                 letterSpacing: "0.5px",
               }}
             >
-              עבור
+              {t("doc.pdfFor")}
             </div>
-            <div style={{ fontWeight: 600, fontSize: "16px" }}>{doc.client_name}</div>
+            <div style={{ fontWeight: 600, fontSize: "16px" }}><bdi>{doc.client_name}</bdi></div>
           </div>
         </div>
 
         <table className="pdf-table" style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ backgroundColor: "#f8fafc" }}>
-              <th style={{ padding: "0.5rem 0.75rem", textAlign: "start" }}>פריט</th>
-              <th style={{ padding: "0.5rem 0.75rem", textAlign: "start" }}>פירוט</th>
-              <th style={{ padding: "0.5rem 0.75rem", textAlign: "start" }}>כמות / תעריף</th>
-              <th style={{ padding: "0.5rem 0.75rem", textAlign: "start" }}>סכום</th>
+              <th style={{ padding: "0.5rem 0.75rem", textAlign: "start" }}>{t("doc.colItem")}</th>
+              <th style={{ padding: "0.5rem 0.75rem", textAlign: "start" }}>{t("doc.colDetails")}</th>
+              <th style={{ padding: "0.5rem 0.75rem", textAlign: "start" }}>{t("doc.colQtyRate")}</th>
+              <th style={{ padding: "0.5rem 0.75rem", textAlign: "start" }}>{t("doc.colAmount")}</th>
             </tr>
           </thead>
           <tbody>
             {lines.map((line) => (
               <tr key={line.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                 <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>
-                  {line.label}
+                  <bdi>{line.label}</bdi>
                   {isItemLine(line) && line.item_ref != null && (
-                    <span style={{ color: "#94a3b8" }}> · אסמכתא {line.item_ref}</span>
+                    <span style={{ color: "#94a3b8" }}> · {t("units.ref", { ref: line.item_ref })}</span>
                   )}
                 </td>
                 <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>
-                  {line.description || ""}
-                  {line.notes ? ` (${line.notes})` : ""}
+                  <bdi>{line.description || ""}{line.notes ? ` (${line.notes})` : ""}</bdi>
                 </td>
                 <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>
                   {isItemLine(line) && line.quantity != null && line.rate != null
-                    ? `${line.quantity} × ${formatCurrency(line.rate, doc.currency)}`
+                    ? `${line.quantity} × ${formatCurrency(line.rate, doc.currency, locale)}`
                     : ""}
                 </td>
                 <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>
-                  {formatCurrency(line.amount, doc.currency)}
+                  {formatCurrency(line.amount, doc.currency, locale)}
                 </td>
               </tr>
             ))}
@@ -811,10 +813,10 @@ export default function ChargeDocumentView({
           <tfoot>
             <tr>
               <td colSpan={3} style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: 600 }}>
-                סה״כ
+                {t("doc.total")}
               </td>
               <td style={{ padding: "0.5rem 0.75rem", fontWeight: 600, whiteSpace: "nowrap" }}>
-                {formatCurrency(doc.total, doc.currency)}
+                {formatCurrency(doc.total, doc.currency, locale)}
               </td>
             </tr>
           </tfoot>
@@ -822,8 +824,8 @@ export default function ChargeDocumentView({
 
         {doc.notes && (
           <div className="pdf-section" style={{ marginTop: "1.25rem", fontSize: "12px", color: "#475569" }}>
-            <div style={{ fontWeight: 600, marginBottom: "0.25rem" }}>הערות</div>
-            <div>{doc.notes}</div>
+            <div style={{ fontWeight: 600, marginBottom: "0.25rem" }}>{t("doc.notesHeading")}</div>
+            <div><bdi>{doc.notes}</bdi></div>
           </div>
         )}
       </div>
