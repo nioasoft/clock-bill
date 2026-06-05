@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "@/src/i18n/navigation";
 import { Link } from "@/src/i18n/navigation";
 import { AppLayout } from "@/components/app-layout";
@@ -24,6 +24,7 @@ interface AdminStats {
 
 export default function AdminDashboardPage() {
   const t = useTranslations("Admin");
+  const intlLocale = useLocale() === "en" ? "en-US" : "he-IL";
   const router = useRouter();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -164,7 +165,7 @@ export default function AdminDashboardPage() {
                 <div className="h-48 flex items-end gap-1">
                   {stats.registrationTrend.map((d) => {
                     const height = (d.count / maxTrend) * 100;
-                    const dateStr = new Date(d.day).toLocaleDateString("he-IL", {
+                    const dateStr = new Date(d.day).toLocaleDateString(intlLocale, {
                       day: "numeric",
                       month: "numeric",
                     });

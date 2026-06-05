@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "@/src/i18n/navigation";
 import { Link } from "@/src/i18n/navigation";
 import { AppLayout } from "@/components/app-layout";
@@ -30,6 +30,7 @@ interface Pagination {
 
 export default function AdminUsersPage() {
   const t = useTranslations("Admin");
+  const intlLocale = useLocale() === "en" ? "en-US" : "he-IL";
   const router = useRouter();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
@@ -129,11 +130,11 @@ export default function AdminUsersPage() {
                       <td className="px-4 py-3 font-medium text-foreground">{user.email}</td>
                       <td className="px-4 py-3 text-muted-foreground">{user.businessName || "—"}</td>
                       <td className="px-4 py-3 text-muted-foreground">
-                        {new Date(user.createdAt).toLocaleDateString("he-IL")}
+                        {new Date(user.createdAt).toLocaleDateString(intlLocale)}
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">
                         {user.lastEntryDate
-                          ? new Date(user.lastEntryDate).toLocaleDateString("he-IL")
+                          ? new Date(user.lastEntryDate).toLocaleDateString(intlLocale)
                           : "—"}
                       </td>
                       <td className="px-4 py-3 text-center font-mono tabular-nums">{user.entryCount}</td>
@@ -184,7 +185,7 @@ export default function AdminUsersPage() {
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <span>{t("users.entriesCount", { count: user.entryCount })}</span>
                     <span>{t("users.projectsCount", { count: user.projectCount })}</span>
-                    <span>{new Date(user.createdAt).toLocaleDateString("he-IL")}</span>
+                    <span>{new Date(user.createdAt).toLocaleDateString(intlLocale)}</span>
                   </div>
                 </Link>
               ))}

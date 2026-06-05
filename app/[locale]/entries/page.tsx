@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/src/i18n/navigation";
 import { useTimer } from "@/contexts/timer-context";
 import { AppLayout } from "@/components/app-layout";
@@ -101,6 +101,8 @@ interface GroupedProjects {
 
 export default function EntriesPage() {
   const t = useTranslations("Entries");
+  const locale = useLocale();
+  const intlLocale = locale === "en" ? "en-US" : "he-IL";
   const resolveValidation = useValidationMessage();
   const [entries, setEntries] = useState<TimeEntry[]>([]);
   const [entriesLoading, setEntriesLoading] = useState(true);
@@ -1244,7 +1246,7 @@ export default function EntriesPage() {
                       <tr key={entry.id} className="hover:bg-surface even:bg-surface/50">
                         <td className="whitespace-nowrap px-6 py-4">
                           <div className="text-sm text-foreground">
-                            {new Date(entry.date).toLocaleDateString("he-IL")}
+                            {new Date(entry.date).toLocaleDateString(intlLocale)}
                           </div>
                         </td>
                       <td className="px-6 py-4 max-w-sm">
@@ -1295,7 +1297,7 @@ export default function EntriesPage() {
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
-                          {formatCurrency(entryAmount(entry), entry.currency || "ILS")}
+                          {formatCurrency(entryAmount(entry), entry.currency || "ILS", locale)}
                         </span>
                       </td>
                       <td className="w-px whitespace-nowrap px-4 py-4 text-start">
@@ -1325,7 +1327,7 @@ export default function EntriesPage() {
                   <div className="flex items-center justify-between gap-2 mb-1.5">
                     <div className="flex min-w-0 items-center gap-1.5">
                       <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                        {new Date(entry.date).toLocaleDateString("he-IL")}
+                        {new Date(entry.date).toLocaleDateString(intlLocale)}
                       </span>
                       {isEntryRunning(entry) && (
                         <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-semibold text-success">
@@ -1344,7 +1346,7 @@ export default function EntriesPage() {
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
                       <span className="font-mono text-base font-bold tabular-nums text-foreground">
-                        {formatCurrency(entryAmount(entry), entry.currency || "ILS")}
+                        {formatCurrency(entryAmount(entry), entry.currency || "ILS", locale)}
                       </span>
                       <button
                         onClick={() => handleEdit(entry)}

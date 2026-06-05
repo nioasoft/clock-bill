@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Search, Users, FolderKanban, Clock, X } from "lucide-react";
 import { useRouter } from "@/src/i18n/navigation";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
@@ -20,6 +20,7 @@ interface SearchResult {
 
 export function GlobalSearch() {
   const t = useTranslations("Timer");
+  const intlLocale = useLocale() === "en" ? "en-US" : "he-IL";
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -259,7 +260,7 @@ export function GlobalSearch() {
                                 {result.date && (
                                   <>
                                     <span>•</span>
-                                    <span>{new Date(result.date).toLocaleDateString('he-IL')}</span>
+                                    <span>{new Date(result.date).toLocaleDateString(intlLocale)}</span>
                                   </>
                                 )}
                                 {result.duration && (

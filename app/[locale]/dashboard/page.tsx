@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/src/i18n/navigation";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
@@ -63,6 +63,7 @@ interface ProjectHours {
 
 export default function DashboardPage() {
   const t = useTranslations("Dashboard");
+  const intlLocale = useLocale() === "en" ? "en-US" : "he-IL";
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState(false);
@@ -335,7 +336,7 @@ export default function DashboardPage() {
                         <Clock className="h-4 w-4 shrink-0" />
                         <span>
                           {t("activeTimers.startedAt", {
-                            time: new Date(timer.startTime).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" }),
+                            time: new Date(timer.startTime).toLocaleTimeString(intlLocale, { hour: "2-digit", minute: "2-digit" }),
                           })}
                         </span>
                       </div>
@@ -468,7 +469,7 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <p className="text-sm font-medium text-foreground">{entry.description}</p>
-                        <p className="text-sm text-muted-foreground">{new Date(entry.date).toLocaleDateString('he-IL')}</p>
+                        <p className="text-sm text-muted-foreground">{new Date(entry.date).toLocaleDateString(intlLocale)}</p>
                       </div>
                       <div className="text-end">
                         <p className="font-mono text-sm font-medium tabular-nums text-foreground">{entry.formattedDuration}</p>

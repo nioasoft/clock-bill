@@ -12,7 +12,7 @@ import { ClientRatesEditor } from "@/components/client-rates-editor";
 import { cleanClientRates } from "@/lib/schemas/rates";
 import type { ClientRate, ClientRateInput } from "@/lib/schemas/rates";
 import { ROUNDING_MODES, asRoundingMode, type RoundingMode } from "@/lib/rounding";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 
 const CURRENCIES = [
   { value: "ILS", label: "₪ ILS" },
@@ -70,6 +70,7 @@ function clientToFormData(client: Client) {
 export default function ClientDetailsPage() {
   const t = useTranslations("Clients");
   const tRounding = useTranslations("Rounding");
+  const intlLocale = useLocale() === "en" ? "en-US" : "he-IL";
   const router = useRouter();
   const params = useParams();
   const clientId = params.id as string;
@@ -604,7 +605,7 @@ export default function ClientDetailsPage() {
               <span className="text-border">|</span>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-muted-foreground">{t("createdLabel")}</span>
-                <span className="text-foreground tabular-nums">{new Date(client.createdAt).toLocaleDateString('he-IL')}</span>
+                <span className="text-foreground tabular-nums">{new Date(client.createdAt).toLocaleDateString(intlLocale)}</span>
               </div>
             </div>
 

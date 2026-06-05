@@ -9,7 +9,7 @@ import { PageContainer } from "@/components/page-container";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { validateRequired, validateDateRange } from "@/lib/validation";
 import { asRoundingMode, resolveRounding } from "@/lib/rounding";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 
 interface Project {
   id: string;
@@ -34,6 +34,7 @@ interface Project {
 export default function ProjectDetailsPage() {
   const t = useTranslations("Projects");
   const tRounding = useTranslations("Rounding");
+  const intlLocale = useLocale() === "en" ? "en-US" : "he-IL";
   const router = useRouter();
   const params = useParams();
   const projectId = params.id as string;
@@ -841,14 +842,14 @@ export default function ProjectDetailsPage() {
               <div className="flex items-center justify-between gap-4 sm:block">
                 <dt className="text-sm text-muted-foreground sm:mb-1">{t("details.startDate")}</dt>
                 <dd className="text-sm text-foreground tabular-nums">
-                  {project.startDate ? new Date(project.startDate).toLocaleDateString("he-IL") : "-"}
+                  {project.startDate ? new Date(project.startDate).toLocaleDateString(intlLocale) : "-"}
                 </dd>
               </div>
 
               <div className="flex items-center justify-between gap-4 sm:block">
                 <dt className="text-sm text-muted-foreground sm:mb-1">{t("details.endDate")}</dt>
                 <dd className="text-sm text-foreground tabular-nums">
-                  {project.endDate ? new Date(project.endDate).toLocaleDateString("he-IL") : "-"}
+                  {project.endDate ? new Date(project.endDate).toLocaleDateString(intlLocale) : "-"}
                 </dd>
               </div>
 
@@ -857,8 +858,8 @@ export default function ProjectDetailsPage() {
                 <dd className="text-sm text-foreground tabular-nums">
                   {(project.fixedMonthlyStartDate || project.fixedMonthlyEndDate)
                     ? t("details.validityRange", {
-                        from: project.fixedMonthlyStartDate ? new Date(project.fixedMonthlyStartDate).toLocaleDateString("he-IL") : "-",
-                        to: project.fixedMonthlyEndDate ? new Date(project.fixedMonthlyEndDate).toLocaleDateString("he-IL") : t("details.noEnd"),
+                        from: project.fixedMonthlyStartDate ? new Date(project.fixedMonthlyStartDate).toLocaleDateString(intlLocale) : "-",
+                        to: project.fixedMonthlyEndDate ? new Date(project.fixedMonthlyEndDate).toLocaleDateString(intlLocale) : t("details.noEnd"),
                       })
                     : t("details.unlimited")}
                 </dd>
@@ -919,7 +920,7 @@ export default function ProjectDetailsPage() {
                     <div>
                       <p className="text-sm font-medium text-foreground">{entry.description}</p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(entry.date).toLocaleDateString("he-IL")}
+                        {new Date(entry.date).toLocaleDateString(intlLocale)}
                       </p>
                     </div>
                     <span className="font-mono text-sm tabular-nums text-foreground">

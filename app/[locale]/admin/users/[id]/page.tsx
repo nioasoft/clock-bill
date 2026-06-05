@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "@/src/i18n/navigation";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
@@ -90,6 +90,7 @@ export default function AdminUserDetailPage({
 }) {
   const { id: userId } = use(params);
   const t = useTranslations("Admin");
+  const intlLocale = useLocale() === "en" ? "en-US" : "he-IL";
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>("profile");
   const [loading, setLoading] = useState(true);
@@ -264,7 +265,7 @@ export default function AdminUserDetailPage({
               <div>
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">{t("detail.profile.registrationDate")}</p>
                 <p className="text-sm text-foreground">
-                  {new Date(user.createdAt).toLocaleDateString("he-IL", {
+                  {new Date(user.createdAt).toLocaleDateString(intlLocale, {
                     year: "numeric",
                     month: "long",
                     day: "numeric",
@@ -395,7 +396,7 @@ export default function AdminUserDetailPage({
                     <tr key={e.id} className="border-b border-border/50">
                       <td className="px-4 py-3 font-medium text-foreground max-w-xs truncate">{e.description}</td>
                       <td className="px-4 py-3 text-muted-foreground">
-                        {new Date(e.date).toLocaleDateString("he-IL")}
+                        {new Date(e.date).toLocaleDateString(intlLocale)}
                       </td>
                       <td className="px-4 py-3 text-center font-mono tabular-nums">
                         {formatDuration(e.duration)}
@@ -426,7 +427,7 @@ export default function AdminUserDetailPage({
                     {sessions.map((s) => (
                       <tr key={s.id} className="border-b border-border/50">
                         <td className="px-4 py-3 text-muted-foreground">
-                          {new Date(s.createdAt).toLocaleDateString("he-IL", {
+                          {new Date(s.createdAt).toLocaleDateString(intlLocale, {
                             year: "numeric",
                             month: "short",
                             day: "numeric",
@@ -435,7 +436,7 @@ export default function AdminUserDetailPage({
                           })}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground">
-                          {new Date(s.expiresAt).toLocaleDateString("he-IL", {
+                          {new Date(s.expiresAt).toLocaleDateString(intlLocale, {
                             year: "numeric",
                             month: "short",
                             day: "numeric",

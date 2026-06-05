@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { Link } from "@/src/i18n/navigation";
 import { Calendar } from "lucide-react";
 
@@ -17,6 +18,7 @@ interface UpcomingDeadlinesProps {
 }
 
 export function UpcomingDeadlines({ userId }: UpcomingDeadlinesProps) {
+  const intlLocale = useLocale() === "en" ? "en-US" : "he-IL";
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -120,7 +122,7 @@ export function UpcomingDeadlines({ userId }: UpcomingDeadlinesProps) {
               </div>
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              תאריך יעד: {new Date(deadline.endDate).toLocaleDateString('he-IL')}
+              תאריך יעד: {new Date(deadline.endDate).toLocaleDateString(intlLocale)}
             </p>
           </Link>
         ))}

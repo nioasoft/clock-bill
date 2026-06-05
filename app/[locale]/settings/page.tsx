@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "@/src/i18n/navigation";
 import { DeleteAccountSection } from "@/components/delete-account-section";
 import { AppLayout } from "@/components/app-layout";
@@ -63,6 +63,8 @@ interface CurrencyRate {
 
 export default function SettingsPage() {
   const t = useTranslations("Settings");
+  const locale = useLocale();
+  const intlLocale = locale === "en" ? "en-US" : "he-IL";
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"profile" | "security" | "currencies" | "notifications">("profile");
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -232,7 +234,7 @@ export default function SettingsPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleString("he-IL", {
+    return date.toLocaleString(intlLocale, {
       year: "numeric",
       month: "long",
       day: "numeric",

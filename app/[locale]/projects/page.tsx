@@ -12,7 +12,7 @@ import { FolderOpen } from "lucide-react";
 import { validateRequired, validateDateRange } from "@/lib/validation";
 import { useValidationMessage } from "@/lib/validation-messages";
 import { fieldClass } from "@/lib/form-styles";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 
 interface Client {
   id: string;
@@ -47,6 +47,7 @@ export default function ProjectsPage() {
 function ProjectsPageContent() {
   const t = useTranslations("Projects");
   const tRounding = useTranslations("Rounding");
+  const intlLocale = useLocale() === "en" ? "en-US" : "he-IL";
   const resolveValidation = useValidationMessage();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -705,9 +706,9 @@ function ProjectsPageContent() {
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push(`/projects/${project.id}`); }}
                       >
                         <div className="text-sm text-muted-foreground">
-                          {project.startDate ? new Date(project.startDate).toLocaleDateString("he-IL") : "-"}
+                          {project.startDate ? new Date(project.startDate).toLocaleDateString(intlLocale) : "-"}
                           {" - "}
-                          {project.endDate ? new Date(project.endDate).toLocaleDateString("he-IL") : t("noEndDate")}
+                          {project.endDate ? new Date(project.endDate).toLocaleDateString(intlLocale) : t("noEndDate")}
                         </div>
                       </td>
                       {statusFilter === "archived" && (
@@ -752,9 +753,9 @@ function ProjectsPageContent() {
                   <div className="mt-1 text-sm text-muted-foreground">{project.clientName}</div>
 
                   <div className="mt-1 text-xs text-muted-foreground">
-                    {project.startDate ? new Date(project.startDate).toLocaleDateString("he-IL") : "-"}
+                    {project.startDate ? new Date(project.startDate).toLocaleDateString(intlLocale) : "-"}
                     {" - "}
-                    {project.endDate ? new Date(project.endDate).toLocaleDateString("he-IL") : t("noEndDate")}
+                    {project.endDate ? new Date(project.endDate).toLocaleDateString(intlLocale) : t("noEndDate")}
                   </div>
 
                   {statusFilter === "archived" && (
