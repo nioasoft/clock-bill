@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/src/i18n/navigation";
 import { useTimer } from "@/contexts/timer-context";
 import { AppLayout } from "@/components/app-layout";
@@ -98,6 +99,7 @@ interface GroupedProjects {
 }
 
 export default function EntriesPage() {
+  const t = useTranslations("Entries");
   const [entries, setEntries] = useState<TimeEntry[]>([]);
   const [entriesLoading, setEntriesLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -382,18 +384,18 @@ export default function EntriesPage() {
     if (formData.billingKind === "item") {
       const q = parseFloat(formData.quantity);
       if (!formData.quantity || isNaN(q) || q <= 0) {
-        errors.duration = "נא להזין כמות תקינה";
+        errors.duration = t("validation.quantityInvalid");
       } else if (!formData.rateId) {
-        errors.duration = "נא לבחור פריט";
+        errors.duration = t("validation.selectItem");
       }
       // Ad-hoc item: name + unit price are required.
       if (formData.rateId === ADHOC) {
         const price = parseFloat(formData.adhocPrice);
         if (!formData.adhocName.trim()) {
-          errors.adhocName = "נא להזין שם פריט";
+          errors.adhocName = t("validation.itemNameRequired");
         }
         if (formData.adhocPrice === "" || isNaN(price) || price < 0) {
-          errors.adhocPrice = "נא להזין מחיר ליחידה";
+          errors.adhocPrice = t("validation.unitPriceRequired");
         }
       }
     } else {
@@ -479,13 +481,13 @@ export default function EntriesPage() {
               });
               const rd = await r.json();
               if (rd.success) {
-                showSuccessToast(rd.created ? "הפריט נשמר ללקוח" : "הפריט כבר קיים אצל הלקוח");
+                showSuccessToast(rd.created ? t("toast.itemSaved") : t("toast.itemAlreadyExists"));
               } else {
-                showErrorToast("הרשומה נשמרה, אך הפריט לא נשמר ללקוח");
+                showErrorToast(t("toast.itemNotSaved"));
               }
             } catch (err) {
               console.error("Error saving item to client:", err);
-              showErrorToast("הרשומה נשמרה, אך הפריט לא נשמר ללקוח");
+              showErrorToast(t("toast.itemNotSaved"));
             }
           }
         }
@@ -510,11 +512,11 @@ export default function EntriesPage() {
         setEditingEntry(null);
         setFieldErrors({});
       } else {
-        setFormError(data.message || isEditing ? "שגיאה בעדכון הרשומה" : "שגיאה ביצירת הרשומה");
+        setFormError(data.message || isEditing ? t("error.update") : t("error.create"));
       }
     } catch (error) {
       console.error("Error saving entry:", error);
-      setFormError(editingEntry ? "שגיאה בעדכון הרשומה" : "שגיאה ביצירת הרשומה");
+      setFormError(editingEntry ? t("error.update") : t("error.create"));
     } finally {
       setSubmitting(false);
     }
@@ -615,13 +617,13 @@ export default function EntriesPage() {
         // Delete is only reachable from within the edit form — close it on success.
         setShowForm(false);
         setEditingEntry(null);
-        showSuccessToast("הרשומה נמחקה בהצלחה");
+        showSuccessToast(t("toast.deleted"));
       } else {
-        showErrorToast(data.message || "שגיאה במחיקת הרשומה");
+        showErrorToast(data.message || t("error.delete"));
       }
     } catch (error) {
       console.error("Error deleting entry:", error);
-      showErrorToast("שגיאה במחיקת הרשומה");
+      showErrorToast(t("error.delete"));
     } finally {
       setDeleting(false);
     }
@@ -670,14 +672,14 @@ export default function EntriesPage() {
   return (
     <AppLayout>
       <PageContainer>
-        <PageHeader title="רשומות חיוב">
+        <PageHeader title={t("pageTitle")}>
           <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">N</kbd>
           {showForm ? (
             <button
               onClick={handleCancelEdit}
               className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted"
             >
-              ביטול
+              {t("cancel")}
             </button>
           ) : (
             <>
@@ -685,13 +687,13 @@ export default function EntriesPage() {
                 onClick={() => openManualEntry("hourly")}
                 className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
               >
-                + הזנת רשומת זמן
+                {t("addTimeEntry")}
               </button>
               <button
                 onClick={() => openManualEntry("item")}
                 className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-surface"
               >
-                + הזנת פריט חיוב
+                {t("addBillingItem")}
               </button>
             </>
           )}
@@ -701,7 +703,7 @@ export default function EntriesPage() {
         <div className="mb-6 rounded-[var(--radius-card)] border border-border bg-card p-4">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div className="flex items-center gap-2">
-              <label htmlFor="filterMonth" className="text-sm font-medium text-foreground">חודש</label>
+              <label htmlFor="filterMonth" className="text-sm font-medium text-foreground">{t("filters.month")}</label>
               <input
                 type="month"
                 id="filterMonth"
@@ -719,7 +721,7 @@ export default function EntriesPage() {
               onClick={() => setShowFilters(!showFilters)}
               className="min-h-[44px] px-4 py-2 text-sm font-medium text-primary hover:bg-primary-light rounded-[var(--radius-card)] transition-colors"
             >
-              {showFilters ? "הסתר סינון מתקדם" : "סינון מתקדם"}
+              {showFilters ? t("filters.hideAdvanced") : t("filters.advanced")}
             </button>
           </div>
 
@@ -727,7 +729,7 @@ export default function EntriesPage() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div>
                 <label htmlFor="filterClient" className="block text-sm font-medium text-foreground mb-1">
-                  לקוח
+                  {t("filters.client")}
                 </label>
                 <select
                   id="filterClient"
@@ -739,7 +741,7 @@ export default function EntriesPage() {
                   className="block w-full rounded-md border border-border/50 px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                   disabled={clientsLoading}
                 >
-                  <option value="">כל הלקוחות</option>
+                  <option value="">{t("filters.allClients")}</option>
                   {clients.map((client) => (
                     <option key={client.id} value={client.id}>
                       {client.name}
@@ -750,7 +752,7 @@ export default function EntriesPage() {
 
               <div>
                 <label htmlFor="filterProject" className="block text-sm font-medium text-foreground mb-1">
-                  פרויקט
+                  {t("filters.project")}
                 </label>
                 <select
                   id="filterProject"
@@ -759,7 +761,7 @@ export default function EntriesPage() {
                   className="block w-full rounded-md border border-border/50 px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                   disabled={projectsLoading}
                 >
-                  <option value="">כל הפרויקטים</option>
+                  <option value="">{t("filters.allProjects")}</option>
                   {getFilteredProjects().map((project) => (
                     <option key={project.id} value={project.id}>
                       {project.name}
@@ -770,7 +772,7 @@ export default function EntriesPage() {
 
               <div>
                 <label htmlFor="filterStartDate" className="block text-sm font-medium text-foreground mb-1">
-                  תאריך התחלה
+                  {t("filters.startDate")}
                 </label>
                 <input
                   type="date"
@@ -783,7 +785,7 @@ export default function EntriesPage() {
 
               <div>
                 <label htmlFor="filterEndDate" className="block text-sm font-medium text-foreground mb-1">
-                  תאריך סיום
+                  {t("filters.endDate")}
                 </label>
                 <input
                   type="date"
@@ -799,7 +801,7 @@ export default function EntriesPage() {
                   onClick={clearFilters}
                   className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-sm text-foreground hover:bg-muted"
                 >
-                  נקה סינון
+                  {t("filters.clear")}
                 </button>
               </div>
             </div>
@@ -814,7 +816,7 @@ export default function EntriesPage() {
                   <button
                     onClick={() => handleFilterChange("clientId", "")}
                     className="flex h-5 w-5 items-center justify-center rounded-full text-primary/70 hover:bg-primary/20 hover:text-primary"
-                    aria-label="הסר סינון לקוח"
+                    aria-label={t("filters.removeClientFilter")}
                   >
                     ×
                   </button>
@@ -826,7 +828,7 @@ export default function EntriesPage() {
                   <button
                     onClick={() => handleFilterChange("projectId", "")}
                     className="flex h-5 w-5 items-center justify-center rounded-full text-primary/70 hover:bg-primary/20 hover:text-primary"
-                    aria-label="הסר סינון פרויקט"
+                    aria-label={t("filters.removeProjectFilter")}
                   >
                     ×
                   </button>
@@ -840,7 +842,7 @@ export default function EntriesPage() {
         {showForm && (
           <div className="mb-8 rounded-[var(--radius-card)] bg-surface p-6 shadow motion-safe:animate-scale-in">
             <h2 className="text-xl font-semibold text-foreground mb-4">
-              {editingEntry ? "ערוך רישום זמן" : "רשום זמן חדש"}
+              {editingEntry ? t("form.editTitle") : t("form.newTitle")}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               {formError && (
@@ -852,7 +854,7 @@ export default function EntriesPage() {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label htmlFor="projectId" className="block text-sm font-medium text-foreground">
-                    פרויקט *
+                    {t("form.projectLabel")}
                   </label>
                   <select
                     id="projectId"
@@ -862,7 +864,7 @@ export default function EntriesPage() {
                     className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.projectId ? "border border-destructive" : "border border-border/50"}`}
                     disabled={submitting || projectsLoading}
                   >
-                    <option value="">בחר פרויקט</option>
+                    <option value="">{t("form.selectProject")}</option>
                     {Object.entries(groupedProjects).map(([clientId, { clientName, projects: clientProjects }]) => (
                       <optgroup key={clientId} label={clientName}>
                         {clientProjects.map((project) => (
@@ -881,7 +883,7 @@ export default function EntriesPage() {
                       href="/projects?create=true"
                       className="mt-1 inline-block text-xs text-primary hover:text-primary/90"
                     >
-                      + צור פרויקט חדש
+                      {t("form.createProject")}
                     </Link>
                   )}
                 </div>
@@ -889,7 +891,7 @@ export default function EntriesPage() {
                 {formData.projectId && formTasks.length > 0 && (
                   <div>
                     <label htmlFor="taskId" className="block text-sm font-medium text-foreground">
-                      משימה
+                      {t("form.taskLabel")}
                     </label>
                     <select
                       id="taskId"
@@ -898,7 +900,7 @@ export default function EntriesPage() {
                       className="mt-1 block w-full rounded-md border border-border/50 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                       disabled={submitting}
                     >
-                      <option value="">ללא משימה</option>
+                      <option value="">{t("form.noTask")}</option>
                       {formTasks.map((task) => (
                         <option key={task.id} value={task.id}>
                           {task.name}
@@ -910,7 +912,7 @@ export default function EntriesPage() {
 
                 <div>
                   <label htmlFor="date" className="block text-sm font-medium text-foreground">
-                    תאריך *
+                    {t("form.dateLabel")}
                   </label>
                   <input
                     type="date"
@@ -928,7 +930,7 @@ export default function EntriesPage() {
 
                 {/* Billing type toggle: hours vs item */}
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-foreground mb-1">סוג</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">{t("form.kindLabel")}</label>
                   <div className="inline-flex rounded-md border border-border/50 p-0.5">
                     <button
                       type="button"
@@ -936,7 +938,7 @@ export default function EntriesPage() {
                       className={`min-h-[44px] px-4 py-1.5 text-sm rounded ${formData.billingKind === "hourly" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
                       disabled={submitting}
                     >
-                      שעות
+                      {t("form.kindHours")}
                     </button>
                     <button
                       type="button"
@@ -944,7 +946,7 @@ export default function EntriesPage() {
                       className={`min-h-[44px] px-4 py-1.5 text-sm rounded ${formData.billingKind === "item" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
                       disabled={submitting}
                     >
-                      פריט
+                      {t("form.kindItem")}
                     </button>
                   </div>
                 </div>
@@ -953,7 +955,7 @@ export default function EntriesPage() {
                   <>
                     <div>
                       <label htmlFor="duration" className="block text-sm font-medium text-foreground">
-                        משך זמן (דקות) *
+                        {t("form.durationLabel")}
                       </label>
                       <input
                         type="number"
@@ -964,18 +966,18 @@ export default function EntriesPage() {
                         onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
                         className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.duration ? "border border-destructive" : "border border-border/50"}`}
                         disabled={submitting}
-                        placeholder="לדוגמה: 60"
+                        placeholder={t("form.durationPlaceholder")}
                       />
                       {fieldErrors.duration && (
                         <p className="mt-1 text-xs text-destructive">{fieldErrors.duration}</p>
                       )}
-                      <p className="mt-1 text-xs text-muted-foreground">הזן את משך הזמן בדקות</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{t("form.durationHelp")}</p>
                     </div>
 
                     {formRates.some((r) => r.kind === "hourly") && (
                       <div>
                         <label htmlFor="entryRate" className="block text-sm font-medium text-foreground">
-                          תעריף
+                          {t("form.rateLabel")}
                         </label>
                         <select
                           id="entryRate"
@@ -988,7 +990,7 @@ export default function EntriesPage() {
                             .filter((r) => r.kind === "hourly")
                             .map((r) => (
                               <option key={r.id} value={r.id}>
-                                {r.name} — {r.rate}/שעה
+                                {t("form.hourlyRateOption", { name: r.name, rate: r.rate })}
                               </option>
                             ))}
                         </select>
@@ -999,7 +1001,7 @@ export default function EntriesPage() {
                   <>
                     <div>
                       <label htmlFor="entryItem" className="block text-sm font-medium text-foreground">
-                        פריט *
+                        {t("form.itemLabel")}
                       </label>
                       <select
                         id="entryItem"
@@ -1008,12 +1010,12 @@ export default function EntriesPage() {
                         className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.duration ? "border border-destructive" : "border border-border/50"}`}
                         disabled={submitting}
                       >
-                        <option value={ADHOC}>+ פריט חד-פעמי…</option>
+                        <option value={ADHOC}>{t("form.adhocOption")}</option>
                         {formRates
                           .filter((r) => r.kind === "item")
                           .map((r) => (
                             <option key={r.id} value={r.id}>
-                              {r.name} — {r.rate}/יח׳
+                              {t("form.itemRateOption", { name: r.name, rate: r.rate })}
                             </option>
                           ))}
                       </select>
@@ -1024,7 +1026,7 @@ export default function EntriesPage() {
                       <>
                         <div>
                           <label htmlFor="adhocName" className="block text-sm font-medium text-foreground">
-                            שם הפריט *
+                            {t("form.adhocNameLabel")}
                           </label>
                           <input
                             type="text"
@@ -1033,7 +1035,7 @@ export default function EntriesPage() {
                             onChange={(e) => setFormData({ ...formData, adhocName: e.target.value })}
                             className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.adhocName ? "border border-destructive" : "border border-border/50"}`}
                             disabled={submitting}
-                            placeholder="לדוגמה: מכתב"
+                            placeholder={t("form.adhocNamePlaceholder")}
                           />
                           {fieldErrors.adhocName && (
                             <p className="mt-1 text-xs text-destructive">{fieldErrors.adhocName}</p>
@@ -1042,7 +1044,7 @@ export default function EntriesPage() {
 
                         <div>
                           <label htmlFor="adhocPrice" className="block text-sm font-medium text-foreground">
-                            מחיר ליחידה (₪) *
+                            {t("form.adhocPriceLabel")}
                           </label>
                           <input
                             type="number"
@@ -1053,7 +1055,7 @@ export default function EntriesPage() {
                             onChange={(e) => setFormData({ ...formData, adhocPrice: e.target.value })}
                             className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.adhocPrice ? "border border-destructive" : "border border-border/50"}`}
                             disabled={submitting}
-                            placeholder="לדוגמה: 250"
+                            placeholder={t("form.adhocPricePlaceholder")}
                           />
                           {fieldErrors.adhocPrice && (
                             <p className="mt-1 text-xs text-destructive">{fieldErrors.adhocPrice}</p>
@@ -1070,7 +1072,7 @@ export default function EntriesPage() {
                               className="h-5 w-5 rounded border-border text-primary focus:ring-primary"
                               disabled={submitting}
                             />
-                            <span className="me-2 text-sm text-muted-foreground">שמור פריט זה ללקוח לשימוש חוזר</span>
+                            <span className="me-2 text-sm text-muted-foreground">{t("form.saveItemToClient")}</span>
                           </label>
                         </div>
                       </>
@@ -1078,7 +1080,7 @@ export default function EntriesPage() {
 
                     <div>
                       <label htmlFor="quantity" className="block text-sm font-medium text-foreground">
-                        כמות *
+                        {t("form.quantityLabel")}
                       </label>
                       <input
                         type="number"
@@ -1089,7 +1091,7 @@ export default function EntriesPage() {
                         onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                         className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.duration ? "border border-destructive" : "border border-border/50"}`}
                         disabled={submitting}
-                        placeholder="לדוגמה: 3"
+                        placeholder={t("form.quantityPlaceholder")}
                       />
                       {fieldErrors.duration && (
                         <p className="mt-1 text-xs text-destructive">{fieldErrors.duration}</p>
@@ -1108,13 +1110,13 @@ export default function EntriesPage() {
                       className="h-5 w-5 rounded border-border text-primary focus:ring-primary"
                       disabled={submitting}
                     />
-                    <span className="me-2 text-sm font-medium text-foreground">ניתן לחיוב</span>
+                    <span className="me-2 text-sm font-medium text-foreground">{t("form.billable")}</span>
                   </label>
                 </div>
 
                 <div className="sm:col-span-2">
                   <label htmlFor="description" className="block text-sm font-medium text-foreground">
-                    {formData.billingKind === "item" ? "פירוט *" : "תיאור *"}
+                    {formData.billingKind === "item" ? t("form.detailLabel") : t("form.descriptionLabel")}
                   </label>
                   <input
                     type="text"
@@ -1126,8 +1128,8 @@ export default function EntriesPage() {
                     disabled={submitting}
                     placeholder={
                       formData.billingKind === "item"
-                        ? "נושא / פירוט — יופיע בתעודת החיוב (למשל: בנושא הסכם שכירות)"
-                        : "מה עשית?"
+                        ? t("form.detailPlaceholder")
+                        : t("form.descriptionPlaceholder")
                     }
                   />
                   {fieldErrors.description && (
@@ -1137,7 +1139,7 @@ export default function EntriesPage() {
 
                 <div className="sm:col-span-2">
                   <label htmlFor="notes" className="block text-sm font-medium text-foreground">
-                    הערות
+                    {t("form.notesLabel")}
                   </label>
                   <textarea
                     id="notes"
@@ -1146,7 +1148,7 @@ export default function EntriesPage() {
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     className="mt-1 block w-full rounded-md border border-border/50 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                     disabled={submitting}
-                    placeholder="הערות נוספות (אופציונלי)"
+                    placeholder={t("form.notesPlaceholder")}
                   />
                 </div>
               </div>
@@ -1161,7 +1163,7 @@ export default function EntriesPage() {
                     disabled={submitting}
                   >
                     <Trash2 className="h-4 w-4" />
-                    מחיקת רשומה
+                    {t("form.deleteEntry")}
                   </button>
                 ) : (
                   <span />
@@ -1173,14 +1175,14 @@ export default function EntriesPage() {
                     className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted"
                     disabled={submitting}
                   >
-                    ביטול
+                    {t("cancel")}
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
                     className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                   >
-                    {submitting ? "שומר..." : editingEntry ? "עדכן" : "שמור"}
+                    {submitting ? t("form.saving") : editingEntry ? t("form.update") : t("form.save")}
                   </button>
                 </div>
               </div>
@@ -1191,14 +1193,14 @@ export default function EntriesPage() {
         {/* Entries List */}
         <div className="rounded-[var(--radius-card)] bg-card shadow">
           {entriesLoading ? (
-            <div className="p-8 text-center text-muted-foreground">טוען רישומי זמן...</div>
+            <div className="p-8 text-center text-muted-foreground">{t("list.loading")}</div>
           ) : entries.length === 0 ? (
             <div className="relative">
               <EmptyState
                 icon={Clock}
-                message="אין רישומי זמן עדיין"
-                description="התחל לעקוב אחר זמני העבודה שלך על ידי רישום זמן ראשון"
-                actionLabel="רשום זמן ראשון"
+                message={t("empty.message")}
+                description={t("empty.description")}
+                actionLabel={t("empty.action")}
                 onAction={() => setShowForm(true)}
               />
               <div className="absolute top-8 start-1/2 -translate-x-1/2 opacity-10 pointer-events-none">
@@ -1213,25 +1215,25 @@ export default function EntriesPage() {
                   <thead className="bg-surface">
                     <tr>
                       <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        תאריך
+                        {t("table.date")}
                       </th>
                       <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        תיאור
+                        {t("table.description")}
                       </th>
                       <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        לקוח
+                        {t("table.client")}
                       </th>
                       <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        פרויקט
+                        {t("table.project")}
                       </th>
                       <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        משך / כמות
+                        {t("table.durationQuantity")}
                       </th>
                       <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        סכום
+                        {t("table.amount")}
                       </th>
                       <th className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        פעולות
+                        {t("table.actions")}
                       </th>
                     </tr>
                   </thead>
@@ -1251,14 +1253,14 @@ export default function EntriesPage() {
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
                                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success"></span>
                               </span>
-                              פעיל
+                              {t("entry.active")}
                             </span>
                           )}
                           <span className="truncate text-sm font-medium text-foreground">
                             {entry.billingKind === "item" && entry.rateLabel ? entry.rateLabel : entry.description}
                           </span>
                           {!entry.isBillable && (
-                            <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">לא לחיוב</span>
+                            <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">{t("entry.notBillable")}</span>
                           )}
                         </div>
                         {(() => {
@@ -1266,7 +1268,7 @@ export default function EntriesPage() {
                           if (entry.billingKind === "item" && entry.rateLabel && entry.description) sub.push(entry.description);
                           if (entry.billingKind !== "item" && entry.rateLabel) sub.push(entry.rateLabel);
                           if (entry.notes) sub.push(entry.notes);
-                          if (entry.billingKind === "item" && entry.itemRef != null) sub.push(`אסמכתא ${entry.itemRef}`);
+                          if (entry.billingKind === "item" && entry.itemRef != null) sub.push(t("entry.reference", { ref: entry.itemRef }));
                           return sub.length ? (
                             <div className="mt-0.5 truncate text-xs text-muted-foreground">{sub.join(" · ")}</div>
                           ) : null;
@@ -1285,7 +1287,7 @@ export default function EntriesPage() {
                       <td className="whitespace-nowrap px-6 py-4">
                         <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
                           {entry.billingKind === "item"
-                            ? `${entry.quantity ?? 0} יח׳`
+                            ? t("entry.quantity", { quantity: entry.quantity ?? 0 })
                             : formatDuration(entry.duration)}
                         </span>
                       </td>
@@ -1298,8 +1300,8 @@ export default function EntriesPage() {
                         <button
                           onClick={() => handleEdit(entry)}
                           className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
-                          aria-label="ערוך רשומה"
-                          title="ערוך"
+                          aria-label={t("entry.editAria")}
+                          title={t("entry.editTitle")}
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
@@ -1329,12 +1331,12 @@ export default function EntriesPage() {
                             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75"></span>
                             <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success"></span>
                           </span>
-                          פעיל
+                          {t("entry.active")}
                         </span>
                       )}
                       {!entry.isBillable && (
                         <span className="inline-flex shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
-                          לא לחיוב
+                          {t("entry.notBillable")}
                         </span>
                       )}
                     </div>
@@ -1345,8 +1347,8 @@ export default function EntriesPage() {
                       <button
                         onClick={() => handleEdit(entry)}
                         className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius)] border border-border text-muted-foreground transition-colors hover:bg-surface hover:text-foreground active:bg-surface/80"
-                        aria-label="ערוך רשומה"
-                        title="ערוך"
+                        aria-label={t("entry.editAria")}
+                        title={t("entry.editTitle")}
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
@@ -1384,14 +1386,14 @@ export default function EntriesPage() {
                   <div className="mt-1.5 flex items-center gap-2">
                     <span className="font-mono text-base font-bold tabular-nums text-primary">
                       {entry.billingKind === "item"
-                        ? `${entry.quantity ?? 0} יח׳`
+                        ? t("entry.quantity", { quantity: entry.quantity ?? 0 })
                         : formatDuration(entry.duration)}
                     </span>
                     {entry.billingKind !== "item" && entry.rateLabel && (
                       <span className="truncate text-xs text-muted-foreground">{entry.rateLabel}</span>
                     )}
                     {entry.billingKind === "item" && entry.itemRef != null && (
-                      <span className="font-mono text-xs tabular-nums text-muted-foreground">אסמכתא {entry.itemRef}</span>
+                      <span className="font-mono text-xs tabular-nums text-muted-foreground">{t("entry.reference", { ref: entry.itemRef })}</span>
                     )}
                   </div>
                 </div>
@@ -1406,9 +1408,9 @@ export default function EntriesPage() {
       <Dialog open={!!entryToDelete} onOpenChange={(open) => { if (!open) cancelDelete(); }}>
         <DialogContent showCloseButton={false} className="border-destructive/20">
           <DialogHeader>
-            <DialogTitle>מחק רישום זמן</DialogTitle>
+            <DialogTitle>{t("deleteDialog.title")}</DialogTitle>
             <DialogDescription>
-              האם למחוק את רישום הזמן &quot;{entryToDelete?.description}&quot;? פעולה זו אינה הפיכה.
+              {t("deleteDialog.body", { description: entryToDelete?.description ?? "" })}
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-2">
@@ -1417,14 +1419,14 @@ export default function EntriesPage() {
               disabled={deleting}
               className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted disabled:opacity-50"
             >
-              ביטול
+              {t("cancel")}
             </button>
             <button
               onClick={handleDeleteConfirm}
               disabled={deleting}
               className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
             >
-              {deleting ? "מוחק..." : "מחק"}
+              {deleting ? t("deleteDialog.deleting") : t("deleteDialog.confirm")}
             </button>
           </div>
         </DialogContent>

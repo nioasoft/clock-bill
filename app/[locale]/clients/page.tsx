@@ -50,9 +50,12 @@ interface Client {
   totalHours: number;
 }
 
-/** One brand-new hourly rate row ("תכנות"), preselected as default. */
-const seedRates = (): ClientRateInput[] => [
-  { kind: "hourly", name: "תכנות", rate: 0, isDefault: true },
+/**
+ * One brand-new hourly rate row, preselected as default.
+ * The seed name is passed in (translated) by the caller.
+ */
+const seedRates = (name: string): ClientRateInput[] => [
+  { kind: "hourly", name, rate: 0, isDefault: true },
 ];
 
 const CURRENCIES = [
@@ -72,6 +75,7 @@ export default function ClientsPage() {
 }
 
 function ClientsPageContent() {
+  const t = useTranslations("Clients");
   const tRounding = useTranslations("Rounding");
   const searchParams = useSearchParams();
   const [clients, setClients] = useState<Client[]>([]);
@@ -111,10 +115,10 @@ function ClientsPageContent() {
   // Auto-open create form via URL params (seed one default hourly rate row)
   useEffect(() => {
     if (searchParams.get("create") === "true") {
-      setFormData((prev) => ({ ...prev, rates: prev.rates.length ? prev.rates : seedRates() }));
+      setFormData((prev) => ({ ...prev, rates: prev.rates.length ? prev.rates : seedRates(t("seedRateName")) }));
       setShowForm(true);
     }
-  }, [searchParams]);
+  }, [searchParams, t]);
 
   useEffect(() => {
     const fetchClients = async () => {
@@ -145,7 +149,7 @@ function ClientsPageContent() {
     const errors: typeof fieldErrors = {};
 
     // Name is required
-    const nameValidation = validateRequired(formData.name, "שם הלקוח");
+    const nameValidation = validateRequired(formData.name, t("clientNameLabel"));
     if (!nameValidation.isValid) {
       errors.name = nameValidation.error;
     }
@@ -174,7 +178,7 @@ function ClientsPageContent() {
 
     // Rows with a price but no name are likely mistakes — block submit.
     if (formData.rates.some((r) => r.name.trim() === "" && r.rate > 0)) {
-      setFormError("יש להזין שם לכל תעריף עם מחיר");
+      setFormError(t("errorRateNameRequired"));
       return;
     }
 
@@ -242,11 +246,11 @@ function ClientsPageContent() {
         setShowForm(false);
         setEditingClient(null);
       } else {
-        setFormError(data.message || isEditing ? "שגיאה בעדכון הלקוח" : "שגיאה ביצירת הלקוח");
+        setFormError(data.message || isEditing ? t("errorUpdateClient") : t("errorCreateClient"));
       }
     } catch (error) {
       console.error("Error saving client:", error);
-      setFormError(editingClient ? "שגיאה בעדכון הלקוח" : "שגיאה ביצירת הלקוח");
+      setFormError(editingClient ? t("errorUpdateClient") : t("errorCreateClient"));
     } finally {
       setSubmitting(false);
     }
@@ -335,13 +339,13 @@ function ClientsPageContent() {
         // Close edit form if open
         setShowForm(false);
         setEditingClient(null);
-        showSuccessToast("הלקוח הועבר לארכיון");
+        showSuccessToast(t("toastArchived"));
       } else {
-        showErrorToast(data.message || "שגיאה במחיקת הלקוח");
+        showErrorToast(data.message || t("errorDeleteClient"));
       }
     } catch (error) {
       console.error("Error deleting client:", error);
-      showErrorToast("שגיאה במחיקת הלקוח");
+      showErrorToast(t("errorDeleteClient"));
     } finally {
       setDeleting(false);
     }
@@ -361,13 +365,13 @@ function ClientsPageContent() {
         // Close edit form if open
         setShowForm(false);
         setEditingClient(null);
-        showSuccessToast("הלקוח שוחזר בהצלחה");
+        showSuccessToast(t("toastRestored"));
       } else {
-        showErrorToast(data.message || "שגיאה בשחזור הלקוח");
+        showErrorToast(data.message || t("errorRestoreClient"));
       }
     } catch (error) {
       console.error("Error restoring client:", error);
-      showErrorToast("שגיאה בשחזור הלקוח");
+      showErrorToast(t("errorRestoreClient"));
     }
   };
 
@@ -378,18 +382,18 @@ function ClientsPageContent() {
   return (
     <AppLayout>
       <PageContainer>
-        <PageHeader title="לקוחות">
+        <PageHeader title={t("pageTitle")}>
           <button
             onClick={() => {
               if (!showForm) {
                 setEditingClient(null);
-                setFormData((prev) => ({ ...prev, rates: seedRates() }));
+                setFormData((prev) => ({ ...prev, rates: seedRates(t("seedRateName")) }));
               }
               setShowForm(!showForm);
             }}
             className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
           >
-            {showForm ? "ביטול" : "+ לקוח חדש"}
+            {showForm ? t("cancel") : t("newClientButton")}
           </button>
         </PageHeader>
         {/* Add/Edit Client Form */}
@@ -397,10 +401,10 @@ function ClientsPageContent() {
           <div className="mb-8 rounded-[var(--radius-card)] border border-border bg-card p-6 sm:p-8 motion-safe:animate-scale-in">
             <div className="mb-6">
               <h2 className="font-display text-xl font-semibold text-foreground">
-                {editingClient ? "עריכת לקוח" : "לקוח חדש"}
+                {editingClient ? t("editClientTitle") : t("newClientTitle")}
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                {editingClient ? "עדכן את פרטי הלקוח" : "מלא את הפרטים כדי להוסיף לקוח לרשימה"}
+                {editingClient ? t("editClientSubtitle") : t("newClientSubtitle")}
               </p>
             </div>
 
@@ -414,12 +418,12 @@ function ClientsPageContent() {
               {/* Section — contact details */}
               <fieldset className="space-y-4">
                 <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                  פרטי קשר
+                  {t("contactSection")}
                 </legend>
                 <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
                   <div>
                     <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-foreground">
-                      שם הלקוח <span className="text-primary">*</span>
+                      {t("clientNameLabel")} <span className="text-primary">*</span>
                     </label>
                     <input
                       type="text"
@@ -432,14 +436,14 @@ function ClientsPageContent() {
                       }}
                       className={fieldClass(!!fieldErrors.name)}
                       disabled={submitting}
-                      placeholder="לדוגמה: חברת אקמה בע״מ"
+                      placeholder={t("clientNamePlaceholder")}
                     />
                     {fieldErrors.name && <p className="mt-1.5 text-xs text-destructive">{fieldErrors.name}</p>}
                   </div>
 
                   <div>
                     <label htmlFor="contactName" className="mb-1.5 block text-sm font-medium text-foreground">
-                      איש קשר
+                      {t("contactNameLabel")}
                     </label>
                     <input
                       type="text"
@@ -448,13 +452,13 @@ function ClientsPageContent() {
                       onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
                       className={fieldClass(false)}
                       disabled={submitting}
-                      placeholder="שם מלא"
+                      placeholder={t("contactNamePlaceholder")}
                     />
                   </div>
 
                   <div>
                     <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
-                      אימייל
+                      {t("emailLabel")}
                     </label>
                     <input
                       type="email"
@@ -474,7 +478,7 @@ function ClientsPageContent() {
 
                   <div>
                     <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-foreground">
-                      טלפון
+                      {t("phoneLabel")}
                     </label>
                     <input
                       type="tel"
@@ -494,7 +498,7 @@ function ClientsPageContent() {
 
                   <div className="sm:col-span-2">
                     <label htmlFor="address" className="mb-1.5 block text-sm font-medium text-foreground">
-                      כתובת
+                      {t("addressLabel")}
                     </label>
                     <input
                       type="text"
@@ -503,7 +507,7 @@ function ClientsPageContent() {
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                       className={fieldClass(false)}
                       disabled={submitting}
-                      placeholder="רחוב, מספר, עיר"
+                      placeholder={t("addressPlaceholder")}
                     />
                   </div>
                 </div>
@@ -512,13 +516,13 @@ function ClientsPageContent() {
               {/* Section — billing */}
               <fieldset className="space-y-4">
                 <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                  חיוב
+                  {t("billingSection")}
                 </legend>
 
                 <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
                   <div>
                     <label htmlFor="currency" className="mb-1.5 block text-sm font-medium text-foreground">
-                      מטבע
+                      {t("currencyLabel")}
                     </label>
                     <select
                       id="currency"
@@ -535,7 +539,7 @@ function ClientsPageContent() {
 
                   <div>
                     <label htmlFor="billingRounding" className="mb-1.5 block text-sm font-medium text-foreground">
-                      עיגול זמן לחיוב
+                      {t("billingRoundingLabel")}
                     </label>
                     <select
                       id="billingRounding"
@@ -554,7 +558,7 @@ function ClientsPageContent() {
 
                 {/* Rates & items editor */}
                 <div className="space-y-2">
-                  <span className="text-sm font-medium text-foreground">תעריפים ופריטים</span>
+                  <span className="text-sm font-medium text-foreground">{t("ratesAndItems")}</span>
                   <ClientRatesEditor
                     rates={formData.rates}
                     currency={formData.currency}
@@ -565,7 +569,7 @@ function ClientsPageContent() {
 
                 {/* Retainer toggle — full-width switch row */}
                 <label className="flex cursor-pointer items-center justify-between rounded-[var(--radius)] border border-border bg-background px-4 py-3">
-                  <span className="text-sm font-medium text-foreground">לקוח בריטיינר</span>
+                  <span className="text-sm font-medium text-foreground">{t("retainerClient")}</span>
                   <input
                     type="checkbox"
                     checked={formData.isRetainer}
@@ -581,7 +585,7 @@ function ClientsPageContent() {
                     <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
                       <div>
                         <label htmlFor="retainerHours" className="mb-1.5 block text-sm font-medium text-foreground">
-                          שעות בריטיינר
+                          {t("retainerHoursLabel")}
                         </label>
                         <input
                           type="number"
@@ -597,7 +601,7 @@ function ClientsPageContent() {
                       </div>
                       <div>
                         <label htmlFor="retainerMonthlyFee" className="mb-1.5 block text-sm font-medium text-foreground">
-                          סכום חודשי ({CURRENCY_SYMBOLS[formData.currency] || "₪"})
+                          {t("monthlyAmountLabel", { symbol: CURRENCY_SYMBOLS[formData.currency] || "₪" })}
                         </label>
                         <input
                           type="number"
@@ -614,7 +618,7 @@ function ClientsPageContent() {
                     </div>
 
                     <label className="flex cursor-pointer items-center justify-between rounded-[var(--radius)] border border-border bg-background px-4 py-3">
-                      <span className="text-sm font-medium text-foreground">תעריף נפרד מעל הריטיינר</span>
+                      <span className="text-sm font-medium text-foreground">{t("separateOverageRate")}</span>
                       <input
                         type="checkbox"
                         checked={formData.hasOverageRate}
@@ -627,7 +631,7 @@ function ClientsPageContent() {
                     {formData.hasOverageRate && (
                       <div className="sm:max-w-[calc(50%-0.5rem)]">
                         <label htmlFor="overageRate" className="mb-1.5 block text-sm font-medium text-foreground">
-                          תעריף שעתי מעל הריטיינר ({CURRENCY_SYMBOLS[formData.currency] || "₪"})
+                          {t("overageHourlyRateLabel", { symbol: CURRENCY_SYMBOLS[formData.currency] || "₪" })}
                         </label>
                         <input
                           type="number"
@@ -649,7 +653,7 @@ function ClientsPageContent() {
               {/* Section — notes */}
               <fieldset className="space-y-4">
                 <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                  הערות
+                  {t("notesSection")}
                 </legend>
                 <textarea
                   id="notes"
@@ -658,7 +662,7 @@ function ClientsPageContent() {
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   className={`${fieldClass(false)} resize-y`}
                   disabled={submitting}
-                  placeholder="מידע נוסף על הלקוח (אופציונלי)"
+                  placeholder={t("notesPlaceholder")}
                 />
               </fieldset>
 
@@ -666,12 +670,12 @@ function ClientsPageContent() {
                 <div className="flex items-center justify-between rounded-[var(--radius)] border border-border bg-background/50 p-4">
                   <div>
                     <p className="text-sm font-medium text-foreground">
-                      {editingClient.isActive ? "העבר לארכיון" : "שחזר מארכיון"}
+                      {editingClient.isActive ? t("archiveTitle") : t("restoreTitle")}
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {editingClient.isActive
-                        ? "הלקוח יוסתר מהרשימה אך יישמר במערכת"
-                        : "הלקוח יוחזר לרשימה הפעילה"}
+                        ? t("archiveDescription")
+                        : t("restoreDescription")}
                     </p>
                   </div>
                   {editingClient.isActive ? (
@@ -680,7 +684,7 @@ function ClientsPageContent() {
                       onClick={() => handleDelete(editingClient)}
                       className="shrink-0 rounded-[var(--radius)] border border-destructive/30 px-3 py-1.5 text-sm text-destructive transition-colors hover:bg-destructive/10"
                     >
-                      ארכב לקוח
+                      {t("archiveClientButton")}
                     </button>
                   ) : (
                     <button
@@ -688,7 +692,7 @@ function ClientsPageContent() {
                       onClick={() => handleRestore(editingClient)}
                       className="shrink-0 rounded-[var(--radius)] border border-success/30 px-3 py-1.5 text-sm text-success transition-colors hover:bg-success/10"
                     >
-                      שחזר לקוח
+                      {t("restoreClientButton")}
                     </button>
                   )}
                 </div>
@@ -701,14 +705,14 @@ function ClientsPageContent() {
                   className="rounded-[var(--radius)] border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
                   disabled={submitting}
                 >
-                  ביטול
+                  {t("cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
                   className="rounded-[var(--radius)] bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
                 >
-                  {submitting ? "שומר..." : editingClient ? "עדכן לקוח" : "שמור לקוח"}
+                  {submitting ? t("saving") : editingClient ? t("updateClientButton") : t("saveClientButton")}
                 </button>
               </div>
             </form>
@@ -718,13 +722,13 @@ function ClientsPageContent() {
         {/* Clients List */}
         <div className="rounded-[var(--radius-card)] bg-card shadow">
           {clientsLoading ? (
-            <div className="p-8 text-center text-muted-foreground">טוען לקוחות...</div>
+            <div className="p-8 text-center text-muted-foreground">{t("loadingClients")}</div>
           ) : clients.length === 0 ? (
             <EmptyState
               icon={Users}
-              message="אין לקוחות עדיין"
-              description="צור לקוח ראשון כדי להתחיל לנהל את הפרויקטים שלך"
-              actionLabel="הוסף לקוח ראשון"
+              message={t("emptyTitle")}
+              description={t("emptyDescription")}
+              actionLabel={t("emptyAction")}
               onAction={() => setShowForm(true)}
             />
           ) : (
@@ -734,34 +738,34 @@ function ClientsPageContent() {
                 <thead className="bg-surface">
                   <tr>
                     <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      שם
+                      {t("colName")}
                     </th>
                     <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      איש קשר
+                      {t("contactNameLabel")}
                     </th>
                     <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      אימייל
+                      {t("emailLabel")}
                     </th>
                     <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      טלפון
+                      {t("phoneLabel")}
                     </th>
                     <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      כתובת
+                      {t("addressLabel")}
                     </th>
                     <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      תעריף שעתי
+                      {t("colHourlyRate")}
                     </th>
                     <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      סך חויב
+                      {t("colTotalBilled")}
                     </th>
                     <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      שעות
+                      {t("colHours")}
                     </th>
                     <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      סטטוס
+                      {t("colStatus")}
                     </th>
                     <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      פעולות
+                      {t("colActions")}
                     </th>
                   </tr>
                 </thead>
@@ -790,7 +794,7 @@ function ClientsPageContent() {
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <div className="text-sm text-foreground">
-                          {client.defaultRate ? `${CURRENCY_SYMBOLS[client.currency] || "₪"}${client.defaultRate}/שעה` : "-"}
+                          {client.defaultRate ? t("ratePerHour", { symbol: CURRENCY_SYMBOLS[client.currency] || "₪", rate: client.defaultRate }) : "-"}
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
@@ -800,17 +804,17 @@ function ClientsPageContent() {
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <div className="text-sm text-foreground">
-                          {Number(client.totalHours) > 0 ? `${Number(client.totalHours).toFixed(1)} שעות` : "0 שעות"}
+                          {Number(client.totalHours) > 0 ? t("hoursValue", { hours: Number(client.totalHours).toFixed(1) }) : t("hoursValue", { hours: "0" })}
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         {client.isActive ? (
                           <span className="inline-flex rounded-full bg-success/10 text-success px-3 py-0.5 text-xs font-semibold">
-                            פעיל
+                            {t("statusActive")}
                           </span>
                         ) : (
                           <span className="inline-flex rounded-full bg-muted text-muted-foreground px-3 py-0.5 text-xs font-semibold">
-                            לא פעיל
+                            {t("statusInactive")}
                           </span>
                         )}
                       </td>
@@ -819,7 +823,7 @@ function ClientsPageContent() {
                           onClick={() => handleEdit(client)}
                           className="text-primary hover:text-primary/90 font-medium ms-2"
                         >
-                          ערוך
+                          {t("edit")}
                         </button>
                       </td>
                     </tr>
@@ -839,9 +843,9 @@ function ClientsPageContent() {
                       {client.name}
                     </Link>
                     {client.isActive ? (
-                      <span className="inline-flex shrink-0 rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-semibold text-success">פעיל</span>
+                      <span className="inline-flex shrink-0 rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-semibold text-success">{t("statusActive")}</span>
                     ) : (
-                      <span className="inline-flex shrink-0 rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">לא פעיל</span>
+                      <span className="inline-flex shrink-0 rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">{t("statusInactive")}</span>
                     )}
                   </div>
 
@@ -855,19 +859,19 @@ function ClientsPageContent() {
 
                   <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
                     <span className="text-muted-foreground">
-                      תעריף:{" "}
+                      {t("rateInline")}{" "}
                       <span className="text-foreground">
-                        {client.defaultRate ? `${CURRENCY_SYMBOLS[client.currency] || "₪"}${client.defaultRate}/שעה` : "-"}
+                        {client.defaultRate ? t("ratePerHour", { symbol: CURRENCY_SYMBOLS[client.currency] || "₪", rate: client.defaultRate }) : "-"}
                       </span>
                     </span>
                     <span className="text-muted-foreground">
-                      חויב:{" "}
+                      {t("billedInline")}{" "}
                       <span className="font-medium text-foreground">
                         {Number(client.totalBilled) > 0 ? `₪${Number(client.totalBilled).toFixed(2)}` : "₪0"}
                       </span>
                     </span>
                     <span className="text-muted-foreground">
-                      שעות:{" "}
+                      {t("hoursInline")}{" "}
                       <span className="text-foreground tabular-nums">
                         {Number(client.totalHours) > 0 ? `${Number(client.totalHours).toFixed(1)}` : "0"}
                       </span>
@@ -879,7 +883,7 @@ function ClientsPageContent() {
                       onClick={() => handleEdit(client)}
                       className="min-h-[44px] rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface"
                     >
-                      ערוך
+                      {t("edit")}
                     </button>
                   </div>
                 </div>
@@ -893,9 +897,9 @@ function ClientsPageContent() {
       <Dialog open={!!clientToDelete} onOpenChange={(open) => { if (!open) cancelDelete(); }}>
         <DialogContent showCloseButton={false} className="motion-safe:animate-scale-in border-destructive/20">
           <DialogHeader>
-            <DialogTitle>ארכב לקוח</DialogTitle>
+            <DialogTitle>{t("archiveClientButton")}</DialogTitle>
             <DialogDescription>
-              האם לארכב את הלקוח &quot;{clientToDelete?.name}&quot;? הלקוח יוסתר מהרשימה אך יישמר במערכת.
+              {t("archiveConfirmBody", { name: clientToDelete?.name ?? "" })}
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-2">
@@ -904,14 +908,14 @@ function ClientsPageContent() {
               disabled={deleting}
               className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted disabled:opacity-50"
             >
-              ביטול
+              {t("cancel")}
             </button>
             <button
               onClick={confirmDelete}
               disabled={deleting}
               className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
             >
-              {deleting ? "מארכב..." : "ארכב"}
+              {deleting ? t("archiving") : t("archiveAction")}
             </button>
           </div>
         </DialogContent>

@@ -23,6 +23,7 @@ function isOverdue(dueDate: string | null): boolean {
 
 export function TaskCard({ task, isTimerRunning, onClick }: TaskCardProps) {
   const tPriority = useTranslations("Tasks.priority");
+  const t = useTranslations("Tasks.card");
   return (
     <button
       type="button"
@@ -36,7 +37,7 @@ export function TaskCard({ task, isTimerRunning, onClick }: TaskCardProps) {
             <span className="truncate font-sans font-medium text-foreground">{task.title}</span>
             {isTimerRunning && (
               <span className="shrink-0 rounded-[var(--radius)] bg-primary px-1.5 py-0.5 text-xs text-primary-foreground">
-                טיימר רץ
+                {t("timerRunning")}
               </span>
             )}
           </div>
@@ -47,11 +48,11 @@ export function TaskCard({ task, isTimerRunning, onClick }: TaskCardProps) {
             {task.rateLabel ? (
               <span>{task.rateLabel}</span>
             ) : (
-              <span className="text-destructive">חסר תעריף</span>
+              <span className="text-destructive">{t("missingRate")}</span>
             )}
             {task.dueDate && (
               <span className={isOverdue(task.dueDate) ? "text-destructive" : ""}>
-                יעד: {task.dueDate}
+                {t("due", { date: task.dueDate })}
               </span>
             )}
             {task.priority !== "normal" && <span>{tPriority(task.priority)}</span>}

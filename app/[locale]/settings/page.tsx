@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/src/i18n/navigation";
 import { DeleteAccountSection } from "@/components/delete-account-section";
 import { AppLayout } from "@/components/app-layout";
@@ -61,6 +62,7 @@ interface CurrencyRate {
 }
 
 export default function SettingsPage() {
+  const t = useTranslations("Settings");
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"profile" | "security" | "currencies" | "notifications">("profile");
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -130,6 +132,7 @@ export default function SettingsPage() {
       fetchProfile();
       checkNotificationPermission();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   // Check notification permission on mount
@@ -147,7 +150,7 @@ export default function SettingsPage() {
 
   const requestNotificationPermission = async () => {
     if (!("Notification" in window)) {
-      alert("הדפדפן שלך לא תומך בהתראות");
+      alert(t("toasts.notificationsUnsupported"));
       return;
     }
 
@@ -155,7 +158,7 @@ export default function SettingsPage() {
     setNotificationPermission(permission);
 
     if (permission === "granted") {
-      setSuccessMessage("ההרשאה להתראות ניתנה בהצלחה!");
+      setSuccessMessage(t("toasts.permissionGranted"));
       setTimeout(() => setSuccessMessage(""), 3000);
     }
   };
@@ -199,10 +202,10 @@ export default function SettingsPage() {
         setDateFormat(data.profile.dateFormat || "DD/MM/YYYY");
         setTimeFormat(data.profile.timeFormat || "24h");
       } else {
-        setProfileError(data.message || "שגיאה בטעינת הפרופיל");
+        setProfileError(data.message || t("toasts.loadProfileError"));
       }
     } catch {
-      setProfileError("שגיאת תקשורת. אנא נסה שוב.");
+      setProfileError(t("toasts.networkError"));
     } finally {
       setLoading(false);
     }
@@ -218,10 +221,10 @@ export default function SettingsPage() {
       if (data.success) {
         setSessions(data.sessions || []);
       } else {
-        setError(data.message || "שגיאה בטעינת הפעולות");
+        setError(data.message || t("toasts.loadSessionsError"));
       }
     } catch {
-      setError("שגיאת תקשורת. אנא נסה שוב.");
+      setError(t("toasts.networkError"));
     } finally {
       setLoading(false);
     }
@@ -241,7 +244,7 @@ export default function SettingsPage() {
   const getDeviceInfo = (sessionId: string) => {
     // In a real implementation, this would use user-agent parsing
     // For now, we return a generic device identifier
-    return `מכשיר ${sessionId.slice(0, 8)}`;
+    return t("security.deviceLabel", { id: sessionId.slice(0, 8) });
   };
 
   const handleLogoutAll = async () => {
@@ -258,11 +261,11 @@ export default function SettingsPage() {
         // Redirect to login page after successful logout
         router.push("/login");
       } else {
-        setError(data.message || "שגיאה בהתנתקות מכל המכשירים");
+        setError(data.message || t("toasts.logoutAllError"));
         setShowConfirmDialog(false);
       }
     } catch {
-      setError("שגיאת תקשורת. אנא נסה שוב.");
+      setError(t("toasts.networkError"));
       setShowConfirmDialog(false);
     } finally {
       setLogoutAllLoading(false);
@@ -307,14 +310,14 @@ export default function SettingsPage() {
 
       if (data.success) {
         setProfile(data.profile);
-        setSuccessMessage("הפרטים נשמרו בהצלחה!");
+        setSuccessMessage(t("toasts.profileSaved"));
         // Clear success message after 3 seconds
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
-        setProfileError(data.message || "שגיאה בשמירת הפרטים");
+        setProfileError(data.message || t("toasts.saveProfileError"));
       }
     } catch {
-      setProfileError("שגיאת תקשורת. אנא נסה שוב.");
+      setProfileError(t("toasts.networkError"));
     } finally {
       setProfileLoading(false);
     }
@@ -344,13 +347,13 @@ export default function SettingsPage() {
 
       if (data.success) {
         setProfile(data.profile);
-        setSuccessMessage("הגדרות ההתראות נשמרו בהצלחה!");
+        setSuccessMessage(t("toasts.notificationSettingsSaved"));
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
-        setProfileError(data.message || "שגיאה בשמירת הגדרות");
+        setProfileError(data.message || t("toasts.saveSettingsError"));
       }
     } catch {
-      setProfileError("שגיאת תקשורת. אנא נסה שוב.");
+      setProfileError(t("toasts.networkError"));
     } finally {
       setProfileLoading(false);
     }
@@ -359,7 +362,7 @@ export default function SettingsPage() {
   // Test notification
   const handleTestNotification = async () => {
     if (!("Notification" in window)) {
-      alert("הדפדפן שלך לא תומך בהתראות");
+      alert(t("toasts.notificationsUnsupported"));
       return;
     }
 
@@ -370,15 +373,15 @@ export default function SettingsPage() {
       setNotificationPermission(permission);
 
       if (permission !== "granted") {
-        alert("נדרש אישור להתראות כדי לבדוק את הפונקציונליות");
+        alert(t("toasts.permissionRequiredForTest"));
         setTestingNotification(false);
         return;
       }
     }
 
     // Show test notification
-    new Notification("בדיקת התראות - מוניט", {
-      body: "זוהי התראת בדיקה מהמערכת. אם אתה רואה את ההודעה הזו, ההתראות עובדות כראוי!",
+    new Notification(t("toasts.testNotificationTitle"), {
+      body: t("toasts.testNotificationBody"),
       dir: "rtl",
       lang: "he",
     });
@@ -408,13 +411,13 @@ export default function SettingsPage() {
 
       if (data.success) {
         setProfile((prev) => (prev ? { ...prev, logoUrl: data.logoUrl } : null));
-        setSuccessMessage("הלוגו הועלה בהצלחה!");
+        setSuccessMessage(t("toasts.logoUploaded"));
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
-        setLogoError(data.message || "שגיאה בהעלאת הלוגו");
+        setLogoError(data.message || t("toasts.uploadLogoError"));
       }
     } catch {
-      setLogoError("שגיאת תקשורת. אנא נסה שוב.");
+      setLogoError(t("toasts.networkError"));
     } finally {
       setLogoLoading(false);
       // Reset file input
@@ -426,7 +429,7 @@ export default function SettingsPage() {
 
   // Handle logo removal
   const handleRemoveLogo = async () => {
-    if (!confirm("האם אתה בטוח שברצונך להסיר את הלוגו?")) return;
+    if (!confirm(t("toasts.removeLogoConfirm"))) return;
 
     setLogoLoading(true);
     setLogoError("");
@@ -441,13 +444,13 @@ export default function SettingsPage() {
 
       if (data.success) {
         setProfile((prev) => (prev ? { ...prev, logoUrl: null } : null));
-        setSuccessMessage("הלוגו הוסר בהצלחה!");
+        setSuccessMessage(t("toasts.logoRemoved"));
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
-        setLogoError(data.message || "שגיאה בהסרת הלוגו");
+        setLogoError(data.message || t("toasts.removeLogoError"));
       }
     } catch {
-      setLogoError("שגיאת תקשורת. אנא נסה שוב.");
+      setLogoError(t("toasts.networkError"));
     } finally {
       setLogoLoading(false);
     }
@@ -475,13 +478,13 @@ export default function SettingsPage() {
 
       if (data.success) {
         setProfile((prev) => (prev ? { ...prev, signatureUrl: data.signatureUrl } : null));
-        setSuccessMessage("החתימה הועלתה בהצלחה!");
+        setSuccessMessage(t("toasts.signatureUploaded"));
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
-        setSignatureError(data.message || "שגיאה בהעלאת החתימה");
+        setSignatureError(data.message || t("toasts.uploadSignatureError"));
       }
     } catch {
-      setSignatureError("שגיאת תקשורת. אנא נסה שוב.");
+      setSignatureError(t("toasts.networkError"));
     } finally {
       setSignatureLoading(false);
       // Reset file input
@@ -493,7 +496,7 @@ export default function SettingsPage() {
 
   // Handle signature removal
   const handleRemoveSignature = async () => {
-    if (!confirm("האם אתה בטוח שברצונך להסיר את החתימה?")) return;
+    if (!confirm(t("toasts.removeSignatureConfirm"))) return;
 
     setSignatureLoading(true);
     setSignatureError("");
@@ -508,13 +511,13 @@ export default function SettingsPage() {
 
       if (data.success) {
         setProfile((prev) => (prev ? { ...prev, signatureUrl: null } : null));
-        setSuccessMessage("החתימה הוסרה בהצלחה!");
+        setSuccessMessage(t("toasts.signatureRemoved"));
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
-        setSignatureError(data.message || "שגיאה בהסרת החתימה");
+        setSignatureError(data.message || t("toasts.removeSignatureError"));
       }
     } catch {
-      setSignatureError("שגיאת תקשורת. אנא נסה שוב.");
+      setSignatureError(t("toasts.networkError"));
     } finally {
       setSignatureLoading(false);
     }
@@ -531,10 +534,10 @@ export default function SettingsPage() {
       if (data.success) {
         setCurrencyRates(data.rates || []);
       } else {
-        setRateError(data.message || "שגיאה בטעינת שערי חליפין");
+        setRateError(data.message || t("toasts.loadRatesError"));
       }
     } catch {
-      setRateError("שגיאת תקשורת. אנא נסה שוב.");
+      setRateError(t("toasts.networkError"));
     } finally {
       setLoading(false);
     }
@@ -561,7 +564,7 @@ export default function SettingsPage() {
       const data = await response.json();
 
       if (data.success) {
-        setRateSuccess("שער החליפין נשמר בהצלחה!");
+        setRateSuccess(t("toasts.rateSaved"));
         setTimeout(() => setRateSuccess(""), 3000);
         // Refresh rates list
         fetchCurrencyRates();
@@ -570,10 +573,10 @@ export default function SettingsPage() {
         setToCurrency("ILS");
         setRate("");
       } else {
-        setRateError(data.message || "שגיאה בשמירת שער חליפין");
+        setRateError(data.message || t("toasts.saveRateError"));
       }
     } catch {
-      setRateError("שגיאת תקשורת. אנא נסה שוב.");
+      setRateError(t("toasts.networkError"));
     } finally {
       setRateSaving(false);
     }
@@ -581,7 +584,7 @@ export default function SettingsPage() {
 
   // Delete currency rate
   const handleDeleteRate = async (rateId: string) => {
-    if (!confirm("האם למחוק את שער חליפין זה?")) return;
+    if (!confirm(t("toasts.deleteRateConfirm"))) return;
 
     setRateError("");
     setRateSuccess("");
@@ -596,15 +599,15 @@ export default function SettingsPage() {
       const data = await response.json();
 
       if (data.success) {
-        setRateSuccess("שער החליפין נמחק בהצלחה!");
+        setRateSuccess(t("toasts.rateDeleted"));
         setTimeout(() => setRateSuccess(""), 3000);
         // Refresh rates list
         fetchCurrencyRates();
       } else {
-        setRateError(data.message || "שגיאה במחיקת שער חליפין");
+        setRateError(data.message || t("toasts.deleteRateError"));
       }
     } catch {
-      setRateError("שגיאת תקשורת. אנא נסה שוב.");
+      setRateError(t("toasts.networkError"));
     }
   };
 
@@ -628,7 +631,7 @@ export default function SettingsPage() {
   return (
     <AppLayout>
       <PageContainer maxWidth="max-w-3xl">
-        <PageHeader title="הגדרות" />
+        <PageHeader title={t("pageTitle")} />
 
         {/* Tabs */}
         <div className="mb-8">
@@ -643,7 +646,7 @@ export default function SettingsPage() {
               role="tab"
               aria-selected={activeTab === "profile"}
             >
-              פרופיל
+              {t("tabs.profile")}
             </button>
             <button
               onClick={() => setActiveTab("notifications")}
@@ -655,7 +658,7 @@ export default function SettingsPage() {
               role="tab"
               aria-selected={activeTab === "notifications"}
             >
-              התראות
+              {t("tabs.notifications")}
             </button>
             <button
               onClick={() => setActiveTab("currencies")}
@@ -667,7 +670,7 @@ export default function SettingsPage() {
               role="tab"
               aria-selected={activeTab === "currencies"}
             >
-              מטבעות
+              {t("tabs.currencies")}
             </button>
             <button
               onClick={() => setActiveTab("security")}
@@ -679,7 +682,7 @@ export default function SettingsPage() {
               role="tab"
               aria-selected={activeTab === "security"}
             >
-              אבטחה
+              {t("tabs.security")}
             </button>
           </nav>
         </div>
@@ -690,10 +693,10 @@ export default function SettingsPage() {
             {/* Add Currency Rate Form */}
             <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-2">
-                הוסף שער חליפין
+                {t("currencies.addTitle")}
               </h2>
               <p className="text-sm text-muted-foreground mb-6">
-                הגדר שערי חליפין בין מטבעות שונים. שערים אלו ישמשו להמרת מטבעות בדוחות.
+                {t("currencies.addDescription")}
               </p>
 
               {rateError && (
@@ -716,7 +719,7 @@ export default function SettingsPage() {
                       htmlFor="fromCurrency"
                       className="block text-sm font-medium text-muted-foreground mb-1"
                     >
-                      ממטבע
+                      {t("currencies.fromLabel")}
                     </label>
                     <select
                       id="fromCurrency"
@@ -725,11 +728,11 @@ export default function SettingsPage() {
                       className={fieldClass()}
                       disabled={rateSaving}
                     >
-                      <option value="ILS">₪ - שקל ישראלי</option>
-                      <option value="USD">$ - דולר אמריקאי</option>
-                      <option value="USDT">₮ - טתר (USDT)</option>
-                      <option value="BTC">₿ - ביטקוין</option>
-                      <option value="ETH">Ξ - אתריום</option>
+                      <option value="ILS">{t("currencyOptions.ILS")}</option>
+                      <option value="USD">{t("currencyOptions.USD")}</option>
+                      <option value="USDT">{t("currencyOptions.USDT")}</option>
+                      <option value="BTC">{t("currencyOptions.BTC")}</option>
+                      <option value="ETH">{t("currencyOptions.ETH")}</option>
                     </select>
                   </div>
 
@@ -739,7 +742,7 @@ export default function SettingsPage() {
                       htmlFor="toCurrency"
                       className="block text-sm font-medium text-muted-foreground mb-1"
                     >
-                      למטבע
+                      {t("currencies.toLabel")}
                     </label>
                     <select
                       id="toCurrency"
@@ -748,11 +751,11 @@ export default function SettingsPage() {
                       className={fieldClass()}
                       disabled={rateSaving}
                     >
-                      <option value="ILS">₪ - שקל ישראלי</option>
-                      <option value="USD">$ - דולר אמריקאי</option>
-                      <option value="USDT">₮ - טתר (USDT)</option>
-                      <option value="BTC">₿ - ביטקוין</option>
-                      <option value="ETH">Ξ - אתריום</option>
+                      <option value="ILS">{t("currencyOptions.ILS")}</option>
+                      <option value="USD">{t("currencyOptions.USD")}</option>
+                      <option value="USDT">{t("currencyOptions.USDT")}</option>
+                      <option value="BTC">{t("currencyOptions.BTC")}</option>
+                      <option value="ETH">{t("currencyOptions.ETH")}</option>
                     </select>
                   </div>
 
@@ -762,14 +765,14 @@ export default function SettingsPage() {
                       htmlFor="rate"
                       className="block text-sm font-medium text-muted-foreground mb-1"
                     >
-                      שער חליפין
+                      {t("currencies.rateLabel")}
                     </label>
                     <input
                       type="number"
                       id="rate"
                       value={rate}
                       onChange={(e) => setRate(e.target.value)}
-                      placeholder="לדוגמה: 3.5"
+                      placeholder={t("currencies.ratePlaceholder")}
                       step="0.00000001"
                       min="0"
                       required
@@ -777,7 +780,10 @@ export default function SettingsPage() {
                       disabled={rateSaving}
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      כמה {getCurrencySymbol(toCurrency)} מקבלים עבור 1 {getCurrencySymbol(fromCurrency)}
+                      {t("currencies.rateHint", {
+                        to: getCurrencySymbol(toCurrency),
+                        from: getCurrencySymbol(fromCurrency),
+                      })}
                     </p>
                   </div>
                 </div>
@@ -788,7 +794,7 @@ export default function SettingsPage() {
                     disabled={rateSaving || fromCurrency === toCurrency}
                     className="px-6 py-2 bg-primary text-primary-foreground font-medium rounded-[var(--radius)] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    {rateSaving ? "שומר..." : "שמור שער"}
+                    {rateSaving ? t("currencies.saving") : t("currencies.saveButton")}
                   </button>
                 </div>
               </form>
@@ -797,17 +803,17 @@ export default function SettingsPage() {
             {/* Existing Rates List */}
             <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-4">
-                שערי חליפין שהוגדרו
+                {t("currencies.listTitle")}
               </h2>
 
               {loading ? (
                 <div className="text-center py-8">
                   <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
-                  <p className="mt-2 text-muted-foreground">טוען שערים...</p>
+                  <p className="mt-2 text-muted-foreground">{t("currencies.loadingRates")}</p>
                 </div>
               ) : currencyRates.length === 0 ? (
                 <p className="text-muted-foreground text-center py-8">
-                  לא הוגדרו שערי חליפין עדיין
+                  {t("currencies.emptyRates")}
                 </p>
               ) : (
                 <div className="space-y-4">
@@ -850,7 +856,7 @@ export default function SettingsPage() {
                         onClick={() => handleDeleteRate(rate.id)}
                         className="px-3 py-1 text-destructive text-sm font-medium rounded hover:bg-destructive/10 transition-colors"
                       >
-                        מחק
+                        {t("currencies.delete")}
                       </button>
                     </div>
                   ))}
@@ -866,20 +872,20 @@ export default function SettingsPage() {
             {/* Notification Permission */}
             <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-2">
-                הרשאת התראות דפדפן
+                {t("notifications.permissionTitle")}
               </h2>
               <p className="text-sm text-muted-foreground mb-6">
-                כדי שהמערכת תוכל לשלוח לך התראות, עליך לאפשר התראות מהדפדפן.
+                {t("notifications.permissionDescription")}
               </p>
 
               <div className="flex items-center justify-between p-4 rounded-[var(--radius-card)] border border-border bg-muted">
                 <div>
-                  <p className="font-medium text-foreground">סטטוס הרשאה</p>
+                  <p className="font-medium text-foreground">{t("notifications.permissionStatus")}</p>
                   <p className="text-sm text-muted-foreground">
-                    {notificationPermission === "granted" && "✅ ההתראות מאופשרות"}
-                    {notificationPermission === "denied" && "❌ ההתראות נחסמו"}
-                    {notificationPermission === "default" && "⏳ טרם ניתנה הרשאה"}
-                    {notificationPermission === null && "❌ הדפדפן לא תומך בהתראות"}
+                    {notificationPermission === "granted" && t("notifications.statusGranted")}
+                    {notificationPermission === "denied" && t("notifications.statusDenied")}
+                    {notificationPermission === "default" && t("notifications.statusDefault")}
+                    {notificationPermission === null && t("notifications.statusUnsupported")}
                   </p>
                 </div>
                 <div className="flex gap-3">
@@ -888,7 +894,7 @@ export default function SettingsPage() {
                       onClick={requestNotificationPermission}
                       className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-[var(--radius)] hover:bg-primary/90 transition-colors"
                     >
-                      אפשר התראות
+                      {t("notifications.enablePermission")}
                     </button>
                   )}
                   <button
@@ -896,7 +902,7 @@ export default function SettingsPage() {
                     disabled={testingNotification || notificationPermission !== "granted"}
                     className="px-4 py-2 border border-border bg-card text-foreground text-sm font-medium rounded-[var(--radius)] hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    {testingNotification ? "שולח..." : "נסה התראה"}
+                    {testingNotification ? t("notifications.sending") : t("notifications.testButton")}
                   </button>
                 </div>
               </div>
@@ -905,10 +911,10 @@ export default function SettingsPage() {
             {/* Long Timer Notification */}
             <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-2">
-                התראת טיימר ארוך
+                {t("notifications.longTimerTitle")}
               </h2>
               <p className="text-sm text-muted-foreground mb-6">
-                קבל התראה כאשר הטיימר רץ לפרק זמן ארוך (למשל, יותר מ-2 שעות).
+                {t("notifications.longTimerDescription")}
               </p>
 
               {successMessage && activeTab === "notifications" && (
@@ -927,8 +933,8 @@ export default function SettingsPage() {
                 {/* Enable/Disable */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">אפשר התראת טיימר ארוך</label>
-                    <p className="text-xs text-muted-foreground mt-1">קבל התראה כאשר הטיימר רץ זמן רב מדי</p>
+                    <label className="text-sm font-medium text-muted-foreground">{t("notifications.longTimerToggle")}</label>
+                    <p className="text-xs text-muted-foreground mt-1">{t("notifications.longTimerToggleHint")}</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
@@ -945,7 +951,7 @@ export default function SettingsPage() {
                 {longTimerEnabled && (
                   <div>
                     <label className="text-sm font-medium text-muted-foreground block mb-2">
-                      סף זמן מינימלי (בדקות)
+                      {t("notifications.thresholdLabel")}
                     </label>
                     <input
                       type="number"
@@ -957,7 +963,10 @@ export default function SettingsPage() {
                       className={fieldClass()}
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      התראה תישלח כאשר הטיימר רץ יותר מ-{parseInt(longTimerThreshold, 10)} דקות ({(parseInt(longTimerThreshold, 10) / 60).toFixed(1)} שעות)
+                      {t("notifications.thresholdHint", {
+                        minutes: parseInt(longTimerThreshold, 10),
+                        hours: (parseInt(longTimerThreshold, 10) / 60).toFixed(1),
+                      })}
                     </p>
                   </div>
                 )}
@@ -967,18 +976,18 @@ export default function SettingsPage() {
             {/* Daily Reminder */}
             <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-2">
-                תזכורת יומית
+                {t("notifications.dailyReminderTitle")}
               </h2>
               <p className="text-sm text-muted-foreground mb-6">
-                קבל תזכורת יומית להזנת רשומות זמן אם טרם עשית זאת.
+                {t("notifications.dailyReminderDescription")}
               </p>
 
               <div className="space-y-6">
                 {/* Enable/Disable */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">אפשר תזכורת יומית</label>
-                    <p className="text-xs text-muted-foreground mt-1">קבל תזכורת להזנת רשומות זמן</p>
+                    <label className="text-sm font-medium text-muted-foreground">{t("notifications.dailyReminderToggle")}</label>
+                    <p className="text-xs text-muted-foreground mt-1">{t("notifications.dailyReminderToggleHint")}</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
@@ -995,7 +1004,7 @@ export default function SettingsPage() {
                 {dailyReminderEnabled && (
                   <div>
                     <label className="text-sm font-medium text-muted-foreground block mb-2">
-                      שעת התזכורת
+                      {t("notifications.reminderTimeLabel")}
                     </label>
                     <input
                       type="time"
@@ -1004,7 +1013,7 @@ export default function SettingsPage() {
                       className={fieldClass()}
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      התזכורת תישלח ב-{dailyReminderTime} בכל יום שבו לא נרשמו שעות
+                      {t("notifications.reminderTimeHint", { time: dailyReminderTime })}
                     </p>
                   </div>
                 )}
@@ -1014,15 +1023,15 @@ export default function SettingsPage() {
             {/* Working Hours */}
             <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-2">
-                שעות עבודה יומיות
+                {t("notifications.workingHoursTitle")}
               </h2>
               <p className="text-sm text-muted-foreground mb-6">
-                הגדר את מספר השעות היומיות שאתה עובד. זה שימושי למעקב ודוחות.
+                {t("notifications.workingHoursDescription")}
               </p>
 
               <div>
                 <label className="text-sm font-medium text-muted-foreground block mb-2">
-                  שעות עבודה ליום
+                  {t("notifications.workingHoursLabel")}
                 </label>
                 <input
                   type="number"
@@ -1034,7 +1043,7 @@ export default function SettingsPage() {
                   className={fieldClass()}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  מספר השעות המלאות ליום עבודה: {workingHours} שעות
+                  {t("notifications.workingHoursHint", { hours: workingHours })}
                 </p>
               </div>
             </div>
@@ -1042,26 +1051,26 @@ export default function SettingsPage() {
             {/* First Day of Week */}
             <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-2">
-                יום תחילת השבוע
+                {t("notifications.firstDayTitle")}
               </h2>
               <p className="text-sm text-muted-foreground mb-6">
-                בחר את היום שבו מתחיל השבוע שלך (משפיע על לוחות שנה ודוחות).
+                {t("notifications.firstDayDescription")}
               </p>
 
               <div>
                 <label className="text-sm font-medium text-muted-foreground block mb-2">
-                  יום תחילת שבוע
+                  {t("notifications.firstDayLabel")}
                 </label>
                 <select
                   value={firstDayOfWeek}
                   onChange={(e) => setFirstDayOfWeek(e.target.value)}
                   className={fieldClass()}
                 >
-                  <option value="sunday">ראשון (Sunday)</option>
-                  <option value="monday">שני (Monday)</option>
+                  <option value="sunday">{t("notifications.firstDaySunday")}</option>
+                  <option value="monday">{t("notifications.firstDayMonday")}</option>
                 </select>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {firstDayOfWeek === "sunday" ? "השבוע מתחיל ביום ראשון" : "השבוע מתחיל ביום שני"}
+                  {firstDayOfWeek === "sunday" ? t("notifications.firstDayHintSunday") : t("notifications.firstDayHintMonday")}
                 </p>
               </div>
             </div>
@@ -1076,10 +1085,10 @@ export default function SettingsPage() {
                 {profileLoading ? (
                   <span className="flex items-center gap-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-foreground border-t-transparent"></div>
-                    שומר...
+                    {t("notifications.saving")}
                   </span>
                 ) : (
-                  "שמור הגדרות התראות"
+                  t("notifications.saveButton")
                 )}
               </button>
             </div>
@@ -1093,7 +1102,7 @@ export default function SettingsPage() {
             <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
               <div className="flex items-center justify-between mb-2">
                 <h2 className="font-display text-lg font-bold text-foreground">
-                  פעולות פעילות
+                  {t("security.sessionsTitle")}
                 </h2>
                 {sessions.length > 1 && (
                   <button
@@ -1101,18 +1110,18 @@ export default function SettingsPage() {
                     disabled={logoutAllLoading}
                     className="px-4 py-2 bg-destructive text-destructive-foreground text-sm font-medium rounded-[var(--radius)] hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    {logoutAllLoading ? "מתנתק..." : "התנתק מכל המכשירים"}
+                    {logoutAllLoading ? t("security.loggingOut") : t("security.logoutAll")}
                   </button>
                 )}
               </div>
               <p className="text-sm text-muted-foreground mb-6">
-                רשימת כל המכשירים שמחוברים כרגע לחשבון שלך.
+                {t("security.sessionsDescription")}
               </p>
 
               {loading ? (
                 <div className="text-center py-8">
                   <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
-                  <p className="mt-2 text-muted-foreground">טוען פעולות...</p>
+                  <p className="mt-2 text-muted-foreground">{t("security.loadingSessions")}</p>
                 </div>
               ) : error ? (
                 <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4">
@@ -1120,7 +1129,7 @@ export default function SettingsPage() {
                 </div>
               ) : sessions.length === 0 ? (
                 <p className="text-muted-foreground text-center py-8">
-                  אין פעולות פעילות
+                  {t("security.emptySessions")}
                 </p>
               ) : (
                 <div className="space-y-2.5">
@@ -1154,12 +1163,15 @@ export default function SettingsPage() {
                           {session.is_current && (
                             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium bg-accent/10 text-accent">
                               <span className="w-2 h-2 rounded-full bg-accent"></span>
-                              נוכחי
+                              {t("security.current")}
                             </span>
                           )}
                         </p>
                         <p className="font-mono text-xs text-muted-foreground mt-0.5">
-                          התחברות {formatDate(session.created_at)} · תפוגה {formatDate(session.expires_at)}
+                          {t("security.sessionMeta", {
+                            created: formatDate(session.created_at),
+                            expires: formatDate(session.expires_at),
+                          })}
                         </p>
                       </div>
                     </div>
@@ -1185,11 +1197,11 @@ export default function SettingsPage() {
 
               <div className="flex items-center justify-between gap-5">
                 <div className="min-w-0">
-                  <h2 className="font-display text-lg font-bold text-foreground">לוגו עסקי</h2>
+                  <h2 className="font-display text-lg font-bold text-foreground">{t("profile.logoTitle")}</h2>
                   <p className="text-sm text-muted-foreground mt-1">
-                    יופיע בדוחות PDF. מומלץ תמונה ריבועית, 200x200 לפחות.
+                    {t("profile.logoDescription")}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-2">JPEG, PNG, GIF, WebP · עד 5MB</p>
+                  <p className="text-xs text-muted-foreground mt-2">{t("profile.logoFormats")}</p>
                 </div>
 
                 <div className="flex items-center gap-3 shrink-0">
@@ -1197,7 +1209,7 @@ export default function SettingsPage() {
                   <div className="w-16 h-16 rounded-full border-2 border-dashed border-border flex items-center justify-center bg-muted overflow-hidden">
                     {profile?.logoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={profile.logoUrl} alt="לוגו עסקי" className="w-full h-full object-contain" />
+                      <img src={profile.logoUrl} alt={t("profile.logoAlt")} className="w-full h-full object-contain" />
                     ) : (
                       <svg className="w-6 h-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -1219,7 +1231,7 @@ export default function SettingsPage() {
                       disabled={logoLoading}
                       className="px-3 py-1.5 bg-primary text-primary-foreground text-sm font-medium rounded-[var(--radius)] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
                     >
-                      {logoLoading ? "מעלה..." : profile?.logoUrl ? "החלף לוגו" : "העלה לוגו"}
+                      {logoLoading ? t("profile.uploading") : profile?.logoUrl ? t("profile.replaceLogo") : t("profile.uploadLogo")}
                     </button>
                     {profile?.logoUrl && (
                       <button
@@ -1227,7 +1239,7 @@ export default function SettingsPage() {
                         disabled={logoLoading}
                         className="px-3 py-1.5 text-destructive text-sm font-medium rounded-[var(--radius)] hover:bg-destructive/10 disabled:opacity-50 transition-colors whitespace-nowrap"
                       >
-                        הסר לוגו
+                        {t("profile.removeLogo")}
                       </button>
                     )}
                   </div>
@@ -1245,11 +1257,11 @@ export default function SettingsPage() {
 
               <div className="flex items-center justify-between gap-5">
                 <div className="min-w-0">
-                  <h2 className="font-display text-lg font-bold text-foreground">חתימה דיגיטלית</h2>
+                  <h2 className="font-display text-lg font-bold text-foreground">{t("profile.signatureTitle")}</h2>
                   <p className="text-sm text-muted-foreground mt-1">
-                    תופיע בחשבוניות PDF. מומלץ PNG עם רקע שקוף, 200x80 לפחות.
+                    {t("profile.signatureDescription")}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-2">JPEG, PNG, GIF, WebP · עד 2MB</p>
+                  <p className="text-xs text-muted-foreground mt-2">{t("profile.signatureFormats")}</p>
                 </div>
 
                 <div className="flex items-center gap-3 shrink-0">
@@ -1257,7 +1269,7 @@ export default function SettingsPage() {
                   <div className="w-28 h-16 rounded-[var(--radius)] border-2 border-dashed border-border flex items-center justify-center bg-muted overflow-hidden">
                     {profile?.signatureUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={profile.signatureUrl} alt="חתימה דיגיטלית" className="w-full h-full object-contain" />
+                      <img src={profile.signatureUrl} alt={t("profile.signatureAlt")} className="w-full h-full object-contain" />
                     ) : (
                       <svg className="w-6 h-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -1279,7 +1291,7 @@ export default function SettingsPage() {
                       disabled={signatureLoading}
                       className="px-3 py-1.5 bg-primary text-primary-foreground text-sm font-medium rounded-[var(--radius)] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
                     >
-                      {signatureLoading ? "מעלה..." : profile?.signatureUrl ? "החלף חתימה" : "העלה חתימה"}
+                      {signatureLoading ? t("profile.uploading") : profile?.signatureUrl ? t("profile.replaceSignature") : t("profile.uploadSignature")}
                     </button>
                     {profile?.signatureUrl && (
                       <button
@@ -1287,7 +1299,7 @@ export default function SettingsPage() {
                         disabled={signatureLoading}
                         className="px-3 py-1.5 text-destructive text-sm font-medium rounded-[var(--radius)] hover:bg-destructive/10 disabled:opacity-50 transition-colors whitespace-nowrap"
                       >
-                        הסר חתימה
+                        {t("profile.removeSignature")}
                       </button>
                     )}
                   </div>
@@ -1298,10 +1310,10 @@ export default function SettingsPage() {
             {/* Business Details Form */}
             <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-2">
-                פרטי עסק
+                {t("business.title")}
               </h2>
               <p className="text-sm text-muted-foreground mb-6">
-                פרטים אלו יופיעו בדוחות ובחשבוניות שתייצרו.
+                {t("business.description")}
               </p>
 
               {profileError && (
@@ -1319,7 +1331,7 @@ export default function SettingsPage() {
               {loading ? (
                 <div className="text-center py-8">
                   <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
-                  <p className="mt-2 text-muted-foreground">טוען פרטים...</p>
+                  <p className="mt-2 text-muted-foreground">{t("business.loading")}</p>
                 </div>
               ) : (
                 <form onSubmit={handleSaveProfile} className="space-y-6">
@@ -1330,14 +1342,14 @@ export default function SettingsPage() {
                         htmlFor="businessName"
                         className="block text-sm font-medium text-muted-foreground mb-1"
                       >
-                        שם העסק
+                        {t("business.businessName")}
                       </label>
                       <input
                         type="text"
                         id="businessName"
                         value={businessName}
                         onChange={(e) => setBusinessName(e.target.value)}
-                        placeholder="לדוגמה: חברת הייעוץ שלי"
+                        placeholder={t("business.businessNamePlaceholder")}
                         className={fieldClass()}
                       />
                     </div>
@@ -1348,14 +1360,14 @@ export default function SettingsPage() {
                         htmlFor="phone"
                         className="block text-sm font-medium text-muted-foreground mb-1"
                       >
-                        טלפון
+                        {t("business.phone")}
                       </label>
                       <input
                         type="tel"
                         id="phone"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        placeholder="לדוגמה: 050-1234567"
+                        placeholder={t("business.phonePlaceholder")}
                         className={fieldClass()}
                       />
                     </div>
@@ -1366,14 +1378,14 @@ export default function SettingsPage() {
                         htmlFor="email"
                         className="block text-sm font-medium text-muted-foreground mb-1"
                       >
-                        אימייל עסקי
+                        {t("business.email")}
                       </label>
                       <input
                         type="email"
                         id="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="לדוגמה: info@example.com"
+                        placeholder={t("business.emailPlaceholder")}
                         className={fieldClass()}
                       />
                     </div>
@@ -1384,14 +1396,14 @@ export default function SettingsPage() {
                         htmlFor="taxId"
                         className="block text-sm font-medium text-muted-foreground mb-1"
                       >
-                        ח.פ. / מספר עוסק
+                        {t("business.taxId")}
                       </label>
                       <input
                         type="text"
                         id="taxId"
                         value={taxId}
                         onChange={(e) => setTaxId(e.target.value)}
-                        placeholder="לדוגמה: 123456789"
+                        placeholder={t("business.taxIdPlaceholder")}
                         className={fieldClass()}
                       />
                     </div>
@@ -1402,14 +1414,14 @@ export default function SettingsPage() {
                         htmlFor="website"
                         className="block text-sm font-medium text-muted-foreground mb-1"
                       >
-                        אתר אינטרנט
+                        {t("business.website")}
                       </label>
                       <input
                         type="url"
                         id="website"
                         value={website}
                         onChange={(e) => setWebsite(e.target.value)}
-                        placeholder="לדוגמה: https://example.com"
+                        placeholder={t("business.websitePlaceholder")}
                         className={fieldClass()}
                       />
                     </div>
@@ -1420,13 +1432,13 @@ export default function SettingsPage() {
                         htmlFor="address"
                         className="block text-sm font-medium text-muted-foreground mb-1"
                       >
-                        כתובת
+                        {t("business.address")}
                       </label>
                       <textarea
                         id="address"
                         value={address}
                         onChange={(e) => setAddress(e.target.value)}
-                        placeholder="לדוגמה: רחוב הרצל 1, תל אביב"
+                        placeholder={t("business.addressPlaceholder")}
                         rows={3}
                         className={`${fieldClass()} resize-none`}
                       />
@@ -1438,7 +1450,7 @@ export default function SettingsPage() {
                         htmlFor="defaultCurrency"
                         className="block text-sm font-medium text-muted-foreground mb-1"
                       >
-                        מטבע ברירת מחדל
+                        {t("business.defaultCurrency")}
                       </label>
                       <select
                         id="defaultCurrency"
@@ -1446,14 +1458,14 @@ export default function SettingsPage() {
                         onChange={(e) => setDefaultCurrency(e.target.value)}
                         className={fieldClass()}
                       >
-                        <option value="ILS">₪ - שקל ישראלי</option>
-                        <option value="USD">$ - דולר אמריקאי</option>
-                        <option value="USDT">₮ - טתר (USDT)</option>
-                        <option value="BTC">₿ - ביטקוין</option>
-                        <option value="ETH">Ξ - אתריום</option>
+                        <option value="ILS">{t("currencyOptions.ILS")}</option>
+                        <option value="USD">{t("currencyOptions.USD")}</option>
+                        <option value="USDT">{t("currencyOptions.USDT")}</option>
+                        <option value="BTC">{t("currencyOptions.BTC")}</option>
+                        <option value="ETH">{t("currencyOptions.ETH")}</option>
                       </select>
                       <p className="text-xs text-muted-foreground mt-1">
-                        המטבע שיופיע כברירת מחדל בפרויקטים חדשים
+                        {t("business.defaultCurrencyHint")}
                       </p>
                     </div>
 
@@ -1463,7 +1475,7 @@ export default function SettingsPage() {
                         htmlFor="preferredPdfTemplate"
                         className="block text-sm font-medium text-muted-foreground mb-1"
                       >
-                        תבנית PDF ברירת מחדל
+                        {t("pdf.templateLabel")}
                       </label>
                       <select
                         id="preferredPdfTemplate"
@@ -1471,15 +1483,15 @@ export default function SettingsPage() {
                         onChange={(e) => setPreferredPdfTemplate(e.target.value)}
                         className={fieldClass()}
                       >
-                        <option value="modern">מודרני (Modern)</option>
-                        <option value="classic">קלאסי (Classic)</option>
-                        <option value="bold">בולד (Bold)</option>
-                        <option value="elegant">אלגנטי (Elegant)</option>
-                        <option value="nature">טבע (Nature)</option>
-                        <option value="ocean">אוקיינוס (Ocean)</option>
+                        <option value="modern">{t("pdf.templateModern")}</option>
+                        <option value="classic">{t("pdf.templateClassic")}</option>
+                        <option value="bold">{t("pdf.templateBold")}</option>
+                        <option value="elegant">{t("pdf.templateElegant")}</option>
+                        <option value="nature">{t("pdf.templateNature")}</option>
+                        <option value="ocean">{t("pdf.templateOcean")}</option>
                       </select>
                       <p className="text-xs text-muted-foreground mt-1">
-                        התבנית שתשמש כברירת מחדל בייצוא דוחות PDF
+                        {t("pdf.templateHint")}
                       </p>
                     </div>
 
@@ -1489,7 +1501,7 @@ export default function SettingsPage() {
                         htmlFor="pdfPrimaryColor"
                         className="block text-sm font-medium text-muted-foreground mb-1"
                       >
-                        צבע ראשי ל-PDF
+                        {t("pdf.primaryColorLabel")}
                       </label>
                       <div className="flex items-center gap-3">
                         <input
@@ -1510,7 +1522,7 @@ export default function SettingsPage() {
                         />
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        הצבע הראשי שיופיע בכותרות ואלמנטים מרכזיים ב-PDF
+                        {t("pdf.primaryColorHint")}
                       </p>
                     </div>
 
@@ -1520,7 +1532,7 @@ export default function SettingsPage() {
                         htmlFor="pdfAccentColor"
                         className="block text-sm font-medium text-muted-foreground mb-1"
                       >
-                        צבע משני ל-PDF
+                        {t("pdf.accentColorLabel")}
                       </label>
                       <div className="flex items-center gap-3">
                         <input
@@ -1541,7 +1553,7 @@ export default function SettingsPage() {
                         />
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        הצבע המשני שיופיע בפרטים ואלמנטים נוספים ב-PDF
+                        {t("pdf.accentColorHint")}
                       </p>
                     </div>
 
@@ -1551,7 +1563,7 @@ export default function SettingsPage() {
                         htmlFor="dateFormat"
                         className="block text-sm font-medium text-muted-foreground mb-1"
                       >
-                        פורמט תאריך
+                        {t("display.dateFormatLabel")}
                       </label>
                       <select
                         id="dateFormat"
@@ -1559,12 +1571,12 @@ export default function SettingsPage() {
                         onChange={(e) => setDateFormat(e.target.value)}
                         className={fieldClass()}
                       >
-                        <option value="DD/MM/YYYY">יום/חודש/שנה (DD/MM/YYYY)</option>
-                        <option value="MM/DD/YYYY">חודש/יום/שנה (MM/DD/YYYY)</option>
-                        <option value="YYYY-MM-DD">שנה-חודש-יום (YYYY-MM-DD)</option>
+                        <option value="DD/MM/YYYY">{t("display.dateFormatDMY")}</option>
+                        <option value="MM/DD/YYYY">{t("display.dateFormatMDY")}</option>
+                        <option value="YYYY-MM-DD">{t("display.dateFormatYMD")}</option>
                       </select>
                       <p className="text-xs text-muted-foreground mt-1">
-                        פורמט התצוגה של תאריכים במערכת
+                        {t("display.dateFormatHint")}
                       </p>
                     </div>
 
@@ -1574,7 +1586,7 @@ export default function SettingsPage() {
                         htmlFor="timeFormat"
                         className="block text-sm font-medium text-muted-foreground mb-1"
                       >
-                        פורמט שעה
+                        {t("display.timeFormatLabel")}
                       </label>
                       <select
                         id="timeFormat"
@@ -1582,11 +1594,11 @@ export default function SettingsPage() {
                         onChange={(e) => setTimeFormat(e.target.value)}
                         className={fieldClass()}
                       >
-                        <option value="24h">24 שעות (14:30)</option>
-                        <option value="12h">12 שעות (02:30 PM)</option>
+                        <option value="24h">{t("display.timeFormat24h")}</option>
+                        <option value="12h">{t("display.timeFormat12h")}</option>
                       </select>
                       <p className="text-xs text-muted-foreground mt-1">
-                        פורמט התצוגה של שעות במערכת
+                        {t("display.timeFormatHint")}
                       </p>
                     </div>
 
@@ -1596,18 +1608,18 @@ export default function SettingsPage() {
                         htmlFor="invoicePrefix"
                         className="block text-sm font-medium text-muted-foreground mb-1"
                       >
-                        קידומת חשבונית
+                        {t("invoice.prefixLabel")}
                       </label>
                       <input
                         type="text"
                         id="invoicePrefix"
                         value={invoicePrefix}
                         onChange={(e) => setInvoicePrefix(e.target.value)}
-                        placeholder="לדוגמה: INV-"
+                        placeholder={t("invoice.prefixPlaceholder")}
                         className={fieldClass()}
                       />
                       <p className="text-xs text-muted-foreground mt-1">
-                        הקידומת תופיע לפני מספר החשבונית (לדוגמה: INV-001, INV-002)
+                        {t("invoice.prefixHint")}
                       </p>
                     </div>
 
@@ -1617,19 +1629,19 @@ export default function SettingsPage() {
                         htmlFor="nextInvoiceNumber"
                         className="block text-sm font-medium text-muted-foreground mb-1"
                       >
-                        מספר החשבונית הבא
+                        {t("invoice.nextNumberLabel")}
                       </label>
                       <input
                         type="number"
                         id="nextInvoiceNumber"
                         value={nextInvoiceNumber}
                         onChange={(e) => setNextInvoiceNumber(e.target.value)}
-                        placeholder="לדוגמה: 1"
+                        placeholder={t("invoice.nextNumberPlaceholder")}
                         min="1"
                         className={fieldClass()}
                       />
                       <p className="text-xs text-muted-foreground mt-1">
-                        מספר החשבונית הבא שיונפק. המספר יעלה אוטומטית לאחר כל חשבונית
+                        {t("invoice.nextNumberHint")}
                       </p>
                     </div>
 
@@ -1639,27 +1651,27 @@ export default function SettingsPage() {
                         htmlFor="paymentTerms"
                         className="block text-sm font-medium text-muted-foreground mb-1"
                       >
-                        תנאי תשלום
+                        {t("invoice.paymentTermsLabel")}
                       </label>
                       <textarea
                         id="paymentTerms"
                         value={paymentTerms}
                         onChange={(e) => setPaymentTerms(e.target.value)}
-                        placeholder="לדוגמה: תשלום בתוך 30 יום מתאריך החשבונית"
+                        placeholder={t("invoice.paymentTermsPlaceholder")}
                         rows={3}
                         className={`${fieldClass()} resize-none`}
                       />
                       <p className="text-xs text-muted-foreground mt-1">
-                        תנאי התשלום יופיעו בחשבוניות ובדוחות
+                        {t("invoice.paymentTermsHint")}
                       </p>
                     </div>
                   </div>
 
                   {/* Bank Details Section */}
                   <div className="border-t border-border pt-6 mt-6">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">פרטי בנק להעברות</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-4">{t("business.bankSectionTitle")}</h3>
                     <p className="text-sm text-muted-foreground mb-6">
-                      פרטים אלו יופיעו בחשבוניות כדי לאפשר העברת תשלומים
+                      {t("business.bankSectionDescription")}
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1669,14 +1681,14 @@ export default function SettingsPage() {
                           htmlFor="bankName"
                           className="block text-sm font-medium text-muted-foreground mb-1"
                         >
-                          שם הבנק
+                          {t("business.bankName")}
                         </label>
                         <input
                           type="text"
                           id="bankName"
                           value={bankName}
                           onChange={(e) => setBankName(e.target.value)}
-                          placeholder="לדוגמה: בנק הפועלים"
+                          placeholder={t("business.bankNamePlaceholder")}
                           className={fieldClass()}
                         />
                       </div>
@@ -1687,14 +1699,14 @@ export default function SettingsPage() {
                           htmlFor="bankBranch"
                           className="block text-sm font-medium text-muted-foreground mb-1"
                         >
-                          מספר סניף
+                          {t("business.bankBranch")}
                         </label>
                         <input
                           type="text"
                           id="bankBranch"
                           value={bankBranch}
                           onChange={(e) => setBankBranch(e.target.value)}
-                          placeholder="לדוגמה: 123"
+                          placeholder={t("business.bankBranchPlaceholder")}
                           className={fieldClass()}
                         />
                       </div>
@@ -1705,14 +1717,14 @@ export default function SettingsPage() {
                           htmlFor="bankAccountNumber"
                           className="block text-sm font-medium text-muted-foreground mb-1"
                         >
-                          מספר חשבון
+                          {t("business.bankAccountNumber")}
                         </label>
                         <input
                           type="text"
                           id="bankAccountNumber"
                           value={bankAccountNumber}
                           onChange={(e) => setBankAccountNumber(e.target.value)}
-                          placeholder="לדוגמה: 123456"
+                          placeholder={t("business.bankAccountNumberPlaceholder")}
                           className={fieldClass()}
                         />
                       </div>
@@ -1723,18 +1735,18 @@ export default function SettingsPage() {
                           htmlFor="bankSwift"
                           className="block text-sm font-medium text-muted-foreground mb-1"
                         >
-                          מזהה בנק בינלאומי (SWIFT/BIC)
+                          {t("business.bankSwift")}
                         </label>
                         <input
                           type="text"
                           id="bankSwift"
                           value={bankSwift}
                           onChange={(e) => setBankSwift(e.target.value)}
-                          placeholder="לדוגמה: POHALILIT"
+                          placeholder={t("business.bankSwiftPlaceholder")}
                           className={fieldClass()}
                         />
                         <p className="text-xs text-muted-foreground mt-1">
-                          נדרש להעברות בינלאומיות בלבד
+                          {t("business.bankSwiftHint")}
                         </p>
                       </div>
                     </div>
@@ -1749,10 +1761,10 @@ export default function SettingsPage() {
                       {profileLoading ? (
                         <span className="flex items-center gap-2">
                           <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-foreground border-t-transparent"></div>
-                          שומר...
+                          {t("business.saving")}
                         </span>
                       ) : (
-                        "שמור שינויים"
+                        t("business.saveButton")
                       )}
                     </button>
                   </div>
@@ -1769,10 +1781,10 @@ export default function SettingsPage() {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-card rounded-[var(--radius-card)] border border-border-strong p-6 max-w-md w-full mx-4 motion-safe:animate-scale-in" dir="rtl">
             <h3 className="text-lg font-semibold text-foreground mb-4">
-              האם אתה בטוח?
+              {t("security.confirmTitle")}
             </h3>
             <p className="text-muted-foreground mb-6">
-              פעולה זו תנתק אותך מכל המכשירים המחוברים לחשבון שלך, כולל המכשיר הנוכחי. תצטרך להתחבר מחדש.
+              {t("security.confirmDescription")}
             </p>
             <div className="flex gap-3 justify-end">
               <button
@@ -1780,14 +1792,14 @@ export default function SettingsPage() {
                 disabled={logoutAllLoading}
                 className="px-4 py-2 border border-border bg-card text-foreground rounded-[var(--radius)] hover:bg-muted disabled:opacity-50 transition-colors"
               >
-                ביטול
+                {t("security.cancel")}
               </button>
               <button
                 onClick={handleLogoutAll}
                 disabled={logoutAllLoading}
                 className="px-4 py-2 bg-destructive text-destructive-foreground rounded-[var(--radius)] hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {logoutAllLoading ? "מתנתק..." : "התנתק מכל המכשירים"}
+                {logoutAllLoading ? t("security.loggingOut") : t("security.logoutAll")}
               </button>
             </div>
           </div>

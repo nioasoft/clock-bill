@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors, closestCorners, type DragEndEvent } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useTranslations } from "next-intl";
 import { useTimer } from "@/contexts/timer-context";
 import { TASK_STATUSES, type TaskRecord, type TaskStatus } from "@/lib/tasks-types";
 import { TaskCard } from "./task-card";
@@ -26,6 +27,7 @@ export function SortableTaskCard(props: { task: TaskRecord; isTimerRunning: bool
 }
 
 export function KanbanBoard({ board }: { board: UseTasksBoardReturn }) {
+  const t = useTranslations("Tasks.board");
   const { runningTimerForTask } = useTimer();
   const { state, load, byStatus, moveTask } = board;
   const [selected, setSelected] = useState<TaskRecord | null>(null);
@@ -57,16 +59,16 @@ export function KanbanBoard({ board }: { board: UseTasksBoardReturn }) {
   if (state.error) {
     return (
       <div className="rounded-[var(--radius-card)] border border-border bg-card p-8 text-center">
-        <p className="text-foreground">שגיאה בטעינת המשימות</p>
-        <button onClick={load} className="mt-3 min-h-[44px] rounded-[var(--radius)] bg-primary px-4 py-2 text-primary-foreground">נסה שוב</button>
+        <p className="text-foreground">{t("loadError")}</p>
+        <button onClick={load} className="mt-3 min-h-[44px] rounded-[var(--radius)] bg-primary px-4 py-2 text-primary-foreground">{t("retry")}</button>
       </div>
     );
   }
   if (state.tasks.length === 0) {
     return (
       <div className="rounded-[var(--radius-card)] border border-border bg-card p-10 text-center">
-        <p className="text-foreground">אין עדיין משימות</p>
-        <p className="mt-1 text-sm text-muted-foreground">צור את המשימה הראשונה כדי להתחיל</p>
+        <p className="text-foreground">{t("emptyTitle")}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t("emptyHint")}</p>
       </div>
     );
   }

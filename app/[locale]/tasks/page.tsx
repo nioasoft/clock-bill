@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
@@ -10,6 +11,7 @@ import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
 import { useTasksBoard } from "@/components/tasks/use-tasks-board";
 
 export default function TasksPage() {
+  const t = useTranslations("Tasks.board");
   const [creating, setCreating] = useState(false);
   const board = useTasksBoard();
 
@@ -28,12 +30,12 @@ export default function TasksPage() {
   return (
     <AppLayout>
       <PageContainer>
-        <PageHeader title="משימות">
+        <PageHeader title={t("pageTitle")}>
           <button
             onClick={() => setCreating(true)}
             className="min-h-[44px] rounded-[var(--radius-card)] bg-primary px-4 py-2 font-medium text-primary-foreground hover:bg-primary/90"
           >
-            + משימה חדשה
+            {t("newTask")}
           </button>
         </PageHeader>
 

@@ -44,6 +44,7 @@ export default function ProjectsPage() {
 }
 
 function ProjectsPageContent() {
+  const t = useTranslations("Projects");
   const tRounding = useTranslations("Rounding");
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -140,7 +141,7 @@ function ProjectsPageContent() {
 
     // Client is required
     if (!formData.clientId) {
-      errors.clientId = "נא לבחור לקוח";
+      errors.clientId = t("errors.clientRequired");
     }
 
     // Name is required
@@ -161,7 +162,7 @@ function ProjectsPageContent() {
     if (formData.fixedMonthlyEnabled) {
       const fee = parseFloat(formData.fixedMonthlyFee);
       if (!formData.fixedMonthlyFee || Number.isNaN(fee) || fee <= 0) {
-        errors.fixedMonthlyFee = "יש להזין סכום חודשי גדול מ-0";
+        errors.fixedMonthlyFee = t("errors.monthlyFeePositive");
       }
 
       if (formData.fixedMonthlyStartDate && formData.fixedMonthlyEndDate) {
@@ -227,11 +228,11 @@ function ProjectsPageContent() {
         });
         setShowForm(false);
       } else {
-        setFormError(data.message || "שגיאה ביצירת הפרויקט");
+        setFormError(data.message || t("errors.createFailed"));
       }
     } catch (error) {
       console.error("Error saving project:", error);
-      setFormError("שגיאה ביצירת הפרויקט");
+      setFormError(t("errors.createFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -240,13 +241,13 @@ function ProjectsPageContent() {
   const getStatusLabel = (status: string) => {
     switch (status) {
       case "active":
-        return "פעיל";
+        return t("status.active");
       case "completed":
-        return "הושלם";
+        return t("status.completed");
       case "paused":
-        return "מושהה";
+        return t("status.paused");
       case "archived":
-        return "בארכיון";
+        return t("status.archived");
       default:
         return status;
     }
@@ -272,24 +273,24 @@ function ProjectsPageContent() {
         // Remove the restored project from the list
         setProjects(projects.filter((p) => p.id !== projectId));
       } else {
-        alert(data.message || "שגיאה בשחזור הפרויקט");
+        alert(data.message || t("errors.restoreFailed"));
       }
     } catch (error) {
       console.error("Error restoring project:", error);
-      alert("שגיאה בשחזור הפרויקט");
+      alert(t("errors.restoreFailed"));
     }
   };
 
   return (
     <AppLayout>
       <PageContainer>
-        <PageHeader title="פרויקטים">
+        <PageHeader title={t("pageTitle")}>
           {statusFilter === "active" && (
             <button
               onClick={() => setShowForm(!showForm)}
               className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
             >
-              {showForm ? "ביטול" : "+ פרויקט חדש"}
+              {showForm ? t("cancel") : t("newProject")}
             </button>
           )}
         </PageHeader>
@@ -304,7 +305,7 @@ function ProjectsPageContent() {
                 : "text-muted-foreground hover:bg-muted"
             }`}
           >
-            פעילים
+            {t("filter.active")}
           </button>
           <button
             onClick={() => setStatusFilter("archived")}
@@ -314,15 +315,15 @@ function ProjectsPageContent() {
                 : "text-muted-foreground hover:bg-muted"
             }`}
           >
-            ארכיון
+            {t("filter.archived")}
           </button>
         </div>
         {/* Add Project Form */}
         {showForm && (
           <div className="mb-8 mx-auto max-w-2xl rounded-[var(--radius-card)] border border-border bg-card p-6 motion-safe:animate-scale-in">
             <div className="mb-5">
-              <h2 className="font-display text-lg font-semibold text-foreground">פרויקט חדש</h2>
-              <p className="mt-0.5 text-sm text-muted-foreground">שייך את הפרויקט ללקוח והגדר את מודל החיוב</p>
+              <h2 className="font-display text-lg font-semibold text-foreground">{t("form.title")}</h2>
+              <p className="mt-0.5 text-sm text-muted-foreground">{t("form.subtitle")}</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -335,12 +336,12 @@ function ProjectsPageContent() {
               {/* Section — details */}
               <fieldset className="space-y-4">
                 <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                  פרטי הפרויקט
+                  {t("form.detailsLegend")}
                 </legend>
                 <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
                   <div>
                     <label htmlFor="clientId" className="mb-1.5 block text-sm font-medium text-foreground">
-                      לקוח <span className="text-primary">*</span>
+                      {t("form.clientLabel")} <span className="text-primary">*</span>
                     </label>
                     <select
                       id="clientId"
@@ -353,7 +354,7 @@ function ProjectsPageContent() {
                       className={fieldClass(!!fieldErrors.clientId)}
                       disabled={submitting}
                     >
-                      <option value="">בחר לקוח</option>
+                      <option value="">{t("form.clientPlaceholder")}</option>
                       {clients.map((client) => (
                         <option key={client.id} value={client.id}>
                           {client.name}
@@ -366,14 +367,14 @@ function ProjectsPageContent() {
                         href="/clients?create=true"
                         className="mt-1.5 inline-block text-xs text-primary hover:text-primary/90"
                       >
-                        + צור לקוח חדש
+                        {t("form.createClientLink")}
                       </Link>
                     )}
                   </div>
 
                   <div>
                     <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-foreground">
-                      שם הפרויקט <span className="text-primary">*</span>
+                      {t("form.nameLabel")} <span className="text-primary">*</span>
                     </label>
                     <input
                       type="text"
@@ -386,14 +387,14 @@ function ProjectsPageContent() {
                       }}
                       className={fieldClass(!!fieldErrors.name)}
                       disabled={submitting}
-                      placeholder="לדוגמה: עיצוב אתר"
+                      placeholder={t("form.namePlaceholder")}
                     />
                     {fieldErrors.name && <p className="mt-1.5 text-xs text-destructive">{fieldErrors.name}</p>}
                   </div>
 
                   <div>
                     <label htmlFor="status" className="mb-1.5 block text-sm font-medium text-foreground">
-                      סטטוס
+                      {t("form.statusLabel")}
                     </label>
                     <select
                       id="status"
@@ -402,16 +403,16 @@ function ProjectsPageContent() {
                       className={fieldClass(false)}
                       disabled={submitting}
                     >
-                      <option value="active">פעיל</option>
-                      <option value="paused">מושהה</option>
-                      <option value="completed">הושלם</option>
+                      <option value="active">{t("status.active")}</option>
+                      <option value="paused">{t("status.paused")}</option>
+                      <option value="completed">{t("status.completed")}</option>
                     </select>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="startDate" className="mb-1.5 block text-sm font-medium text-foreground">
-                        תאריך התחלה
+                        {t("form.startDateLabel")}
                       </label>
                       <input
                         type="date"
@@ -427,7 +428,7 @@ function ProjectsPageContent() {
                     </div>
                     <div>
                       <label htmlFor="endDate" className="mb-1.5 block text-sm font-medium text-foreground">
-                        תאריך סיום
+                        {t("form.endDateLabel")}
                       </label>
                       <input
                         type="date"
@@ -448,12 +449,12 @@ function ProjectsPageContent() {
               {/* Section — fixed monthly billing */}
               <fieldset className="space-y-4">
                 <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                  חיוב קבוע
+                  {t("form.fixedBillingLegend")}
                 </legend>
                 <label className="flex cursor-pointer items-center justify-between gap-4 rounded-[var(--radius)] border border-border bg-background px-4 py-3">
                   <div>
-                    <div className="text-sm font-medium text-foreground">חיוב קבוע חודשי</div>
-                    <div className="text-xs text-muted-foreground">מתווסף לחיוב לפי שעות בדוחות</div>
+                    <div className="text-sm font-medium text-foreground">{t("form.fixedMonthlyLabel")}</div>
+                    <div className="text-xs text-muted-foreground">{t("form.fixedMonthlyHint")}</div>
                   </div>
                   <input
                     type="checkbox"
@@ -478,7 +479,7 @@ function ProjectsPageContent() {
                   <div className="grid grid-cols-1 gap-x-4 gap-y-4 rounded-[var(--radius)] border border-border bg-background/50 p-4 sm:grid-cols-3">
                     <div>
                       <label htmlFor="fixedMonthlyFee" className="mb-1.5 block text-sm font-medium text-foreground">
-                        סכום חודשי <span className="text-primary">*</span>
+                        {t("form.monthlyFeeLabel")} <span className="text-primary">*</span>
                       </label>
                       <input
                         type="number"
@@ -499,7 +500,7 @@ function ProjectsPageContent() {
 
                     <div>
                       <label htmlFor="fixedMonthlyStartDate" className="mb-1.5 block text-sm font-medium text-foreground">
-                        תוקף מ-
+                        {t("form.validFromLabel")}
                       </label>
                       <input
                         type="date"
@@ -514,7 +515,7 @@ function ProjectsPageContent() {
 
                     <div>
                       <label htmlFor="fixedMonthlyEndDate" className="mb-1.5 block text-sm font-medium text-foreground">
-                        תוקף עד
+                        {t("form.validToLabel")}
                       </label>
                       <input
                         type="date"
@@ -533,7 +534,7 @@ function ProjectsPageContent() {
               {/* Section — billing rounding */}
               <fieldset className="space-y-2">
                 <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                  עיגול זמן לחיוב
+                  {t("form.roundingLegend")}
                 </legend>
                 <select
                   id="billingRounding"
@@ -542,18 +543,18 @@ function ProjectsPageContent() {
                   className={fieldClass(false)}
                   disabled={submitting}
                 >
-                  <option value="">ירושה מהלקוח</option>
+                  <option value="">{t("form.roundingInherit")}</option>
                   <option value="none">{tRounding("none")}</option>
                   <option value="hour_up">{tRounding("hour_up")}</option>
                   <option value="half_hour_up">{tRounding("half_hour_up")}</option>
                 </select>
-                <p className="text-xs text-muted-foreground">חל על תעריפים שעתיים בלבד.</p>
+                <p className="text-xs text-muted-foreground">{t("form.roundingHint")}</p>
               </fieldset>
 
               {/* Section — notes */}
               <fieldset className="space-y-4">
                 <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                  הערות
+                  {t("form.notesLegend")}
                 </legend>
                 <textarea
                   id="notes"
@@ -562,7 +563,7 @@ function ProjectsPageContent() {
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   className={`${fieldClass(false)} resize-y`}
                   disabled={submitting}
-                  placeholder="מידע נוסף על הפרויקט (אופציונלי)"
+                  placeholder={t("form.notesPlaceholder")}
                 />
               </fieldset>
 
@@ -588,14 +589,14 @@ function ProjectsPageContent() {
                   className="rounded-[var(--radius)] border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
                   disabled={submitting}
                 >
-                  ביטול
+                  {t("cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
                   className="rounded-[var(--radius)] bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
                 >
-                  {submitting ? "שומר..." : "שמור פרויקט"}
+                  {submitting ? t("form.saving") : t("form.saveProject")}
                 </button>
               </div>
             </form>
@@ -605,19 +606,19 @@ function ProjectsPageContent() {
         {/* Projects List */}
         <div className="rounded-[var(--radius-card)] bg-card shadow">
           {projectsLoading ? (
-            <div className="p-8 text-center text-muted-foreground">טוען פרויקטים...</div>
+            <div className="p-8 text-center text-muted-foreground">{t("loading")}</div>
           ) : projects.length === 0 ? (
             <EmptyState
               icon={FolderOpen}
-              message={statusFilter === "archived" ? "אין פרויקטים בארכיון" : "אין פרויקטים עדיין"}
+              message={statusFilter === "archived" ? t("empty.archivedMessage") : t("empty.activeMessage")}
               description={
                 statusFilter === "archived"
-                  ? "פרויקטים שארכבת יופיעו כאן"
+                  ? t("empty.archivedDescription")
                   : clients.length === 0
-                  ? "צור לקוח תחילה ואז תוכל ליצור פרויקטים"
-                  : "צור פרויקט ראשון כדי להתחיל לעקוב אחר זמן העבודה שלך"
+                  ? t("empty.noClientsDescription")
+                  : t("empty.activeDescription")
               }
-              actionLabel={statusFilter === "archived" ? undefined : "צור פרויקט"}
+              actionLabel={statusFilter === "archived" ? undefined : t("empty.createAction")}
               onAction={statusFilter === "archived" ? undefined : () => setShowForm(true)}
             />
           ) : (
@@ -627,20 +628,20 @@ function ProjectsPageContent() {
                 <thead className="bg-surface">
                   <tr>
                     <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      שם
+                      {t("table.name")}
                     </th>
                     <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      לקוח
+                      {t("table.client")}
                     </th>
                     <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      סטטוס
+                      {t("table.status")}
                     </th>
                     <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      תאריכים
+                      {t("table.dates")}
                     </th>
                     {statusFilter === "archived" && (
                       <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                        פעולות
+                        {t("table.actions")}
                       </th>
                     )}
                   </tr>
@@ -704,7 +705,7 @@ function ProjectsPageContent() {
                         <div className="text-sm text-muted-foreground">
                           {project.startDate ? new Date(project.startDate).toLocaleDateString("he-IL") : "-"}
                           {" - "}
-                          {project.endDate ? new Date(project.endDate).toLocaleDateString("he-IL") : "ללא תאריך סיום"}
+                          {project.endDate ? new Date(project.endDate).toLocaleDateString("he-IL") : t("noEndDate")}
                         </div>
                       </td>
                       {statusFilter === "archived" && (
@@ -713,7 +714,7 @@ function ProjectsPageContent() {
                             onClick={(e) => handleRestore(project.id, e)}
                             className="text-sm font-medium text-success hover:text-success/90"
                           >
-                            שחזר
+                            {t("restore")}
                           </button>
                         </td>
                       )}
@@ -751,7 +752,7 @@ function ProjectsPageContent() {
                   <div className="mt-1 text-xs text-muted-foreground">
                     {project.startDate ? new Date(project.startDate).toLocaleDateString("he-IL") : "-"}
                     {" - "}
-                    {project.endDate ? new Date(project.endDate).toLocaleDateString("he-IL") : "ללא תאריך סיום"}
+                    {project.endDate ? new Date(project.endDate).toLocaleDateString("he-IL") : t("noEndDate")}
                   </div>
 
                   {statusFilter === "archived" && (
@@ -760,7 +761,7 @@ function ProjectsPageContent() {
                         onClick={(e) => handleRestore(project.id, e)}
                         className="min-h-[44px] rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-success transition-colors hover:bg-surface"
                       >
-                        שחזר
+                        {t("restore")}
                       </button>
                     </div>
                   )}

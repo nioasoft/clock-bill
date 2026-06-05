@@ -29,6 +29,8 @@ const labelClass = "mb-1.5 block text-sm font-medium text-foreground";
 
 export function TaskFormDialog(props: TaskFormDialogProps) {
   const tPriority = useTranslations("Tasks.priority");
+  const t = useTranslations("Tasks.form");
+  const tToasts = useTranslations("Tasks.toasts");
   const isEdit = props.mode === "edit";
   const task = isEdit ? props.task : null;
 
@@ -77,10 +79,11 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
         }
       } catch (error) {
         console.error("Error loading task form options:", error);
-        showErrorToast("שגיאה בטעינת הנתונים");
+        showErrorToast(tToasts("loadDataError"));
       }
     })();
     return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // When a client is chosen, fetch its hourly rates and preselect a default.
@@ -158,14 +161,14 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
       });
       const data = await res.json();
       if (data.success) {
-        showSuccessToast(isEdit ? "המשימה עודכנה בהצלחה" : "המשימה נוצרה בהצלחה");
+        showSuccessToast(isEdit ? tToasts("updated") : tToasts("created"));
         props.onSaved();
       } else {
-        showErrorToast(data.message || (isEdit ? "שגיאה בעדכון המשימה" : "שגיאה ביצירת המשימה"));
+        showErrorToast(data.message || (isEdit ? tToasts("updateError") : tToasts("createError")));
       }
     } catch (error) {
       console.error("Error saving task:", error);
-      showErrorToast(isEdit ? "שגיאה בעדכון המשימה" : "שגיאה ביצירת המשימה");
+      showErrorToast(isEdit ? tToasts("updateError") : tToasts("createError"));
     } finally {
       setSubmitting(false);
     }
@@ -175,9 +178,9 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
     <Dialog open onOpenChange={(open) => { if (!open) props.onClose(); }}>
       <DialogContent variant="sheet">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "עריכת משימה" : "משימה חדשה"}</DialogTitle>
+          <DialogTitle>{isEdit ? t("editTitle") : t("createTitle")}</DialogTitle>
           <DialogDescription>
-            {isEdit ? "עדכן את פרטי המשימה" : "מלא את הפרטים כדי ליצור משימה חדשה"}
+            {isEdit ? t("editDescription") : t("createDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -188,7 +191,7 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
           <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-3">
             <div>
               <label htmlFor="task-client" className={labelClass}>
-                לקוח <span className="text-primary">*</span>
+                {t("client")} <span className="text-primary">*</span>
               </label>
               <select
                 id="task-client"
@@ -197,7 +200,7 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
                 className={fieldClass(false)}
                 disabled={submitting}
               >
-                <option value="">בחר לקוח</option>
+                <option value="">{t("selectClient")}</option>
                 {clients.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
@@ -206,7 +209,7 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
 
             <div>
               <label htmlFor="task-project" className={labelClass}>
-                פרויקט <span className="text-primary">*</span>
+                {t("project")} <span className="text-primary">*</span>
               </label>
               <select
                 id="task-project"
@@ -215,7 +218,7 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
                 className={fieldClass(false)}
                 disabled={submitting || !clientId}
               >
-                <option value="">{clientId ? "בחר פרויקט" : "בחר לקוח תחילה"}</option>
+                <option value="">{clientId ? t("selectProject") : t("selectClientFirst")}</option>
                 {projectsForClient.map((p) => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
@@ -224,7 +227,7 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
 
             <div>
               <label htmlFor="task-rate" className={labelClass}>
-                תעריף <span className="text-primary">*</span>
+                {t("rate")} <span className="text-primary">*</span>
               </label>
               <select
                 id="task-rate"
@@ -233,7 +236,7 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
                 className={fieldClass(false)}
                 disabled={submitting || !clientId}
               >
-                <option value="">{clientId ? "בחר תעריף" : "בחר לקוח תחילה"}</option>
+                <option value="">{clientId ? t("selectRate") : t("selectClientFirst")}</option>
                 {rates.map((r) => (
                   <option key={r.id} value={r.id}>{r.name}</option>
                 ))}
@@ -243,7 +246,7 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
 
           <div>
             <label htmlFor="task-title" className={labelClass}>
-              שם המשימה <span className="text-primary">*</span>
+              {t("title")} <span className="text-primary">*</span>
             </label>
             <input
               id="task-title"
@@ -252,7 +255,7 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
               onChange={(e) => setTitle(e.target.value)}
               className={fieldClass(false)}
               disabled={submitting}
-              placeholder="לדוגמה: עיצוב מסך הבית"
+              placeholder={t("titlePlaceholder")}
             />
           </div>
 
@@ -263,12 +266,12 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
             aria-expanded={showAdvanced}
             aria-controls="task-advanced"
           >
-            {showAdvanced ? "הסתר פרטים נוספים" : "+ פרטים נוספים"}
+            {showAdvanced ? t("hideAdvanced") : t("showAdvanced")}
           </button>
 
           <div id="task-advanced" className={`${showAdvanced ? "" : "hidden"} sm:block space-y-4`}>
             <div>
-              <label htmlFor="task-priority" className={labelClass}>דחיפות</label>
+              <label htmlFor="task-priority" className={labelClass}>{t("priority")}</label>
               <select
                 id="task-priority"
                 value={priority}
@@ -283,7 +286,7 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
             </div>
 
             <div>
-              <label htmlFor="task-due" className={labelClass}>תאריך יעד</label>
+              <label htmlFor="task-due" className={labelClass}>{t("dueDate")}</label>
               <input
                 id="task-due"
                 type="date"
@@ -295,20 +298,20 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
             </div>
 
             <div>
-              <label htmlFor="task-tags" className={labelClass}>תגיות</label>
+              <label htmlFor="task-tags" className={labelClass}>{t("tags")}</label>
               {tags.length > 0 && (
                 <div className="mb-2 flex flex-wrap gap-2">
-                  {tags.map((t) => (
+                  {tags.map((tag) => (
                     <span
-                      key={t}
+                      key={tag}
                       className="inline-flex items-center gap-1 rounded-[var(--radius)] border border-border bg-background px-2 py-1 text-xs text-foreground"
                     >
-                      {t}
+                      {tag}
                       <button
                         type="button"
-                        onClick={() => setTags((prev) => prev.filter((x) => x !== t))}
+                        onClick={() => setTags((prev) => prev.filter((x) => x !== tag))}
                         className="text-muted-foreground hover:text-foreground"
-                        aria-label={`הסר תגית ${t}`}
+                        aria-label={t("removeTag", { tag })}
                       >
                         ×
                       </button>
@@ -325,12 +328,12 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
                 onBlur={addTag}
                 className={fieldClass(false)}
                 disabled={submitting}
-                placeholder="הקלד תגית ולחץ Enter"
+                placeholder={t("tagsPlaceholder")}
               />
             </div>
 
             <div>
-              <label htmlFor="task-notes" className={labelClass}>הערות</label>
+              <label htmlFor="task-notes" className={labelClass}>{t("notes")}</label>
               <textarea
                 id="task-notes"
                 rows={3}
@@ -338,7 +341,7 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
                 onChange={(e) => setNotes(e.target.value)}
                 className={`${fieldClass(false)} resize-y`}
                 disabled={submitting}
-                placeholder="מידע נוסף על המשימה (אופציונלי)"
+                placeholder={t("notesPlaceholder")}
               />
             </div>
           </div>
@@ -350,14 +353,14 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
               disabled={submitting}
               className="rounded-[var(--radius)] border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
             >
-              ביטול
+              {t("cancel")}
             </button>
             <button
               type="submit"
               disabled={!canSubmit}
               className="rounded-[var(--radius)] bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
-              {submitting ? "שומר..." : isEdit ? "עדכן משימה" : "שמור משימה"}
+              {submitting ? t("saving") : isEdit ? t("updateTask") : t("saveTask")}
             </button>
           </div>
         </form>

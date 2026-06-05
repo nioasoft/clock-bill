@@ -68,6 +68,7 @@ function clientToFormData(client: Client) {
 }
 
 export default function ClientDetailsPage() {
+  const t = useTranslations("Clients");
   const tRounding = useTranslations("Rounding");
   const router = useRouter();
   const params = useParams();
@@ -129,17 +130,17 @@ export default function ClientDetailsPage() {
           setClient(data.client);
           setFormData(clientToFormData(data.client));
         } else {
-          setError(data.message || "שגיאה בטעינת הלקוח");
+          setError(data.message || t("errorLoadClient"));
         }
       } catch (error) {
         console.error("Error fetching client:", error);
-        setError("שגיאה בטעינת הלקוח");
+        setError(t("errorLoadClient"));
       } finally {
         setClientLoading(false);
       }
     };
     fetchClient();
-  }, [clientId]);
+  }, [clientId, t]);
 
   useEffect(() => {
     const fetchClientProjects = async () => {
@@ -166,7 +167,7 @@ export default function ClientDetailsPage() {
 
     // Rows with a price but no name are likely mistakes — block submit.
     if (formData.rates.some((r) => r.name.trim() === "" && r.rate > 0)) {
-      setFormError("יש להזין שם לכל תעריף עם מחיר");
+      setFormError(t("errorRateNameRequired"));
       return;
     }
 
@@ -203,11 +204,11 @@ export default function ClientDetailsPage() {
         setFormData(clientToFormData(data.client));
         setShowEditForm(false);
       } else {
-        setFormError(data.message || "שגיאה בעדכון הלקוח");
+        setFormError(data.message || t("errorUpdateClient"));
       }
     } catch (error) {
       console.error("Error updating client:", error);
-      setFormError("שגיאה בעדכון הלקוח");
+      setFormError(t("errorUpdateClient"));
     } finally {
       setSubmitting(false);
     }
@@ -227,12 +228,12 @@ export default function ClientDetailsPage() {
       if (data.success) {
         router.push("/clients");
       } else {
-        setFormError(data.message || "שגיאה במחיקת הלקוח");
+        setFormError(data.message || t("errorDeleteClient"));
         setShowDeleteConfirm(false);
       }
     } catch (error) {
       console.error("Error deleting client:", error);
-      setFormError("שגיאה במחיקת הלקוח");
+      setFormError(t("errorDeleteClient"));
       setShowDeleteConfirm(false);
     } finally {
       setSubmitting(false);
@@ -245,16 +246,16 @@ export default function ClientDetailsPage() {
           <div className="mb-6">
             <Breadcrumb
               items={[
-                { label: "לקוחות", href: "/clients" },
-                { label: client?.name || "פרטי לקוח" },
+                { label: t("pageTitle"), href: "/clients" },
+                { label: client?.name || t("clientDetails") },
               ]}
             />
           </div>
         {showDeleteConfirm && (
           <div className="mb-6 rounded-[var(--radius-card)] bg-card p-6 border border-destructive/30">
-            <h2 className="text-xl font-semibold text-destructive mb-4">מחק לקוח</h2>
+            <h2 className="text-xl font-semibold text-destructive mb-4">{t("deleteClient")}</h2>
             <p className="text-destructive mb-4">
-              האם אתה בטוח שברצונך למחוק את הלקוח &quot;{client?.name}&quot;? לקוחות שנמחקים יועברו למצב &quot;לא פעיל&quot; ולא יוצגו ברשימה.
+              {t("deleteConfirmBody", { name: client?.name ?? "" })}
             </p>
             {formError && (
               <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive mb-4">
@@ -270,14 +271,14 @@ export default function ClientDetailsPage() {
                 className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted bg-card"
                 disabled={submitting}
               >
-                ביטול
+                {t("cancel")}
               </button>
               <button
                 onClick={handleDelete}
                 disabled={submitting}
                 className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
               >
-                {submitting ? "מוחק..." : "מחק לקוח"}
+                {submitting ? t("deleting") : t("deleteClient")}
               </button>
             </div>
           </div>
@@ -285,7 +286,7 @@ export default function ClientDetailsPage() {
 
         {showEditForm && (
           <div ref={editFormRef} className="mb-6 mx-auto max-w-2xl rounded-[var(--radius-card)] bg-card p-5 border border-border scroll-mt-20">
-            <h2 className="font-display text-lg font-semibold text-foreground mb-4">ערוך לקוח</h2>
+            <h2 className="font-display text-lg font-semibold text-foreground mb-4">{t("editClientButton")}</h2>
             <form onSubmit={handleEdit} className="space-y-4">
               {formError && (
                 <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
@@ -296,7 +297,7 @@ export default function ClientDetailsPage() {
               <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
                 <div>
                   <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-foreground">
-                    שם הלקוח <span className="text-primary">*</span>
+                    {t("clientNameLabel")} <span className="text-primary">*</span>
                   </label>
                   <input
                     type="text"
@@ -311,7 +312,7 @@ export default function ClientDetailsPage() {
 
                 <div>
                   <label htmlFor="contactName" className="mb-1.5 block text-sm font-medium text-foreground">
-                    איש קשר
+                    {t("contactNameLabel")}
                   </label>
                   <input
                     type="text"
@@ -325,7 +326,7 @@ export default function ClientDetailsPage() {
 
                 <div>
                   <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
-                    אימייל
+                    {t("emailLabel")}
                   </label>
                   <input
                     type="email"
@@ -340,7 +341,7 @@ export default function ClientDetailsPage() {
 
                 <div>
                   <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-foreground">
-                    טלפון
+                    {t("phoneLabel")}
                   </label>
                   <input
                     type="tel"
@@ -355,7 +356,7 @@ export default function ClientDetailsPage() {
 
                 <div className="sm:col-span-2">
                   <label htmlFor="address" className="mb-1.5 block text-sm font-medium text-foreground">
-                    כתובת
+                    {t("addressLabel")}
                   </label>
                   <input
                     type="text"
@@ -364,7 +365,7 @@ export default function ClientDetailsPage() {
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     className={fieldClass(false)}
                     disabled={submitting}
-                    placeholder="רחוב, מספר, עיר"
+                    placeholder={t("addressPlaceholder")}
                   />
                 </div>
               </div>
@@ -374,7 +375,7 @@ export default function ClientDetailsPage() {
                 <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
                   <div>
                     <label htmlFor="currency" className="mb-1.5 block text-sm font-medium text-foreground">
-                      מטבע
+                      {t("currencyLabel")}
                     </label>
                     <select
                       id="currency"
@@ -391,7 +392,7 @@ export default function ClientDetailsPage() {
 
                   <div>
                     <label htmlFor="billingRounding" className="mb-1.5 block text-sm font-medium text-foreground">
-                      עיגול זמן לחיוב
+                      {t("billingRoundingLabel")}
                     </label>
                     <select
                       id="billingRounding"
@@ -405,13 +406,13 @@ export default function ClientDetailsPage() {
                       ))}
                     </select>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      שעתי בלבד · ניתן לדרוס לכל פרויקט
+                      {t("roundingHint")}
                     </p>
                   </div>
                 </div>
 
                 <div ref={ratesEditorRef} className="space-y-1.5 scroll-mt-20">
-                  <span className="text-sm font-medium text-foreground">תעריפים ופריטים</span>
+                  <span className="text-sm font-medium text-foreground">{t("ratesAndItems")}</span>
                   <ClientRatesEditor
                     rates={formData.rates}
                     currency={formData.currency}
@@ -422,7 +423,7 @@ export default function ClientDetailsPage() {
 
                 {/* Retainer toggle */}
                 <label className="flex cursor-pointer items-center justify-between rounded-[var(--radius)] border border-border bg-background px-4 py-2.5">
-                  <span className="text-sm font-medium text-foreground">לקוח בריטיינר</span>
+                  <span className="text-sm font-medium text-foreground">{t("retainerClient")}</span>
                   <input
                     type="checkbox"
                     checked={formData.isRetainer}
@@ -438,7 +439,7 @@ export default function ClientDetailsPage() {
                     <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
                       <div>
                         <label htmlFor="retainerHours" className="mb-1.5 block text-sm font-medium text-foreground">
-                          שעות בריטיינר
+                          {t("retainerHoursLabel")}
                         </label>
                         <input
                           type="number"
@@ -454,7 +455,7 @@ export default function ClientDetailsPage() {
                       </div>
                       <div>
                         <label htmlFor="retainerMonthlyFee" className="mb-1.5 block text-sm font-medium text-foreground">
-                          סכום חודשי ({CURRENCY_SYMBOLS[formData.currency] || "₪"})
+                          {t("monthlyAmountLabel", { symbol: CURRENCY_SYMBOLS[formData.currency] || "₪" })}
                         </label>
                         <input
                           type="number"
@@ -471,7 +472,7 @@ export default function ClientDetailsPage() {
                     </div>
 
                     <label className="flex cursor-pointer items-center justify-between rounded-[var(--radius)] border border-border bg-background px-4 py-3">
-                      <span className="text-sm font-medium text-foreground">תעריף נפרד מעל הריטיינר</span>
+                      <span className="text-sm font-medium text-foreground">{t("separateOverageRate")}</span>
                       <input
                         type="checkbox"
                         checked={formData.hasOverageRate}
@@ -484,7 +485,7 @@ export default function ClientDetailsPage() {
                     {formData.hasOverageRate && (
                       <div className="sm:max-w-[calc(50%-0.5rem)]">
                         <label htmlFor="overageRate" className="mb-1.5 block text-sm font-medium text-foreground">
-                          תעריף שעתי מעל הריטיינר ({CURRENCY_SYMBOLS[formData.currency] || "₪"})
+                          {t("overageHourlyRateLabel", { symbol: CURRENCY_SYMBOLS[formData.currency] || "₪" })}
                         </label>
                         <input
                           type="number"
@@ -505,7 +506,7 @@ export default function ClientDetailsPage() {
 
               <div>
                 <label htmlFor="notes" className="mb-1.5 block text-sm font-medium text-foreground">
-                  הערות
+                  {t("notesSection")}
                 </label>
                 <textarea
                   id="notes"
@@ -530,14 +531,14 @@ export default function ClientDetailsPage() {
                   className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted"
                   disabled={submitting}
                 >
-                  ביטול
+                  {t("cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
                   className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                 >
-                  {submitting ? "שומר..." : "שמור שינויים"}
+                  {submitting ? t("saving") : t("saveChanges")}
                 </button>
               </div>
             </form>
@@ -546,7 +547,7 @@ export default function ClientDetailsPage() {
 
         {clientLoading ? (
           <div className="rounded-[var(--radius-card)] bg-card p-8 border border-border text-center text-muted-foreground">
-            טוען נתוני לקוח...
+            {t("loadingClientData")}
           </div>
         ) : error ? (
           <div className="rounded-[var(--radius-card)] bg-card p-8 border border-border">
@@ -554,7 +555,7 @@ export default function ClientDetailsPage() {
           </div>
         ) : !client ? (
           <div className="rounded-[var(--radius-card)] bg-card p-8 border border-border text-center text-muted-foreground">
-            הלקוח לא נמצא
+            {t("clientNotFound")}
           </div>
         ) : (
           <div className="rounded-[var(--radius-card)] bg-card p-5 border border-border">
@@ -562,26 +563,26 @@ export default function ClientDetailsPage() {
               <div className="min-w-0">
                 <h2 className="font-display text-2xl font-bold tracking-tight text-foreground truncate">{client.name}</h2>
                 {client.contactName && (
-                  <p className="text-sm text-muted-foreground mt-0.5">איש קשר: {client.contactName}</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">{t("contactNameInline", { name: client.contactName })}</p>
                 )}
               </div>
               <span className={`inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                 client.isActive ? "bg-success/10 text-success" : "bg-muted text-foreground"
               }`}>
-                {client.isActive ? "פעיל" : "לא פעיל"}
+                {client.isActive ? t("statusActive") : t("statusInactive")}
               </span>
             </div>
 
             <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 text-sm">
               <div className="flex items-baseline gap-1.5">
-                <span className="text-muted-foreground">אימייל</span>
+                <span className="text-muted-foreground">{t("emailLabel")}</span>
                 {client.email ? (
                   <a href={`mailto:${client.email}`} dir="ltr" className="text-primary hover:text-primary/90">{client.email}</a>
                 ) : <span className="text-muted-foreground">—</span>}
               </div>
               <span className="text-border">|</span>
               <div className="flex items-baseline gap-1.5">
-                <span className="text-muted-foreground">טלפון</span>
+                <span className="text-muted-foreground">{t("phoneLabel")}</span>
                 {client.phone ? (
                   <a href={`tel:${client.phone}`} dir="ltr" className="text-primary hover:text-primary/90">{client.phone}</a>
                 ) : <span className="text-muted-foreground">—</span>}
@@ -590,19 +591,19 @@ export default function ClientDetailsPage() {
                 <>
                   <span className="text-border">|</span>
                   <div className="flex items-baseline gap-1.5">
-                    <span className="text-muted-foreground">כתובת</span>
+                    <span className="text-muted-foreground">{t("addressLabel")}</span>
                     <span className="text-foreground">{client.address}</span>
                   </div>
                 </>
               )}
               <span className="text-border">|</span>
               <div className="flex items-baseline gap-1.5">
-                <span className="text-muted-foreground">מטבע</span>
+                <span className="text-muted-foreground">{t("currencyLabel")}</span>
                 <span className="text-foreground">{CURRENCIES.find((c) => c.value === client.currency)?.label || client.currency}</span>
               </div>
               <span className="text-border">|</span>
               <div className="flex items-baseline gap-1.5">
-                <span className="text-muted-foreground">נוצר</span>
+                <span className="text-muted-foreground">{t("createdLabel")}</span>
                 <span className="text-foreground tabular-nums">{new Date(client.createdAt).toLocaleDateString('he-IL')}</span>
               </div>
             </div>
@@ -617,7 +618,7 @@ export default function ClientDetailsPage() {
                 <div className="mt-6 border-t border-border pt-6">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-display text-base font-semibold text-foreground">תעריפים ופריטים</h3>
+                      <h3 className="font-display text-base font-semibold text-foreground">{t("ratesAndItems")}</h3>
                       {asRoundingMode(client.billingRounding) !== "none" && (
                         <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
                           {tRounding(asRoundingMode(client.billingRounding))}
@@ -629,29 +630,29 @@ export default function ClientDetailsPage() {
                         onClick={() => openEditForm(true)}
                         className="text-sm font-medium text-primary hover:text-primary/90"
                       >
-                        ערוך תעריפים
+                        {t("editRates")}
                       </button>
                     )}
                   </div>
                   {!hasAny ? (
                     <p className="text-sm text-muted-foreground">
-                      לא הוגדרו תעריפים ללקוח זה — לחץ &quot;ערוך תעריפים&quot; כדי להוסיף.
+                      {t("noRatesDefined", { action: t("editRates") })}
                     </p>
                   ) : (
                     <div className="space-y-4">
                       {hourly.length > 0 && (
                         <div>
-                          <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">תעריפים שעתיים</h4>
+                          <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("hourlyRatesHeader")}</h4>
                           <ul className="space-y-1">
                             {hourly.map((r) => (
                               <li key={r.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-[var(--radius)] bg-background/40 px-3 py-2">
                                 <span className="text-sm font-medium text-foreground">{r.name}</span>
                                 <span className="font-mono text-sm tabular-nums text-foreground">
-                                  {symbol}{r.rate}<span className="text-muted-foreground">/שעה</span>
+                                  {symbol}{r.rate}<span className="text-muted-foreground">{t("perHourSuffix")}</span>
                                 </span>
                                 {r.isDefault && (
                                   <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                                    ברירת מחדל
+                                    {t("defaultBadge")}
                                   </span>
                                 )}
                               </li>
@@ -661,13 +662,13 @@ export default function ClientDetailsPage() {
                       )}
                       {items.length > 0 && (
                         <div>
-                          <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">פריטים (מחיר ליחידה)</h4>
+                          <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("itemsHeader")}</h4>
                           <ul className="space-y-1">
                             {items.map((r) => (
                               <li key={r.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-[var(--radius)] bg-background/40 px-3 py-2">
                                 <span className="text-sm font-medium text-foreground">{r.name}</span>
                                 <span className="font-mono text-sm tabular-nums text-foreground">
-                                  {symbol}{r.rate}<span className="text-muted-foreground">/יח׳</span>
+                                  {symbol}{r.rate}<span className="text-muted-foreground">{t("perUnitSuffix")}</span>
                                 </span>
                               </li>
                             ))}
@@ -676,14 +677,14 @@ export default function ClientDetailsPage() {
                       )}
                       {client.isRetainer && (
                         <div>
-                          <h4 className="text-sm font-medium text-muted-foreground mb-2">ריטיינר</h4>
+                          <h4 className="text-sm font-medium text-muted-foreground mb-2">{t("retainerHeader")}</h4>
                           <div className="rounded-[var(--radius)] border border-border bg-background/50 px-3 py-2 text-sm text-foreground">
                             <span className="tabular-nums">
-                              {client.retainerHours ?? 0} שעות בחודש · {symbol}{client.retainerMonthlyFee ?? 0} לחודש
+                              {t("retainerSummary", { hours: client.retainerHours ?? 0, symbol, fee: client.retainerMonthlyFee ?? 0 })}
                             </span>
                             {client.overageRate != null && (
                               <span className="block text-muted-foreground">
-                                תעריף מעל הריטיינר: {symbol}{client.overageRate}/שעה
+                                {t("overageRateSummary", { symbol, rate: client.overageRate })}
                               </span>
                             )}
                           </div>
@@ -697,7 +698,7 @@ export default function ClientDetailsPage() {
 
             {client.notes && (
               <div className="mt-6">
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">הערות</h3>
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">{t("notesSection")}</h3>
                 <div className="rounded-md bg-muted p-3">
                   <p className="text-foreground whitespace-pre-wrap">{client.notes}</p>
                 </div>
@@ -709,18 +710,18 @@ export default function ClientDetailsPage() {
         {client && (
           <div className="mt-6 rounded-[var(--radius-card)] bg-card p-5 border border-border">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display text-base font-semibold text-foreground">פרויקטים</h3>
+              <h3 className="font-display text-base font-semibold text-foreground">{t("projectsHeader")}</h3>
               <a
                 href={`/projects?create=true&clientId=${clientId}`}
                 className="text-sm text-primary hover:text-primary/90 font-medium"
               >
-                + הוסף פרויקט
+                {t("addProject")}
               </a>
             </div>
             {projectsLoading ? (
-              <p className="text-sm text-muted-foreground">טוען פרויקטים...</p>
+              <p className="text-sm text-muted-foreground">{t("loadingProjects")}</p>
             ) : clientProjects.length === 0 ? (
-              <p className="text-sm text-muted-foreground">אין פרויקטים עדיין ללקוח זה</p>
+              <p className="text-sm text-muted-foreground">{t("noProjectsYet")}</p>
             ) : (
               <div className="space-y-2">
                 {clientProjects.map((project) => (
@@ -736,10 +737,10 @@ export default function ClientDetailsPage() {
                       project.status === "paused" ? "bg-accent text-accent-foreground" :
                       "bg-muted text-foreground"
                     }`}>
-                      {project.status === "active" ? "פעיל" :
-                       project.status === "completed" ? "הושלם" :
-                       project.status === "paused" ? "מושהה" :
-                       project.status === "archived" ? "בארכיון" : project.status}
+                      {project.status === "active" ? t("projectStatusActive") :
+                       project.status === "completed" ? t("projectStatusCompleted") :
+                       project.status === "paused" ? t("projectStatusPaused") :
+                       project.status === "archived" ? t("projectStatusArchived") : project.status}
                     </span>
                   </a>
                 ))}
@@ -755,13 +756,13 @@ export default function ClientDetailsPage() {
               onClick={() => openEditForm()}
               className="rounded-[var(--radius)] border border-border px-3.5 py-2 text-sm text-foreground hover:bg-muted"
             >
-              ערוך לקוח
+              {t("editClientButton")}
             </button>
             <button
               onClick={() => setShowDeleteConfirm(true)}
               className="rounded-[var(--radius)] px-3.5 py-2 text-sm text-destructive hover:bg-destructive/10"
             >
-              מחק לקוח
+              {t("deleteClient")}
             </button>
           </div>
         )}

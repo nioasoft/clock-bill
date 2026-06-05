@@ -28,6 +28,8 @@ const rowLabelClass = "text-xs font-semibold uppercase tracking-widest text-mute
 export function TaskDetailSheet({ task, moveTask, onClose, onChanged }: TaskDetailSheetProps) {
   const tPriority = useTranslations("Tasks.priority");
   const tTransitions = useTranslations("Tasks.transitions");
+  const t = useTranslations("Tasks.detail");
+  const tToasts = useTranslations("Tasks.toasts");
   const { runningTimerForTask } = useTimer();
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -54,14 +56,14 @@ export function TaskDetailSheet({ task, moveTask, onClose, onChanged }: TaskDeta
       const res = await fetch(`/api/tasks/${task.id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
-        showSuccessToast("המשימה נמחקה בהצלחה");
+        showSuccessToast(tToasts("deleted"));
         onChanged();
       } else {
-        showErrorToast(data.message || "שגיאה במחיקת המשימה");
+        showErrorToast(data.message || tToasts("deleteError"));
       }
     } catch (error) {
       console.error("Error deleting task:", error);
-      showErrorToast("שגיאה במחיקת המשימה");
+      showErrorToast(tToasts("deleteError"));
     } finally {
       setDeleting(false);
     }
@@ -92,7 +94,7 @@ export function TaskDetailSheet({ task, moveTask, onClose, onChanged }: TaskDeta
         <div className="space-y-4">
           {isTimerRunning && (
             <div className="rounded-[var(--radius)] bg-primary px-3 py-2 text-sm font-medium text-primary-foreground">
-              טיימר רץ למשימה זו
+              {t("timerRunningForTask")}
             </div>
           )}
 
@@ -116,21 +118,21 @@ export function TaskDetailSheet({ task, moveTask, onClose, onChanged }: TaskDeta
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className={rowLabelClass}>תעריף</p>
+              <p className={rowLabelClass}>{t("rateLabel")}</p>
               <p className="mt-1 text-sm text-foreground">
-                {task.rateLabel ?? <span className="text-destructive">חסר תעריף</span>}
+                {task.rateLabel ?? <span className="text-destructive">{t("missingRate")}</span>}
               </p>
             </div>
             <div>
-              <p className={rowLabelClass}>דחיפות</p>
+              <p className={rowLabelClass}>{t("priorityLabel")}</p>
               <p className="mt-1 text-sm text-foreground">{tPriority(task.priority)}</p>
             </div>
             <div>
-              <p className={rowLabelClass}>תאריך יעד</p>
+              <p className={rowLabelClass}>{t("dueDateLabel")}</p>
               <p className="mt-1 text-sm text-foreground">{task.dueDate ?? "—"}</p>
             </div>
             <div>
-              <p className={rowLabelClass}>תגיות</p>
+              <p className={rowLabelClass}>{t("tagsLabel")}</p>
               {task.tags.length > 0 ? (
                 <div className="mt-1 flex flex-wrap gap-2">
                   {task.tags.map((t) => (
@@ -149,7 +151,7 @@ export function TaskDetailSheet({ task, moveTask, onClose, onChanged }: TaskDeta
           </div>
 
           <div>
-            <p className={rowLabelClass}>הערות</p>
+            <p className={rowLabelClass}>{t("notesLabel")}</p>
             <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">
               {task.notes?.trim() ? task.notes : "—"}
             </p>
@@ -157,7 +159,7 @@ export function TaskDetailSheet({ task, moveTask, onClose, onChanged }: TaskDeta
 
           {confirmingDelete ? (
             <div className="rounded-[var(--radius)] border border-destructive/30 bg-destructive/10 p-4">
-              <p className="text-sm text-foreground">האם למחוק את המשימה?</p>
+              <p className="text-sm text-foreground">{t("deleteConfirm")}</p>
               <div className="mt-3 flex justify-end gap-2">
                 <button
                   type="button"
@@ -165,7 +167,7 @@ export function TaskDetailSheet({ task, moveTask, onClose, onChanged }: TaskDeta
                   disabled={deleting}
                   className="min-h-[44px] rounded-[var(--radius)] border border-border px-4 py-2 text-sm text-foreground transition-colors hover:bg-muted disabled:opacity-50"
                 >
-                  ביטול
+                  {t("cancel")}
                 </button>
                 <button
                   type="button"
@@ -173,7 +175,7 @@ export function TaskDetailSheet({ task, moveTask, onClose, onChanged }: TaskDeta
                   disabled={deleting}
                   className="min-h-[44px] rounded-[var(--radius)] bg-destructive px-4 py-2 text-sm text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-50"
                 >
-                  {deleting ? "מוחק..." : "מחק"}
+                  {deleting ? t("deleting") : t("deleteShort")}
                 </button>
               </div>
             </div>
@@ -184,14 +186,14 @@ export function TaskDetailSheet({ task, moveTask, onClose, onChanged }: TaskDeta
                 onClick={() => setConfirmingDelete(true)}
                 className="min-h-[44px] rounded-[var(--radius)] border border-destructive/30 px-4 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
               >
-                מחיקה
+                {t("delete")}
               </button>
               <button
                 type="button"
                 onClick={() => setEditing(true)}
                 className="min-h-[44px] rounded-[var(--radius)] bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
               >
-                עריכה
+                {t("edit")}
               </button>
             </div>
           )}
