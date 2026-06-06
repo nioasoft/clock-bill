@@ -28,7 +28,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (!file) {
       return NextResponse.json(
-        { success: false, message: "No file provided" },
+        { success: false, error_code: "NO_FILE", message: "No file provided" },
         { status: 400 }
       );
     }
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Validate file type
     if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { success: false, message: "Invalid file type. Allowed: JPEG, PNG, GIF, WebP" },
+        { success: false, error_code: "INVALID_FILE_TYPE", message: "Invalid file type. Allowed: JPEG, PNG, GIF, WebP" },
         { status: 400 }
       );
     }
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { success: false, message: "File too large. Maximum size: 5MB" },
+        { success: false, error_code: "FILE_TOO_LARGE", message: "File too large. Maximum size: 5MB" },
         { status: 400 }
       );
     }
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         // Ignore cleanup errors
       }
       return NextResponse.json(
-        { success: false, message: "פרופיל לא נמצא" },
+        { success: false, error_code: "PROFILE_NOT_FOUND", message: "פרופיל לא נמצא" },
         { status: 404 }
       );
     }
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   } catch (error) {
     console.error("Logo upload error:", error);
     return NextResponse.json(
-      { success: false, message: "Internal server error" },
+      { success: false, error_code: "SERVER_ERROR", message: "Internal server error" },
       { status: 500 }
     );
   }
@@ -127,7 +127,7 @@ export async function DELETE(): Promise<NextResponse> {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -142,7 +142,7 @@ export async function DELETE(): Promise<NextResponse> {
 
     if (!logoUrl) {
       return NextResponse.json(
-        { success: false, message: "No logo to delete" },
+        { success: false, error_code: "NO_FILE_TO_DELETE", message: "No logo to delete" },
         { status: 400 }
       );
     }
@@ -170,7 +170,7 @@ export async function DELETE(): Promise<NextResponse> {
   } catch (error) {
     console.error("Logo delete error:", error);
     return NextResponse.json(
-      { success: false, message: "Internal server error" },
+      { success: false, error_code: "SERVER_ERROR", message: "Internal server error" },
       { status: 500 }
     );
   }

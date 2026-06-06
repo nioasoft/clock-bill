@@ -11,7 +11,7 @@ type Ctx = { params: Promise<{ id: string }> };
 export async function GET(_request: NextRequest, ctx: Ctx) {
   try {
     const user = await getUser();
-    if (!user) return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+    if (!user) return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
     const { id } = await ctx.params;
     const { query } = await import("@/lib/db");
 
@@ -21,7 +21,7 @@ export async function GET(_request: NextRequest, ctx: Ctx) {
         WHERE d.id = $1 AND d.user_id = $2`,
       [id, user.id]
     );
-    if (doc.rowCount === 0) return NextResponse.json({ success: false, message: "תעודה לא נמצאה" }, { status: 404 });
+    if (doc.rowCount === 0) return NextResponse.json({ success: false, error_code: "DOCUMENT_NOT_FOUND", message: "תעודה לא נמצאה" }, { status: 404 });
 
     const lines = await query(
       `SELECT * FROM charge_document_lines WHERE document_id = $1 AND user_id = $2 ORDER BY created_at`,
@@ -30,7 +30,7 @@ export async function GET(_request: NextRequest, ctx: Ctx) {
     return NextResponse.json({ success: true, data: { document: doc.rows[0], lines: lines.rows } });
   } catch (error) {
     console.error("GET /api/charge-documents/[id] failed:", error);
-    return NextResponse.json({ success: false, message: "שגיאה בטעינת תעודה" }, { status: 500 });
+    return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת תעודה" }, { status: 500 });
   }
 }
 
@@ -38,7 +38,7 @@ export async function GET(_request: NextRequest, ctx: Ctx) {
 export async function PATCH(request: NextRequest, ctx: Ctx) {
   try {
     const user = await getUser();
-    if (!user) return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+    if (!user) return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
     const { id } = await ctx.params;
     const parsed = await parseBody(request, patchChargeDocumentSchema);
     if (!parsed.ok) return parsed.response;
@@ -111,12 +111,12 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
     return NextResponse.json({ success: true, data: { total } });
   } catch (error) {
     const msg = error instanceof Error ? error.message : "";
-    if (msg === "NOT_FOUND") return NextResponse.json({ success: false, message: "תעודה לא נמצאה" }, { status: 404 });
-    if (msg === "LOCKED") return NextResponse.json({ success: false, message: "התעודה נעולה — בטל תשלום כדי לערוך" }, { status: 409 });
-    if (msg === "LINE_NOT_FOUND") return NextResponse.json({ success: false, message: "שורה לא נמצאה" }, { status: 404 });
-    if (msg === "ENTRY_UNAVAILABLE") return NextResponse.json({ success: false, message: "הפריט כבר חויב או אינו זמין" }, { status: 409 });
+    if (msg === "NOT_FOUND") return NextResponse.json({ success: false, error_code: "DOCUMENT_NOT_FOUND", message: "תעודה לא נמצאה" }, { status: 404 });
+    if (msg === "LOCKED") return NextResponse.json({ success: false, error_code: "DOCUMENT_LOCKED", message: "התעודה נעולה — בטל תשלום כדי לערוך" }, { status: 409 });
+    if (msg === "LINE_NOT_FOUND") return NextResponse.json({ success: false, error_code: "LINE_NOT_FOUND", message: "שורה לא נמצאה" }, { status: 404 });
+    if (msg === "ENTRY_UNAVAILABLE") return NextResponse.json({ success: false, error_code: "ENTRY_UNAVAILABLE", message: "הפריט כבר חויב או אינו זמין" }, { status: 409 });
     console.error("PATCH /api/charge-documents/[id] failed:", error);
-    return NextResponse.json({ success: false, message: "שגיאה בעדכון תעודה" }, { status: 500 });
+    return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בעדכון תעודה" }, { status: 500 });
   }
 }
 
@@ -124,17 +124,17 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
 export async function DELETE(_request: NextRequest, ctx: Ctx) {
   try {
     const user = await getUser();
-    if (!user) return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+    if (!user) return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
     const { id } = await ctx.params;
     const { query } = await import("@/lib/db");
     const r = await query(
       `DELETE FROM charge_documents WHERE id = $1 AND user_id = $2 AND status = 'canceled' RETURNING id`,
       [id, user.id]
     );
-    if (r.rowCount === 0) return NextResponse.json({ success: false, message: "ניתן למחוק רק תעודה מבוטלת" }, { status: 409 });
+    if (r.rowCount === 0) return NextResponse.json({ success: false, error_code: "DELETE_REQUIRES_CANCELED", message: "ניתן למחוק רק תעודה מבוטלת" }, { status: 409 });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("DELETE /api/charge-documents/[id] failed:", error);
-    return NextResponse.json({ success: false, message: "שגיאה במחיקת תעודה" }, { status: 500 });
+    return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה במחיקת תעודה" }, { status: 500 });
   }
 }

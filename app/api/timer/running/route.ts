@@ -11,7 +11,7 @@ export async function GET(_request: NextRequest) {
     // Get authenticated user
     const user = await getUser();
     if (!user) {
-      return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+      return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
     }
 
     const userId = user.id;
@@ -66,7 +66,7 @@ export async function GET(_request: NextRequest) {
   } catch (error) {
     console.error("Error fetching running timer:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה בטעינת הטיימר" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת הטיימר" },
       { status: 500 }
     );
   }

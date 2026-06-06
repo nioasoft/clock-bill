@@ -19,7 +19,7 @@ export async function PATCH(
 ) {
   try {
     const user = await getUser();
-    if (!user) return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+    if (!user) return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
 
     const { id } = await params;
     const parsed = await parseBody(request, moveTaskSchema);
@@ -35,7 +35,7 @@ export async function PATCH(
       [id, user.id]
     );
     if (existing.rows.length === 0)
-      return NextResponse.json({ success: false, message: "המשימה לא נמצאה" }, { status: 404 });
+      return NextResponse.json({ success: false, error_code: "TASK_NOT_FOUND", message: "המשימה לא נמצאה" }, { status: 404 });
 
     const task = existing.rows[0];
     const enteringInProgress = status === "in_progress" && task.status !== "in_progress";
@@ -76,6 +76,6 @@ export async function PATCH(
     return NextResponse.json({ success: true, entryId });
   } catch (error) {
     logger.error("Failed to move task", error);
-    return NextResponse.json({ success: false, message: "שגיאה בעדכון המשימה" }, { status: 500 });
+    return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בעדכון המשימה" }, { status: 500 });
   }
 }

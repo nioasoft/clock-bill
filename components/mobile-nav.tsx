@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
+import { Link } from "@/src/i18n/navigation";
 import { Gauge } from "lucide-react";
-import { BRAND } from "@/lib/brand";
+import { brandName } from "@/lib/brand";
 
 interface MobileNavProps {
   userEmail?: string;
@@ -17,7 +18,9 @@ interface MobileNavProps {
  * drawer — it would duplicate the bottom nav.
  */
 export function MobileNav({ userEmail, onLogout }: MobileNavProps) {
-  const firstLetter = userEmail?.charAt(0).toUpperCase() || "א";
+  const t = useTranslations("Nav");
+  const locale = useLocale();
+  const firstLetter = userEmail ? userEmail.charAt(0).toUpperCase() : "?";
 
   return (
     <header className="lg:hidden bg-sidebar shadow-sm sticky top-0 z-40">
@@ -27,7 +30,7 @@ export function MobileNav({ userEmail, onLogout }: MobileNavProps) {
           <div className="w-8 h-8 bg-gradient-to-br from-accent to-accent/80 rounded-lg flex items-center justify-center">
             <Gauge className="h-5 w-5 text-sidebar" />
           </div>
-          <h1 className="text-xl font-bold text-white">{BRAND.name}</h1>
+          <h1 className="text-xl font-bold text-white">{brandName(locale)}</h1>
         </Link>
 
         {/* Account */}
@@ -40,10 +43,10 @@ export function MobileNav({ userEmail, onLogout }: MobileNavProps) {
           {onLogout && (
             <button
               onClick={onLogout}
-              aria-label="התנתק"
+              aria-label={t("logout")}
               className="min-h-[44px] min-w-[44px] p-2 text-sm text-white/80 hover:text-white"
             >
-              התנתק
+              {t("logout")}
             </button>
           )}
         </div>

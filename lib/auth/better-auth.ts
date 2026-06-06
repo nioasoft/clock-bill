@@ -15,9 +15,117 @@ import { db } from "@/src/db";
 import * as schema from "@/src/db/schema";
 import { query, setUserContext } from "@/lib/db";
 import { createLogger } from "@/lib/logger";
-import { sendEmail, emailLayout, emailButton, isEmailConfigured } from "@/lib/email";
+import {
+  sendEmail,
+  emailLayout,
+  emailButton,
+  isEmailConfigured,
+  type EmailLocale,
+} from "@/lib/email";
 
 const logger = createLogger("auth");
+
+/**
+ * Best-effort recipient locale for transactional emails. Better Auth passes the
+ * originating `Request` to its send hooks; we read the locale from (in order):
+ *   1. the URL path prefix (`/en/...` → en; Hebrew is prefix-less default),
+ *   2. the `NEXT_LOCALE` cookie,
+ *   3. the `Accept-Language` header,
+ * and fall back to Hebrew. No catalog — the bilingual strings are inline below.
+ */
+function resolveEmailLocale(request?: Request): EmailLocale {
+  if (!request) return "he";
+  try {
+    // 1. Path prefix — English routes are namespaced under /en.
+    const { pathname } = new URL(request.url);
+    if (/^\/en(\/|$)/.test(pathname)) return "en";
+    if (/^\/he(\/|$)/.test(pathname)) return "he";
+
+    // 2. NEXT_LOCALE cookie (set by next-intl when the user picks a language).
+    const cookie = request.headers.get("cookie") ?? "";
+    const cookieLocale = cookie.match(/(?:^|;\s*)NEXT_LOCALE=([^;]+)/)?.[1];
+    if (cookieLocale === "en") return "en";
+    if (cookieLocale === "he") return "he";
+
+    // 3. Accept-Language — first tag wins if it's English.
+    const accept = request.headers.get("accept-language") ?? "";
+    if (/^\s*en\b/i.test(accept)) return "en";
+  } catch {
+    // Malformed URL/headers — fall through to the Hebrew default.
+  }
+  return "he";
+}
+
+/**
+ * Resolve the recipient locale for a transactional email, preferring the user's
+ * stored preference (`user_profiles.locale`) over request heuristics. This makes
+ * the language reliable beyond the originating request context — e.g. a password
+ * reset triggered without an `/en` path still lands in the user's chosen language.
+ *
+ * Resilient by design: any lookup failure (or a missing/invalid stored value)
+ * falls back to the request-based heuristic. An email must never fail because of
+ * this lookup.
+ */
+async function resolveEmailLocaleForUser(
+  userId: string,
+  request?: Request
+): Promise<EmailLocale> {
+  try {
+    // Bind the RLS tenant context to the authoritative (trusted) Better Auth
+    // user id so the user_profiles row is visible — the reset-password flow has
+    // no session/in-frame context, otherwise the RLS policy would hide the row.
+    setUserContext(userId);
+    const result = await query<{ locale: string | null }>(
+      `SELECT locale FROM user_profiles WHERE user_id = $1`,
+      [userId]
+    );
+    const stored = result.rows[0]?.locale;
+    if (stored === "en" || stored === "he") return stored;
+  } catch (error) {
+    logger.error("Failed to read stored email locale; using request heuristic", error);
+  }
+  return resolveEmailLocale(request);
+}
+
+/** Inline bilingual copy for the user-facing auth emails (no i18n catalog). */
+const AUTH_EMAILS = {
+  resetPassword: {
+    he: {
+      subject: "איפוס סיסמה — מוניט",
+      heading: "איפוס סיסמה",
+      intro: "קיבלנו בקשה לאיפוס הסיסמה לחשבון שלך במוניט.",
+      cta: "לחץ על הכפתור כדי לבחור סיסמה חדשה. הקישור תקף לזמן מוגבל.",
+      button: "אפס סיסמה",
+      ignore: "אם לא ביקשת לאפס סיסמה, אפשר להתעלם מהודעה זו — הסיסמה שלך לא תשתנה.",
+    },
+    en: {
+      subject: "Password reset — Monit",
+      heading: "Reset your password",
+      intro: "We received a request to reset the password for your Monit account.",
+      cta: "Click the button below to choose a new password. This link is valid for a limited time.",
+      button: "Reset password",
+      ignore: "If you didn't request a password reset, you can safely ignore this email — your password won't change.",
+    },
+  },
+  verifyEmail: {
+    he: {
+      subject: "אימות כתובת אימייל — מוניט",
+      heading: "אמת את כתובת האימייל שלך",
+      intro: "ברוך הבא למוניט.",
+      cta: "כדי להתחיל, אנא אמת את כתובת האימייל שלך בלחיצה על הכפתור.",
+      button: "אמת אימייל",
+      ignore: "אם לא נרשמת למוניט, אפשר להתעלם מהודעה זו.",
+    },
+    en: {
+      subject: "Verify your email — Monit",
+      heading: "Verify your email address",
+      intro: "Welcome to Monit.",
+      cta: "To get started, please verify your email address by clicking the button below.",
+      button: "Verify email",
+      ignore: "If you didn't sign up for Monit, you can safely ignore this email.",
+    },
+  },
+} as const;
 
 // Only gate login on verification when email can actually be sent — otherwise
 // (local dev / before Resend is configured) signups would be permanently locked
@@ -46,17 +154,20 @@ export const auth = betterAuth({
     // email/password accounts. Disabled when email isn't configured.
     requireEmailVerification: emailEnabled,
     minPasswordLength: 8,
-    sendResetPassword: async ({ user, url }) => {
+    sendResetPassword: async ({ user, url }, request) => {
+      const locale = await resolveEmailLocaleForUser(user.id, request);
+      const t = AUTH_EMAILS.resetPassword[locale];
       const sent = await sendEmail({
         to: user.email,
-        subject: "איפוס סיסמה — מוניט",
+        subject: t.subject,
         html: emailLayout({
-          heading: "איפוס סיסמה",
+          locale,
+          heading: t.heading,
           bodyHtml: `
-            <p style="margin:0 0 8px;font-size:15px;line-height:1.6;">קיבלנו בקשה לאיפוס הסיסמה לחשבון שלך במוניט.</p>
-            <p style="margin:0;font-size:15px;line-height:1.6;">לחץ על הכפתור כדי לבחור סיסמה חדשה. הקישור תקף לזמן מוגבל.</p>
-            ${emailButton(url, "אפס סיסמה")}
-            <p style="margin:0;font-size:13px;color:#71717a;line-height:1.6;">אם לא ביקשת לאפס סיסמה, אפשר להתעלם מהודעה זו — הסיסמה שלך לא תשתנה.</p>`,
+            <p style="margin:0 0 8px;font-size:15px;line-height:1.6;">${t.intro}</p>
+            <p style="margin:0;font-size:15px;line-height:1.6;">${t.cta}</p>
+            ${emailButton(url, t.button)}
+            <p style="margin:0;font-size:13px;color:#71717a;line-height:1.6;">${t.ignore}</p>`,
         }),
       });
       // Dev parity / fallback when email isn't configured: log the link.
@@ -69,17 +180,20 @@ export const auth = betterAuth({
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
     expiresIn: 3600,
-    sendVerificationEmail: async ({ user, url }) => {
+    sendVerificationEmail: async ({ user, url }, request) => {
+      const locale = await resolveEmailLocaleForUser(user.id, request);
+      const t = AUTH_EMAILS.verifyEmail[locale];
       const sent = await sendEmail({
         to: user.email,
-        subject: "אימות כתובת אימייל — מוניט",
+        subject: t.subject,
         html: emailLayout({
-          heading: "אמת את כתובת האימייל שלך",
+          locale,
+          heading: t.heading,
           bodyHtml: `
-            <p style="margin:0 0 8px;font-size:15px;line-height:1.6;">ברוך הבא למוניט.</p>
-            <p style="margin:0;font-size:15px;line-height:1.6;">כדי להתחיל, אנא אמת את כתובת האימייל שלך בלחיצה על הכפתור.</p>
-            ${emailButton(url, "אמת אימייל")}
-            <p style="margin:0;font-size:13px;color:#71717a;line-height:1.6;">אם לא נרשמת למוניט, אפשר להתעלם מהודעה זו.</p>`,
+            <p style="margin:0 0 8px;font-size:15px;line-height:1.6;">${t.intro}</p>
+            <p style="margin:0;font-size:15px;line-height:1.6;">${t.cta}</p>
+            ${emailButton(url, t.button)}
+            <p style="margin:0;font-size:13px;color:#71717a;line-height:1.6;">${t.ignore}</p>`,
         }),
       });
       if (!sent) {

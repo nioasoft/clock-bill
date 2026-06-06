@@ -1,11 +1,15 @@
 "use client";
 
-import Link from "next/link";
-import { BRAND } from "@/lib/brand";
+import { Link } from "@/src/i18n/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { brandName } from "@/lib/brand";
 import { GrainOverlay, RadialLines, HourglassSVG, ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { Clock, DollarSign } from "lucide-react";
 
 export function Hero() {
+  const t = useTranslations("Landing");
+  const locale = useLocale();
+
   return (
     <section className="relative overflow-hidden pt-24 py-20 sm:py-28 lg:py-36">
       {/* Background */}
@@ -22,16 +26,16 @@ export function Hero() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold text-foreground leading-tight motion-safe:animate-fade-up">
-          {BRAND.tagline}
+          {t("hero.headlinePrefix")}
           <br />
           <span className="bg-gradient-to-l from-primary via-accent to-primary bg-[length:200%_100%] bg-clip-text text-transparent motion-safe:animate-shimmer">
-            {BRAND.name}
+            {brandName(locale)}
           </span>{" "}
-          עוזר לך לגבות אותו.
+          {t("hero.headlineSuffix")}
         </h1>
 
         <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto motion-safe:animate-fade-up stagger-1">
-          מעקב שעות, ניהול לקוחות ודוחות מקצועיים בעברית &mdash; הכל במקום אחד, בחינם.
+          {t("hero.subhead")}
         </p>
 
         <div className="mt-10 flex flex-col items-center gap-4 motion-safe:animate-fade-up stagger-2">
@@ -40,10 +44,10 @@ export function Hero() {
             className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-l from-primary to-primary/90 px-10 py-4 text-lg font-medium text-primary-foreground shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all"
           >
             <Clock className="h-5 w-5" aria-hidden="true" />
-            <span>התחל לעקוב &mdash; בחינם</span>
+            <span>{t("hero.ctaPrimary")}</span>
           </Link>
           <p className="text-sm text-muted-foreground">
-            חינם בתקופת הבטא. ללא כרטיס אשראי, ללא התחייבות.
+            {t("hero.ctaNote")}
           </p>
         </div>
 
@@ -66,12 +70,12 @@ export function Hero() {
                 <Clock className="h-4 w-4 text-primary" />
               </div>
               <div className="text-start">
-                <div className="text-xs text-muted-foreground">פרויקט נוכחי</div>
+                <div className="text-xs text-muted-foreground">{t("hero.mock.currentProject")}</div>
                 <div className="text-sm font-medium">00:00:00</div>
               </div>
             </div>
             <div className="h-8 px-4 rounded-full bg-primary/10 text-primary text-sm font-medium flex items-center">
-              הפעל
+              {t("hero.mock.start")}
             </div>
           </div>
 
@@ -83,14 +87,14 @@ export function Hero() {
               <div className="relative bg-card rounded-lg border border-border p-4 overflow-hidden">
                 <ClockFaceMarks size={80} className="absolute -top-4 -end-4 text-primary/5" />
                 <div className="relative">
-                  <div className="text-xs text-muted-foreground mb-1">שעות החודש</div>
+                  <div className="text-xs text-muted-foreground mb-1">{t("hero.mock.hoursThisMonth")}</div>
                   <div className="text-2xl font-display font-bold text-foreground">142.5</div>
                 </div>
               </div>
 
               {/* Card 2 */}
               <div className="bg-card rounded-lg border border-border p-4">
-                <div className="text-xs text-muted-foreground mb-1">הכנסות החודש</div>
+                <div className="text-xs text-muted-foreground mb-1">{t("hero.mock.revenueThisMonth")}</div>
                 <div className="text-2xl font-display font-bold text-foreground flex items-center gap-1">
                   <DollarSign className="h-5 w-5" />
                   <span>12,500</span>
@@ -99,7 +103,7 @@ export function Hero() {
 
               {/* Card 3 */}
               <div className="bg-card rounded-lg border border-border p-4">
-                <div className="text-xs text-muted-foreground mb-1">פרויקטים פעילים</div>
+                <div className="text-xs text-muted-foreground mb-1">{t("hero.mock.activeProjects")}</div>
                 <div className="text-2xl font-display font-bold text-foreground">8</div>
               </div>
             </div>
@@ -107,7 +111,7 @@ export function Hero() {
             {/* Chart placeholder */}
             <div className="grid grid-cols-3 gap-4">
               <div className="col-span-2 bg-card rounded-lg border border-border p-6">
-                <div className="text-sm font-medium text-foreground mb-4">הכנסות לפי פרויקט</div>
+                <div className="text-sm font-medium text-foreground mb-4">{t("hero.mock.revenueByProject")}</div>
                 <div className="flex items-end justify-between gap-2 h-32">
                   {[65, 85, 45, 95, 70, 55, 75].map((height, i) => (
                     <div key={i} className="flex-1 bg-primary/20 rounded-t" style={{ height: `${height}%` }} />
@@ -115,19 +119,19 @@ export function Hero() {
                 </div>
               </div>
               <div className="bg-card rounded-lg border border-border p-6">
-                <div className="text-sm font-medium text-foreground mb-4">סטטוס</div>
+                <div className="text-sm font-medium text-foreground mb-4">{t("hero.mock.status")}</div>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-success" />
-                    <div className="text-xs text-muted-foreground">5 פרויקטים</div>
+                    <div className="text-xs text-muted-foreground">{t("hero.mock.statusActive", { count: 5 })}</div>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-accent" />
-                    <div className="text-xs text-muted-foreground">2 בהמתנה</div>
+                    <div className="text-xs text-muted-foreground">{t("hero.mock.statusPending", { count: 2 })}</div>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-muted" />
-                    <div className="text-xs text-muted-foreground">1 הושלם</div>
+                    <div className="text-xs text-muted-foreground">{t("hero.mock.statusDone", { count: 1 })}</div>
                   </div>
                 </div>
               </div>

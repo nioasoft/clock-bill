@@ -34,7 +34,7 @@ export async function GET(
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -88,7 +88,7 @@ export async function GET(
 
     if (result.rows.length === 0) {
       return NextResponse.json(
-        { success: false, message: "הפרויקט לא נמצא" },
+        { success: false, error_code: "PROJECT_NOT_FOUND", message: "הפרויקט לא נמצא" },
         { status: 404 }
       );
     }
@@ -128,7 +128,7 @@ export async function GET(
   } catch (error) {
     console.error("Error fetching project:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה בטעינת הפרויקט" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת הפרויקט" },
       { status: 500 }
     );
   }
@@ -147,7 +147,7 @@ export async function PUT(
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -312,14 +312,14 @@ export async function PUT(
 
     if ("notFound" in result) {
       return NextResponse.json(
-        { success: false, message: "הפרויקט לא נמצא" },
+        { success: false, error_code: "PROJECT_NOT_FOUND", message: "הפרויקט לא נמצא" },
         { status: 404 }
       );
     }
 
     if ("validationError" in result) {
       return NextResponse.json(
-        { success: false, message: result.validationError },
+        { success: false, error_code: "VALIDATION_ERROR", message: result.validationError },
         { status: 400 }
       );
     }
@@ -348,7 +348,7 @@ export async function PUT(
   } catch (error) {
     console.error("Error updating project:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה בעדכון הפרויקט" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה בעדכון הפרויקט" },
       { status: 500 }
     );
   }
@@ -367,7 +367,7 @@ export async function DELETE(
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -383,7 +383,7 @@ export async function DELETE(
 
     if (!checkResult.rows[0].exists) {
       return NextResponse.json(
-        { success: false, message: "הפרויקט לא נמצא" },
+        { success: false, error_code: "PROJECT_NOT_FOUND", message: "הפרויקט לא נמצא" },
         { status: 404 }
       );
     }
@@ -401,7 +401,7 @@ export async function DELETE(
   } catch (error) {
     console.error("Error deleting project:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה במחיקת הפרויקט" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה במחיקת הפרויקט" },
       { status: 500 }
     );
   }

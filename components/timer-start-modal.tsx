@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/src/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { useTimer } from "@/contexts/timer-context";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import {
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 
 export function TimerStartModal() {
+  const t = useTranslations("Timer");
   const {
     showTimerModal,
     setShowTimerModal,
@@ -46,7 +48,7 @@ export function TimerStartModal() {
             size={32}
             className="absolute top-0 end-0 opacity-10 text-foreground"
           />
-          <DialogTitle className="font-display">התחל טיימר חדש</DialogTitle>
+          <DialogTitle className="font-display">{t("start.title")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -57,7 +59,7 @@ export function TimerStartModal() {
                   htmlFor="timer-project"
                   className="block text-sm font-medium text-foreground mb-1"
                 >
-                  פרויקט *
+                  {t("start.projectLabel")}
                 </label>
                 <select
                   id="timer-project"
@@ -66,7 +68,7 @@ export function TimerStartModal() {
                   className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
                   disabled={startingTimer}
                 >
-                  <option value="">בחר פרויקט</option>
+                  <option value="">{t("start.projectPlaceholder")}</option>
                   {projects.map((project) => (
                     <option key={project.id} value={project.id}>
                       {project.name}
@@ -81,7 +83,7 @@ export function TimerStartModal() {
                     htmlFor="timer-task"
                     className="block text-sm font-medium text-foreground mb-1"
                   >
-                    משימה
+                    {t("start.taskLabel")}
                   </label>
                   <select
                     id="timer-task"
@@ -90,7 +92,7 @@ export function TimerStartModal() {
                     className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
                     disabled={startingTimer}
                   >
-                    <option value="">ללא משימה</option>
+                    <option value="">{t("start.noTask")}</option>
                     {timerTasks.map((task) => (
                       <option key={task.id} value={task.id}>
                         {task.name}
@@ -106,7 +108,7 @@ export function TimerStartModal() {
                     htmlFor="timer-rate"
                     className="block text-sm font-medium text-foreground mb-1"
                   >
-                    תעריף
+                    {t("start.rateLabel")}
                   </label>
                   <select
                     id="timer-rate"
@@ -117,7 +119,7 @@ export function TimerStartModal() {
                   >
                     {timerRates.map((rate) => (
                       <option key={rate.id} value={rate.id}>
-                        {rate.name} — {rate.rate}/שעה
+                        {t("start.rateOption", { name: rate.name, rate: rate.rate })}
                       </option>
                     ))}
                   </select>
@@ -130,14 +132,14 @@ export function TimerStartModal() {
                     htmlFor="timer-description"
                     className="block text-sm font-medium text-foreground mb-1"
                   >
-                    תיאור
+                    {t("start.descriptionLabel")}
                   </label>
                   <input
                     type="text"
                     id="timer-description"
                     value={timerDescription}
                     onChange={(e) => setTimerDescription(e.target.value)}
-                    placeholder="מה אתה עובד עליו?"
+                    placeholder={t("start.descriptionPlaceholder")}
                     className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
                     disabled={startingTimer}
                   />
@@ -150,22 +152,22 @@ export function TimerStartModal() {
                   disabled={startingTimer}
                   className="px-4 py-2.5 text-sm font-medium text-muted-foreground bg-muted rounded-[var(--radius)] hover:bg-muted/80 disabled:opacity-50 min-h-[44px]"
                 >
-                  ביטול
+                  {t("start.cancel")}
                 </button>
                 <button
                   onClick={handleStartTimer}
                   disabled={startingTimer || !selectedProject}
                   className="px-4 py-2.5 text-sm font-medium text-primary-foreground bg-primary rounded-[var(--radius)] hover:bg-primary/90 disabled:opacity-50 min-h-[44px]"
                 >
-                  {startingTimer ? "מתחיל..." : "התחל טיימר"}
+                  {startingTimer ? t("start.starting") : t("start.startButton")}
                 </button>
               </div>
             </>
           ) : (
             <div className="text-center py-4">
-              <p className="text-muted-foreground mb-4">אין פרויקטים עדיין</p>
+              <p className="text-muted-foreground mb-4">{t("start.noProjects")}</p>
               <p className="text-sm text-muted-foreground mb-4">
-                כדי להתחיל לעקוב אחר זמן, צור קודם פרויקט
+                {t("start.noProjectsHint")}
               </p>
               <div className="flex flex-col gap-2">
                 <Link
@@ -173,21 +175,21 @@ export function TimerStartModal() {
                   onClick={() => setShowTimerModal(false)}
                   className="inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-primary-foreground bg-primary rounded-[var(--radius)] hover:bg-primary/90 min-h-[44px]"
                 >
-                  + צור פרויקט חדש
+                  {t("start.createProject")}
                 </Link>
                 <Link
                   href="/clients?create=true"
                   onClick={() => setShowTimerModal(false)}
                   className="inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-muted-foreground bg-muted rounded-[var(--radius)] hover:bg-muted/80 min-h-[44px]"
                 >
-                  + צור לקוח חדש
+                  {t("start.createClient")}
                 </Link>
               </div>
               <button
                 onClick={() => setShowTimerModal(false)}
                 className="mt-3 px-4 py-2 text-sm text-muted-foreground hover:text-foreground"
               >
-                ביטול
+                {t("start.cancel")}
               </button>
             </div>
           )}

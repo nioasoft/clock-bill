@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -504,7 +504,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Error generating report:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה ביצירת הדוח" },
+      { success: false, error_code: "REPORT_GENERATION_ERROR", message: "שגיאה ביצירת הדוח" },
       { status: 500 }
     );
   }

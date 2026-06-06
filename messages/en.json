@@ -1,0 +1,1915 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "skipToMain": "Skip to main content",
+    "close": "Close"
+  },
+  "Meta": {
+    "title": "Monit - Time Tracking for Freelancers",
+    "description": "Time tracking, client management, and professional reports. All in one place, for free.",
+    "keywords": "time tracking,freelancer,work hours,project management,itemized billing,settlement statement,client management,reports,Monit"
+  },
+  "Nav": {
+    "sidebarLabel": "Sidebar",
+    "breadcrumbLabel": "Breadcrumb",
+    "dashboard": "Dashboard",
+    "entries": "Billing Entries",
+    "tasks": "Tasks",
+    "clients": "Clients",
+    "reports": "Settlements",
+    "feedback": "Feedback",
+    "settings": "Settings",
+    "admin": "Admin",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar",
+    "collapse": "Collapse",
+    "profileFallback": "My Profile",
+    "logout": "Log out",
+    "loggingOut": "Logging out..."
+  },
+  "LocaleSwitcher": {
+    "label": "Language",
+    "he": "עברית",
+    "en": "English"
+  },
+  "Tasks": {
+    "status": {
+      "todo": "To Do",
+      "in_progress": "In Progress",
+      "done": "Done"
+    },
+    "priority": {
+      "normal": "Normal",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "empty": {
+      "todo": "No new tasks",
+      "in_progress": "No tasks in progress",
+      "done": "No completed tasks"
+    },
+    "transitions": {
+      "start": "Start",
+      "markDone": "Mark as done",
+      "finish": "Finish",
+      "backToTodo": "Move back to To Do",
+      "backToInProgress": "Move back to In Progress"
+    },
+    "board": {
+      "pageTitle": "Tasks",
+      "newTask": "+ New Task",
+      "loadError": "Failed to load tasks",
+      "retry": "Try Again",
+      "emptyTitle": "No tasks yet",
+      "emptyHint": "Create your first task to get started",
+      "filterByStatus": "Filter tasks by status"
+    },
+    "card": {
+      "timerRunning": "Timer running",
+      "missingRate": "No rate",
+      "due": "Due: {date}"
+    },
+    "detail": {
+      "timerRunningForTask": "Timer running for this task",
+      "rateLabel": "Rate",
+      "missingRate": "No rate",
+      "priorityLabel": "Priority",
+      "dueDateLabel": "Due date",
+      "tagsLabel": "Tags",
+      "notesLabel": "Notes",
+      "deleteConfirm": "Delete this task?",
+      "cancel": "Cancel",
+      "deleting": "Deleting...",
+      "deleteShort": "Delete",
+      "delete": "Delete",
+      "edit": "Edit"
+    },
+    "form": {
+      "createTitle": "New Task",
+      "editTitle": "Edit Task",
+      "createDescription": "Fill in the details to create a new task",
+      "editDescription": "Update the task details",
+      "client": "Client",
+      "selectClient": "Select a client",
+      "project": "Project",
+      "selectProject": "Select a project",
+      "selectClientFirst": "Select a client first",
+      "rate": "Rate",
+      "selectRate": "Select a rate",
+      "title": "Task name",
+      "titlePlaceholder": "e.g. Homepage design",
+      "showAdvanced": "+ More details",
+      "hideAdvanced": "Hide more details",
+      "priority": "Priority",
+      "dueDate": "Due date",
+      "tags": "Tags",
+      "removeTag": "Remove tag {tag}",
+      "tagsPlaceholder": "Type a tag and press Enter",
+      "notes": "Notes",
+      "notesPlaceholder": "Additional information about the task (optional)",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "updateTask": "Update Task",
+      "saveTask": "Save Task"
+    },
+    "toasts": {
+      "loadDataError": "Failed to load data",
+      "created": "Task created successfully",
+      "updated": "Task updated successfully",
+      "createError": "Failed to create task",
+      "updateError": "Failed to update task",
+      "deleted": "Task deleted successfully",
+      "deleteError": "Failed to delete task",
+      "moveError": "Failed to update task"
+    }
+  },
+  "Rounding": {
+    "none": "No rounding",
+    "hour_up": "Round up to a full hour",
+    "half_hour_up": "Round up to a half hour"
+  },
+  "Feedback": {
+    "category": {
+      "bug": "Bug / Issue",
+      "suggestion": "Suggestion",
+      "question": "Question",
+      "other": "Other"
+    },
+    "title": "Feedback & Bug Reports",
+    "subtitle": "The app is in trial. Hit a bug or have an idea to improve it? Let us know.",
+    "submit": "Send feedback",
+    "submitting": "Sending...",
+    "fields": {
+      "category": "Type",
+      "message": "Description",
+      "messagePlaceholder": "Tell us what happened, what you expected, and how to reproduce it..."
+    },
+    "success": {
+      "title": "Feedback received",
+      "description": "If we need more details we'll reach out to the email you signed in with.",
+      "writeAnother": "Write another"
+    },
+    "errors": {
+      "tooShort": "Please write at least a few words",
+      "submitFailed": "Failed to send feedback. Try again.",
+      "network": "Network error. Please try again."
+    }
+  },
+  "Dashboard": {
+    "pageTitle": "Welcome!",
+    "pageSubtitle": "This is your dashboard. Here you can manage your work hours and projects.",
+    "gettingStarted": {
+      "title": "Let's get started!",
+      "subtitle": "Three quick steps to get up and running",
+      "createClient": {
+        "title": "Create your first client",
+        "subtitle": "Add your first client"
+      },
+      "createProject": {
+        "title": "Create your first project",
+        "subtitle": "Set up a project with a pricing model"
+      },
+      "logTime": {
+        "title": "Log time or start a timer",
+        "subtitle": "Start tracking your work hours"
+      }
+    },
+    "stats": {
+      "error": "Failed to load data. Try refreshing the page.",
+      "todayHours": "Today's hours",
+      "monthHours": "This month's hours",
+      "earningsByHours": "By hours",
+      "earningsByItems": "By items",
+      "totalEarnings": "Total earnings"
+    },
+    "activeTimers": {
+      "title": "Active timers",
+      "newTimerButton": "New timer",
+      "newBillingItemButton": "+ Billing item",
+      "statusPaused": "Paused",
+      "statusActive": "Active",
+      "startedAt": "Started at {time}",
+      "resumeButton": "Resume timer",
+      "resumingButton": "Resuming…",
+      "pauseButton": "Pause",
+      "pausingButton": "Pausing…",
+      "stopButton": "Stop timer"
+    },
+    "quickTimer": {
+      "title": "Quick timer",
+      "subtitle": "Start tracking time in one click",
+      "startButton": "Start new timer",
+      "manualEntryButton": "+ Add time entry"
+    },
+    "billingItem": {
+      "title": "Billing item",
+      "subtitle": "Add a billable item without time tracking — fixed amount or quantity × rate",
+      "addButton": "+ Billing item"
+    },
+    "task": {
+      "title": "Add a task",
+      "subtitle": "Create a task with a client, project and rate — drag it to \"In progress\" to start a timer",
+      "createButton": "+ New task",
+      "allTasksLink": "All tasks"
+    },
+    "recentEntries": {
+      "title": "Recent entries"
+    },
+    "earningsChart": {
+      "title": "Monthly earnings",
+      "loading": "Loading data…",
+      "empty": "Start tracking your time to see earnings",
+      "subtitle": "Total billable earnings over the past {count} months",
+      "months": {
+        "jan": "Jan",
+        "feb": "Feb",
+        "mar": "Mar",
+        "apr": "Apr",
+        "may": "May",
+        "jun": "Jun",
+        "jul": "Jul",
+        "aug": "Aug",
+        "sep": "Sep",
+        "oct": "Oct",
+        "nov": "Nov",
+        "dec": "Dec"
+      }
+    },
+    "projectHoursChart": {
+      "titleLoading": "Hours by project – this month",
+      "loading": "Loading data…",
+      "empty": "No hours data available yet",
+      "title": "Hours by project",
+      "subtitle": "Breakdown of hours logged this month, by project"
+    },
+    "notifications": {
+      "longTimer": {
+        "title": "Timer has been running for a long time",
+        "bodyWithHours": "The timer has been running for {hours} hours and {mins} minutes. Maybe take a break?",
+        "bodyMinutesOnly": "The timer has been running for {minutes} minutes. Maybe take a break?"
+      },
+      "dailyReminder": {
+        "title": "Daily reminder",
+        "bodyWithHours": "Hi! You haven't logged any time entries today. So far you've logged {hours} hours today.",
+        "bodyNoHours": "Hi! You haven't logged any time entries today. Start logging your time."
+      }
+    },
+    "upcomingDeadlines": {
+      "title": "Upcoming deadlines",
+      "empty": "No projects with upcoming deadlines",
+      "allProjects": "All projects →",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "inDays": "In {days} days",
+      "deadlineLabel": "Deadline: {date}"
+    }
+  },
+  "Entries": {
+    "pageTitle": "Billing Records",
+    "cancel": "Cancel",
+    "addTimeEntry": "+ Add Time Entry",
+    "addBillingItem": "+ Add Billing Item",
+    "filters": {
+      "month": "Month",
+      "advanced": "Advanced Filters",
+      "hideAdvanced": "Hide Advanced Filters",
+      "client": "Client",
+      "allClients": "All Clients",
+      "project": "Project",
+      "allProjects": "All Projects",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "clear": "Clear Filters",
+      "removeClientFilter": "Remove client filter",
+      "removeProjectFilter": "Remove project filter"
+    },
+    "form": {
+      "editTitle": "Edit Time Entry",
+      "newTitle": "New Time Entry",
+      "projectLabel": "Project *",
+      "selectProject": "Select a project",
+      "createProject": "+ Create new project",
+      "taskLabel": "Task",
+      "noTask": "No task",
+      "dateLabel": "Date *",
+      "kindLabel": "Type",
+      "kindHours": "Hours",
+      "kindItem": "Item",
+      "durationLabel": "Duration (minutes) *",
+      "durationPlaceholder": "e.g. 60",
+      "durationHelp": "Enter the duration in minutes",
+      "rateLabel": "Rate",
+      "hourlyRateOption": "{name} — {rate}/hr",
+      "itemLabel": "Item *",
+      "adhocOption": "+ One-time item…",
+      "itemRateOption": "{name} — {rate}/unit",
+      "adhocNameLabel": "Item Name *",
+      "adhocNamePlaceholder": "e.g. Letter",
+      "adhocPriceLabel": "Unit Price (₪) *",
+      "adhocPricePlaceholder": "e.g. 250",
+      "saveItemToClient": "Save this item to the client for reuse",
+      "quantityLabel": "Quantity *",
+      "quantityPlaceholder": "e.g. 3",
+      "billable": "Billable",
+      "detailLabel": "Details *",
+      "descriptionLabel": "Description *",
+      "detailPlaceholder": "Subject / details — will appear on the billing document (e.g. re: lease agreement)",
+      "descriptionPlaceholder": "What did you do?",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "Additional notes (optional)",
+      "deleteEntry": "Delete Entry",
+      "saving": "Saving...",
+      "update": "Update",
+      "save": "Save"
+    },
+    "validation": {
+      "quantityInvalid": "Please enter a valid quantity",
+      "selectItem": "Please select an item",
+      "itemNameRequired": "Please enter an item name",
+      "unitPriceRequired": "Please enter a unit price"
+    },
+    "toast": {
+      "itemSaved": "Item saved to client",
+      "itemAlreadyExists": "Item already exists for this client",
+      "itemNotSaved": "Entry saved, but the item was not saved to the client",
+      "deleted": "Entry deleted successfully"
+    },
+    "error": {
+      "create": "Error creating entry",
+      "update": "Error updating entry",
+      "delete": "Error deleting entry"
+    },
+    "list": {
+      "loading": "Loading time entries..."
+    },
+    "empty": {
+      "message": "No time entries yet",
+      "description": "Start tracking your work by logging your first time entry",
+      "action": "Log first entry"
+    },
+    "table": {
+      "date": "Date",
+      "description": "Description",
+      "client": "Client",
+      "project": "Project",
+      "durationQuantity": "Duration / Quantity",
+      "amount": "Amount",
+      "actions": "Actions"
+    },
+    "entry": {
+      "active": "Active",
+      "notBillable": "Non-billable",
+      "reference": "Ref {ref}",
+      "quantity": "{quantity} units",
+      "editAria": "Edit entry",
+      "editTitle": "Edit"
+    },
+    "deleteDialog": {
+      "title": "Delete Time Entry",
+      "body": "Delete the time entry \"{description}\"? This action cannot be undone.",
+      "deleting": "Deleting...",
+      "confirm": "Delete"
+    }
+  },
+  "Clients": {
+    "pageTitle": "Clients",
+    "clientDetails": "Client Details",
+    "newClientButton": "+ New Client",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "saving": "Saving...",
+    "seedRateName": "Programming",
+    "newClientTitle": "New Client",
+    "editClientTitle": "Edit Client",
+    "newClientSubtitle": "Fill in the details to add a client to the list",
+    "editClientSubtitle": "Update the client's details",
+    "contactSection": "Contact Details",
+    "billingSection": "Billing",
+    "notesSection": "Notes",
+    "clientNameLabel": "Client Name",
+    "clientNamePlaceholder": "e.g. Acme Inc.",
+    "contactNameLabel": "Contact Person",
+    "contactNamePlaceholder": "Full name",
+    "emailLabel": "Email",
+    "phoneLabel": "Phone",
+    "addressLabel": "Address",
+    "addressPlaceholder": "Street, number, city",
+    "currencyLabel": "Currency",
+    "billingRoundingLabel": "Billing Time Rounding",
+    "roundingHint": "Hourly only · can be overridden per project",
+    "ratesAndItems": "Rates & Items",
+    "retainerClient": "Retainer Client",
+    "retainerHoursLabel": "Retainer Hours",
+    "monthlyAmountLabel": "Monthly Amount ({symbol})",
+    "separateOverageRate": "Separate Overage Rate",
+    "overageHourlyRateLabel": "Hourly Overage Rate ({symbol})",
+    "notesPlaceholder": "Additional information about the client (optional)",
+    "archiveTitle": "Move to Archive",
+    "restoreTitle": "Restore from Archive",
+    "archiveDescription": "The client will be hidden from the list but kept in the system",
+    "restoreDescription": "The client will be returned to the active list",
+    "archiveClientButton": "Archive Client",
+    "restoreClientButton": "Restore Client",
+    "saveClientButton": "Save Client",
+    "updateClientButton": "Update Client",
+    "saveChanges": "Save Changes",
+    "editClientButton": "Edit Client",
+    "deleteClient": "Delete Client",
+    "deleting": "Deleting...",
+    "archiving": "Archiving...",
+    "archiveAction": "Archive",
+    "loadingClients": "Loading clients...",
+    "emptyTitle": "No clients yet",
+    "emptyDescription": "Create your first client to start managing your projects",
+    "emptyAction": "Add First Client",
+    "colName": "Name",
+    "colHourlyRate": "Hourly Rate",
+    "colTotalBilled": "Total Billed",
+    "colHours": "Hours",
+    "colStatus": "Status",
+    "colActions": "Actions",
+    "statusActive": "Active",
+    "statusInactive": "Inactive",
+    "ratePerHour": "{symbol}{rate}/hr",
+    "hoursValue": "{hours} hours",
+    "rateInline": "Rate:",
+    "billedInline": "Billed:",
+    "hoursInline": "Hours:",
+    "archiveConfirmBody": "Archive the client \"{name}\"? The client will be hidden from the list but kept in the system.",
+    "deleteConfirmBody": "Are you sure you want to delete the client \"{name}\"? Deleted clients are set to \"inactive\" and won't appear in the list.",
+    "errorRateNameRequired": "Each rate with a price must have a name",
+    "errorCreateClient": "Error creating client",
+    "errorUpdateClient": "Error updating client",
+    "errorDeleteClient": "Error deleting client",
+    "errorRestoreClient": "Error restoring client",
+    "errorLoadClient": "Error loading client",
+    "toastArchived": "Client moved to archive",
+    "toastRestored": "Client restored successfully",
+    "loadingClientData": "Loading client data...",
+    "clientNotFound": "Client not found",
+    "contactNameInline": "Contact: {name}",
+    "createdLabel": "Created",
+    "editRates": "Edit Rates",
+    "noRatesDefined": "No rates defined for this client — click \"{action}\" to add some.",
+    "hourlyRatesHeader": "Hourly Rates",
+    "itemsHeader": "Items (price per unit)",
+    "perHourSuffix": "/hr",
+    "perUnitSuffix": "/unit",
+    "defaultBadge": "Default",
+    "retainerHeader": "Retainer",
+    "retainerSummary": "{hours} hours/month · {symbol}{fee}/month",
+    "overageRateSummary": "Overage rate: {symbol}{rate}/hr",
+    "projectsHeader": "Projects",
+    "addProject": "+ Add Project",
+    "loadingProjects": "Loading projects...",
+    "noProjectsYet": "No projects yet for this client",
+    "projectStatusActive": "Active",
+    "projectStatusCompleted": "Completed",
+    "projectStatusPaused": "Paused",
+    "projectStatusArchived": "Archived",
+    "defaultRateAria": "Default rate",
+    "remove": "Remove",
+    "rateNameHourlyPlaceholder": "Name (e.g. Programming)",
+    "rateNameItemPlaceholder": "Name (e.g. Letter writing)",
+    "addRate": "+ Rate",
+    "addItem": "+ Item",
+    "unitHour": "hr",
+    "unitItem": "unit",
+    "noHourlyRates": "No hourly rates defined — the default rate will be used."
+  },
+  "Projects": {
+    "pageTitle": "Projects",
+    "newProject": "+ New Project",
+    "cancel": "Cancel",
+    "loading": "Loading projects...",
+    "restore": "Restore",
+    "noEndDate": "No end date",
+    "filter": {
+      "active": "Active",
+      "archived": "Archive"
+    },
+    "status": {
+      "active": "Active",
+      "paused": "Paused",
+      "completed": "Completed",
+      "archived": "Archived"
+    },
+    "table": {
+      "name": "Name",
+      "client": "Client",
+      "status": "Status",
+      "dates": "Dates",
+      "actions": "Actions"
+    },
+    "empty": {
+      "activeMessage": "No projects yet",
+      "archivedMessage": "No archived projects",
+      "activeDescription": "Create your first project to start tracking your work time",
+      "archivedDescription": "Projects you archive will appear here",
+      "noClientsDescription": "Create a client first, then you can create projects",
+      "createAction": "Create project"
+    },
+    "form": {
+      "title": "New Project",
+      "subtitle": "Assign the project to a client and set the billing model",
+      "detailsLegend": "Project details",
+      "clientLabel": "Client",
+      "clientPlaceholder": "Select a client",
+      "createClientLink": "+ Create new client",
+      "nameLabel": "Project name",
+      "namePlaceholder": "e.g. Website design",
+      "statusLabel": "Status",
+      "startDateLabel": "Start date",
+      "endDateLabel": "End date",
+      "fixedBillingLegend": "Fixed billing",
+      "fixedMonthlyLabel": "Fixed monthly charge",
+      "fixedMonthlyHint": "Added to the hourly billing in reports",
+      "monthlyFeeLabel": "Monthly amount",
+      "validFromLabel": "Valid from",
+      "validToLabel": "Valid until",
+      "roundingLegend": "Time rounding for billing",
+      "roundingInherit": "Inherit from client",
+      "roundingHint": "Applies to hourly rates only.",
+      "notesLegend": "Notes",
+      "notesPlaceholder": "Additional information about the project (optional)",
+      "saving": "Saving...",
+      "saveProject": "Save project"
+    },
+    "editForm": {
+      "title": "Edit Project",
+      "nameLabel": "Project name *",
+      "clientLabel": "Client",
+      "statusLabel": "Status",
+      "startDateLabel": "Start date",
+      "endDateLabel": "End date",
+      "roundingLabel": "Time rounding for billing",
+      "roundingInherit": "Inherit from client ({value})",
+      "roundingHint": "Overrides the client setting for this project. Applies to hourly rates only.",
+      "fixedMonthlyLabel": "Fixed monthly charge",
+      "fixedMonthlyHint": "The fixed charge is added to the hourly billing in reports.",
+      "monthlyFeeLabel": "Monthly amount *",
+      "validFromLabel": "Valid from",
+      "validToLabel": "Valid until",
+      "notesLabel": "Notes",
+      "saving": "Saving...",
+      "saveChanges": "Save changes"
+    },
+    "detail": {
+      "loading": "Loading project...",
+      "notFound": "Project not found"
+    },
+    "breadcrumb": {
+      "clients": "Clients"
+    },
+    "delete": {
+      "title": "Delete project",
+      "body": "Delete the project \"{name}\"? This action cannot be undone.",
+      "deleting": "Deleting...",
+      "confirm": "Delete project"
+    },
+    "archive": {
+      "title": "Archive project",
+      "body": "Archive the project \"{name}\"? The project will be hidden from the projects list but can be restored.",
+      "archiving": "Archiving...",
+      "confirm": "Archive project"
+    },
+    "stats": {
+      "totalHours": "Total hours",
+      "entryCount": "Entry count",
+      "fixedMonthly": "Fixed monthly charge",
+      "rounding": "Time rounding"
+    },
+    "details": {
+      "title": "Project details",
+      "client": "Client",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "fixedValidity": "Fixed charge validity",
+      "validityRange": "{from} to {to}",
+      "noEnd": "No end",
+      "unlimited": "No limit",
+      "notes": "Notes"
+    },
+    "tasks": {
+      "title": "Tasks",
+      "movedNotice": "Task management has moved to the central <link>task board</link>."
+    },
+    "entries": {
+      "title": "Recent entries",
+      "viewAll": "View all entries",
+      "loading": "Loading entries...",
+      "empty": "No time entries yet for this project"
+    },
+    "actions": {
+      "edit": "Edit",
+      "duplicate": "Duplicate",
+      "duplicating": "Copying...",
+      "archive": "Archive",
+      "delete": "Delete",
+      "restoreProject": "Restore project",
+      "restoring": "Restoring..."
+    },
+    "errors": {
+      "clientRequired": "Please select a client",
+      "monthlyFeePositive": "Enter a monthly amount greater than 0",
+      "createFailed": "Failed to create the project",
+      "updateFailed": "Failed to update the project",
+      "deleteFailed": "Failed to delete the project",
+      "archiveFailed": "Failed to archive the project",
+      "restoreFailed": "Failed to restore the project",
+      "duplicateFailed": "Failed to duplicate the project"
+    }
+  },
+  "Settings": {
+    "pageTitle": "Settings",
+    "tabs": {
+      "profile": "Profile",
+      "notifications": "Notifications",
+      "currencies": "Currencies",
+      "security": "Security"
+    },
+    "currencyOptions": {
+      "ILS": "₪ - Israeli Shekel",
+      "USD": "$ - US Dollar",
+      "USDT": "₮ - Tether (USDT)",
+      "BTC": "₿ - Bitcoin",
+      "ETH": "Ξ - Ethereum"
+    },
+    "profile": {
+      "logoTitle": "Business Logo",
+      "logoDescription": "Appears on PDF reports. A square image, at least 200x200, is recommended.",
+      "logoFormats": "JPEG, PNG, GIF, WebP · up to 5MB",
+      "logoAlt": "Business logo",
+      "uploading": "Uploading...",
+      "replaceLogo": "Replace Logo",
+      "uploadLogo": "Upload Logo",
+      "removeLogo": "Remove Logo",
+      "signatureTitle": "Digital Signature",
+      "signatureDescription": "Appears on PDF invoices. A PNG with a transparent background, at least 200x80, is recommended.",
+      "signatureFormats": "JPEG, PNG, GIF, WebP · up to 2MB",
+      "signatureAlt": "Digital signature",
+      "replaceSignature": "Replace Signature",
+      "uploadSignature": "Upload Signature",
+      "removeSignature": "Remove Signature"
+    },
+    "business": {
+      "title": "Business Details",
+      "description": "These details will appear on the reports and invoices you generate.",
+      "loading": "Loading details...",
+      "businessName": "Business Name",
+      "businessNamePlaceholder": "e.g. My Consulting Firm",
+      "phone": "Phone",
+      "phonePlaceholder": "e.g. 050-1234567",
+      "email": "Business Email",
+      "emailPlaceholder": "e.g. info@example.com",
+      "taxId": "Company / VAT ID",
+      "taxIdPlaceholder": "e.g. 123456789",
+      "website": "Website",
+      "websitePlaceholder": "e.g. https://example.com",
+      "address": "Address",
+      "addressPlaceholder": "e.g. 1 Herzl St., Tel Aviv",
+      "defaultCurrency": "Default Currency",
+      "defaultCurrencyHint": "The currency used by default for new projects",
+      "bankSectionTitle": "Bank Details for Transfers",
+      "bankSectionDescription": "These details will appear on invoices to enable payment transfers",
+      "bankName": "Bank Name",
+      "bankNamePlaceholder": "e.g. Bank Hapoalim",
+      "bankBranch": "Branch Number",
+      "bankBranchPlaceholder": "e.g. 123",
+      "bankAccountNumber": "Account Number",
+      "bankAccountNumberPlaceholder": "e.g. 123456",
+      "bankSwift": "International Bank ID (SWIFT/BIC)",
+      "bankSwiftPlaceholder": "e.g. POHALILIT",
+      "bankSwiftHint": "Required for international transfers only",
+      "saving": "Saving...",
+      "saveButton": "Save Changes"
+    },
+    "pdf": {
+      "templateLabel": "Default PDF Template",
+      "templateModern": "Modern",
+      "templateClassic": "Classic",
+      "templateBold": "Bold",
+      "templateElegant": "Elegant",
+      "templateNature": "Nature",
+      "templateOcean": "Ocean",
+      "templateHint": "The template used by default when exporting PDF reports",
+      "primaryColorLabel": "PDF Primary Color",
+      "primaryColorHint": "The primary color used for headings and key elements in the PDF",
+      "accentColorLabel": "PDF Accent Color",
+      "accentColorHint": "The accent color used for details and additional elements in the PDF"
+    },
+    "display": {
+      "dateFormatLabel": "Date Format",
+      "dateFormatDMY": "Day/Month/Year (DD/MM/YYYY)",
+      "dateFormatMDY": "Month/Day/Year (MM/DD/YYYY)",
+      "dateFormatYMD": "Year-Month-Day (YYYY-MM-DD)",
+      "dateFormatHint": "How dates are displayed across the app",
+      "timeFormatLabel": "Time Format",
+      "timeFormat24h": "24-hour (14:30)",
+      "timeFormat12h": "12-hour (02:30 PM)",
+      "timeFormatHint": "How times are displayed across the app",
+      "language": {
+        "label": "Interface language",
+        "hint": "The language the app is displayed in. The change applies immediately.",
+        "he": "עברית",
+        "en": "English"
+      }
+    },
+    "invoice": {
+      "prefixLabel": "Invoice Prefix",
+      "prefixPlaceholder": "e.g. INV-",
+      "prefixHint": "The prefix appears before the invoice number (e.g. INV-001, INV-002)",
+      "nextNumberLabel": "Next Invoice Number",
+      "nextNumberPlaceholder": "e.g. 1",
+      "nextNumberHint": "The next invoice number to be issued. The number increases automatically after each invoice",
+      "paymentTermsLabel": "Payment Terms",
+      "paymentTermsPlaceholder": "e.g. Payment due within 30 days of the invoice date",
+      "paymentTermsHint": "Payment terms will appear on invoices and reports"
+    },
+    "notifications": {
+      "permissionTitle": "Browser Notification Permission",
+      "permissionDescription": "To allow the system to send you notifications, you must enable notifications in your browser.",
+      "permissionStatus": "Permission Status",
+      "statusGranted": "✅ Notifications are enabled",
+      "statusDenied": "❌ Notifications are blocked",
+      "statusDefault": "⏳ Permission not yet granted",
+      "statusUnsupported": "❌ Your browser does not support notifications",
+      "enablePermission": "Enable Notifications",
+      "sending": "Sending...",
+      "testButton": "Test Notification",
+      "longTimerTitle": "Long Timer Alert",
+      "longTimerDescription": "Get an alert when the timer has been running for a long time (e.g. more than 2 hours).",
+      "longTimerToggle": "Enable long timer alert",
+      "longTimerToggleHint": "Get an alert when the timer runs too long",
+      "thresholdLabel": "Minimum time threshold (in minutes)",
+      "thresholdHint": "An alert will be sent when the timer runs longer than {minutes} minutes ({hours} hours)",
+      "dailyReminderTitle": "Daily Reminder",
+      "dailyReminderDescription": "Get a daily reminder to log time entries if you haven't done so yet.",
+      "dailyReminderToggle": "Enable daily reminder",
+      "dailyReminderToggleHint": "Get a reminder to log time entries",
+      "reminderTimeLabel": "Reminder Time",
+      "reminderTimeHint": "The reminder will be sent at {time} on every day with no logged hours",
+      "workingHoursTitle": "Daily Working Hours",
+      "workingHoursDescription": "Set the number of hours you work per day. This is useful for tracking and reports.",
+      "workingHoursLabel": "Working Hours per Day",
+      "workingHoursHint": "Full hours per working day: {hours} hours",
+      "firstDayTitle": "First Day of the Week",
+      "firstDayDescription": "Choose the day your week starts on (affects calendars and reports).",
+      "firstDayLabel": "First Day of Week",
+      "firstDaySunday": "Sunday",
+      "firstDayMonday": "Monday",
+      "firstDayHintSunday": "The week starts on Sunday",
+      "firstDayHintMonday": "The week starts on Monday",
+      "saving": "Saving...",
+      "saveButton": "Save Notification Settings"
+    },
+    "currencies": {
+      "addTitle": "Add Exchange Rate",
+      "addDescription": "Define exchange rates between different currencies. These rates are used to convert currencies in reports.",
+      "fromLabel": "From Currency",
+      "toLabel": "To Currency",
+      "rateLabel": "Exchange Rate",
+      "ratePlaceholder": "e.g. 3.5",
+      "rateHint": "How much {to} you get for 1 {from}",
+      "saving": "Saving...",
+      "saveButton": "Save Rate",
+      "listTitle": "Defined Exchange Rates",
+      "loadingRates": "Loading rates...",
+      "emptyRates": "No exchange rates defined yet",
+      "delete": "Delete"
+    },
+    "security": {
+      "sessionsTitle": "Active Sessions",
+      "sessionsDescription": "A list of all devices currently signed in to your account.",
+      "logoutAll": "Sign Out of All Devices",
+      "loggingOut": "Signing out...",
+      "loadingSessions": "Loading sessions...",
+      "emptySessions": "No active sessions",
+      "deviceLabel": "Device {id}",
+      "current": "Current",
+      "sessionMeta": "Signed in {created} · Expires {expires}",
+      "confirmTitle": "Are you sure?",
+      "confirmDescription": "This will sign you out of all devices connected to your account, including the current device. You'll need to sign in again.",
+      "cancel": "Cancel"
+    },
+    "danger": {
+      "title": "Delete Account",
+      "subtitle": "A permanent, irreversible action — all data will be deleted forever.",
+      "deleteButton": "Delete Account",
+      "dialogTitle": "Permanently Delete Account",
+      "irreversible": "This action is irreversible.",
+      "warningBody": "The account and all its data — clients, projects, time entries, reports, and settings — will be permanently deleted. This cannot be undone. We recommend exporting your data first.",
+      "acknowledge": "I understand that all data will be permanently deleted and cannot be recovered.",
+      "typeWordPrefix": "To confirm, type the word",
+      "confirmWord": "delete",
+      "cancel": "Cancel",
+      "deleting": "Deleting...",
+      "deleteForever": "Delete Permanently",
+      "deleteError": "Failed to delete the account"
+    },
+    "toasts": {
+      "networkError": "Connection error. Please try again.",
+      "notificationsUnsupported": "Your browser does not support notifications",
+      "permissionGranted": "Notification permission granted successfully!",
+      "permissionRequiredForTest": "Notification permission is required to test this feature",
+      "testNotificationTitle": "Notification Test - Monit",
+      "testNotificationBody": "This is a test notification from the system. If you see this message, notifications are working correctly!",
+      "loadProfileError": "Failed to load profile",
+      "loadSessionsError": "Failed to load sessions",
+      "logoutAllError": "Failed to sign out of all devices",
+      "profileSaved": "Details saved successfully!",
+      "saveProfileError": "Failed to save details",
+      "notificationSettingsSaved": "Notification settings saved successfully!",
+      "saveSettingsError": "Failed to save settings",
+      "logoUploaded": "Logo uploaded successfully!",
+      "uploadLogoError": "Failed to upload logo",
+      "removeLogoConfirm": "Are you sure you want to remove the logo?",
+      "logoRemoved": "Logo removed successfully!",
+      "removeLogoError": "Failed to remove logo",
+      "signatureUploaded": "Signature uploaded successfully!",
+      "uploadSignatureError": "Failed to upload signature",
+      "removeSignatureConfirm": "Are you sure you want to remove the signature?",
+      "signatureRemoved": "Signature removed successfully!",
+      "removeSignatureError": "Failed to remove signature",
+      "loadRatesError": "Failed to load exchange rates",
+      "rateSaved": "Exchange rate saved successfully!",
+      "saveRateError": "Failed to save exchange rate",
+      "deleteRateConfirm": "Delete this exchange rate?",
+      "rateDeleted": "Exchange rate deleted successfully!",
+      "deleteRateError": "Failed to delete exchange rate"
+    },
+    "data": {
+      "title": "Your data & privacy",
+      "description": "Download a copy of all your data — clients, projects, time entries, charge documents and more — in a single JSON file.",
+      "exportButton": "Export my data",
+      "exporting": "Exporting...",
+      "exportError": "Data export failed. Please try again."
+    }
+  },
+  "Auth": {
+    "common": {
+      "appName": "Monit",
+      "emailLabel": "Email address",
+      "passwordLabel": "Password",
+      "confirmPasswordLabel": "Confirm password",
+      "emailPlaceholder": "Enter your email address",
+      "minCharsPlaceholder": "At least 8 characters",
+      "sending": "Sending...",
+      "networkError": "Connection error. Please try again.",
+      "resendFailed": "Sending failed. Try again in a moment.",
+      "signInHere": "Sign in here",
+      "backToLogin": "Back to login",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Terms of Service",
+      "loading": "Loading...",
+      "redirectingToGoogle": "Redirecting to Google..."
+    },
+    "verifyNotice": {
+      "heading": "Please verify your email address",
+      "body": "We sent a verification email to <email>{email}</email>. Verifying your email helps us keep your account secure.",
+      "resend": "Send a new verification email",
+      "sending": "Sending...",
+      "success": "Email sent! Check your inbox (and your spam folder too).",
+      "error": "Error sending the email. Please try again."
+    },
+    "login": {
+      "title": "Sign in to your account",
+      "subtitle": "Manage your work hours and projects",
+      "googleSignIn": "Sign in with Google",
+      "orWithEmail": "or sign in with email",
+      "passwordPlaceholder": "Your password",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "forgotPassword": "Forgot password?",
+      "noAccount": "Don't have an account yet?",
+      "registerHere": "Register here",
+      "resendVerification": "Resend verification email",
+      "resendSuccess": "We sent a new verification email.",
+      "errors": {
+        "notVerified": "You must verify your email address before signing in. Check your inbox.",
+        "signInFailed": "Sign-in error"
+      }
+    },
+    "register": {
+      "title": "Create a new account",
+      "subtitle": "Start managing your work hours",
+      "googleSignUp": "Sign up with Google",
+      "orWithEmail": "or sign up with email",
+      "businessNameLabel": "Business name (optional)",
+      "businessNamePlaceholder": "Your business name",
+      "confirmPasswordPlaceholder": "Re-enter your password",
+      "submit": "Sign up",
+      "submitting": "Signing up...",
+      "haveAccount": "Already have an account?",
+      "signInHere": "Sign in here",
+      "termsAgreement": "By signing up you agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>",
+      "resendVerification": "Resend verification email",
+      "resendSuccess": "We resent the verification email.",
+      "alreadyVerified": "Already verified?",
+      "verify": {
+        "title": "Check your email",
+        "sentTo": "We sent a verification link to",
+        "instructions": "Click the link in the email to activate your account and get started.",
+        "notReceived": "Didn't receive it? Check your spam folder, or resend."
+      },
+      "errors": {
+        "signUpFailed": "Sign-up error"
+      }
+    },
+    "forgot": {
+      "title": "Reset password",
+      "subtitle": "Enter your email address and we'll send you a link to reset your password",
+      "submit": "Send password reset link",
+      "successMessage": "If an account exists with this email address, we've sent password reset instructions.",
+      "rememberedPassword": "Remembered your password?",
+      "errors": {
+        "requestFailed": "Error sending the password reset request"
+      }
+    },
+    "reset": {
+      "title": "Reset password",
+      "subtitle": "Enter your new password",
+      "newPasswordLabel": "New password",
+      "confirmPasswordPlaceholder": "Re-enter your password",
+      "submit": "Reset password",
+      "submitting": "Resetting password...",
+      "successMessage": "Your password has been reset successfully! You can now sign in with your new password.",
+      "goToLogin": "Go to login",
+      "errors": {
+        "invalidToken": "The password reset link is invalid or has expired.",
+        "passwordsMismatch": "Passwords do not match",
+        "passwordTooShort": "Password must contain at least 8 characters",
+        "resetFailed": "Error resetting the password"
+      }
+    }
+  },
+  "Admin": {
+    "dashboard": {
+      "title": "System Administration",
+      "subtitle": "System overview",
+      "loadError": "Failed to load data",
+      "totalUsers": "Total Users",
+      "totalEntries": "Time Entries",
+      "activeTimers": "Active Timers",
+      "newThisWeek": "New This Week",
+      "newThisMonth": "New This Month",
+      "totalProjects": "Total Projects",
+      "newTodayDelta": "+{count} today",
+      "registrationsTrend": "Registrations - Last 30 Days",
+      "registrationsTooltip": "{date}: {count} registrations",
+      "usersLinkTitle": "User Management",
+      "usersLinkSubtitle": "View and manage all users",
+      "statsLinkTitle": "Statistics",
+      "statsLinkSubtitle": "In-depth system analysis"
+    },
+    "users": {
+      "title": "User Management",
+      "subtitle": "View and manage all users in the system",
+      "searchPlaceholder": "Search by email or business name...",
+      "searchAriaLabel": "Search users",
+      "colEmail": "Email",
+      "colBusinessName": "Business Name",
+      "colRegistrationDate": "Registered",
+      "colLastActivity": "Last Activity",
+      "colEntries": "Entries",
+      "colProjects": "Projects",
+      "colRole": "Role",
+      "roleAdmin": "Admin",
+      "roleUser": "User",
+      "empty": "No users found",
+      "entriesCount": "{count} entries",
+      "projectsCount": "{count} projects",
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}"
+    },
+    "stats": {
+      "title": "System Statistics",
+      "subtitle": "In-depth analysis of system usage",
+      "loadError": "Failed to load data",
+      "avgEntriesPerUser": "Avg Entries Per User",
+      "totalLogos": "Logos Uploaded",
+      "topUsersTitle": "Top 10 Most Active Users",
+      "projectStatusTitle": "Project Status Distribution",
+      "currencyTitle": "Currency Distribution",
+      "noData": "No data",
+      "projectStatus": {
+        "active": "Active",
+        "completed": "Completed",
+        "paused": "Paused",
+        "archived": "Archived"
+      }
+    },
+    "detail": {
+      "notFound": "User not found",
+      "backToUsers": "Back to user list",
+      "roleAdmin": "Admin",
+      "roleUser": "User",
+      "yes": "Yes",
+      "no": "No",
+      "actionError": "Failed to perform action",
+      "tabs": {
+        "profile": "Profile",
+        "clients": "Clients",
+        "projects": "Projects",
+        "entries": "Entries",
+        "sessions": "Sessions",
+        "actions": "Actions"
+      },
+      "profile": {
+        "email": "Email",
+        "emailVerified": "Email Verified",
+        "role": "Role",
+        "registrationDate": "Registered",
+        "businessName": "Business Name",
+        "phone": "Phone",
+        "address": "Address",
+        "taxId": "Tax ID",
+        "currency": "Currency",
+        "pdfTemplate": "PDF Template",
+        "logo": "Logo",
+        "logoUploaded": "Uploaded",
+        "logoNotUploaded": "Not uploaded",
+        "website": "Website"
+      },
+      "clients": {
+        "empty": "No clients",
+        "colName": "Name",
+        "colContact": "Contact",
+        "colEmail": "Email",
+        "colStatus": "Status",
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "projects": {
+        "empty": "No projects",
+        "colName": "Name",
+        "colStatus": "Status"
+      },
+      "entries": {
+        "empty": "No time entries",
+        "colDescription": "Description",
+        "colDate": "Date",
+        "colDuration": "Duration"
+      },
+      "sessions": {
+        "empty": "No sessions",
+        "colCreated": "Created",
+        "colExpires": "Expires",
+        "colStatus": "Status",
+        "expired": "Expired",
+        "active": "Active"
+      },
+      "actions": {
+        "tempPasswordLabel": "Temporary password:",
+        "copy": "Copy",
+        "tempPasswordHint": "Save the password - it won't be shown again",
+        "resetPassword": {
+          "title": "Reset Password",
+          "description": "Generate a new temporary password and sign out all sessions",
+          "loading": "Resetting...",
+          "button": "Reset"
+        },
+        "verifyEmail": {
+          "title": "Verify Email",
+          "description": "Manually mark the email as verified",
+          "loading": "Verifying...",
+          "button": "Verify"
+        },
+        "deleteSessions": {
+          "title": "Sign Out Sessions",
+          "description": "Delete all active sessions",
+          "loading": "Signing out...",
+          "button": "Sign Out All"
+        },
+        "toggleRole": {
+          "title": "Change Role",
+          "demoteDescription": "Demote to regular user",
+          "promoteDescription": "Promote to admin",
+          "loading": "Changing...",
+          "demoteButton": "Demote",
+          "promoteButton": "Make Admin"
+        },
+        "deleteUser": {
+          "title": "Delete User",
+          "description": "Permanently delete the user and all their data",
+          "loading": "Deleting...",
+          "confirmButton": "Confirm Delete",
+          "cancel": "Cancel",
+          "button": "Delete"
+        }
+      }
+    }
+  },
+  "Timer": {
+    "bar": {
+      "startTracking": "Start tracking your time",
+      "startTimer": "Start timer",
+      "paused": "Paused",
+      "activeTimer": "Active timer",
+      "editNotes": "Edit notes",
+      "addNotes": "Add notes",
+      "noteShort": "Note",
+      "notes": "Notes",
+      "resumeTimer": "Resume timer",
+      "pauseTimer": "Pause timer",
+      "stopTimer": "Stop timer",
+      "startAnotherTimer": "Start another timer",
+      "anotherTimer": "Another timer",
+      "notesLabel": "Timer notes (saved to the entry and shown in the report)",
+      "notesPlaceholder": "What's been done so far? You can update anytime.",
+      "saving": "Saving...",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "start": {
+      "title": "Start a new timer",
+      "projectLabel": "Project *",
+      "projectPlaceholder": "Select a project",
+      "taskLabel": "Task",
+      "noTask": "No task",
+      "rateLabel": "Rate",
+      "rateOption": "{name} — {rate}/hr",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "What are you working on?",
+      "cancel": "Cancel",
+      "starting": "Starting...",
+      "startButton": "Start timer",
+      "noProjects": "No projects yet",
+      "noProjectsHint": "To start tracking time, create a project first",
+      "createProject": "+ Create new project",
+      "createClient": "+ Create new client"
+    },
+    "stop": {
+      "title": "Stop timer and save entry",
+      "elapsedLabel": "Elapsed time:",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "What did you do?",
+      "notesLabel": "Notes (shown in the report)",
+      "notesPlaceholder": "Details of what was done (optional)",
+      "adjustDuration": "Adjust the duration (optional)",
+      "hours": "Hours",
+      "minutes": "Minutes",
+      "markDone": "Mark the task as done",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "saveButton": "Stop and save"
+    },
+    "search": {
+      "trigger": "Search...",
+      "dialogTitle": "Global search",
+      "dialogDescription": "Search clients, projects and entries",
+      "placeholder": "Search clients, projects, time entries...",
+      "inputAriaLabel": "Search",
+      "clear": "Clear search",
+      "startTyping": "Start typing to search",
+      "startTypingHint": "Search clients, projects and time entries by name",
+      "searching": "Searching...",
+      "noResults": "No results found",
+      "noResultsHint": "Try searching for different words",
+      "groupClients": "Clients",
+      "groupProjects": "Projects",
+      "groupEntries": "Time entries",
+      "hintNavigate": "Navigate",
+      "hintSelect": "Select",
+      "hintClose": "Close",
+      "resultCount": "{count} results"
+    }
+  },
+  "Contact": {
+    "meta": {
+      "title": "Contact | {brand}",
+      "description": "Contact {brand}. We're happy to hear questions, suggestions, or bug reports."
+    },
+    "back": "Back to {brand}",
+    "title": "Contact",
+    "description": "A question, an improvement idea, or a bug? Write to us and we'll get back to the email you leave.",
+    "form": {
+      "nameLabel": "Name",
+      "nameOptional": "(optional)",
+      "emailLabel": "Email",
+      "messageLabel": "Message",
+      "messagePlaceholder": "How can we help?",
+      "honeypotLabel": "Website",
+      "submit": "Send message",
+      "submitting": "Sending...",
+      "successHeading": "Message sent",
+      "successBody": "Thanks. We'll get back to you at the email you left soon.",
+      "sendAnother": "Send another message",
+      "errorFix": "Please correct the details",
+      "errorSend": "Failed to send the message. Please try again.",
+      "errorNetwork": "Network error. Please try again."
+    }
+  },
+  "Validation": {
+    "field": "This field",
+    "REQUIRED": "This field is required",
+    "REQUIRED_NAMED": "{field} is required",
+    "MIN_LENGTH": "Must contain at least {min} characters",
+    "MAX_LENGTH": "Must contain at most {max} characters",
+    "INVALID_FORMAT": "Invalid format",
+    "INVALID_EMAIL": "Invalid email address",
+    "INVALID_PHONE": "Invalid phone number",
+    "PASSWORD_TOO_SHORT": "Password must contain at least 8 characters",
+    "PASSWORD_MISMATCH": "Passwords do not match",
+    "NOT_A_NUMBER": "Must be a number",
+    "MIN_VALUE": "Must be greater than or equal to {min}",
+    "INVALID_DATE_FORMAT": "Invalid date format (YYYY-MM-DD)",
+    "INVALID_DATE": "Invalid date",
+    "DATE_RANGE_ORDER": "Start date must be before end date",
+    "DATE_NOT_FUTURE": "Date cannot be in the future",
+    "DATE_NOT_PAST": "Date cannot be in the past",
+    "INVALID_URL": "Invalid URL",
+    "fields": {
+      "project": "Project",
+      "description": "Description",
+      "clientName": "Client name",
+      "projectName": "Project name",
+      "password": "Password"
+    },
+    "passwordStrength": {
+      "WEAK": "Weak password — consider strengthening it",
+      "FAIR": "Fair password — it could still be stronger",
+      "GOOD": "Good password — almost there",
+      "STRONG": "Excellent, strong password!",
+      "requirements": {
+        "length": "At least 8 characters",
+        "lowercase": "Lowercase letter (a-z)",
+        "uppercase": "Uppercase letter (A-Z)",
+        "number": "Number (0-9)",
+        "special": "Special character (!@#$%...)"
+      }
+    }
+  },
+  "Landing": {
+    "nav": {
+      "ariaLabel": "Main navigation",
+      "howItWorks": "How it works",
+      "features": "Features",
+      "faq": "FAQ",
+      "login": "Log in",
+      "ctaStart": "Start free"
+    },
+    "hero": {
+      "headlinePrefix": "Your time is worth money",
+      "headlineSuffix": "helps you collect it.",
+      "subhead": "Time tracking, client management, and professional reports — all in one place, free.",
+      "ctaPrimary": "Start tracking — free",
+      "ctaNote": "Free during the beta. No credit card, no commitment.",
+      "mock": {
+        "currentProject": "Current project",
+        "start": "Start",
+        "hoursThisMonth": "Hours this month",
+        "revenueThisMonth": "Revenue this month",
+        "activeProjects": "Active projects",
+        "revenueByProject": "Revenue by project",
+        "status": "Status",
+        "statusActive": "{count} projects",
+        "statusPending": "{count} pending",
+        "statusDone": "{count} completed"
+      }
+    },
+    "howItWorks": {
+      "heading": "How does it work?",
+      "subheading": "Three simple steps to get started",
+      "step1": {
+        "title": "Sign up free",
+        "description": "Create an account in 30 seconds. Just email and password."
+      },
+      "step2": {
+        "title": "Add a client and project",
+        "description": "Set up your clients and pricing."
+      },
+      "step3": {
+        "title": "Track and bill",
+        "description": "Start a timer, log hours, and generate a report in one click."
+      }
+    },
+    "features": {
+      "heading": "Everything you need to manage time and billing",
+      "subheading": "Professional tools for freelancers and the self-employed, fully in Hebrew",
+      "parallelTimers": {
+        "title": "Multiple timers at once",
+        "description": "Working for several clients at the same time? Open a timer for each. Each runs and stops independently."
+      },
+      "itemBilling": {
+        "title": "Item-based billing",
+        "description": "Not just hours. Quantity times unit price, from the client's catalog or a one-off item."
+      },
+      "kanban": {
+        "title": "Task board (Kanban)",
+        "description": "Drag a task to 'In progress' and the timer starts on its own. Drag it out, and an entry is saved."
+      },
+      "flexiblePricing": {
+        "title": "Flexible pricing",
+        "description": "Hourly, retainer, fixed monthly, or per item. A separate rate for every client."
+      },
+      "clientsProjects": {
+        "title": "Clients and projects",
+        "description": "All your clients in one place: contact details, rates, and billing history."
+      },
+      "settlementDocs": {
+        "title": "Settlement statements",
+        "description": "Roll up hours and items into a single statement, and export a fully Hebrew PDF with your logo."
+      },
+      "rounding": {
+        "title": "Rounding and billing rules",
+        "description": "Round time to the hour or half hour, per client or project. Precise math, without losing a minute."
+      },
+      "multiCurrency": {
+        "title": "Multiple currencies",
+        "description": "Shekel, dollar, USDT, Bitcoin, and Ethereum. A separate rate for each client."
+      },
+      "dashboard": {
+        "title": "Dashboard and insights",
+        "description": "How much came in this month — by hours, by items, and by project."
+      }
+    },
+    "highlights": {
+      "heading": "More than a timer. A complete billing tool.",
+      "subheading": "From the moment you start working to the moment the bill is ready",
+      "timers": {
+        "eyebrow": "Parallel timers",
+        "title": "Several timers, all at once",
+        "body": "Working for three clients in the same morning? Start a timer for each. Each one runs separately, stops separately, and lands in the right entries. No tallying it all up in your head at the end of the day.",
+        "mock": {
+          "activeTimers": "Active timers",
+          "running": "{count} running",
+          "client1": "Oren Studio",
+          "client2": "Levi Law",
+          "client3": "Nova Inc."
+        }
+      },
+      "items": {
+        "eyebrow": "Item-based billing",
+        "title": "Not everything is measured in hours",
+        "body": "Some work is billed per item: a license, a fix, a one-off consultation. Add a quantity and unit price, save it to the client's catalog, and bill it just like an hour.",
+        "mock": {
+          "itemLabel": "Item",
+          "qtyUnitLabel": "Qty × unit",
+          "total": "Total",
+          "item1": "Usage license",
+          "item2": "Issue fix",
+          "item3": "Ad-hoc consulting"
+        }
+      },
+      "flow": {
+        "eyebrow": "From task to bill",
+        "title": "Nothing copied by hand",
+        "body": "Drag a task on the Kanban board to 'In progress', and the timer starts on its own. Done? The entry is already waiting. At the end of the month, roll it all into a settlement statement and export a Hebrew PDF.",
+        "mock": {
+          "step1": {
+            "label": "Task to 'In progress'",
+            "note": "Timer starts on its own"
+          },
+          "step2": {
+            "label": "Time entry saved",
+            "note": "To the right client"
+          },
+          "step3": {
+            "label": "Settlement statement",
+            "note": "Export to Hebrew PDF"
+          }
+        }
+      }
+    },
+    "faq": {
+      "heading": "Frequently asked questions",
+      "q1": {
+        "question": "Who can use Monit?",
+        "answer": "Monit is built for freelancers, independent consultants, and small business owners who need to track work hours, manage clients, and bill in an organized way."
+      },
+      "q2": {
+        "question": "Is it really free?",
+        "answer": "Yes, today it's free. Monit is in beta, and using it currently costs nothing, with no credit card. Going forward, managing up to three clients will stay free too. If we add paid plans for extended use, we'll let you know in advance and won't charge anyone without their choosing to."
+      },
+      "q3": {
+        "question": "Can I run several timers at the same time?",
+        "answer": "Absolutely. If you're working for several clients at once, open a timer for each. Every timer runs and stops separately, and every entry lands in the right client and project."
+      },
+      "q4": {
+        "question": "What is item-based billing?",
+        "answer": "Beyond hourly billing, you can bill by item: quantity times unit price. Save recurring items in each client's catalog, or add a one-off item on the fly. Great for fixes, licenses, or any work that isn't measured in hours."
+      },
+      "q5": {
+        "question": "Is the settlement statement a tax invoice?",
+        "answer": "No. The settlement statement is an internal summary that rolls up the hours and items to be billed, for your convenience and your client's. It is not a tax invoice or receipt. You continue to issue official tax documents as usual through your invoicing system."
+      },
+      "q6": {
+        "question": "Is my data secure?",
+        "answer": "Absolutely. Data is stored on encrypted servers in the European Union, and every user sees only their own information, even at the database level. We don't sell data and don't share it with advertisers."
+      },
+      "q7": {
+        "question": "Can I export reports in Hebrew?",
+        "answer": "Yes. Monit exports reports and statements as fully Hebrew PDFs with RTL support. There are several designs to choose from, and you can upload a personal logo."
+      },
+      "q8": {
+        "question": "Is there a mobile app?",
+        "answer": "Monit works great in the mobile browser and supports installing as an app (PWA). You can add it to your home screen and use it like a regular app."
+      },
+      "q9": {
+        "question": "How do I set up pricing models?",
+        "answer": "Each client gets their own rate: hourly, monthly retainer, fixed monthly billing, or item-based billing. You can also set time rounding per client or project."
+      }
+    },
+    "cta": {
+      "heading": "Ready to manage your time the smart way?",
+      "subheading": "Join 500+ freelancers already using Monit",
+      "socialProof": "Join 500+ freelancers",
+      "button": "Create a free account"
+    },
+    "footer": {
+      "tagline": "Your time is worth money",
+      "navAriaLabel": "Footer navigation",
+      "howItWorks": "How it works",
+      "features": "Features",
+      "faq": "FAQ",
+      "login": "Log in",
+      "privacy": "Privacy",
+      "terms": "Terms of use",
+      "contact": "Contact",
+      "builtWith": "Built with ♥ in Israel",
+      "rightsReserved": "All rights reserved"
+    }
+  },
+  "Legal": {
+    "page": {
+      "backTo": "Back to {brand}",
+      "updatedLabel": "Last updated: {date}",
+      "questions": "Questions?",
+      "contactCta": "Contact us",
+      "privacyLink": "Privacy Policy",
+      "termsLink": "Terms of Service",
+      "contactLink": "Contact"
+    },
+    "terms": {
+      "metaTitle": "Terms of Service",
+      "metaDescription": "The terms of service for {brand}.",
+      "title": "Terms of Service",
+      "updated": "June 3, 2026",
+      "intro": "Welcome to {brand} (the \"Service\" or \"{brand}\"), an online service for tracking work hours, managing clients and projects, and generating billing documents, intended for freelancers and the self-employed. These Terms of Service (the \"Terms\") govern your use of the Service, alongside the <privacyLink>Privacy Policy</privacyLink>. Using, registering for, or accessing the Service constitutes full acceptance of these Terms. If you do not agree to the Terms, you may not use the Service.",
+      "beta": {
+        "heading": "Beta Stage",
+        "body": "The Service is in beta and is provided on an \"as-is\" and \"as-available\" basis. At this stage the Service may change, be updated, or be limited from time to time, and may contain faults, downtime, or errors. We do not guarantee any service level (SLA), full data retention, or that any particular feature will continue to exist. Using the Service during the beta stage is at your own risk."
+      },
+      "account": {
+        "heading": "User Account and Eligibility",
+        "item1": "The Service is intended for users aged 18 and over who are competent to enter into a binding agreement.",
+        "item2": "You must provide true, accurate, and up-to-date information when registering, and keep it current.",
+        "item3": "You are solely responsible for keeping your login credentials confidential and for all activity carried out under your account.",
+        "item4": "You must notify us without delay of any unauthorized use of your account or any suspected breach of its security."
+      },
+      "permitted": {
+        "heading": "Permitted Use",
+        "intro": "In using the Service, you undertake not to:",
+        "item1": "Use it for any unlawful, infringing, or harmful purpose.",
+        "item2": "Attempt to harm or disrupt the Service, or gain unauthorized access to the system, to accounts, or to other users' data.",
+        "item3": "Place an abnormal load on the Service, or use it in an automated manner inconsistent with reasonable and fair use.",
+        "item4": "Copy, reproduce, reverse-engineer, or sell any part of the Service without express written permission."
+      },
+      "notTaxDocs": {
+        "heading": "The Documents Generated by the Service Are Not Tax Documents",
+        "body": "The documents the Service generates, including the settlement statement and PDF files, are <strong>an internal summary for convenience only</strong> that aggregates hours and billable items. These documents do not constitute an invoice, a tax invoice, a receipt, or any lawful accounting document, and may not be treated as a substitute for one. Responsibility for issuing lawful tax documents, keeping books, reporting to the authorities, and complying with all tax, regulatory, and legal obligations applicable to you rests with you alone. The Service is not responsible for the content of the charges, the amounts, the calculations, or any use you make of the documents it generates."
+      },
+      "noAdvice": {
+        "heading": "No Professional Advice",
+        "body": "Nothing in the Service, its content, or the documents it generates constitutes tax advice, accounting advice, legal advice, or any other professional advice, and you may not rely on them as such. For any professional matter you should consult a qualified professional."
+      },
+      "yourData": {
+        "heading": "Your Data and Backup Responsibility",
+        "body": "The data you enter is owned by you. We process it solely to provide the Service, in accordance with the <privacyLink>Privacy Policy</privacyLink>. You may export or delete your data at any time from your account settings. Since the Service is in beta, you are responsible for keeping an independent and up-to-date backup of important data, and we will not be liable for any loss of data for any reason whatsoever."
+      },
+      "ip": {
+        "heading": "Intellectual Property",
+        "body": "All rights in the Service itself, including the design, the code, the trademarks, and the content, are reserved to us. These Terms grant you a personal, limited, non-exclusive, and non-transferable license to use the Service only, and do not grant you any right in the Service's intellectual property."
+      },
+      "pricing": {
+        "heading": "Pricing and Future Changes",
+        "body": "During the beta stage, use of the Service is free of charge. We intend to continue allowing the management of up to three clients free of charge going forward. We reserve the right to add paid plans or features for extended use in the future, to change the pricing model, or to limit certain features. Any such change will take effect only after advance notice and within a reasonable timeframe. You will not be charged without your express prior consent."
+      },
+      "availability": {
+        "heading": "Service Availability",
+        "body": "We strive for high availability but do not guarantee continuous, available, or fault-free operation. We may update, change, disable, or discontinue the Service or parts of it from time to time, including for maintenance purposes, and will endeavor to provide advance notice of material changes."
+      },
+      "liability": {
+        "heading": "Limitation of Liability",
+        "body": "The Service is provided \"as is\" and without warranty of any kind, express or implied, including any warranty of fitness for a particular purpose, availability, accuracy, or non-interruption. To the maximum extent permitted by law, we will not be liable for any indirect, special, consequential, or punitive damages, or for loss of profits, revenue, goodwill, or data, arising from the use of the Service or the inability to use it. In any event, our total aggregate liability for any cause whatsoever will not exceed the amount you actually paid for the Service in the twelve months preceding the event, and during the beta stage, in which the Service is provided free of charge, that amount is zero."
+      },
+      "indemnity": {
+        "heading": "Indemnification",
+        "body": "You undertake to indemnify and compensate us for any damage, expense, or liability, including reasonable attorneys' fees, caused to us as a result of your use of the Service in breach of these Terms or the law, or as a result of a third-party claim arising from your use of the Service or from the data you entered into it."
+      },
+      "thirdParty": {
+        "heading": "Third-Party Services",
+        "body": "The Service relies on external infrastructure providers (including storage, hosting, and login services). We are not responsible for faults, service interruptions, or damages arising from the operation of these providers, who are subject to their own terms and privacy policies."
+      },
+      "forceMajeure": {
+        "heading": "Force Majeure",
+        "body": "We will not be liable for any delay or failure to perform our obligations arising from circumstances beyond our reasonable control, including communications or power failures, faults at infrastructure providers, cyberattacks, war, a state of emergency, or an order of a competent authority."
+      },
+      "suspension": {
+        "heading": "Suspension and Termination",
+        "body": "You may stop using the Service and delete your account at any time. We may suspend or terminate your account, immediately and at our discretion, if you breach these Terms, if your use harms the Service or other users, or if required by law."
+      },
+      "changes": {
+        "heading": "Changes to the Terms",
+        "body": "We may update these Terms from time to time. In the event of a material change, we will update the revision date and provide notice as needed. Continued use of the Service after the Terms are updated constitutes acceptance of the updated Terms."
+      },
+      "general": {
+        "heading": "General Provisions",
+        "item1": "If any provision of these Terms is found to be invalid, the remaining provisions will continue in full force.",
+        "item2": "Failure to enforce a right under these Terms will not be deemed a waiver of it.",
+        "item3": "You may not assign your rights under these Terms without our prior written consent.",
+        "item4": "These Terms, together with the Privacy Policy, constitute the entire agreement between you and us regarding the Service."
+      },
+      "law": {
+        "heading": "Governing Law and Jurisdiction",
+        "body": "These Terms are governed solely by the laws of the State of Israel, and exclusive jurisdiction over any matter relating to them is vested in the competent courts of the Tel Aviv-Jaffa district."
+      },
+      "contact": {
+        "heading": "Contact Us",
+        "body": "For questions regarding these Terms, you may contact us through the <contactLink>contact form</contactLink>."
+      }
+    },
+    "privacy": {
+      "metaTitle": "Privacy Policy",
+      "metaDescription": "{brand}'s privacy policy: what data we collect, how we use it, and what your rights are.",
+      "title": "Privacy Policy",
+      "updated": "June 3, 2026",
+      "intro": "This policy explains what personal data {brand} (\"we\" or the \"Service\") collects about you, how we use and store it, and what rights are available to you. We act as the controller of the data and process the information in accordance with the Protection of Privacy Law, 5741-1981, including Amendment No. 13 to the law. Use of the Service constitutes acceptance of this policy.",
+      "collect": {
+        "heading": "What Data We Collect",
+        "item1": "<strong>Account details:</strong> email address and name, received upon registration or when logging in with Google.",
+        "item2": "<strong>Usage data you enter:</strong> clients, projects, tasks, time entries, items, rates, billing documents, and notes you create in the Service.",
+        "item3": "<strong>Technical data:</strong> a session cookie for login, as well as basic operational logs (IP address, browser type, request times) used for security and stability."
+      },
+      "use": {
+        "heading": "How We Use the Data",
+        "intro": "We process the information for the following purposes only:",
+        "item1": "To provide the Service, and to store and display your clients, projects, hours, and charges.",
+        "item2": "To authenticate you and maintain account security.",
+        "item3": "To maintain, monitor, and improve the system's stability and performance.",
+        "item4": "To communicate with you regarding matters concerning your account only.",
+        "note": "We do not sell your data, and we do not use it for advertising or disclose it to any third party for advertising purposes."
+      },
+      "providers": {
+        "heading": "Sharing with Service Providers",
+        "intro": "We use infrastructure providers only, who process information on our behalf in order to operate the Service:",
+        "item1": "<strong>Neon / AWS:</strong> database storage (Frankfurt region, European Union).",
+        "item2": "<strong>Vercel:</strong> application hosting.",
+        "item3": "<strong>Google:</strong> optional login via a Google account (OAuth).",
+        "note": "These providers process data on our behalf only and subject to security and privacy obligations. Apart from these providers, we do not disclose the information to third parties, unless required to do so by law or by order of a competent authority."
+      },
+      "storage": {
+        "heading": "Storage and Transfer of Data Outside Israel",
+        "body": "The data is stored and processed on servers located in the European Union (Frankfurt, Germany). By using the Service, you consent to the transfer and storage of the data outside the borders of Israel, in a region that maintains an accepted level of data protection."
+      },
+      "security": {
+        "heading": "Data Security",
+        "body": "Traffic is encrypted (HTTPS/TLS), and data access is isolated at the database level so that each user sees only their own data (Row-Level Security). We take reasonable and accepted measures to protect the data, but no measure provides absolute security. You are responsible for keeping your login credentials confidential."
+      },
+      "incident": {
+        "heading": "Security Incident",
+        "body": "In the event of a material security incident concerning your data, we will act in accordance with the applicable provisions of the law, including notification to the extent required by law."
+      },
+      "cookies": {
+        "heading": "Cookies",
+        "body": "We use strictly necessary cookies only, primarily the session cookie that keeps you logged in. We do not use advertising or third-party tracking cookies, and we do not run analytics tools that track your activity."
+      },
+      "rights": {
+        "heading": "Your Rights",
+        "intro": "In accordance with the Protection of Privacy Law, 5741-1981, and its regulations, the following rights are available to you:",
+        "item1": "<strong>Access:</strong> to view the data we hold about you.",
+        "item2": "<strong>Export:</strong> to download a copy of all your data from your account settings.",
+        "item3": "<strong>Correction:</strong> to update or correct your details at any time.",
+        "item4": "<strong>Deletion:</strong> to permanently delete your account and all its data, from your account settings.",
+        "note": "To exercise these rights you can use the tools in your account settings or contact us through the contact form."
+      },
+      "retention": {
+        "heading": "Data Retention and Deletion",
+        "body": "We retain your data for as long as your account is active. When the account is deleted, all of your user data is irreversibly removed from the system, except for operational logs that clear themselves after a short time, and except for information we are required to retain by law."
+      },
+      "minors": {
+        "heading": "Minors",
+        "body": "The Service is not intended for use by minors under the age of 18, and we do not knowingly collect information about them."
+      },
+      "changes": {
+        "heading": "Changes to the Policy",
+        "body": "We may update this policy from time to time. In the event of a material change, we will update the revision date and provide notice as needed. Continued use of the Service after the update constitutes acceptance of the updated policy."
+      },
+      "contact": {
+        "heading": "Contact Us",
+        "body": "For any question or request regarding privacy, you may contact us through the <contactLink>contact form</contactLink>."
+      }
+    }
+  },
+  "Offline": {
+    "metaTitle": "No Connection — Monit",
+    "title": "No Internet Connection",
+    "body": "It looks like you're offline. Check your connection and try again — some of the screens you've already visited are available even without a network.",
+    "retry": "Try Again"
+  },
+  "errors": {
+    "UNAUTHORIZED": "Not authenticated",
+    "FORBIDDEN": "No permission",
+    "SERVER_ERROR": "Server error",
+    "INVALID_REQUEST": "Invalid request",
+    "VALIDATION_ERROR": "Validation error",
+    "NO_FIELDS_TO_UPDATE": "At least one field must be selected to update",
+    "RATE_LIMIT": "Too many messages were sent. Try again later.",
+    "EMAIL_SEND_FAILED": "Failed to send the message. Try again later.",
+    "CLIENT_NOT_FOUND": "Client not found",
+    "CLIENT_REQUIRED": "Please select a client",
+    "PROJECT_NOT_FOUND": "Project not found",
+    "TASK_NOT_FOUND": "Task not found",
+    "ENTRY_NOT_FOUND": "Time entry not found",
+    "RATE_NOT_FOUND": "Rate not found",
+    "PROFILE_NOT_FOUND": "Profile not found",
+    "USER_NOT_FOUND": "User not found",
+    "FIXED_MONTHLY_FEE_REQUIRED": "When monthly billing is enabled, an amount greater than 0 is required",
+    "FIXED_MONTHLY_DATE_RANGE_INVALID": "Monthly billing start date must be before the end date",
+    "TIMER_NOT_FOUND": "Timer not found or already stopped",
+    "TIMER_ALREADY_PAUSED": "Timer is already paused",
+    "TIMER_NOT_PAUSED": "No paused timer",
+    "ENTRY_STATE_CHANGED": "Some items were already billed or changed — refresh and try again",
+    "ENTRY_UNAVAILABLE": "The item was already billed or is unavailable",
+    "DOCUMENT_NOT_FOUND": "Document not found",
+    "DOCUMENT_LOCKED": "Document is locked — unpay it to edit",
+    "LINE_NOT_FOUND": "Line not found",
+    "DELETE_REQUIRES_CANCELED": "Only a canceled document can be deleted",
+    "CANCEL_REQUIRES_PENDING": "Only a pending document can be canceled",
+    "PAY_REQUIRES_PENDING": "Cannot mark as paid (document is not pending)",
+    "UNPAY_REQUIRES_PAID": "Cannot unpay (document is not paid)",
+    "REPORT_GENERATION_ERROR": "Failed to generate the report",
+    "REPORTS_INIT_LOAD_ERROR": "Failed to load reports data",
+    "EXCEL_GENERATION_ERROR": "Failed to generate the Excel file",
+    "PRESETS_LOAD_ERROR": "Failed to load presets",
+    "PRESET_SAVE_ERROR": "Failed to save the preset",
+    "PRESET_NOT_FOUND": "Preset not found",
+    "PRESET_DELETE_ERROR": "Failed to delete the preset",
+    "CURRENCY_RATES_LOAD_ERROR": "Failed to load currency exchange rates",
+    "CURRENCY_SAME_SOURCE_TARGET": "Source and target currencies cannot be identical",
+    "CURRENCY_RATES_TABLE_MISSING": "The currency rates table does not exist. It must be created first.",
+    "CURRENCY_RATE_SAVE_ERROR": "Failed to save the currency exchange rate",
+    "CURRENCY_RATE_NOT_FOUND": "Currency exchange rate not found",
+    "CURRENCY_RATE_DELETE_ERROR": "Failed to delete the currency exchange rate",
+    "NO_FILE": "No file provided",
+    "INVALID_FILE_TYPE": "Invalid file type. Allowed: JPEG, PNG, GIF, WebP",
+    "FILE_TOO_LARGE": "File too large",
+    "NO_FILE_TO_DELETE": "No file to delete",
+    "SELF_ACTION_FORBIDDEN": "You cannot perform this action on yourself",
+    "PASSWORD_RESET_UNSUPPORTED": "Manual password reset is not supported. Direct the user to the 'forgot password' flow.",
+    "UNKNOWN_ACTION": "Unknown action"
+  },
+  "Pwa": {
+    "dialogLabel": "Install the app",
+    "close": "Close",
+    "installTitle": "Install Monit",
+    "installSubtitle": "Quick access from your home screen, even without a browser.",
+    "installButton": "Install app",
+    "iosInstructions": "Tap the share button <icon></icon> in the browser bar, then choose \"Add to Home Screen\".",
+    "shareIconLabel": "Share"
+  },
+  "Reports": {
+    "pageTitle": "Settlement",
+    "tabs": {
+      "billable": "To bill",
+      "documents": "Documents",
+      "report": "Ad-hoc report"
+    },
+    "status": {
+      "pending": "Pending",
+      "paid": "Paid",
+      "canceled": "Canceled"
+    },
+    "actions": {
+      "retry": "Try again",
+      "back": "Back",
+      "cancel": "Cancel",
+      "close": "Close",
+      "save": "Save",
+      "saving": "Saving…",
+      "edit": "Edit",
+      "working": "Working…"
+    },
+    "columns": {
+      "date": "Date",
+      "client": "Client",
+      "project": "Project",
+      "description": "Description",
+      "duration": "Duration",
+      "hours": "Hours",
+      "workDescription": "Work description",
+      "amount": "Amount",
+      "month": "Month",
+      "label": "Label",
+      "type": "Type",
+      "hoursOrQty": "Hours / Qty"
+    },
+    "kind": {
+      "item": "Item",
+      "hours": "Hours"
+    },
+    "units": {
+      "items": "{count} units",
+      "ref": "Ref {ref}",
+      "hoursMeasure": "{hours}h"
+    },
+    "sections": {
+      "fixedCharges": "Fixed charges",
+      "byLabel": "Breakdown by label",
+      "byClient": "Summary by client",
+      "byProject": "Summary by project",
+      "byDate": "Summary by date (daily)",
+      "byWeek": "Summary by week",
+      "detailedEntries": "Detailed entries"
+    },
+    "summary": {
+      "totalHours": "Total hours",
+      "hoursValue": "{hours} h",
+      "totalEntries": "Total entries",
+      "totalAmount": "Total amount",
+      "totalDue": "Total due",
+      "notAvailable": "Not available",
+      "period": "Period",
+      "periodRange": "{start} to {end}",
+      "recordCount": "{count} entries",
+      "weekRange": "{start} to {end}"
+    },
+    "filters": {
+      "title": "Filters",
+      "show": "Show",
+      "hide": "Hide",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "client": "Client",
+      "allClients": "All clients",
+      "project": "Project",
+      "allProjects": "All projects",
+      "includeFixed": "Include fixed charges",
+      "includeFixedHint": "Adds recurring monthly charge items at the project level to the report.",
+      "showWorkTimes": "Show work hours (from/to)",
+      "showWorkTimesHint": "Adds the start and end time of each work entry to the report.",
+      "displayCurrency": "Display amounts in currency",
+      "currencyOriginal": "Original currency (mixed)",
+      "currencyILS": "₪ - Israeli Shekel (ILS)",
+      "currencyUSD": "$ - US Dollar (USD)",
+      "currencyUSDT": "₮ - Tether (USDT)",
+      "currencyBTC": "₿ - Bitcoin (BTC)",
+      "currencyETH": "Ξ - Ethereum (ETH)",
+      "ratesMissing": "⚠️ No exchange rates configured",
+      "ratesAvailable": "✓ Exchange rates available",
+      "clear": "Clear filters"
+    },
+    "report": {
+      "generate": "Generate report",
+      "generating": "Generating report...",
+      "generateError": "Error generating the report",
+      "docTitle": "Work hours report",
+      "headerTitle": "Work report",
+      "fromDate": "From: {date}",
+      "toDate": "To: {date}",
+      "issueDate": "Issued: {date}",
+      "for": "For",
+      "perHour": "{amount}/hour",
+      "notBillable": "Non-billable",
+      "projectTotal": "Total {project}",
+      "fixedMonthly": "Fixed monthly charge",
+      "appName": "Monit",
+      "generatedOn": "Generated on {date}",
+      "noEntries": "No entries found for the selected period",
+      "logTimeNow": "Log time now",
+      "noReportYet": "Select filters and click \"Generate report\" to view the report"
+    },
+    "pdf": {
+      "button": "Export to PDF",
+      "taxId": "Business / Company ID"
+    },
+    "excel": {
+      "button": "Export to Excel",
+      "success": "Excel file exported successfully",
+      "error": "Error exporting Excel file"
+    },
+    "share": {
+      "button": "Share report",
+      "copyTooltip": "Copy report link",
+      "copied": "Report link copied to clipboard",
+      "error": "Error copying the link"
+    },
+    "preset": {
+      "load": "Load preset",
+      "save": "Save preset",
+      "loadAction": "Load",
+      "deleteAction": "Delete",
+      "nameRequired": "Please enter a preset name",
+      "saved": "Preset saved successfully",
+      "saveError": "Error saving the preset",
+      "loaded": "Preset loaded successfully",
+      "deleted": "Preset deleted successfully",
+      "deleteError": "Error deleting the preset",
+      "noneSaved": "No saved presets",
+      "noneSavedHint": "Save a preset to see it here",
+      "saveTitle": "Save preset",
+      "saveDescription": "Save the current filter settings as a preset",
+      "nameLabel": "Preset name",
+      "namePlaceholder": "e.g. Monthly report - Tech client",
+      "filterSettings": "Filter settings:",
+      "startDateLabel": "Start date:",
+      "endDateLabel": "End date:",
+      "clientLabel": "Client:",
+      "projectLabel": "Project:",
+      "notSelected": "Not selected",
+      "loadTitle": "Load preset",
+      "loadDescription": "Choose a saved preset to load"
+    },
+    "billable": {
+      "clientLabel": "Client",
+      "clientLoading": "Loading clients...",
+      "clientPlaceholder": "Select a client",
+      "monthLabel": "Billing month",
+      "pickClientPrompt": "Select a client to see billable items.",
+      "loadError": "Error loading billable items.",
+      "emptyTitle": "No billable items for this client 🎉",
+      "emptyBody": "All entries and fixed charges have already been handled, or there are none for the selected month.",
+      "entriesHeading": "Billable entries",
+      "fixedHeading": "Fixed charges",
+      "actualDuration": "(actual {duration})",
+      "alreadyBilled": "Already billed this month",
+      "selectedTotal": "Selected total",
+      "issuing": "Issuing...",
+      "issueButton": "Issue settlement document",
+      "issuedToast": "Document #{number} created",
+      "issueError": "Error creating the document"
+    },
+    "documents": {
+      "loadErrorTitle": "We couldn't load the documents",
+      "loadErrorBody": "A problem occurred while loading the data.",
+      "emptyTitle": "You haven't issued any documents yet",
+      "emptyBody": "Issue a settlement document from the <tab>To bill</tab> tab and it will appear here.",
+      "docNumber": "Document #{number}"
+    },
+    "doc": {
+      "loadErrorTitle": "We couldn't load the document",
+      "loadErrorBody": "It may have been deleted, or a problem occurred.",
+      "issuedOn": "Issued: {date}",
+      "paidOn": "Paid: {date}",
+      "total": "Total",
+      "backToList": "← Back to list",
+      "lockedNotice": "This document is locked — cancel the payment to edit it.",
+      "colItem": "Item",
+      "colDetails": "Details",
+      "colQtyRate": "Qty / Rate",
+      "colAmount": "Amount",
+      "colActions": "Actions",
+      "noLines": "No lines in this document.",
+      "lineDescriptionAria": "Line description",
+      "lineNoteAria": "Line note",
+      "descriptionPlaceholder": "Description",
+      "notePlaceholder": "Note",
+      "notesLabel": "Document notes",
+      "notesPlaceholder": "Internal notes…",
+      "saveNotes": "Save notes",
+      "notesSaved": "Notes saved",
+      "lineUpdated": "Line updated",
+      "lineRemoved": "Line removed",
+      "removeLineTitle": "Remove line",
+      "removeLineBody": "Remove \"{label}\" from the document? An item that originated from a time entry will return to the billable items list.",
+      "removeLineAction": "Remove",
+      "updateError": "Error updating document",
+      "actionFailed": "The action failed",
+      "deleteFailed": "Delete failed",
+      "deleted": "Document deleted",
+      "exportPdf": "Export PDF",
+      "markPaidTitle": "Mark as paid",
+      "markPaidBody": "Mark this document as paid? It will be locked for editing until you cancel the payment.",
+      "markPaidAction": "Mark as paid",
+      "markedPaid": "Marked as paid",
+      "cancelDocTitle": "Cancel document",
+      "cancelDocBody": "Cancel this document? This action is irreversible. Items that originated from time entries will return to the billable items list.",
+      "cancelDocAction": "Cancel document",
+      "docCanceled": "Document canceled",
+      "unpayTitle": "Cancel payment",
+      "unpayBody": "Cancel the payment mark and reopen the document for editing?",
+      "unpayAction": "Cancel payment",
+      "unpaid": "Payment canceled",
+      "deleteDocTitle": "Delete document",
+      "deleteDocBody": "Permanently delete this canceled document? It cannot be restored.",
+      "deleteDocAction": "Delete document",
+      "pdfPromptTitle": "Document created successfully",
+      "pdfPromptBody": "Generate a PDF now?",
+      "pdfPromptLater": "Not now",
+      "pdfPromptConfirm": "Generate PDF",
+      "pdfFilenamePrefix": "Document",
+      "settlementDocTitle": "Internal settlement document",
+      "pdfNumber": "No. {number}",
+      "pdfStatus": "Status: {status}",
+      "pdfIssueDate": "Issue date: {date}",
+      "pdfFor": "For",
+      "notesHeading": "Notes"
+    }
+  }
+}

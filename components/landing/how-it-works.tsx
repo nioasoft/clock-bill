@@ -1,27 +1,28 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 
-const steps = [
-  {
-    number: "1",
-    title: "הירשם בחינם",
-    description: "צור חשבון תוך 30 שניות. רק אימייל וסיסמה.",
-  },
-  {
-    number: "2",
-    title: "הוסף לקוח ופרויקט",
-    description: "הגדר את הלקוחות והתמחור שלך.",
-  },
-  {
-    number: "3",
-    title: "עקוב וחייב",
-    description: "הפעל טיימר, רשום שעות, וצור דוח בלחיצה.",
-  },
-];
-
 export function HowItWorks() {
+  const t = useTranslations("Landing");
+  const steps = [
+    {
+      number: "1",
+      title: t("howItWorks.step1.title"),
+      description: t("howItWorks.step1.description"),
+    },
+    {
+      number: "2",
+      title: t("howItWorks.step2.title"),
+      description: t("howItWorks.step2.description"),
+    },
+    {
+      number: "3",
+      title: t("howItWorks.step3.title"),
+      description: t("howItWorks.step3.description"),
+    },
+  ];
   const [, setIsVisible] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
 
@@ -47,10 +48,10 @@ export function HowItWorks() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-display font-bold text-foreground">
-            איך זה עובד?
+            {t("howItWorks.heading")}
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            שלושה צעדים פשוטים להתחלה
+            {t("howItWorks.subheading")}
           </p>
         </div>
 
@@ -106,7 +107,7 @@ export function HowItWorks() {
             >
               {/* Vertical line */}
               {index < steps.length - 1 && (
-                <div className="absolute top-16 right-8 w-0 h-full border-r-2 border-dashed border-primary/20" />
+                <div className="absolute top-16 start-8 w-0 h-full border-s-2 border-dashed border-primary/20" />
               )}
 
               {/* Step circle with clock marks */}

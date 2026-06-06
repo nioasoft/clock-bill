@@ -63,6 +63,46 @@ export class ErrorBoundary extends React.Component<
   }
 }
 
+/**
+ * Crash-safe localized copy for the default error fallback.
+ *
+ * The error boundary is a React class component and may catch errors that
+ * originate *above* or *inside* the next-intl provider, so we cannot rely on
+ * `useTranslations` (it would throw when the intl context is missing and break
+ * the boundary itself). Instead we read the active language straight from the
+ * `<html lang>` attribute and pick from this tiny inline map — no context, no
+ * throw. Falls back to Hebrew (the app default) when `lang` is anything else.
+ */
+interface ErrorFallbackCopy {
+  heading: string;
+  body: string;
+  retry: string;
+  home: string;
+}
+
+const ERROR_FALLBACK_COPY: Record<'he' | 'en', ErrorFallbackCopy> = {
+  he: {
+    heading: 'שגיאה ברכיב',
+    body: 'אירעה שגיאה בטעינת התוכן. אנא נסה שוב.',
+    retry: 'נסה שוב',
+    home: 'חזרה לדף הבית',
+  },
+  en: {
+    heading: 'Component error',
+    body: 'An error occurred while loading the content. Please try again.',
+    retry: 'Try again',
+    home: 'Back to home',
+  },
+};
+
+function getErrorFallbackCopy(): ErrorFallbackCopy {
+  const lang =
+    typeof document !== 'undefined'
+      ? document.documentElement.lang
+      : 'he';
+  return lang === 'en' ? ERROR_FALLBACK_COPY.en : ERROR_FALLBACK_COPY.he;
+}
+
 function DefaultErrorFallback({
   error,
   retry,
@@ -70,6 +110,7 @@ function DefaultErrorFallback({
   error: Error | null;
   retry: () => void;
 }) {
+  const copy = getErrorFallbackCopy();
   return (
     <div className="min-h-[400px] flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-card rounded-lg shadow-lg p-6 border border-destructive/20">
@@ -80,10 +121,10 @@ function DefaultErrorFallback({
         </div>
 
         <h3 className="text-xl font-bold text-foreground text-center mb-2">
-          שגיאה ברכיב
+          {copy.heading}
         </h3>
         <p className="text-muted-foreground text-center mb-4">
-          אירעה שגיאה בטעינת התוכן. אנא נסה שוב.
+          {copy.body}
         </p>
 
         {process.env.NODE_ENV === 'development' && error?.message && (
@@ -100,14 +141,14 @@ function DefaultErrorFallback({
             className="inline-flex items-center justify-center gap-2 w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
           >
             <RefreshCw className="w-4 h-4" />
-            נסה שוב
+            {copy.retry}
           </button>
           <Link
             href="/"
             className="inline-flex items-center justify-center gap-2 w-full px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted transition-colors font-medium"
           >
             <Home className="w-4 h-4" />
-            חזרה לדף הבית
+            {copy.home}
           </Link>
         </div>
       </div>

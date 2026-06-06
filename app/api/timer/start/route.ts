@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getUser();
     if (!user) {
-      return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+      return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
     }
     userId = user.id;
 
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!newEntry) {
-      return NextResponse.json({ success: false, message: "הפרויקט לא נמצא" }, { status: 404 });
+      return NextResponse.json({ success: false, error_code: "PROJECT_NOT_FOUND", message: "הפרויקט לא נמצא" }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -90,6 +90,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     logger.error("Failed to start timer", error, userId && projectId ? { userId, projectId } : undefined);
-    return NextResponse.json({ success: false, message: "שגיאה בהתחלת הטיימר" }, { status: 500 });
+    return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בהתחלת הטיימר" }, { status: 500 });
   }
 }

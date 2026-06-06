@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Download, Share, X } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -17,6 +18,7 @@ const IOS_DISMISS_KEY = "monit-ios-install-dismissed";
  * the banner simply never appears there — users use Share → Add to Home Screen.
  */
 export function PwaProvider() {
+  const t = useTranslations("Pwa");
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
   // iOS has no beforeinstallprompt; we show a manual "Add to Home Screen" hint.
@@ -103,16 +105,15 @@ export function PwaProvider() {
   if (!visible && iosHintVisible) {
     return (
       <div
-        dir="rtl"
         className="fixed inset-x-3 z-50 mx-auto max-w-sm rounded-[var(--radius-card)] border border-border bg-card-elevated p-4 shadow-lg"
         style={{ bottom: "calc(env(safe-area-inset-bottom) + 5rem)" }}
         role="dialog"
-        aria-label="התקנת האפליקציה"
+        aria-label={t("dialogLabel")}
       >
         <button
           onClick={dismissIos}
           className="absolute top-2 end-2 z-10 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
-          aria-label="סגור"
+          aria-label={t("close")}
         >
           <X className="h-4 w-4" />
         </button>
@@ -121,11 +122,16 @@ export function PwaProvider() {
             <Download className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">התקן את מוניט</p>
+            <p className="text-sm font-semibold text-foreground">{t("installTitle")}</p>
             <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-              הקש על כפתור השיתוף
-              <Share className="mx-1 inline h-3.5 w-3.5 align-text-bottom" aria-label="שיתוף" />
-              בסרגל הדפדפן, ואז בחר &quot;הוסף למסך הבית&quot;.
+              {t.rich("iosInstructions", {
+                icon: () => (
+                  <Share
+                    className="mx-1 inline h-3.5 w-3.5 align-text-bottom"
+                    aria-label={t("shareIconLabel")}
+                  />
+                ),
+              })}
             </p>
           </div>
         </div>
@@ -137,16 +143,15 @@ export function PwaProvider() {
 
   return (
     <div
-      dir="rtl"
       className="fixed inset-x-3 z-50 mx-auto max-w-sm rounded-[var(--radius-card)] border border-border bg-card-elevated p-4 shadow-lg"
       style={{ bottom: "calc(env(safe-area-inset-bottom) + 5rem)" }}
       role="dialog"
-      aria-label="התקנת האפליקציה"
+      aria-label={t("dialogLabel")}
     >
       <button
         onClick={dismiss}
         className="absolute top-2 end-2 z-10 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
-        aria-label="סגור"
+        aria-label={t("close")}
       >
         <X className="h-4 w-4" />
       </button>
@@ -155,15 +160,15 @@ export function PwaProvider() {
           <Download className="h-5 w-5" />
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-foreground">התקן את מוניט</p>
-          <p className="text-xs text-muted-foreground">גישה מהירה ממסך הבית, גם ללא דפדפן.</p>
+          <p className="text-sm font-semibold text-foreground">{t("installTitle")}</p>
+          <p className="text-xs text-muted-foreground">{t("installSubtitle")}</p>
         </div>
       </div>
       <button
         onClick={install}
         className="mt-3 w-full rounded-[var(--radius)] bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
       >
-        התקן אפליקציה
+        {t("installButton")}
       </button>
     </div>
   );

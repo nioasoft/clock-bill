@@ -1,0 +1,1915 @@
+{
+  "common": {
+    "save": "שמור",
+    "cancel": "ביטול",
+    "delete": "מחק",
+    "edit": "ערוך",
+    "loading": "טוען...",
+    "skipToMain": "דלג לתוכן ראשי",
+    "close": "סגור"
+  },
+  "Meta": {
+    "title": "מוניט - מעקב שעות עבודה לפרילנסרים",
+    "description": "מעקב שעות, ניהול לקוחות ודוחות מקצועיים בעברית. הכל במקום אחד, בחינם.",
+    "keywords": "מעקב זמן,פרילנסר,שעות עבודה,ניהול פרויקטים,חיוב לפי פריטים,תעודת התחשבנות,ניהול לקוחות,דוחות,מוניט"
+  },
+  "Nav": {
+    "sidebarLabel": "סרגל צד",
+    "breadcrumbLabel": "ניווט מיקום",
+    "dashboard": "דשבורד",
+    "entries": "רשומות חיוב",
+    "tasks": "משימות",
+    "clients": "לקוחות",
+    "reports": "התחשבנות",
+    "feedback": "פניות",
+    "settings": "הגדרות",
+    "admin": "ניהול",
+    "expandSidebar": "הרחב סרגל צד",
+    "collapseSidebar": "כווץ סרגל צד",
+    "collapse": "כווץ",
+    "profileFallback": "הפרופיל שלי",
+    "logout": "התנתק",
+    "loggingOut": "מתנתק..."
+  },
+  "LocaleSwitcher": {
+    "label": "שפה",
+    "he": "עברית",
+    "en": "English"
+  },
+  "Tasks": {
+    "status": {
+      "todo": "חדש",
+      "in_progress": "בעבודה",
+      "done": "הושלם"
+    },
+    "priority": {
+      "normal": "רגילה",
+      "high": "גבוהה",
+      "urgent": "דחוף"
+    },
+    "empty": {
+      "todo": "אין משימות חדשות",
+      "in_progress": "אין משימות בעבודה",
+      "done": "אין משימות שהושלמו"
+    },
+    "transitions": {
+      "start": "התחל",
+      "markDone": "סמן כהושלם",
+      "finish": "סיים",
+      "backToTodo": "החזר לחדש",
+      "backToInProgress": "החזר לעבודה"
+    },
+    "board": {
+      "pageTitle": "משימות",
+      "newTask": "+ משימה חדשה",
+      "loadError": "שגיאה בטעינת המשימות",
+      "retry": "נסה שוב",
+      "emptyTitle": "אין עדיין משימות",
+      "emptyHint": "צור את המשימה הראשונה כדי להתחיל",
+      "filterByStatus": "סינון משימות לפי סטטוס"
+    },
+    "card": {
+      "timerRunning": "טיימר רץ",
+      "missingRate": "חסר תעריף",
+      "due": "יעד: {date}"
+    },
+    "detail": {
+      "timerRunningForTask": "טיימר רץ למשימה זו",
+      "rateLabel": "תעריף",
+      "missingRate": "חסר תעריף",
+      "priorityLabel": "דחיפות",
+      "dueDateLabel": "תאריך יעד",
+      "tagsLabel": "תגיות",
+      "notesLabel": "הערות",
+      "deleteConfirm": "האם למחוק את המשימה?",
+      "cancel": "ביטול",
+      "deleting": "מוחק...",
+      "deleteShort": "מחק",
+      "delete": "מחיקה",
+      "edit": "עריכה"
+    },
+    "form": {
+      "createTitle": "משימה חדשה",
+      "editTitle": "עריכת משימה",
+      "createDescription": "מלא את הפרטים כדי ליצור משימה חדשה",
+      "editDescription": "עדכן את פרטי המשימה",
+      "client": "לקוח",
+      "selectClient": "בחר לקוח",
+      "project": "פרויקט",
+      "selectProject": "בחר פרויקט",
+      "selectClientFirst": "בחר לקוח תחילה",
+      "rate": "תעריף",
+      "selectRate": "בחר תעריף",
+      "title": "שם המשימה",
+      "titlePlaceholder": "לדוגמה: עיצוב מסך הבית",
+      "showAdvanced": "+ פרטים נוספים",
+      "hideAdvanced": "הסתר פרטים נוספים",
+      "priority": "דחיפות",
+      "dueDate": "תאריך יעד",
+      "tags": "תגיות",
+      "removeTag": "הסר תגית {tag}",
+      "tagsPlaceholder": "הקלד תגית ולחץ Enter",
+      "notes": "הערות",
+      "notesPlaceholder": "מידע נוסף על המשימה (אופציונלי)",
+      "cancel": "ביטול",
+      "saving": "שומר...",
+      "updateTask": "עדכן משימה",
+      "saveTask": "שמור משימה"
+    },
+    "toasts": {
+      "loadDataError": "שגיאה בטעינת הנתונים",
+      "created": "המשימה נוצרה בהצלחה",
+      "updated": "המשימה עודכנה בהצלחה",
+      "createError": "שגיאה ביצירת המשימה",
+      "updateError": "שגיאה בעדכון המשימה",
+      "deleted": "המשימה נמחקה בהצלחה",
+      "deleteError": "שגיאה במחיקת המשימה",
+      "moveError": "שגיאה בעדכון המשימה"
+    }
+  },
+  "Rounding": {
+    "none": "ללא עיגול",
+    "hour_up": "עיגול לשעה מלאה (כלפי מעלה)",
+    "half_hour_up": "עיגול לחצי שעה (כלפי מעלה)"
+  },
+  "Feedback": {
+    "category": {
+      "bug": "תקלה / באג",
+      "suggestion": "הצעה לשיפור",
+      "question": "שאלה",
+      "other": "אחר"
+    },
+    "title": "פניות ודיווח תקלות",
+    "subtitle": "המערכת בתקופת ניסוי. נתקלת בתקלה או יש לך רעיון לשיפור? כתוב לנו.",
+    "submit": "שלח פנייה",
+    "submitting": "שולח...",
+    "fields": {
+      "category": "סוג הפנייה",
+      "message": "תיאור",
+      "messagePlaceholder": "ספר לנו מה קרה, מה ציפית שיקרה, ואיך אפשר לשחזר..."
+    },
+    "success": {
+      "title": "הפנייה התקבלה",
+      "description": "אם נצטרך פרטים נוספים נחזור אליך למייל שאיתו נכנסת.",
+      "writeAnother": "כתוב פנייה נוספת"
+    },
+    "errors": {
+      "tooShort": "אנא כתוב לפחות כמה מילים",
+      "submitFailed": "שליחת הפנייה נכשלה. נסה שוב.",
+      "network": "שגיאת תקשורת. אנא נסה שוב."
+    }
+  },
+  "Dashboard": {
+    "pageTitle": "ברוך הבא!",
+    "pageSubtitle": "זהו הדשבורד שלך. כאן תוכל לנהל את שעות העבודה והפרויקטים שלך.",
+    "gettingStarted": {
+      "title": "בוא נתחיל!",
+      "subtitle": "שלושה צעדים קצרים כדי להתחיל לעבוד",
+      "createClient": {
+        "title": "צור לקוח ראשון",
+        "subtitle": "הוסף את הלקוח הראשון שלך"
+      },
+      "createProject": {
+        "title": "צור פרויקט ראשון",
+        "subtitle": "הגדר פרויקט עם מודל תמחור"
+      },
+      "logTime": {
+        "title": "רשום זמן או הפעל טיימר",
+        "subtitle": "התחל לעקוב אחר שעות העבודה שלך"
+      }
+    },
+    "stats": {
+      "error": "שגיאה בטעינת הנתונים. נסה לרענן את הדף.",
+      "todayHours": "שעות היום",
+      "monthHours": "שעות החודש",
+      "earningsByHours": "לפי שעות",
+      "earningsByItems": "לפי פריטים",
+      "totalEarnings": "סך הכנסות"
+    },
+    "activeTimers": {
+      "title": "טיימרים פעילים",
+      "newTimerButton": "טיימר חדש",
+      "newBillingItemButton": "+ פריט חיוב",
+      "statusPaused": "מושהה",
+      "statusActive": "פעיל",
+      "startedAt": "התחיל ב-{time}",
+      "resumeButton": "חדש טיימר",
+      "resumingButton": "מחדש...",
+      "pauseButton": "השהה",
+      "pausingButton": "משהה...",
+      "stopButton": "עצור טיימר"
+    },
+    "quickTimer": {
+      "title": "טיימר מהיר",
+      "subtitle": "התחל לעקוב אחר הזמן בלחיצה אחת",
+      "startButton": "התחל טיימר חדש",
+      "manualEntryButton": "+ הזן רשומת זמן"
+    },
+    "billingItem": {
+      "title": "פריט חיוב",
+      "subtitle": "הוסף פריט לחיוב ללא מדידת זמן — סכום קבוע או כמות × תעריף",
+      "addButton": "+ פריט חיוב"
+    },
+    "task": {
+      "title": "הכנס משימה",
+      "subtitle": "צור משימה עם לקוח, פרויקט ותעריף — גרור אותה ל\"בעבודה\" כדי להפעיל טיימר",
+      "createButton": "+ משימה חדשה",
+      "allTasksLink": "לכל המשימות"
+    },
+    "recentEntries": {
+      "title": "רשומות אחרונות"
+    },
+    "earningsChart": {
+      "title": "הכנסות חודשיות",
+      "loading": "טוען נתונים...",
+      "empty": "התחל לעקוב אחרי הזמן שלך כדי לראות הכנסות",
+      "subtitle": "סך ההכנסות לחיוב ב-{count} החודשים האחרונים",
+      "months": {
+        "jan": "ינו׳",
+        "feb": "פבר׳",
+        "mar": "מרץ",
+        "apr": "אפר׳",
+        "may": "מאי",
+        "jun": "יונ׳",
+        "jul": "יול׳",
+        "aug": "אוג׳",
+        "sep": "ספט׳",
+        "oct": "אוק׳",
+        "nov": "נוב׳",
+        "dec": "דצמ׳"
+      }
+    },
+    "projectHoursChart": {
+      "titleLoading": "שעות לפי פרויקט - החודש",
+      "loading": "טוען נתונים...",
+      "empty": "אין נתוני שעות זמינים עדיין",
+      "title": "שעות לפי פרויקט",
+      "subtitle": "פילוח השעות שנרשמו החודש, לפי פרויקט"
+    },
+    "notifications": {
+      "longTimer": {
+        "title": "הטיימר רץ זמן רב",
+        "bodyWithHours": "הטיימר רץ כבר {hours} שעות ו-{mins} דקות. אולי כדאי לקחת הפסקה?",
+        "bodyMinutesOnly": "הטיימר רץ כבר {minutes} דקות. אולי כדאי לקחת הפסקה?"
+      },
+      "dailyReminder": {
+        "title": "תזכורת יומית",
+        "bodyWithHours": "שלום! עדיין לא הזנת רשומות זמן היום. למשל, רשמת היום {hours} שעות",
+        "bodyNoHours": "שלום! עדיין לא הזנת רשומות זמן היום. למשל, התחל לרשום זמן."
+      }
+    },
+    "upcomingDeadlines": {
+      "title": "יעדים קרובים",
+      "empty": "אין פרויקטים עם יעדים קרובים",
+      "allProjects": "לכל הפרויקטים →",
+      "today": "היום",
+      "tomorrow": "מחר",
+      "inDays": "בעוד {days} ימים",
+      "deadlineLabel": "תאריך יעד: {date}"
+    }
+  },
+  "Entries": {
+    "pageTitle": "רשומות חיוב",
+    "cancel": "ביטול",
+    "addTimeEntry": "+ הזנת רשומת זמן",
+    "addBillingItem": "+ הזנת פריט חיוב",
+    "filters": {
+      "month": "חודש",
+      "advanced": "סינון מתקדם",
+      "hideAdvanced": "הסתר סינון מתקדם",
+      "client": "לקוח",
+      "allClients": "כל הלקוחות",
+      "project": "פרויקט",
+      "allProjects": "כל הפרויקטים",
+      "startDate": "תאריך התחלה",
+      "endDate": "תאריך סיום",
+      "clear": "נקה סינון",
+      "removeClientFilter": "הסר סינון לקוח",
+      "removeProjectFilter": "הסר סינון פרויקט"
+    },
+    "form": {
+      "editTitle": "ערוך רישום זמן",
+      "newTitle": "רשום זמן חדש",
+      "projectLabel": "פרויקט *",
+      "selectProject": "בחר פרויקט",
+      "createProject": "+ צור פרויקט חדש",
+      "taskLabel": "משימה",
+      "noTask": "ללא משימה",
+      "dateLabel": "תאריך *",
+      "kindLabel": "סוג",
+      "kindHours": "שעות",
+      "kindItem": "פריט",
+      "durationLabel": "משך זמן (דקות) *",
+      "durationPlaceholder": "לדוגמה: 60",
+      "durationHelp": "הזן את משך הזמן בדקות",
+      "rateLabel": "תעריף",
+      "hourlyRateOption": "{name} — {rate}/שעה",
+      "itemLabel": "פריט *",
+      "adhocOption": "+ פריט חד-פעמי…",
+      "itemRateOption": "{name} — {rate}/יח׳",
+      "adhocNameLabel": "שם הפריט *",
+      "adhocNamePlaceholder": "לדוגמה: מכתב",
+      "adhocPriceLabel": "מחיר ליחידה (₪) *",
+      "adhocPricePlaceholder": "לדוגמה: 250",
+      "saveItemToClient": "שמור פריט זה ללקוח לשימוש חוזר",
+      "quantityLabel": "כמות *",
+      "quantityPlaceholder": "לדוגמה: 3",
+      "billable": "ניתן לחיוב",
+      "detailLabel": "פירוט *",
+      "descriptionLabel": "תיאור *",
+      "detailPlaceholder": "נושא / פירוט — יופיע בתעודת החיוב (למשל: בנושא הסכם שכירות)",
+      "descriptionPlaceholder": "מה עשית?",
+      "notesLabel": "הערות",
+      "notesPlaceholder": "הערות נוספות (אופציונלי)",
+      "deleteEntry": "מחיקת רשומה",
+      "saving": "שומר...",
+      "update": "עדכן",
+      "save": "שמור"
+    },
+    "validation": {
+      "quantityInvalid": "נא להזין כמות תקינה",
+      "selectItem": "נא לבחור פריט",
+      "itemNameRequired": "נא להזין שם פריט",
+      "unitPriceRequired": "נא להזין מחיר ליחידה"
+    },
+    "toast": {
+      "itemSaved": "הפריט נשמר ללקוח",
+      "itemAlreadyExists": "הפריט כבר קיים אצל הלקוח",
+      "itemNotSaved": "הרשומה נשמרה, אך הפריט לא נשמר ללקוח",
+      "deleted": "הרשומה נמחקה בהצלחה"
+    },
+    "error": {
+      "create": "שגיאה ביצירת הרשומה",
+      "update": "שגיאה בעדכון הרשומה",
+      "delete": "שגיאה במחיקת הרשומה"
+    },
+    "list": {
+      "loading": "טוען רישומי זמן..."
+    },
+    "empty": {
+      "message": "אין רישומי זמן עדיין",
+      "description": "התחל לעקוב אחר זמני העבודה שלך על ידי רישום זמן ראשון",
+      "action": "רשום זמן ראשון"
+    },
+    "table": {
+      "date": "תאריך",
+      "description": "תיאור",
+      "client": "לקוח",
+      "project": "פרויקט",
+      "durationQuantity": "משך / כמות",
+      "amount": "סכום",
+      "actions": "פעולות"
+    },
+    "entry": {
+      "active": "פעיל",
+      "notBillable": "לא לחיוב",
+      "reference": "אסמכתא {ref}",
+      "quantity": "{quantity} יח׳",
+      "editAria": "ערוך רשומה",
+      "editTitle": "ערוך"
+    },
+    "deleteDialog": {
+      "title": "מחק רישום זמן",
+      "body": "האם למחוק את רישום הזמן \"{description}\"? פעולה זו אינה הפיכה.",
+      "deleting": "מוחק...",
+      "confirm": "מחק"
+    }
+  },
+  "Clients": {
+    "pageTitle": "לקוחות",
+    "clientDetails": "פרטי לקוח",
+    "newClientButton": "+ לקוח חדש",
+    "cancel": "ביטול",
+    "edit": "ערוך",
+    "saving": "שומר...",
+    "seedRateName": "תכנות",
+    "newClientTitle": "לקוח חדש",
+    "editClientTitle": "עריכת לקוח",
+    "newClientSubtitle": "מלא את הפרטים כדי להוסיף לקוח לרשימה",
+    "editClientSubtitle": "עדכן את פרטי הלקוח",
+    "contactSection": "פרטי קשר",
+    "billingSection": "חיוב",
+    "notesSection": "הערות",
+    "clientNameLabel": "שם הלקוח",
+    "clientNamePlaceholder": "לדוגמה: חברת אקמה בע״מ",
+    "contactNameLabel": "איש קשר",
+    "contactNamePlaceholder": "שם מלא",
+    "emailLabel": "אימייל",
+    "phoneLabel": "טלפון",
+    "addressLabel": "כתובת",
+    "addressPlaceholder": "רחוב, מספר, עיר",
+    "currencyLabel": "מטבע",
+    "billingRoundingLabel": "עיגול זמן לחיוב",
+    "roundingHint": "שעתי בלבד · ניתן לדרוס לכל פרויקט",
+    "ratesAndItems": "תעריפים ופריטים",
+    "retainerClient": "לקוח בריטיינר",
+    "retainerHoursLabel": "שעות בריטיינר",
+    "monthlyAmountLabel": "סכום חודשי ({symbol})",
+    "separateOverageRate": "תעריף נפרד מעל הריטיינר",
+    "overageHourlyRateLabel": "תעריף שעתי מעל הריטיינר ({symbol})",
+    "notesPlaceholder": "מידע נוסף על הלקוח (אופציונלי)",
+    "archiveTitle": "העבר לארכיון",
+    "restoreTitle": "שחזר מארכיון",
+    "archiveDescription": "הלקוח יוסתר מהרשימה אך יישמר במערכת",
+    "restoreDescription": "הלקוח יוחזר לרשימה הפעילה",
+    "archiveClientButton": "ארכב לקוח",
+    "restoreClientButton": "שחזר לקוח",
+    "saveClientButton": "שמור לקוח",
+    "updateClientButton": "עדכן לקוח",
+    "saveChanges": "שמור שינויים",
+    "editClientButton": "ערוך לקוח",
+    "deleteClient": "מחק לקוח",
+    "deleting": "מוחק...",
+    "archiving": "מארכב...",
+    "archiveAction": "ארכב",
+    "loadingClients": "טוען לקוחות...",
+    "emptyTitle": "אין לקוחות עדיין",
+    "emptyDescription": "צור לקוח ראשון כדי להתחיל לנהל את הפרויקטים שלך",
+    "emptyAction": "הוסף לקוח ראשון",
+    "colName": "שם",
+    "colHourlyRate": "תעריף שעתי",
+    "colTotalBilled": "סך חויב",
+    "colHours": "שעות",
+    "colStatus": "סטטוס",
+    "colActions": "פעולות",
+    "statusActive": "פעיל",
+    "statusInactive": "לא פעיל",
+    "ratePerHour": "{symbol}{rate}/שעה",
+    "hoursValue": "{hours} שעות",
+    "rateInline": "תעריף:",
+    "billedInline": "חויב:",
+    "hoursInline": "שעות:",
+    "archiveConfirmBody": "האם לארכב את הלקוח \"{name}\"? הלקוח יוסתר מהרשימה אך יישמר במערכת.",
+    "deleteConfirmBody": "האם אתה בטוח שברצונך למחוק את הלקוח \"{name}\"? לקוחות שנמחקים יועברו למצב \"לא פעיל\" ולא יוצגו ברשימה.",
+    "errorRateNameRequired": "יש להזין שם לכל תעריף עם מחיר",
+    "errorCreateClient": "שגיאה ביצירת הלקוח",
+    "errorUpdateClient": "שגיאה בעדכון הלקוח",
+    "errorDeleteClient": "שגיאה במחיקת הלקוח",
+    "errorRestoreClient": "שגיאה בשחזור הלקוח",
+    "errorLoadClient": "שגיאה בטעינת הלקוח",
+    "toastArchived": "הלקוח הועבר לארכיון",
+    "toastRestored": "הלקוח שוחזר בהצלחה",
+    "loadingClientData": "טוען נתוני לקוח...",
+    "clientNotFound": "הלקוח לא נמצא",
+    "contactNameInline": "איש קשר: {name}",
+    "createdLabel": "נוצר",
+    "editRates": "ערוך תעריפים",
+    "noRatesDefined": "לא הוגדרו תעריפים ללקוח זה — לחץ \"{action}\" כדי להוסיף.",
+    "hourlyRatesHeader": "תעריפים שעתיים",
+    "itemsHeader": "פריטים (מחיר ליחידה)",
+    "perHourSuffix": "/שעה",
+    "perUnitSuffix": "/יח׳",
+    "defaultBadge": "ברירת מחדל",
+    "retainerHeader": "ריטיינר",
+    "retainerSummary": "{hours} שעות בחודש · {symbol}{fee} לחודש",
+    "overageRateSummary": "תעריף מעל הריטיינר: {symbol}{rate}/שעה",
+    "projectsHeader": "פרויקטים",
+    "addProject": "+ הוסף פרויקט",
+    "loadingProjects": "טוען פרויקטים...",
+    "noProjectsYet": "אין פרויקטים עדיין ללקוח זה",
+    "projectStatusActive": "פעיל",
+    "projectStatusCompleted": "הושלם",
+    "projectStatusPaused": "מושהה",
+    "projectStatusArchived": "בארכיון",
+    "defaultRateAria": "תעריף ברירת מחדל",
+    "remove": "הסר",
+    "rateNameHourlyPlaceholder": "שם (למשל תכנות)",
+    "rateNameItemPlaceholder": "שם (למשל כתיבת מכתב)",
+    "addRate": "+ תעריף",
+    "addItem": "+ פריט",
+    "unitHour": "שעה",
+    "unitItem": "יח׳",
+    "noHourlyRates": "לא הוגדרו תעריפים שעתיים — ייעשה שימוש בתעריף ברירת המחדל."
+  },
+  "Projects": {
+    "pageTitle": "פרויקטים",
+    "newProject": "+ פרויקט חדש",
+    "cancel": "ביטול",
+    "loading": "טוען פרויקטים...",
+    "restore": "שחזר",
+    "noEndDate": "ללא תאריך סיום",
+    "filter": {
+      "active": "פעילים",
+      "archived": "ארכיון"
+    },
+    "status": {
+      "active": "פעיל",
+      "paused": "מושהה",
+      "completed": "הושלם",
+      "archived": "בארכיון"
+    },
+    "table": {
+      "name": "שם",
+      "client": "לקוח",
+      "status": "סטטוס",
+      "dates": "תאריכים",
+      "actions": "פעולות"
+    },
+    "empty": {
+      "activeMessage": "אין פרויקטים עדיין",
+      "archivedMessage": "אין פרויקטים בארכיון",
+      "activeDescription": "צור פרויקט ראשון כדי להתחיל לעקוב אחר זמן העבודה שלך",
+      "archivedDescription": "פרויקטים שארכבת יופיעו כאן",
+      "noClientsDescription": "צור לקוח תחילה ואז תוכל ליצור פרויקטים",
+      "createAction": "צור פרויקט"
+    },
+    "form": {
+      "title": "פרויקט חדש",
+      "subtitle": "שייך את הפרויקט ללקוח והגדר את מודל החיוב",
+      "detailsLegend": "פרטי הפרויקט",
+      "clientLabel": "לקוח",
+      "clientPlaceholder": "בחר לקוח",
+      "createClientLink": "+ צור לקוח חדש",
+      "nameLabel": "שם הפרויקט",
+      "namePlaceholder": "לדוגמה: עיצוב אתר",
+      "statusLabel": "סטטוס",
+      "startDateLabel": "תאריך התחלה",
+      "endDateLabel": "תאריך סיום",
+      "fixedBillingLegend": "חיוב קבוע",
+      "fixedMonthlyLabel": "חיוב קבוע חודשי",
+      "fixedMonthlyHint": "מתווסף לחיוב לפי שעות בדוחות",
+      "monthlyFeeLabel": "סכום חודשי",
+      "validFromLabel": "תוקף מ-",
+      "validToLabel": "תוקף עד",
+      "roundingLegend": "עיגול זמן לחיוב",
+      "roundingInherit": "ירושה מהלקוח",
+      "roundingHint": "חל על תעריפים שעתיים בלבד.",
+      "notesLegend": "הערות",
+      "notesPlaceholder": "מידע נוסף על הפרויקט (אופציונלי)",
+      "saving": "שומר...",
+      "saveProject": "שמור פרויקט"
+    },
+    "editForm": {
+      "title": "ערוך פרויקט",
+      "nameLabel": "שם הפרויקט *",
+      "clientLabel": "לקוח",
+      "statusLabel": "סטטוס",
+      "startDateLabel": "תאריך התחלה",
+      "endDateLabel": "תאריך סיום",
+      "roundingLabel": "עיגול זמן לחיוב",
+      "roundingInherit": "ירושה מהלקוח ({value})",
+      "roundingHint": "דורס את הגדרת הלקוח לפרויקט זה. חל על תעריפים שעתיים בלבד.",
+      "fixedMonthlyLabel": "חיוב קבוע חודשי",
+      "fixedMonthlyHint": "החיוב הקבוע מתווסף לחיוב לפי שעות בדוחות.",
+      "monthlyFeeLabel": "סכום חודשי *",
+      "validFromLabel": "תוקף מ-",
+      "validToLabel": "תוקף עד",
+      "notesLabel": "הערות",
+      "saving": "שומר...",
+      "saveChanges": "שמור שינויים"
+    },
+    "detail": {
+      "loading": "טוען פרויקט...",
+      "notFound": "הפרויקט לא נמצא"
+    },
+    "breadcrumb": {
+      "clients": "לקוחות"
+    },
+    "delete": {
+      "title": "מחיקת פרויקט",
+      "body": "האם למחוק את הפרויקט \"{name}\"? פעולה זו אינה הפיכה.",
+      "deleting": "מוחק...",
+      "confirm": "מחק פרויקט"
+    },
+    "archive": {
+      "title": "ארכוב פרויקט",
+      "body": "האם לארכב את הפרויקט \"{name}\"? הפרויקט יוסתר מרשימת הפרויקטים אך ניתן יהיה לשחזר אותו.",
+      "archiving": "מארכב...",
+      "confirm": "ארכב פרויקט"
+    },
+    "stats": {
+      "totalHours": "סה״כ שעות",
+      "entryCount": "מספר רשומות",
+      "fixedMonthly": "חיוב קבוע חודשי",
+      "rounding": "עיגול זמן"
+    },
+    "details": {
+      "title": "פרטי פרויקט",
+      "client": "לקוח",
+      "startDate": "תאריך התחלה",
+      "endDate": "תאריך סיום",
+      "fixedValidity": "תוקף חיוב קבוע",
+      "validityRange": "{from} עד {to}",
+      "noEnd": "ללא סיום",
+      "unlimited": "ללא הגבלה",
+      "notes": "הערות"
+    },
+    "tasks": {
+      "title": "משימות",
+      "movedNotice": "ניהול המשימות עבר ל<link>לוח המשימות</link>המרכזי."
+    },
+    "entries": {
+      "title": "רשומות אחרונות",
+      "viewAll": "צפה בכל הרשומות",
+      "loading": "טוען רשומות...",
+      "empty": "אין רשומות זמן עדיין לפרויקט זה"
+    },
+    "actions": {
+      "edit": "ערוך",
+      "duplicate": "שכפל",
+      "duplicating": "מעתיק...",
+      "archive": "ארכב",
+      "delete": "מחק",
+      "restoreProject": "שחזר פרויקט",
+      "restoring": "משחזר..."
+    },
+    "errors": {
+      "clientRequired": "נא לבחור לקוח",
+      "monthlyFeePositive": "יש להזין סכום חודשי גדול מ-0",
+      "createFailed": "שגיאה ביצירת הפרויקט",
+      "updateFailed": "שגיאה בעדכון הפרויקט",
+      "deleteFailed": "שגיאה במחיקת הפרויקט",
+      "archiveFailed": "שגיאה בארכוב הפרויקט",
+      "restoreFailed": "שגיאה בשחזור הפרויקט",
+      "duplicateFailed": "שגיאה בשכפול הפרויקט"
+    }
+  },
+  "Settings": {
+    "pageTitle": "הגדרות",
+    "tabs": {
+      "profile": "פרופיל",
+      "notifications": "התראות",
+      "currencies": "מטבעות",
+      "security": "אבטחה"
+    },
+    "currencyOptions": {
+      "ILS": "₪ - שקל ישראלי",
+      "USD": "$ - דולר אמריקאי",
+      "USDT": "₮ - טתר (USDT)",
+      "BTC": "₿ - ביטקוין",
+      "ETH": "Ξ - אתריום"
+    },
+    "profile": {
+      "logoTitle": "לוגו עסקי",
+      "logoDescription": "יופיע בדוחות PDF. מומלץ תמונה ריבועית, 200x200 לפחות.",
+      "logoFormats": "JPEG, PNG, GIF, WebP · עד 5MB",
+      "logoAlt": "לוגו עסקי",
+      "uploading": "מעלה...",
+      "replaceLogo": "החלף לוגו",
+      "uploadLogo": "העלה לוגו",
+      "removeLogo": "הסר לוגו",
+      "signatureTitle": "חתימה דיגיטלית",
+      "signatureDescription": "תופיע בחשבוניות PDF. מומלץ PNG עם רקע שקוף, 200x80 לפחות.",
+      "signatureFormats": "JPEG, PNG, GIF, WebP · עד 2MB",
+      "signatureAlt": "חתימה דיגיטלית",
+      "replaceSignature": "החלף חתימה",
+      "uploadSignature": "העלה חתימה",
+      "removeSignature": "הסר חתימה"
+    },
+    "business": {
+      "title": "פרטי עסק",
+      "description": "פרטים אלו יופיעו בדוחות ובחשבוניות שתייצרו.",
+      "loading": "טוען פרטים...",
+      "businessName": "שם העסק",
+      "businessNamePlaceholder": "לדוגמה: חברת הייעוץ שלי",
+      "phone": "טלפון",
+      "phonePlaceholder": "לדוגמה: 050-1234567",
+      "email": "אימייל עסקי",
+      "emailPlaceholder": "לדוגמה: info@example.com",
+      "taxId": "ח.פ. / מספר עוסק",
+      "taxIdPlaceholder": "לדוגמה: 123456789",
+      "website": "אתר אינטרנט",
+      "websitePlaceholder": "לדוגמה: https://example.com",
+      "address": "כתובת",
+      "addressPlaceholder": "לדוגמה: רחוב הרצל 1, תל אביב",
+      "defaultCurrency": "מטבע ברירת מחדל",
+      "defaultCurrencyHint": "המטבע שיופיע כברירת מחדל בפרויקטים חדשים",
+      "bankSectionTitle": "פרטי בנק להעברות",
+      "bankSectionDescription": "פרטים אלו יופיעו בחשבוניות כדי לאפשר העברת תשלומים",
+      "bankName": "שם הבנק",
+      "bankNamePlaceholder": "לדוגמה: בנק הפועלים",
+      "bankBranch": "מספר סניף",
+      "bankBranchPlaceholder": "לדוגמה: 123",
+      "bankAccountNumber": "מספר חשבון",
+      "bankAccountNumberPlaceholder": "לדוגמה: 123456",
+      "bankSwift": "מזהה בנק בינלאומי (SWIFT/BIC)",
+      "bankSwiftPlaceholder": "לדוגמה: POHALILIT",
+      "bankSwiftHint": "נדרש להעברות בינלאומיות בלבד",
+      "saving": "שומר...",
+      "saveButton": "שמור שינויים"
+    },
+    "pdf": {
+      "templateLabel": "תבנית PDF ברירת מחדל",
+      "templateModern": "מודרני (Modern)",
+      "templateClassic": "קלאסי (Classic)",
+      "templateBold": "בולד (Bold)",
+      "templateElegant": "אלגנטי (Elegant)",
+      "templateNature": "טבע (Nature)",
+      "templateOcean": "אוקיינוס (Ocean)",
+      "templateHint": "התבנית שתשמש כברירת מחדל בייצוא דוחות PDF",
+      "primaryColorLabel": "צבע ראשי ל-PDF",
+      "primaryColorHint": "הצבע הראשי שיופיע בכותרות ואלמנטים מרכזיים ב-PDF",
+      "accentColorLabel": "צבע משני ל-PDF",
+      "accentColorHint": "הצבע המשני שיופיע בפרטים ואלמנטים נוספים ב-PDF"
+    },
+    "display": {
+      "dateFormatLabel": "פורמט תאריך",
+      "dateFormatDMY": "יום/חודש/שנה (DD/MM/YYYY)",
+      "dateFormatMDY": "חודש/יום/שנה (MM/DD/YYYY)",
+      "dateFormatYMD": "שנה-חודש-יום (YYYY-MM-DD)",
+      "dateFormatHint": "פורמט התצוגה של תאריכים במערכת",
+      "timeFormatLabel": "פורמט שעה",
+      "timeFormat24h": "24 שעות (14:30)",
+      "timeFormat12h": "12 שעות (02:30 PM)",
+      "timeFormatHint": "פורמט התצוגה של שעות במערכת",
+      "language": {
+        "label": "שפת ממשק",
+        "hint": "השפה שבה תוצג המערכת. השינוי חל מיד.",
+        "he": "עברית",
+        "en": "English"
+      }
+    },
+    "invoice": {
+      "prefixLabel": "קידומת חשבונית",
+      "prefixPlaceholder": "לדוגמה: INV-",
+      "prefixHint": "הקידומת תופיע לפני מספר החשבונית (לדוגמה: INV-001, INV-002)",
+      "nextNumberLabel": "מספר החשבונית הבא",
+      "nextNumberPlaceholder": "לדוגמה: 1",
+      "nextNumberHint": "מספר החשבונית הבא שיונפק. המספר יעלה אוטומטית לאחר כל חשבונית",
+      "paymentTermsLabel": "תנאי תשלום",
+      "paymentTermsPlaceholder": "לדוגמה: תשלום בתוך 30 יום מתאריך החשבונית",
+      "paymentTermsHint": "תנאי התשלום יופיעו בחשבוניות ובדוחות"
+    },
+    "notifications": {
+      "permissionTitle": "הרשאת התראות דפדפן",
+      "permissionDescription": "כדי שהמערכת תוכל לשלוח לך התראות, עליך לאפשר התראות מהדפדפן.",
+      "permissionStatus": "סטטוס הרשאה",
+      "statusGranted": "✅ ההתראות מאופשרות",
+      "statusDenied": "❌ ההתראות נחסמו",
+      "statusDefault": "⏳ טרם ניתנה הרשאה",
+      "statusUnsupported": "❌ הדפדפן לא תומך בהתראות",
+      "enablePermission": "אפשר התראות",
+      "sending": "שולח...",
+      "testButton": "נסה התראה",
+      "longTimerTitle": "התראת טיימר ארוך",
+      "longTimerDescription": "קבל התראה כאשר הטיימר רץ לפרק זמן ארוך (למשל, יותר מ-2 שעות).",
+      "longTimerToggle": "אפשר התראת טיימר ארוך",
+      "longTimerToggleHint": "קבל התראה כאשר הטיימר רץ זמן רב מדי",
+      "thresholdLabel": "סף זמן מינימלי (בדקות)",
+      "thresholdHint": "התראה תישלח כאשר הטיימר רץ יותר מ-{minutes} דקות ({hours} שעות)",
+      "dailyReminderTitle": "תזכורת יומית",
+      "dailyReminderDescription": "קבל תזכורת יומית להזנת רשומות זמן אם טרם עשית זאת.",
+      "dailyReminderToggle": "אפשר תזכורת יומית",
+      "dailyReminderToggleHint": "קבל תזכורת להזנת רשומות זמן",
+      "reminderTimeLabel": "שעת התזכורת",
+      "reminderTimeHint": "התזכורת תישלח ב-{time} בכל יום שבו לא נרשמו שעות",
+      "workingHoursTitle": "שעות עבודה יומיות",
+      "workingHoursDescription": "הגדר את מספר השעות היומיות שאתה עובד. זה שימושי למעקב ודוחות.",
+      "workingHoursLabel": "שעות עבודה ליום",
+      "workingHoursHint": "מספר השעות המלאות ליום עבודה: {hours} שעות",
+      "firstDayTitle": "יום תחילת השבוע",
+      "firstDayDescription": "בחר את היום שבו מתחיל השבוע שלך (משפיע על לוחות שנה ודוחות).",
+      "firstDayLabel": "יום תחילת שבוע",
+      "firstDaySunday": "ראשון (Sunday)",
+      "firstDayMonday": "שני (Monday)",
+      "firstDayHintSunday": "השבוע מתחיל ביום ראשון",
+      "firstDayHintMonday": "השבוע מתחיל ביום שני",
+      "saving": "שומר...",
+      "saveButton": "שמור הגדרות התראות"
+    },
+    "currencies": {
+      "addTitle": "הוסף שער חליפין",
+      "addDescription": "הגדר שערי חליפין בין מטבעות שונים. שערים אלו ישמשו להמרת מטבעות בדוחות.",
+      "fromLabel": "ממטבע",
+      "toLabel": "למטבע",
+      "rateLabel": "שער חליפין",
+      "ratePlaceholder": "לדוגמה: 3.5",
+      "rateHint": "כמה {to} מקבלים עבור 1 {from}",
+      "saving": "שומר...",
+      "saveButton": "שמור שער",
+      "listTitle": "שערי חליפין שהוגדרו",
+      "loadingRates": "טוען שערים...",
+      "emptyRates": "לא הוגדרו שערי חליפין עדיין",
+      "delete": "מחק"
+    },
+    "security": {
+      "sessionsTitle": "פעולות פעילות",
+      "sessionsDescription": "רשימת כל המכשירים שמחוברים כרגע לחשבון שלך.",
+      "logoutAll": "התנתק מכל המכשירים",
+      "loggingOut": "מתנתק...",
+      "loadingSessions": "טוען פעולות...",
+      "emptySessions": "אין פעולות פעילות",
+      "deviceLabel": "מכשיר {id}",
+      "current": "נוכחי",
+      "sessionMeta": "התחברות {created} · תפוגה {expires}",
+      "confirmTitle": "האם אתה בטוח?",
+      "confirmDescription": "פעולה זו תנתק אותך מכל המכשירים המחוברים לחשבון שלך, כולל המכשיר הנוכחי. תצטרך להתחבר מחדש.",
+      "cancel": "ביטול"
+    },
+    "danger": {
+      "title": "מחיקת חשבון",
+      "subtitle": "פעולה קבועה ובלתי הפיכה — כל הנתונים יימחקו לצמיתות.",
+      "deleteButton": "מחק חשבון",
+      "dialogTitle": "מחיקת חשבון לצמיתות",
+      "irreversible": "פעולה זו בלתי הפיכה.",
+      "warningBody": "החשבון וכל הנתונים — לקוחות, פרויקטים, רשומות זמן, דוחות והגדרות — יימחקו לצמיתות. לא ניתן לשחזר. מומלץ לייצא את הנתונים תחילה.",
+      "acknowledge": "אני מבין/ה שכל הנתונים יימחקו לצמיתות ולא ניתן לשחזר אותם.",
+      "typeWordPrefix": "כדי לאשר, הקלד/י את המילה",
+      "confirmWord": "מחיקה",
+      "cancel": "ביטול",
+      "deleting": "מוחק...",
+      "deleteForever": "מחק לצמיתות",
+      "deleteError": "שגיאה במחיקת החשבון"
+    },
+    "toasts": {
+      "networkError": "שגיאת תקשורת. אנא נסה שוב.",
+      "notificationsUnsupported": "הדפדפן שלך לא תומך בהתראות",
+      "permissionGranted": "ההרשאה להתראות ניתנה בהצלחה!",
+      "permissionRequiredForTest": "נדרש אישור להתראות כדי לבדוק את הפונקציונליות",
+      "testNotificationTitle": "בדיקת התראות - מוניט",
+      "testNotificationBody": "זוהי התראת בדיקה מהמערכת. אם אתה רואה את ההודעה הזו, ההתראות עובדות כראוי!",
+      "loadProfileError": "שגיאה בטעינת הפרופיל",
+      "loadSessionsError": "שגיאה בטעינת הפעולות",
+      "logoutAllError": "שגיאה בהתנתקות מכל המכשירים",
+      "profileSaved": "הפרטים נשמרו בהצלחה!",
+      "saveProfileError": "שגיאה בשמירת הפרטים",
+      "notificationSettingsSaved": "הגדרות ההתראות נשמרו בהצלחה!",
+      "saveSettingsError": "שגיאה בשמירת הגדרות",
+      "logoUploaded": "הלוגו הועלה בהצלחה!",
+      "uploadLogoError": "שגיאה בהעלאת הלוגו",
+      "removeLogoConfirm": "האם אתה בטוח שברצונך להסיר את הלוגו?",
+      "logoRemoved": "הלוגו הוסר בהצלחה!",
+      "removeLogoError": "שגיאה בהסרת הלוגו",
+      "signatureUploaded": "החתימה הועלתה בהצלחה!",
+      "uploadSignatureError": "שגיאה בהעלאת החתימה",
+      "removeSignatureConfirm": "האם אתה בטוח שברצונך להסיר את החתימה?",
+      "signatureRemoved": "החתימה הוסרה בהצלחה!",
+      "removeSignatureError": "שגיאה בהסרת החתימה",
+      "loadRatesError": "שגיאה בטעינת שערי חליפין",
+      "rateSaved": "שער החליפין נשמר בהצלחה!",
+      "saveRateError": "שגיאה בשמירת שער חליפין",
+      "deleteRateConfirm": "האם למחוק את שער חליפין זה?",
+      "rateDeleted": "שער החליפין נמחק בהצלחה!",
+      "deleteRateError": "שגיאה במחיקת שער חליפין"
+    },
+    "data": {
+      "title": "הנתונים והפרטיות שלך",
+      "description": "הורד עותק של כל הנתונים שלך — לקוחות, פרויקטים, רישומי זמן, מסמכי התחשבנות ועוד — בקובץ JSON יחיד.",
+      "exportButton": "יצוא הנתונים שלי",
+      "exporting": "מייצא...",
+      "exportError": "ייצוא הנתונים נכשל. נסה שוב."
+    }
+  },
+  "Auth": {
+    "common": {
+      "appName": "מוניט",
+      "emailLabel": "כתובת אימייל",
+      "passwordLabel": "סיסמה",
+      "confirmPasswordLabel": "אימות סיסמה",
+      "emailPlaceholder": "הכנס כתובת אימייל",
+      "minCharsPlaceholder": "לפחות 8 תווים",
+      "sending": "שולח...",
+      "networkError": "שגיאת תקשורת. אנא נסה שוב.",
+      "resendFailed": "שליחה נכשלה. נסה שוב בעוד רגע.",
+      "signInHere": "התחבר כאן",
+      "backToLogin": "חזרה לדף ההתחברות",
+      "privacyPolicy": "מדיניות פרטיות",
+      "termsOfService": "תנאי שימוש",
+      "loading": "טוען...",
+      "redirectingToGoogle": "מעביר ל-Google..."
+    },
+    "verifyNotice": {
+      "heading": "אנא אמת את כתובת האימייל שלך",
+      "body": "שלחנו לך אימייל אימות לכתובת <email>{email}</email>. אימות האימייל עוזר לנו לשמור על אבטחת חשבונך.",
+      "resend": "שלח אימייל אימות חדש",
+      "sending": "שולח...",
+      "success": "האימייל נשלח! בדוק את תיבת הדואר הנכנס (וגם את התיקייה ספאם).",
+      "error": "שגיאה בשליחת האימייל. נסה שוב."
+    },
+    "login": {
+      "title": "התחבר לחשבון שלך",
+      "subtitle": "נהל את שעות העבודה והפרויקטים שלך",
+      "googleSignIn": "התחבר עם Google",
+      "orWithEmail": "או התחבר עם אימייל",
+      "passwordPlaceholder": "הסיסמה שלך",
+      "submit": "התחבר",
+      "submitting": "מתחבר...",
+      "forgotPassword": "שכחת סיסמה?",
+      "noAccount": "אין לך חשבון עדיין?",
+      "registerHere": "הירשם כאן",
+      "resendVerification": "שלח מייל אימות מחדש",
+      "resendSuccess": "שלחנו מייל אימות חדש.",
+      "errors": {
+        "notVerified": "עליך לאמת את כתובת האימייל לפני ההתחברות. בדוק את תיבת הדואר שלך.",
+        "signInFailed": "שגיאה בהתחברות"
+      }
+    },
+    "register": {
+      "title": "צור חשבון חדש",
+      "subtitle": "התחל לנהל את שעות העבודה שלך",
+      "googleSignUp": "הירשם עם Google",
+      "orWithEmail": "או הירשם עם אימייל",
+      "businessNameLabel": "שם העסק (אופציונלי)",
+      "businessNamePlaceholder": "שם העסק שלך",
+      "confirmPasswordPlaceholder": "הקלד את הסיסמה שוב",
+      "submit": "הרשם",
+      "submitting": "נרשם...",
+      "haveAccount": "יש לך כבר חשבון?",
+      "signInHere": "התחבר כאן",
+      "termsAgreement": "בהרשמה אתה מסכים ל<terms>תנאי השימוש</terms> ול<privacy>מדיניות הפרטיות</privacy>",
+      "resendVerification": "שלח מייל אימות שוב",
+      "resendSuccess": "שלחנו שוב את מייל האימות.",
+      "alreadyVerified": "כבר אימתת?",
+      "verify": {
+        "title": "בדוק את האימייל שלך",
+        "sentTo": "שלחנו קישור אימות לכתובת",
+        "instructions": "לחץ על הקישור במייל כדי להפעיל את החשבון ולהתחיל לעבוד.",
+        "notReceived": "לא קיבלת? בדוק את תיקיית הספאם, או שלח שוב."
+      },
+      "errors": {
+        "signUpFailed": "שגיאה בהרשמה"
+      }
+    },
+    "forgot": {
+      "title": "איפוס סיסמה",
+      "subtitle": "הזן את כתובת האימייל שלך ונשלח לך קישור לאיפוס הסיסמה",
+      "submit": "שלח קישור לאיפוס סיסמה",
+      "successMessage": "אם קיים חשבון עם כתובת האימייל הזו, שלחנו הוראות לאיפוס הסיסמה.",
+      "rememberedPassword": "נזכרת בסיסמה?",
+      "errors": {
+        "requestFailed": "שגיאה בשליחת בקשת איפוס הסיסמה"
+      }
+    },
+    "reset": {
+      "title": "איפוס סיסמה",
+      "subtitle": "הזן את הסיסמה החדשה שלך",
+      "newPasswordLabel": "סיסמה חדשה",
+      "confirmPasswordPlaceholder": "הזן את הסיסמה שוב",
+      "submit": "אפס סיסמה",
+      "submitting": "מאפס סיסמה...",
+      "successMessage": "הסיסמה אופסה בהצלחה! כעת תוכל להתחבר עם הסיסמה החדשה.",
+      "goToLogin": "מעבר לדף ההתחברות",
+      "errors": {
+        "invalidToken": "קישור לאיפוס סיסמה לא תקין או שפג תוקפו.",
+        "passwordsMismatch": "הסיסמאות אינן תואמות",
+        "passwordTooShort": "הסיסמה חייבת להכיל לפחות 8 תווים",
+        "resetFailed": "שגיאה באיפוס הסיסמה"
+      }
+    }
+  },
+  "Admin": {
+    "dashboard": {
+      "title": "ניהול מערכת",
+      "subtitle": "סקירה כללית של המערכת",
+      "loadError": "שגיאה בטעינת הנתונים",
+      "totalUsers": "סה\"כ משתמשים",
+      "totalEntries": "רשומות זמן",
+      "activeTimers": "טיימרים פעילים",
+      "newThisWeek": "חדשים השבוע",
+      "newThisMonth": "חדשים החודש",
+      "totalProjects": "סה\"כ פרויקטים",
+      "newTodayDelta": "+{count} היום",
+      "registrationsTrend": "הרשמות - 30 ימים אחרונים",
+      "registrationsTooltip": "{date}: {count} הרשמות",
+      "usersLinkTitle": "ניהול משתמשים",
+      "usersLinkSubtitle": "צפה וניהל את כל המשתמשים",
+      "statsLinkTitle": "סטטיסטיקות",
+      "statsLinkSubtitle": "ניתוח מעמיק של המערכת"
+    },
+    "users": {
+      "title": "ניהול משתמשים",
+      "subtitle": "צפה וניהל את כל המשתמשים במערכת",
+      "searchPlaceholder": "חיפוש לפי אימייל או שם עסק...",
+      "searchAriaLabel": "חיפוש משתמשים",
+      "colEmail": "אימייל",
+      "colBusinessName": "שם עסק",
+      "colRegistrationDate": "תאריך רישום",
+      "colLastActivity": "פעילות אחרונה",
+      "colEntries": "רשומות",
+      "colProjects": "פרויקטים",
+      "colRole": "תפקיד",
+      "roleAdmin": "מנהל",
+      "roleUser": "משתמש",
+      "empty": "לא נמצאו משתמשים",
+      "entriesCount": "{count} רשומות",
+      "projectsCount": "{count} פרויקטים",
+      "prev": "הקודם",
+      "next": "הבא",
+      "pageOf": "עמוד {page} מתוך {total}"
+    },
+    "stats": {
+      "title": "סטטיסטיקות מערכת",
+      "subtitle": "ניתוח מעמיק של השימוש במערכת",
+      "loadError": "שגיאה בטעינת הנתונים",
+      "avgEntriesPerUser": "ממוצע רשומות למשתמש",
+      "totalLogos": "לוגואים שהועלו",
+      "topUsersTitle": "10 המשתמשים הפעילים ביותר",
+      "projectStatusTitle": "התפלגות סטטוס פרויקטים",
+      "currencyTitle": "התפלגות מטבעות",
+      "noData": "אין נתונים",
+      "projectStatus": {
+        "active": "פעיל",
+        "completed": "הושלם",
+        "paused": "מושהה",
+        "archived": "בארכיון"
+      }
+    },
+    "detail": {
+      "notFound": "משתמש לא נמצא",
+      "backToUsers": "חזרה לרשימת המשתמשים",
+      "roleAdmin": "מנהל",
+      "roleUser": "משתמש",
+      "yes": "כן",
+      "no": "לא",
+      "actionError": "שגיאה בביצוע הפעולה",
+      "tabs": {
+        "profile": "פרופיל",
+        "clients": "לקוחות",
+        "projects": "פרויקטים",
+        "entries": "רשומות",
+        "sessions": "הפעלות",
+        "actions": "פעולות"
+      },
+      "profile": {
+        "email": "אימייל",
+        "emailVerified": "אימייל מאומת",
+        "role": "תפקיד",
+        "registrationDate": "תאריך רישום",
+        "businessName": "שם עסק",
+        "phone": "טלפון",
+        "address": "כתובת",
+        "taxId": "ח.פ / ע.מ",
+        "currency": "מטבע",
+        "pdfTemplate": "תבנית PDF",
+        "logo": "לוגו",
+        "logoUploaded": "הועלה",
+        "logoNotUploaded": "לא הועלה",
+        "website": "אתר"
+      },
+      "clients": {
+        "empty": "אין לקוחות",
+        "colName": "שם",
+        "colContact": "איש קשר",
+        "colEmail": "אימייל",
+        "colStatus": "סטטוס",
+        "active": "פעיל",
+        "inactive": "לא פעיל"
+      },
+      "projects": {
+        "empty": "אין פרויקטים",
+        "colName": "שם",
+        "colStatus": "סטטוס"
+      },
+      "entries": {
+        "empty": "אין רשומות זמן",
+        "colDescription": "תיאור",
+        "colDate": "תאריך",
+        "colDuration": "משך"
+      },
+      "sessions": {
+        "empty": "אין הפעלות",
+        "colCreated": "נוצר",
+        "colExpires": "פג תוקף",
+        "colStatus": "סטטוס",
+        "expired": "פג תוקף",
+        "active": "פעיל"
+      },
+      "actions": {
+        "tempPasswordLabel": "סיסמה זמנית:",
+        "copy": "העתק",
+        "tempPasswordHint": "שמור את הסיסמה - היא לא תוצג שוב",
+        "resetPassword": {
+          "title": "איפוס סיסמה",
+          "description": "יצירת סיסמה זמנית חדשה וניתוק כל ההפעלות",
+          "loading": "מאפס...",
+          "button": "איפוס"
+        },
+        "verifyEmail": {
+          "title": "אימות אימייל",
+          "description": "סימון האימייל כמאומת ידנית",
+          "loading": "מאמת...",
+          "button": "אמת"
+        },
+        "deleteSessions": {
+          "title": "ניתוק הפעלות",
+          "description": "מחיקת כל ההפעלות הפעילות",
+          "loading": "מנתק...",
+          "button": "נתק הכל"
+        },
+        "toggleRole": {
+          "title": "שינוי תפקיד",
+          "demoteDescription": "הורדה למשתמש רגיל",
+          "promoteDescription": "הפיכה למנהל",
+          "loading": "משנה...",
+          "demoteButton": "הורד",
+          "promoteButton": "הפוך למנהל"
+        },
+        "deleteUser": {
+          "title": "מחיקת משתמש",
+          "description": "מחיקת המשתמש וכל הנתונים שלו לצמיתות",
+          "loading": "מוחק...",
+          "confirmButton": "אישור מחיקה",
+          "cancel": "ביטול",
+          "button": "מחק"
+        }
+      }
+    }
+  },
+  "Timer": {
+    "bar": {
+      "startTracking": "התחל לעקוב אחרי הזמן שלך",
+      "startTimer": "התחל טיימר",
+      "paused": "מושהה",
+      "activeTimer": "טיימר פעיל",
+      "editNotes": "ערוך הערות",
+      "addNotes": "הוסף הערות",
+      "noteShort": "הערה",
+      "notes": "הערות",
+      "resumeTimer": "חדש טיימר",
+      "pauseTimer": "השהה טיימר",
+      "stopTimer": "עצור טיימר",
+      "startAnotherTimer": "התחל טיימר נוסף",
+      "anotherTimer": "טיימר נוסף",
+      "notesLabel": "הערות לטיימר (יישמרו על הרשומה ויופיעו בדוח)",
+      "notesPlaceholder": "מה נעשה עד עכשיו? אפשר לעדכן בכל רגע.",
+      "saving": "שומר...",
+      "save": "שמור",
+      "cancel": "ביטול"
+    },
+    "start": {
+      "title": "התחל טיימר חדש",
+      "projectLabel": "פרויקט *",
+      "projectPlaceholder": "בחר פרויקט",
+      "taskLabel": "משימה",
+      "noTask": "ללא משימה",
+      "rateLabel": "תעריף",
+      "rateOption": "{name} — {rate}/שעה",
+      "descriptionLabel": "תיאור",
+      "descriptionPlaceholder": "מה אתה עובד עליו?",
+      "cancel": "ביטול",
+      "starting": "מתחיל...",
+      "startButton": "התחל טיימר",
+      "noProjects": "אין פרויקטים עדיין",
+      "noProjectsHint": "כדי להתחיל לעקוב אחר זמן, צור קודם פרויקט",
+      "createProject": "+ צור פרויקט חדש",
+      "createClient": "+ צור לקוח חדש"
+    },
+    "stop": {
+      "title": "עצור טיימר ושמור רשומה",
+      "elapsedLabel": "זמן שעבר:",
+      "descriptionLabel": "תיאור",
+      "descriptionPlaceholder": "מה עשית?",
+      "notesLabel": "הערות (יופיעו בדוח)",
+      "notesPlaceholder": "פירוט מה נעשה בעבודה (אופציונלי)",
+      "adjustDuration": "התאם את משך הזמן (אופציונלי)",
+      "hours": "שעות",
+      "minutes": "דקות",
+      "markDone": "סמן את המשימה כהושלמה",
+      "cancel": "ביטול",
+      "saving": "שומר...",
+      "saveButton": "עצור ושמור"
+    },
+    "search": {
+      "trigger": "חיפוש...",
+      "dialogTitle": "חיפוש גלובלי",
+      "dialogDescription": "חיפוש לקוחות, פרויקטים ורשומות",
+      "placeholder": "חפש לקוחות, פרויקטים, רשומות זמן...",
+      "inputAriaLabel": "חיפוש",
+      "clear": "נקה חיפוש",
+      "startTyping": "התחל להקליד לחיפוש",
+      "startTypingHint": "חפש לקוחות, פרויקטים ורשומות זמן לפי שם",
+      "searching": "מחפש...",
+      "noResults": "לא נמצאו תוצאות",
+      "noResultsHint": "נסה לחפש מילים אחרות",
+      "groupClients": "לקוחות",
+      "groupProjects": "פרויקטים",
+      "groupEntries": "רשומות זמן",
+      "hintNavigate": "לנווט",
+      "hintSelect": "לבחור",
+      "hintClose": "לסגור",
+      "resultCount": "{count} תוצאות"
+    }
+  },
+  "Contact": {
+    "meta": {
+      "title": "יצירת קשר | {brand}",
+      "description": "יצירת קשר עם {brand}. נשמח לשאלות, הצעות או דיווחי תקלה."
+    },
+    "back": "חזרה ל{brand}",
+    "title": "יצירת קשר",
+    "description": "שאלה, הצעה לשיפור או תקלה? כתבו לנו ונחזור אליכם לאימייל שתשאירו.",
+    "form": {
+      "nameLabel": "שם",
+      "nameOptional": "(לא חובה)",
+      "emailLabel": "אימייל",
+      "messageLabel": "הודעה",
+      "messagePlaceholder": "במה נוכל לעזור?",
+      "honeypotLabel": "אתר",
+      "submit": "שלח הודעה",
+      "submitting": "שולח...",
+      "successHeading": "ההודעה נשלחה",
+      "successBody": "תודה. נחזור אליך לאימייל שהשארת בהקדם.",
+      "sendAnother": "שלח הודעה נוספת",
+      "errorFix": "נא לתקן את הפרטים",
+      "errorSend": "שליחת ההודעה נכשלה. נסה שוב.",
+      "errorNetwork": "שגיאת תקשורת. אנא נסה שוב."
+    }
+  },
+  "Validation": {
+    "field": "שדה זה",
+    "REQUIRED": "שדה חובה",
+    "REQUIRED_NAMED": "{field} הוא שדה חובה",
+    "MIN_LENGTH": "חייב להכיל לפחות {min} תווים",
+    "MAX_LENGTH": "חייב להכיל לכל היותר {max} תווים",
+    "INVALID_FORMAT": "פורמט לא תקין",
+    "INVALID_EMAIL": "כתובת אימייל לא תקינה",
+    "INVALID_PHONE": "מספר טלפון לא תקין",
+    "PASSWORD_TOO_SHORT": "הסיסמה חייבת להכיל לפחות 8 תווים",
+    "PASSWORD_MISMATCH": "הסיסמאות אינן תואמות",
+    "NOT_A_NUMBER": "חייב להיות מספר",
+    "MIN_VALUE": "חייב להיות גדול או שווה ל-{min}",
+    "INVALID_DATE_FORMAT": "פורמט תאריך לא תקין (YYYY-MM-DD)",
+    "INVALID_DATE": "תאריך לא תקין",
+    "DATE_RANGE_ORDER": "תאריך התחלה חייב להיות לפני תאריך הסיום",
+    "DATE_NOT_FUTURE": "תאריך לא יכול להיות בעתיד",
+    "DATE_NOT_PAST": "תאריך לא יכול להיות בעבר",
+    "INVALID_URL": "כתובת אתר לא תקינה",
+    "fields": {
+      "project": "פרויקט",
+      "description": "תיאור",
+      "clientName": "שם הלקוח",
+      "projectName": "שם הפרויקט",
+      "password": "הסיסמה"
+    },
+    "passwordStrength": {
+      "WEAK": "סיסמה חלשה - כדאי לחזק אותה",
+      "FAIR": "סיסמה בינונית - עדיין יכולה להיות חזקה יותר",
+      "GOOD": "סיסמה טובה - כמעט שם",
+      "STRONG": "סיסמה חזקה מצוינת!",
+      "requirements": {
+        "length": "לפחות 8 תווים",
+        "lowercase": "אות קטנה באנגלית (a-z)",
+        "uppercase": "אות גדולה באנגלית (A-Z)",
+        "number": "מספר (0-9)",
+        "special": "תו מיוחד (!@#$%...)"
+      }
+    }
+  },
+  "Landing": {
+    "nav": {
+      "ariaLabel": "ניווט ראשי",
+      "howItWorks": "איך זה עובד",
+      "features": "פיצ׳רים",
+      "faq": "שאלות נפוצות",
+      "login": "התחבר",
+      "ctaStart": "התחל בחינם"
+    },
+    "hero": {
+      "headlinePrefix": "הזמן שלך שווה כסף",
+      "headlineSuffix": "עוזר לך לגבות אותו.",
+      "subhead": "מעקב שעות, ניהול לקוחות ודוחות מקצועיים בעברית — הכל במקום אחד, בחינם.",
+      "ctaPrimary": "התחל לעקוב — בחינם",
+      "ctaNote": "חינם בתקופת הבטא. ללא כרטיס אשראי, ללא התחייבות.",
+      "mock": {
+        "currentProject": "פרויקט נוכחי",
+        "start": "הפעל",
+        "hoursThisMonth": "שעות החודש",
+        "revenueThisMonth": "הכנסות החודש",
+        "activeProjects": "פרויקטים פעילים",
+        "revenueByProject": "הכנסות לפי פרויקט",
+        "status": "סטטוס",
+        "statusActive": "{count} פרויקטים",
+        "statusPending": "{count} בהמתנה",
+        "statusDone": "{count} הושלם"
+      }
+    },
+    "howItWorks": {
+      "heading": "איך זה עובד?",
+      "subheading": "שלושה צעדים פשוטים להתחלה",
+      "step1": {
+        "title": "הירשם בחינם",
+        "description": "צור חשבון תוך 30 שניות. רק אימייל וסיסמה."
+      },
+      "step2": {
+        "title": "הוסף לקוח ופרויקט",
+        "description": "הגדר את הלקוחות והתמחור שלך."
+      },
+      "step3": {
+        "title": "עקוב וחייב",
+        "description": "הפעל טיימר, רשום שעות, וצור דוח בלחיצה."
+      }
+    },
+    "features": {
+      "heading": "כל מה שצריך כדי לנהל זמן וחיוב",
+      "subheading": "כלים מקצועיים לפרילנסרים ולעצמאים, בעברית מלאה",
+      "parallelTimers": {
+        "title": "כמה טיימרים במקביל",
+        "description": "עובד על כמה לקוחות באותו זמן? פתח טיימר לכל אחד. כל אחד רץ ונעצר בנפרד."
+      },
+      "itemBilling": {
+        "title": "חיוב לפי פריטים",
+        "description": "לא רק שעות. כמות כפול מחיר ליחידה, מקטלוג הלקוח או פריט חד-פעמי."
+      },
+      "kanban": {
+        "title": "לוח משימות (קנבן)",
+        "description": "גרור משימה ל'בעבודה' והטיימר נדלק לבד. גרור החוצה, ונשמרת רשומה."
+      },
+      "flexiblePricing": {
+        "title": "תמחור גמיש",
+        "description": "שעתי, ריטיינר, חודשי קבוע או לפי פריטים. תעריף לכל לקוח בנפרד."
+      },
+      "clientsProjects": {
+        "title": "לקוחות ופרויקטים",
+        "description": "כל הלקוחות במקום אחד: פרטי קשר, תעריפים והיסטוריית חיוב."
+      },
+      "settlementDocs": {
+        "title": "תעודות התחשבנות",
+        "description": "רכז שעות ופריטים לתעודה אחת, וייצא PDF בעברית מלאה עם הלוגו שלך."
+      },
+      "rounding": {
+        "title": "עיגול וכללי חיוב",
+        "description": "עגל זמן לשעה או לחצי שעה, לכל לקוח או פרויקט. החישוב מדויק, בלי לאבד דקות."
+      },
+      "multiCurrency": {
+        "title": "מטבעות מרובים",
+        "description": "שקל, דולר, USDT, ביטקוין ואת'ריום. תעריף נפרד לכל לקוח."
+      },
+      "dashboard": {
+        "title": "דשבורד ותובנות",
+        "description": "כמה נכנס החודש, לפי שעות, לפי פריטים ולפי פרויקט."
+      }
+    },
+    "highlights": {
+      "heading": "לא עוד טיימר. כלי חיוב שלם.",
+      "subheading": "מהרגע שהתחלת לעבוד ועד שהחיוב מוכן",
+      "timers": {
+        "eyebrow": "טיימרים מקבילים",
+        "title": "כמה טיימרים, בו-זמנית",
+        "body": "עובד על שלושה לקוחות באותו בוקר? הפעל טיימר לכל אחד. כל אחד רץ בנפרד, נעצר בנפרד, ונכנס לרשומות הנכונות. בלי לחשב הכל בראש בסוף היום.",
+        "mock": {
+          "activeTimers": "טיימרים פעילים",
+          "running": "{count} רצים",
+          "client1": "סטודיו אורן",
+          "client2": "עו\"ד לוי",
+          "client3": "חברת נוֹבָה"
+        }
+      },
+      "items": {
+        "eyebrow": "חיוב לפי פריטים",
+        "title": "לא הכל נמדד בשעות",
+        "body": "יש עבודות שמחויבות לפי פריט: רישיון, תיקון, ייעוץ נקודתי. מוסיפים כמות ומחיר ליחידה, שומרים בקטלוג של הלקוח, ומוציאים לחיוב בדיוק כמו שעה.",
+        "mock": {
+          "itemLabel": "פריט",
+          "qtyUnitLabel": "כמות × יחידה",
+          "total": "סך הכל",
+          "item1": "רישיון שימוש",
+          "item2": "תיקון תקלה",
+          "item3": "ייעוץ נקודתי"
+        }
+      },
+      "flow": {
+        "eyebrow": "ממשימה לחיוב",
+        "title": "בלי להעתיק כלום ביד",
+        "body": "גרור משימה בלוח הקנבן ל'בעבודה', והטיימר נדלק לבד. סיימת? הרשומה כבר מחכה. בסוף החודש מרכזים הכל לתעודת התחשבנות ומוציאים PDF בעברית.",
+        "mock": {
+          "step1": {
+            "label": "משימה ל'בעבודה'",
+            "note": "הטיימר נדלק לבד"
+          },
+          "step2": {
+            "label": "רשומת זמן נשמרת",
+            "note": "ללקוח הנכון"
+          },
+          "step3": {
+            "label": "תעודת התחשבנות",
+            "note": "ייצוא PDF בעברית"
+          }
+        }
+      }
+    },
+    "faq": {
+      "heading": "שאלות נפוצות",
+      "q1": {
+        "question": "מי יכול להשתמש במוניט?",
+        "answer": "מוניט מיועד לפרילנסרים, ליועצים עצמאיים ולבעלי עסקים קטנים שצריכים לעקוב אחרי שעות עבודה, לנהל לקוחות, ולהוציא חיוב מסודר."
+      },
+      "q2": {
+        "question": "זה באמת בחינם?",
+        "answer": "כן, היום זה חינם. מוניט בתקופת בטא, והשימוש כרגע לא עולה כלום, בלי כרטיס אשראי. גם בהמשך, ניהול של עד שלושה לקוחות יישאר חינם. אם נוסיף תוכניות בתשלום לשימוש מורחב, נודיע על כך מראש ולא נחייב אף אחד בלי שיבחר בזה."
+      },
+      "q3": {
+        "question": "אפשר להפעיל כמה טיימרים במקביל?",
+        "answer": "בהחלט. אם אתה עובד על כמה לקוחות באותו זמן, פתח טיימר לכל אחד. כל טיימר רץ ונעצר בנפרד, וכל רשומה נכנסת ללקוח ולפרויקט הנכונים."
+      },
+      "q4": {
+        "question": "מה זה חיוב לפי פריטים?",
+        "answer": "מעבר לחיוב שעתי, אפשר לחייב לפי פריטים: כמות כפול מחיר ליחידה. שומרים פריטים קבועים בקטלוג של כל לקוח, או מוסיפים פריט חד-פעמי תוך כדי. מתאים לתיקונים, רישיונות או כל עבודה שלא נמדדת בשעות."
+      },
+      "q5": {
+        "question": "תעודת ההתחשבנות היא חשבונית מס?",
+        "answer": "לא. תעודת ההתחשבנות היא סיכום פנימי שמרכז את השעות והפריטים לחיוב, לנוחות שלך ושל הלקוח. היא לא מהווה חשבונית מס או קבלה. את מסמכי המס הרשמיים אתה ממשיך להפיק כרגיל דרך מערכת החשבוניות שלך."
+      },
+      "q6": {
+        "question": "האם הנתונים שלי מאובטחים?",
+        "answer": "בהחלט. הנתונים מאוחסנים בשרתים מוצפנים באיחוד האירופי, וכל משתמש רואה אך ורק את המידע שלו, גם ברמת מסד הנתונים. איננו מוכרים מידע ולא משתפים אותו עם מפרסמים."
+      },
+      "q7": {
+        "question": "האם אפשר לייצא דוחות בעברית?",
+        "answer": "כן. מוניט מייצא דוחות ותעודות PDF בעברית מלאה עם תמיכת RTL. יש כמה עיצובים לבחירה, ואפשר להעלות לוגו אישי."
+      },
+      "q8": {
+        "question": "האם יש אפליקציה לנייד?",
+        "answer": "מוניט עובד מעולה בדפדפן הנייד ותומך בהתקנה כאפליקציה (PWA). אפשר להוסיף אותו למסך הבית ולהשתמש בו כמו אפליקציה רגילה."
+      },
+      "q9": {
+        "question": "איך מגדירים מודלי תמחור?",
+        "answer": "כל לקוח מקבל תעריף משלו: שעתי, ריטיינר חודשי, חיוב חודשי קבוע או חיוב לפי פריטים. אפשר גם לקבוע עיגול זמן לכל לקוח או פרויקט."
+      }
+    },
+    "cta": {
+      "heading": "מוכן לנהל את הזמן שלך בצורה חכמה?",
+      "subheading": "הצטרפו ל-500+ פרילנסרים שכבר משתמשים במוניט",
+      "socialProof": "הצטרפו ל-500+ פרילנסרים",
+      "button": "צור חשבון בחינם"
+    },
+    "footer": {
+      "tagline": "הזמן שלך שווה כסף",
+      "navAriaLabel": "ניווט תחתון",
+      "howItWorks": "איך זה עובד",
+      "features": "פיצ׳רים",
+      "faq": "שאלות נפוצות",
+      "login": "התחבר",
+      "privacy": "פרטיות",
+      "terms": "תנאי שימוש",
+      "contact": "צור קשר",
+      "builtWith": "נבנה עם ♥ בישראל",
+      "rightsReserved": "כל הזכויות שמורות"
+    }
+  },
+  "Legal": {
+    "page": {
+      "backTo": "חזרה ל{brand}",
+      "updatedLabel": "עודכן לאחרונה: {date}",
+      "questions": "שאלות?",
+      "contactCta": "צרו קשר",
+      "privacyLink": "מדיניות פרטיות",
+      "termsLink": "תנאי שימוש",
+      "contactLink": "יצירת קשר"
+    },
+    "terms": {
+      "metaTitle": "תנאי שימוש",
+      "metaDescription": "תנאי השימוש בשירות {brand}.",
+      "title": "תנאי שימוש",
+      "updated": "3 ביוני 2026",
+      "intro": "ברוכים הבאים ל{brand} (להלן: \"השירות\" או \"{brand}\"), שירות מקוון למעקב שעות עבודה, ניהול לקוחות ופרויקטים והפקת מסמכי חיוב, המיועד לפרילנסרים ולעצמאים. תנאי שימוש אלה (להלן: \"התנאים\") מסדירים את השימוש שלך בשירות, לצד <privacyLink>מדיניות הפרטיות</privacyLink>. עצם השימוש בשירות, ההרשמה אליו או הגישה אליו מהווים הסכמה מלאה לתנאים אלה. אם אינך מסכים לתנאים, אינך רשאי לעשות שימוש בשירות.",
+      "beta": {
+        "heading": "שלב הבטא",
+        "body": "השירות מצוי בשלב בטא ומסופק במתכונת \"כפי שהוא\" (as-is) ו\"כפי שהוא זמין\" (as-available). בשלב זה השירות עשוי להשתנות, להתעדכן או להיות מוגבל מעת לעת, ועלולות להופיע בו תקלות, אי-זמינות או שגיאות. איננו מתחייבים לרמת זמינות (SLA), לשימור מלא של נתונים, או לכך שתכונה מסוימת תוסיף להתקיים. השימוש בשירות בשלב הבטא נעשה על אחריותך בלבד."
+      },
+      "account": {
+        "heading": "חשבון משתמש וכשירות",
+        "item1": "השירות מיועד למשתמשים בני 18 ומעלה הכשירים להתקשר בהסכם מחייב.",
+        "item2": "עליך לספק מידע נכון, מדויק ועדכני בעת ההרשמה ולשמור על עדכניותו.",
+        "item3": "אתה האחראי הבלעדי לשמירת סודיות פרטי ההתחברות שלך ולכל פעילות המתבצעת בחשבונך.",
+        "item4": "עליך להודיע לנו ללא דיחוי על כל שימוש בלתי מורשה בחשבונך או על חשד לפגיעה באבטחתו."
+      },
+      "permitted": {
+        "heading": "שימוש מותר",
+        "intro": "בעשותך שימוש בשירות, אתה מתחייב שלא:",
+        "item1": "לעשות בו שימוש למטרה בלתי חוקית, מפרה או פוגענית.",
+        "item2": "לנסות לפגוע בשירות, לשבשו, או לקבל גישה בלתי מורשית למערכת, לחשבונות או לנתוני משתמשים אחרים.",
+        "item3": "להעמיס על השירות באופן חריג, או לעשות בו שימוש אוטומטי שאינו תואם שימוש סביר והוגן.",
+        "item4": "להעתיק, לשכפל, להנדס לאחור או למכור חלק כלשהו מהשירות ללא הרשאה מפורשת בכתב."
+      },
+      "notTaxDocs": {
+        "heading": "המסמכים המופקים בשירות אינם מסמכי מס",
+        "body": "המסמכים שהשירות מפיק, ובכלל זה תעודת ההתחשבנות וקובצי ה-PDF, הם <strong>סיכום פנימי לנוחות בלבד</strong> המרכז שעות ופריטים לחיוב. מסמכים אלה אינם מהווים חשבונית, חשבונית מס, קבלה או כל מסמך חשבונאי כדין, ואין לראות בהם תחליף לכך. האחריות להפקת מסמכי מס כדין, לניהול ספרים, לדיווח לרשויות ולעמידה בכל חובות המס, הרגולציה והדין החלים עליך, מוטלת עליך בלבד. השירות אינו אחראי לתוכן החיובים, לסכומים, לחישובים או לכל שימוש שתעשה במסמכים המופקים בו."
+      },
+      "noAdvice": {
+        "heading": "היעדר ייעוץ מקצועי",
+        "body": "אין באמור בשירות, בתכניו או במסמכים המופקים בו משום ייעוץ מס, ייעוץ חשבונאי, ייעוץ משפטי או ייעוץ מקצועי אחר, ואין להסתמך עליהם ככאלה. בכל עניין מקצועי עליך לפנות לבעל מקצוע מוסמך."
+      },
+      "yourData": {
+        "heading": "הנתונים שלך ואחריות לגיבוי",
+        "body": "הנתונים שאתה מזין הם בבעלותך. אנו מעבדים אותם לצורך אספקת השירות בלבד, בהתאם ל<privacyLink>מדיניות הפרטיות</privacyLink>. באפשרותך לייצא או למחוק את הנתונים שלך בכל עת מתוך הגדרות החשבון. מאחר שהשירות מצוי בשלב בטא, אתה האחראי לשמירת גיבוי עצמאי ועדכני של נתונים חשובים, ולא נישא באחריות לאובדן נתונים מכל סיבה שהיא."
+      },
+      "ip": {
+        "heading": "קניין רוחני",
+        "body": "כל הזכויות בשירות עצמו, לרבות העיצוב, הקוד, הסימנים המסחריים והתכנים, שמורות לנו. תנאים אלה מקנים לך רישיון אישי, מוגבל, לא בלעדי ובלתי ניתן להעברה לשימוש בשירות בלבד, ואינם מקנים לך זכות כלשהי בקניין הרוחני של השירות."
+      },
+      "pricing": {
+        "heading": "תמחור ושינויים עתידיים",
+        "body": "בשלב הבטא השימוש בשירות אינו כרוך בתשלום. בכוונתנו לאפשר גם בהמשך ניהול של עד שלושה לקוחות ללא תשלום. אנו שומרים על הזכות להוסיף בעתיד תכניות או תכונות בתשלום עבור שימוש מורחב, לשנות את מודל התמחור, או להגביל תכונות מסוימות. שינוי כאמור יחול רק לאחר הודעה מראש ובמסגרת זמן סבירה. לא תחויב בתשלום ללא הסכמתך המפורשת מראש."
+      },
+      "availability": {
+        "heading": "זמינות השירות",
+        "body": "אנו שואפים לזמינות גבוהה אך איננו מתחייבים לפעילות רציפה, זמינה או נטולת תקלות. אנו רשאים לעדכן, לשנות, להשבית או להפסיק את השירות או חלקים ממנו מעת לעת, לרבות לצורכי תחזוקה, ונשתדל להודיע מראש על שינויים מהותיים."
+      },
+      "liability": {
+        "heading": "הגבלת אחריות",
+        "body": "השירות מסופק \"כפי שהוא\" וללא אחריות מכל סוג, מפורשת או משתמעת, לרבות אחריות להתאמה לצורך מסוים, לזמינות, לדיוק או לאי-הפרעה. במידה המרבית המותרת בדין, לא נישא באחריות לכל נזק עקיף, מיוחד, תוצאתי או עונשי, לאובדן רווחים, הכנסות, מוניטין או נתונים, הנובע מהשימוש בשירות או מאי-היכולת להשתמש בו. בכל מקרה, אחריותנו המצרפית הכוללת בגין כל עילה שהיא לא תעלה על הסכום ששילמת בפועל עבור השירות בשנים-עשר החודשים שקדמו לאירוע, ובשלב הבטא, שבו השירות ניתן ללא תשלום, סכום זה הוא אפס."
+      },
+      "indemnity": {
+        "heading": "שיפוי",
+        "body": "אתה מתחייב לשפות ולפצות אותנו בגין כל נזק, הוצאה או חבות, לרבות שכר טרחת עורך דין סביר, שייגרמו לנו עקב שימושך בשירות תוך הפרת תנאים אלה או הדין, או עקב תביעה של צד שלישי הנובעת משימושך בשירות או מהנתונים שהזנת בו."
+      },
+      "thirdParty": {
+        "heading": "שירותי צד שלישי",
+        "body": "השירות נשען על ספקי תשתית חיצוניים (ובהם שירותי אחסון, אירוח והתחברות). איננו אחראים לתקלות, להפסקות שירות או לנזקים הנובעים מפעולתם של ספקים אלה, הכפופים לתנאיהם ולמדיניות הפרטיות שלהם."
+      },
+      "forceMajeure": {
+        "heading": "כוח עליון",
+        "body": "לא נישא באחריות לעיכוב או לכשל בקיום התחייבויותינו הנובעים מנסיבות שאינן בשליטתנו הסבירה, ובכלל זה כשלי תקשורת או חשמל, תקלות אצל ספקי תשתית, מתקפות סייבר, מלחמה, מצב חירום או הוראת רשות מוסמכת."
+      },
+      "suspension": {
+        "heading": "השעיה וסיום",
+        "body": "באפשרותך להפסיק את השימוש ולמחוק את חשבונך בכל עת. אנו רשאים להשעות או לסיים את חשבונך, באופן מיידי ולפי שיקול דעתנו, אם הפרת תנאים אלה, אם השימוש שלך פוגע בשירות או במשתמשים אחרים, או אם הדבר נדרש על פי דין."
+      },
+      "changes": {
+        "heading": "שינויים בתנאים",
+        "body": "אנו רשאים לעדכן תנאים אלה מעת לעת. במקרה של שינוי מהותי נעדכן את תאריך העדכון ונודיע במידת הצורך. המשך השימוש בשירות לאחר עדכון התנאים מהווה הסכמה לתנאים המעודכנים."
+      },
+      "general": {
+        "heading": "הוראות כלליות",
+        "item1": "אם הוראה מהוראות תנאים אלה תימצא בלתי תקפה, יתר ההוראות יוסיפו לעמוד בתוקפן.",
+        "item2": "הימנעות מאכיפת זכות לפי תנאים אלה לא תיחשב כוויתור עליה.",
+        "item3": "אינך רשאי להמחות את זכויותיך לפי תנאים אלה ללא הסכמתנו מראש ובכתב.",
+        "item4": "תנאים אלה, יחד עם מדיניות הפרטיות, מהווים את ההסכם המלא בינך ובינינו בנוגע לשירות."
+      },
+      "law": {
+        "heading": "דין וסמכות שיפוט",
+        "body": "על תנאים אלה יחולו דיני מדינת ישראל בלבד, וסמכות השיפוט הבלעדית בכל עניין הנוגע להם תהא נתונה לבתי המשפט המוסמכים במחוז תל אביב-יפו."
+      },
+      "contact": {
+        "heading": "יצירת קשר",
+        "body": "לשאלות בנוגע לתנאים אלה ניתן לפנות אלינו דרך <contactLink>טופס יצירת הקשר</contactLink>."
+      }
+    },
+    "privacy": {
+      "metaTitle": "מדיניות פרטיות",
+      "metaDescription": "מדיניות הפרטיות של {brand}: אילו נתונים אנו אוספים, כיצד אנו משתמשים בהם, ומהן זכויותיך.",
+      "title": "מדיניות פרטיות",
+      "updated": "3 ביוני 2026",
+      "intro": "מדיניות זו מסבירה אילו נתונים אישיים {brand} (להלן: \"אנו\" או \"השירות\") אוסף אודותיך, כיצד אנו משתמשים בהם ושומרים אותם, ומהן הזכויות העומדות לרשותך. אנו פועלים כבעלי השליטה במאגר המידע ומעבדים את המידע בהתאם לחוק הגנת הפרטיות, התשמ\"א-1981, לרבות תיקון מס' 13 לחוק. השימוש בשירות מהווה הסכמה למדיניות זו.",
+      "collect": {
+        "heading": "אילו נתונים אנו אוספים",
+        "item1": "<strong>פרטי חשבון:</strong> כתובת אימייל ושם, המתקבלים בעת הרשמה או בהתחברות עם Google.",
+        "item2": "<strong>נתוני שימוש שאתה מזין:</strong> לקוחות, פרויקטים, משימות, רשומות זמן, פריטים, תעריפים, מסמכי חיוב והערות שאתה יוצר בשירות.",
+        "item3": "<strong>נתונים טכניים:</strong> עוגיית הפעלה (session) לצורך התחברות, וכן לוגים תפעוליים בסיסיים (כתובת IP, סוג דפדפן, זמני בקשה) המשמשים לאבטחה וליציבות."
+      },
+      "use": {
+        "heading": "כיצד אנו משתמשים בנתונים",
+        "intro": "אנו מעבדים את המידע למטרות הבאות בלבד:",
+        "item1": "כדי לספק את השירות, לשמור ולהציג את הלקוחות, הפרויקטים, השעות והחיובים שלך.",
+        "item2": "כדי לאמת אותך ולשמור על אבטחת החשבון.",
+        "item3": "כדי לתחזק, לנטר ולשפר את יציבות וביצועי המערכת.",
+        "item4": "כדי לתקשר איתך בעניינים הנוגעים לחשבונך בלבד.",
+        "note": "איננו מוכרים את הנתונים שלך, ואיננו משתמשים בהם לפרסום או למסירה לצד שלישי לשם פרסום."
+      },
+      "providers": {
+        "heading": "שיתוף עם ספקי שירות",
+        "intro": "אנו נעזרים בספקי תשתית בלבד, המעבדים מידע מטעמנו לצורך הפעלת השירות:",
+        "item1": "<strong>Neon / AWS:</strong> אחסון מסד הנתונים (אזור פרנקפורט, האיחוד האירופי).",
+        "item2": "<strong>Vercel:</strong> אירוח האפליקציה.",
+        "item3": "<strong>Google:</strong> התחברות אופציונלית באמצעות חשבון Google (OAuth).",
+        "note": "ספקים אלה מעבדים נתונים מטעמנו בלבד ובכפוף להתחייבויות אבטחה ופרטיות. למעט ספקים אלה, איננו מוסרים את המידע לצדדים שלישיים, אלא אם נדרש לכך על פי דין או צו של רשות מוסמכת."
+      },
+      "storage": {
+        "heading": "אחסון והעברת מידע מחוץ לישראל",
+        "body": "המידע מאוחסן ומעובד בשרתים הממוקמים באיחוד האירופי (פרנקפורט, גרמניה). בעצם השימוש בשירות אתה מסכים להעברת המידע ולאחסונו מחוץ לגבולות ישראל, באזור המקיים רמת הגנה מקובלת על מידע."
+      },
+      "security": {
+        "heading": "אבטחת מידע",
+        "body": "התעבורה מוצפנת (HTTPS/TLS), והגישה לנתונים מבודדת ברמת מסד הנתונים כך שכל משתמש רואה אך ורק את המידע שלו (Row-Level Security). אנו נוקטים באמצעים סבירים ומקובלים להגנה על המידע, אך אף אמצעי אינו מספק אבטחה מוחלטת. אתה האחראי לשמירת סודיות פרטי ההתחברות שלך."
+      },
+      "incident": {
+        "heading": "אירוע אבטחה",
+        "body": "במקרה של אירוע אבטחה מהותי הנוגע למידע שלך, נפעל בהתאם להוראות הדין החלות, לרבות יידוע ככל שנדרש על פי דין."
+      },
+      "cookies": {
+        "heading": "עוגיות",
+        "body": "אנו עושים שימוש בעוגיות הכרחיות בלבד, בעיקר עוגיית ההפעלה ששומרת על ההתחברות שלך. איננו משתמשים בעוגיות פרסום או מעקב צד שלישי, ואיננו מפעילים כלי ניתוח (analytics) המתחקים אחר פעילותך."
+      },
+      "rights": {
+        "heading": "הזכויות שלך",
+        "intro": "בהתאם לחוק הגנת הפרטיות, התשמ\"א-1981 ולתקנותיו, עומדות לרשותך הזכויות הבאות:",
+        "item1": "<strong>עיון:</strong> לצפות בנתונים שאנו מחזיקים עליך.",
+        "item2": "<strong>ייצוא:</strong> להוריד עותק של כל הנתונים שלך מתוך הגדרות החשבון.",
+        "item3": "<strong>תיקון:</strong> לעדכן או לתקן את פרטיך בכל עת.",
+        "item4": "<strong>מחיקה:</strong> למחוק את חשבונך ואת כל הנתונים שלו לצמיתות, מתוך הגדרות החשבון.",
+        "note": "למימוש זכויות אלה ניתן להשתמש בכלים שבהגדרות החשבון או לפנות אלינו דרך טופס יצירת הקשר."
+      },
+      "retention": {
+        "heading": "שמירה ומחיקת נתונים",
+        "body": "אנו שומרים את הנתונים שלך כל עוד חשבונך פעיל. בעת מחיקת החשבון, כלל נתוני המשתמש שלך נמחקים מהמערכת באופן בלתי הפיך, למעט לוגים תפעוליים המתאפסים מעצמם לאחר זמן קצר, ולמעט מידע שאנו נדרשים לשמור על פי דין."
+      },
+      "minors": {
+        "heading": "קטינים",
+        "body": "השירות אינו מיועד לשימוש על ידי קטינים מתחת לגיל 18, ואיננו אוספים ביודעין מידע אודותיהם."
+      },
+      "changes": {
+        "heading": "שינויים במדיניות",
+        "body": "אנו עשויים לעדכן מדיניות זו מעת לעת. במקרה של שינוי מהותי נעדכן את תאריך העדכון ונודיע במידת הצורך. המשך השימוש בשירות לאחר העדכון מהווה הסכמה למדיניות המעודכנת."
+      },
+      "contact": {
+        "heading": "יצירת קשר",
+        "body": "בכל שאלה או בקשה הנוגעת לפרטיות, ניתן לפנות אלינו דרך <contactLink>טופס יצירת הקשר</contactLink>."
+      }
+    }
+  },
+  "Offline": {
+    "metaTitle": "אין חיבור — מוניט",
+    "title": "אין חיבור לאינטרנט",
+    "body": "נראה שאתה במצב לא מקוון. בדוק את החיבור ונסה שוב — חלק מהמסכים שכבר ביקרת בהם זמינים גם ללא רשת.",
+    "retry": "נסה שוב"
+  },
+  "errors": {
+    "UNAUTHORIZED": "לא מחובר",
+    "FORBIDDEN": "אין הרשאה",
+    "SERVER_ERROR": "שגיאת שרת",
+    "INVALID_REQUEST": "בקשה לא תקינה",
+    "VALIDATION_ERROR": "נתונים לא תקינים",
+    "NO_FIELDS_TO_UPDATE": "יש לבחור לפחות שדה אחד לעדכון",
+    "RATE_LIMIT": "נשלחו יותר מדי הודעות. נסה שוב מאוחר יותר.",
+    "EMAIL_SEND_FAILED": "שליחת ההודעה נכשלה. נסה שוב מאוחר יותר.",
+    "CLIENT_NOT_FOUND": "הלקוח לא נמצא",
+    "CLIENT_REQUIRED": "נא לבחור לקוח",
+    "PROJECT_NOT_FOUND": "הפרויקט לא נמצא",
+    "TASK_NOT_FOUND": "המשימה לא נמצאה",
+    "ENTRY_NOT_FOUND": "הרשומה לא נמצאה",
+    "RATE_NOT_FOUND": "התעריף לא נמצא",
+    "PROFILE_NOT_FOUND": "פרופיל לא נמצא",
+    "USER_NOT_FOUND": "משתמש לא נמצא",
+    "FIXED_MONTHLY_FEE_REQUIRED": "כאשר חיוב חודשי פעיל, יש להזין סכום גדול מ-0",
+    "FIXED_MONTHLY_DATE_RANGE_INVALID": "תאריך התחלה של חיוב חודשי חייב להיות לפני תאריך הסיום",
+    "TIMER_NOT_FOUND": "הטיימר לא נמצא או כבר הופסק",
+    "TIMER_ALREADY_PAUSED": "הטיימר כבר מושהה",
+    "TIMER_NOT_PAUSED": "אין טיימר מושהה",
+    "ENTRY_STATE_CHANGED": "חלק מהפריטים כבר חויבו או השתנו — רענן ונסה שוב",
+    "ENTRY_UNAVAILABLE": "הפריט כבר חויב או אינו זמין",
+    "DOCUMENT_NOT_FOUND": "תעודה לא נמצאה",
+    "DOCUMENT_LOCKED": "התעודה נעולה — בטל תשלום כדי לערוך",
+    "LINE_NOT_FOUND": "שורה לא נמצאה",
+    "DELETE_REQUIRES_CANCELED": "ניתן למחוק רק תעודה מבוטלת",
+    "CANCEL_REQUIRES_PENDING": "ניתן לבטל רק תעודה ממתינה",
+    "PAY_REQUIRES_PENDING": "לא ניתן לסמן כשולם (התעודה אינה ממתינה)",
+    "UNPAY_REQUIRES_PAID": "לא ניתן לבטל תשלום (התעודה אינה משולמת)",
+    "REPORT_GENERATION_ERROR": "שגיאה ביצירת הדוח",
+    "REPORTS_INIT_LOAD_ERROR": "שגיאה בטעינת נתוני הדוחות",
+    "EXCEL_GENERATION_ERROR": "שגיאה ביצירת קובץ Excel",
+    "PRESETS_LOAD_ERROR": "שגיאה בטעינת הפריסטים",
+    "PRESET_SAVE_ERROR": "שגיאה בשמירת הפריסט",
+    "PRESET_NOT_FOUND": "הפריסט לא נמצא",
+    "PRESET_DELETE_ERROR": "שגיאה במחיקת הפריסט",
+    "CURRENCY_RATES_LOAD_ERROR": "שגיאה בטעינת שערי חליפין",
+    "CURRENCY_SAME_SOURCE_TARGET": "מטבע המקור ומטבע היעד לא יכולים להיות זהים",
+    "CURRENCY_RATES_TABLE_MISSING": "טבלת שערי חליפין אינה קיימת. יש ליצור אותה תחילה.",
+    "CURRENCY_RATE_SAVE_ERROR": "שגיאה בשמירת שער חליפין",
+    "CURRENCY_RATE_NOT_FOUND": "שער חליפין לא נמצא",
+    "CURRENCY_RATE_DELETE_ERROR": "שגיאה במחיקת שער חליפין",
+    "NO_FILE": "לא נבחר קובץ",
+    "INVALID_FILE_TYPE": "סוג קובץ לא נתמך. מותר: JPEG, PNG, GIF, WebP",
+    "FILE_TOO_LARGE": "הקובץ גדול מדי",
+    "NO_FILE_TO_DELETE": "אין קובץ למחיקה",
+    "SELF_ACTION_FORBIDDEN": "לא ניתן לבצע פעולה זו על עצמך",
+    "PASSWORD_RESET_UNSUPPORTED": "איפוס סיסמה ידני אינו נתמך. יש להפנות את המשתמש לתהליך 'שכחתי סיסמה'.",
+    "UNKNOWN_ACTION": "פעולה לא מוכרת"
+  },
+  "Pwa": {
+    "dialogLabel": "התקנת האפליקציה",
+    "close": "סגור",
+    "installTitle": "התקן את מוניט",
+    "installSubtitle": "גישה מהירה ממסך הבית, גם ללא דפדפן.",
+    "installButton": "התקן אפליקציה",
+    "iosInstructions": "הקש על כפתור השיתוף <icon></icon> בסרגל הדפדפן, ואז בחר \"הוסף למסך הבית\".",
+    "shareIconLabel": "שיתוף"
+  },
+  "Reports": {
+    "pageTitle": "התחשבנות",
+    "tabs": {
+      "billable": "לחיוב",
+      "documents": "תעודות",
+      "report": "דוח חד-פעמי"
+    },
+    "status": {
+      "pending": "ממתין",
+      "paid": "שולם",
+      "canceled": "בוטל"
+    },
+    "actions": {
+      "retry": "נסה שוב",
+      "back": "חזרה",
+      "cancel": "ביטול",
+      "close": "סגור",
+      "save": "שמור",
+      "saving": "שומר…",
+      "edit": "ערוך",
+      "working": "מבצע…"
+    },
+    "columns": {
+      "date": "תאריך",
+      "client": "לקוח",
+      "project": "פרויקט",
+      "description": "תיאור",
+      "duration": "משך",
+      "hours": "שעות",
+      "workDescription": "תיאור עבודה",
+      "amount": "סכום",
+      "month": "חודש",
+      "label": "תווית",
+      "type": "סוג",
+      "hoursOrQty": "שעות / כמות"
+    },
+    "kind": {
+      "item": "פריט",
+      "hours": "שעות"
+    },
+    "units": {
+      "items": "{count} יח׳",
+      "ref": "אסמכתא {ref}",
+      "hoursMeasure": "{hours}ש׳"
+    },
+    "sections": {
+      "fixedCharges": "חיובים קבועים",
+      "byLabel": "פירוט לפי תווית",
+      "byClient": "סיכום לפי לקוח",
+      "byProject": "סיכום לפי פרויקט",
+      "byDate": "סיכום לפי תאריך (יומי)",
+      "byWeek": "סיכום לפי שבוע",
+      "detailedEntries": "רשומות מפורטות"
+    },
+    "summary": {
+      "totalHours": "סה״כ שעות",
+      "hoursValue": "{hours} שע׳",
+      "totalEntries": "סה״כ רשומות",
+      "totalAmount": "סה״כ סכום",
+      "totalDue": "סה״כ לתשלום",
+      "notAvailable": "לא זמין",
+      "period": "תקופה",
+      "periodRange": "{start} עד {end}",
+      "recordCount": "{count} רשומות",
+      "weekRange": "{start} עד {end}"
+    },
+    "filters": {
+      "title": "פילטרים",
+      "show": "הצג",
+      "hide": "הסתר",
+      "startDate": "תאריך התחלה",
+      "endDate": "תאריך סיום",
+      "client": "לקוח",
+      "allClients": "כל הלקוחות",
+      "project": "פרויקט",
+      "allProjects": "כל הפרויקטים",
+      "includeFixed": "לכלול חיובים קבועים",
+      "includeFixedHint": "מוסיף לדוח רכיבי חיוב חודשי קבועים ברמת פרויקט.",
+      "showWorkTimes": "הצג שעות עבודה (ממתי עד מתי)",
+      "showWorkTimesHint": "מוסיף לדוח את שעת ההתחלה והסיום של כל רשומת עבודה.",
+      "displayCurrency": "הצג סכומים במטבע",
+      "currencyOriginal": "מטבע מקורי (מרובה)",
+      "currencyILS": "₪ - שקל ישראלי (ILS)",
+      "currencyUSD": "$ - דולר אמריקני (USD)",
+      "currencyUSDT": "₮ - טתר (USDT)",
+      "currencyBTC": "₿ - ביטקוין (BTC)",
+      "currencyETH": "Ξ - אתריום (ETH)",
+      "ratesMissing": "⚠️ לא הוגדרו שערי חליפין",
+      "ratesAvailable": "✓ שערי חליפין זמינים",
+      "clear": "נקה פילטרים"
+    },
+    "report": {
+      "generate": "צור דוח",
+      "generating": "יוצר דוח...",
+      "generateError": "שגיאה ביצירת הדוח",
+      "docTitle": "דוח שעות עבודה",
+      "headerTitle": "דוח עבודה",
+      "fromDate": "מתאריך: {date}",
+      "toDate": "עד תאריך: {date}",
+      "issueDate": "תאריך הפקה: {date}",
+      "for": "עבור",
+      "perHour": "{amount}/שעה",
+      "notBillable": "לא לחיוב",
+      "projectTotal": "סה״כ {project}",
+      "fixedMonthly": "חיוב חודשי קבוע",
+      "appName": "מוניט",
+      "generatedOn": "נוצר בתאריך {date}",
+      "noEntries": "לא נמצאו רשומות לתקופה שנבחרה",
+      "logTimeNow": "רשום זמן עכשיו",
+      "noReportYet": "בחר פילטרים ולחץ על \"צור דוח\" להצגת הדוח"
+    },
+    "pdf": {
+      "button": "יצא ל-PDF",
+      "taxId": "ע.מ / ח.פ"
+    },
+    "excel": {
+      "button": "יצא ל-Excel",
+      "success": "קובץ Excel יוצא בהצלחה",
+      "error": "שגיאה בייצוא קובץ Excel"
+    },
+    "share": {
+      "button": "שתף דוח",
+      "copyTooltip": "העתק קישור לדוח",
+      "copied": "קישור לדוח הועתק ללוח",
+      "error": "שגיאה בהעתקת הקישור"
+    },
+    "preset": {
+      "load": "טען פריסט",
+      "save": "שמור פריסט",
+      "loadAction": "טען",
+      "deleteAction": "מחק",
+      "nameRequired": "נא להזין שם לפריסט",
+      "saved": "הפריסט נשמר בהצלחה",
+      "saveError": "שגיאה בשמירת הפריסט",
+      "loaded": "הפריסט נטען בהצלחה",
+      "deleted": "הפריסט נמחק בהצלחה",
+      "deleteError": "שגיאה במחיקת הפריסט",
+      "noneSaved": "אין פריסטים שמורים",
+      "noneSavedHint": "שמור פריסט כדי שיופיע כאן",
+      "saveTitle": "שמור פריסט",
+      "saveDescription": "שמור את הגדרות הפילטרים הנוכחיות כפריסט",
+      "nameLabel": "שם הפריסט",
+      "namePlaceholder": "לדוגמה: דוח חודשי - לקוח הייטק",
+      "filterSettings": "הגדרות הפילטר:",
+      "startDateLabel": "תאריך התחלה:",
+      "endDateLabel": "תאריך סיום:",
+      "clientLabel": "לקוח:",
+      "projectLabel": "פרויקט:",
+      "notSelected": "לא נבחר",
+      "loadTitle": "טען פריסט",
+      "loadDescription": "בחר פריסט שמור לטעינה"
+    },
+    "billable": {
+      "clientLabel": "לקוח",
+      "clientLoading": "טוען לקוחות...",
+      "clientPlaceholder": "בחר לקוח",
+      "monthLabel": "חודש חיוב",
+      "pickClientPrompt": "בחר לקוח כדי לראות פריטים לחיוב.",
+      "loadError": "שגיאה בטעינת פריטים לחיוב.",
+      "emptyTitle": "אין פריטים לחיוב ללקוח הזה 🎉",
+      "emptyBody": "כל הרשומות והחיובים הקבועים כבר טופלו או שאין כאלה לחודש שנבחר.",
+      "entriesHeading": "רשומות לחיוב",
+      "fixedHeading": "חיובים קבועים",
+      "actualDuration": "(בפועל {duration})",
+      "alreadyBilled": "כבר חויב החודש",
+      "selectedTotal": "סה״כ נבחר",
+      "issuing": "מפיק...",
+      "issueButton": "הפק תעודת התחשבנות",
+      "issuedToast": "תעודה #{number} נוצרה",
+      "issueError": "שגיאה ביצירת התעודה"
+    },
+    "documents": {
+      "loadErrorTitle": "לא הצלחנו לטעון את התעודות",
+      "loadErrorBody": "אירעה תקלה בטעינת הנתונים.",
+      "emptyTitle": "עדיין לא הפקת תעודות",
+      "emptyBody": "הפק תעודת התחשבנות מתוך לשונית <tab>לחיוב</tab> והיא תופיע כאן.",
+      "docNumber": "תעודה #{number}"
+    },
+    "doc": {
+      "loadErrorTitle": "לא הצלחנו לטעון את התעודה",
+      "loadErrorBody": "ייתכן שהיא נמחקה או שאירעה תקלה.",
+      "issuedOn": "הופקה: {date}",
+      "paidOn": "שולם: {date}",
+      "total": "סה״כ",
+      "backToList": "→ חזרה לרשימה",
+      "lockedNotice": "התעודה נעולה — בטל תשלום כדי לערוך.",
+      "colItem": "פריט",
+      "colDetails": "פירוט",
+      "colQtyRate": "כמות / תעריף",
+      "colAmount": "סכום",
+      "colActions": "פעולות",
+      "noLines": "אין שורות בתעודה.",
+      "lineDescriptionAria": "תיאור שורה",
+      "lineNoteAria": "הערה לשורה",
+      "descriptionPlaceholder": "תיאור",
+      "notePlaceholder": "הערה",
+      "notesLabel": "הערות לתעודה",
+      "notesPlaceholder": "הערות פנימיות…",
+      "saveNotes": "שמור הערות",
+      "notesSaved": "ההערות נשמרו",
+      "lineUpdated": "השורה עודכנה",
+      "lineRemoved": "השורה הוסרה",
+      "removeLineTitle": "הסרת שורה",
+      "removeLineBody": "להסיר את \"{label}\" מהתעודה? פריט שמקורו ברישום זמן יחזור לרשימת הפריטים לחיוב.",
+      "removeLineAction": "הסר",
+      "updateError": "שגיאה בעדכון תעודה",
+      "actionFailed": "הפעולה נכשלה",
+      "deleteFailed": "מחיקה נכשלה",
+      "deleted": "התעודה נמחקה",
+      "exportPdf": "ייצוא PDF",
+      "markPaidTitle": "סימון כשולם",
+      "markPaidBody": "לסמן את התעודה כשולמה? היא תינעל לעריכה עד שתבטל את התשלום.",
+      "markPaidAction": "סמן כשולם",
+      "markedPaid": "סומן כשולם",
+      "cancelDocTitle": "ביטול תעודה",
+      "cancelDocBody": "לבטל את התעודה? הפעולה אינה הפיכה. הפריטים שמקורם ברישום זמן יחזרו לרשימת הפריטים לחיוב.",
+      "cancelDocAction": "בטל תעודה",
+      "docCanceled": "התעודה בוטלה",
+      "unpayTitle": "ביטול תשלום",
+      "unpayBody": "לבטל את סימון התשלום ולפתוח את התעודה לעריכה מחדש?",
+      "unpayAction": "בטל תשלום",
+      "unpaid": "התשלום בוטל",
+      "deleteDocTitle": "מחיקת תעודה",
+      "deleteDocBody": "למחוק לצמיתות את התעודה המבוטלת? לא ניתן לשחזר.",
+      "deleteDocAction": "מחק תעודה",
+      "pdfPromptTitle": "התעודה נוצרה בהצלחה",
+      "pdfPromptBody": "להפיק PDF עכשיו?",
+      "pdfPromptLater": "לא עכשיו",
+      "pdfPromptConfirm": "הפק PDF",
+      "pdfFilenamePrefix": "תעודה",
+      "settlementDocTitle": "תעודת התחשבנות פנימית",
+      "pdfNumber": "מספר {number}",
+      "pdfStatus": "סטטוס: {status}",
+      "pdfIssueDate": "תאריך הפקה: {date}",
+      "pdfFor": "עבור",
+      "notesHeading": "הערות"
+    }
+  }
+}

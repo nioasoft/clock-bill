@@ -8,7 +8,7 @@ type Ctx = { params: Promise<{ id: string }> };
 export async function POST(_request: NextRequest, ctx: Ctx) {
   try {
     const user = await getUser();
-    if (!user) return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+    if (!user) return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
     const { id } = await ctx.params;
     const { withTransaction } = await import("@/lib/db");
 
@@ -34,9 +34,9 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
     return NextResponse.json({ success: true });
   } catch (error) {
     const msg = error instanceof Error ? error.message : "";
-    if (msg === "NOT_FOUND") return NextResponse.json({ success: false, message: "תעודה לא נמצאה" }, { status: 404 });
-    if (msg === "BAD_STATE") return NextResponse.json({ success: false, message: "ניתן לבטל רק תעודה ממתינה" }, { status: 409 });
+    if (msg === "NOT_FOUND") return NextResponse.json({ success: false, error_code: "DOCUMENT_NOT_FOUND", message: "תעודה לא נמצאה" }, { status: 404 });
+    if (msg === "BAD_STATE") return NextResponse.json({ success: false, error_code: "CANCEL_REQUIRES_PENDING", message: "ניתן לבטל רק תעודה ממתינה" }, { status: 409 });
     console.error("POST cancel failed:", error);
-    return NextResponse.json({ success: false, message: "שגיאה בביטול תעודה" }, { status: 500 });
+    return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בביטול תעודה" }, { status: 500 });
   }
 }

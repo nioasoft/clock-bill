@@ -18,7 +18,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     if (result.rows.length === 0) {
       return NextResponse.json(
-        { success: false, message: "הרשומה לא נמצאה" },
+        { success: false, error_code: "ENTRY_NOT_FOUND", message: "הרשומה לא נמצאה" },
         { status: 404 }
       );
     }
@@ -122,7 +122,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
   } catch (error) {
     console.error("Error fetching entry:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה בטעינת הרשומה" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת הרשומה" },
       { status: 500 }
     );
   }
@@ -138,7 +138,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -228,6 +228,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       return NextResponse.json(
         {
           success: false,
+          error_code: result.error === "entry" ? "ENTRY_NOT_FOUND" : "PROJECT_NOT_FOUND",
           message: result.error === "entry" ? "הרשומה לא נמצאה" : "הפרויקט לא נמצא",
         },
         { status: 404 }
@@ -265,7 +266,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   } catch (error) {
     console.error("Error updating entry:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה בעדכון הרשומה" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה בעדכון הרשומה" },
       { status: 500 }
     );
   }
@@ -306,7 +307,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -323,7 +324,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     if (deleted.rows.length === 0) {
       return NextResponse.json(
-        { success: false, message: "הרשומה לא נמצאה" },
+        { success: false, error_code: "ENTRY_NOT_FOUND", message: "הרשומה לא נמצאה" },
         { status: 404 }
       );
     }
@@ -335,7 +336,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   } catch (error) {
     console.error("Error deleting entry:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה במחיקת הרשומה" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה במחיקת הרשומה" },
       { status: 500 }
     );
   }

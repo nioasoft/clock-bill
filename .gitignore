@@ -74,6 +74,12 @@ public/uploads/
 # playwright artifacts
 .playwright-mcp/*.png
 
+# playwright e2e (test runner output + downloaded browsers cache)
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
 # SQLite databases
 *.db
 *.sqlite

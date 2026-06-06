@@ -1,7 +1,8 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { useRouter, usePathname } from "@/src/i18n/navigation";
 import { Gauge } from "lucide-react";
 import { Sidebar } from "./sidebar";
 import { MobileNav } from "./mobile-nav";
@@ -11,7 +12,7 @@ import { PersistentTimerBar } from "./persistent-timer-bar";
 import { TimerStartModal } from "./timer-start-modal";
 import { TimerStopModal } from "./timer-stop-modal";
 import { TimerFab } from "./timer-fab";
-import { BRAND } from "@/lib/brand";
+import { brandName } from "@/lib/brand";
 
 interface User {
   id: string;
@@ -26,9 +27,14 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const locale = useLocale();
+  const tCommon = useTranslations("common");
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [, setLogoutLoading] = useState(false);
+  // Guards the stored-locale sync so it runs once and can never loop.
+  const localeSyncedRef = useRef(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("sidebar-collapsed") === "true";
@@ -74,6 +80,35 @@ export function AppLayout({ children }: AppLayoutProps) {
     fetchUser();
   }, [router]);
 
+  // Apply the user's saved interface-language preference. Runs once per mount
+  // (ref-guarded → no redirect loop): if the stored locale differs from the
+  // active one, set the NEXT_LOCALE cookie so the next navigation/visit honors
+  // it, then do a single soft switch to the stored locale. The switcher in
+  // Settings remains the way to change it explicitly.
+  useEffect(() => {
+    if (!user || localeSyncedRef.current) return;
+    localeSyncedRef.current = true;
+
+    const syncLocale = async () => {
+      try {
+        const res = await fetch("/api/profile");
+        const data = await res.json();
+        const stored: unknown = data?.profile?.locale;
+        if ((stored === "he" || stored === "en") && stored !== locale) {
+          // Persist so a hard reload / new visit picks it up immediately.
+          document.cookie = `NEXT_LOCALE=${stored}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+          // Single soft switch to the stored locale on the current path.
+          router.replace(pathname, { locale: stored });
+        }
+      } catch {
+        // Non-fatal: the UI stays on the current locale; the user can switch
+        // manually in Settings.
+      }
+    };
+
+    void syncLocale();
+  }, [user, locale, router, pathname]);
+
   const handleLogout = async () => {
     setLogoutLoading(true);
     try {
@@ -112,8 +147,8 @@ export function AppLayout({ children }: AppLayoutProps) {
             <div className="absolute -inset-2 border-2 border-accent/20 rounded-2xl animate-ping" />
           </div>
           <div className="flex flex-col items-center gap-1">
-            <h2 className="text-xl font-display font-bold text-foreground">{BRAND.name}</h2>
-            <p className="text-sm text-muted-foreground">טוען...</p>
+            <h2 className="text-xl font-display font-bold text-foreground">{brandName(locale)}</h2>
+            <p className="text-sm text-muted-foreground">{tCommon("loading")}</p>
           </div>
         </div>
       </div>
@@ -128,7 +163,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     <div className="min-h-screen bg-background">
       <MobileNav userEmail={user.email} onLogout={handleLogout} userRole={user.role} />
       <div className="hidden lg:flex">
-        <div className="fixed right-0 top-0 h-screen z-30">
+        <div className="fixed ltr:left-0 rtl:right-0 top-0 h-screen z-30">
           <Sidebar
             isCollapsed={sidebarCollapsed}
             onToggle={handleSidebarToggle}
@@ -139,7 +174,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
         <div
           className={`flex-1 min-h-screen flex flex-col transition-[margin] duration-200 ${
-            sidebarCollapsed ? "mr-16" : "mr-64"
+            sidebarCollapsed ? "ms-16" : "ms-64"
           }`}
         >
           <PersistentTimerBar />

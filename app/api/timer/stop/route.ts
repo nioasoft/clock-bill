@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     // Get authenticated user
     const user = await getUser();
     if (!user) {
-      return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+      return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
     }
 
     const userId = user.id;
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
 
     if (!result) {
       return NextResponse.json(
-        { success: false, message: "הטיימר לא נמצא או כבר הופסק" },
+        { success: false, error_code: "TIMER_NOT_FOUND", message: "הטיימר לא נמצא או כבר הופסק" },
         { status: 404 }
       );
     }
@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error stopping timer:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה בעצירת הטיימר" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה בעצירת הטיימר" },
       { status: 500 }
     );
   }

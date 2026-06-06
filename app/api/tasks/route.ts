@@ -11,7 +11,7 @@ const logger = createLogger("tasks:list");
 export async function GET(request: NextRequest) {
   try {
     const user = await getUser();
-    if (!user) return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+    if (!user) return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
 
     const { query } = await import("@/lib/db");
     const projectId = new URL(request.url).searchParams.get("projectId");
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, tasks });
   } catch (error) {
     logger.error("Failed to list tasks", error);
-    return NextResponse.json({ success: false, message: "שגיאה בטעינת המשימות" }, { status: 500 });
+    return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת המשימות" }, { status: 500 });
   }
 }
 
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const user = await getUser();
-    if (!user) return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+    if (!user) return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
 
     const parsed = await parseBody(request, createTaskSchema);
     if (!parsed.ok) return parsed.response;
@@ -78,13 +78,13 @@ export async function POST(request: NextRequest) {
     // read is folded into the INSERT as a subselect, removing a statement and the
     // read/write race on `position`.
     const outcome = await withTransaction(
-      async (client): Promise<{ error: { message: string; status: number } } | { id: string }> => {
+      async (client): Promise<{ error: { code: string; message: string; status: number } } | { id: string }> => {
       const projectCheck = await client.query<{ id: string }>(
         `SELECT id FROM projects WHERE id = $1 AND client_id = $2 AND user_id = $3`,
         [projectId, clientId, user.id]
       );
       if (projectCheck.rows.length === 0)
-        return { error: { message: "הפרויקט לא נמצא", status: 404 } as const };
+        return { error: { code: "PROJECT_NOT_FOUND", message: "הפרויקט לא נמצא", status: 404 } as const };
 
       const rateCheck = await client.query<{ id: string; rate: number; name: string }>(
         `SELECT id, rate, name FROM client_rates
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
         [rateId, clientId, user.id]
       );
       if (rateCheck.rows.length === 0)
-        return { error: { message: "התעריף לא נמצא", status: 404 } as const };
+        return { error: { code: "RATE_NOT_FOUND", message: "התעריף לא נמצא", status: 404 } as const };
       const chosen = rateCheck.rows[0];
 
       const result = await client.query<{ id: string }>(
@@ -112,11 +112,11 @@ export async function POST(request: NextRequest) {
     });
 
     if ("error" in outcome)
-      return NextResponse.json({ success: false, message: outcome.error.message }, { status: outcome.error.status });
+      return NextResponse.json({ success: false, error_code: outcome.error.code, message: outcome.error.message }, { status: outcome.error.status });
 
     return NextResponse.json({ success: true, id: outcome.id });
   } catch (error) {
     logger.error("Failed to create task", error);
-    return NextResponse.json({ success: false, message: "שגיאה ביצירת המשימה" }, { status: 500 });
+    return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה ביצירת המשימה" }, { status: 500 });
   }
 }

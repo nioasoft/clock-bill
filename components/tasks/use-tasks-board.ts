@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useTimer } from "@/contexts/timer-context";
 import { showErrorToast } from "@/lib/toast";
 import { positionBetween } from "@/lib/tasks-order";
@@ -25,6 +26,7 @@ export interface UseTasksBoardReturn {
 /** Shared task board data + timer-aware status moves. Consumed by both the
  *  desktop Kanban and the mobile list so side-effects stay identical. */
 export function useTasksBoard(): UseTasksBoardReturn {
+  const tToasts = useTranslations("Tasks.toasts");
   const { refreshTimer, runningTimerForTask, handleStopTimer, onTimerStopped, onTimerStarted } = useTimer();
   const [state, setState] = useState<BoardState>({ loading: true, error: false, tasks: [] });
   // Pending unsubscribe for an in-flight "drag/move out of in_progress → stop
@@ -96,7 +98,7 @@ export function useTasksBoard(): UseTasksBoardReturn {
           unsub();
           pendingStopUnsubRef.current = null;
           try { await persistMove(task.id, targetStatus, position); await load(); }
-          catch { showErrorToast("שגיאה בעדכון המשימה"); }
+          catch { showErrorToast(tToasts("moveError")); }
         });
         pendingStopUnsubRef.current = unsub;
         handleStopTimer(entryId, { managed: true });
@@ -113,10 +115,10 @@ export function useTasksBoard(): UseTasksBoardReturn {
       if (effect === "start_timer") await refreshTimer();
       await load();
     } catch {
-      showErrorToast("שגיאה בעדכון המשימה");
+      showErrorToast(tToasts("moveError"));
       await load();
     }
-  }, [state.tasks, byStatus, runningTimerForTask, persistMove, load, refreshTimer, handleStopTimer, onTimerStopped]);
+  }, [state.tasks, byStatus, runningTimerForTask, persistMove, load, refreshTimer, handleStopTimer, onTimerStopped, tToasts]);
 
   return { state, load, byStatus, moveTask };
 }

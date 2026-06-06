@@ -197,6 +197,48 @@ runner.test('formatDuration: large duration', () => {
   assertEqual(result, '10 שע׳ 5 דק׳');
 });
 
+// Locale-aware behavior (en)
+runner.test('formatDuration: en minutes only', () => {
+  assertEqual(formatDuration(30, 'en'), '30m');
+});
+
+runner.test('formatDuration: en hours only', () => {
+  assertEqual(formatDuration(120, 'en'), '2h');
+});
+
+runner.test('formatDuration: en hours and minutes', () => {
+  assertEqual(formatDuration(150, 'en'), '2h 30m');
+});
+
+runner.test('formatDuration: he unchanged (default locale)', () => {
+  assertEqual(formatDuration(150), '2 שע׳ 30 דק׳');
+});
+
+runner.test('formatDate: en default pattern is MM/DD/YYYY', () => {
+  const result = formatDate('2024-01-15', undefined, 'en');
+  assertEqual(result, '01/15/2024');
+});
+
+runner.test('formatDate: he default pattern is DD/MM/YYYY', () => {
+  const result = formatDate('2024-01-15', undefined, 'he');
+  assertEqual(result, '15/01/2024');
+});
+
+runner.test('formatDate: explicit format wins over locale default', () => {
+  const result = formatDate('2024-01-15', 'YYYY-MM-DD', 'en');
+  assertEqual(result, '2024-01-15');
+});
+
+runner.test('formatTime: en default is 12h', () => {
+  const date = new Date('2024-01-15T14:30:00');
+  assertEqual(formatTime(date, undefined, 'en'), '2:30 PM');
+});
+
+runner.test('formatTime: he default is 24h', () => {
+  const date = new Date('2024-01-15T14:30:00');
+  assertEqual(formatTime(date, undefined, 'he'), '14:30');
+});
+
 // Edge cases
 runner.test('formatDate: handles leap year', () => {
   const date = new Date('2024-02-29');

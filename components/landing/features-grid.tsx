@@ -1,58 +1,17 @@
 "use client";
 
 import { useState, useEffect, useRef, MouseEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Timer, Boxes, LayoutGrid, Layers, Users, FileText, Calculator, CircleDollarSign, TrendingUp } from "lucide-react";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 
-const features = [
-  {
-    icon: Timer,
-    title: "כמה טיימרים במקביל",
-    description: "עובד על כמה לקוחות באותו זמן? פתח טיימר לכל אחד. כל אחד רץ ונעצר בנפרד.",
-  },
-  {
-    icon: Boxes,
-    title: "חיוב לפי פריטים",
-    description: "לא רק שעות. כמות כפול מחיר ליחידה, מקטלוג הלקוח או פריט חד-פעמי.",
-  },
-  {
-    icon: LayoutGrid,
-    title: "לוח משימות (קנבן)",
-    description: "גרור משימה ל'בעבודה' והטיימר נדלק לבד. גרור החוצה, ונשמרת רשומה.",
-  },
-  {
-    icon: Layers,
-    title: "תמחור גמיש",
-    description: "שעתי, ריטיינר, חודשי קבוע או לפי פריטים. תעריף לכל לקוח בנפרד.",
-  },
-  {
-    icon: Users,
-    title: "לקוחות ופרויקטים",
-    description: "כל הלקוחות במקום אחד: פרטי קשר, תעריפים והיסטוריית חיוב.",
-  },
-  {
-    icon: FileText,
-    title: "תעודות התחשבנות",
-    description: "רכז שעות ופריטים לתעודה אחת, וייצא PDF בעברית מלאה עם הלוגו שלך.",
-  },
-  {
-    icon: Calculator,
-    title: "עיגול וכללי חיוב",
-    description: "עגל זמן לשעה או לחצי שעה, לכל לקוח או פרויקט. החישוב מדויק, בלי לאבד דקות.",
-  },
-  {
-    icon: CircleDollarSign,
-    title: "מטבעות מרובים",
-    description: "שקל, דולר, USDT, ביטקוין ואת'ריום. תעריף נפרד לכל לקוח.",
-  },
-  {
-    icon: TrendingUp,
-    title: "דשבורד ותובנות",
-    description: "כמה נכנס החודש, לפי שעות, לפי פריטים ולפי פרויקט.",
-  },
-];
+interface Feature {
+  icon: typeof Timer;
+  title: string;
+  description: string;
+}
 
-function FeatureCard({ feature, index }: { feature: typeof features[0]; index: number }) {
+function FeatureCard({ feature, index }: { feature: Feature; index: number }) {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const cardRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
@@ -108,6 +67,54 @@ function FeatureCard({ feature, index }: { feature: typeof features[0]; index: n
 }
 
 export function FeaturesGrid() {
+  const t = useTranslations("Landing");
+  const features: Feature[] = [
+    {
+      icon: Timer,
+      title: t("features.parallelTimers.title"),
+      description: t("features.parallelTimers.description"),
+    },
+    {
+      icon: Boxes,
+      title: t("features.itemBilling.title"),
+      description: t("features.itemBilling.description"),
+    },
+    {
+      icon: LayoutGrid,
+      title: t("features.kanban.title"),
+      description: t("features.kanban.description"),
+    },
+    {
+      icon: Layers,
+      title: t("features.flexiblePricing.title"),
+      description: t("features.flexiblePricing.description"),
+    },
+    {
+      icon: Users,
+      title: t("features.clientsProjects.title"),
+      description: t("features.clientsProjects.description"),
+    },
+    {
+      icon: FileText,
+      title: t("features.settlementDocs.title"),
+      description: t("features.settlementDocs.description"),
+    },
+    {
+      icon: Calculator,
+      title: t("features.rounding.title"),
+      description: t("features.rounding.description"),
+    },
+    {
+      icon: CircleDollarSign,
+      title: t("features.multiCurrency.title"),
+      description: t("features.multiCurrency.description"),
+    },
+    {
+      icon: TrendingUp,
+      title: t("features.dashboard.title"),
+      description: t("features.dashboard.description"),
+    },
+  ];
   const [, setIsVisible] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
 
@@ -133,10 +140,10 @@ export function FeaturesGrid() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-display font-bold text-foreground">
-            כל מה שצריך כדי לנהל זמן וחיוב
+            {t("features.heading")}
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            כלים מקצועיים לפרילנסרים ולעצמאים, בעברית מלאה
+            {t("features.subheading")}
           </p>
         </div>
 

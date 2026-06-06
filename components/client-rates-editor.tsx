@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { fieldClass } from "@/lib/form-styles";
 import { CURRENCY_SYMBOLS } from "@/lib/currency";
 import type { ClientRateInput, RateKind } from "@/lib/schemas/rates";
@@ -26,6 +27,7 @@ interface ClientRatesEditorProps {
  * (default · name · price · remove), grouped under two slim section headers.
  */
 export function ClientRatesEditor({ rates, currency, onChange, disabled }: ClientRatesEditorProps) {
+  const t = useTranslations("Clients");
   const symbol = CURRENCY_SYMBOLS[currency] || "₪";
 
   const addRate = (kind: RateKind) =>
@@ -76,8 +78,8 @@ export function ClientRatesEditor({ rates, currency, onChange, disabled }: Clien
           onChange={() => setDefault(idx)}
           className="h-4 w-4 shrink-0 accent-primary"
           disabled={disabled}
-          aria-label="תעריף ברירת מחדל"
-          title="ברירת מחדל"
+          aria-label={t("defaultRateAria")}
+          title={t("defaultBadge")}
         />
       ) : (
         <span className="w-4 shrink-0" aria-hidden />
@@ -86,7 +88,7 @@ export function ClientRatesEditor({ rates, currency, onChange, disabled }: Clien
         type="text"
         value={r.name}
         onChange={(e) => updateRate(idx, { name: e.target.value })}
-        placeholder={showDefault ? "שם (למשל תכנות)" : "שם (למשל כתיבת מכתב)"}
+        placeholder={showDefault ? t("rateNameHourlyPlaceholder") : t("rateNameItemPlaceholder")}
         className={`${fieldClass(false)} min-w-0 flex-1`}
         disabled={disabled}
       />
@@ -110,8 +112,8 @@ export function ClientRatesEditor({ rates, currency, onChange, disabled }: Clien
         onClick={() => removeRate(idx)}
         className="shrink-0 rounded-[var(--radius)] px-2 py-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
         disabled={disabled}
-        aria-label="הסר"
-        title="הסר"
+        aria-label={t("remove")}
+        title={t("remove")}
       >
         ✕
       </button>
@@ -136,22 +138,22 @@ export function ClientRatesEditor({ rates, currency, onChange, disabled }: Clien
     <div className="divide-y divide-border rounded-[var(--radius)] border border-border bg-background/50">
       {/* Hourly rates */}
       <div className="space-y-2 p-3">
-        {sectionHeader("תעריפים שעתיים", "+ תעריף", "hourly")}
+        {sectionHeader(t("hourlyRatesHeader"), t("addRate"), "hourly")}
         {hourly ? (
           <div className="space-y-1.5">
-            {rates.map((r, idx) => (r.kind === "hourly" ? row(r, idx, "שעה", true) : null))}
+            {rates.map((r, idx) => (r.kind === "hourly" ? row(r, idx, t("unitHour"), true) : null))}
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground">לא הוגדרו תעריפים שעתיים — ייעשה שימוש בתעריף ברירת המחדל.</p>
+          <p className="text-xs text-muted-foreground">{t("noHourlyRates")}</p>
         )}
       </div>
 
       {/* Items (price per unit) */}
       <div className="space-y-2 p-3">
-        {sectionHeader("פריטים (מחיר ליחידה)", "+ פריט", "item")}
+        {sectionHeader(t("itemsHeader"), t("addItem"), "item")}
         {items && (
           <div className="space-y-1.5">
-            {rates.map((r, idx) => (r.kind === "item" ? row(r, idx, "יח׳", false) : null))}
+            {rates.map((r, idx) => (r.kind === "item" ? row(r, idx, t("unitItem"), false) : null))}
           </div>
         )}
       </div>

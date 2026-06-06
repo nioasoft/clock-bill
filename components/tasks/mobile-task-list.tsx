@@ -1,19 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useTimer } from "@/contexts/timer-context";
-import { TASK_STATUSES, TASK_STATUS_LABEL, type TaskRecord, type TaskStatus } from "@/lib/tasks-types";
+import { TASK_STATUSES, type TaskRecord, type TaskStatus } from "@/lib/tasks-types";
 import { TaskCard } from "./task-card";
 import { TaskDetailSheet } from "./task-detail-sheet";
 import type { UseTasksBoardReturn } from "./use-tasks-board";
 
-const EMPTY_LABEL: Record<TaskStatus, string> = {
-  todo: "אין משימות חדשות",
-  in_progress: "אין משימות בעבודה",
-  done: "אין משימות שהושלמו",
-};
-
 export function MobileTaskList({ board }: { board: UseTasksBoardReturn }) {
+  const tStatus = useTranslations("Tasks.status");
+  const tEmpty = useTranslations("Tasks.empty");
+  const t = useTranslations("Tasks.board");
   const { runningTimerForTask } = useTimer();
   const { state, load, byStatus, moveTask } = board;
   // null = "follow the default tab"; a value = user's explicit choice.
@@ -40,16 +38,16 @@ export function MobileTaskList({ board }: { board: UseTasksBoardReturn }) {
   if (state.error) {
     return (
       <div className="rounded-[var(--radius-card)] border border-border bg-card p-8 text-center">
-        <p className="text-foreground">שגיאה בטעינת המשימות</p>
-        <button onClick={load} className="mt-3 min-h-[44px] rounded-[var(--radius)] bg-primary px-4 py-2 text-primary-foreground">נסה שוב</button>
+        <p className="text-foreground">{t("loadError")}</p>
+        <button onClick={load} className="mt-3 min-h-[44px] rounded-[var(--radius)] bg-primary px-4 py-2 text-primary-foreground">{t("retry")}</button>
       </div>
     );
   }
   if (state.tasks.length === 0) {
     return (
       <div className="rounded-[var(--radius-card)] border border-border bg-card p-10 text-center">
-        <p className="text-foreground">אין עדיין משימות</p>
-        <p className="mt-1 text-sm text-muted-foreground">צור את המשימה הראשונה כדי להתחיל</p>
+        <p className="text-foreground">{t("emptyTitle")}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t("emptyHint")}</p>
       </div>
     );
   }
@@ -58,7 +56,7 @@ export function MobileTaskList({ board }: { board: UseTasksBoardReturn }) {
 
   return (
     <>
-      <div role="tablist" aria-label="סינון משימות לפי סטטוס" className="mb-4 grid grid-cols-3 gap-1 rounded-[var(--radius)] border border-border bg-surface p-1">
+      <div role="tablist" aria-label={t("filterByStatus")} className="mb-4 grid grid-cols-3 gap-1 rounded-[var(--radius)] border border-border bg-surface p-1">
         {TASK_STATUSES.map((s) => {
           const isActive = s === tab;
           return (
@@ -72,7 +70,7 @@ export function MobileTaskList({ board }: { board: UseTasksBoardReturn }) {
                 isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {TASK_STATUS_LABEL[s]}{" "}
+              {tStatus(s)}{" "}
               <span className="tabular-nums">{byStatus(s).length}</span>
             </button>
           );
@@ -81,7 +79,7 @@ export function MobileTaskList({ board }: { board: UseTasksBoardReturn }) {
 
       <div role="tabpanel" aria-labelledby={`tab-${tab}`} className="flex flex-col gap-2">
         {tasks.length === 0 ? (
-          <p className="px-2 py-10 text-center text-sm text-muted-foreground">{EMPTY_LABEL[tab]}</p>
+          <p className="px-2 py-10 text-center text-sm text-muted-foreground">{tEmpty(tab)}</p>
         ) : (
           tasks.map((task) => (
             <TaskCard

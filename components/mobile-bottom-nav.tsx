@@ -1,26 +1,27 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link } from "@/src/i18n/navigation";
+import { usePathname } from "@/src/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { Home, Clock, Users, FolderKanban, FileText, MessageSquare, Settings, Shield } from "lucide-react";
 import { navItemDefs } from "@/lib/nav-items";
 
 const iconMap = { Home, Clock, Users, FolderKanban, FileText, MessageSquare, Settings, Shield } as const;
 
-const navItems = navItemDefs
-  .filter((item) => !item.adminOnly)
-  .map((item) => {
-    const Icon = iconMap[item.iconName];
-    return { name: item.name, href: item.href, icon: <Icon className="h-5 w-5" /> };
-  });
+const visibleNavItems = navItemDefs.filter((item) => !item.adminOnly);
 
 export function MobileBottomNav() {
   const pathname = usePathname();
+  const t = useTranslations("Nav");
+
+  const navItems = visibleNavItems.map((item) => {
+    const Icon = iconMap[item.iconName];
+    return { name: t(item.labelKey), href: item.href, icon: <Icon className="h-5 w-5" /> };
+  });
 
   return (
     <nav
       className="lg:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t border-border z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.04)] pb-[env(safe-area-inset-bottom)]"
-      dir="rtl"
     >
       <div className="flex items-center justify-around h-16 px-2">
         {navItems.map((item) => {

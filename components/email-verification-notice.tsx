@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { AlertCircle, Mail, Check, Loader2 } from "lucide-react";
 
 interface User {
@@ -16,6 +17,7 @@ interface SessionResponse {
 }
 
 export function EmailVerificationNotice() {
+  const t = useTranslations("Auth.verifyNotice");
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -58,19 +60,19 @@ export function EmailVerificationNotice() {
       if (data.success) {
         setMessage({
           type: "success",
-          text: "האימייל נשלח! בדוק את תיבת הדואר הנכנס (וגם את התיקייה ספאם).",
+          text: t("success"),
         });
       } else {
         setMessage({
           type: "error",
-          text: data.message || "שגיאה בשליחת האימייל. נסה שוב.",
+          text: data.message || t("error"),
         });
       }
     } catch (error) {
       console.error("Failed to send verification email:", error);
       setMessage({
         type: "error",
-        text: "שגיאה בשליחת האימייל. נסה שוב.",
+        text: t("error"),
       });
     } finally {
       setSending(false);
@@ -88,11 +90,12 @@ export function EmailVerificationNotice() {
           <Mail className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
             <h3 className="font-medium text-amber-900">
-              אנא אמת את כתובת האימייל שלך
+              {t("heading")}
             </h3>
             <p className="mt-1 text-sm text-amber-700">
-              שלחנו לך אימייל אימות לכתובת <strong>{user.email}</strong>. אימות
-              האימייל עוזר לנו לשמור על אבטחת חשבונך.
+              {t.rich("body", {
+                email: () => <strong>{user.email}</strong>,
+              })}
             </p>
             {message && (
               <div
@@ -119,12 +122,12 @@ export function EmailVerificationNotice() {
                 {sending ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    שולח...
+                    {t("sending")}
                   </>
                 ) : (
                   <>
                     <Mail className="h-4 w-4" />
-                    שלח אימייל אימות חדש
+                    {t("resend")}
                   </>
                 )}
               </button>

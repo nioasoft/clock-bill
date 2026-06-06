@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     // Get authenticated user
     const user = await getUser();
     if (!user) {
-      return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+      return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
     }
 
     const userId = user.id;
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     if (!result) {
       return NextResponse.json(
-        { success: false, message: "אין טיימר מושהה" },
+        { success: false, error_code: "TIMER_NOT_PAUSED", message: "אין טיימר מושהה" },
         { status: 404 }
       );
     }
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error resuming timer:", error);
     return NextResponse.json(
-      { success: false, message: "שגיאה בחידוש הטיימר" },
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה בחידוש הטיימר" },
       { status: 500 }
     );
   }

@@ -24,20 +24,20 @@ function escapeHtml(text: string): string {
 export async function POST(request: NextRequest) {
   const user = await getUser();
   if (!user) {
-    return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
+    return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
   }
 
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ success: false, message: "בקשה לא תקינה" }, { status: 400 });
+    return NextResponse.json({ success: false, error_code: "INVALID_REQUEST", message: "בקשה לא תקינה" }, { status: 400 });
   }
 
   const parsed = feedbackSchema.safeParse(body);
   if (!parsed.success) {
     const message = parsed.error.issues[0]?.message || "נתונים לא תקינים";
-    return NextResponse.json({ success: false, message }, { status: 400 });
+    return NextResponse.json({ success: false, error_code: "VALIDATION_ERROR", message }, { status: 400 });
   }
 
   const { category, message, pageUrl, userAgent } = parsed.data;
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
 
   if (!sent) {
     return NextResponse.json(
-      { success: false, message: "שליחת הפנייה נכשלה. נסה שוב מאוחר יותר." },
+      { success: false, error_code: "EMAIL_SEND_FAILED", message: "שליחת הפנייה נכשלה. נסה שוב מאוחר יותר." },
       { status: 502 }
     );
   }

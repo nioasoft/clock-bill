@@ -73,26 +73,53 @@ export async function sendEmail({ to, subject, html, replyTo }: SendEmailParams)
   }
 }
 
+/** Supported email locales. Recipient locale is resolved best-effort by callers. */
+export type EmailLocale = "he" | "en";
+
+/** Brand name per locale (Latin transliteration for English clients). */
+const EMAIL_BRAND: Record<EmailLocale, string> = {
+  he: "מוניט",
+  en: "Monit",
+};
+
+/** Footer line per locale. */
+const EMAIL_FOOTER: Record<EmailLocale, string> = {
+  he: "הודעה זו נשלחה ממוניט — מערכת מעקב שעות עבודה.",
+  en: "This message was sent by Monit — a work-hours tracking system.",
+};
+
 /**
- * Wrap body content in a consistent RTL, Hebrew, light-theme email shell.
+ * Wrap body content in a consistent, light-theme email shell.
  * Emails render in third-party clients, so this stays inline-styled and light
- * (not the app's dark theme).
+ * (not the app's dark theme). The locale sets `<html lang/dir>`, text direction,
+ * the brand label, and the footer line — defaults to Hebrew/RTL for back-compat.
  */
-export function emailLayout(opts: { heading: string; bodyHtml: string }): string {
+export function emailLayout(opts: {
+  heading: string;
+  bodyHtml: string;
+  locale?: EmailLocale;
+}): string {
+  const locale = opts.locale ?? "he";
+  const isRtl = locale === "he";
+  const dir = isRtl ? "rtl" : "ltr";
+  const align = isRtl ? "right" : "left";
+  const brand = EMAIL_BRAND[locale];
+  const footer = EMAIL_FOOTER[locale];
+
   return `<!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="${locale}" dir="${dir}">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   </head>
   <body style="margin:0;padding:0;background-color:#f4f4f5;font-family:Arial,Helvetica,sans-serif;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" dir="rtl" style="background-color:#f4f4f5;padding:24px 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" dir="${dir}" style="background-color:#f4f4f5;padding:24px 0;">
       <tr>
         <td align="center" style="text-align:center;">
-          <table role="presentation" align="center" width="520" cellpadding="0" cellspacing="0" dir="rtl" style="width:100%;max-width:520px;margin:0 auto;background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e4e4e7;text-align:right;">
+          <table role="presentation" align="center" width="520" cellpadding="0" cellspacing="0" dir="${dir}" style="width:100%;max-width:520px;margin:0 auto;background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e4e4e7;text-align:${align};">
             <tr>
               <td style="background-color:#0a0a0a;padding:20px 28px;">
-                <span style="color:#faff69;font-size:22px;font-weight:bold;">מוניט</span>
+                <span style="color:#faff69;font-size:22px;font-weight:bold;">${brand}</span>
               </td>
             </tr>
             <tr>
@@ -103,7 +130,7 @@ export function emailLayout(opts: { heading: string; bodyHtml: string }): string
             </tr>
             <tr>
               <td style="padding:16px 28px;border-top:1px solid #e4e4e7;color:#71717a;font-size:12px;">
-                הודעה זו נשלחה ממוניט — מערכת מעקב שעות עבודה.
+                ${footer}
               </td>
             </tr>
           </table>

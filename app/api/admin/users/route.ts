@@ -10,7 +10,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const admin = await getAdminUser();
     if (!admin) {
-      return NextResponse.json({ success: false, message: "אין הרשאה" }, { status: 403 });
+      return NextResponse.json({ success: false, error_code: "FORBIDDEN", message: "אין הרשאה" }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -93,6 +93,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     });
   } catch (error) {
     console.error("Admin users error:", error);
-    return NextResponse.json({ success: false, message: "שגיאת שרת" }, { status: 500 });
+    return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאת שרת" }, { status: 500 });
   }
 }

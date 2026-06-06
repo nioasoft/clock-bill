@@ -24,7 +24,7 @@ runner.test("todo offers exactly 2 transitions, primary is in_progress", () => {
   assertEqual(t.length, 2);
   assertEqual(t[0].to, "in_progress");
   assertEqual(t[0].primary, true);
-  assertEqual(t[0].label, "התחל");
+  assertEqual(t[0].labelKey, "start");
   assertEqual(t[1].to, "done");
 });
 runner.test("in_progress offers done (primary) + todo", () => {
@@ -32,7 +32,7 @@ runner.test("in_progress offers done (primary) + todo", () => {
   assertEqual(t.length, 2);
   assertEqual(t[0].to, "done");
   assertEqual(t[0].primary, true);
-  assertEqual(t[0].label, "סיים");
+  assertEqual(t[0].labelKey, "finish");
   assertEqual(t[1].to, "todo");
 });
 runner.test("done offers in_progress (primary) + todo", () => {

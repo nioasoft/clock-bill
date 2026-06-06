@@ -17,7 +17,7 @@ export async function POST() {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "לא מחובר" },
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
       );
     }
@@ -40,7 +40,7 @@ export async function POST() {
   } catch (error) {
     logger.error("Failed to update reminder date", error, userId ? { userId } : undefined);
     return NextResponse.json(
-      { success: false, message: "Internal server error" },
+      { success: false, error_code: "SERVER_ERROR", message: "Internal server error" },
       { status: 500 }
     );
   }
