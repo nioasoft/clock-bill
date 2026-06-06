@@ -14,6 +14,9 @@
     "test": "node --import tsx tests/run-tests.ts",
     "test:format": "node --import tsx tests/unit/format.test.ts",
     "test:validation": "node --import tsx tests/unit/validation.test.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report",
     "verify:deployment": "node --import tsx scripts/verify-deployment.ts"
   },
   "dependencies": {
@@ -43,6 +46,7 @@
     "@vercel/blob": "^0.23.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "20.19.32",
     "@types/pg": "^8.16.0",
