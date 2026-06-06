@@ -711,7 +711,13 @@
       "timeFormatLabel": "Time Format",
       "timeFormat24h": "24-hour (14:30)",
       "timeFormat12h": "12-hour (02:30 PM)",
-      "timeFormatHint": "How times are displayed across the app"
+      "timeFormatHint": "How times are displayed across the app",
+      "language": {
+        "label": "Interface language",
+        "hint": "The language the app is displayed in. The change applies immediately.",
+        "he": "עברית",
+        "en": "English"
+      }
     },
     "invoice": {
       "prefixLabel": "Invoice Prefix",
@@ -835,6 +841,13 @@
       "deleteRateConfirm": "Delete this exchange rate?",
       "rateDeleted": "Exchange rate deleted successfully!",
       "deleteRateError": "Failed to delete exchange rate"
+    },
+    "data": {
+      "title": "Your data & privacy",
+      "description": "Download a copy of all your data — clients, projects, time entries, charge documents and more — in a single JSON file.",
+      "exportButton": "Export my data",
+      "exporting": "Exporting...",
+      "exportError": "Data export failed. Please try again."
     }
   },
   "Auth": {

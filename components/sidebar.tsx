@@ -20,7 +20,6 @@ import {
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { GlobalSearch } from "./global-search";
-import { LocaleSwitcher } from "./locale-switcher";
 import { navItemDefs } from "@/lib/nav-items";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { brandName } from "@/lib/brand";
@@ -168,11 +167,6 @@ export function Sidebar({
           </button>
         </div>
       )}
-
-      {/* Locale switcher */}
-      <div className={`${isCollapsed ? "px-1.5 pb-2" : "px-3 pb-2"}`}>
-        <LocaleSwitcher isCollapsed={isCollapsed} />
-      </div>
 
       {/* User info section */}
       <div className={`border-t border-white/10 space-y-1 ${isCollapsed ? "p-1.5" : "p-4"}`}>

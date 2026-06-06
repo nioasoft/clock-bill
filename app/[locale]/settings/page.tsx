@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { useRouter } from "@/src/i18n/navigation";
+import { useRouter, usePathname } from "@/src/i18n/navigation";
 import { DeleteAccountSection } from "@/components/delete-account-section";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
@@ -68,6 +68,7 @@ export default function SettingsPage() {
   const locale = useLocale();
   const intlLocale = locale === "en" ? "en-US" : "he-IL";
   const router = useRouter();
+  const pathname = usePathname();
   const [activeTab, setActiveTab] = useState<"profile" | "security" | "currencies" | "notifications">("profile");
   const [sessions, setSessions] = useState<Session[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -83,6 +84,8 @@ export default function SettingsPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [logoutAllLoading, setLogoutAllLoading] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [exportingData, setExportingData] = useState(false);
+  const [exportError, setExportError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const signatureInputRef = useRef<HTMLInputElement>(null);
 
@@ -629,6 +632,52 @@ export default function SettingsPage() {
         return "Ξ";
       default:
         return currency;
+    }
+  };
+
+  // Interface language. Persists the choice to the profile (drives transactional
+  // email language + survives cookie loss) AND switches the UI immediately by
+  // replacing the current route under the chosen locale (next-intl swaps the
+  // prefix and sets NEXT_LOCALE, so the user stays on the same screen).
+  const handleLocaleChange = (next: string) => {
+    if (next !== "he" && next !== "en") return;
+    if (next === locale) return;
+    void fetch("/api/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ locale: next }),
+    }).catch(() => {
+      // Non-fatal: the UI still switches; the preference can be re-saved later.
+    });
+    router.replace(pathname, { locale: next });
+  };
+
+  // GDPR data export — download all the user's data as a single JSON file.
+  // Uses fetch→blob so a failed request surfaces an error instead of navigating
+  // the browser to a raw error page.
+  const handleExportData = async () => {
+    setExportingData(true);
+    setExportError("");
+    try {
+      const response = await fetch("/api/account/export");
+      if (!response.ok) {
+        setExportError(t("data.exportError"));
+        return;
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const today = new Date().toISOString().slice(0, 10);
+      link.download = `monit-data-export-${today}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setExportError(t("data.exportError"));
+    } finally {
+      setExportingData(false);
     }
   };
 
@@ -1184,6 +1233,28 @@ export default function SettingsPage() {
               )}
             </div>
 
+            {/* Data & Privacy — GDPR data export (right of access / portability) */}
+            <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
+              <h2 className="font-display text-lg font-bold text-foreground mb-2">
+                {t("data.title")}
+              </h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                {t("data.description")}
+              </p>
+              {exportError && (
+                <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 mb-4">
+                  <p className="text-sm text-destructive">{exportError}</p>
+                </div>
+              )}
+              <button
+                onClick={handleExportData}
+                disabled={exportingData}
+                className="px-4 py-2 border border-border bg-card text-foreground text-sm font-medium rounded-[var(--radius)] hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {exportingData ? t("data.exporting") : t("data.exportButton")}
+              </button>
+            </div>
+
             <DeleteAccountSection />
           </div>
         )}
@@ -1603,6 +1674,28 @@ export default function SettingsPage() {
                       </select>
                       <p className="text-xs text-muted-foreground mt-1">
                         {t("display.timeFormatHint")}
+                      </p>
+                    </div>
+
+                    {/* Interface Language */}
+                    <div>
+                      <label
+                        htmlFor="interfaceLanguage"
+                        className="block text-sm font-medium text-muted-foreground mb-1"
+                      >
+                        {t("display.language.label")}
+                      </label>
+                      <select
+                        id="interfaceLanguage"
+                        value={locale}
+                        onChange={(e) => handleLocaleChange(e.target.value)}
+                        className={fieldClass()}
+                      >
+                        <option value="he">{t("display.language.he")}</option>
+                        <option value="en">{t("display.language.en")}</option>
+                      </select>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {t("display.language.hint")}
                       </p>
                     </div>
 
