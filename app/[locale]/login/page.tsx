@@ -9,6 +9,7 @@ import { validateEmail, validateRequired } from "@/lib/validation";
 import { authClient } from "@/lib/auth/client";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import { LocaleSwitcher } from "@/components/locale-switcher";
 
 export default function LoginPage() {
   const t = useTranslations("Auth");
@@ -99,6 +100,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+      <LocaleSwitcher isCollapsed className="fixed top-4 end-4 z-50" />
       <div className="w-full max-w-md space-y-8">
         {/* Logo + heading — centered, always visible */}
         <div className="text-center">

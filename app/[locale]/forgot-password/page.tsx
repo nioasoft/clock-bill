@@ -6,6 +6,7 @@ import { Link } from "@/src/i18n/navigation";
 import { Gauge, CheckCircle2 } from "lucide-react";
 import { authClient } from "@/lib/auth/client";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
+import { LocaleSwitcher } from "@/components/locale-switcher";
 
 export default function ForgotPasswordPage() {
   const t = useTranslations("Auth");
@@ -40,6 +41,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface px-4">
+      <LocaleSwitcher isCollapsed className="fixed top-4 end-4 z-50" />
       <div className="w-full max-w-md">
         <div className="bg-card rounded-[var(--radius-card)] border border-border p-8 shadow-sm">
           <div className="text-center mb-8">

@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { Gauge, Clock } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
+import { LocaleSwitcher } from "@/components/locale-switcher";
 
 export function LandingNavbar() {
   const t = useTranslations("Landing");
@@ -75,6 +76,7 @@ export function LandingNavbar() {
 
           {/* Auth buttons */}
           <div className="flex items-center gap-3">
+            <LocaleSwitcher isCollapsed />
             <Link
               href="/login"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
