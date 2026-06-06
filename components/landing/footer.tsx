@@ -1,10 +1,11 @@
 import { Link } from "@/src/i18n/navigation";
-import { useTranslations } from "next-intl";
-import { BRAND } from "@/lib/brand";
+import { useLocale, useTranslations } from "next-intl";
+import { brandName } from "@/lib/brand";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 
 export function LandingFooter() {
   const t = useTranslations("Landing");
+  const locale = useLocale();
   const year = new Date().getFullYear();
 
   return (
@@ -17,7 +18,7 @@ export function LandingFooter() {
             <div className="flex items-center gap-2">
               <ClockFaceMarks size={20} className="text-accent" />
               <span className="text-lg font-display font-bold text-white">
-                {BRAND.name}
+                {brandName(locale)}
               </span>
             </div>
             <p className="text-sm text-sidebar-foreground/70">
@@ -80,7 +81,7 @@ export function LandingFooter() {
         {/* Copyright */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-sidebar-foreground/60">
           <p>
-            {year} &copy; {BRAND.name} &middot; {t("footer.builtWith")}
+            {year} &copy; {brandName(locale)} &middot; {t("footer.builtWith")}
           </p>
           <p className="text-xs">{t("footer.rightsReserved")}</p>
         </div>

@@ -11,7 +11,7 @@ import { Providers } from "@/components/providers";
 import { PwaProvider } from "@/components/pwa-provider";
 import { routing } from "@/src/i18n/routing";
 import type { Locale } from "@/src/i18n/routing";
-import { THEME_COLOR } from "@/lib/brand";
+import { THEME_COLOR, brandName } from "@/lib/brand";
 
 /** Exhaustive map of app locales → Open Graph locale codes. */
 const OG_LOCALE: Record<Locale, string> = { he: "he_IL", en: "en_US" };
@@ -60,13 +60,14 @@ export async function generateMetadata({ params }: Pick<Props, "params">): Promi
     .split(",")
     .map((k) => k.trim())
     .filter(Boolean);
+  const brand = brandName(locale);
 
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://www.clock-bill.com"),
     title,
     description,
     keywords,
-    authors: [{ name: "מוניט" }],
+    authors: [{ name: brand }],
     robots: {
       index: true,
       follow: true,
@@ -83,7 +84,7 @@ export async function generateMetadata({ params }: Pick<Props, "params">): Promi
       description,
       type: "website",
       locale: OG_LOCALE[locale as Locale],
-      siteName: "מוניט",
+      siteName: brand,
     },
     twitter: {
       card: "summary_large_image",
@@ -95,7 +96,7 @@ export async function generateMetadata({ params }: Pick<Props, "params">): Promi
     appleWebApp: {
       capable: true,
       statusBarStyle: "black-translucent",
-      title: "מוניט",
+      title: brand,
     },
   };
 }

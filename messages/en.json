@@ -5,7 +5,8 @@
     "delete": "Delete",
     "edit": "Edit",
     "loading": "Loading...",
-    "skipToMain": "Skip to main content"
+    "skipToMain": "Skip to main content",
+    "close": "Close"
   },
   "Meta": {
     "title": "Monit - Time Tracking for Freelancers",
@@ -851,7 +852,16 @@
       "backToLogin": "Back to login",
       "privacyPolicy": "Privacy Policy",
       "termsOfService": "Terms of Service",
-      "loading": "Loading..."
+      "loading": "Loading...",
+      "redirectingToGoogle": "Redirecting to Google..."
+    },
+    "verifyNotice": {
+      "heading": "Please verify your email address",
+      "body": "We sent a verification email to <email>{email}</email>. Verifying your email helps us keep your account secure.",
+      "resend": "Send a new verification email",
+      "sending": "Sending...",
+      "success": "Email sent! Check your inbox (and your spam folder too).",
+      "error": "Error sending the email. Please try again."
     },
     "login": {
       "title": "Sign in to your account",
@@ -1164,7 +1174,23 @@
     },
     "back": "Back to {brand}",
     "title": "Contact",
-    "description": "A question, an improvement idea, or a bug? Write to us and we'll get back to the email you leave."
+    "description": "A question, an improvement idea, or a bug? Write to us and we'll get back to the email you leave.",
+    "form": {
+      "nameLabel": "Name",
+      "nameOptional": "(optional)",
+      "emailLabel": "Email",
+      "messageLabel": "Message",
+      "messagePlaceholder": "How can we help?",
+      "honeypotLabel": "Website",
+      "submit": "Send message",
+      "submitting": "Sending...",
+      "successHeading": "Message sent",
+      "successBody": "Thanks. We'll get back to you at the email you left soon.",
+      "sendAnother": "Send another message",
+      "errorFix": "Please correct the details",
+      "errorSend": "Failed to send the message. Please try again.",
+      "errorNetwork": "Network error. Please try again."
+    }
   },
   "Validation": {
     "field": "This field",
@@ -1189,13 +1215,21 @@
       "project": "Project",
       "description": "Description",
       "clientName": "Client name",
-      "projectName": "Project name"
+      "projectName": "Project name",
+      "password": "Password"
     },
     "passwordStrength": {
       "WEAK": "Weak password — consider strengthening it",
       "FAIR": "Fair password — it could still be stronger",
       "GOOD": "Good password — almost there",
-      "STRONG": "Excellent, strong password!"
+      "STRONG": "Excellent, strong password!",
+      "requirements": {
+        "length": "At least 8 characters",
+        "lowercase": "Lowercase letter (a-z)",
+        "uppercase": "Uppercase letter (A-Z)",
+        "number": "Number (0-9)",
+        "special": "Special character (!@#$%...)"
+      }
     }
   },
   "Landing": {
@@ -1390,6 +1424,15 @@
     }
   },
   "Legal": {
+    "page": {
+      "backTo": "Back to {brand}",
+      "updatedLabel": "Last updated: {date}",
+      "questions": "Questions?",
+      "contactCta": "Contact us",
+      "privacyLink": "Privacy Policy",
+      "termsLink": "Terms of Service",
+      "contactLink": "Contact"
+    },
     "terms": {
       "metaTitle": "Terms of Service",
       "metaDescription": "The terms of service for {brand}.",

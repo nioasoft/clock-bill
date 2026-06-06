@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/src/i18n/navigation";
 import { Gauge } from "lucide-react";
 import { Sidebar } from "./sidebar";
@@ -11,7 +12,7 @@ import { PersistentTimerBar } from "./persistent-timer-bar";
 import { TimerStartModal } from "./timer-start-modal";
 import { TimerStopModal } from "./timer-stop-modal";
 import { TimerFab } from "./timer-fab";
-import { BRAND } from "@/lib/brand";
+import { brandName } from "@/lib/brand";
 
 interface User {
   id: string;
@@ -26,6 +27,8 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const router = useRouter();
+  const locale = useLocale();
+  const tCommon = useTranslations("common");
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [, setLogoutLoading] = useState(false);
@@ -112,8 +115,8 @@ export function AppLayout({ children }: AppLayoutProps) {
             <div className="absolute -inset-2 border-2 border-accent/20 rounded-2xl animate-ping" />
           </div>
           <div className="flex flex-col items-center gap-1">
-            <h2 className="text-xl font-display font-bold text-foreground">{BRAND.name}</h2>
-            <p className="text-sm text-muted-foreground">טוען...</p>
+            <h2 className="text-xl font-display font-bold text-foreground">{brandName(locale)}</h2>
+            <p className="text-sm text-muted-foreground">{tCommon("loading")}</p>
           </div>
         </div>
       </div>

@@ -1,15 +1,16 @@
 "use client";
 
 import { Link } from "@/src/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState, useEffect } from "react";
 import { Gauge, Clock } from "lucide-react";
-import { BRAND } from "@/lib/brand";
+import { brandName } from "@/lib/brand";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 
 export function LandingNavbar() {
   const t = useTranslations("Landing");
+  const locale = useLocale();
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
@@ -48,7 +49,7 @@ export function LandingNavbar() {
               <Gauge className="relative h-5 w-5 text-primary-foreground" aria-hidden="true" />
             </div>
             <span className="text-xl font-display font-bold text-foreground">
-              {BRAND.name}
+              {brandName(locale)}
             </span>
           </Link>
 

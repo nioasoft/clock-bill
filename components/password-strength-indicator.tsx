@@ -1,6 +1,7 @@
 "use client";
 
 import { calculatePasswordStrength, PasswordStrength, PasswordStrengthResult } from "@/lib/validation";
+import { useTranslations } from "next-intl";
 import { Check, X } from "lucide-react";
 
 interface PasswordStrengthIndicatorProps {
@@ -8,12 +9,14 @@ interface PasswordStrengthIndicatorProps {
 }
 
 export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicatorProps) {
+  const t = useTranslations("Validation.passwordStrength");
+
+  const strength: PasswordStrengthResult = calculatePasswordStrength(password);
+
   // Don't show anything if password is empty
   if (!password) {
     return null;
   }
-
-  const strength: PasswordStrengthResult = calculatePasswordStrength(password);
 
   // Strength level colors
   const getStrengthColor = (level: PasswordStrength): string => {
@@ -56,7 +59,7 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
           />
         </div>
         <span className={`text-xs font-medium ${getStrengthTextColor(strength.strength)}`}>
-          {strength.feedback}
+          {t(strength.feedbackCode)}
         </span>
       </div>
 
@@ -70,7 +73,7 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
               <X className="h-3.5 w-3.5 text-destructive" />
             )}
             <span className={strength.checks.length ? "text-success" : ""}>
-              לפחות 8 תווים
+              {t("requirements.length")}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -80,7 +83,7 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
               <X className="h-3.5 w-3.5 text-destructive" />
             )}
             <span className={strength.checks.lowercase ? "text-success" : ""}>
-              אות קטנה באנגלית (a-z)
+              {t("requirements.lowercase")}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -90,7 +93,7 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
               <X className="h-3.5 w-3.5 text-destructive" />
             )}
             <span className={strength.checks.uppercase ? "text-success" : ""}>
-              אות גדולה באנגלית (A-Z)
+              {t("requirements.uppercase")}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -100,7 +103,7 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
               <X className="h-3.5 w-3.5 text-destructive" />
             )}
             <span className={strength.checks.number ? "text-success" : ""}>
-              מספר (0-9)
+              {t("requirements.number")}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -110,7 +113,7 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
               <X className="h-3.5 w-3.5 text-destructive" />
             )}
             <span className={strength.checks.special ? "text-success" : ""}>
-              תו מיוחד (!@#$%...)
+              {t("requirements.special")}
             </span>
           </div>
         </div>

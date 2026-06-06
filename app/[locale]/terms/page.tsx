@@ -1,26 +1,28 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { LegalPage } from "@/components/legal-page";
-import { BRAND } from "@/lib/brand";
+import { brandName } from "@/lib/brand";
 import { Link } from "@/src/i18n/navigation";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Legal.terms");
+  const brand = brandName(await getLocale());
   return {
-    title: `${t("metaTitle")} | ${BRAND.name}`,
-    description: t("metaDescription", { brand: BRAND.name }),
+    title: `${t("metaTitle")} | ${brand}`,
+    description: t("metaDescription", { brand }),
   };
 }
 
 export default async function TermsPage() {
   const t = await getTranslations("Legal.terms");
+  const brand = brandName(await getLocale());
 
   return (
     <LegalPage title={t("title")} updated={t("updated")}>
       <section>
         <p>
           {t.rich("intro", {
-            brand: BRAND.name,
+            brand,
             privacyLink: (chunks) => <Link href="/privacy">{chunks}</Link>,
           })}
         </p>

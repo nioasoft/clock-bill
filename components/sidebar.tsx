@@ -23,7 +23,7 @@ import { GlobalSearch } from "./global-search";
 import { LocaleSwitcher } from "./locale-switcher";
 import { navItemDefs } from "@/lib/nav-items";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
-import { BRAND } from "@/lib/brand";
+import { brandName } from "@/lib/brand";
 
 const iconMap = { Home, Clock: Gauge, Users, FolderKanban, FileText, MessageSquare, Settings, Shield } as const;
 
@@ -99,7 +99,7 @@ export function Sidebar({
             </div>
           </div>
           {!isCollapsed && (
-            <h1 className="text-2xl font-display font-bold text-white">{BRAND.name}</h1>
+            <h1 className="text-2xl font-display font-bold text-white">{brandName(locale)}</h1>
           )}
         </Link>
       </div>

@@ -5,7 +5,8 @@
     "delete": "מחק",
     "edit": "ערוך",
     "loading": "טוען...",
-    "skipToMain": "דלג לתוכן ראשי"
+    "skipToMain": "דלג לתוכן ראשי",
+    "close": "סגור"
   },
   "Meta": {
     "title": "מוניט - מעקב שעות עבודה לפרילנסרים",
@@ -851,7 +852,16 @@
       "backToLogin": "חזרה לדף ההתחברות",
       "privacyPolicy": "מדיניות פרטיות",
       "termsOfService": "תנאי שימוש",
-      "loading": "טוען..."
+      "loading": "טוען...",
+      "redirectingToGoogle": "מעביר ל-Google..."
+    },
+    "verifyNotice": {
+      "heading": "אנא אמת את כתובת האימייל שלך",
+      "body": "שלחנו לך אימייל אימות לכתובת <email>{email}</email>. אימות האימייל עוזר לנו לשמור על אבטחת חשבונך.",
+      "resend": "שלח אימייל אימות חדש",
+      "sending": "שולח...",
+      "success": "האימייל נשלח! בדוק את תיבת הדואר הנכנס (וגם את התיקייה ספאם).",
+      "error": "שגיאה בשליחת האימייל. נסה שוב."
     },
     "login": {
       "title": "התחבר לחשבון שלך",
@@ -1164,7 +1174,23 @@
     },
     "back": "חזרה ל{brand}",
     "title": "יצירת קשר",
-    "description": "שאלה, הצעה לשיפור או תקלה? כתבו לנו ונחזור אליכם לאימייל שתשאירו."
+    "description": "שאלה, הצעה לשיפור או תקלה? כתבו לנו ונחזור אליכם לאימייל שתשאירו.",
+    "form": {
+      "nameLabel": "שם",
+      "nameOptional": "(לא חובה)",
+      "emailLabel": "אימייל",
+      "messageLabel": "הודעה",
+      "messagePlaceholder": "במה נוכל לעזור?",
+      "honeypotLabel": "אתר",
+      "submit": "שלח הודעה",
+      "submitting": "שולח...",
+      "successHeading": "ההודעה נשלחה",
+      "successBody": "תודה. נחזור אליך לאימייל שהשארת בהקדם.",
+      "sendAnother": "שלח הודעה נוספת",
+      "errorFix": "נא לתקן את הפרטים",
+      "errorSend": "שליחת ההודעה נכשלה. נסה שוב.",
+      "errorNetwork": "שגיאת תקשורת. אנא נסה שוב."
+    }
   },
   "Validation": {
     "field": "שדה זה",
@@ -1189,13 +1215,21 @@
       "project": "פרויקט",
       "description": "תיאור",
       "clientName": "שם הלקוח",
-      "projectName": "שם הפרויקט"
+      "projectName": "שם הפרויקט",
+      "password": "הסיסמה"
     },
     "passwordStrength": {
       "WEAK": "סיסמה חלשה - כדאי לחזק אותה",
       "FAIR": "סיסמה בינונית - עדיין יכולה להיות חזקה יותר",
       "GOOD": "סיסמה טובה - כמעט שם",
-      "STRONG": "סיסמה חזקה מצוינת!"
+      "STRONG": "סיסמה חזקה מצוינת!",
+      "requirements": {
+        "length": "לפחות 8 תווים",
+        "lowercase": "אות קטנה באנגלית (a-z)",
+        "uppercase": "אות גדולה באנגלית (A-Z)",
+        "number": "מספר (0-9)",
+        "special": "תו מיוחד (!@#$%...)"
+      }
     }
   },
   "Landing": {
@@ -1390,6 +1424,15 @@
     }
   },
   "Legal": {
+    "page": {
+      "backTo": "חזרה ל{brand}",
+      "updatedLabel": "עודכן לאחרונה: {date}",
+      "questions": "שאלות?",
+      "contactCta": "צרו קשר",
+      "privacyLink": "מדיניות פרטיות",
+      "termsLink": "תנאי שימוש",
+      "contactLink": "יצירת קשר"
+    },
     "terms": {
       "metaTitle": "תנאי שימוש",
       "metaDescription": "תנאי השימוש בשירות {brand}.",

@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/src/i18n/navigation";
 import { ArrowRight } from "lucide-react";
-import { BRAND } from "@/lib/brand";
+import { brandName } from "@/lib/brand";
 import { ContactForm } from "@/components/contact-form";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Contact");
+  const brand = brandName(await getLocale());
   return {
-    title: t("meta.title", { brand: BRAND.name }),
-    description: t("meta.description", { brand: BRAND.name }),
+    title: t("meta.title", { brand }),
+    description: t("meta.description", { brand }),
   };
 }
 
@@ -19,6 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default async function ContactPage() {
   const t = await getTranslations("Contact");
+  const brand = brandName(await getLocale());
   return (
     <main className="min-h-screen bg-background text-foreground">
       <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 sm:py-16">
@@ -27,7 +29,7 @@ export default async function ContactPage() {
           className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowRight className="h-4 w-4" />
-          {t("back", { brand: BRAND.name })}
+          {t("back", { brand })}
         </Link>
 
         <header className="mt-8 mb-8">

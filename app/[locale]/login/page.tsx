@@ -6,6 +6,7 @@ import { useRouter } from "@/src/i18n/navigation";
 import { Link } from "@/src/i18n/navigation";
 import { Gauge, LogIn } from "lucide-react";
 import { validateEmail, validateRequired } from "@/lib/validation";
+import { useValidationMessage } from "@/lib/validation-messages";
 import { authClient } from "@/lib/auth/client";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
@@ -13,6 +14,7 @@ import { LocaleSwitcher } from "@/components/locale-switcher";
 
 export default function LoginPage() {
   const t = useTranslations("Auth");
+  const resolveValidation = useValidationMessage();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -47,14 +49,14 @@ export default function LoginPage() {
     // Validate email
     const emailValidation = validateEmail(email);
     if (!emailValidation.isValid) {
-      setEmailError(emailValidation.error);
+      setEmailError(resolveValidation(emailValidation.code));
       return;
     }
 
     // Validate password (required)
-    const passwordValidation = validateRequired(password, "הסיסמה");
+    const passwordValidation = validateRequired(password, "password");
     if (!passwordValidation.isValid) {
-      setPasswordError(passwordValidation.error);
+      setPasswordError(resolveValidation(passwordValidation.code));
       return;
     }
 

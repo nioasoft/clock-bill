@@ -1,13 +1,14 @@
 "use client";
 
 import { Link } from "@/src/i18n/navigation";
-import { useTranslations } from "next-intl";
-import { BRAND } from "@/lib/brand";
+import { useLocale, useTranslations } from "next-intl";
+import { brandName } from "@/lib/brand";
 import { GrainOverlay, RadialLines, HourglassSVG, ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { Clock, DollarSign } from "lucide-react";
 
 export function Hero() {
   const t = useTranslations("Landing");
+  const locale = useLocale();
 
   return (
     <section className="relative overflow-hidden pt-24 py-20 sm:py-28 lg:py-36">
@@ -28,7 +29,7 @@ export function Hero() {
           {t("hero.headlinePrefix")}
           <br />
           <span className="bg-gradient-to-l from-primary via-accent to-primary bg-[length:200%_100%] bg-clip-text text-transparent motion-safe:animate-shimmer">
-            {BRAND.name}
+            {brandName(locale)}
           </span>{" "}
           {t("hero.headlineSuffix")}
         </h1>

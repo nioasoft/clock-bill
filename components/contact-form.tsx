@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Check, Send, MessageSquare } from "lucide-react";
 import { fieldClass } from "@/lib/form-styles";
 import { contactSchema } from "@/lib/schemas/contact";
@@ -14,6 +15,7 @@ const MAX_MESSAGE = 5000;
  * honeypot for spam.
  */
 export function ContactForm() {
+  const t = useTranslations("Contact.form");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -29,7 +31,7 @@ export function ContactForm() {
     // Validate client-side for fast feedback; the server re-validates.
     const result = contactSchema.safeParse({ name, email, message, website });
     if (!result.success) {
-      setError(result.error.issues[0]?.message || "נא לתקן את הפרטים");
+      setError(result.error.issues[0]?.message || t("errorFix"));
       return;
     }
 
@@ -47,10 +49,10 @@ export function ContactForm() {
         setEmail("");
         setMessage("");
       } else {
-        setError(data.message || "שליחת ההודעה נכשלה. נסה שוב.");
+        setError(data.message || t("errorSend"));
       }
     } catch {
-      setError("שגיאת תקשורת. אנא נסה שוב.");
+      setError(t("errorNetwork"));
     } finally {
       setSubmitting(false);
     }
@@ -68,9 +70,9 @@ export function ContactForm() {
             <Check className="h-4 w-4 text-success" aria-hidden="true" />
           </div>
           <div>
-            <h2 className="font-display text-base font-semibold text-foreground">ההודעה נשלחה</h2>
+            <h2 className="font-display text-base font-semibold text-foreground">{t("successHeading")}</h2>
             <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
-              תודה. נחזור אליך לאימייל שהשארת בהקדם.
+              {t("successBody")}
             </p>
           </div>
         </div>
@@ -80,7 +82,7 @@ export function ContactForm() {
           className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
         >
           <MessageSquare className="h-4 w-4" />
-          שלח הודעה נוספת
+          {t("sendAnother")}
         </button>
       </div>
     );
@@ -93,7 +95,7 @@ export function ContactForm() {
     >
       <div>
         <label htmlFor="contact-name" className="mb-1.5 block text-sm font-medium text-foreground">
-          שם <span className="text-muted-foreground font-normal">(לא חובה)</span>
+          {t("nameLabel")} <span className="text-muted-foreground font-normal">{t("nameOptional")}</span>
         </label>
         <input
           id="contact-name"
@@ -108,7 +110,7 @@ export function ContactForm() {
 
       <div>
         <label htmlFor="contact-email" className="mb-1.5 block text-sm font-medium text-foreground">
-          אימייל
+          {t("emailLabel")}
         </label>
         <input
           id="contact-email"
@@ -129,7 +131,7 @@ export function ContactForm() {
 
       <div>
         <label htmlFor="contact-message" className="mb-1.5 block text-sm font-medium text-foreground">
-          הודעה
+          {t("messageLabel")}
         </label>
         <textarea
           id="contact-message"
@@ -140,7 +142,7 @@ export function ContactForm() {
           }}
           rows={6}
           required
-          placeholder="במה נוכל לעזור?"
+          placeholder={t("messagePlaceholder")}
           className={`${fieldClass(Boolean(error))} resize-y`}
           disabled={submitting}
           aria-describedby="contact-count"
@@ -152,7 +154,7 @@ export function ContactForm() {
 
       {/* Honeypot: visually hidden, off-screen, not announced to screen readers. */}
       <div aria-hidden="true" className="absolute -left-[9999px] top-auto h-0 w-0 overflow-hidden">
-        <label htmlFor="contact-website">אתר</label>
+        <label htmlFor="contact-website">{t("honeypotLabel")}</label>
         <input
           id="contact-website"
           type="text"
@@ -175,7 +177,7 @@ export function ContactForm() {
         className="inline-flex w-full items-center justify-center gap-2 rounded-[var(--radius)] bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         <Send className="h-4 w-4" />
-        {submitting ? "שולח..." : "שלח הודעה"}
+        {submitting ? t("submitting") : t("submit")}
       </button>
     </form>
   );
