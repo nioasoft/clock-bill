@@ -47,6 +47,7 @@ const updateProfileSchema = z.object({
   dateFormat: z.string().max(50).nullable().optional(),
   timeFormat: z.string().max(50).nullable().optional(),
   firstDayOfWeek: z.string().max(50).nullable().optional(),
+  locale: z.enum(["he", "en"]).optional(),
 });
 
 export interface Profile {
@@ -80,6 +81,7 @@ export interface Profile {
   dateFormat: string;
   timeFormat: string;
   firstDayOfWeek: string;
+  locale: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -123,6 +125,7 @@ export async function GET(): Promise<NextResponse> {
               last_reminder_date as "lastReminderDate", working_hours as "workingHours",
               date_format as "dateFormat", time_format as "timeFormat",
               first_day_of_week as "firstDayOfWeek",
+              COALESCE(locale, 'he') as "locale",
               created_at as "createdAt", updated_at as "updatedAt"
        FROM user_profiles
        WHERE user_id = $1`,
@@ -306,6 +309,11 @@ export async function PATCH(request: Request): Promise<NextResponse> {
       values.push(body.firstDayOfWeek);
     }
 
+    if (body.locale !== undefined) {
+      updates.push(`locale = $${paramIndex++}`);
+      values.push(body.locale);
+    }
+
     if (updates.length === 0) {
       return NextResponse.json(
         { success: false, error_code: "NO_FIELDS_TO_UPDATE", message: "No fields to update" },
@@ -336,6 +344,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
                  last_reminder_date as "lastReminderDate", working_hours as "workingHours",
                  date_format as "dateFormat", time_format as "timeFormat",
                  first_day_of_week as "firstDayOfWeek",
+                 COALESCE(locale, 'he') as "locale",
                  created_at as "createdAt", updated_at as "updatedAt"`,
       values
     );

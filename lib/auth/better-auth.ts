@@ -56,6 +56,37 @@ function resolveEmailLocale(request?: Request): EmailLocale {
   return "he";
 }
 
+/**
+ * Resolve the recipient locale for a transactional email, preferring the user's
+ * stored preference (`user_profiles.locale`) over request heuristics. This makes
+ * the language reliable beyond the originating request context — e.g. a password
+ * reset triggered without an `/en` path still lands in the user's chosen language.
+ *
+ * Resilient by design: any lookup failure (or a missing/invalid stored value)
+ * falls back to the request-based heuristic. An email must never fail because of
+ * this lookup.
+ */
+async function resolveEmailLocaleForUser(
+  userId: string,
+  request?: Request
+): Promise<EmailLocale> {
+  try {
+    // Bind the RLS tenant context to the authoritative (trusted) Better Auth
+    // user id so the user_profiles row is visible — the reset-password flow has
+    // no session/in-frame context, otherwise the RLS policy would hide the row.
+    setUserContext(userId);
+    const result = await query<{ locale: string | null }>(
+      `SELECT locale FROM user_profiles WHERE user_id = $1`,
+      [userId]
+    );
+    const stored = result.rows[0]?.locale;
+    if (stored === "en" || stored === "he") return stored;
+  } catch (error) {
+    logger.error("Failed to read stored email locale; using request heuristic", error);
+  }
+  return resolveEmailLocale(request);
+}
+
 /** Inline bilingual copy for the user-facing auth emails (no i18n catalog). */
 const AUTH_EMAILS = {
   resetPassword: {
@@ -124,7 +155,7 @@ export const auth = betterAuth({
     requireEmailVerification: emailEnabled,
     minPasswordLength: 8,
     sendResetPassword: async ({ user, url }, request) => {
-      const locale = resolveEmailLocale(request);
+      const locale = await resolveEmailLocaleForUser(user.id, request);
       const t = AUTH_EMAILS.resetPassword[locale];
       const sent = await sendEmail({
         to: user.email,
@@ -150,7 +181,7 @@ export const auth = betterAuth({
     autoSignInAfterVerification: true,
     expiresIn: 3600,
     sendVerificationEmail: async ({ user, url }, request) => {
-      const locale = resolveEmailLocale(request);
+      const locale = await resolveEmailLocaleForUser(user.id, request);
       const t = AUTH_EMAILS.verifyEmail[locale];
       const sent = await sendEmail({
         to: user.email,

@@ -28,6 +28,15 @@ export function LocaleSwitcher({ isCollapsed = false, className = "" }: LocaleSw
     startTransition(() => {
       router.replace(pathname, { locale: next });
     });
+    // Persist the choice to the profile so it survives cookie loss / a new
+    // device (and drives transactional-email language). Fire-and-forget: on
+    // public/unauthenticated pages this returns 401 — we swallow it and never
+    // block the UI on the request.
+    void fetch("/api/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ locale: next }),
+    }).catch(() => {});
   };
 
   // Collapsed: a single tap target toggling between the two locales.

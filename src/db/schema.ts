@@ -139,6 +139,9 @@ export const userProfiles = pgTable("user_profiles", {
   dateFormat: text("date_format").default("DD/MM/YYYY"),
   timeFormat: text("time_format").default("24h"),
   firstDayOfWeek: text("first_day_of_week").default("sunday"),
+  // Preferred UI language ('he' | 'en'). Locks the user's language choice
+  // server-side (e.g. for transactional emails) beyond the NEXT_LOCALE cookie.
+  locale: text("locale").default("he"),
   // Timestamps
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
