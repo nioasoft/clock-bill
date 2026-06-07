@@ -19,6 +19,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [businessName, setBusinessName] = useState("");
+  const [consent, setConsent] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
@@ -57,6 +58,12 @@ export default function RegisterPage() {
     const confirmValidation = validatePasswordConfirm(password, confirmPassword);
     if (!confirmValidation.isValid) {
       setConfirmPasswordError(confirmValidation.error);
+      return;
+    }
+
+    // Require explicit consent to terms + privacy
+    if (!consent) {
+      setError(t("register.consentRequired"));
       return;
     }
 
@@ -175,7 +182,7 @@ export default function RegisterPage() {
 
           <div className="rounded-[var(--radius-card)] border border-border bg-card p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <GoogleSignInButton label={t("register.googleSignUp")} />
+            <GoogleSignInButton label={t("register.googleSignUp")} disabled={!consent} />
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center" aria-hidden="true">
@@ -278,6 +285,30 @@ export default function RegisterPage() {
               </div>
             </div>
 
+            <div className="flex items-start gap-2.5">
+              <input
+                id="consent"
+                name="consent"
+                type="checkbox"
+                checked={consent}
+                onChange={(e) => {
+                  setConsent(e.target.checked);
+                  if (e.target.checked) setError("");
+                }}
+                className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border-border bg-card accent-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              />
+              <label htmlFor="consent" className="cursor-pointer text-xs leading-relaxed text-muted-foreground">
+                {t.rich("register.termsAgreement", {
+                  terms: (chunks) => (
+                    <Link href="/terms" className="text-primary hover:text-primary/80">{chunks}</Link>
+                  ),
+                  privacy: (chunks) => (
+                    <Link href="/privacy" className="text-primary hover:text-primary/80">{chunks}</Link>
+                  ),
+                })}
+              </label>
+            </div>
+
             {error && (
               <div className="rounded-[var(--radius)] bg-destructive/10 p-4" role="alert">
                 <p className="text-sm text-destructive">{error}</p>
@@ -287,7 +318,7 @@ export default function RegisterPage() {
             <div>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !consent}
                 className="group relative flex w-full items-center justify-center gap-2 rounded-[var(--radius)] border border-transparent bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
               >
                 <UserPlus className="h-4 w-4" />
@@ -304,16 +335,6 @@ export default function RegisterPage() {
                 >
                   {t("register.signInHere")}
                 </Link>
-              </p>
-              <p className="pt-2 text-xs text-muted-foreground">
-                {t.rich("register.termsAgreement", {
-                  terms: (chunks) => (
-                    <Link href="/terms" className="text-primary hover:text-primary/80">{chunks}</Link>
-                  ),
-                  privacy: (chunks) => (
-                    <Link href="/privacy" className="text-primary hover:text-primary/80">{chunks}</Link>
-                  ),
-                })}
               </p>
             </div>
           </form>

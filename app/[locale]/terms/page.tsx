@@ -29,11 +29,6 @@ export default async function TermsPage() {
       </section>
 
       <section>
-        <h2>{t("beta.heading")}</h2>
-        <p>{t("beta.body")}</p>
-      </section>
-
-      <section>
         <h2>{t("account.heading")}</h2>
         <ul>
           <li>{t("account.item1")}</li>

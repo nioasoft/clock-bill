@@ -906,7 +906,8 @@
       "submitting": "Signing up...",
       "haveAccount": "Already have an account?",
       "signInHere": "Sign in here",
-      "termsAgreement": "By signing up you agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>",
+      "termsAgreement": "I have read and agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>",
+      "consentRequired": "Please accept the Terms of Service and Privacy Policy to continue.",
       "resendVerification": "Resend verification email",
       "resendSuccess": "We resent the verification email.",
       "alreadyVerified": "Already verified?",
@@ -1450,12 +1451,8 @@
       "metaTitle": "Terms of Service",
       "metaDescription": "The terms of service for {brand}.",
       "title": "Terms of Service",
-      "updated": "June 3, 2026",
+      "updated": "June 7, 2026",
       "intro": "Welcome to {brand} (the \"Service\" or \"{brand}\"), an online service for tracking work hours, managing clients and projects, and generating billing documents, intended for freelancers and the self-employed. These Terms of Service (the \"Terms\") govern your use of the Service, alongside the <privacyLink>Privacy Policy</privacyLink>. Using, registering for, or accessing the Service constitutes full acceptance of these Terms. If you do not agree to the Terms, you may not use the Service.",
-      "beta": {
-        "heading": "Beta Stage",
-        "body": "The Service is in beta and is provided on an \"as-is\" and \"as-available\" basis. At this stage the Service may change, be updated, or be limited from time to time, and may contain faults, downtime, or errors. We do not guarantee any service level (SLA), full data retention, or that any particular feature will continue to exist. Using the Service during the beta stage is at your own risk."
-      },
       "account": {
         "heading": "User Account and Eligibility",
         "item1": "The Service is intended for users aged 18 and over who are competent to enter into a binding agreement.",
@@ -1481,7 +1478,7 @@
       },
       "yourData": {
         "heading": "Your Data and Backup Responsibility",
-        "body": "The data you enter is owned by you. We process it solely to provide the Service, in accordance with the <privacyLink>Privacy Policy</privacyLink>. You may export or delete your data at any time from your account settings. Since the Service is in beta, you are responsible for keeping an independent and up-to-date backup of important data, and we will not be liable for any loss of data for any reason whatsoever."
+        "body": "The data you enter is owned by you. We process it solely to provide the Service, in accordance with the <privacyLink>Privacy Policy</privacyLink>. You may export or delete your data at any time from your account settings. We recommend keeping an independent, up-to-date backup of important data, and, subject to applicable law, we will not be liable for loss of data."
       },
       "ip": {
         "heading": "Intellectual Property",
@@ -1489,7 +1486,7 @@
       },
       "pricing": {
         "heading": "Pricing and Future Changes",
-        "body": "During the beta stage, use of the Service is free of charge. We intend to continue allowing the management of up to three clients free of charge going forward. We reserve the right to add paid plans or features for extended use in the future, to change the pricing model, or to limit certain features. Any such change will take effect only after advance notice and within a reasonable timeframe. You will not be charged without your express prior consent."
+        "body": "Currently, use of the Service is free of charge. We intend to continue allowing the management of up to three clients free of charge going forward. We reserve the right to add paid plans or features for extended use in the future, to change the pricing model, or to limit certain features. Any such change will take effect only after advance notice and within a reasonable timeframe. You will not be charged without your express prior consent."
       },
       "availability": {
         "heading": "Service Availability",
@@ -1497,7 +1494,7 @@
       },
       "liability": {
         "heading": "Limitation of Liability",
-        "body": "The Service is provided \"as is\" and without warranty of any kind, express or implied, including any warranty of fitness for a particular purpose, availability, accuracy, or non-interruption. To the maximum extent permitted by law, we will not be liable for any indirect, special, consequential, or punitive damages, or for loss of profits, revenue, goodwill, or data, arising from the use of the Service or the inability to use it. In any event, our total aggregate liability for any cause whatsoever will not exceed the amount you actually paid for the Service in the twelve months preceding the event, and during the beta stage, in which the Service is provided free of charge, that amount is zero."
+        "body": "The Service is provided \"as is\" and without warranty of any kind, express or implied, including any warranty of fitness for a particular purpose, availability, accuracy, or non-interruption. To the maximum extent permitted by law, we will not be liable for any indirect, special, consequential, or punitive damages, or for loss of profits, revenue, goodwill, or data, arising from the use of the Service or the inability to use it. In any event, our total aggregate liability for any cause whatsoever will not exceed the amount you actually paid for the Service in the twelve months preceding the event, and where the Service is provided free of charge, that amount is zero."
       },
       "indemnity": {
         "heading": "Indemnification",
@@ -1532,20 +1529,21 @@
       },
       "contact": {
         "heading": "Contact Us",
-        "body": "For questions regarding these Terms, you may contact us through the <contactLink>contact form</contactLink>."
+        "body": "For questions regarding these Terms, you may contact us at support@clock-bill.com or through the <contactLink>contact form</contactLink>."
       }
     },
     "privacy": {
       "metaTitle": "Privacy Policy",
       "metaDescription": "{brand}'s privacy policy: what data we collect, how we use it, and what your rights are.",
       "title": "Privacy Policy",
-      "updated": "June 3, 2026",
+      "updated": "June 7, 2026",
       "intro": "This policy explains what personal data {brand} (\"we\" or the \"Service\") collects about you, how we use and store it, and what rights are available to you. We act as the controller of the data and process the information in accordance with the Protection of Privacy Law, 5741-1981, including Amendment No. 13 to the law. Use of the Service constitutes acceptance of this policy.",
       "collect": {
         "heading": "What Data We Collect",
         "item1": "<strong>Account details:</strong> email address and name, received upon registration or when logging in with Google.",
         "item2": "<strong>Usage data you enter:</strong> clients, projects, tasks, time entries, items, rates, billing documents, and notes you create in the Service.",
-        "item3": "<strong>Technical data:</strong> a session cookie for login, as well as basic operational logs (IP address, browser type, request times) used for security and stability."
+        "item3": "<strong>Technical data:</strong> a session cookie for login, as well as basic operational logs (IP address, browser type, request times) used for security and stability.",
+        "note": "Providing your email address is required to create an account and operate the Service; providing additional details, such as your business name, is optional. Without an email address the Service cannot be used."
       },
       "use": {
         "heading": "How We Use the Data",
@@ -1560,8 +1558,9 @@
         "heading": "Sharing with Service Providers",
         "intro": "We use infrastructure providers only, who process information on our behalf in order to operate the Service:",
         "item1": "<strong>Neon / AWS:</strong> database storage (Frankfurt region, European Union).",
-        "item2": "<strong>Vercel:</strong> application hosting.",
+        "item2": "<strong>Vercel:</strong> application hosting, as well as cookieless, anonymous traffic analytics (Vercel Analytics and Speed Insights).",
         "item3": "<strong>Google:</strong> optional login via a Google account (OAuth).",
+        "item4": "<strong>Resend:</strong> delivery of transactional emails (email verification, password reset). Only your email address is processed for this purpose.",
         "note": "These providers process data on our behalf only and subject to security and privacy obligations. Apart from these providers, we do not disclose the information to third parties, unless required to do so by law or by order of a competent authority."
       },
       "storage": {
@@ -1577,8 +1576,8 @@
         "body": "In the event of a material security incident concerning your data, we will act in accordance with the applicable provisions of the law, including notification to the extent required by law."
       },
       "cookies": {
-        "heading": "Cookies",
-        "body": "We use strictly necessary cookies only, primarily the session cookie that keeps you logged in. We do not use advertising or third-party tracking cookies, and we do not run analytics tools that track your activity."
+        "heading": "Cookies and Anonymous Analytics",
+        "body": "We use strictly necessary cookies only — the session cookie that keeps you logged in and a cookie that remembers your chosen interface language. We do not use advertising or third-party tracking cookies. To measure traffic and performance we use cookieless, anonymous analytics tools (Vercel Analytics and Speed Insights) that collect aggregate data only, do not identify you personally, and do not track you across sites. For this reason no cookie consent banner is required."
       },
       "rights": {
         "heading": "Your Rights",
@@ -1587,7 +1586,8 @@
         "item2": "<strong>Export:</strong> to download a copy of all your data from your account settings.",
         "item3": "<strong>Correction:</strong> to update or correct your details at any time.",
         "item4": "<strong>Deletion:</strong> to permanently delete your account and all its data, from your account settings.",
-        "note": "To exercise these rights you can use the tools in your account settings or contact us through the contact form."
+        "item5": "<strong>Complaint:</strong> if you believe the processing of your data infringes your rights, you may contact the Israeli Privacy Protection Authority; if you reside in the European Union, you may also contact your local data protection supervisory authority.",
+        "note": "To exercise these rights you can use the tools in your account settings, contact us at support@clock-bill.com, or use the contact form."
       },
       "retention": {
         "heading": "Data Retention and Deletion",
@@ -1603,7 +1603,7 @@
       },
       "contact": {
         "heading": "Contact Us",
-        "body": "For any question or request regarding privacy, you may contact us through the <contactLink>contact form</contactLink>."
+        "body": "For any question or request regarding privacy, you may contact us at support@clock-bill.com or through the <contactLink>contact form</contactLink>."
       }
     }
   },

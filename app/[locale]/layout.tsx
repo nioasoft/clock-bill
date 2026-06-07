@@ -4,8 +4,7 @@ import "./globals.css";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import { AnalyticsScripts } from "@/components/analytics";
 import { Toaster } from "@/components/ui/toaster";
 import { Providers } from "@/components/providers";
 import { PwaProvider } from "@/components/pwa-provider";
@@ -126,8 +125,7 @@ export default async function LocaleLayout({ children, params }: Props) {
           <PwaProvider />
         </NextIntlClientProvider>
         <Toaster />
-        <Analytics />
-        <SpeedInsights />
+        <AnalyticsScripts />
       </body>
     </html>
   );
