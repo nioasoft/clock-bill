@@ -322,6 +322,22 @@ export async function PATCH(
       );
     }
 
+    // Reactivating a client consumes a slot — enforce the cap.
+    const { getUserPlan, countActiveClients } = await import("@/lib/entitlements");
+    const { canAddClient } = await import("@/lib/plans");
+    const plan = await getUserPlan(user.id);
+    const activeCount = await countActiveClients(user.id);
+    if (!canAddClient(plan.tier, activeCount)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error_code: "PLAN_LIMIT_REACHED",
+          message: "הגעת למגבלת הלקוחות בתוכנית שלך. שדרגו כדי לשחזר לקוח זה.",
+        },
+        { status: 402 }
+      );
+    }
+
     const { query } = await import("@/lib/db");
     const { id: clientId } = await params;
 

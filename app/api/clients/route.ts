@@ -110,16 +110,27 @@ export async function GET(_request: NextRequest) {
       totalHours: client.total_hours || 0,
     }));
 
-    // Add cache headers for better performance
-    // Cache for 60 seconds since client list doesn't change that often
-    return NextResponse.json({
-      success: true,
-      clients,
-    }, {
-      headers: {
-        'Cache-Control': 'private, max-age=60, stale-while-revalidate=120'
+    const { getUserPlan } = await import("@/lib/entitlements");
+    const plan = await getUserPlan(user.id);
+    const activeCount = clients.filter((c) => c.isActive).length;
+
+    return NextResponse.json(
+      {
+        success: true,
+        clients,
+        plan: {
+          tier: plan.tier,
+          // null = unlimited (Infinity isn't JSON-serializable)
+          clientLimit: Number.isFinite(plan.clientLimit) ? plan.clientLimit : null,
+          activeCount,
+        },
+      },
+      {
+        headers: {
+          "Cache-Control": "private, max-age=60, stale-while-revalidate=120",
+        },
       }
-    });
+    );
   } catch (error) {
     console.error("Error fetching clients:", error);
     return NextResponse.json(
@@ -141,6 +152,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
         { status: 401 }
+      );
+    }
+
+    // Enforce the active-client cap for the user's plan (Iron Law 5: server-side).
+    const { getUserPlan, countActiveClients } = await import("@/lib/entitlements");
+    const { canAddClient } = await import("@/lib/plans");
+    const plan = await getUserPlan(user.id);
+    const activeCount = await countActiveClients(user.id);
+    if (!canAddClient(plan.tier, activeCount)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error_code: "PLAN_LIMIT_REACHED",
+          message: "הגעת למגבלת הלקוחות בתוכנית שלך. שדרגו כדי להוסיף לקוחות נוספים.",
+        },
+        { status: 402 }
       );
     }
 
