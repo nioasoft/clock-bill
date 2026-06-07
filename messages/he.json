@@ -376,6 +376,12 @@
     }
   },
   "Clients": {
+    "usage": {
+      "count": "{active} מתוך {limit} לקוחות",
+      "unlimited": "{active} לקוחות · ללא הגבלה",
+      "atLimit": "הגעת למגבלת התוכנית.",
+      "upgrade": "שדרגו"
+    },
     "pageTitle": "לקוחות",
     "clientDetails": "פרטי לקוח",
     "newClientButton": "+ לקוח חדש",

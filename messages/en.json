@@ -376,6 +376,12 @@
     }
   },
   "Clients": {
+    "usage": {
+      "count": "{active} of {limit} clients",
+      "unlimited": "{active} clients · unlimited",
+      "atLimit": "You've reached your plan limit.",
+      "upgrade": "Upgrade"
+    },
     "pageTitle": "Clients",
     "clientDetails": "Client Details",
     "newClientButton": "+ New Client",

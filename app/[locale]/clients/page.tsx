@@ -6,6 +6,7 @@ import { Link } from "@/src/i18n/navigation";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
+import { PlanUsageBanner } from "@/components/plan-usage-banner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Users } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
@@ -83,6 +84,7 @@ function ClientsPageContent() {
   const resolveValidation = useValidationMessage();
   const searchParams = useSearchParams();
   const [clients, setClients] = useState<Client[]>([]);
+  const [plan, setPlan] = useState<{ activeCount: number; clientLimit: number | null } | null>(null);
   const [clientsLoading, setClientsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -133,6 +135,9 @@ function ClientsPageContent() {
 
         if (data.success) {
           setClients(data.clients || []);
+          if (data.plan) {
+            setPlan({ activeCount: data.plan.activeCount, clientLimit: data.plan.clientLimit });
+          }
         }
       } catch (error) {
         console.error("Error fetching clients:", error);
@@ -406,6 +411,7 @@ function ClientsPageContent() {
             {showForm ? t("cancel") : t("newClientButton")}
           </button>
         </PageHeader>
+        {plan && <PlanUsageBanner active={plan.activeCount} limit={plan.clientLimit} />}
         {/* Add/Edit Client Form */}
         {showForm && (
           <div className="mb-8 rounded-[var(--radius-card)] border border-border bg-card p-6 sm:p-8 motion-safe:animate-scale-in">
