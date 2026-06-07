@@ -158,8 +158,10 @@ export async function POST(request: NextRequest) {
     // Enforce the active-client cap for the user's plan (Iron Law 5: server-side).
     const { getUserPlan, countActiveClients } = await import("@/lib/entitlements");
     const { canAddClient } = await import("@/lib/plans");
-    const plan = await getUserPlan(user.id);
-    const activeCount = await countActiveClients(user.id);
+    const [plan, activeCount] = await Promise.all([
+      getUserPlan(user.id),
+      countActiveClients(user.id),
+    ]);
     if (!canAddClient(plan.tier, activeCount)) {
       return NextResponse.json(
         {
