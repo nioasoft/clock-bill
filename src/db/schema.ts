@@ -142,6 +142,15 @@ export const userProfiles = pgTable("user_profiles", {
   // Preferred UI language ('he' | 'en'). Locks the user's language choice
   // server-side (e.g. for transactional emails) beyond the NEXT_LOCALE cookie.
   locale: text("locale").default("he"),
+  // ─── Subscription (Polar) ───────────────────────────────────────────
+  // Tier is written by the Polar webhook (Plan 2). Until then everyone is
+  // 'free' except accounts flagged `founding` (owner / pre-launch users),
+  // which lib/entitlements.ts resolves to 'unlimited'.
+  subscriptionTier: text("subscription_tier").default("free"),
+  subscriptionStatus: text("subscription_status"),
+  subscriptionPeriodEnd: timestamp("subscription_period_end"),
+  polarSubscriptionId: text("polar_subscription_id"),
+  founding: boolean("founding").default(false),
   // Timestamps
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
