@@ -233,6 +233,8 @@ function ClientsPageContent() {
         } else {
           // Add the new client to the list
           setClients([data.client, ...clients]);
+          // Keep the usage banner fresh (only count genuine creates)
+          setPlan((p) => (p ? { ...p, activeCount: p.activeCount + 1 } : p));
         }
         // Reset form and close
         setFormData({
@@ -350,6 +352,8 @@ function ClientsPageContent() {
       if (data.success) {
         // Update client in list (soft delete - sets isActive to false)
         setClients(clients.map((c) => (c.id === clientToDelete.id ? { ...c, isActive: false } : c)));
+        // Archiving frees a slot — keep the usage banner fresh
+        setPlan((p) => (p ? { ...p, activeCount: Math.max(0, p.activeCount - 1) } : p));
         setClientToDelete(null);
         // Close edit form if open
         setShowForm(false);
@@ -377,6 +381,8 @@ function ClientsPageContent() {
       if (data.success) {
         // Update client in list (restore - sets isActive to true)
         setClients(clients.map((c) => (c.id === client.id ? { ...c, isActive: true } : c)));
+        // Restoring consumes a slot — keep the usage banner fresh
+        setPlan((p) => (p ? { ...p, activeCount: p.activeCount + 1 } : p));
         // Close edit form if open
         setShowForm(false);
         setEditingClient(null);
@@ -394,6 +400,10 @@ function ClientsPageContent() {
     setClientToDelete(null);
   };
 
+  // At the plan's client cap — gate the create action (banner explains why).
+  const atClientLimit =
+    plan !== null && plan.clientLimit !== null && plan.activeCount >= plan.clientLimit;
+
   return (
     <AppLayout>
       <PageContainer>
@@ -406,7 +416,8 @@ function ClientsPageContent() {
               }
               setShowForm(!showForm);
             }}
-            className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
+            disabled={!showForm && atClientLimit}
+            className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {showForm ? t("cancel") : t("newClientButton")}
           </button>

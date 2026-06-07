@@ -31,7 +31,7 @@ export async function getUserPlan(userId: string): Promise<UserPlan> {
   const rawTier = row?.subscription_tier ?? "free";
   const tier: PlanTier = founding
     ? "unlimited"
-    : isPlanTier(rawTier ?? "free")
+    : isPlanTier(rawTier)
       ? (rawTier as PlanTier)
       : "free";
   return {
@@ -41,14 +41,4 @@ export async function getUserPlan(userId: string): Promise<UserPlan> {
     periodEnd: row?.subscription_period_end ?? null,
     founding,
   };
-}
-
-/** Count active (is_active = TRUE) clients for a user. */
-export async function countActiveClients(userId: string): Promise<number> {
-  const { query } = await import("@/lib/db");
-  const result = await query<{ count: string }>(
-    `SELECT COUNT(*)::text AS count FROM clients WHERE user_id = $1 AND is_active = TRUE`,
-    [userId]
-  );
-  return parseInt(result.rows[0]?.count ?? "0", 10);
 }
