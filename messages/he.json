@@ -1615,6 +1615,7 @@
   },
   "errors": {
     "UNAUTHORIZED": "לא מחובר",
+    "PLAN_LIMIT_REACHED": "הגעת למגבלת הלקוחות בתוכנית שלך. שדרגו כדי להוסיף עוד.",
     "FORBIDDEN": "אין הרשאה",
     "SERVER_ERROR": "שגיאת שרת",
     "INVALID_REQUEST": "בקשה לא תקינה",

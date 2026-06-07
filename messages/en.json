@@ -1615,6 +1615,7 @@
   },
   "errors": {
     "UNAUTHORIZED": "Not authenticated",
+    "PLAN_LIMIT_REACHED": "You've reached your plan's client limit. Upgrade to add more.",
     "FORBIDDEN": "No permission",
     "SERVER_ERROR": "Server error",
     "INVALID_REQUEST": "Invalid request",
