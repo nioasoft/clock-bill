@@ -155,23 +155,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Enforce the active-client cap for the user's plan (Iron Law 5: server-side).
-    const { getUserPlan, countActiveClients } = await import("@/lib/entitlements");
+    // Read the plan tier up front; the active-client cap is enforced ATOMICALLY
+    // inside the transaction below (per-user advisory lock) to close a TOCTOU race
+    // where two concurrent creates could both pass a non-atomic pre-check.
+    const { getUserPlan } = await import("@/lib/entitlements");
     const { canAddClient } = await import("@/lib/plans");
-    const [plan, activeCount] = await Promise.all([
-      getUserPlan(user.id),
-      countActiveClients(user.id),
-    ]);
-    if (!canAddClient(plan.tier, activeCount)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error_code: "PLAN_LIMIT_REACHED",
-          message: "הגעת למגבלת הלקוחות בתוכנית שלך. שדרגו כדי להוסיף לקוחות נוספים.",
-        },
-        { status: 402 }
-      );
-    }
+    const plan = await getUserPlan(user.id);
 
     const parsed = await parseBody(request, createClientSchema);
     if (!parsed.ok) return parsed.response;
@@ -187,7 +176,21 @@ export async function POST(request: NextRequest) {
     const effectiveDefaultRate = defaultHourly ? defaultHourly.rate : (defaultRate ?? null);
 
     // Insert client + rates atomically (RLS GUC bound by withTransaction).
-    const client = await withTransaction(async (db) => {
+    const result = await withTransaction(async (db) => {
+      // Serialize concurrent create/reactivate calls FOR THIS USER on a per-user
+      // advisory lock so the COUNT below always sees the prior txn's committed state
+      // (different users use different keys and never block each other).
+      await db.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`clients:${user.id}`]);
+
+      const countRes = await db.query<{ count: string }>(
+        "SELECT COUNT(*)::text AS count FROM clients WHERE user_id = $1 AND is_active = TRUE",
+        [user.id]
+      );
+      const activeCount = parseInt(countRes.rows[0]?.count ?? "0", 10);
+      if (!canAddClient(plan.tier, activeCount)) {
+        return { overLimit: true as const };
+      }
+
       const clientResult = await db.query<{
         id: string;
         name: string;
@@ -245,8 +248,21 @@ export async function POST(request: NextRequest) {
           ]
         );
       }
-      return row;
+      return { overLimit: false as const, client: row };
     });
+
+    if (result.overLimit) {
+      return NextResponse.json(
+        {
+          success: false,
+          error_code: "PLAN_LIMIT_REACHED",
+          message: "הגעת למגבלת הלקוחות בתוכנית שלך. שדרגו כדי להוסיף לקוחות נוספים.",
+        },
+        { status: 402 }
+      );
+    }
+
+    const client = result.client;
 
     return NextResponse.json({
       success: true,
