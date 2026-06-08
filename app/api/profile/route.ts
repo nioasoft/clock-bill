@@ -9,6 +9,7 @@ import { query } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
 import { createLogger } from "@/lib/logger";
+import { isThemeId } from "@/lib/themes";
 
 const logger = createLogger("api:profile");
 
@@ -48,6 +49,9 @@ const updateProfileSchema = z.object({
   timeFormat: z.string().max(50).nullable().optional(),
   firstDayOfWeek: z.string().max(50).nullable().optional(),
   locale: z.enum(["he", "en"]).optional(),
+  // Validated against the theme registry (isThemeId) in the handler, not here,
+  // so an invalid value returns a Hebrew 400 instead of a generic Zod error.
+  theme: z.string().max(50).optional(),
 });
 
 export interface Profile {
@@ -82,6 +86,7 @@ export interface Profile {
   timeFormat: string;
   firstDayOfWeek: string;
   locale: string;
+  theme: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -126,6 +131,7 @@ export async function GET(): Promise<NextResponse> {
               date_format as "dateFormat", time_format as "timeFormat",
               first_day_of_week as "firstDayOfWeek",
               COALESCE(locale, 'he') as "locale",
+              COALESCE(theme, 'dark') as "theme",
               created_at as "createdAt", updated_at as "updatedAt"
        FROM user_profiles
        WHERE user_id = $1`,
@@ -314,6 +320,19 @@ export async function PATCH(request: Request): Promise<NextResponse> {
       values.push(body.locale);
     }
 
+    if (body.theme !== undefined) {
+      // Server-side allow-list check against the theme registry — never trust an
+      // arbitrary string from the client (validate at every boundary).
+      if (!isThemeId(body.theme)) {
+        return NextResponse.json(
+          { success: false, error_code: "INVALID_THEME", message: "ערכת נושא לא חוקית" },
+          { status: 400 }
+        );
+      }
+      updates.push(`theme = $${paramIndex++}`);
+      values.push(body.theme);
+    }
+
     if (updates.length === 0) {
       return NextResponse.json(
         { success: false, error_code: "NO_FIELDS_TO_UPDATE", message: "No fields to update" },
@@ -345,6 +364,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
                  date_format as "dateFormat", time_format as "timeFormat",
                  first_day_of_week as "firstDayOfWeek",
                  COALESCE(locale, 'he') as "locale",
+                 COALESCE(theme, 'dark') as "theme",
                  created_at as "createdAt", updated_at as "updatedAt"`,
       values
     );
