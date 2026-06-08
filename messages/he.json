@@ -666,6 +666,17 @@
       "currencies": "מטבעות",
       "security": "אבטחה"
     },
+    "billing": {
+      "tabLabel": "חיוב",
+      "heading": "תוכנית ומנוי",
+      "currentPlan": "התוכנית הנוכחית",
+      "tierFree": "חינם",
+      "tierStarter": "Starter",
+      "tierUnlimited": "Unlimited",
+      "manage": "ניהול מנוי",
+      "viewPlans": "צפייה בתוכניות",
+      "founding": "חבר מייסד — גישה מלאה"
+    },
     "currencyOptions": {
       "ILS": "₪ - שקל ישראלי",
       "USD": "$ - דולר אמריקאי",

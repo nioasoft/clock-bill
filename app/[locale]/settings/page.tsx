@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { useRouter, usePathname } from "@/src/i18n/navigation";
+import { useRouter, usePathname, Link } from "@/src/i18n/navigation";
+import { authClient } from "@/lib/auth/client";
 import { DeleteAccountSection } from "@/components/delete-account-section";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
@@ -69,7 +70,7 @@ export default function SettingsPage() {
   const intlLocale = locale === "en" ? "en-US" : "he-IL";
   const router = useRouter();
   const pathname = usePathname();
-  const [activeTab, setActiveTab] = useState<"profile" | "security" | "currencies" | "notifications">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "security" | "currencies" | "notifications" | "billing">("profile");
   const [sessions, setSessions] = useState<Session[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [currencyRates, setCurrencyRates] = useState<CurrencyRate[]>([]);
@@ -86,6 +87,10 @@ export default function SettingsPage() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [exportingData, setExportingData] = useState(false);
   const [exportError, setExportError] = useState("");
+
+  // Billing / subscription state — best-effort fetch of the current plan.
+  const [billingPlan, setBillingPlan] = useState<{ tier: string; founding: boolean } | null>(null);
+  const [billingError, setBillingError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const signatureInputRef = useRef<HTMLInputElement>(null);
 
@@ -138,6 +143,8 @@ export default function SettingsPage() {
     } else if (activeTab === "notifications") {
       fetchProfile();
       checkNotificationPermission();
+    } else if (activeTab === "billing") {
+      fetchBillingPlan();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
@@ -652,6 +659,30 @@ export default function SettingsPage() {
     router.replace(pathname, { locale: next });
   };
 
+  // Fetch the current subscription plan (best-effort; failures are non-fatal —
+  // the panel simply shows nothing rather than blocking the settings page).
+  const fetchBillingPlan = async () => {
+    try {
+      const response = await fetch("/api/account/plan");
+      const data = await response.json();
+      if (data.success && data.plan) {
+        setBillingPlan({ tier: data.plan.tier, founding: !!data.plan.founding });
+      }
+    } catch {
+      // Ignore — billingPlan stays null and the panel renders nothing.
+    }
+  };
+
+  // Open the Polar-hosted customer portal so paid users can manage their subscription.
+  const handleManageSubscription = async () => {
+    setBillingError("");
+    try {
+      await authClient.customer.portal();
+    } catch {
+      setBillingError(t("toasts.networkError"));
+    }
+  };
+
   // GDPR data export — download all the user's data as a single JSON file.
   // Uses fetch→blob so a failed request surfaces an error instead of navigating
   // the browser to a raw error page.
@@ -736,6 +767,18 @@ export default function SettingsPage() {
               aria-selected={activeTab === "security"}
             >
               {t("tabs.security")}
+            </button>
+            <button
+              onClick={() => setActiveTab("billing")}
+              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+                activeTab === "billing"
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-muted"
+              }`}
+              role="tab"
+              aria-selected={activeTab === "billing"}
+            >
+              {t("billing.tabLabel")}
             </button>
           </nav>
         </div>
@@ -1144,6 +1187,62 @@ export default function SettingsPage() {
                   t("notifications.saveButton")
                 )}
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Billing Tab Content */}
+        {activeTab === "billing" && (
+          <div className="space-y-6" role="tabpanel">
+            <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
+              <h2 className="font-display text-lg font-bold text-foreground mb-6">
+                {t("billing.heading")}
+              </h2>
+
+              {billingError && (
+                <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 mb-4">
+                  <p className="text-sm text-destructive">{billingError}</p>
+                </div>
+              )}
+
+              {billingPlan === null ? (
+                <div className="h-10 w-48 rounded-[var(--radius)] bg-muted animate-pulse" />
+              ) : (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between p-4 rounded-[var(--radius-card)] border border-border bg-muted">
+                    <div>
+                      <p className="text-sm text-muted-foreground">{t("billing.currentPlan")}</p>
+                      <p className="font-medium text-foreground mt-0.5">
+                        {billingPlan.tier === "unlimited"
+                          ? t("billing.tierUnlimited")
+                          : billingPlan.tier === "starter"
+                            ? t("billing.tierStarter")
+                            : t("billing.tierFree")}
+                      </p>
+                      {billingPlan.founding && (
+                        <p className="text-xs text-accent mt-1">{t("billing.founding")}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3">
+                    <Link
+                      href="/pricing"
+                      className="px-4 py-2 border border-border bg-card text-foreground text-sm font-medium rounded-[var(--radius)] hover:bg-muted transition-colors"
+                    >
+                      {t("billing.viewPlans")}
+                    </Link>
+                    {(billingPlan.tier === "starter" || billingPlan.tier === "unlimited") && (
+                      <button
+                        onClick={handleManageSubscription}
+                        className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-[var(--radius)] hover:bg-primary/90 transition-colors"
+                      >
+                        {t("billing.manage")}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

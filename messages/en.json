@@ -666,6 +666,17 @@
       "currencies": "Currencies",
       "security": "Security"
     },
+    "billing": {
+      "tabLabel": "Billing",
+      "heading": "Plan & Subscription",
+      "currentPlan": "Current plan",
+      "tierFree": "Free",
+      "tierStarter": "Starter",
+      "tierUnlimited": "Unlimited",
+      "manage": "Manage subscription",
+      "viewPlans": "View plans",
+      "founding": "Founding member — full access"
+    },
     "currencyOptions": {
       "ILS": "₪ - Israeli Shekel",
       "USD": "$ - US Dollar",
