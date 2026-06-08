@@ -150,6 +150,9 @@ export const userProfiles = pgTable("user_profiles", {
   subscriptionStatus: text("subscription_status"),
   subscriptionPeriodEnd: timestamp("subscription_period_end"),
   polarSubscriptionId: text("polar_subscription_id"),
+  // Which billing backend owns the active subscription ('polar' today; lets a
+  // future provider — e.g. an Israeli gateway — write the same tier columns).
+  billingProvider: text("billing_provider").default("polar"),
   founding: boolean("founding").default(false),
   // Timestamps
   createdAt: timestamp("created_at").defaultNow(),
