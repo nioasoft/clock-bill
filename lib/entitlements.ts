@@ -42,3 +42,42 @@ export async function getUserPlan(userId: string): Promise<UserPlan> {
     founding,
   };
 }
+
+/** Subscription columns derived from a Polar webhook event. */
+export interface EntitlementUpdate {
+  tier: PlanTier;
+  status: string | null;
+  periodEnd: string | null; // ISO timestamp or null
+  polarSubscriptionId: string | null;
+}
+
+/**
+ * Upsert a user's subscription columns from a Polar event. Sets provider='polar'.
+ * Binds the RLS tenant context first since webhooks carry no session.
+ */
+export async function applyPolarEntitlement(
+  userId: string,
+  u: EntitlementUpdate
+): Promise<void> {
+  const { query, setUserContext } = await import("@/lib/db");
+  setUserContext(userId); // bind RLS tenant context (webhook has no session)
+  await query(
+    `UPDATE user_profiles
+       SET subscription_tier = $2, subscription_status = $3, subscription_period_end = $4,
+           polar_subscription_id = $5, billing_provider = 'polar', updated_at = NOW()
+     WHERE user_id = $1`,
+    [userId, u.tier, u.status, u.periodEnd, u.polarSubscriptionId]
+  );
+}
+
+/** Drop a user back to free (subscription revoked/ended). */
+export async function revokeEntitlement(userId: string): Promise<void> {
+  const { query, setUserContext } = await import("@/lib/db");
+  setUserContext(userId);
+  await query(
+    `UPDATE user_profiles
+       SET subscription_tier = 'free', subscription_status = 'revoked', updated_at = NOW()
+     WHERE user_id = $1`,
+    [userId]
+  );
+}

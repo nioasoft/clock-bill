@@ -11,10 +11,21 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
+import { polar, checkout, portal, webhooks } from "@polar-sh/better-auth";
 import { db } from "@/src/db";
 import * as schema from "@/src/db/schema";
 import { query, setUserContext } from "@/lib/db";
 import { createLogger } from "@/lib/logger";
+import {
+  getPolar,
+  getProductTierMap,
+  tierForProductId,
+  polarEnabled,
+} from "@/lib/polar";
+import {
+  applyPolarEntitlement,
+  revokeEntitlement,
+} from "@/lib/entitlements";
 import {
   sendEmail,
   emailLayout,
@@ -135,6 +146,95 @@ const emailEnabled = isEmailConfigured();
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 const googleEnabled = Boolean(googleClientId && googleClientSecret);
+
+/**
+ * Map a Polar subscription-shaped payload → our columns and persist.
+ *
+ * The Polar SDK deserializes webhook payloads to camelCase with rich types
+ * (`currentPeriodEnd` is a `Date`), so we normalize to the ISO strings our
+ * `EntitlementUpdate` contract expects. `externalId` is the Better Auth user id
+ * (Polar customer `external_id`, set via `createCustomerOnSignUp`).
+ */
+async function syncSubscription(
+  externalId: string | null | undefined,
+  sub: {
+    status?: string | null;
+    productId?: string | null;
+    currentPeriodEnd?: Date | string | null;
+    id?: string | null;
+  }
+): Promise<void> {
+  if (!externalId) {
+    logger.error("Polar webhook: subscription without customer.externalId");
+    return;
+  }
+  const tier = tierForProductId(sub.productId, getProductTierMap());
+  if (!tier) {
+    logger.error("Polar webhook: unknown productId", { productId: sub.productId });
+    return;
+  }
+  const periodEnd =
+    sub.currentPeriodEnd instanceof Date
+      ? sub.currentPeriodEnd.toISOString()
+      : (sub.currentPeriodEnd ?? null);
+  await applyPolarEntitlement(externalId, {
+    tier,
+    status: sub.status ?? null,
+    periodEnd,
+    polarSubscriptionId: sub.id ?? null,
+  });
+}
+
+// Polar Better Auth plugin — gated on POLAR_API_KEY (mirrors emailEnabled /
+// googleEnabled). The webhooks() sub-plugin requires a secret at construction,
+// so it's additionally gated on POLAR_WEBHOOK_SECRET: in dev without a secret
+// the app still boots (checkout/portal work; entitlement sync is inert until a
+// secret is set). nextCookies() stays last (see plugins array below).
+const polarWebhookSecret = process.env.POLAR_WEBHOOK_SECRET;
+const polarPlugin = polarEnabled
+  ? polar({
+      client: getPolar(),
+      createCustomerOnSignUp: true,
+      use: [
+        checkout({
+          products: [
+            { productId: process.env.POLAR_PRODUCT_STARTER_MONTHLY ?? "", slug: "starter-monthly" },
+            { productId: process.env.POLAR_PRODUCT_STARTER_ANNUAL ?? "", slug: "starter-annual" },
+            { productId: process.env.POLAR_PRODUCT_UNLIMITED_MONTHLY ?? "", slug: "unlimited-monthly" },
+            { productId: process.env.POLAR_PRODUCT_UNLIMITED_ANNUAL ?? "", slug: "unlimited-annual" },
+          ],
+          successUrl: process.env.POLAR_SUCCESS_URL ?? "/dashboard?checkout=success",
+          authenticatedUsersOnly: true,
+        }),
+        portal(),
+        ...(polarWebhookSecret
+          ? [
+              webhooks({
+                secret: polarWebhookSecret,
+                onSubscriptionActive: async (payload) => {
+                  const sub = payload.data;
+                  await syncSubscription(sub.customer?.externalId, sub);
+                },
+                onSubscriptionUpdated: async (payload) => {
+                  const sub = payload.data;
+                  await syncSubscription(sub.customer?.externalId, sub);
+                },
+                onOrderPaid: async (payload) => {
+                  const order = payload.data;
+                  if (order.subscription) {
+                    await syncSubscription(order.customer?.externalId, order.subscription);
+                  }
+                },
+                onSubscriptionRevoked: async (payload) => {
+                  const externalId = payload.data.customer?.externalId;
+                  if (externalId) await revokeEntitlement(externalId);
+                },
+              }),
+            ]
+          : []),
+      ],
+    })
+  : null;
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -259,7 +359,7 @@ export const auth = betterAuth({
     },
   },
   // nextCookies must be last so it can set cookies after other plugins run.
-  plugins: [nextCookies()],
+  plugins: [...(polarPlugin ? [polarPlugin] : []), nextCookies()],
 });
 
 export type Session = typeof auth.$Infer.Session;
