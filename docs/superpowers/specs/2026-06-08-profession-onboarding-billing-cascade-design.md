@@ -15,8 +15,10 @@ billing rules in one step:
   editable.
 - **Default hourly rate** — the user types their standard rate (e.g. ₪400).
 - **Rounding** — prefilled from the profession preset, editable.
+- **Appearance (theme)** — the user picks their UI theme from the 12 available themes.
+  Own choice, **not** profession-derived; defaults to `dark`.
 
-These four become the user's **base**. Below the base, a **3-tier cascade** lets each
+The first four become the user's **base**. Below the base, a **3-tier cascade** lets each
 client and project override:
 
 > The user sets the base. **Client overrides base, project overrides client.**
@@ -73,8 +75,10 @@ current users.** Only newly created clients inherit the base.
   2. Currency selector — prefilled from `GET /api/geo`, editable.
   3. Default hourly rate — numeric input.
   4. Rounding — prefilled from the chosen profession, editable.
+  5. Appearance — theme picker over the 12 themes. **Reuse the Settings theme selector
+     component + its live-apply mechanism** for instant preview; defaults to `dark`.
 - **Submit:** `PATCH /api/profile { profession, defaultCurrency, defaultRate,
-  defaultBillingRounding, onboarded: true }` → success toast → modal closes.
+  defaultBillingRounding, theme, onboarded: true }` → success toast → modal closes.
 - **Skip ("דלג" / X):** `PATCH /api/profile { onboarded: true }` — base stays blank, never
   nags again.
 - **4 UX states:** the modal is the success path; a PATCH failure shows an **inline Hebrew
@@ -113,7 +117,8 @@ export interface Profession {
 **Presets set rounding + payment terms + PDF template only.** They do **not** set:
 - **currency** — comes from geo + user confirmation.
 - **rate** — user-typed.
-- **theme** — a personal aesthetic choice; untouched (default `dark`).
+- **theme** — chosen by the user as its own onboarding field (see §3), **not** derived
+  from the profession; default `dark`.
 - **billing model** (hourly/retainer/fixed) — lives on client/project, has no profile-level
   field. Shown as **descriptive text only** (`modelHint*`) on the card to orient the user;
   not applied in v1. (Applying it would mean prefilling the new-client form — a separate,
@@ -181,6 +186,8 @@ Applied via **psql + `DATABASE_URL_ADMIN`** (Drizzle journal is drifted — do N
 - `defaultRate` — `number` nullable.
 - `defaultBillingRounding` — validated against `ROUNDING_MODES`.
 - `onboarded` — boolean.
+- `theme` — **already supported** (validated via `isThemeId`); included in the onboarding
+  payload, no API change needed beyond confirming it stays in the allow-list.
 - GET returns the new fields.
 
 `app/api/clients/route.ts` (POST):
