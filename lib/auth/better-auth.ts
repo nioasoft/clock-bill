@@ -350,8 +350,8 @@ export const auth = betterAuth({
             // Bind the tenant context so the INSERT satisfies RLS once enforced.
             setUserContext(createdUser.id);
             await query(
-              `INSERT INTO user_profiles (id, user_id, default_currency, preferred_pdf_template, created_at, updated_at)
-               VALUES (gen_random_uuid()::text, $1, 'ILS', 'modern', NOW(), NOW())
+              `INSERT INTO user_profiles (id, user_id, default_currency, preferred_pdf_template, theme, created_at, updated_at)
+               VALUES (gen_random_uuid()::text, $1, 'ILS', 'modern', 'dark', NOW(), NOW())
                ON CONFLICT (user_id) DO NOTHING`,
               [createdUser.id]
             );

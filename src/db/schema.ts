@@ -142,6 +142,8 @@ export const userProfiles = pgTable("user_profiles", {
   // Preferred UI language ('he' | 'en'). Locks the user's language choice
   // server-side (e.g. for transactional emails) beyond the NEXT_LOCALE cookie.
   locale: text("locale").default("he"),
+  // Selected UI theme (Theme Set feature). Defaults to the dark theme.
+  theme: text("theme").default("dark"),
   // ─── Subscription (Polar) ───────────────────────────────────────────
   // Tier is written by the Polar webhook (Plan 2). Until then everyone is
   // 'free' except accounts flagged `founding` (owner / pre-launch users),
