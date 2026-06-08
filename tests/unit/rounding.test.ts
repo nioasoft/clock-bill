@@ -108,4 +108,30 @@ runner.test('asRoundingMode: narrows unknown to none', () => {
   assertEqual(asRoundingMode('hour_up'), 'hour_up');
 });
 
+// --- new increments ---
+runner.test('roundBillableMinutes: tenth_hour_up rounds to 6 min', () => {
+  assertEqual(roundBillableMinutes(1, 'tenth_hour_up'), 6);
+  assertEqual(roundBillableMinutes(7, 'tenth_hour_up'), 12);
+  assertEqual(roundBillableMinutes(12, 'tenth_hour_up'), 12);
+});
+runner.test('roundBillableMinutes: quarter_hour_up rounds to 15 min', () => {
+  assertEqual(roundBillableMinutes(1, 'quarter_hour_up'), 15);
+  assertEqual(roundBillableMinutes(16, 'quarter_hour_up'), 30);
+  assertEqual(roundBillableMinutes(30, 'quarter_hour_up'), 30);
+});
+// --- 3-tier resolve (profile is lowest priority) ---
+runner.test('resolveRounding: profile used when project+client empty', () => {
+  assertEqual(resolveRounding(null, null, 'tenth_hour_up'), 'tenth_hour_up');
+  assertEqual(resolveRounding(undefined, undefined, 'quarter_hour_up'), 'quarter_hour_up');
+});
+runner.test('resolveRounding: client overrides profile', () => {
+  assertEqual(resolveRounding(null, 'hour_up', 'tenth_hour_up'), 'hour_up');
+});
+runner.test('resolveRounding: project overrides client and profile', () => {
+  assertEqual(resolveRounding('none', 'hour_up', 'tenth_hour_up'), 'none');
+});
+runner.test('resolveRounding: all empty → none (no profile arg)', () => {
+  assertEqual(resolveRounding(null, null), 'none');
+});
+
 runner.run().then((ok) => process.exit(ok ? 0 : 1));
