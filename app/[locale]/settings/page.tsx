@@ -10,6 +10,7 @@ import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { fieldClass } from "@/lib/form-styles";
 import { messageForError } from "@/lib/api-error";
+import { ROUNDING_MODES } from "@/lib/rounding";
 import { THEMES } from "@/lib/themes";
 import { useTheme } from "@/components/theme-provider";
 
@@ -68,6 +69,7 @@ interface CurrencyRate {
 export default function SettingsPage() {
   const t = useTranslations("Settings");
   const tRoot = useTranslations();
+  const tRounding = useTranslations("Rounding");
   const locale = useLocale();
   const isHebrew = locale !== "en";
   const intlLocale = locale === "en" ? "en-US" : "he-IL";
@@ -125,6 +127,8 @@ export default function SettingsPage() {
   const [website, setWebsite] = useState("");
   const [defaultCurrency, setDefaultCurrency] = useState("ILS");
   const [preferredPdfTemplate, setPreferredPdfTemplate] = useState("modern");
+  const [defaultRate, setDefaultRate] = useState<string>("");
+  const [defaultBillingRounding, setDefaultBillingRounding] = useState<string>("none");
   const [invoicePrefix, setInvoicePrefix] = useState("");
   const [nextInvoiceNumber, setNextInvoiceNumber] = useState("");
   const [paymentTerms, setPaymentTerms] = useState("");
@@ -149,6 +153,7 @@ export default function SettingsPage() {
       checkNotificationPermission();
     } else if (activeTab === "billing") {
       fetchBillingPlan();
+      fetchProfile();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
@@ -200,6 +205,8 @@ export default function SettingsPage() {
         setWebsite(data.profile.website || "");
         setDefaultCurrency(data.profile.defaultCurrency || "ILS");
         setPreferredPdfTemplate(data.profile.preferredPdfTemplate || "modern");
+        setDefaultRate(data.profile.defaultRate != null ? String(data.profile.defaultRate) : "");
+        setDefaultBillingRounding(data.profile.defaultBillingRounding || "none");
         setInvoicePrefix(data.profile.invoicePrefix || "");
         setNextInvoiceNumber(data.profile.nextInvoiceNumber?.toString() || "");
         setPaymentTerms(data.profile.paymentTerms || "");
@@ -310,6 +317,8 @@ export default function SettingsPage() {
           website: website || null,
           defaultCurrency: defaultCurrency || null,
           preferredPdfTemplate: preferredPdfTemplate || null,
+          defaultRate: defaultRate.trim() === "" ? null : Number(defaultRate),
+          defaultBillingRounding,
           invoicePrefix: invoicePrefix || null,
           nextInvoiceNumber: nextInvoiceNumber ? parseInt(nextInvoiceNumber, 10) : null,
           paymentTerms: paymentTerms || null,
@@ -1302,6 +1311,91 @@ export default function SettingsPage() {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Default Billing Base */}
+            <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
+              <h2 className="font-display text-lg font-bold text-foreground mb-2">
+                {t("billing.baseHeading")}
+              </h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                {t("billing.baseDescription")}
+              </p>
+
+              {successMessage && activeTab === "billing" && (
+                <div className="rounded-[var(--radius-card)] bg-success/10 p-4 mb-4">
+                  <p className="text-sm text-success">{successMessage}</p>
+                </div>
+              )}
+
+              {profileError && activeTab === "billing" && (
+                <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 mb-4">
+                  <p className="text-sm text-destructive">{profileError}</p>
+                </div>
+              )}
+
+              <form onSubmit={handleSaveProfile} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Default hourly rate */}
+                  <div>
+                    <label
+                      htmlFor="defaultRate"
+                      className="block text-sm font-medium text-muted-foreground mb-1"
+                    >
+                      {t("billing.defaultRateLabel")}
+                    </label>
+                    <input
+                      id="defaultRate"
+                      type="number"
+                      inputMode="decimal"
+                      min="0"
+                      step="0.01"
+                      value={defaultRate}
+                      onChange={(e) => setDefaultRate(e.target.value)}
+                      className={fieldClass()}
+                    />
+                  </div>
+
+                  {/* Default billing rounding */}
+                  <div>
+                    <label
+                      htmlFor="defaultBillingRounding"
+                      className="block text-sm font-medium text-muted-foreground mb-1"
+                    >
+                      {t("billing.defaultRoundingLabel")}
+                    </label>
+                    <select
+                      id="defaultBillingRounding"
+                      value={defaultBillingRounding}
+                      onChange={(e) => setDefaultBillingRounding(e.target.value)}
+                      className={fieldClass()}
+                    >
+                      {ROUNDING_MODES.map((m) => (
+                        <option key={m} value={m}>
+                          {tRounding(m)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={profileLoading}
+                    className="px-6 py-2 bg-primary text-primary-foreground font-medium rounded-[var(--radius)] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {profileLoading ? (
+                      <span className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-foreground border-t-transparent"></div>
+                        {t("business.saving")}
+                      </span>
+                    ) : (
+                      t("business.saveButton")
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

@@ -704,7 +704,11 @@
       "tierUnlimited": "Unlimited",
       "manage": "ניהול מנוי",
       "viewPlans": "צפייה בתוכניות",
-      "founding": "חבר מייסד — גישה מלאה"
+      "founding": "חבר מייסד — גישה מלאה",
+      "baseHeading": "בסיס חיוב",
+      "baseDescription": "ערכי ברירת המחדל לתעריף ולעיגול. לקוחות ופרויקטים יורשים אותם, וניתן לדרוס בכל רמה.",
+      "defaultRateLabel": "תעריף שעתי ברירת מחדל",
+      "defaultRoundingLabel": "עיגול חיוב ברירת מחדל"
     },
     "currencyOptions": {
       "ILS": "₪ - שקל ישראלי",

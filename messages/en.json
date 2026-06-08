@@ -704,7 +704,11 @@
       "tierUnlimited": "Unlimited",
       "manage": "Manage subscription",
       "viewPlans": "View plans",
-      "founding": "Founding member — full access"
+      "founding": "Founding member — full access",
+      "baseHeading": "Billing base",
+      "baseDescription": "Default values for hourly rate and rounding. Clients and projects inherit them, and you can override at any level.",
+      "defaultRateLabel": "Default hourly rate",
+      "defaultRoundingLabel": "Default billing rounding"
     },
     "currencyOptions": {
       "ILS": "₪ - Israeli Shekel",
