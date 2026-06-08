@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EarningsChart } from "@/components/earnings-chart";
 import { ProjectHoursChart } from "@/components/project-hours-chart";
 import { useNotifications } from "@/hooks/use-notifications";
+import { OnboardingModal } from "@/components/onboarding-modal";
 import { useTimer } from "@/contexts/timer-context";
 import { Users, FolderOpen, Clock } from "lucide-react";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
@@ -70,6 +71,22 @@ export default function DashboardPage() {
   const [recentEntries, setRecentEntries] = useState<RecentEntry[]>([]);
   const [monthlyEarnings, setMonthlyEarnings] = useState<MonthlyEarnings[]>([]);
   const [projectHours, setProjectHours] = useState<ProjectHours[]>([]);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/profile")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (active && data?.profile && data.profile.onboarded === false) {
+          setShowOnboarding(true);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Timer from global context
   const {
@@ -144,6 +161,7 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
+      {showOnboarding && <OnboardingModal onDone={() => setShowOnboarding(false)} />}
       <PageContainer>
         <PageHeader
           title={t("pageTitle")}
