@@ -31,7 +31,7 @@ export function PlanUsageBanner({ active, limit }: PlanUsageBannerProps) {
           <span className="text-muted-foreground">·</span>
           <span className="text-muted-foreground">{t("atLimit")}</span>
           <Link
-            href="/settings"
+            href="/pricing"
             className="font-medium text-primary hover:text-primary/80"
           >
             {t("upgrade")}
