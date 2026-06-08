@@ -322,12 +322,17 @@ export async function PATCH(
       );
     }
 
-    const { query } = await import("@/lib/db");
+    // Reactivating a client consumes a slot. Read the plan tier up front; the cap
+    // is enforced ATOMICALLY inside the transaction below (per-user advisory lock)
+    // to close a TOCTOU race where concurrent reactivations could exceed the cap.
+    const { getUserPlan } = await import("@/lib/entitlements");
+    const { canAddClient } = await import("@/lib/plans");
+    const plan = await getUserPlan(user.id);
+
+    const { withTransaction } = await import("@/lib/db");
     const { id: clientId } = await params;
 
-    // Restore - set is_active to TRUE; RETURNING the needed cols collapses the
-    // update + existence check + re-read into one round-trip.
-    const clientResult = await query<{
+    type RestoredClientRow = {
       id: string;
       name: string;
       contact_name: string | null;
@@ -338,22 +343,54 @@ export async function PATCH(
       notes: string | null;
       is_active: boolean;
       created_at: string;
-    }>(
-      `UPDATE clients
-       SET is_active = TRUE
-       WHERE id = $1 AND user_id = $2
-       RETURNING id, name, contact_name, email, phone, address, default_rate, notes, is_active, created_at`,
-      [clientId, user.id]
-    );
+    };
 
-    if (clientResult.rows.length === 0) {
+    const result = await withTransaction(async (db) => {
+      // Serialize concurrent create/reactivate calls FOR THIS USER on a per-user
+      // advisory lock so the COUNT below always sees the prior txn's committed state.
+      await db.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`clients:${user.id}`]);
+
+      const countRes = await db.query<{ count: string }>(
+        "SELECT COUNT(*)::text AS count FROM clients WHERE user_id = $1 AND is_active = TRUE",
+        [user.id]
+      );
+      const activeCount = parseInt(countRes.rows[0]?.count ?? "0", 10);
+      if (!canAddClient(plan.tier, activeCount)) {
+        return { overLimit: true as const };
+      }
+
+      // Restore - set is_active to TRUE; RETURNING the needed cols collapses the
+      // update + existence check + re-read into one round-trip.
+      const clientResult = await db.query<RestoredClientRow>(
+        `UPDATE clients
+         SET is_active = TRUE
+         WHERE id = $1 AND user_id = $2
+         RETURNING id, name, contact_name, email, phone, address, default_rate, notes, is_active, created_at`,
+        [clientId, user.id]
+      );
+
+      return { overLimit: false as const, client: clientResult.rows[0] as RestoredClientRow | undefined };
+    });
+
+    if (result.overLimit) {
+      return NextResponse.json(
+        {
+          success: false,
+          error_code: "PLAN_LIMIT_REACHED",
+          message: "הגעת למגבלת הלקוחות בתוכנית שלך. שדרגו כדי לשחזר לקוח זה.",
+        },
+        { status: 402 }
+      );
+    }
+
+    if (!result.client) {
       return NextResponse.json(
         { success: false, error_code: "CLIENT_NOT_FOUND", message: "הלקוח לא נמצא" },
         { status: 404 }
       );
     }
 
-    const client = clientResult.rows[0];
+    const client = result.client;
 
     return NextResponse.json({
       success: true,

@@ -125,6 +125,49 @@ const ENV_SCHEMA: EnvVarSchema[] = [
     required: false,
     description: "Cloudflare R2 public URL (optional)",
   },
+  // Polar billing (all optional — the app boots without Polar configured; the
+  // Better Auth plugin only loads when POLAR_API_KEY is set).
+  {
+    name: "POLAR_API_KEY",
+    required: false,
+    description: "Polar organization access token (optional; enables billing)",
+  },
+  {
+    name: "POLAR_SERVER",
+    required: false,
+    description: 'Polar API host: "sandbox" or "production" (optional, default production)',
+    validator: (value) => ["sandbox", "production"].includes(value),
+  },
+  {
+    name: "POLAR_WEBHOOK_SECRET",
+    required: false,
+    description: "Polar webhook signing secret (optional; required for entitlement sync)",
+  },
+  {
+    name: "POLAR_PRODUCT_STARTER_MONTHLY",
+    required: false,
+    description: "Polar product id for the Starter monthly plan (optional)",
+  },
+  {
+    name: "POLAR_PRODUCT_STARTER_ANNUAL",
+    required: false,
+    description: "Polar product id for the Starter annual plan (optional)",
+  },
+  {
+    name: "POLAR_PRODUCT_UNLIMITED_MONTHLY",
+    required: false,
+    description: "Polar product id for the Unlimited monthly plan (optional)",
+  },
+  {
+    name: "POLAR_PRODUCT_UNLIMITED_ANNUAL",
+    required: false,
+    description: "Polar product id for the Unlimited annual plan (optional)",
+  },
+  {
+    name: "POLAR_SUCCESS_URL",
+    required: false,
+    description: "Post-checkout redirect URL (optional, default /dashboard?checkout=success)",
+  },
   {
     name: "BLOB_READ_WRITE_TOKEN",
     required: false,

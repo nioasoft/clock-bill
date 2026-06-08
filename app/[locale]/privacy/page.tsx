@@ -42,6 +42,7 @@ export default async function PrivacyPage() {
             })}
           </li>
         </ul>
+        <p>{t("collect.note")}</p>
       </section>
 
       <section>
@@ -72,6 +73,16 @@ export default async function PrivacyPage() {
           </li>
           <li>
             {t.rich("providers.item3", {
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
+          </li>
+          <li>
+            {t.rich("providers.item4", {
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
+          </li>
+          <li>
+            {t.rich("providers.item5", {
               strong: (chunks) => <strong>{chunks}</strong>,
             })}
           </li>
@@ -120,6 +131,11 @@ export default async function PrivacyPage() {
           </li>
           <li>
             {t.rich("rights.item4", {
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
+          </li>
+          <li>
+            {t.rich("rights.item5", {
               strong: (chunks) => <strong>{chunks}</strong>,
             })}
           </li>

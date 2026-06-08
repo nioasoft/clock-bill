@@ -40,6 +40,17 @@ export async function DELETE() {
       await client.query(`DELETE FROM "user" WHERE id = $1`, [uid]);
     });
 
+    // Best-effort: remove the Polar customer (keyed by our user id) so no billing
+    // identity lingers after a GDPR delete. Never fail the deletion on Polar error.
+    try {
+      const { polarEnabled, getPolar } = await import("@/lib/polar");
+      if (polarEnabled) {
+        await getPolar().customers.deleteExternal({ externalId: uid, anonymize: true });
+      }
+    } catch (error) {
+      logger.error("Failed to delete Polar customer on account deletion", error, { userId: uid });
+    }
+
     logger.info("Account permanently deleted", { userId: uid });
     return NextResponse.json({ success: true, message: "החשבון נמחק לצמיתות" });
   } catch (error) {

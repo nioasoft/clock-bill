@@ -29,11 +29,6 @@ export default async function TermsPage() {
       </section>
 
       <section>
-        <h2>{t("beta.heading")}</h2>
-        <p>{t("beta.body")}</p>
-      </section>
-
-      <section>
         <h2>{t("account.heading")}</h2>
         <ul>
           <li>{t("account.item1")}</li>
@@ -85,6 +80,17 @@ export default async function TermsPage() {
       <section>
         <h2>{t("pricing.heading")}</h2>
         <p>{t("pricing.body")}</p>
+      </section>
+
+      <section>
+        <h2>{t("payment.heading")}</h2>
+        <p>{t("payment.processor")}</p>
+        <p>{t("payment.billing")}</p>
+        <p>{t("payment.priceChanges")}</p>
+        <p>{t("payment.cancellation")}</p>
+        <p>{t("payment.refunds")}</p>
+        <p>{t("payment.downgrade")}</p>
+        <p>{t("payment.freeTier")}</p>
       </section>
 
       <section>
