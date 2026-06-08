@@ -62,18 +62,19 @@ components. Token names are stable."*
 - **DB**: add `theme text default 'dark'` to `user_profiles` (`src/db/schema.ts`). Apply to
   dev + prod via `psql` + `DATABASE_URL_ADMIN` (drizzle journal is drifted in this repo — do not
   use db:migrate). Seed default `'dark'` on the existing signup-hook insert.
-- **Cookie = SSR source of truth**: cookie `theme` (1-year, `SameSite=Lax`, not httpOnly so the
-  client provider can read/write). `app/[locale]/layout.tsx` (server) resolves the initial theme in
-  this order and renders `<html data-theme={theme}>` at render time → **zero flash, no injected
-  script**:
-  1. `theme` cookie if present (the common, fast path).
-  2. else, if the request is authenticated → read `user_profiles.theme` server-side (so a returning
-     user on a new device gets their saved theme on first paint — no cookie-set during RSC render
-     needed).
-  3. else → `DEFAULT_THEME`.
-- **Cookie write happens client-side only**: the provider sets the `theme` cookie on mount (if
-  missing) and on every switch, so subsequent loads take the fast cookie path. This avoids setting
-  cookies during RSC render (not supported in a server component).
+- **Inline no-flash script (keeps pages SSG)** — *revised from the original "SSR cookie read"*:
+  calling `cookies()`/`getUser()` in the root `[locale]` layout would force the whole route tree to
+  dynamic rendering and regress SSG pages (`/pricing`, `/login`, landing). Instead, the layout stays
+  **static**: it renders `<html data-theme="dark" suppressHydrationWarning>` plus a tiny inline
+  `<script>` in `<head>` that reads the `theme` cookie (sanitized to `[a-z-]`) and sets
+  `document.documentElement.dataset.theme` **before paint** → no visible flash, and `/pricing`,
+  `/login`, etc. remain `●` SSG.
+- **Cookie `theme`** (1-year, `SameSite=Lax`, not httpOnly) is the client source of truth. The
+  provider writes it on every switch.
+- **New-device sync (client-side):** on mount, if there is NO `theme` cookie, the provider fetches
+  `GET /api/profile` and applies the saved `user_profiles.theme` (state + `data-theme` + cookie) — a
+  one-time correction (a brief flash only on a brand-new device with no cookie; accepted trade-off
+  for keeping pages SSG). A re-check guards against clobbering an in-flight user switch.
 - **Client provider** — **new `components/theme-provider.tsx`** (~60 lines, no `next-themes`):
   React context exposing `theme` + `setTheme(id)`. `setTheme` (a) sets `document.documentElement.dataset.theme`
   immediately (optimistic, no flash), (b) writes the `theme` cookie, (c) fires
@@ -128,6 +129,8 @@ components. Token names are stable."*
 - **Switch + persistence**: switch theme in settings → instant, no flash; reload → persists (cookie);
   log in on another browser → `user_profiles.theme` applied. Verify `PATCH /api/profile { theme:'bogus' }`
   is rejected.
-- **No-flash**: first paint already shows the saved theme (SSR `data-theme`), not a default-then-swap.
+- **No-flash**: with a `theme` cookie, the inline `<head>` script sets `data-theme` before paint —
+  no default-then-swap. Pages stay SSG (`/pricing`, `/login` show `●` in the build). Only a
+  brand-new device with no cookie shows a one-time default→saved correction after the profile fetch.
 - **Add-a-theme drill** (proves the template goal): adding a 5th theme touches only `themes.css` +
   `lib/themes.ts`, nothing else.
