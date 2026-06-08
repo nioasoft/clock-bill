@@ -28,4 +28,11 @@ r.test("every theme has labels + 3 swatches", () =>
 r.test("isThemeId accepts a registered id", () => assertEqual(isThemeId("dark"), true));
 r.test("isThemeId rejects junk", () => assertEqual(isThemeId("neon-pink"), false));
 r.test("isThemeId rejects non-string", () => assertEqual(isThemeId(42), false));
+r.test("registry has all 12 themes", () => assertEqual(THEMES.length, 12));
+r.test("ids include dark, daylight, obsidian", () =>
+  assertEqual(["dark", "daylight", "obsidian"].every((id) => THEMES.some((t) => t.id === id)), true));
+r.test("isThemeId accepts daylight", () => assertEqual(isThemeId("daylight"), true));
+r.test("isThemeId rejects midnight (we use id 'dark')", () => assertEqual(isThemeId("midnight"), false));
+r.test("every id is lowercase a-z (inline cookie script safe)", () =>
+  assertEqual(THEMES.every((t) => /^[a-z]+$/.test(t.id)), true));
 r.run();
