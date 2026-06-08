@@ -227,7 +227,11 @@ const polarPlugin = polarEnabled
                 },
                 onSubscriptionRevoked: async (payload) => {
                   const externalId = payload.data.customer?.externalId;
-                  if (externalId) await revokeEntitlement(externalId);
+                  if (!externalId) {
+                    logger.error("Polar webhook: subscription revoked without customer.externalId");
+                    return;
+                  }
+                  await revokeEntitlement(externalId);
                 },
               }),
             ]
