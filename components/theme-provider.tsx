@@ -75,7 +75,9 @@ export function ThemeProvider({
       .then((r) => (r.ok ? r.json() : null))
       .then((data: { profile?: { theme?: string } } | null) => {
         const saved = data?.profile?.theme;
-        if (active && isThemeId(saved)) {
+        // Re-check the cookie: if the user switched themes while this fetch was in
+        // flight (which writes a cookie), don't clobber their choice with the DB value.
+        if (active && !readCookie() && isThemeId(saved)) {
           setThemeState(saved);
           document.documentElement.dataset.theme = saved;
           writeCookie(saved);
