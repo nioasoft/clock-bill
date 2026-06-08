@@ -106,7 +106,7 @@ export function PersistentTimerBar() {
               className={`flex shrink-0 items-center gap-2 sm:gap-2.5 rounded-full border ps-3 pe-1.5 py-1 ${
                 isPaused
                   ? "border-warning/30 bg-warning/5"
-                  : "border-emerald-500/30 bg-emerald-500/5"
+                  : "border-running/30 bg-running/5"
               }`}
             >
               {isPaused ? (
@@ -115,8 +115,8 @@ export function PersistentTimerBar() {
                 </span>
               ) : (
                 <span className="relative flex h-2.5 w-2.5 shrink-0">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-running opacity-75" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-running" />
                 </span>
               )}
 
@@ -150,7 +150,7 @@ export function PersistentTimerBar() {
                   onClick={() => handleResumeTimer(timer.id)}
                   disabled={resuming}
                   aria-label={t("bar.resumeTimer")}
-                  className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all disabled:opacity-50"
+                  className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-running/20 text-running hover:bg-running/30 transition-all disabled:opacity-50"
                 >
                   <Play className="h-4 w-4" />
                 </button>

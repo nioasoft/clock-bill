@@ -22,6 +22,8 @@
   --success-foreground: #0a0a0a;
   --warning: #f59e0b;
   --warning-foreground: #0a0a0a;
+  --running: #10b981;
+  --running-foreground: #0a0a0a;
   --border: #2a2a2a;
   --border-strong: #3a3a3a;
   --input: #2a2a2a;
