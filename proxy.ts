@@ -32,6 +32,7 @@ const publicRoutes = [
   "/privacy",
   "/terms",
   "/contact",
+  "/pricing",
   "/monitoring",
 ];
 

@@ -375,6 +375,34 @@
       "confirm": "Delete"
     }
   },
+  "Pricing": {
+    "metaTitle": "Pricing",
+    "title": "Plans & Pricing",
+    "subtitle": "Start free. Upgrade as you grow.",
+    "monthly": "Monthly",
+    "annual": "Annual",
+    "annualSave": "Save 20%",
+    "perMonth": "/ mo",
+    "perYear": "/ yr",
+    "currentPlan": "Your current plan",
+    "manage": "Manage subscription",
+    "free": { "name": "Free", "price": "$0", "tagline": "For one client", "cta": "Current plan" },
+    "starter": { "name": "Starter", "tagline": "Up to 5 clients", "cta": "Upgrade to Starter" },
+    "unlimited": { "name": "Unlimited", "tagline": "Unlimited clients", "cta": "Upgrade to Unlimited" },
+    "features": {
+      "allFeatures": "All features — timer, tasks, PDF reports, multi-currency",
+      "clients1": "1 client",
+      "clients5": "Up to 5 clients",
+      "clientsUnlimited": "Unlimited clients",
+      "noLimits": "No limits on hours/timers"
+    },
+    "consent": "I request immediate access to the service and acknowledge I lose my 14-day right of withdrawal once the service is fully performed.",
+    "mor": "Payments are processed by Polar as Merchant of Record; your purchase contract is with Polar. Price in USD, renews automatically, cancel anytime.",
+    "renews": "Renews automatically · cancel anytime",
+    "agree": "By paying you agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
+    "consentRequired": "Please accept to continue to checkout.",
+    "checkoutError": "Could not open checkout. Please try again."
+  },
   "Clients": {
     "usage": {
       "count": "{active} of {limit} clients",

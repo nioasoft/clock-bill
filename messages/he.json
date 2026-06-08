@@ -375,6 +375,34 @@
       "confirm": "מחק"
     }
   },
+  "Pricing": {
+    "metaTitle": "תמחור",
+    "title": "תוכניות ומחירים",
+    "subtitle": "התחילו בחינם. שדרגו כשתצמחו.",
+    "monthly": "חודשי",
+    "annual": "שנתי",
+    "annualSave": "חסכו 20%",
+    "perMonth": "/ חודש",
+    "perYear": "/ שנה",
+    "currentPlan": "התוכנית הנוכחית שלך",
+    "manage": "ניהול מנוי",
+    "free": { "name": "חינם", "price": "$0", "tagline": "ללקוח אחד", "cta": "התוכנית הנוכחית" },
+    "starter": { "name": "Starter", "tagline": "עד 5 לקוחות", "cta": "שדרגו ל-Starter" },
+    "unlimited": { "name": "Unlimited", "tagline": "לקוחות ללא הגבלה", "cta": "שדרגו ל-Unlimited" },
+    "features": {
+      "allFeatures": "כל הפיצ'רים — טיימר, משימות, דוחות PDF, רב-מטבע",
+      "clients1": "לקוח אחד",
+      "clients5": "עד 5 לקוחות",
+      "clientsUnlimited": "לקוחות ללא הגבלה",
+      "noLimits": "ללא הגבלת שעות/טיימרים"
+    },
+    "consent": "אני מבקש/ת לקבל גישה מיידית לשירות ומאשר/ת שאאבד את זכות הביטול בת 14 הימים עם השלמת השירות.",
+    "mor": "התשלום מעובד על ידי Polar כ-Merchant of Record; חוזה הרכישה הוא מול Polar. המחיר ב-USD, מתחדש אוטומטית, ניתן לביטול בכל עת.",
+    "renews": "מתחדש אוטומטית · ביטול בכל עת",
+    "agree": "בתשלום אתם מסכימים ל<terms>תנאי השימוש</terms> ול<privacy>מדיניות הפרטיות</privacy>.",
+    "consentRequired": "יש לאשר את ההסכמה כדי להמשיך לתשלום.",
+    "checkoutError": "שגיאה בפתיחת התשלום. נסו שוב."
+  },
   "Clients": {
     "usage": {
       "count": "{active} מתוך {limit} לקוחות",
