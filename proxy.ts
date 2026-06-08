@@ -78,6 +78,20 @@ function stripLocale(pathname: string): { locale: string; rest: string } {
  *
  * Returns a `NextResponse` to short-circuit the proxy, or `null` to continue.
  */
+/**
+ * Heuristic: a bot / non-browser client (search crawler, link unfurler, or a
+ * reachability/uptime checker like Polar's product-URL validator). These must
+ * NOT be geo-redirected — a 307 on `/` makes non-redirect-following checkers
+ * report the site as "unreachable" and is worse for SEO. They should get a
+ * direct 200 at the prefix-less root (the canonical Hebrew page, which already
+ * emits hreflang alternates to `/en`). Real browsers always send a "Mozilla" UA.
+ */
+function isBotRequest(request: NextRequest): boolean {
+  const ua = request.headers.get("user-agent") ?? "";
+  if (!ua || !ua.includes("Mozilla")) return true;
+  return /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|embedly|preview|monitor|headless/i.test(ua);
+}
+
 function geoDefaultLocale(request: NextRequest): NextResponse | null {
   // Explicit cookie always wins over geo.
   if (request.cookies.has("NEXT_LOCALE")) {
@@ -88,6 +102,12 @@ function geoDefaultLocale(request: NextRequest): NextResponse | null {
   const segments = request.nextUrl.pathname.split("/"); // ["", "en", "dashboard"]
   const maybeLocale = segments[1];
   if ((routing.locales as readonly string[]).includes(maybeLocale)) {
+    return null;
+  }
+
+  // Bots / non-browser clients (crawlers, unfurlers, reachability checkers like
+  // Polar) are never redirected — serve the prefix-less 200 root instead.
+  if (isBotRequest(request)) {
     return null;
   }
 
