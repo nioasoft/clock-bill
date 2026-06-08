@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Heebo, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { cookies } from "next/headers";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -12,7 +11,7 @@ import { PwaProvider } from "@/components/pwa-provider";
 import { routing } from "@/src/i18n/routing";
 import type { Locale } from "@/src/i18n/routing";
 import { THEME_COLOR, brandName } from "@/lib/brand";
-import { DEFAULT_THEME, isThemeId } from "@/lib/themes";
+import { DEFAULT_THEME } from "@/lib/themes";
 
 /** Exhaustive map of app locales → Open Graph locale codes. */
 const OG_LOCALE: Record<Locale, string> = { he: "he_IL", en: "en_US" };
@@ -113,35 +112,32 @@ export default async function LocaleLayout({ children, params }: Props) {
   const t = await getTranslations("common");
   const dir = DIR[locale as Locale];
 
-  // Resolve the initial theme server-side for zero-flash first paint.
-  // Order: theme cookie → (cookie-miss) authenticated user's saved DB theme → default.
-  const cookieStore = await cookies();
-  let theme: string | undefined = cookieStore.get("theme")?.value;
-  if (!isThemeId(theme)) {
-    // cookie-miss fallback: if authenticated, read the saved theme from the DB
-    const { getUser } = await import("@/lib/auth");
-    const user = await getUser();
-    if (user) {
-      const { query } = await import("@/lib/db");
-      const result = await query<{ theme: string | null }>(
-        "select theme from user_profiles where user_id = $1",
-        [user.id]
-      );
-      const saved = result.rows[0]?.theme;
-      if (isThemeId(saved)) theme = saved;
-    }
-  }
-  if (!isThemeId(theme)) theme = DEFAULT_THEME;
-
   return (
-    <html lang={locale} dir={dir} data-theme={theme}>
+    // The page renders a static default theme on the server; the inline no-flash
+    // script below corrects `data-theme` from the cookie BEFORE paint, and the
+    // ThemeProvider syncs its state post-hydration. Keeping the theme out of the
+    // server render is what lets pricing/login stay statically prerendered.
+    // `suppressHydrationWarning` silences the expected data-theme mismatch.
+    <html lang={locale} dir={dir} data-theme={DEFAULT_THEME} suppressHydrationWarning>
+      <head>
+        {/* No-flash theme: runs before paint, reads the `theme` cookie and sets
+            data-theme. Value is sanitized to [a-z-]; an unknown id harmlessly
+            falls back to the default :root variables. Tiny inline script (not
+            cookies()) so the route tree stays SSG. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var m=document.cookie.match(/(?:^|; )theme=([a-z-]+)/);if(m&&m[1]){document.documentElement.dataset.theme=m[1];}}catch(e){}})();",
+          }}
+        />
+      </head>
       <body className={`${heebo.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
         {/* Skip to main content link for keyboard users */}
         <a href="#main-content" className="skip-to-main">
           {t("skipToMain")}
         </a>
         <NextIntlClientProvider>
-          <Providers initialTheme={theme}>
+          <Providers initialTheme={DEFAULT_THEME}>
             <main id="main-content">{children}</main>
           </Providers>
           <PwaProvider />
