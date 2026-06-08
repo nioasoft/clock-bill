@@ -89,7 +89,7 @@ export function Sidebar({
       } ${className}`}
     >
       {/* Logo/Brand with gradient */}
-      <div className={`flex items-center h-16 border-b border-white/10 bg-gradient-to-b from-white/5 to-transparent ${isCollapsed ? "px-3" : "px-4"}`}>
+      <div className={`flex items-center h-16 border-b border-sidebar-foreground/10 bg-gradient-to-b from-sidebar-foreground/5 to-transparent ${isCollapsed ? "px-3" : "px-4"}`}>
         <Link href="/" className="flex items-center gap-3">
           <div className="w-12 h-12 relative flex items-center justify-center shrink-0">
             <ClockFaceMarks size={40} color="#D4A04A" className="absolute inset-0 m-auto" />
@@ -98,7 +98,7 @@ export function Sidebar({
             </div>
           </div>
           {!isCollapsed && (
-            <h1 className="text-2xl font-display font-bold text-white">{brandName(locale)}</h1>
+            <h1 className="text-2xl font-display font-bold text-sidebar-foreground">{brandName(locale)}</h1>
           )}
         </Link>
       </div>
@@ -131,8 +131,8 @@ export function Sidebar({
                 ${isCollapsed ? "justify-center px-2 py-2.5" : "px-4 py-2.5"}
                 ${
                   isActive
-                    ? "bg-white/8 text-white"
-                    : "text-white/60 hover:bg-white/6 hover:text-white"
+                    ? "bg-sidebar-foreground/8 text-sidebar-foreground"
+                    : "text-sidebar-foreground/60 hover:bg-sidebar-foreground/6 hover:text-sidebar-foreground"
                 }
               `}
             >
@@ -151,7 +151,7 @@ export function Sidebar({
         <div className={`px-3 pb-2 ${isCollapsed ? "px-1.5" : ""}`}>
           <button
             onClick={onToggle}
-            className={`flex items-center gap-3 rounded-lg text-sm font-medium text-white/40 hover:bg-white/6 hover:text-white transition-colors w-full ${
+            className={`flex items-center gap-3 rounded-lg text-sm font-medium text-sidebar-foreground/40 hover:bg-sidebar-foreground/6 hover:text-sidebar-foreground transition-colors w-full ${
               isCollapsed ? "justify-center px-2 py-2.5" : "px-4 py-2.5"
             }`}
             title={isCollapsed ? t("expandSidebar") : t("collapseSidebar")}
@@ -169,12 +169,12 @@ export function Sidebar({
       )}
 
       {/* User info section */}
-      <div className={`border-t border-white/10 space-y-1 ${isCollapsed ? "p-1.5" : "p-4"}`}>
+      <div className={`border-t border-sidebar-foreground/10 space-y-1 ${isCollapsed ? "p-1.5" : "p-4"}`}>
         <Link
           href="/settings"
           title={isCollapsed ? displayName : undefined}
           aria-label={isCollapsed ? displayName : undefined}
-          className={`flex items-center gap-3 rounded-lg text-sm font-medium text-white/60 hover:bg-white/6 hover:text-white transition-colors ${
+          className={`flex items-center gap-3 rounded-lg text-sm font-medium text-sidebar-foreground/60 hover:bg-sidebar-foreground/6 hover:text-sidebar-foreground transition-colors ${
             isCollapsed ? "justify-center px-2 py-2.5" : "px-4 py-2.5"
           }`}
         >
@@ -183,9 +183,9 @@ export function Sidebar({
           </div>
           {!isCollapsed && (
             <div className="flex flex-col min-w-0">
-              <span className="truncate text-white/90">{displayName}</span>
+              <span className="truncate text-sidebar-foreground/90">{displayName}</span>
               {userEmail && userName?.trim() && (
-                <span className="truncate text-xs text-white/40">{userEmail}</span>
+                <span className="truncate text-xs text-sidebar-foreground/40">{userEmail}</span>
               )}
             </div>
           )}

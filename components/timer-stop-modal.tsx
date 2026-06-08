@@ -152,7 +152,7 @@ export function TimerStopModal() {
             <button
               onClick={confirmStopTimer}
               disabled={stoppingTimer}
-              className="px-4 py-2.5 text-sm font-medium text-white bg-destructive rounded-[var(--radius)] hover:bg-destructive/90 disabled:opacity-50 min-h-[44px]"
+              className="px-4 py-2.5 text-sm font-medium text-destructive-foreground bg-destructive rounded-[var(--radius)] hover:bg-destructive/90 disabled:opacity-50 min-h-[44px]"
             >
               {stoppingTimer ? t("stop.saving") : t("stop.saveButton")}
             </button>

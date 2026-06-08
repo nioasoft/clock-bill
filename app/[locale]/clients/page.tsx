@@ -940,7 +940,7 @@ function ClientsPageContent() {
             <button
               onClick={confirmDelete}
               disabled={deleting}
-              className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-white hover:bg-destructive/90 disabled:opacity-50"
+              className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
             >
               {deleting ? t("archiving") : t("archiveAction")}
             </button>

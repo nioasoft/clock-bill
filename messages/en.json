@@ -660,9 +660,14 @@
     "pageTitle": "Settings",
     "tabs": {
       "profile": "Profile",
+      "appearance": "Appearance",
       "notifications": "Notifications",
       "currencies": "Currencies",
       "security": "Security"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "subtitle": "Choose your interface theme"
     },
     "billing": {
       "tabLabel": "Billing",

@@ -578,7 +578,7 @@ export default function AdminUserDetailPage({
                         setDeleteConfirm(false);
                       }}
                       disabled={actionLoading !== null}
-                      className="px-4 py-2 text-sm rounded-lg bg-destructive text-white hover:bg-destructive/90 disabled:opacity-50 transition-colors"
+                      className="px-4 py-2 text-sm rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 transition-colors"
                     >
                       {actionLoading === "delete_user" ? t("detail.actions.deleteUser.loading") : t("detail.actions.deleteUser.confirmButton")}
                     </button>

@@ -1,40 +1,45 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import './accessibility.css';
+@import './themes.css';
 
 /* Theme: ClickHouse — near-black canvas, electric-yellow accent, white type.
    Token names are kept stable so every existing component re-themes in place. */
 @theme inline {
-  /* Core palette */
-  --color-background: #0a0a0a;
-  --color-foreground: #ffffff;
-  --color-primary: #faff69;            /* electric yellow — CTAs, stats, active */
-  --color-primary-foreground: #0a0a0a; /* black text on yellow */
-  --color-primary-light: #26260f;      /* dark yellow-tinted surface */
-  --color-primary-active: #e6eb52;
-  --color-secondary: #5a5a5a;
-  --color-secondary-foreground: #ffffff;
-  --color-secondary-light: #1a1a1a;
-  --color-accent: #faff69;             /* single accent: the yellow */
-  --color-accent-foreground: #0a0a0a;
-  --color-muted: #1a1a1a;
-  --color-muted-foreground: #888888;
-  --color-destructive: #ef4444;
-  --color-destructive-foreground: #ffffff;
-  --color-success: #22c55e;
-  --color-success-foreground: #0a0a0a;
-  --color-border: #2a2a2a;             /* hairline */
-  --color-border-strong: #3a3a3a;
-  --color-input: #2a2a2a;
-  --color-ring: #faff69;
-  --color-popover: #1a1a1a;
-  --color-popover-foreground: #ffffff;
-  --color-card: #1a1a1a;
-  --color-card-foreground: #ffffff;
-  --color-card-elevated: #242424;
-  --color-sidebar: #000000;
-  --color-sidebar-foreground: #ffffff;
-  --color-surface: #121212;
+  /* Core palette — names stay stable; VALUES live in themes.css (:root + [data-theme]) */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-light: var(--primary-light);
+  --color-primary-active: var(--primary-active);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary-light: var(--secondary-light);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-running: var(--running);
+  --color-running-foreground: var(--running-foreground);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-card-elevated: var(--card-elevated);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-surface: var(--surface);
 
   /* Radius — ClickHouse: 8px controls, 12px cards */
   --radius: 0.5rem;
@@ -85,7 +90,7 @@
 
 /* Dark base — ensure the near-black canvas everywhere, even outside wrappers */
 html {
-  color-scheme: dark;
+  color-scheme: var(--color-scheme);
   background-color: var(--color-background);
 }
 body {
@@ -168,7 +173,7 @@ body {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: #8A4E20;
+  background-color: var(--primary-active);
 }
 
 /* Link defaults — MUST be in @layer base so Tailwind text-* utilities

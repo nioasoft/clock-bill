@@ -10,6 +10,8 @@ import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { fieldClass } from "@/lib/form-styles";
 import { messageForError } from "@/lib/api-error";
+import { THEMES } from "@/lib/themes";
+import { useTheme } from "@/components/theme-provider";
 
 interface Session {
   id: string;
@@ -67,10 +69,12 @@ export default function SettingsPage() {
   const t = useTranslations("Settings");
   const tRoot = useTranslations();
   const locale = useLocale();
+  const isHebrew = locale !== "en";
   const intlLocale = locale === "en" ? "en-US" : "he-IL";
   const router = useRouter();
   const pathname = usePathname();
-  const [activeTab, setActiveTab] = useState<"profile" | "security" | "currencies" | "notifications" | "billing">("profile");
+  const { theme, setTheme } = useTheme();
+  const [activeTab, setActiveTab] = useState<"profile" | "appearance" | "security" | "currencies" | "notifications" | "billing">("profile");
   const [sessions, setSessions] = useState<Session[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [currencyRates, setCurrencyRates] = useState<CurrencyRate[]>([]);
@@ -733,6 +737,18 @@ export default function SettingsPage() {
               {t("tabs.profile")}
             </button>
             <button
+              onClick={() => setActiveTab("appearance")}
+              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+                activeTab === "appearance"
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-muted"
+              }`}
+              role="tab"
+              aria-selected={activeTab === "appearance"}
+            >
+              {t("tabs.appearance")}
+            </button>
+            <button
               onClick={() => setActiveTab("notifications")}
               className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
                 activeTab === "notifications"
@@ -958,6 +974,49 @@ export default function SettingsPage() {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Appearance Tab Content */}
+        {activeTab === "appearance" && (
+          <div className="space-y-6" role="tabpanel">
+            <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
+              <h2 className="font-display text-lg font-bold text-foreground mb-2">
+                {t("appearance.title")}
+              </h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                {t("appearance.subtitle")}
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {THEMES.map((themeOption) => (
+                  <button
+                    key={themeOption.id}
+                    type="button"
+                    onClick={() => setTheme(themeOption.id)}
+                    aria-pressed={theme === themeOption.id}
+                    className={`flex items-center gap-3 rounded-[var(--radius-card)] border p-3 text-start transition-colors ${
+                      theme === themeOption.id
+                        ? "border-border-strong ring-2 ring-ring"
+                        : "border-border hover:border-border-strong"
+                    }`}
+                  >
+                    <span className="flex gap-1">
+                      {themeOption.swatch.map((c, i) => (
+                        <span
+                          key={i}
+                          style={{ background: c }}
+                          className="size-5 rounded-full border border-border"
+                        />
+                      ))}
+                    </span>
+                    <span className="font-medium text-foreground">
+                      {isHebrew ? themeOption.labelHe : themeOption.labelEn}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}

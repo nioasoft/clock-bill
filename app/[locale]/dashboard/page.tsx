@@ -309,8 +309,8 @@ export default function DashboardPage() {
                         ) : (
                           <>
                             <span className="relative flex h-2.5 w-2.5">
-                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-running opacity-75" />
+                              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-running" />
                             </span>
                             <span className="text-xs font-medium text-muted-foreground">{t("activeTimers.statusActive")}</span>
                           </>
@@ -363,7 +363,7 @@ export default function DashboardPage() {
                       )}
                       <button
                         onClick={() => handleStopTimer(timer.id)}
-                        className="flex-1 whitespace-nowrap rounded-md bg-destructive px-5 py-2.5 text-sm font-semibold text-white hover:bg-destructive/90 transition-colors sm:flex-initial"
+                        className="flex-1 whitespace-nowrap rounded-md bg-destructive px-5 py-2.5 text-sm font-semibold text-destructive-foreground hover:bg-destructive/90 transition-colors sm:flex-initial"
                       >
                         {t("activeTimers.stopButton")}
                       </button>

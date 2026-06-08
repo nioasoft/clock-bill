@@ -17,7 +17,7 @@ export function LandingFooter() {
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <ClockFaceMarks size={20} className="text-accent" />
-              <span className="text-lg font-display font-bold text-white">
+              <span className="text-lg font-display font-bold text-sidebar-foreground">
                 {brandName(locale)}
               </span>
             </div>
@@ -30,43 +30,43 @@ export function LandingFooter() {
           <nav aria-label={t("footer.navAriaLabel")} className="flex flex-wrap gap-6 text-sm">
             <a
               href="#how-it-works"
-              className="text-sidebar-foreground/80 hover:text-white transition-colors"
+              className="text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors"
             >
               {t("footer.howItWorks")}
             </a>
             <a
               href="#features"
-              className="text-sidebar-foreground/80 hover:text-white transition-colors"
+              className="text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors"
             >
               {t("footer.features")}
             </a>
             <a
               href="#faq"
-              className="text-sidebar-foreground/80 hover:text-white transition-colors"
+              className="text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors"
             >
               {t("footer.faq")}
             </a>
             <Link
               href="/login"
-              className="text-sidebar-foreground/80 hover:text-white transition-colors"
+              className="text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors"
             >
               {t("footer.login")}
             </Link>
             <Link
               href="/privacy"
-              className="text-sidebar-foreground/80 hover:text-white transition-colors"
+              className="text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors"
             >
               {t("footer.privacy")}
             </Link>
             <Link
               href="/terms"
-              className="text-sidebar-foreground/80 hover:text-white transition-colors"
+              className="text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors"
             >
               {t("footer.terms")}
             </Link>
             <Link
               href="/contact"
-              className="text-sidebar-foreground/80 hover:text-white transition-colors"
+              className="text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors"
             >
               {t("footer.contact")}
             </Link>

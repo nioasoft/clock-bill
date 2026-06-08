@@ -15,7 +15,7 @@ export function Hero() {
       {/* Background */}
       <GrainOverlay />
       <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(168,98,45,0.08),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_color-mix(in_srgb,_var(--primary)_8%,_transparent),_transparent_60%)]" />
         <RadialLines className="absolute inset-0 opacity-[0.03]" />
       </div>
 
