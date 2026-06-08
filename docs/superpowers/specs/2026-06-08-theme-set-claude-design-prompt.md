@@ -24,8 +24,10 @@ implementation plan (it only fills token VALUES — names are fixed).
 > `background, foreground, surface, card, card-foreground, card-elevated, muted, muted-foreground,
 > border, border-strong, input, popover, popover-foreground, sidebar, sidebar-foreground, primary,
 > primary-foreground, primary-light, primary-active, accent, accent-foreground, ring, destructive,
-> destructive-foreground, success, success-foreground` — plus whether the theme's `color-scheme` is
-> light or dark.
+> destructive-foreground, success, success-foreground, warning, warning-foreground, running,
+> running-foreground` — plus whether the theme's `color-scheme` is light or dark. (`warning` =
+> amber "paused/attention", `running` = green "active timer" — give light-theme-appropriate values
+> that pass AA; a theme may keep the dark defaults if they already pass on its background.)
 >
 > The themes:
 > 1. **Midnight** — the current dark (keep: background #0a0a0a, accent #faff69, card #1a1a1a,
