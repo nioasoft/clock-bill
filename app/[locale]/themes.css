@@ -1,0 +1,35 @@
+/* Theme token VALUES. :root = default (Midnight / dark). Each non-default theme
+   is a [data-theme="id"] block below holding ONLY its deltas. Token NAMES are
+   stable — components never reference a theme, only these names. */
+:root {
+  --color-scheme: dark;
+  --background: #0a0a0a;
+  --foreground: #ffffff;
+  --primary: #faff69;
+  --primary-foreground: #0a0a0a;
+  --primary-light: #26260f;
+  --primary-active: #e6eb52;
+  --secondary: #5a5a5a;
+  --secondary-foreground: #ffffff;
+  --secondary-light: #1a1a1a;
+  --accent: #faff69;
+  --accent-foreground: #0a0a0a;
+  --muted: #1a1a1a;
+  --muted-foreground: #888888;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --success: #22c55e;
+  --success-foreground: #0a0a0a;
+  --border: #2a2a2a;
+  --border-strong: #3a3a3a;
+  --input: #2a2a2a;
+  --ring: #faff69;
+  --popover: #1a1a1a;
+  --popover-foreground: #ffffff;
+  --card: #1a1a1a;
+  --card-foreground: #ffffff;
+  --card-elevated: #242424;
+  --sidebar: #000000;
+  --sidebar-foreground: #ffffff;
+  --surface: #121212;
+}
