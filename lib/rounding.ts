@@ -7,7 +7,7 @@
  * entry. It applies only to hourly lines (items and fixed-monthly are exempt).
  *
  * The effective mode for an entry is resolved as:
- *   project.billingRounding ?? client.billingRounding ?? 'none'
+ *   project.billingRounding ?? client.billingRounding ?? profile.default_billing_rounding ?? 'none'
  */
 
 export type RoundingMode =
