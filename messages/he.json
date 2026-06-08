@@ -660,9 +660,14 @@
     "pageTitle": "הגדרות",
     "tabs": {
       "profile": "פרופיל",
+      "appearance": "מראה",
       "notifications": "התראות",
       "currencies": "מטבעות",
       "security": "אבטחה"
+    },
+    "appearance": {
+      "title": "מראה",
+      "subtitle": "בחר/י את ערכת הנושא של הממשק"
     },
     "billing": {
       "tabLabel": "חיוב",
