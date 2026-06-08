@@ -57,7 +57,7 @@ const updateProfileSchema = z.object({
   // Onboarding / billing base. profession + defaultBillingRounding are
   // allow-list-checked in the handler (Hebrew 400 on bad value).
   profession: z.string().max(50).nullable().optional(),
-  defaultRate: z.number().nullable().optional(),
+  defaultRate: z.number().min(0).nullable().optional(),
   defaultBillingRounding: z.string().max(50).optional(),
   onboarded: z.boolean().optional(),
 });
