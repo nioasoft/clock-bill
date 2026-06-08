@@ -2,6 +2,7 @@
 export const CURRENCY_SYMBOLS: Record<string, string> = {
   ILS: "₪",
   USD: "$",
+  EUR: "€",
   USDT: "₮",
   BTC: "₿",
   ETH: "Ξ",
