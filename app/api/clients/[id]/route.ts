@@ -20,7 +20,7 @@ const updateClientSchema = z.object({
     .min(0, "התעריף השעתי לא יכול להיות שלילי")
     .nullish(),
   currency: z.string().max(10).nullish(),
-  billingRounding: z.enum(["none", "hour_up", "half_hour_up"]).nullish(),
+  billingRounding: z.enum(["none", "tenth_hour_up", "quarter_hour_up", "half_hour_up", "hour_up"]).nullish(),
   isRetainer: z.boolean().nullish(),
   retainerHours: z.number().nullish(),
   retainerMonthlyFee: z.number().nullish(),

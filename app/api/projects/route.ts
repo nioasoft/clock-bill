@@ -19,7 +19,7 @@ const createProjectSchema = z.object({
   fixedMonthlyStartDate: z.string().nullish(),
   fixedMonthlyEndDate: z.string().nullish(),
   // null/absent => inherit the client's rounding; otherwise overrides it.
-  billingRounding: z.enum(["none", "hour_up", "half_hour_up"]).nullish(),
+  billingRounding: z.enum(["none", "tenth_hour_up", "quarter_hour_up", "half_hour_up", "hour_up"]).nullish(),
   notes: z.string().max(5000).nullish(),
 });
 

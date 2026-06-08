@@ -13,6 +13,7 @@ import { validateRequired, validateDateRange } from "@/lib/validation";
 import { useValidationMessage } from "@/lib/validation-messages";
 import { messageForError } from "@/lib/api-error";
 import { fieldClass } from "@/lib/form-styles";
+import { ROUNDING_MODES, type RoundingMode } from "@/lib/rounding";
 import { useTranslations, useLocale } from "next-intl";
 
 interface Client {
@@ -68,7 +69,7 @@ function ProjectsPageContent() {
     fixedMonthlyFee: "",
     fixedMonthlyStartDate: "",
     fixedMonthlyEndDate: "",
-    billingRounding: "" as "" | "none" | "hour_up" | "half_hour_up",
+    billingRounding: "" as "" | RoundingMode,
     notes: "",
   });
   const [formError, setFormError] = useState("");
@@ -228,7 +229,7 @@ function ProjectsPageContent() {
           fixedMonthlyFee: "",
           fixedMonthlyStartDate: "",
           fixedMonthlyEndDate: "",
-          billingRounding: "" as "" | "none" | "hour_up" | "half_hour_up",
+          billingRounding: "" as "" | RoundingMode,
           notes: "",
         });
         setShowForm(false);
@@ -549,9 +550,9 @@ function ProjectsPageContent() {
                   disabled={submitting}
                 >
                   <option value="">{t("form.roundingInherit")}</option>
-                  <option value="none">{tRounding("none")}</option>
-                  <option value="hour_up">{tRounding("hour_up")}</option>
-                  <option value="half_hour_up">{tRounding("half_hour_up")}</option>
+                  {ROUNDING_MODES.map((m) => (
+                    <option key={m} value={m}>{tRounding(m)}</option>
+                  ))}
                 </select>
                 <p className="text-xs text-muted-foreground">{t("form.roundingHint")}</p>
               </fieldset>
@@ -587,7 +588,7 @@ function ProjectsPageContent() {
                       fixedMonthlyFee: "",
                       fixedMonthlyStartDate: "",
                       fixedMonthlyEndDate: "",
-                      billingRounding: "" as "" | "none" | "hour_up" | "half_hour_up",
+                      billingRounding: "" as "" | RoundingMode,
                       notes: "",
                     });
                   }}

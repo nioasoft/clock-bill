@@ -9,7 +9,7 @@ import { PageContainer } from "@/components/page-container";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { validateRequired, validateDateRange } from "@/lib/validation";
 import { useValidationMessage } from "@/lib/validation-messages";
-import { asRoundingMode, resolveRounding } from "@/lib/rounding";
+import { asRoundingMode, resolveRounding, ROUNDING_MODES, type RoundingMode } from "@/lib/rounding";
 import { messageForError } from "@/lib/api-error";
 import { useTranslations, useLocale } from "next-intl";
 
@@ -71,7 +71,7 @@ export default function ProjectDetailsPage() {
     fixedMonthlyFee: "",
     fixedMonthlyStartDate: "",
     fixedMonthlyEndDate: "",
-    billingRounding: "" as "" | "none" | "hour_up" | "half_hour_up",
+    billingRounding: "" as "" | RoundingMode,
     notes: "",
   });
   const [formError, setFormError] = useState("");
@@ -117,7 +117,7 @@ export default function ProjectDetailsPage() {
             fixedMonthlyFee: data.project.fixedMonthlyFee?.toString() || "",
             fixedMonthlyStartDate: data.project.fixedMonthlyStartDate || "",
             fixedMonthlyEndDate: data.project.fixedMonthlyEndDate || "",
-            billingRounding: (data.project.billingRounding ?? "") as "" | "none" | "hour_up" | "half_hour_up",
+            billingRounding: (data.project.billingRounding ?? "") as "" | RoundingMode,
             notes: data.project.notes || "",
           });
         } else {
@@ -644,9 +644,9 @@ export default function ProjectDetailsPage() {
                     disabled={submitting}
                   >
                     <option value="">{t("editForm.roundingInherit", { value: tRounding(asRoundingMode(project.clientBillingRounding)) })}</option>
-                    <option value="none">{tRounding("none")}</option>
-                    <option value="hour_up">{tRounding("hour_up")}</option>
-                    <option value="half_hour_up">{tRounding("half_hour_up")}</option>
+                    {ROUNDING_MODES.map((m) => (
+                      <option key={m} value={m}>{tRounding(m)}</option>
+                    ))}
                   </select>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {t("editForm.roundingHint")}
@@ -778,7 +778,7 @@ export default function ProjectDetailsPage() {
                       fixedMonthlyFee: project.fixedMonthlyFee?.toString() || "",
                       fixedMonthlyStartDate: project.fixedMonthlyStartDate || "",
                       fixedMonthlyEndDate: project.fixedMonthlyEndDate || "",
-                      billingRounding: (project.billingRounding ?? "") as "" | "none" | "hour_up" | "half_hour_up",
+                      billingRounding: (project.billingRounding ?? "") as "" | RoundingMode,
                       notes: project.notes || "",
                     });
                   }}
