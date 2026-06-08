@@ -27,14 +27,14 @@ const FEATURES: Record<Tier, string[]> = {
 const PAID_TIERS: PaidTier[] = ["starter", "unlimited"];
 
 /**
- * Interactive pricing UI: interval toggle, three plan cards, and an EU consent
- * gate that must be ticked before any paid checkout. Slugs are
- * `${tier}-${interval}` (e.g. `starter-annual`) per the Polar product map.
+ * Interactive pricing UI: interval toggle, three plan cards, and non-blocking
+ * checkout disclosures. Slugs are `${tier}-${interval}` (e.g. `starter-annual`)
+ * per the Polar product map. Polar (Merchant of Record) owns the hosted
+ * checkout and any withdrawal/consent flow.
  */
 export function PricingClient() {
   const t = useTranslations("Pricing");
   const [interval, setInterval] = useState<Interval>("annual");
-  const [consent, setConsent] = useState(false);
   const [currentTier, setCurrentTier] = useState<Tier | null>(null);
   const [error, setError] = useState("");
   const [busyTier, setBusyTier] = useState<PaidTier | null>(null);
@@ -51,10 +51,6 @@ export function PricingClient() {
   }, []);
 
   async function upgrade(tier: PaidTier) {
-    if (!consent) {
-      setError(t("consentRequired"));
-      return;
-    }
     setBusyTier(tier);
     setError("");
     try {
@@ -189,7 +185,7 @@ export function PricingClient() {
                 ) : (
                   <Button
                     className="w-full"
-                    disabled={!consent || busy}
+                    disabled={busy}
                     onClick={() => upgrade(tier)}
                   >
                     {busy && (
@@ -203,21 +199,8 @@ export function PricingClient() {
           })}
         </div>
 
-        {/* EU consent gate + disclosures (once for the page) */}
-        <div className="mx-auto mt-10 max-w-2xl space-y-4">
-          <label className="flex cursor-pointer items-start gap-3 rounded-[var(--radius-card)] border border-border bg-card p-4 text-sm text-foreground">
-            <input
-              type="checkbox"
-              checked={consent}
-              onChange={(e) => {
-                setConsent(e.target.checked);
-                if (e.target.checked) setError("");
-              }}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-            <span className="leading-relaxed">{t("consent")}</span>
-          </label>
-
+        {/* Non-blocking checkout disclosures (once for the page) */}
+        <div className="mx-auto mt-10 max-w-2xl space-y-4 text-center">
           {error && (
             <p role="alert" className="text-sm font-medium text-destructive">
               {error}

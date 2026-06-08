@@ -81,6 +81,11 @@ export default async function PrivacyPage() {
               strong: (chunks) => <strong>{chunks}</strong>,
             })}
           </li>
+          <li>
+            {t.rich("providers.item5", {
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
+          </li>
         </ul>
         <p>{t("providers.note")}</p>
       </section>

@@ -396,11 +396,9 @@
       "clientsUnlimited": "Unlimited clients",
       "noLimits": "No limits on hours/timers"
     },
-    "consent": "I request immediate access to the service and acknowledge I lose my 14-day right of withdrawal once the service is fully performed.",
     "mor": "Payments are processed by Polar as Merchant of Record; your purchase contract is with Polar. Price in USD, renews automatically, cancel anytime.",
     "renews": "Renews automatically · cancel anytime",
     "agree": "By paying you agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
-    "consentRequired": "Please accept to continue to checkout.",
     "checkoutError": "Could not open checkout. Please try again."
   },
   "Clients": {
@@ -1616,6 +1614,7 @@
         "item2": "<strong>Vercel:</strong> application hosting, as well as cookieless, anonymous traffic analytics (Vercel Analytics and Speed Insights).",
         "item3": "<strong>Google:</strong> optional login via a Google account (OAuth).",
         "item4": "<strong>Resend:</strong> delivery of transactional emails (email verification, password reset). Only your email address is processed for this purpose.",
+        "item5": "<strong>Polar:</strong> payment processing for paid plans, as Merchant of Record (handles billing, invoicing and taxes). Your billing details and email are processed.",
         "note": "These providers process data on our behalf only and subject to security and privacy obligations. Apart from these providers, we do not disclose the information to third parties, unless required to do so by law or by order of a competent authority."
       },
       "storage": {
