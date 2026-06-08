@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Heebo, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { cookies } from "next/headers";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -11,6 +12,7 @@ import { PwaProvider } from "@/components/pwa-provider";
 import { routing } from "@/src/i18n/routing";
 import type { Locale } from "@/src/i18n/routing";
 import { THEME_COLOR, brandName } from "@/lib/brand";
+import { DEFAULT_THEME, isThemeId } from "@/lib/themes";
 
 /** Exhaustive map of app locales → Open Graph locale codes. */
 const OG_LOCALE: Record<Locale, string> = { he: "he_IL", en: "en_US" };
@@ -111,15 +113,35 @@ export default async function LocaleLayout({ children, params }: Props) {
   const t = await getTranslations("common");
   const dir = DIR[locale as Locale];
 
+  // Resolve the initial theme server-side for zero-flash first paint.
+  // Order: theme cookie → (cookie-miss) authenticated user's saved DB theme → default.
+  const cookieStore = await cookies();
+  let theme: string | undefined = cookieStore.get("theme")?.value;
+  if (!isThemeId(theme)) {
+    // cookie-miss fallback: if authenticated, read the saved theme from the DB
+    const { getUser } = await import("@/lib/auth");
+    const user = await getUser();
+    if (user) {
+      const { query } = await import("@/lib/db");
+      const result = await query<{ theme: string | null }>(
+        "select theme from user_profiles where user_id = $1",
+        [user.id]
+      );
+      const saved = result.rows[0]?.theme;
+      if (isThemeId(saved)) theme = saved;
+    }
+  }
+  if (!isThemeId(theme)) theme = DEFAULT_THEME;
+
   return (
-    <html lang={locale} dir={dir}>
+    <html lang={locale} dir={dir} data-theme={theme}>
       <body className={`${heebo.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
         {/* Skip to main content link for keyboard users */}
         <a href="#main-content" className="skip-to-main">
           {t("skipToMain")}
         </a>
         <NextIntlClientProvider>
-          <Providers>
+          <Providers initialTheme={theme}>
             <main id="main-content">{children}</main>
           </Providers>
           <PwaProvider />
