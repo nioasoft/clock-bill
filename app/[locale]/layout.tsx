@@ -124,7 +124,14 @@ export default async function LocaleLayout({ children, params }: Props) {
             data-theme. Value is sanitized to [a-z-]; an unknown id harmlessly
             falls back to the default :root variables. Tiny inline script (not
             cookies()) so the route tree stays SSG. */}
+        {/* type is text/javascript on the server (so the browser executes it during
+            HTML parse, before paint) and text/plain on the client render, which stops
+            React 19 from warning about a <script> in the tree; suppressHydrationWarning
+            covers the type attribute mismatch. Per Next.js "preventing flash before
+            hydration" guidance. */}
         <script
+          suppressHydrationWarning
+          type={typeof window === "undefined" ? "text/javascript" : "text/plain"}
           dangerouslySetInnerHTML={{
             __html:
               "(function(){try{var m=document.cookie.match(/(?:^|; )theme=([a-z-]+)/);if(m&&m[1]){document.documentElement.dataset.theme=m[1];}}catch(e){}})();",

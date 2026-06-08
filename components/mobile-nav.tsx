@@ -30,7 +30,7 @@ export function MobileNav({ userEmail, onLogout }: MobileNavProps) {
           <div className="w-8 h-8 bg-gradient-to-br from-accent to-accent/80 rounded-lg flex items-center justify-center">
             <Gauge className="h-5 w-5 text-sidebar" />
           </div>
-          <h1 className="text-xl font-bold text-white">{brandName(locale)}</h1>
+          <h1 className="text-xl font-bold text-sidebar-foreground">{brandName(locale)}</h1>
         </Link>
 
         {/* Account */}
@@ -44,7 +44,7 @@ export function MobileNav({ userEmail, onLogout }: MobileNavProps) {
             <button
               onClick={onLogout}
               aria-label={t("logout")}
-              className="min-h-[44px] min-w-[44px] p-2 text-sm text-white/80 hover:text-white"
+              className="min-h-[44px] min-w-[44px] p-2 text-sm text-sidebar-foreground/80 hover:text-sidebar-foreground"
             >
               {t("logout")}
             </button>

@@ -682,7 +682,7 @@ export default function AdHocReportTab() {
                 <button
                   onClick={() => setShowLoadPresetDialog(true)}
                   disabled={presetsLoading || presets.length === 0}
-                  className="px-4 py-2 bg-secondary text-white rounded-full hover:bg-secondary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-secondary text-secondary-foreground rounded-full hover:bg-secondary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title={presets.length === 0 ? t("preset.noneSaved") : t("preset.load")}
                 >
                   📂 {t("preset.load")}

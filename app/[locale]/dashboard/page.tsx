@@ -363,7 +363,7 @@ export default function DashboardPage() {
                       )}
                       <button
                         onClick={() => handleStopTimer(timer.id)}
-                        className="flex-1 whitespace-nowrap rounded-md bg-destructive px-5 py-2.5 text-sm font-semibold text-white hover:bg-destructive/90 transition-colors sm:flex-initial"
+                        className="flex-1 whitespace-nowrap rounded-md bg-destructive px-5 py-2.5 text-sm font-semibold text-destructive-foreground hover:bg-destructive/90 transition-colors sm:flex-initial"
                       >
                         {t("activeTimers.stopButton")}
                       </button>
