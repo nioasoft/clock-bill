@@ -1457,7 +1457,7 @@
       "metaTitle": "Terms of Service",
       "metaDescription": "The terms of service for {brand}.",
       "title": "Terms of Service",
-      "updated": "June 7, 2026",
+      "updated": "June 8, 2026",
       "intro": "Welcome to {brand} (the \"Service\" or \"{brand}\"), an online service for tracking work hours, managing clients and projects, and generating billing documents, intended for freelancers and the self-employed. These Terms of Service (the \"Terms\") govern your use of the Service, alongside the <privacyLink>Privacy Policy</privacyLink>. Using, registering for, or accessing the Service constitutes full acceptance of these Terms. If you do not agree to the Terms, you may not use the Service.",
       "account": {
         "heading": "User Account and Eligibility",
@@ -1493,6 +1493,16 @@
       "pricing": {
         "heading": "Pricing and Future Changes",
         "body": "Currently, use of the Service is free of charge. We intend to continue allowing the management of up to three clients free of charge going forward. We reserve the right to add paid plans or features for extended use in the future, to change the pricing model, or to limit certain features. Any such change will take effect only after advance notice and within a reasonable timeframe. You will not be charged without your express prior consent."
+      },
+      "payment": {
+        "heading": "Payment, Renewal and Cancellation",
+        "processor": "Payment for paid plans is processed by Polar Software Inc., acting as Merchant of Record (the seller of record). The purchase and billing contract is between you and Polar; Monit licenses the use of the Service to you under these Terms. For payment, invoicing and taxes, Polar's terms apply.",
+        "billing": "Paid plans are billed on a monthly or annual cycle of your choosing, in US dollars, and renew automatically at the end of each period until cancelled. Tax (VAT/sales tax) may be added at checkout depending on your country and is handled by Polar.",
+        "priceChanges": "We may update prices or plans in the future. A price change will take effect only after separate advance notice (including a separate notice at the end of any promotional period), and you will not be charged an updated price without consent.",
+        "cancellation": "You may cancel your subscription at any time via the subscription management portal or your account settings. Cancellation takes effect within 3 business days at the latest; you will not be charged for any period after the cancellation date, and you keep access until the end of the paid period.",
+        "refunds": "Refunds are handled by Polar per its policy and card-network rules, without prejudice to your statutory rights — including the 14-day right to cancel a distance sale and a pro-rata refund for an ongoing transaction under Israeli consumer law.",
+        "downgrade": "On cancellation or downgrade, your data is preserved: clients beyond the free plan's quota remain visible (read-only) and are not deleted; you will not be able to add new clients until below the quota or re-subscribed. You can export your data at any time from account settings.",
+        "freeTier": "The free plan allows managing one client at no charge. We may change the scope of the free plan in the future, with advance notice."
       },
       "availability": {
         "heading": "Service Availability",
