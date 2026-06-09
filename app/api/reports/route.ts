@@ -57,6 +57,7 @@ export async function GET(request: NextRequest) {
         te.rate_label,
         te.quantity,
         te.item_ref,
+        te.unit,
         p.name as project_name,
         p.billing_rounding as project_rounding,
         c.default_rate as hourly_rate,
@@ -119,6 +120,7 @@ export async function GET(request: NextRequest) {
       rate_label: string | null;
       quantity: number | null;
       item_ref: number | null;
+      unit: string | null;
       project_name: string;
       project_rounding: string | null;
       hourly_rate: number | null;
@@ -171,6 +173,7 @@ export async function GET(request: NextRequest) {
         rateLabel: entry.rate_label,
         quantity: entry.quantity,
         itemRef: entry.item_ref,
+        unit: entry.unit,
         currency: entry.currency,
         amount,
         createdAt: entry.created_at,

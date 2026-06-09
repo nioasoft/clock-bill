@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
         const er = await client.query(
           `SELECT te.id, te.description, te.notes, te.billing_kind AS "billingKind",
                   te.duration, te.quantity, te.rate, te.rate_label AS "rateLabel",
+                  te.unit AS "unit",
                   te.item_ref AS "itemRef",
                   p.billing_rounding AS "projectRounding",
                   c.billing_rounding AS "clientRounding"
@@ -134,14 +135,14 @@ export async function POST(request: NextRequest) {
         await client.query(
           `INSERT INTO charge_document_lines
              (id, user_id, document_id, source_type, time_entry_id, period_month, label,
-              description, notes, item_ref, billing_kind, quantity, rate, amount)
+              description, notes, item_ref, billing_kind, quantity, rate, amount, unit)
            SELECT gen_random_uuid()::text, $1, $2, t.source_type, t.time_entry_id, t.period_month,
-                  t.label, t.description, t.notes, t.item_ref, t.billing_kind, t.quantity, t.rate, t.amount
+                  t.label, t.description, t.notes, t.item_ref, t.billing_kind, t.quantity, t.rate, t.amount, t.unit
              FROM unnest(
                $3::text[], $4::text[], $5::text[], $6::text[], $7::text[],
-               $8::text[], $9::text[], $10::text[], $11::numeric[], $12::numeric[], $13::numeric[]
+               $8::text[], $9::text[], $10::text[], $11::numeric[], $12::numeric[], $13::numeric[], $14::text[]
              ) AS t(source_type, time_entry_id, period_month, label, description,
-                    notes, item_ref, billing_kind, quantity, rate, amount)`,
+                    notes, item_ref, billing_kind, quantity, rate, amount, unit)`,
           [
             user.id,
             documentId,
@@ -156,6 +157,7 @@ export async function POST(request: NextRequest) {
             allLines.map((l) => l.quantity),
             allLines.map((l) => l.rate),
             allLines.map((l) => l.amount),
+            allLines.map((l) => l.unit),
           ]
         );
       }
