@@ -45,6 +45,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       rate_label: string | null;
       quantity: number | null;
       item_ref: number | null;
+      unit: string | null;
       project_name: string;
       client_name: string;
       client_id: string;
@@ -68,6 +69,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         te.rate_label,
         te.quantity,
         te.item_ref,
+        te.unit,
         p.name as project_name,
         c.name as client_name,
         c.id as client_id,
@@ -113,6 +115,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         rateLabel: entry.rate_label,
         quantity: entry.quantity,
         itemRef: entry.item_ref,
+        unit: entry.unit,
       },
     }, {
       headers: {
@@ -146,7 +149,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     const { id } = await context.params;
     const parsed = await parseBody(request, entryBodySchema);
     if (!parsed.ok) return parsed.response;
-    const { projectId, taskId, date, duration, description, notes, isBillable, tags, billingKind, rate, rateLabel, quantity } = parsed.data;
+    const { projectId, taskId, date, duration, description, notes, isBillable, tags, billingKind, rate, rateLabel, quantity, unit } = parsed.data;
     const kind = billingKind ?? "hourly";
     const isItem = kind === "item";
     const effectiveDuration = isItem ? 0 : duration;
@@ -190,14 +193,14 @@ export async function PUT(request: NextRequest, context: RouteContext) {
            UPDATE time_entries
            SET project_id = $1, task_id = $2, description = $3, duration = $4, date = $5,
                tags = $6, notes = $7, is_billable = $8, billing_kind = $9, rate = $10,
-               rate_label = $11, quantity = $12, item_ref = $13, updated_at = NOW()
-           WHERE id = $14 AND user_id = $15
+               rate_label = $11, quantity = $12, item_ref = $13, unit = $14, updated_at = NOW()
+           WHERE id = $15 AND user_id = $16
            RETURNING *
          )
          SELECT
            upd.id, upd.project_id, upd.description, upd.start_time, upd.end_time,
            upd.duration, upd.date, upd.tags, upd.notes, upd.is_billable, upd.created_at,
-           upd.task_id, upd.billing_kind, upd.rate, upd.rate_label, upd.quantity, upd.item_ref,
+           upd.task_id, upd.billing_kind, upd.rate, upd.rate_label, upd.quantity, upd.item_ref, upd.unit,
            p.name as project_name, c.name as client_name, c.id as client_id, tk.title as task_name
          FROM upd
          JOIN projects p ON upd.project_id = p.id
@@ -217,6 +220,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
           rateLabel?.trim() || null,
           isItem ? (quantity ?? null) : null,
           itemRef,
+          isItem ? unit?.trim() || null : null,
           id,
           user.id,
         ]
@@ -261,6 +265,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         rateLabel: entry.rate_label,
         quantity: entry.quantity,
         itemRef: entry.item_ref,
+        unit: entry.unit,
       },
     });
   } catch (error) {
@@ -291,6 +296,7 @@ interface UpdatedRow {
   rate_label: string | null;
   quantity: number | null;
   item_ref: number | null;
+  unit: string | null;
   project_name: string;
   client_name: string;
   client_id: string;

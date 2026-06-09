@@ -93,6 +93,7 @@ export async function GET(request: NextRequest) {
         te.rate_label,
         te.quantity,
         te.item_ref,
+        te.unit,
         COUNT(*) OVER() AS total_count,
         p.name as project_name,
         c.name as client_name,
@@ -129,6 +130,7 @@ export async function GET(request: NextRequest) {
       rate_label: string | null;
       quantity: number | null;
       item_ref: number | null;
+      unit: string | null;
       total_count: string;
       project_name: string;
       client_name: string;
@@ -164,6 +166,7 @@ export async function GET(request: NextRequest) {
       rateLabel: entry.rate_label,
       quantity: entry.quantity,
       itemRef: entry.item_ref,
+      unit: entry.unit,
     }));
 
     return NextResponse.json({
@@ -206,7 +209,7 @@ export async function POST(request: NextRequest) {
 
     const parsed = await parseBody(request, entryBodySchema);
     if (!parsed.ok) return parsed.response;
-    const { projectId, taskId, date, duration, description, notes, isBillable, tags, billingKind, rate, rateLabel, quantity } = parsed.data;
+    const { projectId, taskId, date, duration, description, notes, isBillable, tags, billingKind, rate, rateLabel, quantity, unit } = parsed.data;
     const kind = billingKind ?? "hourly";
     const isItem = kind === "item";
     const effectiveDuration = isItem ? 0 : duration;
@@ -248,16 +251,16 @@ export async function POST(request: NextRequest) {
       const inserted = await client.query<CreatedRow>(
         `WITH ins AS (
            INSERT INTO time_entries
-             (id, user_id, project_id, task_id, description, start_time, end_time, duration, date, tags, notes, is_billable, billing_kind, rate, rate_label, quantity, item_ref)
+             (id, user_id, project_id, task_id, description, start_time, end_time, duration, date, tags, notes, is_billable, billing_kind, rate, rate_label, quantity, item_ref, unit)
            VALUES
-             (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+             (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
            RETURNING *
          )
          SELECT
            ins.id, ins.project_id, ins.description, ins.start_time, ins.end_time,
            ins.duration, ins.date, ins.tags, ins.notes, ins.is_billable, ins.created_at,
            ins.paused_at, ins.total_paused_time, ins.task_id, ins.billing_kind,
-           ins.rate, ins.rate_label, ins.quantity, ins.item_ref,
+           ins.rate, ins.rate_label, ins.quantity, ins.item_ref, ins.unit,
            p.name as project_name, c.name as client_name, c.id as client_id, tk.title as task_name
          FROM ins
          JOIN projects p ON ins.project_id = p.id
@@ -280,6 +283,7 @@ export async function POST(request: NextRequest) {
           rateLabel?.trim() || null,
           isItem ? (quantity ?? null) : null,
           itemRef,
+          isItem ? unit?.trim() || null : null,
         ]
       );
       return { row: inserted.rows[0] };
@@ -320,6 +324,7 @@ export async function POST(request: NextRequest) {
         rateLabel: entry.rate_label,
         quantity: entry.quantity,
         itemRef: entry.item_ref,
+        unit: entry.unit,
       },
     });
   } catch (error) {
@@ -352,6 +357,7 @@ interface CreatedRow {
   rate_label: string | null;
   quantity: number | null;
   item_ref: number | null;
+  unit: string | null;
   project_name: string;
   client_name: string;
   client_id: string;
