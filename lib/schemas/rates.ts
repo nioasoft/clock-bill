@@ -8,6 +8,8 @@ export interface ClientRateInput {
   name: string;
   rate: number;
   isDefault: boolean;
+  /** Per-unit noun for an item rate ("פגישה"/"מילה"). Hourly rows leave it unset. */
+  unit?: string | null;
 }
 export interface ClientRate extends ClientRateInput {
   id: string;
@@ -19,6 +21,7 @@ export const clientRateSchema: z.ZodType<ClientRateInput> = z.object({
   name: z.string().trim().min(1, "יש להזין שם לתעריף").max(100, "שם התעריף ארוך מדי"),
   rate: z.number().min(0, "התעריף לא יכול להיות שלילי"),
   isDefault: z.boolean(),
+  unit: z.string().trim().max(30, "שם היחידה ארוך מדי").nullish(),
 });
 
 /** The full list sent on a client save (may be empty for a brand-new client). */
@@ -31,6 +34,7 @@ export const clientRatesSchema = z.array(clientRateSchema).max(100, "יותר מ
 export const addClientItemSchema = z.object({
   name: z.string({ message: "נא להזין שם פריט" }).trim().min(1, "נא להזין שם פריט").max(100, "שם הפריט ארוך מדי"),
   rate: z.number({ message: "נא להזין מחיר ליחידה" }).min(0, "המחיר לא יכול להיות שלילי"),
+  unit: z.string().trim().max(30, "שם היחידה ארוך מדי").nullish(),
 });
 
 /**
@@ -56,6 +60,7 @@ export function cleanClientRates(rates: ClientRateInput[]): ClientRateInput[] {
       name: r.name.trim(),
       rate: r.rate,
       isDefault: r.kind === "hourly" && r.isDefault,
+      unit: r.unit?.trim() || null,
     }));
   const hasDefault = base.some((r) => r.kind === "hourly" && r.isDefault);
   let promoted = false;
