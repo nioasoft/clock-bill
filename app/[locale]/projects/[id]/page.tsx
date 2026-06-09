@@ -9,7 +9,7 @@ import { PageContainer } from "@/components/page-container";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { validateRequired, validateDateRange } from "@/lib/validation";
 import { useValidationMessage } from "@/lib/validation-messages";
-import { asRoundingMode, resolveRounding, ROUNDING_MODES, type RoundingMode } from "@/lib/rounding";
+import { resolveRounding, ROUNDING_MODES, type RoundingMode } from "@/lib/rounding";
 import { messageForError } from "@/lib/api-error";
 import { useTranslations, useLocale } from "next-intl";
 
@@ -61,6 +61,7 @@ export default function ProjectDetailsPage() {
     duration: number;
   }[]>([]);
   const [entriesLoading, setEntriesLoading] = useState(true);
+  const [profileRounding, setProfileRounding] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -178,6 +179,21 @@ export default function ProjectDetailsPage() {
     };
     fetchProjectEntries();
   }, [projectId]);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/profile")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (active && data?.profile) {
+          setProfileRounding(data.profile.defaultBillingRounding ?? null);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -643,7 +659,7 @@ export default function ProjectDetailsPage() {
                     className="mt-1 block w-full rounded-[var(--radius-card)] border border-border bg-card px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary sm:max-w-[calc(50%-0.5rem)]"
                     disabled={submitting}
                   >
-                    <option value="">{t("editForm.roundingInherit", { value: tRounding(asRoundingMode(project.clientBillingRounding)) })}</option>
+                    <option value="">{t("editForm.roundingInherit", { value: tRounding(resolveRounding(null, project.clientBillingRounding, profileRounding)) })}</option>
                     {ROUNDING_MODES.map((m) => (
                       <option key={m} value={m}>{tRounding(m)}</option>
                     ))}
@@ -824,7 +840,7 @@ export default function ProjectDetailsPage() {
           <div className="rounded-[var(--radius-card)] border border-border bg-card p-4">
             <dt className="text-xs font-medium text-muted-foreground">{t("stats.rounding")}</dt>
             <dd className="mt-1.5 text-sm font-semibold text-foreground">
-              {tRounding(resolveRounding(project.billingRounding, project.clientBillingRounding))}
+              {tRounding(resolveRounding(project.billingRounding, project.clientBillingRounding, profileRounding))}
             </dd>
           </div>
         </div>
