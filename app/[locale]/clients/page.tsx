@@ -14,7 +14,7 @@ import { messageForError } from "@/lib/api-error";
 import { fieldClass } from "@/lib/form-styles";
 import { CURRENCY_SYMBOLS } from "@/lib/currency";
 import { ClientRatesEditor } from "@/components/client-rates-editor";
-import { ROUNDING_MODES, asRoundingMode, type RoundingMode } from "@/lib/rounding";
+import { ROUNDING_MODES, type RoundingMode } from "@/lib/rounding";
 import { useTranslations } from "next-intl";
 import { cleanClientRates } from "@/lib/schemas/rates";
 import type { ClientRate, ClientRateInput } from "@/lib/schemas/rates";
@@ -96,7 +96,7 @@ function ClientsPageContent() {
     address: "",
     defaultRate: "",
     currency: "ILS",
-    billingRounding: "none" as RoundingMode,
+    billingRounding: "" as "" | RoundingMode,
     isRetainer: false,
     retainerHours: "",
     retainerMonthlyFee: "",
@@ -214,7 +214,7 @@ function ClientsPageContent() {
           address: formData.address || undefined,
           defaultRate: formData.defaultRate ? parseFloat(formData.defaultRate) : undefined,
           currency: formData.currency,
-          billingRounding: formData.billingRounding,
+          billingRounding: formData.billingRounding === "" ? null : formData.billingRounding,
           isRetainer: formData.isRetainer,
           retainerHours: formData.isRetainer && formData.retainerHours ? parseFloat(formData.retainerHours) : undefined,
           retainerMonthlyFee: formData.isRetainer && formData.retainerMonthlyFee ? parseFloat(formData.retainerMonthlyFee) : undefined,
@@ -245,7 +245,7 @@ function ClientsPageContent() {
           address: "",
           defaultRate: "",
           currency: "ILS",
-          billingRounding: "none" as RoundingMode,
+          billingRounding: "" as "" | RoundingMode,
           isRetainer: false,
           retainerHours: "",
           retainerMonthlyFee: "",
@@ -283,7 +283,7 @@ function ClientsPageContent() {
       address: client.address || "",
       defaultRate: client.defaultRate?.toString() || "",
       currency: client.currency || "ILS",
-      billingRounding: asRoundingMode(client.billingRounding) as RoundingMode,
+      billingRounding: (client.billingRounding ?? "") as "" | RoundingMode,
       isRetainer: client.isRetainer ?? false,
       retainerHours: client.retainerHours?.toString() || "",
       retainerMonthlyFee: client.retainerMonthlyFee?.toString() || "",
@@ -571,10 +571,11 @@ function ClientsPageContent() {
                     <select
                       id="billingRounding"
                       value={formData.billingRounding}
-                      onChange={(e) => setFormData({ ...formData, billingRounding: e.target.value as RoundingMode })}
+                      onChange={(e) => setFormData({ ...formData, billingRounding: e.target.value as "" | RoundingMode })}
                       className={fieldClass(false)}
                       disabled={submitting}
                     >
+                      <option value="">{t("roundingInherit")}</option>
                       {ROUNDING_MODES.map((m) => (
                         <option key={m} value={m}>{tRounding(m)}</option>
                       ))}

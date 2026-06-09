@@ -458,6 +458,7 @@
     "addressPlaceholder": "Street, number, city",
     "currencyLabel": "Currency",
     "billingRoundingLabel": "Billing Time Rounding",
+    "roundingInherit": "Inherit from default",
     "roundingHint": "Hourly only · can be overridden per project",
     "ratesAndItems": "Rates & Items",
     "retainerClient": "Retainer Client",
