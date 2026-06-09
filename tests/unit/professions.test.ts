@@ -21,8 +21,8 @@ function test(name: string, fn: () => void) {
   }
 }
 
-test("has at least 8 professions including 'other'", () => {
-  assert(PROFESSIONS.length >= 8, `expected >=8, got ${PROFESSIONS.length}`);
+test("has at least 17 professions including 'other'", () => {
+  assert(PROFESSIONS.length >= 17, `expected >=17, got ${PROFESSIONS.length}`);
   assert(PROFESSIONS.some((p) => p.id === "other"), "missing 'other'");
 });
 
@@ -45,6 +45,16 @@ test("every preset uses a valid PDF template", () => {
     assert(
       (KNOWN_TEMPLATES as readonly string[]).includes(p.defaults.preferredPdfTemplate),
       `${p.id}: invalid template ${p.defaults.preferredPdfTemplate}`
+    );
+  }
+});
+
+test("every preset has a valid suggestedBillingModel", () => {
+  const valid = ["hourly", "retainer", "fixed_monthly", "items"];
+  for (const p of PROFESSIONS) {
+    assert(
+      valid.includes(p.defaults.suggestedBillingModel),
+      `${p.id}: invalid suggestedBillingModel ${p.defaults.suggestedBillingModel}`
     );
   }
 });
