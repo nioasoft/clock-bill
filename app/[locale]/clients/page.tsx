@@ -322,7 +322,7 @@ function ClientsPageContent() {
       address: "",
       defaultRate: "",
       currency: "ILS",
-      billingRounding: "none" as RoundingMode,
+      billingRounding: "" as "" | RoundingMode,
       isRetainer: false,
       retainerHours: "",
       retainerMonthlyFee: "",

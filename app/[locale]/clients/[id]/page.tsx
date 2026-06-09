@@ -11,7 +11,7 @@ import { CURRENCY_SYMBOLS } from "@/lib/currency";
 import { ClientRatesEditor } from "@/components/client-rates-editor";
 import { cleanClientRates } from "@/lib/schemas/rates";
 import type { ClientRate, ClientRateInput } from "@/lib/schemas/rates";
-import { ROUNDING_MODES, asRoundingMode, type RoundingMode } from "@/lib/rounding";
+import { ROUNDING_MODES, type RoundingMode } from "@/lib/rounding";
 import { messageForError } from "@/lib/api-error";
 import { useTranslations, useLocale } from "next-intl";
 
@@ -623,9 +623,9 @@ export default function ClientDetailsPage() {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-display text-base font-semibold text-foreground">{t("ratesAndItems")}</h3>
-                      {asRoundingMode(client.billingRounding) !== "none" && (
+                      {client.billingRounding != null && (
                         <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-                          {tRounding(asRoundingMode(client.billingRounding))}
+                          {tRounding(client.billingRounding as RoundingMode)}
                         </span>
                       )}
                     </div>
