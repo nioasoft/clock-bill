@@ -52,8 +52,13 @@ match (descriptive).
    rates handling, `app/api/clients/[id]/rates`) read/write `client_rates.unit`.
 4. **Entry logging snapshots unit**: when an item entry is created (`POST /api/entries`,
    and any path that logs an item from a rate), snapshot the rate's `unit` onto
-   `time_entries.unit` alongside `rate_label`. The entries Zod schema + INSERT gain `unit`.
-   GET endpoints that return entries include `unit`.
+   `time_entries.unit` alongside `rate_label`. **Note the snapshot mechanics:** `rate_label`
+   is *client-sent* in the request body (the server never resolves it from `client_rates`),
+   so `unit` rides the same path — the entry-form UI that offers item rates must send the
+   selected rate's `unit` in the POST body. The entries Zod schema + INSERT gain `unit`,
+   and **`PUT /api/entries/[id]` persists `unit` the same way it already persists
+   `rate_label`** (otherwise editing an entry silently drops its unit). GET endpoints that
+   return entries include `unit`.
 5. **Charge documents**: `BillableEntry` + `ChargeLineDraft` (`lib/charge-documents.ts`)
    gain `unit`; `buildLineFromEntry` copies the entry's `unit` into the draft (amount math
    unchanged — still `quantity × rate`, no rounding). The charge-document create route
@@ -62,6 +67,10 @@ match (descriptive).
    item lines render the quantity with the unit — "N × <unit>" (e.g. "3 × פגישה"). Where
    today the code shows the generic `t("units.items", {count})`, prefer the line's `unit`
    when present, else fall back to the existing generic label. Hourly lines unchanged.
+   **Scope guard — aggregated rows stay generic:** summary rows that sum `totalQuantity`
+   across entries (e.g. `AdHocReportTab` by-label/by-client rows) may mix units
+   (3 פגישה + 200 מילה), so they keep the generic "יח׳" label this round; only
+   per-entry/per-line rendering is unit-aware.
 
 ## 4. Profession starter item-templates
 
