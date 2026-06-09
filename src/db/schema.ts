@@ -227,6 +227,8 @@ export const clientRates = pgTable(
     rate: real("rate").notNull(),
     // Preselected hourly rate for the client; items are never default.
     isDefault: boolean("is_default").notNull().default(false),
+    // Per-unit noun for an item rate ("פגישה"/"מילה"). NULL for hourly (implicit "שעה").
+    unit: text("unit"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
@@ -339,6 +341,7 @@ export const timeEntries = pgTable(
     // Per-line billing snapshot (immune to later edits of client_rates).
     rate: real("rate"), // ₪/hour for hourly lines, ₪/unit for item lines
     rateLabel: text("rate_label"), // the rate/item name at log time
+    unit: text("unit"), // item unit-noun snapshot at log time (mirrors rate_label)
     billingKind: text("billing_kind"), // 'hourly' | 'item'; NULL => legacy hourly
     quantity: real("quantity"), // units for an item line; ignored for hourly
     // FK to the charge document this entry was settled into (NULL => unbilled).
@@ -494,6 +497,7 @@ export const chargeDocumentLines = pgTable(
     itemRef: integer("item_ref"),
     billingKind: text("billing_kind"),
     quantity: real("quantity"),
+    unit: text("unit"), // item unit-noun snapshot at issue time
     rate: real("rate"),
     amount: real("amount"),
     createdAt: timestamp("created_at").defaultNow(),
