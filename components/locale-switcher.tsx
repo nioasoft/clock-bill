@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { Globe } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/src/i18n/navigation";
 import { routing, type Locale } from "@/src/i18n/routing";
@@ -49,8 +50,9 @@ export function LocaleSwitcher({ isCollapsed = false, className = "" }: LocaleSw
         disabled={isPending}
         title={t("label")}
         aria-label={t("label")}
-        className={`flex h-11 w-full items-center justify-center rounded-[var(--radius)] text-sm font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50 ${className}`}
+        className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-[var(--radius)] border border-border bg-card px-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50 ${className}`}
       >
+        <Globe className="h-4 w-4" />
         {locale === "he" ? "EN" : "עב"}
       </button>
     );

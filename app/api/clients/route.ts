@@ -20,7 +20,7 @@ const createClientSchema = z.object({
     .min(0, "התעריף השעתי לא יכול להיות שלילי")
     .nullish(),
   currency: z.string().max(10).nullish(),
-  billingRounding: z.enum(["none", "hour_up", "half_hour_up"]).nullish(),
+  billingRounding: z.enum(["none", "tenth_hour_up", "quarter_hour_up", "half_hour_up", "hour_up"]).nullish(),
   isRetainer: z.boolean().nullish(),
   retainerHours: z.number().nullish(),
   retainerMonthlyFee: z.number().nullish(),
@@ -98,7 +98,7 @@ export async function GET(_request: NextRequest) {
       address: client.address,
       defaultRate: client.default_rate,
       currency: client.currency || "ILS",
-      billingRounding: client.billing_rounding || "none",
+      billingRounding: client.billing_rounding,
       isRetainer: client.is_retainer ?? false,
       retainerHours: client.retainer_hours,
       retainerMonthlyFee: client.retainer_monthly_fee,
@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
     if (!parsed.ok) return parsed.response;
     const { name, contactName, email, phone, address, defaultRate, currency, billingRounding, isRetainer, retainerHours, retainerMonthlyFee, overageRate, notes, rates } = parsed.data;
 
-    const { withTransaction } = await import("@/lib/db");
+    const { query, withTransaction } = await import("@/lib/db");
 
     // default_rate stays in sync with the default hourly rate (legacy fallback).
     const ratesList = rates ?? [];
@@ -174,6 +174,13 @@ export async function POST(request: NextRequest) {
       ratesList.find((r) => r.kind === "hourly" && r.isDefault) ??
       ratesList.find((r) => r.kind === "hourly");
     const effectiveDefaultRate = defaultHourly ? defaultHourly.rate : (defaultRate ?? null);
+
+    // Seed currency from the user's base when the client didn't specify one.
+    const profileRow = await query<{ default_currency: string | null }>(
+      `SELECT default_currency FROM user_profiles WHERE user_id = $1`,
+      [user.id]
+    );
+    const baseCurrency = profileRow.rows[0]?.default_currency || "ILS";
 
     // Insert client + rates atomically (RLS GUC bound by withTransaction).
     const result = await withTransaction(async (db) => {
@@ -220,8 +227,8 @@ export async function POST(request: NextRequest) {
           phone?.trim() || null,
           address?.trim() || null,
           effectiveDefaultRate,
-          currency || "ILS",
-          billingRounding || "none",
+          currency || baseCurrency,
+          billingRounding ?? null,
           isRetainer ?? false,
           retainerHours || null,
           retainerMonthlyFee || null,
@@ -275,7 +282,7 @@ export async function POST(request: NextRequest) {
         address: client.address,
         defaultRate: client.default_rate,
         currency: client.currency || "ILS",
-        billingRounding: client.billing_rounding || "none",
+        billingRounding: client.billing_rounding,
         isRetainer: client.is_retainer ?? false,
         retainerHours: client.retainer_hours,
         retainerMonthlyFee: client.retainer_monthly_fee,

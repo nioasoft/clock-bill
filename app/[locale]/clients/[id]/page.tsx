@@ -11,7 +11,7 @@ import { CURRENCY_SYMBOLS } from "@/lib/currency";
 import { ClientRatesEditor } from "@/components/client-rates-editor";
 import { cleanClientRates } from "@/lib/schemas/rates";
 import type { ClientRate, ClientRateInput } from "@/lib/schemas/rates";
-import { ROUNDING_MODES, asRoundingMode, type RoundingMode } from "@/lib/rounding";
+import { ROUNDING_MODES, type RoundingMode } from "@/lib/rounding";
 import { messageForError } from "@/lib/api-error";
 import { useTranslations, useLocale } from "next-intl";
 
@@ -52,7 +52,7 @@ function clientToFormData(client: Client) {
     phone: client.phone || "",
     address: client.address || "",
     currency: client.currency || "ILS",
-    billingRounding: asRoundingMode(client.billingRounding) as RoundingMode,
+    billingRounding: (client.billingRounding ?? "") as "" | RoundingMode,
     isRetainer: !!client.isRetainer,
     retainerHours: client.retainerHours?.toString() || "",
     retainerMonthlyFee: client.retainerMonthlyFee?.toString() || "",
@@ -89,7 +89,7 @@ export default function ClientDetailsPage() {
     phone: "",
     address: "",
     currency: "ILS",
-    billingRounding: "none" as RoundingMode,
+    billingRounding: "" as "" | RoundingMode,
     isRetainer: false,
     retainerHours: "",
     retainerMonthlyFee: "",
@@ -190,7 +190,7 @@ export default function ClientDetailsPage() {
           phone: formData.phone || undefined,
           address: formData.address || undefined,
           currency: formData.currency,
-          billingRounding: formData.billingRounding,
+          billingRounding: formData.billingRounding === "" ? null : formData.billingRounding,
           isRetainer: formData.isRetainer,
           retainerHours: formData.isRetainer && formData.retainerHours ? parseFloat(formData.retainerHours) : undefined,
           retainerMonthlyFee: formData.isRetainer && formData.retainerMonthlyFee ? parseFloat(formData.retainerMonthlyFee) : undefined,
@@ -400,10 +400,11 @@ export default function ClientDetailsPage() {
                     <select
                       id="billingRounding"
                       value={formData.billingRounding}
-                      onChange={(e) => setFormData({ ...formData, billingRounding: e.target.value as RoundingMode })}
+                      onChange={(e) => setFormData({ ...formData, billingRounding: e.target.value as "" | RoundingMode })}
                       className={fieldClass(false)}
                       disabled={submitting}
                     >
+                      <option value="">{t("roundingInherit")}</option>
                       {ROUNDING_MODES.map((m) => (
                         <option key={m} value={m}>{tRounding(m)}</option>
                       ))}
@@ -622,9 +623,9 @@ export default function ClientDetailsPage() {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-display text-base font-semibold text-foreground">{t("ratesAndItems")}</h3>
-                      {asRoundingMode(client.billingRounding) !== "none" && (
+                      {client.billingRounding != null && (
                         <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-                          {tRounding(asRoundingMode(client.billingRounding))}
+                          {tRounding(client.billingRounding as RoundingMode)}
                         </span>
                       )}
                     </div>

@@ -57,6 +57,14 @@ export async function POST(request: NextRequest) {
       if (clientRow.rowCount === 0) throw new Error("CLIENT_NOT_FOUND");
       const currency: string = clientRow.rows[0].currency ?? "ILS";
 
+      // Profile-level billing base (cascade's lowest tier). Read once; used as
+      // the rounding fallback when neither project nor client sets a mode.
+      const profileBaseRow = await client.query(
+        `SELECT default_billing_rounding FROM user_profiles WHERE user_id = $1`,
+        [user.id]
+      );
+      const baseRounding: string | null = profileBaseRow.rows[0]?.default_billing_rounding ?? null;
+
       let entries: BillableEntry[] = [];
       if (timeEntryIds.length > 0) {
         const er = await client.query(
@@ -76,7 +84,8 @@ export async function POST(request: NextRequest) {
           ...(row as BillableEntry),
           billingRounding: resolveRounding(
             (row as { projectRounding: string | null }).projectRounding,
-            (row as { clientRounding: string | null }).clientRounding
+            (row as { clientRounding: string | null }).clientRounding,
+            baseRounding
           ),
         }));
         if (entries.length !== timeEntryIds.length) throw new Error("ENTRY_STATE_CHANGED");

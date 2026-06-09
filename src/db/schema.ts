@@ -144,6 +144,15 @@ export const userProfiles = pgTable("user_profiles", {
   locale: text("locale").default("he"),
   // Selected UI theme (Theme Set feature). Defaults to the dark theme.
   theme: text("theme").default("dark"),
+  // ─── Onboarding / billing base (cascade root) ────────────────────────
+  // Chosen profession preset id (see lib/professions.ts); NULL = never chose.
+  profession: text("profession"),
+  // Base hourly rate; new entries fall back to this when client/task have none.
+  defaultRate: real("default_rate"),
+  // Base billing rounding; clients/projects inherit when their value is NULL.
+  defaultBillingRounding: text("default_billing_rounding").notNull().default("none"),
+  // Controls the first-run onboarding modal. Backfilled true for existing users.
+  onboarded: boolean("onboarded").notNull().default(false),
   // ─── Subscription (Polar) ───────────────────────────────────────────
   // Tier is written by the Polar webhook (Plan 2). Until then everyone is
   // 'free' except accounts flagged `founding` (owner / pre-launch users),
@@ -159,7 +168,12 @@ export const userProfiles = pgTable("user_profiles", {
   // Timestamps
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  check(
+    "user_profiles_default_billing_rounding_check",
+    sql`${table.defaultBillingRounding} IN ('none', 'tenth_hour_up', 'quarter_hour_up', 'half_hour_up', 'hour_up')`
+  ),
+]);
 
 // ─── Clients ────────────────────────────────────────────────────────
 
@@ -192,7 +206,7 @@ export const clients = pgTable(
     index("idx_clients_user_id_is_active").on(table.userId, table.isActive),
     check(
       "clients_billing_rounding_check",
-      sql`${table.billingRounding} IN ('none', 'hour_up', 'half_hour_up')`
+      sql`${table.billingRounding} IS NULL OR ${table.billingRounding} IN ('none', 'tenth_hour_up', 'quarter_hour_up', 'half_hour_up', 'hour_up')`
     ),
   ]
 );
@@ -258,7 +272,7 @@ export const projects = pgTable(
     ),
     check(
       "projects_billing_rounding_check",
-      sql`${table.billingRounding} IS NULL OR ${table.billingRounding} IN ('none', 'hour_up', 'half_hour_up')`
+      sql`${table.billingRounding} IS NULL OR ${table.billingRounding} IN ('none', 'tenth_hour_up', 'quarter_hour_up', 'half_hour_up', 'hour_up')`
     ),
   ]
 );

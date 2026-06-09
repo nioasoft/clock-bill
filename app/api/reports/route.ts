@@ -21,6 +21,15 @@ export async function GET(request: NextRequest) {
 
     const { query } = await import("@/lib/db");
 
+    // Profile-level billing base: the cascade's lowest tier (project > client >
+    // profile > 'none'). Read once per request, used for rounding + rate fallback.
+    const profileBase = await query<{ default_billing_rounding: string | null; default_rate: number | null }>(
+      `SELECT default_billing_rounding, default_rate FROM user_profiles WHERE user_id = $1`,
+      [user.id]
+    );
+    const baseRounding = profileBase.rows[0]?.default_billing_rounding ?? null;
+    const baseRate = profileBase.rows[0]?.default_rate ?? null;
+
     // Get query parameters for filtering
     const { searchParams } = new URL(request.url);
     const clientId = searchParams.get("clientId");
@@ -126,10 +135,10 @@ export async function GET(request: NextRequest) {
     const entries = result.rows.map((entry) => {
       const isItem = entry.billing_kind === "item";
       // Hourly lines fall back to the client default_rate when no snapshot rate.
-      const effectiveRate = entry.rate ?? entry.hourly_rate;
+      const effectiveRate = entry.rate ?? entry.hourly_rate ?? baseRate;
       // Hourly time is billed on rounded minutes per the client/project policy;
       // raw `duration` stays the worked time used for hours aggregates below.
-      const roundingMode = resolveRounding(entry.project_rounding, entry.client_rounding);
+      const roundingMode = resolveRounding(entry.project_rounding, entry.client_rounding, baseRounding);
       const billedMinutes = isItem
         ? entry.duration
         : roundBillableMinutes(entry.duration, roundingMode);

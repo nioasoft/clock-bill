@@ -129,8 +129,34 @@
   },
   "Rounding": {
     "none": "ללא עיגול",
+    "tenth_hour_up": "עיגול לעשירית שעה — 6 דק' (הסטנדרט המשפטי)",
+    "quarter_hour_up": "עיגול לרבע שעה — 15 דק' (כלפי מעלה)",
     "hour_up": "עיגול לשעה מלאה (כלפי מעלה)",
     "half_hour_up": "עיגול לחצי שעה (כלפי מעלה)"
+  },
+  "Onboarding": {
+    "title": "בוא נכין את החשבון שלך",
+    "subtitle": "כמה הגדרות מהירות כדי שמוניט יתאים לך מהרגע הראשון. אפשר לשנות הכל אחר כך בהגדרות.",
+    "professionLabel": "מה התחום שלך?",
+    "currencyLabel": "מטבע ברירת מחדל",
+    "currencyHint": "זיהינו אותו לפי המיקום שלך — אפשר לשנות.",
+    "rateLabel": "תעריף שעתי (ברירת מחדל)",
+    "ratePlaceholder": "למשל 400",
+    "roundingLabel": "עיגול חיוב",
+    "appearanceLabel": "מראה",
+    "save": "שמירה והתחלה",
+    "skip": "דלג",
+    "saveError": "השמירה נכשלה. נסה שוב.",
+    "professions": {
+      "lawyer": "עו\"ד",
+      "accountant": "רו\"ח / יועץ מס",
+      "consultant": "יועץ עסקי / מאמן",
+      "developer": "מפתח תוכנה",
+      "designer": "מעצב גרפי / UX",
+      "photographer": "צלם / וידאו",
+      "writer": "כותב תוכן / קופירייטר",
+      "other": "אחר / כללי"
+    }
   },
   "Feedback": {
     "category": {
@@ -432,6 +458,7 @@
     "addressPlaceholder": "רחוב, מספר, עיר",
     "currencyLabel": "מטבע",
     "billingRoundingLabel": "עיגול זמן לחיוב",
+    "roundingInherit": "ירושה מברירת המחדל",
     "roundingHint": "שעתי בלבד · ניתן לדרוס לכל פרויקט",
     "ratesAndItems": "תעריפים ופריטים",
     "retainerClient": "לקוח בריטיינר",
@@ -678,11 +705,16 @@
       "tierUnlimited": "Unlimited",
       "manage": "ניהול מנוי",
       "viewPlans": "צפייה בתוכניות",
-      "founding": "חבר מייסד — גישה מלאה"
+      "founding": "חבר מייסד — גישה מלאה",
+      "baseHeading": "בסיס חיוב",
+      "baseDescription": "ערכי ברירת המחדל לתעריף ולעיגול. לקוחות ופרויקטים יורשים אותם, וניתן לדרוס בכל רמה.",
+      "defaultRateLabel": "תעריף שעתי ברירת מחדל",
+      "defaultRoundingLabel": "עיגול חיוב ברירת מחדל"
     },
     "currencyOptions": {
       "ILS": "₪ - שקל ישראלי",
       "USD": "$ - דולר אמריקאי",
+      "EUR": "€ - אירו",
       "USDT": "₮ - טתר (USDT)",
       "BTC": "₿ - ביטקוין",
       "ETH": "Ξ - אתריום"

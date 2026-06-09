@@ -24,6 +24,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error_code: "CLIENT_REQUIRED", message: "נא לבחור לקוח" }, { status: 400 });
     }
 
+    // Profile-level billing base (cascade's lowest tier). Used as the rounding
+    // fallback so the preview bills the same minutes the issue route will.
+    const profileBase = await query<{ default_billing_rounding: string | null }>(
+      `SELECT default_billing_rounding FROM user_profiles WHERE user_id = $1`,
+      [user.id]
+    );
+    const baseRounding = profileBase.rows[0]?.default_billing_rounding ?? null;
+
     const entriesRaw = await query<{
       id: string; description: string; notes: string | null; date: string;
       billing_kind: string | null; duration: number; quantity: number | null;
@@ -50,7 +58,7 @@ export async function GET(request: NextRequest) {
     const entries = {
       rows: entriesRaw.rows.map(({ project_rounding, client_rounding, ...e }) => ({
         ...e,
-        billing_rounding: resolveRounding(project_rounding, client_rounding),
+        billing_rounding: resolveRounding(project_rounding, client_rounding, baseRounding),
       })),
     };
 

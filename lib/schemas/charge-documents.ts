@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const PERIOD_MONTH = /^\d{4}-\d{2}$/;
-const KNOWN_TEMPLATES = ["modern", "classic", "bold", "elegant", "nature", "ocean"] as const;
+export const KNOWN_TEMPLATES = ["modern", "classic", "bold", "elegant", "nature", "ocean"] as const;
 
 /** A computed (non-time-entry) line the client chose to include. */
 export const computedLineSchema = z.object({

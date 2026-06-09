@@ -129,8 +129,34 @@
   },
   "Rounding": {
     "none": "No rounding",
+    "tenth_hour_up": "Round up to 6 min (tenth of an hour — legal standard)",
+    "quarter_hour_up": "Round up to 15 min (quarter hour)",
     "hour_up": "Round up to a full hour",
     "half_hour_up": "Round up to a half hour"
+  },
+  "Onboarding": {
+    "title": "Let's set up your account",
+    "subtitle": "A few quick settings so Monit fits you from day one. You can change everything later in Settings.",
+    "professionLabel": "What's your field?",
+    "currencyLabel": "Default currency",
+    "currencyHint": "Detected from your location — change it if needed.",
+    "rateLabel": "Default hourly rate",
+    "ratePlaceholder": "e.g. 400",
+    "roundingLabel": "Billing rounding",
+    "appearanceLabel": "Appearance",
+    "save": "Save & start",
+    "skip": "Skip",
+    "saveError": "Save failed. Please try again.",
+    "professions": {
+      "lawyer": "Lawyer",
+      "accountant": "Accountant / Tax advisor",
+      "consultant": "Consultant / Coach",
+      "developer": "Software developer",
+      "designer": "Graphic / UX designer",
+      "photographer": "Photographer / Video",
+      "writer": "Content writer / Copywriter",
+      "other": "Other / General"
+    }
   },
   "Feedback": {
     "category": {
@@ -432,6 +458,7 @@
     "addressPlaceholder": "Street, number, city",
     "currencyLabel": "Currency",
     "billingRoundingLabel": "Billing Time Rounding",
+    "roundingInherit": "Inherit from default",
     "roundingHint": "Hourly only · can be overridden per project",
     "ratesAndItems": "Rates & Items",
     "retainerClient": "Retainer Client",
@@ -678,11 +705,16 @@
       "tierUnlimited": "Unlimited",
       "manage": "Manage subscription",
       "viewPlans": "View plans",
-      "founding": "Founding member — full access"
+      "founding": "Founding member — full access",
+      "baseHeading": "Billing base",
+      "baseDescription": "Default values for hourly rate and rounding. Clients and projects inherit them, and you can override at any level.",
+      "defaultRateLabel": "Default hourly rate",
+      "defaultRoundingLabel": "Default billing rounding"
     },
     "currencyOptions": {
       "ILS": "₪ - Israeli Shekel",
       "USD": "$ - US Dollar",
+      "EUR": "€ - Euro",
       "USDT": "₮ - Tether (USDT)",
       "BTC": "₿ - Bitcoin",
       "ETH": "Ξ - Ethereum"

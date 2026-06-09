@@ -10,6 +10,8 @@ import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
 import { createLogger } from "@/lib/logger";
 import { isThemeId } from "@/lib/themes";
+import { isProfessionId } from "@/lib/professions";
+import { ROUNDING_MODES } from "@/lib/rounding";
 
 const logger = createLogger("api:profile");
 
@@ -52,6 +54,12 @@ const updateProfileSchema = z.object({
   // Validated against the theme registry (isThemeId) in the handler, not here,
   // so an invalid value returns a Hebrew 400 instead of a generic Zod error.
   theme: z.string().max(50).optional(),
+  // Onboarding / billing base. profession + defaultBillingRounding are
+  // allow-list-checked in the handler (Hebrew 400 on bad value).
+  profession: z.string().max(50).nullable().optional(),
+  defaultRate: z.number().min(0).nullable().optional(),
+  defaultBillingRounding: z.string().max(50).optional(),
+  onboarded: z.boolean().optional(),
 });
 
 export interface Profile {
@@ -87,6 +95,10 @@ export interface Profile {
   firstDayOfWeek: string;
   locale: string;
   theme: string;
+  profession: string | null;
+  defaultRate: number | null;
+  defaultBillingRounding: string;
+  onboarded: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -132,6 +144,10 @@ export async function GET(): Promise<NextResponse> {
               first_day_of_week as "firstDayOfWeek",
               COALESCE(locale, 'he') as "locale",
               COALESCE(theme, 'dark') as "theme",
+              profession as "profession",
+              default_rate as "defaultRate",
+              COALESCE(default_billing_rounding, 'none') as "defaultBillingRounding",
+              COALESCE(onboarded, false) as "onboarded",
               created_at as "createdAt", updated_at as "updatedAt"
        FROM user_profiles
        WHERE user_id = $1`,
@@ -333,6 +349,39 @@ export async function PATCH(request: Request): Promise<NextResponse> {
       values.push(body.theme);
     }
 
+    if (body.profession !== undefined) {
+      // null clears the column; a value must be a known preset id.
+      if (body.profession !== null && !isProfessionId(body.profession)) {
+        return NextResponse.json(
+          { success: false, error_code: "INVALID_PROFESSION", message: "מקצוע לא תקין" },
+          { status: 400 }
+        );
+      }
+      updates.push(`profession = $${paramIndex++}`);
+      values.push(body.profession);
+    }
+
+    if (body.defaultRate !== undefined) {
+      updates.push(`default_rate = $${paramIndex++}`);
+      values.push(body.defaultRate);
+    }
+
+    if (body.defaultBillingRounding !== undefined) {
+      if (!(ROUNDING_MODES as readonly string[]).includes(body.defaultBillingRounding)) {
+        return NextResponse.json(
+          { success: false, error_code: "INVALID_ROUNDING", message: "עיגול חיוב לא תקין" },
+          { status: 400 }
+        );
+      }
+      updates.push(`default_billing_rounding = $${paramIndex++}`);
+      values.push(body.defaultBillingRounding);
+    }
+
+    if (body.onboarded !== undefined) {
+      updates.push(`onboarded = $${paramIndex++}`);
+      values.push(body.onboarded);
+    }
+
     if (updates.length === 0) {
       return NextResponse.json(
         { success: false, error_code: "NO_FIELDS_TO_UPDATE", message: "No fields to update" },
@@ -365,6 +414,10 @@ export async function PATCH(request: Request): Promise<NextResponse> {
                  first_day_of_week as "firstDayOfWeek",
                  COALESCE(locale, 'he') as "locale",
                  COALESCE(theme, 'dark') as "theme",
+                 profession as "profession",
+                 default_rate as "defaultRate",
+                 COALESCE(default_billing_rounding, 'none') as "defaultBillingRounding",
+                 COALESCE(onboarded, false) as "onboarded",
                  created_at as "createdAt", updated_at as "updatedAt"`,
       values
     );
