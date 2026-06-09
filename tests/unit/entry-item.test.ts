@@ -108,4 +108,25 @@ runner.test("addClientItem: rejects negative rate", () => {
   assert(!r.success, "expected negative rate to fail");
 });
 
+// ── unit label (optional snapshot on item lines) ────────────────────────────
+runner.test("item: unit validates and is trimmed", () => {
+  const r = entryBodySchema.safeParse({
+    ...base, billingKind: "item", duration: 0, quantity: 2, rate: 400, rateLabel: "פגישה", unit: " פגישה ",
+  });
+  assert(r.success, "item entry with unit should validate");
+  if (r.success) assert(r.data.unit === "פגישה", `unit should be trimmed, got "${r.data.unit}"`);
+});
+runner.test("item: unit is optional", () => {
+  const r = entryBodySchema.safeParse({
+    ...base, billingKind: "item", duration: 0, quantity: 2, rate: 400, rateLabel: "פגישה",
+  });
+  assert(r.success, "item entry without unit should still validate");
+});
+runner.test("item: rejects unit longer than 30 chars", () => {
+  const r = entryBodySchema.safeParse({
+    ...base, billingKind: "item", duration: 0, quantity: 2, rate: 400, rateLabel: "פגישה", unit: "א".repeat(31),
+  });
+  assert(!r.success, "31-char unit should be rejected");
+});
+
 runner.run().then((ok) => process.exit(ok ? 0 : 1));
