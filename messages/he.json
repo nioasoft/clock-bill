@@ -1820,6 +1820,7 @@
     },
     "units": {
       "items": "{count} יח׳",
+      "itemsWithUnit": "{count} × {unit}",
       "ref": "אסמכתא {ref}",
       "hoursMeasure": "{hours}ש׳"
     },

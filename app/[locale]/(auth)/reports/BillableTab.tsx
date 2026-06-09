@@ -32,6 +32,7 @@ interface BillableEntryRow {
   quantity: number | null;
   rate: number | null;
   rate_label: string | null;
+  unit: string | null;
   item_ref: number | null;
   project_name: string;
   currency: string;
@@ -351,7 +352,9 @@ export default function BillableTab({
                           <div className="flex items-center gap-2 flex-wrap mt-1 text-xs text-muted-foreground">
                             <span>
                               {entry.billing_kind === "item"
-                                ? t("units.items", { count: entry.quantity ?? 0 })
+                                ? (entry.unit
+                                    ? t("units.itemsWithUnit", { count: entry.quantity ?? 0, unit: entry.unit })
+                                    : t("units.items", { count: entry.quantity ?? 0 }))
                                 : formatDuration(billedMinutes(entry), locale)}
                             </span>
                             {entry.billing_kind !== "item" &&

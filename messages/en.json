@@ -1820,6 +1820,7 @@
     },
     "units": {
       "items": "{count} units",
+      "itemsWithUnit": "{count} × {unit}",
       "ref": "Ref {ref}",
       "hoursMeasure": "{hours}h"
     },
