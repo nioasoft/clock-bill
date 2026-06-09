@@ -437,6 +437,7 @@
     "checkoutError": "Could not open checkout. Please try again."
   },
   "Clients": {
+    "preVatHint": "Prices are pre-VAT",
     "usage": {
       "count": "{active} of {limit} clients",
       "unlimited": "{active} clients · unlimited",
@@ -1779,6 +1780,7 @@
     "shareIconLabel": "Share"
   },
   "Reports": {
+    "preVatNote": "All amounts are pre-VAT",
     "pageTitle": "Settlement",
     "tabs": {
       "billable": "To bill",

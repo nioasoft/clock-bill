@@ -437,6 +437,7 @@
     "checkoutError": "שגיאה בפתיחת התשלום. נסו שוב."
   },
   "Clients": {
+    "preVatHint": "המחירים לפני מע\"מ",
     "usage": {
       "count": "{active} מתוך {limit} לקוחות",
       "unlimited": "{active} לקוחות · ללא הגבלה",
@@ -1779,6 +1780,7 @@
     "shareIconLabel": "שיתוף"
   },
   "Reports": {
+    "preVatNote": "כל הסכומים הם לפני מע\"מ",
     "pageTitle": "התחשבנות",
     "tabs": {
       "billable": "לחיוב",

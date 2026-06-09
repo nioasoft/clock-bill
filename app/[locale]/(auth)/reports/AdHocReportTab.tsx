@@ -968,6 +968,7 @@ export default function AdHocReportTab() {
                     </div>
                   )}
                 </div>
+                <div style={{ marginTop: "0.5rem", fontSize: "11px", color: "#94a3b8" }}>{t("preVatNote")}</div>
               </div>
 
               {/* ── Footer ── */}

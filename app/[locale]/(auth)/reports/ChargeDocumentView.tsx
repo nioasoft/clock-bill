@@ -394,6 +394,7 @@ export default function ChargeDocumentView({
           <div className="font-mono text-2xl font-bold tabular-nums text-foreground">
             {formatCurrency(doc.total, doc.currency, locale)}
           </div>
+          <div className="text-xs text-muted-foreground">{t("preVatNote")}</div>
         </div>
       </div>
 
@@ -822,6 +823,8 @@ export default function ChargeDocumentView({
             </tr>
           </tfoot>
         </table>
+
+        <div style={{ marginTop: "0.5rem", fontSize: "11px", color: "#94a3b8" }}>{t("preVatNote")}</div>
 
         {doc.notes && (
           <div className="pdf-section" style={{ marginTop: "1.25rem", fontSize: "12px", color: "#475569" }}>

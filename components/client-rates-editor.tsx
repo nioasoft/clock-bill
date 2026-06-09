@@ -169,6 +169,7 @@ export function ClientRatesEditor({ rates, currency, onChange, disabled }: Clien
             {rates.map((r, idx) => (r.kind === "item" ? row(r, idx, t("unitItem"), false) : null))}
           </div>
         )}
+        <p className="text-xs text-muted-foreground">{t("preVatHint")}</p>
       </div>
     </div>
   );
