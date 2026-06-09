@@ -60,7 +60,7 @@ export function cleanClientRates(rates: ClientRateInput[]): ClientRateInput[] {
       name: r.name.trim(),
       rate: r.rate,
       isDefault: r.kind === "hourly" && r.isDefault,
-      unit: r.unit?.trim() || null,
+      unit: r.kind === "item" ? r.unit?.trim() || null : null,
     }));
   const hasDefault = base.some((r) => r.kind === "hourly" && r.isDefault);
   let promoted = false;

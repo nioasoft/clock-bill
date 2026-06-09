@@ -91,4 +91,11 @@ runner.test("cleanClientRates: carries unit through, nulls empty unit", () => {
   assertEqual(out[1].unit ?? null, null);
 });
 
+runner.test("cleanClientRates: nulls unit on hourly rows", () => {
+  const out = cleanClientRates([
+    { kind: "hourly", name: "תכנות", rate: 300, isDefault: true, unit: "פגישה" },
+  ]);
+  assertEqual(out[0].unit ?? null, null);
+});
+
 runner.run().then((ok) => process.exit(ok ? 0 : 1));

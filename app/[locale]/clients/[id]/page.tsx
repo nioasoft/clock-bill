@@ -64,6 +64,7 @@ function clientToFormData(client: Client) {
       name: r.name,
       rate: r.rate,
       isDefault: r.isDefault,
+      unit: r.unit ?? null,
     })) as ClientRateInput[],
   };
 }
