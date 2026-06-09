@@ -241,10 +241,10 @@ export async function POST(request: NextRequest) {
       if (ratesList.length > 0) {
         // Single multi-row INSERT (one round-trip) instead of N per-rate inserts.
         await db.query(
-          `INSERT INTO client_rates (id, user_id, client_id, kind, name, rate, is_default)
-           SELECT gen_random_uuid()::text, $1, $2, kind, name, rate, is_default
-           FROM unnest($3::text[], $4::text[], $5::numeric[], $6::boolean[])
-             AS r(kind, name, rate, is_default)`,
+          `INSERT INTO client_rates (id, user_id, client_id, kind, name, rate, is_default, unit)
+           SELECT gen_random_uuid()::text, $1, $2, kind, name, rate, is_default, unit
+           FROM unnest($3::text[], $4::text[], $5::numeric[], $6::boolean[], $7::text[])
+             AS r(kind, name, rate, is_default, unit)`,
           [
             user.id,
             row.id,
@@ -252,6 +252,7 @@ export async function POST(request: NextRequest) {
             ratesList.map((r) => r.name.trim()),
             ratesList.map((r) => r.rate),
             ratesList.map((r) => (r.kind === "hourly" ? r.isDefault : false)),
+            ratesList.map((r) => (r.kind === "item" ? r.unit ?? null : null)),
           ]
         );
       }

@@ -21,9 +21,9 @@ export async function GET(
     const { id: clientId } = await params;
 
     const result = await query<{
-      id: string; kind: string; name: string; rate: number; is_default: boolean;
+      id: string; kind: string; name: string; rate: number; is_default: boolean; unit: string | null;
     }>(
-      `SELECT id, kind, name, rate, is_default
+      `SELECT id, kind, name, rate, is_default, unit
        FROM client_rates WHERE client_id = $1 AND user_id = $2
        ORDER BY kind, is_default DESC, name`,
       [clientId, user.id]
@@ -32,7 +32,7 @@ export async function GET(
     return NextResponse.json({
       success: true,
       rates: result.rows.map((r) => ({
-        id: r.id, kind: r.kind as "hourly" | "item", name: r.name, rate: r.rate, isDefault: r.is_default,
+        id: r.id, kind: r.kind as "hourly" | "item", name: r.name, rate: r.rate, isDefault: r.is_default, unit: r.unit,
       })),
     }, { headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=60" } });
   } catch (error) {
@@ -61,7 +61,7 @@ export async function POST(
 
     const parsed = await parseBody(request, addClientItemSchema);
     if (!parsed.ok) return parsed.response;
-    const { name, rate } = parsed.data;
+    const { name, rate, unit } = parsed.data;
 
     const { withTransaction } = await import("@/lib/db");
 
@@ -74,8 +74,8 @@ export async function POST(
       if (owns.rows.length === 0) return { notFound: true as const };
 
       // Already defined for this client? Leave it untouched (case-insensitive match).
-      const existing = await client.query<{ id: string; name: string; rate: number }>(
-        `SELECT id, name, rate FROM client_rates
+      const existing = await client.query<{ id: string; name: string; rate: number; unit: string | null }>(
+        `SELECT id, name, rate, unit FROM client_rates
          WHERE client_id = $1 AND user_id = $2 AND kind = 'item' AND lower(name) = lower($3)
          LIMIT 1`,
         [clientId, user.id, name]
@@ -84,11 +84,11 @@ export async function POST(
         return { rate: existing.rows[0], created: false };
       }
 
-      const inserted = await client.query<{ id: string; name: string; rate: number }>(
-        `INSERT INTO client_rates (id, user_id, client_id, kind, name, rate, is_default)
-         VALUES (gen_random_uuid()::text, $1, $2, 'item', $3, $4, false)
-         RETURNING id, name, rate`,
-        [user.id, clientId, name, rate]
+      const inserted = await client.query<{ id: string; name: string; rate: number; unit: string | null }>(
+        `INSERT INTO client_rates (id, user_id, client_id, kind, name, rate, is_default, unit)
+         VALUES (gen_random_uuid()::text, $1, $2, 'item', $3, $4, false, $5)
+         RETURNING id, name, rate, unit`,
+        [user.id, clientId, name, rate, unit ?? null]
       );
       return { rate: inserted.rows[0], created: true };
     });
@@ -100,7 +100,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       created: result.created,
-      rate: { id: result.rate.id, kind: "item" as const, name: result.rate.name, rate: result.rate.rate, isDefault: false },
+      rate: { id: result.rate.id, kind: "item" as const, name: result.rate.name, rate: result.rate.rate, isDefault: false, unit: result.rate.unit ?? null },
     });
   } catch (error) {
     console.error("Error adding client item:", error);
