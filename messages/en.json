@@ -471,6 +471,7 @@
     "roundingHint": "Hourly only · can be overridden per project",
     "ratesAndItems": "Rates & Items",
     "retainerClient": "Retainer Client",
+    "retainerSuggestedHint": "Suggested for your profession — you can change it",
     "retainerHoursLabel": "Retainer Hours",
     "monthlyAmountLabel": "Monthly Amount ({symbol})",
     "separateOverageRate": "Separate Overage Rate",

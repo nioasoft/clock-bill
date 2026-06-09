@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Link } from "@/src/i18n/navigation";
 import { AppLayout } from "@/components/app-layout";
@@ -15,6 +15,7 @@ import { fieldClass } from "@/lib/form-styles";
 import { CURRENCY_SYMBOLS } from "@/lib/currency";
 import { ClientRatesEditor } from "@/components/client-rates-editor";
 import { ROUNDING_MODES, type RoundingMode } from "@/lib/rounding";
+import { getProfession } from "@/lib/professions";
 import { useTranslations } from "next-intl";
 import { cleanClientRates } from "@/lib/schemas/rates";
 import type { ClientRate, ClientRateInput } from "@/lib/schemas/rates";
@@ -88,6 +89,17 @@ function ClientsPageContent() {
   const [clientsLoading, setClientsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
+  // The user's profession (from their profile) suggests a default billing model.
+  // When it's "retainer" we prefill the NEW-client retainer toggle ON (one-time
+  // default, never forced — the user's choice always wins).
+  const [professionId, setProfessionId] = useState<string | null>(null);
+  const suggestsRetainer = useMemo(
+    () => getProfession(professionId)?.defaults.suggestedBillingModel === "retainer",
+    [professionId],
+  );
+  // True once the user manually toggles the retainer switch in the current
+  // create session — after that their choice stands and we never re-prefill.
+  const [retainerTouched, setRetainerTouched] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     contactName: "",
@@ -125,6 +137,34 @@ function ClientsPageContent() {
       setShowForm(true);
     }
   }, [searchParams, t]);
+
+  // Fetch the user's profession once so we can prefill the retainer toggle.
+  useEffect(() => {
+    const fetchProfession = async () => {
+      try {
+        const response = await fetch("/api/profile");
+        const data = await response.json();
+        if (data.success && data.profile) {
+          setProfessionId(data.profile.profession ?? null);
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+    };
+
+    fetchProfession();
+  }, []);
+
+  // Create-mode default: once the profession resolves, prefill the retainer
+  // toggle ON if it's suggested — but only while the create form is open, the
+  // user hasn't touched the toggle, and it isn't already on. This converges
+  // (suggestsRetainer changes once; retainerTouched flips on interaction), so
+  // there's no render loop, and it never runs in edit mode.
+  useEffect(() => {
+    if (showForm && editingClient === null && !retainerTouched && suggestsRetainer) {
+      setFormData((prev) => (prev.isRetainer ? prev : { ...prev, isRetainer: true }));
+    }
+  }, [showForm, editingClient, retainerTouched, suggestsRetainer]);
 
   useEffect(() => {
     const fetchClients = async () => {
@@ -246,7 +286,7 @@ function ClientsPageContent() {
           defaultRate: "",
           currency: "ILS",
           billingRounding: "" as "" | RoundingMode,
-          isRetainer: false,
+          isRetainer: suggestsRetainer,
           retainerHours: "",
           retainerMonthlyFee: "",
           hasOverageRate: false,
@@ -254,6 +294,7 @@ function ClientsPageContent() {
           notes: "",
           rates: [],
         });
+        setRetainerTouched(false);
         setShowForm(false);
         setEditingClient(null);
       } else {
@@ -314,6 +355,7 @@ function ClientsPageContent() {
 
   const handleCancelEdit = () => {
     setEditingClient(null);
+    setRetainerTouched(false);
     setFormData({
       name: "",
       contactName: "",
@@ -323,7 +365,7 @@ function ClientsPageContent() {
       defaultRate: "",
       currency: "ILS",
       billingRounding: "" as "" | RoundingMode,
-      isRetainer: false,
+      isRetainer: suggestsRetainer,
       retainerHours: "",
       retainerMonthlyFee: "",
       hasOverageRate: false,
@@ -412,7 +454,12 @@ function ClientsPageContent() {
             onClick={() => {
               if (!showForm) {
                 setEditingClient(null);
-                setFormData((prev) => ({ ...prev, rates: seedRates(t("seedRateName")) }));
+                setRetainerTouched(false);
+                setFormData((prev) => ({
+                  ...prev,
+                  isRetainer: suggestsRetainer,
+                  rates: seedRates(t("seedRateName")),
+                }));
               }
               setShowForm(!showForm);
             }}
@@ -601,11 +648,18 @@ function ClientsPageContent() {
                   <input
                     type="checkbox"
                     checked={formData.isRetainer}
-                    onChange={(e) => setFormData({ ...formData, isRetainer: e.target.checked })}
+                    onChange={(e) => {
+                      setRetainerTouched(true);
+                      setFormData({ ...formData, isRetainer: e.target.checked });
+                    }}
                     className="h-4 w-4 rounded border-border accent-primary"
                     disabled={submitting}
                   />
                 </label>
+                {/* Profession-based suggestion (create mode only). */}
+                {suggestsRetainer && editingClient === null && (
+                  <p className="text-xs text-muted-foreground">{t("retainerSuggestedHint")}</p>
+                )}
 
                 {/* Retainer fields */}
                 {formData.isRetainer && (
