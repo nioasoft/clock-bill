@@ -73,6 +73,23 @@ test("isProfessionId + getProfession", () => {
   assert(getProfession("nope") === undefined, "getProfession nope");
 });
 
+test("starterItems (when present) have non-empty he/en names + units", () => {
+  for (const p of PROFESSIONS) {
+    for (const s of p.starterItems ?? []) {
+      assert(
+        !!s.nameHe && !!s.nameEn && !!s.unitHe && !!s.unitEn,
+        `${p.id}: incomplete starter item ${JSON.stringify(s)}`
+      );
+    }
+  }
+});
+
+test("session professions ship starter items", () => {
+  for (const id of ["therapist", "health-pro", "tutor", "fitness-trainer", "photographer", "translator", "writer"]) {
+    assert((getProfession(id)?.starterItems?.length ?? 0) > 0, `${id}: missing starterItems`);
+  }
+});
+
 if (failed > 0) {
   console.error(`\n${failed} test(s) failed`);
   process.exit(1);
