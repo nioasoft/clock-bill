@@ -345,6 +345,7 @@ function ClientsPageContent() {
           name: r.name,
           rate: r.rate,
           isDefault: r.isDefault,
+          unit: r.unit ?? null,
         }));
         setFormData((prev) => ({ ...prev, rates: loaded }));
       }

@@ -548,6 +548,8 @@
     "addItem": "+ פריט",
     "unitHour": "שעה",
     "unitItem": "יח׳",
+    "unitPlaceholder": "יחידה (פגישה / מילה / יום)",
+    "unitAria": "יחידת הפריט",
     "noHourlyRates": "לא הוגדרו תעריפים שעתיים — ייעשה שימוש בתעריף ברירת המחדל."
   },
   "Projects": {

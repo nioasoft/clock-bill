@@ -38,6 +38,7 @@ export function ClientRatesEditor({ rates, currency, onChange, disabled }: Clien
         name: "",
         rate: 0,
         isDefault: kind === "hourly" && !rates.some((r) => r.kind === "hourly" && r.isDefault),
+        unit: null,
       },
     ]);
 
@@ -92,6 +93,18 @@ export function ClientRatesEditor({ rates, currency, onChange, disabled }: Clien
         className={`${fieldClass(false)} min-w-0 flex-1`}
         disabled={disabled}
       />
+      {!showDefault && (
+        <input
+          type="text"
+          value={r.unit ?? ""}
+          onChange={(e) => updateRate(idx, { unit: e.target.value || null })}
+          placeholder={t("unitPlaceholder")}
+          className={`${fieldClass(false)} w-28 shrink-0 sm:w-32`}
+          disabled={disabled}
+          aria-label={t("unitAria")}
+          maxLength={30}
+        />
+      )}
       <div className="relative w-32 shrink-0 sm:w-36">
         <input
           type="number"
@@ -104,7 +117,7 @@ export function ClientRatesEditor({ rates, currency, onChange, disabled }: Clien
           placeholder="0.00"
         />
         <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-muted-foreground">
-          {symbol}/{unit}
+          {symbol}/{r.unit?.trim() || unit}
         </span>
       </div>
       <button

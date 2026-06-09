@@ -548,6 +548,8 @@
     "addItem": "+ Item",
     "unitHour": "hr",
     "unitItem": "unit",
+    "unitPlaceholder": "Unit (session / word / day)",
+    "unitAria": "Item unit",
     "noHourlyRates": "No hourly rates defined — the default rate will be used."
   },
   "Projects": {
