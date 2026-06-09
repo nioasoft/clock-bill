@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
         itemRef: null,
         billingKind: "fixed",
         quantity: null,
+        unit: null,
         rate: null,
         amount: c.amount,
       }));

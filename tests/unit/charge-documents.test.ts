@@ -84,4 +84,28 @@ runner.test("computeDocumentTotal of empty list is 0", () => {
   assertEqual(computeDocumentTotal([]), 0);
 });
 
+runner.test("buildLineFromEntry: item entry carries unit into the draft (amount unchanged)", () => {
+  const entry: BillableEntry = {
+    id: "e10", description: "טיפול", notes: null, billingKind: "item",
+    duration: 0, quantity: 3, rate: 400, rateLabel: "פגישה", itemRef: 7, unit: "פגישה",
+  };
+  const line = buildLineFromEntry(entry);
+  assertEqual(line.unit, "פגישה");
+  assertEqual(line.amount, 1200);
+});
+runner.test("buildLineFromEntry: hourly entry gets null unit", () => {
+  const entry: BillableEntry = {
+    id: "e11", description: "ייעוץ", notes: null, billingKind: "hourly",
+    duration: 60, quantity: null, rate: 150, rateLabel: "ייעוץ", itemRef: null, unit: "פגישה",
+  };
+  assertEqual(buildLineFromEntry(entry).unit, null);
+});
+runner.test("buildLineFromEntry: item without unit -> null unit", () => {
+  const entry: BillableEntry = {
+    id: "e12", description: "מכתב", notes: null, billingKind: "item",
+    duration: 0, quantity: 2, rate: 100, rateLabel: "מכתב", itemRef: 8,
+  };
+  assertEqual(buildLineFromEntry(entry).unit, null);
+});
+
 runner.run().then((ok) => process.exit(ok ? 0 : 1));
