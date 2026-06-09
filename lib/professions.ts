@@ -14,6 +14,8 @@ export interface ProfessionDefaults {
   paymentTerms: string | null;
   /** A KNOWN_TEMPLATES id (see lib/schemas/charge-documents.ts). */
   preferredPdfTemplate: string;
+  /** Suggested billing model — prefills the new-client form (not a cascade level). */
+  suggestedBillingModel: "hourly" | "retainer" | "fixed_monthly" | "items";
 }
 
 export interface Profession {
@@ -33,7 +35,7 @@ export const PROFESSIONS: Profession[] = [
     labelEn: "Lawyer",
     modelHintHe: "חיוב שעתי",
     modelHintEn: "Hourly billing",
-    defaults: { defaultBillingRounding: "tenth_hour_up", paymentTerms: "שוטף+30", preferredPdfTemplate: "classic" },
+    defaults: { defaultBillingRounding: "tenth_hour_up", paymentTerms: "שוטף+30", preferredPdfTemplate: "classic", suggestedBillingModel: "hourly" },
   },
   {
     id: "accountant",
@@ -41,7 +43,7 @@ export const PROFESSIONS: Profession[] = [
     labelEn: "Accountant / Tax advisor",
     modelHintHe: "ריטיינר חודשי",
     modelHintEn: "Monthly retainer",
-    defaults: { defaultBillingRounding: "tenth_hour_up", paymentTerms: "שוטף+30", preferredPdfTemplate: "classic" },
+    defaults: { defaultBillingRounding: "tenth_hour_up", paymentTerms: "שוטף+30", preferredPdfTemplate: "classic", suggestedBillingModel: "retainer" },
   },
   {
     id: "consultant",
@@ -49,7 +51,7 @@ export const PROFESSIONS: Profession[] = [
     labelEn: "Consultant / Coach",
     modelHintHe: "ריטיינר / שעתי",
     modelHintEn: "Retainer / Hourly",
-    defaults: { defaultBillingRounding: "half_hour_up", paymentTerms: "שוטף+30", preferredPdfTemplate: "modern" },
+    defaults: { defaultBillingRounding: "half_hour_up", paymentTerms: "שוטף+30", preferredPdfTemplate: "modern", suggestedBillingModel: "retainer" },
   },
   {
     id: "developer",
@@ -57,7 +59,7 @@ export const PROFESSIONS: Profession[] = [
     labelEn: "Software developer",
     modelHintHe: "שעתי / ריטיינר",
     modelHintEn: "Hourly / Retainer",
-    defaults: { defaultBillingRounding: "none", paymentTerms: "שוטף+30", preferredPdfTemplate: "modern" },
+    defaults: { defaultBillingRounding: "none", paymentTerms: "שוטף+30", preferredPdfTemplate: "modern", suggestedBillingModel: "hourly" },
   },
   {
     id: "designer",
@@ -65,7 +67,7 @@ export const PROFESSIONS: Profession[] = [
     labelEn: "Graphic / UX designer",
     modelHintHe: "פרויקט / Fixed",
     modelHintEn: "Project / Fixed",
-    defaults: { defaultBillingRounding: "none", paymentTerms: "שוטף+30", preferredPdfTemplate: "modern" },
+    defaults: { defaultBillingRounding: "none", paymentTerms: "שוטף+30", preferredPdfTemplate: "modern", suggestedBillingModel: "items" },
   },
   {
     id: "photographer",
@@ -73,7 +75,7 @@ export const PROFESSIONS: Profession[] = [
     labelEn: "Photographer / Video",
     modelHintHe: "Fixed (יום צילום)",
     modelHintEn: "Fixed (shoot day)",
-    defaults: { defaultBillingRounding: "none", paymentTerms: "שוטף+30", preferredPdfTemplate: "modern" },
+    defaults: { defaultBillingRounding: "none", paymentTerms: "שוטף+30", preferredPdfTemplate: "modern", suggestedBillingModel: "items" },
   },
   {
     id: "writer",
@@ -81,7 +83,79 @@ export const PROFESSIONS: Profession[] = [
     labelEn: "Content writer / Copywriter",
     modelHintHe: "לפי פריט / שעתי",
     modelHintEn: "Per item / Hourly",
-    defaults: { defaultBillingRounding: "none", paymentTerms: "שוטף+30", preferredPdfTemplate: "modern" },
+    defaults: { defaultBillingRounding: "none", paymentTerms: "שוטף+30", preferredPdfTemplate: "modern", suggestedBillingModel: "items" },
+  },
+  {
+    id: "therapist",
+    labelHe: "מטפל / פסיכולוג",
+    labelEn: "Therapist / Psychologist",
+    modelHintHe: "פגישה 45–50 דק'",
+    modelHintEn: "Per session",
+    defaults: { defaultBillingRounding: "none", paymentTerms: "מיידי", preferredPdfTemplate: "elegant", suggestedBillingModel: "items" },
+  },
+  {
+    id: "health-pro",
+    labelHe: "מטפל בריאות (דיאטן/פיזיו)",
+    labelEn: "Health / Wellness Practitioner",
+    modelHintHe: "פגישה",
+    modelHintEn: "Per session",
+    defaults: { defaultBillingRounding: "none", paymentTerms: "מיידי", preferredPdfTemplate: "elegant", suggestedBillingModel: "items" },
+  },
+  {
+    id: "marketer",
+    labelHe: "משווק / סושיאל",
+    labelEn: "Marketing / Social Media",
+    modelHintHe: "ריטיינר חודשי",
+    modelHintEn: "Monthly retainer",
+    defaults: { defaultBillingRounding: "none", paymentTerms: "שוטף+30", preferredPdfTemplate: "bold", suggestedBillingModel: "retainer" },
+  },
+  {
+    id: "video-editor",
+    labelHe: "עורך וידאו",
+    labelEn: "Video Editor",
+    modelHintHe: "שעתי / פרויקט",
+    modelHintEn: "Hourly / Project",
+    defaults: { defaultBillingRounding: "none", paymentTerms: "שוטף+30", preferredPdfTemplate: "modern", suggestedBillingModel: "hourly" },
+  },
+  {
+    id: "architect",
+    labelHe: "אדריכל / מהנדס",
+    labelEn: "Architect / Engineer",
+    modelHintHe: "אחוז מהפרויקט",
+    modelHintEn: "% of project",
+    defaults: { defaultBillingRounding: "none", paymentTerms: "שוטף+30", preferredPdfTemplate: "classic", suggestedBillingModel: "hourly" },
+  },
+  {
+    id: "translator",
+    labelHe: "מתרגם",
+    labelEn: "Translator",
+    modelHintHe: "לפי מילה / עמוד",
+    modelHintEn: "Per word / page",
+    defaults: { defaultBillingRounding: "none", paymentTerms: "שוטף+30", preferredPdfTemplate: "classic", suggestedBillingModel: "items" },
+  },
+  {
+    id: "tutor",
+    labelHe: "מורה פרטי",
+    labelEn: "Private Tutor",
+    modelHintHe: "שיעור",
+    modelHintEn: "Per lesson",
+    defaults: { defaultBillingRounding: "none", paymentTerms: "מיידי", preferredPdfTemplate: "modern", suggestedBillingModel: "items" },
+  },
+  {
+    id: "fitness-trainer",
+    labelHe: "מאמן כושר",
+    labelEn: "Fitness Trainer",
+    modelHintHe: "אימון",
+    modelHintEn: "Per session",
+    defaults: { defaultBillingRounding: "none", paymentTerms: "מיידי", preferredPdfTemplate: "bold", suggestedBillingModel: "items" },
+  },
+  {
+    id: "realtor",
+    labelHe: "מתווך נדל\"ן",
+    labelEn: "Real-Estate Agent",
+    modelHintHe: "עמלה (~2%)",
+    modelHintEn: "Commission",
+    defaults: { defaultBillingRounding: "none", paymentTerms: "מיידי", preferredPdfTemplate: "classic", suggestedBillingModel: "items" },
   },
   {
     id: "other",
@@ -89,7 +163,7 @@ export const PROFESSIONS: Profession[] = [
     labelEn: "Other / General",
     modelHintHe: "—",
     modelHintEn: "—",
-    defaults: { defaultBillingRounding: "none", paymentTerms: null, preferredPdfTemplate: "modern" },
+    defaults: { defaultBillingRounding: "none", paymentTerms: null, preferredPdfTemplate: "modern", suggestedBillingModel: "hourly" },
   },
 ];
 

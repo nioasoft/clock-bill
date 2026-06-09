@@ -155,6 +155,15 @@
       "designer": "Graphic / UX designer",
       "photographer": "Photographer / Video",
       "writer": "Content writer / Copywriter",
+      "therapist": "Therapist / Psychologist",
+      "health-pro": "Health / Wellness Practitioner",
+      "marketer": "Marketing / Social Media",
+      "video-editor": "Video Editor",
+      "architect": "Architect / Engineer",
+      "translator": "Translator",
+      "tutor": "Private Tutor",
+      "fitness-trainer": "Fitness Trainer",
+      "realtor": "Real-Estate Agent",
       "other": "Other / General"
     }
   },
