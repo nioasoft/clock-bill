@@ -7,6 +7,7 @@ import { Link } from "@/src/i18n/navigation";
 import { Gauge, UserPlus } from "lucide-react";
 import { validateEmail, validatePassword, validatePasswordConfirm } from "@/lib/validation";
 import { authClient } from "@/lib/auth/client";
+import { useAuthErrorMessage } from "@/lib/auth/error-messages";
 import { PasswordStrengthIndicator } from "@/components/password-strength-indicator";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
@@ -14,6 +15,7 @@ import { LocaleSwitcher } from "@/components/locale-switcher";
 
 export default function RegisterPage() {
   const t = useTranslations("Auth");
+  const resolveAuthError = useAuthErrorMessage();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -77,7 +79,7 @@ export default function RegisterPage() {
       });
 
       if (authError) {
-        setError(authError.message || t("register.errors.signUpFailed"));
+        setError(resolveAuthError(authError, t("register.errors.signUpFailed")));
       } else if (data?.token) {
         // A session was created (email verification is disabled) — sign straight in.
         if (businessName.trim()) {
