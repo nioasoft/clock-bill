@@ -12,7 +12,7 @@ import { ProjectHoursChart } from "@/components/project-hours-chart";
 import { useNotifications } from "@/hooks/use-notifications";
 import { OnboardingModal } from "@/components/onboarding-modal";
 import { useTimer } from "@/contexts/timer-context";
-import { Users, FolderOpen, Clock } from "lucide-react";
+import { Users, FolderOpen, Clock, StickyNote } from "lucide-react";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 
 interface DashboardStats {
@@ -64,6 +64,8 @@ interface ProjectHours {
 
 export default function DashboardPage() {
   const t = useTranslations("Dashboard");
+  // Reuses the timer-bar notes strings so the two editors stay in sync.
+  const tTimer = useTranslations("Timer");
   const intlLocale = useLocale() === "en" ? "en-US" : "he-IL";
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -100,8 +102,27 @@ export default function DashboardPage() {
     handlePauseTimer,
     handleResumeTimer,
     handleStopTimer,
+    handleUpdateTimerNotes,
     onTimerStopped,
   } = useTimer();
+
+  // Inline notes editor state for the active-timers band (same behavior as
+  // the persistent timer bar's notes editor).
+  const [notesEditorId, setNotesEditorId] = useState<string | null>(null);
+  const [notesDraft, setNotesDraft] = useState("");
+  const [savingNotes, setSavingNotes] = useState(false);
+
+  const openNotesEditor = (id: string, current: string | null) => {
+    setNotesEditorId((prev) => (prev === id ? null : id));
+    setNotesDraft(current || "");
+  };
+
+  const saveNotes = async (id: string) => {
+    setSavingNotes(true);
+    const ok = await handleUpdateTimerNotes(id, notesDraft);
+    setSavingNotes(false);
+    if (ok) setNotesEditorId(null);
+  };
 
   // Daily reminder notification
   const { checkDailyReminder } = useNotifications();
@@ -330,11 +351,14 @@ export default function DashboardPage() {
               {runningTimers.map((timer) => {
                 const project = projects.find((p) => p.id === timer.projectId) ?? null;
                 const isPaused = !!timer.pausedAt;
+                const hasNotes = !!timer.notes;
+                const editingNotes = notesEditorId === timer.id;
                 return (
                   <div
                     key={timer.id}
-                    className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4 sm:p-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6"
+                    className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4 sm:p-5 flex flex-col gap-4"
                   >
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
                     {/* Status + digits */}
                     <div className="flex flex-col gap-1 sm:min-w-[170px]">
                       <div className="flex items-center gap-2">
@@ -380,6 +404,19 @@ export default function DashboardPage() {
 
                     {/* Actions */}
                     <div className="flex gap-2 sm:shrink-0">
+                      <button
+                        onClick={() => openNotesEditor(timer.id, timer.notes)}
+                        aria-label={hasNotes ? tTimer("bar.editNotes") : tTimer("bar.addNotes")}
+                        title={hasNotes ? tTimer("bar.editNotes") : tTimer("bar.addNotes")}
+                        className={`inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-4 py-2.5 text-sm font-semibold transition-colors ${
+                          hasNotes || editingNotes
+                            ? "bg-primary/15 text-primary hover:bg-primary/25"
+                            : "border border-border text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        <StickyNote className="h-4 w-4 shrink-0" />
+                        <span className="hidden sm:inline">{hasNotes ? tTimer("bar.noteShort") : tTimer("bar.notes")}</span>
+                      </button>
                       {isPaused ? (
                         <button
                           onClick={() => handleResumeTimer(timer.id)}
@@ -404,6 +441,43 @@ export default function DashboardPage() {
                         {t("activeTimers.stopButton")}
                       </button>
                     </div>
+                  </div>
+
+                  {/* Inline notes editor — same flow as the timer bar's. */}
+                  {editingNotes && (
+                    <div className="border-t border-border/50 pt-3">
+                      <label htmlFor={`band-timer-notes-${timer.id}`} className="mb-1 block text-xs font-medium text-muted-foreground">
+                        {tTimer("bar.notesLabel")}
+                      </label>
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+                        <textarea
+                          id={`band-timer-notes-${timer.id}`}
+                          rows={2}
+                          value={notesDraft}
+                          onChange={(e) => setNotesDraft(e.target.value)}
+                          placeholder={tTimer("bar.notesPlaceholder")}
+                          autoFocus
+                          className="flex-1 resize-y rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/50 focus:border-primary focus:ring-1 focus:ring-primary"
+                        />
+                        <div className="flex shrink-0 gap-2 sm:flex-col">
+                          <button
+                            onClick={() => saveNotes(timer.id)}
+                            disabled={savingNotes}
+                            className="flex-1 sm:flex-initial rounded-[var(--radius)] bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 min-h-[40px]"
+                          >
+                            {savingNotes ? tTimer("bar.saving") : tTimer("bar.save")}
+                          </button>
+                          <button
+                            onClick={() => setNotesEditorId(null)}
+                            disabled={savingNotes}
+                            className="flex-1 sm:flex-initial rounded-[var(--radius)] border border-border px-4 py-2 text-sm text-foreground hover:bg-muted disabled:opacity-50 min-h-[40px]"
+                          >
+                            {tTimer("bar.cancel")}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   </div>
                 );
               })}
