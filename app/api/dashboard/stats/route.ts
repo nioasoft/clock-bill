@@ -92,10 +92,19 @@ export async function GET(_request: NextRequest) {
         date: string;
         duration: number;
         project_id: string;
+        billing_kind: string;
+        item_amount: string;
       }>(
-        `SELECT id, description, date, duration, project_id
+        // Running timers (end_time NULL) are excluded — they'd show as 0:00.
+        // item_amount lets the dashboard show a price for item entries, which
+        // have no duration.
+        `SELECT id, description, date, duration, project_id, billing_kind,
+                CASE WHEN billing_kind = 'item'
+                     THEN COALESCE(quantity, 0) * COALESCE(rate, 0)
+                     ELSE 0 END AS item_amount
          FROM time_entries
          WHERE user_id = $1
+           AND NOT (start_time IS NOT NULL AND end_time IS NULL)
          ORDER BY date DESC, created_at DESC
          LIMIT 5`,
         [userId]
@@ -279,7 +288,10 @@ export async function GET(_request: NextRequest) {
         description: entry.description,
         date: entry.date,
         duration: entry.duration,
-        formattedDuration: formatHours(entry.duration),
+        // Item entries have no duration — show their price instead of 0:00.
+        formattedDuration: entry.billing_kind === 'item'
+          ? `${getCurrencySymbol(userCurrency)}${parseFloat(entry.item_amount || '0').toFixed(2)}`
+          : formatHours(entry.duration),
         projectId: entry.project_id
       })),
       upcomingDeadlines: upcomingDeadlinesResult.rows.map(project => ({
