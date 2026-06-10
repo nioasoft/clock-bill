@@ -19,6 +19,11 @@ const IOS_DISMISS_KEY = "monit-ios-install-dismissed";
 // on auth flow pages; the SW registration below still runs everywhere.
 const SUPPRESSED_ROUTES = ["/login", "/register", "/forgot-password", "/reset-password"];
 
+// Scroll clearance reserved at the bottom of the page while a banner is shown,
+// so content at max scroll (footer CTAs etc.) can always scroll out from under
+// the fixed overlay: banner height (≤ ~150px) + its bottom offset (5rem) + gap.
+const BANNER_CLEARANCE_PX = 240;
+
 /**
  * Registers the service worker and surfaces an "install app" prompt (Android/
  * desktop Chrome via beforeinstallprompt). iOS has no programmatic install, so
@@ -83,6 +88,24 @@ export function PwaProvider() {
     if (isIOS && isSafari && !isStandalone) setIosHintVisible(true);
   }, []);
 
+  // Auth pages: the overlay covers the form's submit button — never render it
+  // there (the install prompt event stays captured for later pages).
+  const suppressed = SUPPRESSED_ROUTES.some((route) => pathname.startsWith(route));
+
+  // While a banner is shown, reserve scroll space at the bottom of the document
+  // so nothing interactive can get trapped underneath the fixed overlay at max
+  // scroll (the register submit button was unreachable this way; same risk for
+  // bottom CTAs on any page).
+  const bannerShown = !suppressed && (visible || iosHintVisible);
+  useEffect(() => {
+    if (!bannerShown) return;
+    const previous = document.body.style.paddingBottom;
+    document.body.style.paddingBottom = `${BANNER_CLEARANCE_PX}px`;
+    return () => {
+      document.body.style.paddingBottom = previous;
+    };
+  }, [bannerShown]);
+
   const install = async () => {
     if (!installEvent) return;
     await installEvent.prompt();
@@ -109,9 +132,7 @@ export function PwaProvider() {
     }
   };
 
-  // Auth pages: the overlay covers the form's submit button — never render it
-  // there (the install prompt event stays captured for later pages).
-  if (SUPPRESSED_ROUTES.some((route) => pathname.startsWith(route))) {
+  if (suppressed) {
     return null;
   }
 
