@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
                   t.label, t.description, t.notes, t.item_ref, t.billing_kind, t.quantity, t.rate, t.amount, t.unit
              FROM unnest(
                $3::text[], $4::text[], $5::text[], $6::text[], $7::text[],
-               $8::text[], $9::text[], $10::text[], $11::numeric[], $12::numeric[], $13::numeric[], $14::text[]
+               $8::text[], $9::int[], $10::text[], $11::numeric[], $12::numeric[], $13::numeric[], $14::text[]
              ) AS t(source_type, time_entry_id, period_month, label, description,
                     notes, item_ref, billing_kind, quantity, rate, amount, unit)`,
           [
