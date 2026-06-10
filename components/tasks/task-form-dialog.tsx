@@ -11,6 +11,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { fieldClass } from "@/lib/form-styles";
+import { SimpleSelect } from "@/components/ui/simple-select";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { pickDefaultHourlyRate, type ClientRate } from "@/lib/schemas/rates";
 import { TASK_PRIORITIES, type TaskPriority, type TaskRecord } from "@/lib/tasks-types";
@@ -195,54 +196,42 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
               <label htmlFor="task-client" className={labelClass}>
                 {t("client")} <span className="text-primary">*</span>
               </label>
-              <select
+              <SimpleSelect
                 id="task-client"
                 value={clientId}
-                onChange={(e) => handleClientChange(e.target.value)}
-                className={fieldClass(false)}
+                onChange={handleClientChange}
+                placeholder={t("selectClient")}
                 disabled={submitting}
-              >
-                <option value="">{t("selectClient")}</option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+                options={clients.map((c) => ({ value: c.id, label: c.name }))}
+              />
             </div>
 
             <div>
               <label htmlFor="task-project" className={labelClass}>
                 {t("project")} <span className="text-primary">*</span>
               </label>
-              <select
+              <SimpleSelect
                 id="task-project"
                 value={projectId}
-                onChange={(e) => setProjectId(e.target.value)}
-                className={fieldClass(false)}
+                onChange={setProjectId}
+                placeholder={clientId ? t("selectProject") : t("selectClientFirst")}
                 disabled={submitting || !clientId}
-              >
-                <option value="">{clientId ? t("selectProject") : t("selectClientFirst")}</option>
-                {projectsForClient.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
+                options={projectsForClient.map((p) => ({ value: p.id, label: p.name }))}
+              />
             </div>
 
             <div>
               <label htmlFor="task-rate" className={labelClass}>
                 {t("rate")} <span className="text-primary">*</span>
               </label>
-              <select
+              <SimpleSelect
                 id="task-rate"
                 value={rateId}
-                onChange={(e) => setRateId(e.target.value)}
-                className={fieldClass(false)}
+                onChange={setRateId}
+                placeholder={clientId ? t("selectRate") : t("selectClientFirst")}
                 disabled={submitting || !clientId}
-              >
-                <option value="">{clientId ? t("selectRate") : t("selectClientFirst")}</option>
-                {rates.map((r) => (
-                  <option key={r.id} value={r.id}>{r.name}</option>
-                ))}
-              </select>
+                options={rates.map((r) => ({ value: r.id, label: r.name }))}
+              />
             </div>
           </div>
 
@@ -274,17 +263,13 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
           <div id="task-advanced" className={`${showAdvanced ? "" : "hidden"} sm:block space-y-4`}>
             <div>
               <label htmlFor="task-priority" className={labelClass}>{t("priority")}</label>
-              <select
+              <SimpleSelect
                 id="task-priority"
                 value={priority}
-                onChange={(e) => setPriority(e.target.value as TaskPriority)}
-                className={fieldClass(false)}
+                onChange={(v) => setPriority(v as TaskPriority)}
                 disabled={submitting}
-              >
-                {TASK_PRIORITIES.map((p) => (
-                  <option key={p} value={p}>{tPriority(p)}</option>
-                ))}
-              </select>
+                options={TASK_PRIORITIES.map((p) => ({ value: p, label: tPriority(p) }))}
+              />
             </div>
 
             <div>

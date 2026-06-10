@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { fieldClass } from "@/lib/form-styles";
+import { SimpleSelect } from "@/components/ui/simple-select";
 import {
   FEEDBACK_CATEGORIES,
   type FeedbackCategory,
@@ -108,19 +109,16 @@ export default function FeedbackPage() {
               <label htmlFor="category" className="mb-1.5 block text-sm font-medium text-foreground">
                 {t("fields.category")}
               </label>
-              <select
+              <SimpleSelect
                 id="category"
                 value={category}
-                onChange={(e) => setCategory(e.target.value as FeedbackCategory)}
-                className={fieldClass(false)}
+                onChange={(v) => setCategory(v as FeedbackCategory)}
                 disabled={submitting}
-              >
-                {FEEDBACK_CATEGORIES.map((c) => (
-                  <option key={c} value={c}>
-                    {tCategory(c)}
-                  </option>
-                ))}
-              </select>
+                options={FEEDBACK_CATEGORIES.map((c) => ({
+                  value: c,
+                  label: tCategory(c),
+                }))}
+              />
             </div>
 
             <div>

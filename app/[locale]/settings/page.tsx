@@ -3,12 +3,14 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname, Link } from "@/src/i18n/navigation";
+import { MessageSquare } from "lucide-react";
 import { authClient } from "@/lib/auth/client";
 import { DeleteAccountSection } from "@/components/delete-account-section";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { fieldClass } from "@/lib/form-styles";
+import { SimpleSelect } from "@/components/ui/simple-select";
 import { messageForError } from "@/lib/api-error";
 import { ROUNDING_MODES } from "@/lib/rounding";
 import { THEMES } from "@/lib/themes";
@@ -842,19 +844,19 @@ export default function SettingsPage() {
                     >
                       {t("currencies.fromLabel")}
                     </label>
-                    <select
+                    <SimpleSelect
                       id="fromCurrency"
                       value={fromCurrency}
-                      onChange={(e) => setFromCurrency(e.target.value)}
-                      className={fieldClass()}
+                      onChange={setFromCurrency}
                       disabled={rateSaving}
-                    >
-                      <option value="ILS">{t("currencyOptions.ILS")}</option>
-                      <option value="USD">{t("currencyOptions.USD")}</option>
-                      <option value="USDT">{t("currencyOptions.USDT")}</option>
-                      <option value="BTC">{t("currencyOptions.BTC")}</option>
-                      <option value="ETH">{t("currencyOptions.ETH")}</option>
-                    </select>
+                      options={[
+                        { value: "ILS", label: t("currencyOptions.ILS") },
+                        { value: "USD", label: t("currencyOptions.USD") },
+                        { value: "USDT", label: t("currencyOptions.USDT") },
+                        { value: "BTC", label: t("currencyOptions.BTC") },
+                        { value: "ETH", label: t("currencyOptions.ETH") },
+                      ]}
+                    />
                   </div>
 
                   {/* To Currency */}
@@ -865,19 +867,19 @@ export default function SettingsPage() {
                     >
                       {t("currencies.toLabel")}
                     </label>
-                    <select
+                    <SimpleSelect
                       id="toCurrency"
                       value={toCurrency}
-                      onChange={(e) => setToCurrency(e.target.value)}
-                      className={fieldClass()}
+                      onChange={setToCurrency}
                       disabled={rateSaving}
-                    >
-                      <option value="ILS">{t("currencyOptions.ILS")}</option>
-                      <option value="USD">{t("currencyOptions.USD")}</option>
-                      <option value="USDT">{t("currencyOptions.USDT")}</option>
-                      <option value="BTC">{t("currencyOptions.BTC")}</option>
-                      <option value="ETH">{t("currencyOptions.ETH")}</option>
-                    </select>
+                      options={[
+                        { value: "ILS", label: t("currencyOptions.ILS") },
+                        { value: "USD", label: t("currencyOptions.USD") },
+                        { value: "USDT", label: t("currencyOptions.USDT") },
+                        { value: "BTC", label: t("currencyOptions.BTC") },
+                        { value: "ETH", label: t("currencyOptions.ETH") },
+                      ]}
+                    />
                   </div>
 
                   {/* Rate */}
@@ -1225,14 +1227,15 @@ export default function SettingsPage() {
                 <label className="text-sm font-medium text-muted-foreground block mb-2">
                   {t("notifications.firstDayLabel")}
                 </label>
-                <select
+                <SimpleSelect
                   value={firstDayOfWeek}
-                  onChange={(e) => setFirstDayOfWeek(e.target.value)}
-                  className={fieldClass()}
-                >
-                  <option value="sunday">{t("notifications.firstDaySunday")}</option>
-                  <option value="monday">{t("notifications.firstDayMonday")}</option>
-                </select>
+                  onChange={setFirstDayOfWeek}
+                  aria-label={t("notifications.firstDayLabel")}
+                  options={[
+                    { value: "sunday", label: t("notifications.firstDaySunday") },
+                    { value: "monday", label: t("notifications.firstDayMonday") },
+                  ]}
+                />
                 <p className="text-xs text-muted-foreground mt-1">
                   {firstDayOfWeek === "sunday" ? t("notifications.firstDayHintSunday") : t("notifications.firstDayHintMonday")}
                 </p>
@@ -1364,18 +1367,15 @@ export default function SettingsPage() {
                     >
                       {t("billing.defaultRoundingLabel")}
                     </label>
-                    <select
+                    <SimpleSelect
                       id="defaultBillingRounding"
                       value={defaultBillingRounding}
-                      onChange={(e) => setDefaultBillingRounding(e.target.value)}
-                      className={fieldClass()}
-                    >
-                      {ROUNDING_MODES.map((m) => (
-                        <option key={m} value={m}>
-                          {tRounding(m)}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={setDefaultBillingRounding}
+                      options={ROUNDING_MODES.map((m) => ({
+                        value: m,
+                        label: tRounding(m),
+                      }))}
+                    />
                   </div>
                 </div>
 
@@ -1522,7 +1522,8 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              <div className="flex items-center justify-between gap-5">
+              {/* Stacked on mobile — side-by-side leaves the text a few words wide. */}
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
                 <div className="min-w-0">
                   <h2 className="font-display text-lg font-bold text-foreground">{t("profile.logoTitle")}</h2>
                   <p className="text-sm text-muted-foreground mt-1">
@@ -1582,7 +1583,8 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              <div className="flex items-center justify-between gap-5">
+              {/* Stacked on mobile — side-by-side leaves the text a few words wide. */}
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
                 <div className="min-w-0">
                   <h2 className="font-display text-lg font-bold text-foreground">{t("profile.signatureTitle")}</h2>
                   <p className="text-sm text-muted-foreground mt-1">
@@ -1779,18 +1781,18 @@ export default function SettingsPage() {
                       >
                         {t("business.defaultCurrency")}
                       </label>
-                      <select
+                      <SimpleSelect
                         id="defaultCurrency"
                         value={defaultCurrency}
-                        onChange={(e) => setDefaultCurrency(e.target.value)}
-                        className={fieldClass()}
-                      >
-                        <option value="ILS">{t("currencyOptions.ILS")}</option>
-                        <option value="USD">{t("currencyOptions.USD")}</option>
-                        <option value="USDT">{t("currencyOptions.USDT")}</option>
-                        <option value="BTC">{t("currencyOptions.BTC")}</option>
-                        <option value="ETH">{t("currencyOptions.ETH")}</option>
-                      </select>
+                        onChange={setDefaultCurrency}
+                        options={[
+                          { value: "ILS", label: t("currencyOptions.ILS") },
+                          { value: "USD", label: t("currencyOptions.USD") },
+                          { value: "USDT", label: t("currencyOptions.USDT") },
+                          { value: "BTC", label: t("currencyOptions.BTC") },
+                          { value: "ETH", label: t("currencyOptions.ETH") },
+                        ]}
+                      />
                       <p className="text-xs text-muted-foreground mt-1">
                         {t("business.defaultCurrencyHint")}
                       </p>
@@ -1804,19 +1806,19 @@ export default function SettingsPage() {
                       >
                         {t("pdf.templateLabel")}
                       </label>
-                      <select
+                      <SimpleSelect
                         id="preferredPdfTemplate"
                         value={preferredPdfTemplate}
-                        onChange={(e) => setPreferredPdfTemplate(e.target.value)}
-                        className={fieldClass()}
-                      >
-                        <option value="modern">{t("pdf.templateModern")}</option>
-                        <option value="classic">{t("pdf.templateClassic")}</option>
-                        <option value="bold">{t("pdf.templateBold")}</option>
-                        <option value="elegant">{t("pdf.templateElegant")}</option>
-                        <option value="nature">{t("pdf.templateNature")}</option>
-                        <option value="ocean">{t("pdf.templateOcean")}</option>
-                      </select>
+                        onChange={setPreferredPdfTemplate}
+                        options={[
+                          { value: "modern", label: t("pdf.templateModern") },
+                          { value: "classic", label: t("pdf.templateClassic") },
+                          { value: "bold", label: t("pdf.templateBold") },
+                          { value: "elegant", label: t("pdf.templateElegant") },
+                          { value: "nature", label: t("pdf.templateNature") },
+                          { value: "ocean", label: t("pdf.templateOcean") },
+                        ]}
+                      />
                       <p className="text-xs text-muted-foreground mt-1">
                         {t("pdf.templateHint")}
                       </p>
@@ -1892,16 +1894,16 @@ export default function SettingsPage() {
                       >
                         {t("display.dateFormatLabel")}
                       </label>
-                      <select
+                      <SimpleSelect
                         id="dateFormat"
                         value={dateFormat}
-                        onChange={(e) => setDateFormat(e.target.value)}
-                        className={fieldClass()}
-                      >
-                        <option value="DD/MM/YYYY">{t("display.dateFormatDMY")}</option>
-                        <option value="MM/DD/YYYY">{t("display.dateFormatMDY")}</option>
-                        <option value="YYYY-MM-DD">{t("display.dateFormatYMD")}</option>
-                      </select>
+                        onChange={setDateFormat}
+                        options={[
+                          { value: "DD/MM/YYYY", label: t("display.dateFormatDMY") },
+                          { value: "MM/DD/YYYY", label: t("display.dateFormatMDY") },
+                          { value: "YYYY-MM-DD", label: t("display.dateFormatYMD") },
+                        ]}
+                      />
                       <p className="text-xs text-muted-foreground mt-1">
                         {t("display.dateFormatHint")}
                       </p>
@@ -1915,15 +1917,15 @@ export default function SettingsPage() {
                       >
                         {t("display.timeFormatLabel")}
                       </label>
-                      <select
+                      <SimpleSelect
                         id="timeFormat"
                         value={timeFormat}
-                        onChange={(e) => setTimeFormat(e.target.value)}
-                        className={fieldClass()}
-                      >
-                        <option value="24h">{t("display.timeFormat24h")}</option>
-                        <option value="12h">{t("display.timeFormat12h")}</option>
-                      </select>
+                        onChange={setTimeFormat}
+                        options={[
+                          { value: "24h", label: t("display.timeFormat24h") },
+                          { value: "12h", label: t("display.timeFormat12h") },
+                        ]}
+                      />
                       <p className="text-xs text-muted-foreground mt-1">
                         {t("display.timeFormatHint")}
                       </p>
@@ -1937,15 +1939,15 @@ export default function SettingsPage() {
                       >
                         {t("display.language.label")}
                       </label>
-                      <select
+                      <SimpleSelect
                         id="interfaceLanguage"
                         value={locale}
-                        onChange={(e) => handleLocaleChange(e.target.value)}
-                        className={fieldClass()}
-                      >
-                        <option value="he">{t("display.language.he")}</option>
-                        <option value="en">{t("display.language.en")}</option>
-                      </select>
+                        onChange={handleLocaleChange}
+                        options={[
+                          { value: "he", label: t("display.language.he") },
+                          { value: "en", label: t("display.language.en") },
+                        ]}
+                      />
                       <p className="text-xs text-muted-foreground mt-1">
                         {t("display.language.hint")}
                       </p>
@@ -2122,6 +2124,23 @@ export default function SettingsPage() {
             </div>
           </div>
         )}
+
+        {/* Feedback / support entry point. On mobile this is the only way to
+            reach the feedback page (it was dropped from the bottom nav to make
+            room), so it lives outside the tabs and is always visible. */}
+        <div className="mt-6 bg-card rounded-[var(--radius-card)] border border-border p-5 sm:p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h2 className="font-display text-lg font-bold text-foreground">{t("support.title")}</h2>
+            <p className="text-sm text-muted-foreground mt-1">{t("support.description")}</p>
+          </div>
+          <Link
+            href="/feedback"
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius)] border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors shrink-0"
+          >
+            <MessageSquare className="h-4 w-4" />
+            {t("support.cta")}
+          </Link>
+        </div>
 
       </PageContainer>
 

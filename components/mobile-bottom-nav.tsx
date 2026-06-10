@@ -8,7 +8,9 @@ import { navItemDefs } from "@/lib/nav-items";
 
 const iconMap = { Home, Clock, Users, FolderKanban, FileText, MessageSquare, Settings, Shield } as const;
 
-const visibleNavItems = navItemDefs.filter((item) => !item.adminOnly);
+const visibleNavItems = navItemDefs.filter(
+  (item) => !item.adminOnly && !item.mobileHidden
+);
 
 export function MobileBottomNav() {
   const pathname = usePathname();
@@ -16,7 +18,11 @@ export function MobileBottomNav() {
 
   const navItems = visibleNavItems.map((item) => {
     const Icon = iconMap[item.iconName];
-    return { name: t(item.labelKey), href: item.href, icon: <Icon className="h-5 w-5" /> };
+    return {
+      name: t(item.mobileLabelKey ?? item.labelKey),
+      href: item.href,
+      icon: <Icon className="h-5 w-5" />,
+    };
   });
 
   return (

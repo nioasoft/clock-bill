@@ -175,11 +175,13 @@ export function PersistentTimerBar() {
           );
         })}
 
-        {/* Add another parallel timer */}
+        {/* Add another parallel timer. Hidden on mobile — the chip row overflows
+            and clips it there, and the global FAB / dashboard button already
+            cover "start another timer" on small screens. */}
         <button
           onClick={() => setShowTimerModal(true)}
           aria-label={t("bar.startAnotherTimer")}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-all"
+          className="hidden sm:inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-all"
         >
           <Play className="h-3.5 w-3.5" />
           {t("bar.anotherTimer")}

@@ -279,7 +279,8 @@ export default function DashboardPage() {
           </div>
         ) : runningTimers.length > 0 ? (
           <div className="mt-6 space-y-4">
-            <div className="flex items-center justify-between">
+            {/* Stacked on mobile so the buttons keep one-line labels. */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">
                 {t("activeTimers.title")}
                 {runningTimers.length > 1 && (
@@ -288,17 +289,17 @@ export default function DashboardPage() {
                   </span>
                 )}
               </h3>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => setShowTimerModal(true)}
-                  className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+                  className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
                   <Clock className="h-4 w-4" />
                   {t("activeTimers.newTimerButton")}
                 </button>
                 <Link
                   href="/entries?new=item"
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface transition-colors"
+                  className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface transition-colors"
                 >
                   {t("activeTimers.newBillingItemButton")}
                 </Link>

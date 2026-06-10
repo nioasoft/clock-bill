@@ -32,6 +32,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { SimpleSelect } from "@/components/ui/simple-select";
 
 interface Client {
   id: string;
@@ -633,35 +634,29 @@ function ClientsPageContent() {
                     <label htmlFor="currency" className="mb-1.5 block text-sm font-medium text-foreground">
                       {t("currencyLabel")}
                     </label>
-                    <select
+                    <SimpleSelect
                       id="currency"
                       value={formData.currency}
-                      onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                      className={fieldClass(false)}
+                      onChange={(v) => setFormData({ ...formData, currency: v })}
                       disabled={submitting}
-                    >
-                      {CURRENCIES.map((c) => (
-                        <option key={c.value} value={c.value}>{c.label}</option>
-                      ))}
-                    </select>
+                      options={CURRENCIES.map((c) => ({ value: c.value, label: c.label }))}
+                    />
                   </div>
 
                   <div>
                     <label htmlFor="billingRounding" className="mb-1.5 block text-sm font-medium text-foreground">
                       {t("billingRoundingLabel")}
                     </label>
-                    <select
+                    <SimpleSelect
                       id="billingRounding"
                       value={formData.billingRounding}
-                      onChange={(e) => setFormData({ ...formData, billingRounding: e.target.value as "" | RoundingMode })}
-                      className={fieldClass(false)}
+                      onChange={(v) => setFormData({ ...formData, billingRounding: v as "" | RoundingMode })}
                       disabled={submitting}
-                    >
-                      <option value="">{t("roundingInherit")}</option>
-                      {ROUNDING_MODES.map((m) => (
-                        <option key={m} value={m}>{tRounding(m)}</option>
-                      ))}
-                    </select>
+                      options={[
+                        { value: "", label: t("roundingInherit") },
+                        ...ROUNDING_MODES.map((m) => ({ value: m, label: tRounding(m) })),
+                      ]}
+                    />
                   </div>
 
                 </div>

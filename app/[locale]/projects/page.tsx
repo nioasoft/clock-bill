@@ -15,6 +15,7 @@ import { messageForError } from "@/lib/api-error";
 import { fieldClass } from "@/lib/form-styles";
 import { ROUNDING_MODES, type RoundingMode } from "@/lib/rounding";
 import { useTranslations, useLocale } from "next-intl";
+import { SimpleSelect } from "@/components/ui/simple-select";
 
 interface Client {
   id: string;
@@ -349,24 +350,20 @@ function ProjectsPageContent() {
                     <label htmlFor="clientId" className="mb-1.5 block text-sm font-medium text-foreground">
                       {t("form.clientLabel")} <span className="text-primary">*</span>
                     </label>
-                    <select
+                    <SimpleSelect
                       id="clientId"
-                      required
                       value={formData.clientId}
-                      onChange={(e) => {
-                        setFormData({ ...formData, clientId: e.target.value });
+                      onChange={(v) => {
+                        setFormData({ ...formData, clientId: v });
                         setFieldErrors({ ...fieldErrors, clientId: undefined });
                       }}
-                      className={fieldClass(!!fieldErrors.clientId)}
+                      placeholder={t("form.clientPlaceholder")}
                       disabled={submitting}
-                    >
-                      <option value="">{t("form.clientPlaceholder")}</option>
-                      {clients.map((client) => (
-                        <option key={client.id} value={client.id}>
-                          {client.name}
-                        </option>
-                      ))}
-                    </select>
+                      options={clients.map((client) => ({
+                        value: client.id,
+                        label: client.name,
+                      }))}
+                    />
                     {fieldErrors.clientId && <p className="mt-1.5 text-xs text-destructive">{fieldErrors.clientId}</p>}
                     {clients.length === 0 && (
                       <Link
@@ -402,17 +399,17 @@ function ProjectsPageContent() {
                     <label htmlFor="status" className="mb-1.5 block text-sm font-medium text-foreground">
                       {t("form.statusLabel")}
                     </label>
-                    <select
+                    <SimpleSelect
                       id="status"
                       value={formData.status}
-                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className={fieldClass(false)}
+                      onChange={(v) => setFormData({ ...formData, status: v })}
                       disabled={submitting}
-                    >
-                      <option value="active">{t("status.active")}</option>
-                      <option value="paused">{t("status.paused")}</option>
-                      <option value="completed">{t("status.completed")}</option>
-                    </select>
+                      options={[
+                        { value: "active", label: t("status.active") },
+                        { value: "paused", label: t("status.paused") },
+                        { value: "completed", label: t("status.completed") },
+                      ]}
+                    />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -542,18 +539,16 @@ function ProjectsPageContent() {
                 <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                   {t("form.roundingLegend")}
                 </legend>
-                <select
+                <SimpleSelect
                   id="billingRounding"
                   value={formData.billingRounding}
-                  onChange={(e) => setFormData({ ...formData, billingRounding: e.target.value as typeof formData.billingRounding })}
-                  className={fieldClass(false)}
+                  onChange={(v) => setFormData({ ...formData, billingRounding: v as "" | RoundingMode })}
                   disabled={submitting}
-                >
-                  <option value="">{t("form.roundingInherit")}</option>
-                  {ROUNDING_MODES.map((m) => (
-                    <option key={m} value={m}>{tRounding(m)}</option>
-                  ))}
-                </select>
+                  options={[
+                    { value: "", label: t("form.roundingInherit") },
+                    ...ROUNDING_MODES.map((m) => ({ value: m, label: tRounding(m) })),
+                  ]}
+                />
                 <p className="text-xs text-muted-foreground">{t("form.roundingHint")}</p>
               </fieldset>
 

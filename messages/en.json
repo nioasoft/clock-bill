@@ -13,11 +13,19 @@
     "description": "Time tracking, client management, and professional reports. All in one place, for free.",
     "keywords": "time tracking,freelancer,work hours,project management,itemized billing,settlement statement,client management,reports,Monit"
   },
+  "NotFound": {
+    "title": "Page Not Found",
+    "description": "Oops! The page you were looking for doesn't exist or has moved.",
+    "backToDashboard": "Back to Dashboard",
+    "goBack": "Go back",
+    "maybeYouMeant": "Maybe you meant:"
+  },
   "Nav": {
     "sidebarLabel": "Sidebar",
     "breadcrumbLabel": "Breadcrumb",
     "dashboard": "Dashboard",
     "entries": "Billing Entries",
+    "entriesMobile": "Entries",
     "tasks": "Tasks",
     "clients": "Clients",
     "reports": "Settlements",
@@ -888,6 +896,11 @@
       "confirmTitle": "Are you sure?",
       "confirmDescription": "This will sign you out of all devices connected to your account, including the current device. You'll need to sign in again.",
       "cancel": "Cancel"
+    },
+    "support": {
+      "title": "Feedback & Support",
+      "description": "Hit a bug or have an idea for improvement? We'd love to hear.",
+      "cta": "Open feedback"
     },
     "danger": {
       "title": "Delete Account",
