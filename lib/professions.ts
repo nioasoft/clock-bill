@@ -18,6 +18,14 @@ export interface ProfessionDefaults {
   suggestedBillingModel: "hourly" | "retainer" | "fixed_monthly" | "items";
 }
 
+/** A ready-made item rate seeded into the new-client form (price left blank). */
+export interface StarterItem {
+  nameHe: string;
+  nameEn: string;
+  unitHe: string;
+  unitEn: string;
+}
+
 export interface Profession {
   id: string;
   labelHe: string;
@@ -26,6 +34,8 @@ export interface Profession {
   modelHintHe: string;
   modelHintEn: string;
   defaults: ProfessionDefaults;
+  /** Prefilled item rows on the first client for per-session professions. */
+  starterItems?: StarterItem[];
 }
 
 export const PROFESSIONS: Profession[] = [
@@ -76,6 +86,7 @@ export const PROFESSIONS: Profession[] = [
     modelHintHe: "Fixed (יום צילום)",
     modelHintEn: "Fixed (shoot day)",
     defaults: { defaultBillingRounding: "none", paymentTerms: "שוטף+30", preferredPdfTemplate: "modern", suggestedBillingModel: "items" },
+    starterItems: [{ nameHe: "יום צילום", nameEn: "Shoot day", unitHe: "יום", unitEn: "day" }],
   },
   {
     id: "writer",
@@ -84,6 +95,7 @@ export const PROFESSIONS: Profession[] = [
     modelHintHe: "לפי פריט / שעתי",
     modelHintEn: "Per item / Hourly",
     defaults: { defaultBillingRounding: "none", paymentTerms: "שוטף+30", preferredPdfTemplate: "modern", suggestedBillingModel: "items" },
+    starterItems: [{ nameHe: "כתיבת תוכן", nameEn: "Content", unitHe: "מילה", unitEn: "word" }],
   },
   {
     id: "therapist",
@@ -92,6 +104,7 @@ export const PROFESSIONS: Profession[] = [
     modelHintHe: "פגישה 45–50 דק'",
     modelHintEn: "Per session",
     defaults: { defaultBillingRounding: "none", paymentTerms: "מיידי", preferredPdfTemplate: "elegant", suggestedBillingModel: "items" },
+    starterItems: [{ nameHe: "פגישה", nameEn: "Session", unitHe: "פגישה", unitEn: "session" }],
   },
   {
     id: "health-pro",
@@ -100,6 +113,7 @@ export const PROFESSIONS: Profession[] = [
     modelHintHe: "פגישה",
     modelHintEn: "Per session",
     defaults: { defaultBillingRounding: "none", paymentTerms: "מיידי", preferredPdfTemplate: "elegant", suggestedBillingModel: "items" },
+    starterItems: [{ nameHe: "פגישה", nameEn: "Session", unitHe: "פגישה", unitEn: "session" }],
   },
   {
     id: "marketer",
@@ -132,6 +146,7 @@ export const PROFESSIONS: Profession[] = [
     modelHintHe: "לפי מילה / עמוד",
     modelHintEn: "Per word / page",
     defaults: { defaultBillingRounding: "none", paymentTerms: "שוטף+30", preferredPdfTemplate: "classic", suggestedBillingModel: "items" },
+    starterItems: [{ nameHe: "תרגום", nameEn: "Translation", unitHe: "מילה", unitEn: "word" }],
   },
   {
     id: "tutor",
@@ -140,6 +155,7 @@ export const PROFESSIONS: Profession[] = [
     modelHintHe: "שיעור",
     modelHintEn: "Per lesson",
     defaults: { defaultBillingRounding: "none", paymentTerms: "מיידי", preferredPdfTemplate: "modern", suggestedBillingModel: "items" },
+    starterItems: [{ nameHe: "שיעור", nameEn: "Lesson", unitHe: "שיעור", unitEn: "lesson" }],
   },
   {
     id: "fitness-trainer",
@@ -148,6 +164,7 @@ export const PROFESSIONS: Profession[] = [
     modelHintHe: "אימון",
     modelHintEn: "Per session",
     defaults: { defaultBillingRounding: "none", paymentTerms: "מיידי", preferredPdfTemplate: "bold", suggestedBillingModel: "items" },
+    starterItems: [{ nameHe: "אימון", nameEn: "Session", unitHe: "אימון", unitEn: "session" }],
   },
   {
     id: "realtor",

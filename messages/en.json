@@ -437,6 +437,7 @@
     "checkoutError": "Could not open checkout. Please try again."
   },
   "Clients": {
+    "preVatHint": "Prices are pre-VAT",
     "usage": {
       "count": "{active} of {limit} clients",
       "unlimited": "{active} clients · unlimited",
@@ -548,6 +549,8 @@
     "addItem": "+ Item",
     "unitHour": "hr",
     "unitItem": "unit",
+    "unitPlaceholder": "Unit (session / word / day)",
+    "unitAria": "Item unit",
     "noHourlyRates": "No hourly rates defined — the default rate will be used."
   },
   "Projects": {
@@ -1777,6 +1780,7 @@
     "shareIconLabel": "Share"
   },
   "Reports": {
+    "preVatNote": "All amounts are pre-VAT",
     "pageTitle": "Settlement",
     "tabs": {
       "billable": "To bill",
@@ -1818,6 +1822,7 @@
     },
     "units": {
       "items": "{count} units",
+      "itemsWithUnit": "{count} × {unit}",
       "ref": "Ref {ref}",
       "hoursMeasure": "{hours}h"
     },

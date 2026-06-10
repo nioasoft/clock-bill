@@ -16,7 +16,7 @@ import { CURRENCY_SYMBOLS } from "@/lib/currency";
 import { ClientRatesEditor } from "@/components/client-rates-editor";
 import { ROUNDING_MODES, type RoundingMode } from "@/lib/rounding";
 import { getProfession } from "@/lib/professions";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { cleanClientRates } from "@/lib/schemas/rates";
 import type { ClientRate, ClientRateInput } from "@/lib/schemas/rates";
 import {
@@ -80,6 +80,7 @@ export default function ClientsPage() {
 
 function ClientsPageContent() {
   const t = useTranslations("Clients");
+  const locale = useLocale();
   const tRoot = useTranslations();
   const tRounding = useTranslations("Rounding");
   const resolveValidation = useValidationMessage();
@@ -100,6 +101,13 @@ function ClientsPageContent() {
   // True once the user manually toggles the retainer switch in the current
   // create session — after that their choice stands and we never re-prefill.
   const [retainerTouched, setRetainerTouched] = useState(false);
+  const starterItems = useMemo(
+    () => getProfession(professionId)?.starterItems ?? [],
+    [professionId],
+  );
+  // One-shot per create session — mirrors retainerTouched so the prefill never
+  // re-appends after the user removes/edits rows.
+  const [starterSeeded, setStarterSeeded] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     contactName: "",
@@ -165,6 +173,31 @@ function ClientsPageContent() {
       setFormData((prev) => (prev.isRetainer ? prev : { ...prev, isRetainer: true }));
     }
   }, [showForm, editingClient, retainerTouched, suggestsRetainer]);
+
+  // Create-mode default: seed the profession's starter item rows once, only if
+  // the user hasn't already added an item row. Never runs in edit mode.
+  useEffect(() => {
+    if (showForm && editingClient === null && !starterSeeded && starterItems.length > 0) {
+      setFormData((prev) =>
+        prev.rates.some((r) => r.kind === "item")
+          ? prev
+          : {
+              ...prev,
+              rates: [
+                ...prev.rates,
+                ...starterItems.map((s) => ({
+                  kind: "item" as const,
+                  name: locale === "he" ? s.nameHe : s.nameEn,
+                  rate: 0,
+                  isDefault: false,
+                  unit: locale === "he" ? s.unitHe : s.unitEn,
+                })),
+              ],
+            }
+      );
+      setStarterSeeded(true);
+    }
+  }, [showForm, editingClient, starterSeeded, starterItems, locale]);
 
   useEffect(() => {
     const fetchClients = async () => {
@@ -345,6 +378,7 @@ function ClientsPageContent() {
           name: r.name,
           rate: r.rate,
           isDefault: r.isDefault,
+          unit: r.unit ?? null,
         }));
         setFormData((prev) => ({ ...prev, rates: loaded }));
       }
@@ -455,6 +489,7 @@ function ClientsPageContent() {
               if (!showForm) {
                 setEditingClient(null);
                 setRetainerTouched(false);
+                setStarterSeeded(false);
                 setFormData((prev) => ({
                   ...prev,
                   isRetainer: suggestsRetainer,

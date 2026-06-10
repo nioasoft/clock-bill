@@ -65,6 +65,7 @@ interface TimeEntry {
   billingKind?: "hourly" | "item";
   rate?: number | null;
   rateLabel?: string | null;
+  unit?: string | null;
   quantity?: number | null;
   itemRef?: number | null;
   currency?: string;
@@ -436,6 +437,10 @@ export default function EntriesPage() {
       // Ad-hoc lines carry typed name+price; catalog lines snapshot the chosen rate.
       const itemRate = isAdhoc ? parseFloat(formData.adhocPrice) || 0 : chosen?.rate ?? null;
       const itemLabel = isAdhoc ? formData.adhocName.trim() : chosen?.name ?? null;
+      // Ad-hoc items have no unit field — preserve the edited entry's snapshot
+      // (covers editing an item whose catalog rate was deleted); new ad-hoc
+      // lines have no unit. Catalog items snapshot the chosen rate's unit.
+      const itemUnit = isAdhoc ? (editingEntry?.unit ?? null) : chosen?.unit ?? null;
       // Hourly lines snapshot the chosen hourly rate/label so the amount survives
       // create AND edit. Sending null here zeroes the entry's price (regression).
       const hourlyRate = chosen?.rate ?? null;
@@ -455,6 +460,7 @@ export default function EntriesPage() {
           quantity: isItem ? parseFloat(formData.quantity) || 0 : null,
           rate: isItem ? itemRate : hourlyRate,
           rateLabel: isItem ? itemLabel : hourlyLabel,
+          unit: isItem ? itemUnit : null,
           description: formData.description,
           notes: formData.notes || undefined,
           isBillable: formData.isBillable,

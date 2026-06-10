@@ -22,6 +22,8 @@ export interface BillableEntry {
   rate: number | null;
   rateLabel: string | null;
   itemRef: number | null;
+  /** Item unit-noun snapshot ("פגישה"). Optional so legacy callers/tests compile. */
+  unit?: string | null;
   // Effective hourly rounding mode (project override ?? client default).
   // Optional so legacy callers/tests default to 'none'. Item lines ignore it.
   billingRounding?: RoundingMode | null;
@@ -38,6 +40,7 @@ export interface ChargeLineDraft {
   itemRef: number | null;
   billingKind: BillingKind;
   quantity: number | null;
+  unit: string | null;
   rate: number | null;
   amount: number;
 }
@@ -79,6 +82,7 @@ export function buildLineFromEntry(entry: BillableEntry): ChargeLineDraft {
     itemRef: isItem ? entry.itemRef : null,
     billingKind: isItem ? "item" : "hourly",
     quantity: isItem ? entry.quantity : null,
+    unit: isItem ? entry.unit ?? null : null,
     rate: entry.rate,
     amount,
   };

@@ -26,6 +26,7 @@ export const entryBodySchema = z
     billingKind: z.enum(["hourly", "item"]).nullish(),
     rate: z.number().min(0).nullish(),
     rateLabel: z.string().max(100).nullish(),
+    unit: z.string().trim().max(30).nullish(),
     quantity: z.number().min(0).nullish(),
   })
   .refine(

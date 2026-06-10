@@ -2,7 +2,7 @@
  * Unit tests for lib/money.ts calcItemAmount and rate-list helpers.
  */
 import { calcItemAmount, sumMoney } from "../../lib/money";
-import { pickDefaultHourlyRate, type ClientRate } from "../../lib/schemas/rates";
+import { pickDefaultHourlyRate, cleanClientRates, clientRateSchema, type ClientRate } from "../../lib/schemas/rates";
 
 class TestRunner {
   private tests: Array<{ name: string; fn: () => void }> = [];
@@ -66,6 +66,36 @@ runner.test("pickDefaultHourlyRate: falls back to first hourly when none default
 });
 runner.test("pickDefaultHourlyRate: null when no hourly rates", () => {
   assertEqual(pickDefaultHourlyRate([]), null);
+});
+
+runner.test("clientRateSchema: item with unit validates and trims", () => {
+  const r = clientRateSchema.safeParse({ kind: "item", name: "פגישה", rate: 400, isDefault: false, unit: " פגישה " });
+  assertEqual(r.success, true);
+  if (r.success) assertEqual(r.data.unit, "פגישה");
+});
+runner.test("clientRateSchema: rate without unit still validates", () => {
+  const r = clientRateSchema.safeParse({ kind: "hourly", name: "תכנות", rate: 300, isDefault: true });
+  assertEqual(r.success, true);
+  if (r.success) assertEqual(r.data.unit ?? null, null);
+});
+runner.test("clientRateSchema: rejects unit longer than 30 chars", () => {
+  const r = clientRateSchema.safeParse({ kind: "item", name: "פגישה", rate: 400, isDefault: false, unit: "א".repeat(31) });
+  assertEqual(r.success, false);
+});
+runner.test("cleanClientRates: carries unit through, nulls empty unit", () => {
+  const out = cleanClientRates([
+    { kind: "item", name: "פגישה", rate: 400, isDefault: false, unit: "פגישה" },
+    { kind: "item", name: "מכתב", rate: 100, isDefault: false, unit: "  " },
+  ]);
+  assertEqual(out[0].unit, "פגישה");
+  assertEqual(out[1].unit ?? null, null);
+});
+
+runner.test("cleanClientRates: nulls unit on hourly rows", () => {
+  const out = cleanClientRates([
+    { kind: "hourly", name: "תכנות", rate: 300, isDefault: true, unit: "פגישה" },
+  ]);
+  assertEqual(out[0].unit ?? null, null);
 });
 
 runner.run().then((ok) => process.exit(ok ? 0 : 1));

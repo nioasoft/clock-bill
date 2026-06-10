@@ -29,6 +29,7 @@ interface DocumentLine {
   item_ref: number | null;
   billing_kind: string;
   quantity: number | null;
+  unit: string | null;
   rate: number | null;
   amount: number;
 }
@@ -393,6 +394,7 @@ export default function ChargeDocumentView({
           <div className="font-mono text-2xl font-bold tabular-nums text-foreground">
             {formatCurrency(doc.total, doc.currency, locale)}
           </div>
+          <div className="text-xs text-muted-foreground">{t("preVatNote")}</div>
         </div>
       </div>
 
@@ -474,7 +476,7 @@ export default function ChargeDocumentView({
                   <td className="px-3 py-3 text-muted-foreground">
                     {isItemLine(line) && line.quantity != null && line.rate != null ? (
                       <span className="font-mono tabular-nums">
-                        {line.quantity} × {formatCurrency(line.rate, doc.currency, locale)}
+                        {line.quantity}{line.unit ? <> <bdi>{line.unit}</bdi></> : null} × {formatCurrency(line.rate, doc.currency, locale)}
                       </span>
                     ) : (
                       "—"
@@ -801,7 +803,7 @@ export default function ChargeDocumentView({
                 </td>
                 <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>
                   {isItemLine(line) && line.quantity != null && line.rate != null
-                    ? `${line.quantity} × ${formatCurrency(line.rate, doc.currency, locale)}`
+                    ? `${line.quantity}${line.unit ? ` ${line.unit}` : ""} × ${formatCurrency(line.rate, doc.currency, locale)}`
                     : ""}
                 </td>
                 <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>
@@ -821,6 +823,8 @@ export default function ChargeDocumentView({
             </tr>
           </tfoot>
         </table>
+
+        <div style={{ marginTop: "0.5rem", fontSize: "11px", color: "#94a3b8" }}>{t("preVatNote")}</div>
 
         {doc.notes && (
           <div className="pdf-section" style={{ marginTop: "1.25rem", fontSize: "12px", color: "#475569" }}>

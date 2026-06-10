@@ -66,6 +66,7 @@ interface ReportEntry {
   rateLabel?: string | null;
   quantity?: number | null;
   itemRef?: number | null;
+  unit?: string | null;
   amount?: number;
 }
 
@@ -864,7 +865,11 @@ export default function AdHocReportTab() {
                             {entry.billingKind === "item" && entry.itemRef != null ? <span style={{ color: "#94a3b8" }}> · {t("units.ref", { ref: entry.itemRef })}</span> : ""}
                           </td>
                           <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>
-                            {entry.billingKind === "item" ? t("units.items", { count: entry.quantity ?? 0 }) : formatDuration(entry.duration)}
+                            {entry.billingKind === "item"
+                              ? (entry.unit
+                                  ? t("units.itemsWithUnit", { count: entry.quantity ?? 0, unit: entry.unit })
+                                  : t("units.items", { count: entry.quantity ?? 0 }))
+                              : formatDuration(entry.duration)}
                           </td>
                           <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>
                             {entry.isBillable
@@ -963,6 +968,7 @@ export default function AdHocReportTab() {
                     </div>
                   )}
                 </div>
+                <div style={{ marginTop: "0.5rem", fontSize: "11px", color: "#94a3b8" }}>{t("preVatNote")}</div>
               </div>
 
               {/* ── Footer ── */}
@@ -1333,7 +1339,9 @@ export default function AdHocReportTab() {
                           </td>
                           <td className="px-6 py-4 text-sm font-mono font-semibold">
                             {entry.billingKind === "item"
-                              ? t("units.items", { count: entry.quantity ?? 0 })
+                              ? (entry.unit
+                                  ? t("units.itemsWithUnit", { count: entry.quantity ?? 0, unit: entry.unit })
+                                  : t("units.items", { count: entry.quantity ?? 0 }))
                               : formatDuration(entry.duration)}
                           </td>
                         </tr>
