@@ -5,11 +5,13 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/src/i18n/navigation";
 import { Gauge, CheckCircle2 } from "lucide-react";
 import { authClient } from "@/lib/auth/client";
+import { useAuthErrorMessage } from "@/lib/auth/error-messages";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 
 export default function ForgotPasswordPage() {
   const t = useTranslations("Auth");
+  const resolveAuthError = useAuthErrorMessage();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -28,7 +30,7 @@ export default function ForgotPasswordPage() {
       });
 
       if (authError) {
-        setError(authError.message || t("forgot.errors.requestFailed"));
+        setError(resolveAuthError(authError, t("forgot.errors.requestFailed")));
       } else {
         setSuccess(true);
       }

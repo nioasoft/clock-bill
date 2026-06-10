@@ -6,11 +6,13 @@ import { useSearchParams } from "next/navigation";
 import { Link } from "@/src/i18n/navigation";
 import { Gauge, CheckCircle2 } from "lucide-react";
 import { authClient } from "@/lib/auth/client";
+import { useAuthErrorMessage } from "@/lib/auth/error-messages";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 
 function ResetPasswordForm() {
   const t = useTranslations("Auth");
+  const resolveAuthError = useAuthErrorMessage();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
@@ -51,7 +53,7 @@ function ResetPasswordForm() {
       });
 
       if (authError) {
-        setError(authError.message || t("reset.errors.resetFailed"));
+        setError(resolveAuthError(authError, t("reset.errors.resetFailed")));
       } else {
         setSuccess(true);
       }

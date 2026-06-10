@@ -8,6 +8,7 @@ import { Gauge, LogIn } from "lucide-react";
 import { validateEmail, validateRequired } from "@/lib/validation";
 import { useValidationMessage } from "@/lib/validation-messages";
 import { authClient } from "@/lib/auth/client";
+import { useAuthErrorMessage } from "@/lib/auth/error-messages";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { LocaleSwitcher } from "@/components/locale-switcher";
@@ -15,6 +16,7 @@ import { LocaleSwitcher } from "@/components/locale-switcher";
 export default function LoginPage() {
   const t = useTranslations("Auth");
   const resolveValidation = useValidationMessage();
+  const resolveAuthError = useAuthErrorMessage();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -74,7 +76,7 @@ export default function LoginPage() {
           setNeedsVerification(true);
           setError(t("login.errors.notVerified"));
         } else {
-          setError(authError.message || t("login.errors.signInFailed"));
+          setError(resolveAuthError(authError, t("login.errors.signInFailed")));
         }
       } else {
         router.push("/dashboard");

@@ -957,6 +957,18 @@
     }
   },
   "Auth": {
+    "serverErrors": {
+      "userAlreadyExists": "This email is already registered. Try signing in, or use a different email.",
+      "invalidCredentials": "Incorrect email or password.",
+      "emailNotVerified": "Your email hasn't been verified yet. Check your inbox.",
+      "invalidEmail": "Invalid email address.",
+      "passwordTooShort": "Password is too short — at least 8 characters required.",
+      "passwordTooLong": "Password is too long.",
+      "invalidToken": "This link is invalid or has expired. Request a new one.",
+      "userNotFound": "No account found with this email address.",
+      "socialAccountOnly": "This account was created with Google — sign in with the Google button.",
+      "tooManyRequests": "Too many attempts. Please wait a moment and try again."
+    },
     "common": {
       "appName": "Monit",
       "emailLabel": "Email address",

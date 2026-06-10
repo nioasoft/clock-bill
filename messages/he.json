@@ -957,6 +957,18 @@
     }
   },
   "Auth": {
+    "serverErrors": {
+      "userAlreadyExists": "כתובת האימייל הזו כבר רשומה במערכת. נסה להתחבר, או השתמש בכתובת אחרת.",
+      "invalidCredentials": "אימייל או סיסמה שגויים.",
+      "emailNotVerified": "כתובת האימייל עדיין לא אומתה. בדוק את תיבת הדואר שלך.",
+      "invalidEmail": "כתובת אימייל לא תקינה.",
+      "passwordTooShort": "הסיסמה קצרה מדי — נדרשים לפחות 8 תווים.",
+      "passwordTooLong": "הסיסמה ארוכה מדי.",
+      "invalidToken": "הקישור אינו תקף או שפג תוקפו. בקש קישור חדש.",
+      "userNotFound": "לא נמצא חשבון עם כתובת האימייל הזו.",
+      "socialAccountOnly": "החשבון הזה נוצר באמצעות Google — התחבר עם כפתור Google.",
+      "tooManyRequests": "יותר מדי ניסיונות. המתן מעט ונסה שוב."
+    },
     "common": {
       "appName": "מוניט",
       "emailLabel": "כתובת אימייל",
