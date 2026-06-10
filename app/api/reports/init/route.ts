@@ -158,7 +158,7 @@ export async function GET(): Promise<NextResponse> {
 
     return NextResponse.json(
       { success: true, profile, clients, projects, presets, rates: data.ratesRes.rows },
-      { headers: { "Cache-Control": "private, max-age=120, stale-while-revalidate=300" } }
+      { headers: { "Cache-Control": "no-store, must-revalidate" } }
     );
   } catch (error) {
     logger.error("Failed to load reports init", error, userId ? { userId } : undefined);

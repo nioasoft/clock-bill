@@ -250,8 +250,6 @@ export async function GET(_request: NextRequest) {
     const hoursRevenue = parseFloat(earningsResult.rows[0]?.hours_total || '0') + fixedEarnings;
     const totalEarnings = hoursRevenue + itemsRevenue;
 
-    // Add cache headers for better performance
-    // Cache for 30 seconds since this is real-time data that changes frequently
     return NextResponse.json({
       success: true,
       stats: {
@@ -324,7 +322,12 @@ export async function GET(_request: NextRequest) {
       })
     }, {
       headers: {
-        'Cache-Control': 'private, max-age=30, stale-while-revalidate=60'
+        // no-store, NOT max-age: with max-age=30 the browser served the
+        // pre-stop cached body to the silent refetch that runs right after
+        // stopping a timer, so the dashboard looked stuck until a manual
+        // reload. (Dev never reproduced it — Next overrides cache headers
+        // with no-store in development.)
+        'Cache-Control': 'no-store, must-revalidate'
       }
     });
   } catch (error) {

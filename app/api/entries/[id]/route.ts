@@ -119,7 +119,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       },
     }, {
       headers: {
-        'Cache-Control': 'private, max-age=30, stale-while-revalidate=60'
+        'Cache-Control': 'no-store, must-revalidate'
       }
     });
   } catch (error) {

@@ -125,7 +125,7 @@ export async function GET(
       },
     }, {
       headers: {
-        'Cache-Control': 'private, max-age=60, stale-while-revalidate=120'
+        'Cache-Control': 'no-store, must-revalidate'
       }
     });
   } catch (error) {
