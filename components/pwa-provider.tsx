@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Download, Share, X } from "lucide-react";
+import { usePathname } from "@/src/i18n/navigation";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -12,6 +13,12 @@ interface BeforeInstallPromptEvent extends Event {
 const DISMISS_KEY = "monit-pwa-install-dismissed";
 const IOS_DISMISS_KEY = "monit-ios-install-dismissed";
 
+// The banner is a fixed bottom overlay (z-50). On mobile it sits exactly on top
+// of the submit button of the auth forms (a tap on "הרשם" hit the banner and
+// silently did nothing — registration was impossible on mobile). Never show it
+// on auth flow pages; the SW registration below still runs everywhere.
+const SUPPRESSED_ROUTES = ["/login", "/register", "/forgot-password", "/reset-password"];
+
 /**
  * Registers the service worker and surfaces an "install app" prompt (Android/
  * desktop Chrome via beforeinstallprompt). iOS has no programmatic install, so
@@ -19,6 +26,8 @@ const IOS_DISMISS_KEY = "monit-ios-install-dismissed";
  */
 export function PwaProvider() {
   const t = useTranslations("Pwa");
+  // Locale-stripped pathname (e.g. "/en/register" -> "/register").
+  const pathname = usePathname();
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
   // iOS has no beforeinstallprompt; we show a manual "Add to Home Screen" hint.
@@ -99,6 +108,12 @@ export function PwaProvider() {
       // ignore storage failures
     }
   };
+
+  // Auth pages: the overlay covers the form's submit button — never render it
+  // there (the install prompt event stays captured for later pages).
+  if (SUPPRESSED_ROUTES.some((route) => pathname.startsWith(route))) {
+    return null;
+  }
 
   // iOS instructional hint (no programmatic install). Shown only when the
   // Android/desktop prompt isn't available.
