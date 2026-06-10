@@ -7,6 +7,7 @@ import { ROUNDING_MODES } from "@/lib/rounding";
 import { CURRENCY_SYMBOLS } from "@/lib/currency";
 import { THEMES } from "@/lib/themes";
 import { useTheme } from "@/components/theme-provider";
+import { SimpleSelect } from "@/components/ui/simple-select";
 
 const CURRENCY_OPTIONS = ["ILS", "USD", "EUR", "USDT", "BTC", "ETH"];
 
@@ -131,18 +132,15 @@ export function OnboardingModal({ onDone }: OnboardingModalProps) {
             <label htmlFor="ob-currency" className="text-sm font-medium text-foreground">
               {t("currencyLabel")}
             </label>
-            <select
+            <SimpleSelect
               id="ob-currency"
               value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              className="w-full rounded-[var(--radius)] border border-border bg-surface px-3 py-2 text-foreground"
-            >
-              {CURRENCY_OPTIONS.map((c) => (
-                <option key={c} value={c}>
-                  {c} {CURRENCY_SYMBOLS[c] ?? ""}
-                </option>
-              ))}
-            </select>
+              onChange={setCurrency}
+              options={CURRENCY_OPTIONS.map((c) => ({
+                value: c,
+                label: `${c} ${CURRENCY_SYMBOLS[c] ?? ""}`.trim(),
+              }))}
+            />
             <p className="text-xs text-muted-foreground">{t("currencyHint")}</p>
           </div>
           <div className="space-y-2">
@@ -166,18 +164,15 @@ export function OnboardingModal({ onDone }: OnboardingModalProps) {
           <label htmlFor="ob-rounding" className="text-sm font-medium text-foreground">
             {t("roundingLabel")}
           </label>
-          <select
+          <SimpleSelect
             id="ob-rounding"
             value={rounding}
-            onChange={(e) => setRounding(e.target.value)}
-            className="w-full rounded-[var(--radius)] border border-border bg-surface px-3 py-2 text-foreground"
-          >
-            {ROUNDING_MODES.map((m) => (
-              <option key={m} value={m}>
-                {tRounding(m)}
-              </option>
-            ))}
-          </select>
+            onChange={setRounding}
+            options={ROUNDING_MODES.map((m) => ({
+              value: m,
+              label: tRounding(m),
+            }))}
+          />
         </div>
 
         {/* Appearance (theme) — live preview via useTheme */}

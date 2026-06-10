@@ -185,7 +185,9 @@ export function AppLayout({ children }: AppLayoutProps) {
       </div>
       <div className="lg:hidden pb-16 min-h-screen flex flex-col">
         <PersistentTimerBar />
-        <main className="flex-1 overflow-x-hidden motion-safe:animate-fade-in">
+        {/* pb-20 clears the floating timer FAB so it can't cover the last
+            interactive element on a page (e.g. upload buttons in settings). */}
+        <main className="flex-1 overflow-x-hidden pb-20 motion-safe:animate-fade-in">
           <ErrorBoundary>{children}</ErrorBoundary>
         </main>
         <MobileBottomNav />

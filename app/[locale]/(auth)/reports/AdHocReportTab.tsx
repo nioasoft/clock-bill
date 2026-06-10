@@ -15,6 +15,7 @@ import {
   DialogDescription,
   DialogClose,
 } from "@/components/ui/dialog";
+import { SimpleSelect } from "@/components/ui/simple-select";
 
 interface UserProfile {
   businessName: string | null;
@@ -589,39 +590,35 @@ export default function AdHocReportTab() {
               {/* Client Filter */}
               <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
                 <label className="block text-sm font-medium mb-2">{t("filters.client")}</label>
-                <select
+                <SimpleSelect
                   value={filters.clientId}
-                  onChange={(e) => handleClientChange(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-[0.625rem] bg-background"
+                  onChange={(v) => handleClientChange(v)}
                   disabled={clientsLoading}
-                >
-                  <option value="">{t("filters.allClients")}</option>
-                  {clients.map((client) => (
-                    <option key={client.id} value={client.id}>
-                      {client.name}
-                    </option>
-                  ))}
-                </select>
+                  options={[
+                    { value: "", label: t("filters.allClients") },
+                    ...clients.map((client) => ({
+                      value: client.id,
+                      label: client.name,
+                    })),
+                  ]}
+                />
               </div>
 
               {/* Project Filter */}
               <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
                 <label className="block text-sm font-medium mb-2">{t("filters.project")}</label>
-                <select
+                <SimpleSelect
                   value={filters.projectId}
-                  onChange={(e) =>
-                    setFilters({ ...filters, projectId: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border rounded-[0.625rem] bg-background"
+                  onChange={(v) => setFilters({ ...filters, projectId: v })}
                   disabled={projectsLoading || !filters.clientId}
-                >
-                  <option value="">{t("filters.allProjects")}</option>
-                  {getFilteredProjects().map((project) => (
-                    <option key={project.id} value={project.id}>
-                      {project.name}
-                    </option>
-                  ))}
-                </select>
+                  options={[
+                    { value: "", label: t("filters.allProjects") },
+                    ...getFilteredProjects().map((project) => ({
+                      value: project.id,
+                      label: project.name,
+                    })),
+                  ]}
+                />
               </div>
 
               {/* Display Currency Filter */}
@@ -659,18 +656,18 @@ export default function AdHocReportTab() {
 
               <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
                 <label className="block text-sm font-medium mb-2">{t("filters.displayCurrency")}</label>
-                <select
+                <SimpleSelect
                   value={displayCurrency}
-                  onChange={(e) => setDisplayCurrency(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-[0.625rem] bg-background"
-                >
-                  <option value="original">{t("filters.currencyOriginal")}</option>
-                  <option value="ILS">{t("filters.currencyILS")}</option>
-                  <option value="USD">{t("filters.currencyUSD")}</option>
-                  <option value="USDT">{t("filters.currencyUSDT")}</option>
-                  <option value="BTC">{t("filters.currencyBTC")}</option>
-                  <option value="ETH">{t("filters.currencyETH")}</option>
-                </select>
+                  onChange={(v) => setDisplayCurrency(v)}
+                  options={[
+                    { value: "original", label: t("filters.currencyOriginal") },
+                    { value: "ILS", label: t("filters.currencyILS") },
+                    { value: "USD", label: t("filters.currencyUSD") },
+                    { value: "USDT", label: t("filters.currencyUSDT") },
+                    { value: "BTC", label: t("filters.currencyBTC") },
+                    { value: "ETH", label: t("filters.currencyETH") },
+                  ]}
+                />
                 {displayCurrency !== "original" && (
                   <p className="text-xs text-muted-foreground mt-1">
                     {!Object.keys(currencyRates).length ? t("filters.ratesMissing") : t("filters.ratesAvailable")}

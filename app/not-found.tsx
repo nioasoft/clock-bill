@@ -1,80 +1,52 @@
-"use client";
-
 import Link from "next/link";
-import { Home, Search } from "lucide-react";
 
-export default function NotFound() {
+/**
+ * Root-level 404 fallback. It renders WITHOUT the [locale] layout, so no
+ * globals.css / fonts / theme are available here — styles must be inline.
+ * Real page 404s are handled by the styled `app/[locale]/not-found.tsx` via
+ * the `[...rest]` catch-all; this only covers paths the proxy matcher
+ * excludes (and any notFound() thrown outside the locale tree).
+ */
+export default function RootNotFound() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-background p-4">
-      <div className="max-w-md w-full">
-        <div className="text-center">
-          {/* 404 Number */}
-          <div className="mb-6 relative">
-            <h1 className="text-9xl font-bold text-primary opacity-20">404</h1>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Search className="w-20 h-20 text-primary" />
-            </div>
-          </div>
-
-          {/* Error Message */}
-          <h2 className="text-2xl font-bold text-foreground mb-2">
-            העמוד לא נמצא
-          </h2>
-          <p className="text-muted-foreground mb-8">
-            אופס! העמוד שחיפשת לא קיים או שהועבר למקום אחר.
-          </p>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              href="/"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
-            >
-              <Home className="w-5 h-5" />
-              חזרה לדשבורד
-            </Link>
-            <button
-              onClick={() => window.history.back()}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-card text-foreground rounded-lg hover:bg-muted transition-colors font-medium border border-border"
-            >
-              חזור אחורה
-            </button>
-          </div>
-
-          {/* Helpful Links */}
-          <div className="mt-12 pt-8 border-t border-border">
-            <p className="text-sm text-muted-foreground mb-4">אולי התכוונת ל:</p>
-            <div className="flex flex-wrap gap-2 justify-center">
-              <Link
-                href="/entries"
-                className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-primary-light rounded-md transition-colors"
-              >
-                רשומות זמן
-              </Link>
-              <span className="text-border">•</span>
-              <Link
-                href="/clients"
-                className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-primary-light rounded-md transition-colors"
-              >
-                לקוחות
-              </Link>
-              <span className="text-border">•</span>
-              <Link
-                href="/projects"
-                className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-primary-light rounded-md transition-colors"
-              >
-                פרויקטים
-              </Link>
-              <span className="text-border">•</span>
-              <Link
-                href="/reports"
-                className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-primary-light rounded-md transition-colors"
-              >
-                התחשבנות
-              </Link>
-            </div>
-          </div>
-        </div>
+    <div
+      dir="rtl"
+      lang="he"
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#0a0a0a",
+        color: "#fafafa",
+        fontFamily:
+          "'Heebo', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        textAlign: "center",
+        padding: "1rem",
+      }}
+    >
+      <div>
+        <p style={{ fontSize: "5rem", fontWeight: 700, margin: 0, opacity: 0.25 }}>
+          404
+        </p>
+        <h1 style={{ fontSize: "1.5rem", margin: "0.5rem 0" }}>העמוד לא נמצא</h1>
+        <p style={{ color: "#a3a3a3", margin: "0 0 1.5rem" }}>
+          העמוד שחיפשת לא קיים או שהועבר למקום אחר.
+        </p>
+        <Link
+          href="/"
+          style={{
+            display: "inline-block",
+            padding: "0.75rem 1.5rem",
+            background: "#faff69",
+            color: "#0a0a0a",
+            borderRadius: "8px",
+            textDecoration: "none",
+            fontWeight: 600,
+          }}
+        >
+          חזרה לדשבורד
+        </Link>
       </div>
     </div>
   );

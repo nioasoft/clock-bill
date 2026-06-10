@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { SimpleSelect } from "@/components/ui/simple-select";
 
 export function TimerStartModal() {
   const t = useTranslations("Timer");
@@ -61,20 +62,17 @@ export function TimerStartModal() {
                 >
                   {t("start.projectLabel")}
                 </label>
-                <select
+                <SimpleSelect
                   id="timer-project"
                   value={selectedProject}
-                  onChange={(e) => setSelectedProject(e.target.value)}
-                  className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
+                  onChange={setSelectedProject}
+                  placeholder={t("start.projectPlaceholder")}
                   disabled={startingTimer}
-                >
-                  <option value="">{t("start.projectPlaceholder")}</option>
-                  {projects.map((project) => (
-                    <option key={project.id} value={project.id}>
-                      {project.name}
-                    </option>
-                  ))}
-                </select>
+                  options={projects.map((project) => ({
+                    value: project.id,
+                    label: project.name,
+                  }))}
+                />
               </div>
 
               {selectedProject && timerTasks.length > 0 && (
@@ -85,20 +83,19 @@ export function TimerStartModal() {
                   >
                     {t("start.taskLabel")}
                   </label>
-                  <select
+                  <SimpleSelect
                     id="timer-task"
                     value={selectedTask}
-                    onChange={(e) => setSelectedTask(e.target.value)}
-                    className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
+                    onChange={setSelectedTask}
                     disabled={startingTimer}
-                  >
-                    <option value="">{t("start.noTask")}</option>
-                    {timerTasks.map((task) => (
-                      <option key={task.id} value={task.id}>
-                        {task.name}
-                      </option>
-                    ))}
-                  </select>
+                    options={[
+                      { value: "", label: t("start.noTask") },
+                      ...timerTasks.map((task) => ({
+                        value: task.id,
+                        label: task.name,
+                      })),
+                    ]}
+                  />
                 </div>
               )}
 
@@ -110,19 +107,16 @@ export function TimerStartModal() {
                   >
                     {t("start.rateLabel")}
                   </label>
-                  <select
+                  <SimpleSelect
                     id="timer-rate"
                     value={selectedRateId}
-                    onChange={(e) => setSelectedRateId(e.target.value)}
-                    className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
+                    onChange={setSelectedRateId}
                     disabled={startingTimer}
-                  >
-                    {timerRates.map((rate) => (
-                      <option key={rate.id} value={rate.id}>
-                        {t("start.rateOption", { name: rate.name, rate: rate.rate })}
-                      </option>
-                    ))}
-                  </select>
+                    options={timerRates.map((rate) => ({
+                      value: rate.id,
+                      label: t("start.rateOption", { name: rate.name, rate: rate.rate }),
+                    }))}
+                  />
                 </div>
               )}
 

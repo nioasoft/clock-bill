@@ -12,6 +12,7 @@ import { useValidationMessage } from "@/lib/validation-messages";
 import { resolveRounding, ROUNDING_MODES, type RoundingMode } from "@/lib/rounding";
 import { messageForError } from "@/lib/api-error";
 import { useTranslations, useLocale } from "next-intl";
+import { SimpleSelect } from "@/components/ui/simple-select";
 
 interface Project {
   id: string;
@@ -605,17 +606,18 @@ export default function ProjectDetailsPage() {
                   <label htmlFor="status" className="block text-sm font-medium text-muted-foreground">
                     {t("editForm.statusLabel")}
                   </label>
-                  <select
+                  <SimpleSelect
                     id="status"
                     value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="mt-1 block w-full rounded-[var(--radius-card)] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    onChange={(v) => setFormData({ ...formData, status: v })}
+                    className="mt-1"
                     disabled={submitting}
-                  >
-                    <option value="active">{t("status.active")}</option>
-                    <option value="paused">{t("status.paused")}</option>
-                    <option value="completed">{t("status.completed")}</option>
-                  </select>
+                    options={[
+                      { value: "active", label: t("status.active") },
+                      { value: "paused", label: t("status.paused") },
+                      { value: "completed", label: t("status.completed") },
+                    ]}
+                  />
                 </div>
 
                 <div>
@@ -652,18 +654,20 @@ export default function ProjectDetailsPage() {
                   <label htmlFor="billingRounding" className="block text-sm font-medium text-muted-foreground">
                     {t("editForm.roundingLabel")}
                   </label>
-                  <select
+                  <SimpleSelect
                     id="billingRounding"
                     value={formData.billingRounding}
-                    onChange={(e) => setFormData({ ...formData, billingRounding: e.target.value as typeof formData.billingRounding })}
-                    className="mt-1 block w-full rounded-[var(--radius-card)] border border-border bg-card px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary sm:max-w-[calc(50%-0.5rem)]"
+                    onChange={(v) => setFormData({ ...formData, billingRounding: v as "" | RoundingMode })}
+                    className="mt-1 sm:max-w-[calc(50%-0.5rem)]"
                     disabled={submitting}
-                  >
-                    <option value="">{t("editForm.roundingInherit", { value: tRounding(resolveRounding(null, project.clientBillingRounding, profileRounding)) })}</option>
-                    {ROUNDING_MODES.map((m) => (
-                      <option key={m} value={m}>{tRounding(m)}</option>
-                    ))}
-                  </select>
+                    options={[
+                      {
+                        value: "",
+                        label: t("editForm.roundingInherit", { value: tRounding(resolveRounding(null, project.clientBillingRounding, profileRounding)) }),
+                      },
+                      ...ROUNDING_MODES.map((m) => ({ value: m, label: tRounding(m) })),
+                    ]}
+                  />
                   <p className="mt-1 text-xs text-muted-foreground">
                     {t("editForm.roundingHint")}
                   </p>
