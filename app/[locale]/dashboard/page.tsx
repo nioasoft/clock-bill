@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/src/i18n/navigation";
 import { AppLayout } from "@/components/app-layout";
@@ -132,7 +132,9 @@ export default function DashboardPage() {
   const fetchStats = useCallback(async (opts?: { silent?: boolean }) => {
     try {
       if (!opts?.silent) setStatsLoading(true);
-      const response = await fetch("/api/dashboard/stats");
+      // no-store: iOS Safari (especially as an installed PWA) may otherwise
+      // serve a cached body for the silent background refetches.
+      const response = await fetch("/api/dashboard/stats", { cache: "no-store" });
       const data = await response.json();
 
       if (data.success) {
@@ -161,14 +163,36 @@ export default function DashboardPage() {
 
   // On mobile the app often comes back from the background hours later with
   // stale numbers (iOS keeps the page alive). Re-fetch silently whenever the
-  // tab becomes visible again.
+  // tab becomes visible again, and on window focus (covers switching between
+  // two visible desktop windows, where visibilitychange never fires).
   useEffect(() => {
+    const refresh = () => fetchStats({ silent: true });
     const onVisible = () => {
-      if (document.visibilityState === "visible") fetchStats({ silent: true });
+      if (document.visibilityState === "visible") refresh();
     };
     document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", refresh);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", refresh);
+    };
   }, [fetchStats]);
+
+  // The context polls /api/timer/running every 30s, so `runningTimers` reflects
+  // stops/starts made in ANY tab or device. The onTimerStopped emit above only
+  // covers a stop performed in THIS tab — here we also refetch whenever the set
+  // of running timer ids actually changes (poll arrays are new refs each tick,
+  // so compare by id signature, and skip the initial load).
+  const runningIdsRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (timerLoading) return;
+    const ids = runningTimers.map((t) => t.id).sort().join(",");
+    const prev = runningIdsRef.current;
+    runningIdsRef.current = ids;
+    if (prev !== null && prev !== ids) {
+      fetchStats({ silent: true });
+    }
+  }, [runningTimers, timerLoading, fetchStats]);
 
   // Check for daily reminder every minute
   useEffect(() => {

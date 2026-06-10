@@ -34,7 +34,7 @@ export async function GET(
       rates: result.rows.map((r) => ({
         id: r.id, kind: r.kind as "hourly" | "item", name: r.name, rate: r.rate, isDefault: r.is_default, unit: r.unit,
       })),
-    }, { headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=60" } });
+    }, { headers: { "Cache-Control": "no-store, must-revalidate" } });
   } catch (error) {
     console.error("Error fetching client rates:", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת התעריפים" }, { status: 500 });

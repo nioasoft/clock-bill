@@ -166,7 +166,7 @@ export async function GET(): Promise<NextResponse> {
       profile: result.rows[0],
     }, {
       headers: {
-        'Cache-Control': 'private, max-age=120, stale-while-revalidate=300'
+        'Cache-Control': 'no-store, must-revalidate'
       }
     });
   } catch (error) {
