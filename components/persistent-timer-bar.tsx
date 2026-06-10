@@ -92,8 +92,9 @@ export function PersistentTimerBar() {
 
   return (
     <div aria-live="polite" className="border-b border-border bg-muted/10">
-      {/* Horizontally scrollable row of running-timer chips. */}
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-2 overflow-x-auto px-4 sm:px-6 lg:px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* Mobile: chips stack as full-width rows. sm+: a single horizontally
+          scrollable row. */}
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-4 py-2 sm:h-16 sm:flex-row sm:items-center sm:overflow-x-auto sm:py-0 sm:px-6 lg:px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {runningTimers.map((timer) => {
           const isPaused = !!timer.pausedAt;
           const pausing = pausingTimerId === timer.id;
@@ -103,7 +104,7 @@ export function PersistentTimerBar() {
           return (
             <div
               key={timer.id}
-              className={`flex shrink-0 items-center gap-2 sm:gap-2.5 rounded-full border ps-3 pe-1.5 py-1 ${
+              className={`flex w-full shrink-0 items-center gap-2 sm:w-auto sm:gap-2.5 rounded-full border ps-3 pe-1.5 py-1 ${
                 isPaused
                   ? "border-warning/30 bg-warning/5"
                   : "border-running/30 bg-running/5"
@@ -120,7 +121,9 @@ export function PersistentTimerBar() {
                 </span>
               )}
 
-              <span className="max-w-[7rem] sm:max-w-[10rem] truncate text-sm font-medium text-foreground">
+              {/* On mobile the chip is full-width, so the description takes the
+                  free space and pushes time + actions to the far edge. */}
+              <span className="min-w-0 flex-1 sm:flex-none sm:max-w-[10rem] truncate text-sm font-medium text-foreground">
                 {timer.description || t("bar.activeTimer")}
               </span>
 

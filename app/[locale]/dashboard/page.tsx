@@ -138,6 +138,17 @@ export default function DashboardPage() {
   // entries page and kanban board use. Returns the unsubscribe fn for cleanup.
   useEffect(() => onTimerStopped(() => fetchStats({ silent: true })), [onTimerStopped, fetchStats]);
 
+  // On mobile the app often comes back from the background hours later with
+  // stale numbers (iOS keeps the page alive). Re-fetch silently whenever the
+  // tab becomes visible again.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") fetchStats({ silent: true });
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [fetchStats]);
+
   // Check for daily reminder every minute
   useEffect(() => {
     const checkDailyReminderInterval = setInterval(() => {
@@ -225,7 +236,7 @@ export default function DashboardPage() {
 
         {/* Stats Cards */}
         {statsLoading ? (
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="mt-5 grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="bg-card border border-border rounded-[var(--radius-card)] p-3 sm:p-4">
                 <Skeleton className="h-3 w-1/2 mb-3" />
@@ -238,7 +249,7 @@ export default function DashboardPage() {
             <p className="text-destructive">{t("stats.error")}</p>
           </div>
         ) : stats && !isFirstTimeUser ? (
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="mt-5 grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {[
               // RTL order: first item renders rightmost, last item leftmost.
               // "שעות השבוע" was removed — a Sun-start week crosses the month
@@ -251,16 +262,22 @@ export default function DashboardPage() {
               { label: t("stats.earningsByItems"), value: stats.earnings.byItems.formatted, accent: false, stagger: "stagger-4" },
               { label: t("stats.totalEarnings"), value: stats.earnings.formatted, accent: true, stagger: "stagger-5" },
             ].map((card) => (
+              // Mobile: compact cards (tight padding, smaller digits); the
+              // accent total spans both columns as a single label+value row.
               <div
                 key={card.label}
-                className={`rounded-[var(--radius-card)] border p-3 sm:p-4 transition-colors motion-safe:animate-fade-up ${card.stagger} ${
+                className={`rounded-[var(--radius-card)] border p-2.5 sm:p-4 transition-colors motion-safe:animate-fade-up ${card.stagger} ${
                   card.accent
-                    ? "bg-primary/[0.06] border-primary/25 hover:border-primary/40"
+                    ? "col-span-2 flex items-center justify-between sm:col-span-1 sm:block bg-primary/[0.06] border-primary/25 hover:border-primary/40"
                     : "bg-card border-border hover:border-border-strong"
                 }`}
               >
                 <p className="text-[10px] sm:text-xs uppercase tracking-widest font-semibold text-muted-foreground">{card.label}</p>
-                <p className={`mt-2 font-mono text-xl sm:text-2xl font-bold tabular-nums ${card.accent ? "text-primary" : "text-foreground"}`}>
+                <p className={`font-mono font-bold tabular-nums ${
+                  card.accent
+                    ? "mt-0 sm:mt-2 text-lg sm:text-2xl text-primary"
+                    : "mt-1 sm:mt-2 text-base sm:text-2xl text-foreground"
+                }`}>
                   {card.value}
                 </p>
               </div>

@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
+import { SimpleSelect } from "@/components/ui/simple-select";
 import { Clock, Pencil, Trash2 } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { messageForError } from "@/lib/api-error";
@@ -749,43 +750,41 @@ export default function EntriesPage() {
                 <label htmlFor="filterClient" className="block text-sm font-medium text-foreground mb-1">
                   {t("filters.client")}
                 </label>
-                <select
+                <SimpleSelect
                   id="filterClient"
                   value={filters.clientId}
-                  onChange={(e) => {
-                    handleFilterChange("clientId", e.target.value);
+                  onChange={(v) => {
+                    handleFilterChange("clientId", v);
                     handleFilterChange("projectId", ""); // Reset project when client changes
                   }}
-                  className="block w-full rounded-md border border-border/50 px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
                   disabled={clientsLoading}
-                >
-                  <option value="">{t("filters.allClients")}</option>
-                  {clients.map((client) => (
-                    <option key={client.id} value={client.id}>
-                      {client.name}
-                    </option>
-                  ))}
-                </select>
+                  options={[
+                    { value: "", label: t("filters.allClients") },
+                    ...clients.map((client) => ({
+                      value: client.id,
+                      label: client.name,
+                    })),
+                  ]}
+                />
               </div>
 
               <div>
                 <label htmlFor="filterProject" className="block text-sm font-medium text-foreground mb-1">
                   {t("filters.project")}
                 </label>
-                <select
+                <SimpleSelect
                   id="filterProject"
                   value={filters.projectId}
-                  onChange={(e) => handleFilterChange("projectId", e.target.value)}
-                  className="block w-full rounded-md border border-border/50 px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                  onChange={(v) => handleFilterChange("projectId", v)}
                   disabled={projectsLoading}
-                >
-                  <option value="">{t("filters.allProjects")}</option>
-                  {getFilteredProjects().map((project) => (
-                    <option key={project.id} value={project.id}>
-                      {project.name}
-                    </option>
-                  ))}
-                </select>
+                  options={[
+                    { value: "", label: t("filters.allProjects") },
+                    ...getFilteredProjects().map((project) => ({
+                      value: project.id,
+                      label: project.name,
+                    })),
+                  ]}
+                />
               </div>
 
               <div>
@@ -874,25 +873,21 @@ export default function EntriesPage() {
                   <label htmlFor="projectId" className="block text-sm font-medium text-foreground">
                     {t("form.projectLabel")}
                   </label>
-                  <select
+                  <SimpleSelect
                     id="projectId"
-                    required
                     value={formData.projectId}
-                    onChange={(e) => setFormData({ ...formData, projectId: e.target.value, taskId: "" })}
-                    className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.projectId ? "border border-destructive" : "border border-border/50"}`}
+                    onChange={(v) => setFormData({ ...formData, projectId: v, taskId: "" })}
+                    placeholder={t("form.selectProject")}
+                    className={`mt-1 ${fieldErrors.projectId ? "border-destructive" : ""}`}
                     disabled={submitting || projectsLoading}
-                  >
-                    <option value="">{t("form.selectProject")}</option>
-                    {Object.entries(groupedProjects).map(([clientId, { clientName, projects: clientProjects }]) => (
-                      <optgroup key={clientId} label={clientName}>
-                        {clientProjects.map((project) => (
-                          <option key={project.id} value={project.id}>
-                            {project.name}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
+                    options={Object.values(groupedProjects).flatMap(
+                      ({ clientName, projects: clientProjects }) =>
+                        clientProjects.map((project) => ({
+                          value: project.id,
+                          label: `${clientName} — ${project.name}`,
+                        }))
+                    )}
+                  />
                   {fieldErrors.projectId && (
                     <p className="mt-1 text-xs text-destructive">{fieldErrors.projectId}</p>
                   )}
@@ -911,20 +906,20 @@ export default function EntriesPage() {
                     <label htmlFor="taskId" className="block text-sm font-medium text-foreground">
                       {t("form.taskLabel")}
                     </label>
-                    <select
+                    <SimpleSelect
                       id="taskId"
                       value={formData.taskId}
-                      onChange={(e) => setFormData({ ...formData, taskId: e.target.value })}
-                      className="mt-1 block w-full rounded-md border border-border/50 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                      onChange={(v) => setFormData({ ...formData, taskId: v })}
+                      className="mt-1"
                       disabled={submitting}
-                    >
-                      <option value="">{t("form.noTask")}</option>
-                      {formTasks.map((task) => (
-                        <option key={task.id} value={task.id}>
-                          {task.name}
-                        </option>
-                      ))}
-                    </select>
+                      options={[
+                        { value: "", label: t("form.noTask") },
+                        ...formTasks.map((task) => ({
+                          value: task.id,
+                          label: task.name,
+                        })),
+                      ]}
+                    />
                   </div>
                 )}
 
@@ -997,21 +992,19 @@ export default function EntriesPage() {
                         <label htmlFor="entryRate" className="block text-sm font-medium text-foreground">
                           {t("form.rateLabel")}
                         </label>
-                        <select
+                        <SimpleSelect
                           id="entryRate"
                           value={formData.rateId}
-                          onChange={(e) => setFormData({ ...formData, rateId: e.target.value })}
-                          className="mt-1 block w-full rounded-md border border-border/50 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                          onChange={(v) => setFormData({ ...formData, rateId: v })}
+                          className="mt-1"
                           disabled={submitting}
-                        >
-                          {formRates
+                          options={formRates
                             .filter((r) => r.kind === "hourly")
-                            .map((r) => (
-                              <option key={r.id} value={r.id}>
-                                {t("form.hourlyRateOption", { name: r.name, rate: r.rate })}
-                              </option>
-                            ))}
-                        </select>
+                            .map((r) => ({
+                              value: r.id,
+                              label: t("form.hourlyRateOption", { name: r.name, rate: r.rate }),
+                            }))}
+                        />
                       </div>
                     )}
                   </>
@@ -1021,22 +1014,22 @@ export default function EntriesPage() {
                       <label htmlFor="entryItem" className="block text-sm font-medium text-foreground">
                         {t("form.itemLabel")}
                       </label>
-                      <select
+                      <SimpleSelect
                         id="entryItem"
                         value={formData.rateId}
-                        onChange={(e) => setFormData({ ...formData, rateId: e.target.value })}
-                        className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.duration ? "border border-destructive" : "border border-border/50"}`}
+                        onChange={(v) => setFormData({ ...formData, rateId: v })}
+                        className={`mt-1 ${fieldErrors.duration ? "border-destructive" : ""}`}
                         disabled={submitting}
-                      >
-                        <option value={ADHOC}>{t("form.adhocOption")}</option>
-                        {formRates
-                          .filter((r) => r.kind === "item")
-                          .map((r) => (
-                            <option key={r.id} value={r.id}>
-                              {t("form.itemRateOption", { name: r.name, rate: r.rate })}
-                            </option>
-                          ))}
-                      </select>
+                        options={[
+                          { value: ADHOC, label: t("form.adhocOption") },
+                          ...formRates
+                            .filter((r) => r.kind === "item")
+                            .map((r) => ({
+                              value: r.id,
+                              label: t("form.itemRateOption", { name: r.name, rate: r.rate }),
+                            })),
+                        ]}
+                      />
                     </div>
 
                     {/* Ad-hoc item: typed name + unit price, optionally saved to the client */}
