@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const statusFilter = searchParams.get("status"); // "active", "archived", "all", or null (default: exclude archived)
+    const clientIdFilter = searchParams.get("clientId"); // narrow to a single client's projects
 
     const { query } = await import("@/lib/db");
 
@@ -54,6 +55,11 @@ export async function GET(request: NextRequest) {
     } else {
       // Default: exclude archived projects
       whereClause = "AND p.status != 'archived'";
+    }
+
+    if (clientIdFilter) {
+      params.push(clientIdFilter);
+      whereClause += ` AND p.client_id = $${params.length}`;
     }
 
     // Get all projects for the user with client info
