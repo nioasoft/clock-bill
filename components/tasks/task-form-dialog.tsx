@@ -183,7 +183,8 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) props.onClose(); }}>
-      <DialogContent variant="sheet">
+      {/* Wider on desktop — the client/project/rate row needs three comfortable columns. */}
+      <DialogContent variant="sheet" className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{isEdit ? t("editTitle") : t("createTitle")}</DialogTitle>
           <DialogDescription>
