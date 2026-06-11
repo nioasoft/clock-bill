@@ -144,7 +144,7 @@ export default async function LocaleLayout({ children, params }: Props) {
           {t("skipToMain")}
         </a>
         <NextIntlClientProvider>
-          <Providers initialTheme={DEFAULT_THEME}>
+          <Providers initialTheme={DEFAULT_THEME} dir={dir}>
             <main id="main-content">{children}</main>
           </Providers>
           <PwaProvider />

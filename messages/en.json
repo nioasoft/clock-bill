@@ -559,7 +559,10 @@
     "unitItem": "unit",
     "unitPlaceholder": "Unit (session / word / day)",
     "unitAria": "Item unit",
-    "noHourlyRates": "No hourly rates defined — the default rate will be used."
+    "noHourlyRates": "No hourly rates defined — the default rate will be used.",
+    "rateScopeLabel": "Applies to:",
+    "rateScopeAll": "All projects",
+    "rateScopeAria": "Specific project"
   },
   "Projects": {
     "pageTitle": "Projects",
@@ -1249,6 +1252,8 @@
       "title": "Start a new timer",
       "projectLabel": "Project *",
       "projectPlaceholder": "Select a project",
+      "projectWithClient": "{project} · {client}",
+      "clientLine": "Client: {name}",
       "taskLabel": "Task",
       "noTask": "No task",
       "rateLabel": "Rate",

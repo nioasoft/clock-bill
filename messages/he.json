@@ -559,7 +559,10 @@
     "unitItem": "יח׳",
     "unitPlaceholder": "יחידה (פגישה / מילה / יום)",
     "unitAria": "יחידת הפריט",
-    "noHourlyRates": "לא הוגדרו תעריפים שעתיים — ייעשה שימוש בתעריף ברירת המחדל."
+    "noHourlyRates": "לא הוגדרו תעריפים שעתיים — ייעשה שימוש בתעריף ברירת המחדל.",
+    "rateScopeLabel": "תקף ל:",
+    "rateScopeAll": "כל הפרויקטים",
+    "rateScopeAria": "פרויקט ספציפי"
   },
   "Projects": {
     "pageTitle": "פרויקטים",
@@ -1249,6 +1252,8 @@
       "title": "התחל טיימר חדש",
       "projectLabel": "פרויקט *",
       "projectPlaceholder": "בחר פרויקט",
+      "projectWithClient": "{project} · {client}",
+      "clientLine": "לקוח: {name}",
       "taskLabel": "משימה",
       "noTask": "ללא משימה",
       "rateLabel": "תעריף",

@@ -100,7 +100,11 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/clients/${clientId}/rates`);
+        // projectId narrows to general rates + ones scoped to the chosen project
+        // (empty before a project is picked => general rates only).
+        const res = await fetch(
+          `/api/clients/${clientId}/rates?projectId=${encodeURIComponent(projectId)}`
+        );
         const data = await res.json();
         if (cancelled || !data.success) return;
         const hourly: ClientRate[] = (data.rates as ClientRate[]).filter((r) => r.kind === "hourly");
@@ -113,7 +117,7 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
       }
     })();
     return () => { cancelled = true; };
-  }, [clientId]);
+  }, [clientId, projectId]);
 
   const projectsForClient = useMemo(
     () => projects.filter((p) => p.clientId === clientId),

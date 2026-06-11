@@ -20,19 +20,29 @@ export async function GET(
     const { query } = await import("@/lib/db");
     const { id: clientId } = await params;
 
+    // ?projectId= narrows to rates visible on that project: general rows
+    // (project_id IS NULL) plus rows scoped to it. An empty value yields
+    // general rows only; absent param keeps the full list (editor views).
+    const projectId = request.nextUrl.searchParams.get("projectId");
+
     const result = await query<{
-      id: string; kind: string; name: string; rate: number; is_default: boolean; unit: string | null;
+      id: string; kind: string; name: string; rate: number; is_default: boolean; unit: string | null; project_id: string | null;
     }>(
-      `SELECT id, kind, name, rate, is_default, unit
-       FROM client_rates WHERE client_id = $1 AND user_id = $2
-       ORDER BY kind, is_default DESC, name`,
-      [clientId, user.id]
+      projectId === null
+        ? `SELECT id, kind, name, rate, is_default, unit, project_id
+           FROM client_rates WHERE client_id = $1 AND user_id = $2
+           ORDER BY kind, is_default DESC, name`
+        : `SELECT id, kind, name, rate, is_default, unit, project_id
+           FROM client_rates WHERE client_id = $1 AND user_id = $2
+             AND (project_id IS NULL OR project_id = $3)
+           ORDER BY kind, is_default DESC, name`,
+      projectId === null ? [clientId, user.id] : [clientId, user.id, projectId]
     );
 
     return NextResponse.json({
       success: true,
       rates: result.rows.map((r) => ({
-        id: r.id, kind: r.kind as "hourly" | "item", name: r.name, rate: r.rate, isDefault: r.is_default, unit: r.unit,
+        id: r.id, kind: r.kind as "hourly" | "item", name: r.name, rate: r.rate, isDefault: r.is_default, unit: r.unit, projectId: r.project_id,
       })),
     }, { headers: { "Cache-Control": "no-store, must-revalidate" } });
   } catch (error) {

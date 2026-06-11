@@ -229,12 +229,19 @@ export const clientRates = pgTable(
     isDefault: boolean("is_default").notNull().default(false),
     // Per-unit noun for an item rate ("פגישה"/"מילה"). NULL for hourly (implicit "שעה").
     unit: text("unit"),
+    // Optional project scoping: NULL => the rate applies to every project of the
+    // client; set => offered only on that project. Cascade with the project —
+    // time_entries keep their own rate/label snapshot so history is unaffected.
+    projectId: text("project_id").references(() => projects.id, {
+      onDelete: "cascade",
+    }),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
   (table) => [
     index("idx_client_rates_client_id").on(table.clientId),
     index("idx_client_rates_user_id").on(table.userId),
+    index("idx_client_rates_project_id").on(table.projectId),
     check("client_rates_kind_check", sql`${table.kind} IN ('hourly', 'item')`),
   ]
 );
