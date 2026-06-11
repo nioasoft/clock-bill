@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { Link } from "@/src/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useTimer } from "@/contexts/timer-context";
@@ -33,13 +34,34 @@ export function TimerStartModal() {
   } = useTimer();
 
   const hasProjects = projects.length > 0;
-  // With several clients the project names alone are ambiguous — label each
-  // option "project · client". With exactly one client, show it once below.
-  const clientCount = new Set(projects.map((p) => p.clientId)).size;
-  const singleClientName = clientCount === 1 ? projects[0]?.clientName : null;
+
+  // With several clients the flow is two-step: pick a client first, then see
+  // only that client's projects. With exactly one client, skip the client
+  // select and show its name once below the project field.
+  const [selectedClientId, setSelectedClientId] = useState("");
+  const clients = useMemo(() => {
+    const byId = new Map<string, string>();
+    for (const p of projects) {
+      if (!byId.has(p.clientId)) byId.set(p.clientId, p.clientName);
+    }
+    return [...byId.entries()].map(([id, name]) => ({ id, name }));
+  }, [projects]);
+  const multiClient = clients.length > 1;
+  const singleClientName = clients.length === 1 ? clients[0].name : null;
+  const visibleProjects = multiClient
+    ? projects.filter((p) => p.clientId === selectedClientId)
+    : projects;
+
+  const handleClientChange = (clientId: string) => {
+    setSelectedClientId(clientId);
+    // The previously selected project belongs to another client now.
+    setSelectedProject("");
+    setSelectedTask("");
+  };
 
   const handleClose = () => {
     setShowTimerModal(false);
+    setSelectedClientId("");
     setSelectedProject("");
     setSelectedTask("");
     setTimerDescription("");
@@ -59,36 +81,54 @@ export function TimerStartModal() {
         <div className="space-y-4">
           {hasProjects ? (
             <>
-              <div>
-                <label
-                  htmlFor="timer-project"
-                  className="block text-sm font-medium text-foreground mb-1"
-                >
-                  {t("start.projectLabel")}
-                </label>
-                <SimpleSelect
-                  id="timer-project"
-                  value={selectedProject}
-                  onChange={setSelectedProject}
-                  placeholder={t("start.projectPlaceholder")}
-                  disabled={startingTimer}
-                  options={projects.map((project) => ({
-                    value: project.id,
-                    label:
-                      clientCount > 1
-                        ? t("start.projectWithClient", {
-                            project: project.name,
-                            client: project.clientName,
-                          })
-                        : project.name,
-                  }))}
-                />
-                {singleClientName && (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {t("start.clientLine", { name: singleClientName })}
-                  </p>
-                )}
-              </div>
+              {multiClient && (
+                <div>
+                  <label
+                    htmlFor="timer-client"
+                    className="block text-sm font-medium text-foreground mb-1"
+                  >
+                    {t("start.clientLabel")}
+                  </label>
+                  <SimpleSelect
+                    id="timer-client"
+                    value={selectedClientId}
+                    onChange={handleClientChange}
+                    placeholder={t("start.clientPlaceholder")}
+                    disabled={startingTimer}
+                    options={clients.map((client) => ({
+                      value: client.id,
+                      label: client.name,
+                    }))}
+                  />
+                </div>
+              )}
+
+              {(!multiClient || selectedClientId) && (
+                <div>
+                  <label
+                    htmlFor="timer-project"
+                    className="block text-sm font-medium text-foreground mb-1"
+                  >
+                    {t("start.projectLabel")}
+                  </label>
+                  <SimpleSelect
+                    id="timer-project"
+                    value={selectedProject}
+                    onChange={setSelectedProject}
+                    placeholder={t("start.projectPlaceholder")}
+                    disabled={startingTimer}
+                    options={visibleProjects.map((project) => ({
+                      value: project.id,
+                      label: project.name,
+                    }))}
+                  />
+                  {singleClientName && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {t("start.clientLine", { name: singleClientName })}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {selectedProject && timerTasks.length > 0 && (
                 <div>
