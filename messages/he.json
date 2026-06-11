@@ -333,6 +333,11 @@
     "form": {
       "editTitle": "ערוך רישום זמן",
       "newTitle": "רשום זמן חדש",
+      "editItemTitle": "עריכת פריט חיוב",
+      "newItemTitle": "פריט חיוב חדש",
+      "clientLabel": "לקוח *",
+      "selectClient": "בחר לקוח",
+      "selectClientFirst": "בחר קודם לקוח",
       "projectLabel": "פרויקט *",
       "selectProject": "בחר פרויקט",
       "createProject": "+ צור פרויקט חדש",

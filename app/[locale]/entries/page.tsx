@@ -116,6 +116,9 @@ export default function EntriesPage() {
   const [clientsLoading, setClientsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState<TimeEntry | null>(null);
+  // Two-step form selection: with several clients, pick the client first and
+  // see only its projects (mirrors the timer start modal).
+  const [formClientId, setFormClientId] = useState("");
   const [formData, setFormData] = useState({
     projectId: "",
     taskId: "",
@@ -185,16 +188,7 @@ export default function EntriesPage() {
     callback: handleQuickEntryShortcut,
   });
 
-  // Keyboard shortcut: Escape key closes form
-  useKeyboardShortcut({
-    key: "Escape",
-    callback: () => {
-      if (showForm) {
-        handleCancelEdit();
-      }
-    },
-    disabled: !showForm,
-  });
+  // Escape closes the form via the Dialog's own onOpenChange — no shortcut needed.
 
   useEffect(() => {
     // Fetch clients when component mounts
@@ -546,6 +540,7 @@ export default function EntriesPage() {
 
   const handleEdit = (entry: TimeEntry) => {
     setEditingEntry(entry);
+    setFormClientId(entry.clientId);
     setFormData({
       projectId: entry.projectId,
       taskId: entry.taskId || "",
@@ -566,6 +561,7 @@ export default function EntriesPage() {
 
   const handleCancelEdit = () => {
     setEditingEntry(null);
+    setFormClientId("");
     setFormData({
       projectId: "",
       taskId: "",
@@ -589,6 +585,7 @@ export default function EntriesPage() {
   // making the user open the form and then flip the toggle.
   const openManualEntry = useCallback((kind: "hourly" | "item") => {
     setEditingEntry(null);
+    setFormClientId("");
     setFormData({
       projectId: "",
       taskId: "",
@@ -691,34 +688,35 @@ export default function EntriesPage() {
     return acc;
   }, {});
 
+  // Clients that actually have projects (a timer/entry must attach to a project).
+  const formClients = Object.entries(groupedProjects).map(([id, group]) => ({
+    id,
+    name: group.clientName,
+  }));
+  const formMultiClient = formClients.length > 1;
+  const formProjects = formMultiClient
+    ? formClientId
+      ? projects.filter((p) => p.clientId === formClientId)
+      : []
+    : projects;
+
   return (
     <AppLayout>
       <PageContainer>
         <PageHeader title={t("pageTitle")}>
           <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">N</kbd>
-          {showForm ? (
-            <button
-              onClick={handleCancelEdit}
-              className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted"
-            >
-              {t("cancel")}
-            </button>
-          ) : (
-            <>
-              <button
-                onClick={() => openManualEntry("hourly")}
-                className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
-              >
-                {t("addTimeEntry")}
-              </button>
-              <button
-                onClick={() => openManualEntry("item")}
-                className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-surface"
-              >
-                {t("addBillingItem")}
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => openManualEntry("hourly")}
+            className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
+          >
+            {t("addTimeEntry")}
+          </button>
+          <button
+            onClick={() => openManualEntry("item")}
+            className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-surface"
+          >
+            {t("addBillingItem")}
+          </button>
         </PageHeader>
 
         {/* Filters Section */}
@@ -858,12 +856,25 @@ export default function EntriesPage() {
           )}
         </div>
 
-        {/* Add/Edit Entry Form */}
-        {showForm && (
-          <div className="mb-8 rounded-[var(--radius-card)] bg-surface p-6 shadow motion-safe:animate-scale-in">
-            <h2 className="text-xl font-semibold text-foreground mb-4">
-              {editingEntry ? t("form.editTitle") : t("form.newTitle")}
-            </h2>
+        {/* Add/Edit Entry Form — bottom sheet on mobile, centered dialog on desktop */}
+        <Dialog
+          open={showForm}
+          onOpenChange={(open) => {
+            if (!open) handleCancelEdit();
+          }}
+        >
+          <DialogContent variant="sheet" showCloseButton={false} className="sm:max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>
+                {editingEntry
+                  ? formData.billingKind === "item"
+                    ? t("form.editItemTitle")
+                    : t("form.editTitle")
+                  : formData.billingKind === "item"
+                    ? t("form.newItemTitle")
+                    : t("form.newTitle")}
+              </DialogTitle>
+            </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               {formError && (
                 <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
@@ -872,6 +883,30 @@ export default function EntriesPage() {
               )}
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {formMultiClient && (
+                  <div>
+                    <label htmlFor="formClientId" className="block text-sm font-medium text-foreground">
+                      {t("form.clientLabel")}
+                    </label>
+                    <SimpleSelect
+                      id="formClientId"
+                      value={formClientId}
+                      onChange={(v) => {
+                        setFormClientId(v);
+                        // The previous project belongs to another client now.
+                        setFormData({ ...formData, projectId: "", taskId: "" });
+                      }}
+                      placeholder={t("form.selectClient")}
+                      className="mt-1"
+                      disabled={submitting || projectsLoading}
+                      options={formClients.map((client) => ({
+                        value: client.id,
+                        label: client.name,
+                      }))}
+                    />
+                  </div>
+                )}
+
                 <div>
                   <label htmlFor="projectId" className="block text-sm font-medium text-foreground">
                     {t("form.projectLabel")}
@@ -880,16 +915,17 @@ export default function EntriesPage() {
                     id="projectId"
                     value={formData.projectId}
                     onChange={(v) => setFormData({ ...formData, projectId: v, taskId: "" })}
-                    placeholder={t("form.selectProject")}
+                    placeholder={
+                      formMultiClient && !formClientId
+                        ? t("form.selectClientFirst")
+                        : t("form.selectProject")
+                    }
                     className={`mt-1 ${fieldErrors.projectId ? "border-destructive" : ""}`}
-                    disabled={submitting || projectsLoading}
-                    options={Object.values(groupedProjects).flatMap(
-                      ({ clientName, projects: clientProjects }) =>
-                        clientProjects.map((project) => ({
-                          value: project.id,
-                          label: `${clientName} — ${project.name}`,
-                        }))
-                    )}
+                    disabled={submitting || projectsLoading || (formMultiClient && !formClientId)}
+                    options={formProjects.map((project) => ({
+                      value: project.id,
+                      label: project.name,
+                    }))}
                   />
                   {fieldErrors.projectId && (
                     <p className="mt-1 text-xs text-destructive">{fieldErrors.projectId}</p>
@@ -1201,8 +1237,8 @@ export default function EntriesPage() {
                 </div>
               </div>
             </form>
-          </div>
-        )}
+          </DialogContent>
+        </Dialog>
 
         {/* Entries List */}
         <div className="rounded-[var(--radius-card)] bg-card shadow">

@@ -333,6 +333,11 @@
     "form": {
       "editTitle": "Edit Time Entry",
       "newTitle": "New Time Entry",
+      "editItemTitle": "Edit Charge Item",
+      "newItemTitle": "New Charge Item",
+      "clientLabel": "Client *",
+      "selectClient": "Select a client",
+      "selectClientFirst": "Select a client first",
       "projectLabel": "Project *",
       "selectProject": "Select a project",
       "createProject": "+ Create new project",
