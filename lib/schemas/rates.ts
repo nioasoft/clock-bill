@@ -10,6 +10,8 @@ export interface ClientRateInput {
   isDefault: boolean;
   /** Per-unit noun for an item rate ("פגישה"/"מילה"). Hourly rows leave it unset. */
   unit?: string | null;
+  /** Optional project scoping: null/undefined => applies to all the client's projects. */
+  projectId?: string | null;
 }
 export interface ClientRate extends ClientRateInput {
   id: string;
@@ -22,6 +24,7 @@ export const clientRateSchema: z.ZodType<ClientRateInput> = z.object({
   rate: z.number().min(0, "התעריף לא יכול להיות שלילי"),
   isDefault: z.boolean(),
   unit: z.string().trim().max(30, "שם היחידה ארוך מדי").nullish(),
+  projectId: z.string().trim().max(100).nullish(),
 });
 
 /** The full list sent on a client save (may be empty for a brand-new client). */
@@ -38,19 +41,26 @@ export const addClientItemSchema = z.object({
 });
 
 /**
- * Pick the hourly rate to preselect: the one flagged default, else the first
- * hourly rate, else null (client has no hourly rates -> fall back to default_rate).
+ * Pick the hourly rate to preselect from an (already project-filtered) list:
+ * a project-scoped hourly wins (the user defined it specifically for this
+ * project), else the client's default, else the first hourly, else null
+ * (client has no hourly rates -> fall back to default_rate).
  */
 export function pickDefaultHourlyRate(rates: ClientRate[]): ClientRate | null {
   const hourly = rates.filter((r) => r.kind === "hourly");
-  return hourly.find((r) => r.isDefault) ?? hourly[0] ?? null;
+  return (
+    hourly.find((r) => r.projectId) ??
+    hourly.find((r) => r.isDefault) ??
+    hourly[0] ??
+    null
+  );
 }
 
 /**
  * Normalize a rates array before saving: drop rows with an empty name, trim
- * names, allow only hourly rows to be default, and guarantee exactly one
- * default hourly (promote the first hourly if none is flagged). Returns a new
- * array — the input is never mutated.
+ * names, allow only general (non-project-scoped) hourly rows to be default,
+ * and guarantee exactly one default hourly (promote the first general hourly
+ * if none is flagged). Returns a new array — the input is never mutated.
  */
 export function cleanClientRates(rates: ClientRateInput[]): ClientRateInput[] {
   const base = rates
@@ -59,13 +69,15 @@ export function cleanClientRates(rates: ClientRateInput[]): ClientRateInput[] {
       kind: r.kind,
       name: r.name.trim(),
       rate: r.rate,
-      isDefault: r.kind === "hourly" && r.isDefault,
+      // The client-level default is only meaningful on a rate every project sees.
+      isDefault: r.kind === "hourly" && r.isDefault && !r.projectId,
       unit: r.kind === "item" ? r.unit?.trim() || null : null,
+      projectId: r.projectId || null,
     }));
   const hasDefault = base.some((r) => r.kind === "hourly" && r.isDefault);
   let promoted = false;
   return base.map((r) => {
-    if (!hasDefault && !promoted && r.kind === "hourly") {
+    if (!hasDefault && !promoted && r.kind === "hourly" && !r.projectId) {
       promoted = true;
       return { ...r, isDefault: true };
     }

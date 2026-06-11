@@ -34,6 +34,7 @@ interface Project {
   id: string;
   name: string;
   clientId: string;
+  clientName: string;
 }
 
 interface TaskOption {
@@ -328,7 +329,10 @@ export function TimerProvider({ children }: TimerProviderProps) {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/clients/${clientId}/rates`);
+        // projectId narrows to general rates + ones scoped to this project.
+        const res = await fetch(
+          `/api/clients/${clientId}/rates?projectId=${encodeURIComponent(selectedProject)}`
+        );
         const data = await res.json();
         if (cancelled || !data.success) return;
         const hourly: ClientRate[] = (data.rates || []).filter(

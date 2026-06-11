@@ -33,6 +33,10 @@ export function TimerStartModal() {
   } = useTimer();
 
   const hasProjects = projects.length > 0;
+  // With several clients the project names alone are ambiguous — label each
+  // option "project · client". With exactly one client, show it once below.
+  const clientCount = new Set(projects.map((p) => p.clientId)).size;
+  const singleClientName = clientCount === 1 ? projects[0]?.clientName : null;
 
   const handleClose = () => {
     setShowTimerModal(false);
@@ -70,9 +74,20 @@ export function TimerStartModal() {
                   disabled={startingTimer}
                   options={projects.map((project) => ({
                     value: project.id,
-                    label: project.name,
+                    label:
+                      clientCount > 1
+                        ? t("start.projectWithClient", {
+                            project: project.name,
+                            client: project.clientName,
+                          })
+                        : project.name,
                   }))}
                 />
+                {singleClientName && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {t("start.clientLine", { name: singleClientName })}
+                  </p>
+                )}
               </div>
 
               {selectedProject && timerTasks.length > 0 && (

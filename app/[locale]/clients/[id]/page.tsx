@@ -417,6 +417,7 @@ export default function ClientDetailsPage() {
                     rates={formData.rates}
                     currency={formData.currency}
                     onChange={(rates) => setFormData((prev) => ({ ...prev, rates }))}
+                    projects={clientProjects}
                     disabled={submitting}
                   />
                 </div>
@@ -655,6 +656,11 @@ export default function ClientDetailsPage() {
                                     {t("defaultBadge")}
                                   </span>
                                 )}
+                                {r.projectId && (
+                                  <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                                    {clientProjects.find((p) => p.id === r.projectId)?.name ?? t("rateScopeAria")}
+                                  </span>
+                                )}
                               </li>
                             ))}
                           </ul>
@@ -670,6 +676,11 @@ export default function ClientDetailsPage() {
                                 <span className="font-mono text-sm tabular-nums text-foreground">
                                   {symbol}{r.rate}<span className="text-muted-foreground">{t("perUnitSuffix")}</span>
                                 </span>
+                                {r.projectId && (
+                                  <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                                    {clientProjects.find((p) => p.id === r.projectId)?.name ?? t("rateScopeAria")}
+                                  </span>
+                                )}
                               </li>
                             ))}
                           </ul>

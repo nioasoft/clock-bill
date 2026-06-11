@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { fieldClass } from "@/lib/form-styles";
 import { CURRENCY_SYMBOLS } from "@/lib/currency";
+import { SimpleSelect } from "@/components/ui/simple-select";
 import type { ClientRateInput, RateKind } from "@/lib/schemas/rates";
 
 interface ClientRatesEditorProps {
@@ -12,6 +13,12 @@ interface ClientRatesEditorProps {
   currency: string;
   /** Emits the next rates array on any add/remove/edit/default-change. */
   onChange: (rates: ClientRateInput[]) => void;
+  /**
+   * The client's projects, for per-rate project scoping. Empty/omitted (e.g.
+   * a brand-new client) hides the scope select; existing projectId values
+   * still pass through unchanged.
+   */
+  projects?: { id: string; name: string }[];
   disabled?: boolean;
 }
 
@@ -26,7 +33,7 @@ interface ClientRatesEditorProps {
  * Layout is intentionally dense: each rate is a single compact row
  * (default · name · price · remove), grouped under two slim section headers.
  */
-export function ClientRatesEditor({ rates, currency, onChange, disabled }: ClientRatesEditorProps) {
+export function ClientRatesEditor({ rates, currency, onChange, projects = [], disabled }: ClientRatesEditorProps) {
   const t = useTranslations("Clients");
   const symbol = CURRENCY_SYMBOLS[currency] || "₪";
 
@@ -39,6 +46,7 @@ export function ClientRatesEditor({ rates, currency, onChange, disabled }: Clien
         rate: 0,
         isDefault: kind === "hourly" && !rates.some((r) => r.kind === "hourly" && r.isDefault),
         unit: null,
+        projectId: null,
       },
     ]);
 
@@ -62,6 +70,25 @@ export function ClientRatesEditor({ rates, currency, onChange, disabled }: Clien
   const updateRate = (idx: number, patch: Partial<ClientRateInput>) =>
     onChange(rates.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
 
+  // Scoping a rate to a project clears its default flag (the client default
+  // must stay visible on every project) and promotes the first general hourly.
+  const setScope = (idx: number, projectId: string | null) => {
+    let next = rates.map((r, i) =>
+      i === idx ? { ...r, projectId, isDefault: r.isDefault && !projectId } : r
+    );
+    if (!next.some((r) => r.kind === "hourly" && r.isDefault)) {
+      let promoted = false;
+      next = next.map((r) => {
+        if (!promoted && r.kind === "hourly" && !r.projectId) {
+          promoted = true;
+          return { ...r, isDefault: true };
+        }
+        return r;
+      });
+    }
+    onChange(next);
+  };
+
   const setDefault = (idx: number) =>
     onChange(rates.map((r, i) => ({ ...r, isDefault: i === idx && r.kind === "hourly" })));
 
@@ -70,7 +97,8 @@ export function ClientRatesEditor({ rates, currency, onChange, disabled }: Clien
 
   /** One compact rate row. `showDefault` renders the default-radio cell (hourly only). */
   const row = (r: ClientRateInput, idx: number, unit: string, showDefault: boolean) => (
-    <div key={idx} className="flex items-center gap-2">
+    <div key={idx} className="space-y-1">
+      <div className="flex items-center gap-2">
       {showDefault ? (
         <input
           type="radio"
@@ -130,6 +158,23 @@ export function ClientRatesEditor({ rates, currency, onChange, disabled }: Clien
       >
         ✕
       </button>
+      </div>
+      {projects.length > 0 && (
+        <div className="flex items-center gap-2 ps-6">
+          <span className="shrink-0 text-xs text-muted-foreground">{t("rateScopeLabel")}</span>
+          <SimpleSelect
+            value={r.projectId ?? ""}
+            onChange={(v) => setScope(idx, v || null)}
+            disabled={disabled}
+            aria-label={t("rateScopeAria")}
+            className="h-8 w-auto min-w-44 px-2 text-xs"
+            options={[
+              { value: "", label: t("rateScopeAll") },
+              ...projects.map((p) => ({ value: p.id, label: p.name })),
+            ]}
+          />
+        </div>
+      )}
     </div>
   );
 

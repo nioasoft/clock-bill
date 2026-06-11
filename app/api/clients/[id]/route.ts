@@ -80,9 +80,9 @@ export async function GET(
         [clientId, user.id]
       ),
       query<{
-        id: string; kind: string; name: string; rate: number; is_default: boolean; unit: string | null;
+        id: string; kind: string; name: string; rate: number; is_default: boolean; unit: string | null; project_id: string | null;
       }>(
-        `SELECT id, kind, name, rate, is_default, unit
+        `SELECT id, kind, name, rate, is_default, unit, project_id
          FROM client_rates WHERE client_id = $1 AND user_id = $2
          ORDER BY kind, is_default DESC, name`,
         [clientId, user.id]
@@ -99,7 +99,7 @@ export async function GET(
     const client = result.rows[0];
 
     const rates = ratesResult.rows.map((r) => ({
-      id: r.id, kind: r.kind as "hourly" | "item", name: r.name, rate: r.rate, isDefault: r.is_default, unit: r.unit,
+      id: r.id, kind: r.kind as "hourly" | "item", name: r.name, rate: r.rate, isDefault: r.is_default, unit: r.unit, projectId: r.project_id,
     }));
 
     return NextResponse.json({
@@ -194,7 +194,7 @@ export async function PUT(
       is_active: boolean;
       created_at: string;
     };
-    type RateRow = { id: string; kind: string; name: string; rate: number; is_default: boolean; unit: string | null };
+    type RateRow = { id: string; kind: string; name: string; rate: number; is_default: boolean; unit: string | null; project_id: string | null };
 
     // Update client + replace rates + re-read both, all in ONE transaction
     // (single connection, single begin/commit; still scoped by user_id; RLS bound).
@@ -233,6 +233,19 @@ export async function PUT(
       }
 
       if (ratesList !== null) {
+        // Project-scoped rates must point at a project of THIS client (an id
+        // from another client/user would silently never be offered — reject it).
+        const scopedIds = [...new Set(ratesList.map((r) => r.projectId).filter((p): p is string => Boolean(p)))];
+        if (scopedIds.length > 0) {
+          const owned = await db.query<{ id: string }>(
+            `SELECT id FROM projects WHERE client_id = $1 AND user_id = $2 AND id = ANY($3::text[])`,
+            [clientId, user.id, scopedIds]
+          );
+          if (owned.rows.length !== scopedIds.length) {
+            return { invalidProject: true as const };
+          }
+        }
+
         await db.query(`DELETE FROM client_rates WHERE client_id = $1 AND user_id = $2`, [clientId, user.id]);
         if (ratesList.length > 0) {
           // One multi-row INSERT via unnest over parallel arrays — preserves the
@@ -242,18 +255,19 @@ export async function PUT(
           const rateValues = ratesList.map((r) => r.rate);
           const isDefaults = ratesList.map((r) => (r.kind === "hourly" ? r.isDefault : false));
           const units = ratesList.map((r) => (r.kind === "item" ? r.unit ?? null : null));
+          const projectIds = ratesList.map((r) => r.projectId ?? null);
           await db.query(
-            `INSERT INTO client_rates (id, user_id, client_id, kind, name, rate, is_default, unit)
-             SELECT gen_random_uuid()::text, $1, $2, k, n, rt, d, u
-             FROM unnest($3::text[], $4::text[], $5::numeric[], $6::boolean[], $7::text[]) AS t(k, n, rt, d, u)`,
-            [user.id, clientId, kinds, names, rateValues, isDefaults, units]
+            `INSERT INTO client_rates (id, user_id, client_id, kind, name, rate, is_default, unit, project_id)
+             SELECT gen_random_uuid()::text, $1, $2, k, n, rt, d, u, p
+             FROM unnest($3::text[], $4::text[], $5::numeric[], $6::boolean[], $7::text[], $8::text[]) AS t(k, n, rt, d, u, p)`,
+            [user.id, clientId, kinds, names, rateValues, isDefaults, units, projectIds]
           );
         }
       }
 
       // Re-read rates inside the same transaction (reuses the one connection).
       const ratesResult = await db.query<RateRow>(
-        `SELECT id, kind, name, rate, is_default, unit
+        `SELECT id, kind, name, rate, is_default, unit, project_id
          FROM client_rates WHERE client_id = $1 AND user_id = $2
          ORDER BY kind, is_default DESC, name`,
         [clientId, user.id]
@@ -261,6 +275,13 @@ export async function PUT(
 
       return { notFound: false as const, client: updateResult.rows[0], rateRows: ratesResult.rows };
     });
+
+    if ("invalidProject" in txResult) {
+      return NextResponse.json(
+        { success: false, error_code: "INVALID_RATE_PROJECT", message: "תעריף משויך לפרויקט שאינו של הלקוח" },
+        { status: 400 }
+      );
+    }
 
     if (txResult.notFound) {
       return NextResponse.json(
@@ -271,7 +292,7 @@ export async function PUT(
 
     const client = txResult.client;
     const updatedRates = txResult.rateRows.map((r) => ({
-      id: r.id, kind: r.kind as "hourly" | "item", name: r.name, rate: r.rate, isDefault: r.is_default, unit: r.unit,
+      id: r.id, kind: r.kind as "hourly" | "item", name: r.name, rate: r.rate, isDefault: r.is_default, unit: r.unit, projectId: r.project_id,
     }));
 
     return NextResponse.json({

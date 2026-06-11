@@ -320,7 +320,10 @@ export default function EntriesPage() {
     setRatesLoaded(false);
     (async () => {
       try {
-        const res = await fetch(`/api/clients/${clientId}/rates`);
+        // projectId narrows to general rates + ones scoped to this project.
+        const res = await fetch(
+          `/api/clients/${clientId}/rates?projectId=${encodeURIComponent(formData.projectId)}`
+        );
         const data = await res.json();
         if (cancelled || !data.success) return;
         setFormRates(data.rates as ClientRate[]);
