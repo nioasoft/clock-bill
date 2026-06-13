@@ -3,6 +3,8 @@
  * Formats dates and times according to user preferences
  */
 
+import { resolveIntlLocale } from "@/lib/locale";
+
 export type DateFormat = "DD/MM/YYYY" | "MM/DD/YYYY" | "YYYY-MM-DD";
 export type TimeFormat = "12h" | "24h";
 
@@ -10,20 +12,6 @@ export interface FormatOptions {
   dateFormat?: DateFormat;
   timeFormat?: TimeFormat;
   locale?: string;
-}
-
-/** App locale codes (from next-intl routing) → BCP-47 tags for Intl. */
-export type AppLocale = "he" | "en";
-
-/**
- * Resolve an app locale ("he"/"en") or a full BCP-47 tag to a concrete
- * Intl locale. Hebrew renders with he-IL conventions, English with en-US.
- */
-function resolveIntlLocale(locale: string): string {
-  if (locale === "he" || locale === "he-IL") return "he-IL";
-  if (locale === "en" || locale === "en-US") return "en-US";
-  // Already a full tag (or unknown) — pass through, falling back to he-IL.
-  return locale.includes("-") ? locale : "he-IL";
 }
 
 /** Locale-appropriate default date pattern when the user has no preference. */

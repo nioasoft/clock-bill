@@ -1,3 +1,5 @@
+import { resolveIntlLocale } from "@/lib/locale";
+
 /** Currency symbols + formatting shared across the app. */
 export const CURRENCY_SYMBOLS: Record<string, string> = {
   ILS: "₪",
@@ -14,13 +16,6 @@ const CRYPTO_FRACTION_DIGITS: Record<string, number> = {
   BTC: 8,
   ETH: 6,
 };
-
-/** App locale ("he"/"en") or BCP-47 tag → concrete Intl locale. */
-function resolveIntlLocale(locale: string): string {
-  if (locale === "he" || locale === "he-IL") return "he-IL";
-  if (locale === "en" || locale === "en-US") return "en-US";
-  return locale.includes("-") ? locale : "he-IL";
-}
 
 /**
  * Format a monetary amount for the active locale.
