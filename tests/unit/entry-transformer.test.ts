@@ -73,7 +73,7 @@ const REQUIRED_KEYS = [
 ] as const;
 
 runner.test("mapEntryRow returns the full field set", () => {
-  const out = mapEntryRow(fullRow) as Record<string, unknown>;
+  const out = mapEntryRow(fullRow);
   for (const k of REQUIRED_KEYS) {
     assert(k in out, `missing field "${k}" in mapped entry`);
   }
