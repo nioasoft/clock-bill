@@ -62,7 +62,7 @@ export async function GET(): Promise<NextResponse> {
 
     logger.info("User data exported", { userId: uid });
 
-    const filename = `monit-data-export-${exportedAt.slice(0, 10)}.json`;
+    const filename = `clockbill-data-export-${exportedAt.slice(0, 10)}.json`;
     return new NextResponse(JSON.stringify(payload, null, 2), {
       status: 200,
       headers: {

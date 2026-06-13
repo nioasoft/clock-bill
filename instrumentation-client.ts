@@ -10,7 +10,7 @@ if (dsn) {
     sendDefaultPii: false,
     environment: process.env.NODE_ENV,
     // Drop noise from browser extensions (wallets, etc.) injected into the page.
-    // These errors come from the visitor's extension, not from Monit's code.
+    // These errors come from the visitor's extension, not from ClockBill's code.
     ignoreErrors: [
       /MetaMask/i,
       /Failed to connect to MetaMask/i,

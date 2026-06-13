@@ -98,7 +98,7 @@ const ENV_SCHEMA: EnvVarSchema[] = [
   {
     name: "EMAIL_FROM",
     required: false,
-    description: 'Verified Resend sender, e.g. "Monit <noreply@clock-bill.com>" (optional)',
+    description: 'Verified Resend sender, e.g. "ClockBill <noreply@clock-bill.com>" (optional)',
   },
   {
     name: "R2_BUCKET_NAME",
@@ -167,6 +167,27 @@ const ENV_SCHEMA: EnvVarSchema[] = [
     name: "POLAR_SUCCESS_URL",
     required: false,
     description: "Post-checkout redirect URL (optional, default /dashboard?checkout=success)",
+  },
+  // Web Push (VAPID). All optional — push degrades to a no-op when unset.
+  {
+    name: "NEXT_PUBLIC_VAPID_PUBLIC_KEY",
+    required: false,
+    description: "VAPID public key for Web Push (browser-safe; required to enable push)",
+  },
+  {
+    name: "VAPID_PRIVATE_KEY",
+    required: false,
+    description: "VAPID private key for Web Push (server-only; never expose to the client)",
+  },
+  {
+    name: "VAPID_SUBJECT",
+    required: false,
+    description: 'VAPID subject contact, e.g. "mailto:support@clock-bill.com" (optional)',
+  },
+  {
+    name: "CRON_SECRET",
+    required: false,
+    description: "Bearer token Vercel attaches to cron invocations; required to protect /api/cron/* in prod",
   },
   {
     name: "BLOB_READ_WRITE_TOKEN",

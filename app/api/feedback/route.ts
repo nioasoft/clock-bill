@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
   const sent = await sendEmail({
     to: FEEDBACK_RECIPIENT,
     replyTo: user.email,
-    subject: `[מוניט · ${categoryLabel}] פנייה מ-${user.email}`,
+    subject: `[ClockBill · ${categoryLabel}] פנייה מ-${user.email}`,
     html: emailLayout({
       heading: `פנייה חדשה — ${escapeHtml(categoryLabel)}`,
       bodyHtml: `

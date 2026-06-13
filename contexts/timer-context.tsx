@@ -248,17 +248,53 @@ export function TimerProvider({ children }: TimerProviderProps) {
     }
   }, []);
 
-  // Initial fetch + polling. Fires immediately on non-public routes — no auth
-  // round-trip first. Public routes (login/register) skip it.
+  // Initial fetch + SPARING re-sync. The timer ticks locally (1s, no network);
+  // the server is the source of truth only for recovery-on-load and cross-device
+  // drift. So we fetch on load, re-sync whenever the tab becomes visible/focused
+  // (covers "user came back" + switching devices), and otherwise only on a slow
+  // safety interval WHILE the tab is visible. A backgrounded tab makes zero
+  // calls — this keeps API volume flat as the user base grows (was: every 30s,
+  // every tab, even hidden → ~960 calls/user/day; now a small fraction of that).
   useEffect(() => {
     if (isPublicRoute) {
       setTimerLoading(false);
       return;
     }
 
+    // Generous: focus/visibility re-sync already covers responsiveness, so the
+    // interval is just a drift safety-net for a tab left open and visible.
+    const SYNC_INTERVAL_MS = 5 * 60 * 1000;
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    const startInterval = () => {
+      if (interval === null) interval = setInterval(fetchRunningTimer, SYNC_INTERVAL_MS);
+    };
+    const stopInterval = () => {
+      if (interval !== null) {
+        clearInterval(interval);
+        interval = null;
+      }
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchRunningTimer(); // re-sync the moment the tab is shown again
+        startInterval();
+      } else {
+        stopInterval(); // hidden → stop polling entirely
+      }
+    };
+
     fetchRunningTimer();
-    const interval = setInterval(fetchRunningTimer, 30000);
-    return () => clearInterval(interval);
+    if (document.visibilityState === "visible") startInterval();
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("focus", fetchRunningTimer);
+
+    return () => {
+      stopInterval();
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("focus", fetchRunningTimer);
+    };
   }, [isPublicRoute, fetchRunningTimer]);
 
   // Fetch projects for start modal — refetch when modal opens to catch newly created projects
@@ -394,7 +430,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
       const { minutes, seconds } = liveElapsed(primary, lastApiUpdate);
       document.title = `${countPrefix}${formatElapsed(minutes, seconds)} - ${
         primary.pausedAt ? "מושהה - " : ""
-      }מוניט`;
+      }ClockBill`;
     };
 
     updateTitle();

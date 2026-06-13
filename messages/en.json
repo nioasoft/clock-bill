@@ -9,9 +9,9 @@
     "close": "Close"
   },
   "Meta": {
-    "title": "Monit - Time Tracking for Freelancers",
+    "title": "ClockBill - Time Tracking for Freelancers",
     "description": "Time tracking, client management, and professional reports. All in one place, for free.",
-    "keywords": "time tracking,freelancer,work hours,project management,itemized billing,settlement statement,client management,reports,Monit"
+    "keywords": "time tracking,freelancer,work hours,project management,itemized billing,settlement statement,client management,reports,ClockBill"
   },
   "NotFound": {
     "title": "Page Not Found",
@@ -144,7 +144,7 @@
   },
   "Onboarding": {
     "title": "Let's set up your account",
-    "subtitle": "A few quick settings so Monit fits you from day one. You can change everything later in Settings.",
+    "subtitle": "A few quick settings so ClockBill fits you from day one. You can change everything later in Settings.",
     "professionLabel": "What's your field?",
     "currencyLabel": "Default currency",
     "currencyHint": "Detected from your location — change it if needed.",
@@ -930,7 +930,7 @@
       "notificationsUnsupported": "Your browser does not support notifications",
       "permissionGranted": "Notification permission granted successfully!",
       "permissionRequiredForTest": "Notification permission is required to test this feature",
-      "testNotificationTitle": "Notification Test - Monit",
+      "testNotificationTitle": "Notification Test - ClockBill",
       "testNotificationBody": "This is a test notification from the system. If you see this message, notifications are working correctly!",
       "loadProfileError": "Failed to load profile",
       "loadSessionsError": "Failed to load sessions",
@@ -978,7 +978,7 @@
       "tooManyRequests": "Too many attempts. Please wait a moment and try again."
     },
     "common": {
-      "appName": "Monit",
+      "appName": "ClockBill",
       "emailLabel": "Email address",
       "passwordLabel": "Password",
       "confirmPasswordLabel": "Confirm password",
@@ -1510,12 +1510,12 @@
     "faq": {
       "heading": "Frequently asked questions",
       "q1": {
-        "question": "Who can use Monit?",
-        "answer": "Monit is built for freelancers, independent consultants, and small business owners who need to track work hours, manage clients, and bill in an organized way."
+        "question": "Who can use ClockBill?",
+        "answer": "ClockBill is built for freelancers, independent consultants, and small business owners who need to track work hours, manage clients, and bill in an organized way."
       },
       "q2": {
         "question": "Is it really free?",
-        "answer": "Yes, today it's free. Monit is in beta, and using it currently costs nothing, with no credit card. Going forward, managing up to three clients will stay free too. If we add paid plans for extended use, we'll let you know in advance and won't charge anyone without their choosing to."
+        "answer": "Yes, today it's free. ClockBill is in beta, and using it currently costs nothing, with no credit card. Going forward, managing up to three clients will stay free too. If we add paid plans for extended use, we'll let you know in advance and won't charge anyone without their choosing to."
       },
       "q3": {
         "question": "Can I run several timers at the same time?",
@@ -1535,11 +1535,11 @@
       },
       "q7": {
         "question": "Can I export reports in Hebrew?",
-        "answer": "Yes. Monit exports reports and statements as fully Hebrew PDFs with RTL support. There are several designs to choose from, and you can upload a personal logo."
+        "answer": "Yes. ClockBill exports reports and statements as fully Hebrew PDFs with RTL support. There are several designs to choose from, and you can upload a personal logo."
       },
       "q8": {
         "question": "Is there a mobile app?",
-        "answer": "Monit works great in the mobile browser and supports installing as an app (PWA). You can add it to your home screen and use it like a regular app."
+        "answer": "ClockBill works great in the mobile browser and supports installing as an app (PWA). You can add it to your home screen and use it like a regular app."
       },
       "q9": {
         "question": "How do I set up pricing models?",
@@ -1548,7 +1548,7 @@
     },
     "cta": {
       "heading": "Ready to manage your time the smart way?",
-      "subheading": "Join 500+ freelancers already using Monit",
+      "subheading": "Join 500+ freelancers already using ClockBill",
       "socialProof": "Join 500+ freelancers",
       "button": "Create a free account"
     },
@@ -1619,7 +1619,7 @@
       },
       "payment": {
         "heading": "Payment, Renewal and Cancellation",
-        "processor": "Payment for paid plans is processed by Polar Software Inc., acting as Merchant of Record (the seller of record). The purchase and billing contract is between you and Polar; Monit licenses the use of the Service to you under these Terms. For payment, invoicing and taxes, Polar's terms apply.",
+        "processor": "Payment for paid plans is processed by Polar Software Inc., acting as Merchant of Record (the seller of record). The purchase and billing contract is between you and Polar; ClockBill licenses the use of the Service to you under these Terms. For payment, invoicing and taxes, Polar's terms apply.",
         "billing": "Paid plans are billed on a monthly or annual cycle of your choosing, in US dollars, and renew automatically at the end of each period until cancelled. Tax (VAT/sales tax) may be added at checkout depending on your country and is handled by Polar.",
         "priceChanges": "We may update prices or plans in the future. A price change will take effect only after separate advance notice (including a separate notice at the end of any promotional period), and you will not be charged an updated price without consent.",
         "cancellation": "You may cancel your subscription at any time via the subscription management portal or your account settings. Cancellation takes effect within 3 business days at the latest; you will not be charged for any period after the cancellation date, and you keep access until the end of the paid period.",
@@ -1748,7 +1748,7 @@
     }
   },
   "Offline": {
-    "metaTitle": "No Connection — Monit",
+    "metaTitle": "No Connection — ClockBill",
     "title": "No Internet Connection",
     "body": "It looks like you're offline. Check your connection and try again — some of the screens you've already visited are available even without a network.",
     "retry": "Try Again"
@@ -1809,7 +1809,7 @@
   "Pwa": {
     "dialogLabel": "Install the app",
     "close": "Close",
-    "installTitle": "Install Monit",
+    "installTitle": "Install ClockBill",
     "installSubtitle": "Quick access from your home screen, even without a browser.",
     "installButton": "Install app",
     "iosInstructions": "Tap the share button <icon></icon> in the browser bar, then choose \"Add to Home Screen\".",
@@ -1922,7 +1922,7 @@
       "notBillable": "Non-billable",
       "projectTotal": "Total {project}",
       "fixedMonthly": "Fixed monthly charge",
-      "appName": "Monit",
+      "appName": "ClockBill",
       "generatedOn": "Generated on {date}",
       "noEntries": "No entries found for the selected period",
       "logTimeNow": "Log time now",

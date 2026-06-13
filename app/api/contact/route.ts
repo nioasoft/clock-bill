@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
   const sent = await sendEmail({
     to: CONTACT_RECIPIENT,
     replyTo: email,
-    subject: `[מוניט · צור קשר] הודעה מ-${email}`,
+    subject: `[ClockBill · צור קשר] הודעה מ-${email}`,
     html: emailLayout({
       heading: "הודעה חדשה מטופס יצירת הקשר",
       bodyHtml: `

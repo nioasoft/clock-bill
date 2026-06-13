@@ -8,14 +8,14 @@
  * (auth hooks) must never crash a flow just because email is unconfigured.
  *
  * Required prod env: RESEND_API_KEY, EMAIL_FROM (a verified Resend sender,
- * e.g. "מוניט <noreply@clock-bill.com>" — the domain must be verified in Resend).
+ * e.g. "ClockBill <noreply@clock-bill.com>" — the domain must be verified in Resend).
  */
 import { Resend } from "resend";
 import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("email");
 
-const DEFAULT_FROM = "מוניט <noreply@clock-bill.com>";
+const DEFAULT_FROM = "ClockBill <noreply@clock-bill.com>";
 
 let client: Resend | null = null;
 
@@ -76,16 +76,16 @@ export async function sendEmail({ to, subject, html, replyTo }: SendEmailParams)
 /** Supported email locales. Recipient locale is resolved best-effort by callers. */
 export type EmailLocale = "he" | "en";
 
-/** Brand name per locale (Latin transliteration for English clients). */
+/** Brand name per locale ("ClockBill" is a single Latin word-mark in every locale). */
 const EMAIL_BRAND: Record<EmailLocale, string> = {
-  he: "מוניט",
-  en: "Monit",
+  he: "ClockBill",
+  en: "ClockBill",
 };
 
 /** Footer line per locale. */
 const EMAIL_FOOTER: Record<EmailLocale, string> = {
-  he: "הודעה זו נשלחה ממוניט — מערכת מעקב שעות עבודה.",
-  en: "This message was sent by Monit — a work-hours tracking system.",
+  he: "הודעה זו נשלחה מ-ClockBill — מערכת מעקב שעות עבודה.",
+  en: "This message was sent by ClockBill — a work-hours tracking system.",
 };
 
 /**

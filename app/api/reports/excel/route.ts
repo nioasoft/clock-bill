@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const L =
       locale === "en"
         ? {
-            creator: "Monit - Time Tracking System",
+            creator: "ClockBill - Time Tracking System",
             sheetEntries: "Time Entries",
             sheetFixed: "Fixed Charges",
             sheetSummary: "Summary",
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
             readingOrder: "ltr" as const,
           }
         : {
-            creator: "מוניט - מערכת למעקב שעות",
+            creator: "ClockBill - מערכת למעקב שעות",
             sheetEntries: "רשומות זמן",
             sheetFixed: "חיובים קבועים",
             sheetSummary: "סיכום",

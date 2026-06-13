@@ -7,8 +7,8 @@ import type { MetadataRoute } from "next";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "מוניט — מעקב שעות עבודה",
-    short_name: "מוניט",
+    name: "ClockBill — מעקב שעות עבודה",
+    short_name: "ClockBill",
     description: "מעקב שעות, ניהול לקוחות ודוחות מקצועיים — בעברית.",
     start_url: "/dashboard",
     scope: "/",

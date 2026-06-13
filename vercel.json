@@ -2,6 +2,7 @@
   "framework": "nextjs",
   "regions": ["fra1"],
   "crons": [
-    { "path": "/api/cron/keep-alive", "schedule": "*/5 * * * *" }
+    { "path": "/api/cron/keep-alive", "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/notifications", "schedule": "*/5 * * * *" }
   ]
 }

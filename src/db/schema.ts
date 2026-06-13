@@ -135,6 +135,10 @@ export const userProfiles = pgTable("user_profiles", {
   dailyReminderEnabled: boolean("daily_reminder_enabled").default(false),
   dailyReminderTime: text("daily_reminder_time").default("09:00"),
   lastReminderDate: date("last_reminder_date"),
+  // IANA timezone (e.g. "Asia/Jerusalem") used by the server cron to fire the
+  // daily reminder at the user's *local* dailyReminderTime. Sent by the client
+  // on push subscribe; defaults to Israel for the existing base.
+  timezone: text("timezone").default("Asia/Jerusalem"),
   // Display preferences
   dateFormat: text("date_format").default("DD/MM/YYYY"),
   timeFormat: text("time_format").default("24h"),
@@ -345,6 +349,10 @@ export const timeEntries = pgTable(
     isBillable: boolean("is_billable").default(true),
     pausedAt: timestamp("paused_at"),
     totalPausedTime: integer("total_paused_time").default(0),
+    // Set by the notifications cron when a long-timer push was sent for this
+    // running entry, so the alert fires once (not on every cron tick). NULL =
+    // not yet notified; naturally NULL for new entries.
+    longTimerNotifiedAt: timestamp("long_timer_notified_at"),
     // Per-line billing snapshot (immune to later edits of client_rates).
     rate: real("rate"), // ₪/hour for hourly lines, ₪/unit for item lines
     rateLabel: text("rate_label"), // the rate/item name at log time
@@ -533,4 +541,23 @@ export const chargeDocumentLines = pgTable(
       sql`${table.periodMonth} IS NULL OR ${table.periodMonth} ~ '^\\d{4}-\\d{2}$'`
     ),
   ]
+);
+
+// ─── Web Push subscriptions ─────────────────────────────────────────
+// One row per browser/device push endpoint a user has granted. The endpoint is
+// globally unique (re-subscribing the same browser upserts). User-scoped → RLS
+// FORCE-d like the other tenant tables; the notifications cron reads across all
+// users via the privileged adminQuery() connection (bypasses RLS).
+export const pushSubscriptions = pgTable(
+  "push_subscriptions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    endpoint: text("endpoint").notNull().unique(),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    userAgent: text("user_agent"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [index("idx_push_subscriptions_user_id").on(table.userId)]
 );

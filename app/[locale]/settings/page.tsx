@@ -15,6 +15,7 @@ import { messageForError } from "@/lib/api-error";
 import { ROUNDING_MODES } from "@/lib/rounding";
 import { THEMES } from "@/lib/themes";
 import { useTheme } from "@/components/theme-provider";
+import { subscribeToPush, unsubscribeFromPush } from "@/lib/push-client";
 
 interface Session {
   id: string;
@@ -183,6 +184,9 @@ export default function SettingsPage() {
     setNotificationPermission(permission);
 
     if (permission === "granted") {
+      // Register this browser for Web Push so reminders/long-timer alerts arrive
+      // even when the app is closed (and on installed iOS PWAs).
+      await subscribeToPush();
       setSuccessMessage(t("toasts.permissionGranted"));
       setTimeout(() => setSuccessMessage(""), 3000);
     }
@@ -376,6 +380,13 @@ export default function SettingsPage() {
 
       if (data.success) {
         setProfile(data.profile);
+        // Keep the Web Push subscription in sync with the toggles: drop it when
+        // both alerts are off, (re)register it when at least one is on.
+        if (!longTimerEnabled && !dailyReminderEnabled) {
+          await unsubscribeFromPush();
+        } else if (notificationPermission === "granted") {
+          await subscribeToPush();
+        }
         setSuccessMessage(t("toasts.notificationSettingsSaved"));
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
@@ -715,7 +726,7 @@ export default function SettingsPage() {
       const link = document.createElement("a");
       link.href = url;
       const today = new Date().toISOString().slice(0, 10);
-      link.download = `monit-data-export-${today}.json`;
+      link.download = `clockbill-data-export-${today}.json`;
       document.body.appendChild(link);
       link.click();
       link.remove();

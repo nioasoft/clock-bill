@@ -102,17 +102,17 @@ async function resolveEmailLocaleForUser(
 const AUTH_EMAILS = {
   resetPassword: {
     he: {
-      subject: "איפוס סיסמה — מוניט",
+      subject: "איפוס סיסמה — ClockBill",
       heading: "איפוס סיסמה",
-      intro: "קיבלנו בקשה לאיפוס הסיסמה לחשבון שלך במוניט.",
+      intro: "קיבלנו בקשה לאיפוס הסיסמה לחשבון שלך ב-ClockBill.",
       cta: "לחץ על הכפתור כדי לבחור סיסמה חדשה. הקישור תקף לזמן מוגבל.",
       button: "אפס סיסמה",
       ignore: "אם לא ביקשת לאפס סיסמה, אפשר להתעלם מהודעה זו — הסיסמה שלך לא תשתנה.",
     },
     en: {
-      subject: "Password reset — Monit",
+      subject: "Password reset — ClockBill",
       heading: "Reset your password",
-      intro: "We received a request to reset the password for your Monit account.",
+      intro: "We received a request to reset the password for your ClockBill account.",
       cta: "Click the button below to choose a new password. This link is valid for a limited time.",
       button: "Reset password",
       ignore: "If you didn't request a password reset, you can safely ignore this email — your password won't change.",
@@ -120,20 +120,20 @@ const AUTH_EMAILS = {
   },
   verifyEmail: {
     he: {
-      subject: "אימות כתובת אימייל — מוניט",
+      subject: "אימות כתובת אימייל — ClockBill",
       heading: "אמת את כתובת האימייל שלך",
-      intro: "ברוך הבא למוניט.",
+      intro: "ברוך הבא ל-ClockBill.",
       cta: "כדי להתחיל, אנא אמת את כתובת האימייל שלך בלחיצה על הכפתור.",
       button: "אמת אימייל",
-      ignore: "אם לא נרשמת למוניט, אפשר להתעלם מהודעה זו.",
+      ignore: "אם לא נרשמת ל-ClockBill, אפשר להתעלם מהודעה זו.",
     },
     en: {
-      subject: "Verify your email — Monit",
+      subject: "Verify your email — ClockBill",
       heading: "Verify your email address",
-      intro: "Welcome to Monit.",
+      intro: "Welcome to ClockBill.",
       cta: "To get started, please verify your email address by clicking the button below.",
       button: "Verify email",
-      ignore: "If you didn't sign up for Monit, you can safely ignore this email.",
+      ignore: "If you didn't sign up for ClockBill, you can safely ignore this email.",
     },
   },
 } as const;

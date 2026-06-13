@@ -1,18 +1,18 @@
 export const BRAND = {
-  name: "מוניט",
-  nameEn: "Monit",
+  name: "ClockBill",
+  nameEn: "ClockBill",
   tagline: "הזמן שלך שווה כסף",
   description: "מעקב שעות, ניהול לקוחות ודוחות מקצועיים בעברית",
 } as const;
 
 /**
- * Locale-aware brand name. The logo/word-mark must read in the active UI
- * language: Hebrew "מוניט" for `he`, Latin "Monit" for `en` (and any other
- * non-`he` locale). Use this everywhere the brand name is *rendered* — never
- * the raw `BRAND.name`, which is Hebrew-only.
+ * Locale-aware brand name. "ClockBill" is a single Latin word-mark used in every
+ * locale (including the Hebrew RTL UI) — there is no transliteration. The helper
+ * is kept for back-compat with existing callers and in case a locale ever needs
+ * a script-specific variant again.
  *
  * @param locale The active next-intl locale (e.g. "he" | "en").
- * @returns The brand name in the matching script.
+ * @returns The brand name.
  */
 export function brandName(locale: string): string {
   return locale === "en" ? BRAND.nameEn : BRAND.name;

@@ -1,12 +1,13 @@
-/* Monit service worker — manual (Turbopack-safe, no build plugin).
+/* ClockBill service worker — manual (Turbopack-safe, no build plugin).
  *
  * Strategy:
  *  - Navigations (HTML): network-first, fall back to cache, then the offline page.
  *  - Same-origin static assets (_next/static, icons, fonts): cache-first.
  *  - API requests (/api/*): always network (never cache user/tenant data).
+ *  - Web Push: `push` shows the notification; `notificationclick` focuses/opens.
  * Bump CACHE_VERSION to invalidate old caches on deploy.
  */
-const CACHE_VERSION = "monit-v2";
+const CACHE_VERSION = "clockbill-v3";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const PAGE_CACHE = `${CACHE_VERSION}-pages`;
 const OFFLINE_URL = "/offline";
@@ -80,4 +81,43 @@ self.addEventListener("fetch", (event) => {
 // Allow the page to trigger an immediate activation after an update.
 self.addEventListener("message", (event) => {
   if (event.data === "SKIP_WAITING") self.skipWaiting();
+});
+
+// Web Push: show the notification carried in the push payload.
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { title: "ClockBill", body: event.data ? event.data.text() : "" };
+  }
+  const title = data.title || "ClockBill";
+  const options = {
+    body: data.body || "",
+    icon: "/web-app-manifest-192x192.png",
+    badge: "/notification-icon.svg",
+    dir: data.lang === "en" ? "ltr" : "rtl",
+    lang: data.lang || "he",
+    tag: data.tag,
+    data: { url: data.url || "/dashboard" },
+    requireInteraction: false,
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Focus an existing app window for the target URL, or open a new one.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || "/dashboard";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(targetUrl) && "focus" in client) return client.focus();
+      }
+      if (clientList.length > 0 && "focus" in clientList[0]) {
+        return clientList[0].focus().then((c) => (c && c.navigate ? c.navigate(targetUrl) : c));
+      }
+      return self.clients.openWindow(targetUrl);
+    })
+  );
 });
