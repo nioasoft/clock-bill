@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/src/i18n/navigation";
-import { Gauge } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 import { brandName } from "@/lib/brand";
 
 interface MobileNavProps {
@@ -28,7 +28,7 @@ export function MobileNav({ userEmail, onLogout }: MobileNavProps) {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-gradient-to-br from-accent to-accent/80 rounded-lg flex items-center justify-center">
-            <Gauge className="h-5 w-5 text-sidebar" />
+            <BrandMark className="h-5 w-5 text-sidebar" />
           </div>
           <h1 className="text-xl font-bold text-sidebar-foreground">{brandName(locale)}</h1>
         </Link>

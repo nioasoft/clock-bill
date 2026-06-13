@@ -1,6 +1,12 @@
 <svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="192" height="192" rx="48" fill="#2563EB"/>
-  <circle cx="96" cy="96" r="8" fill="white"/>
-  <path d="M96 52C78.3269 52 64 66.3269 64 84V108H56C50.4772 108 46 112.477 46 118V136C46 141.523 50.4772 146 56 146H136C141.523 146 146 141.523 146 136V118C146 112.477 141.523 108 136 108H128V84C128 66.3269 113.673 52 96 52Z" fill="white"/>
-  <circle cx="96" cy="154" r="10" fill="white"/>
+  <!-- ClockBill push badge: white mark on transparent (Android masks badges to a
+       white silhouette anyway). 4b · Play + stopwatch crown. -->
+  <g transform="translate(96 96) scale(4) translate(-24 -22.75)"
+     stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M24 13 V8" stroke-width="3"/>
+    <path d="M20.5 8 H27.5" stroke-width="3"/>
+    <path d="M34 16.5 l2 -2" stroke-width="3"/>
+    <circle cx="24" cy="26" r="13" stroke-width="2.8"/>
+    <path d="M20 19.5 L30.5 26 L20 32.5 Z" fill="#ffffff" stroke="none"/>
+  </g>
 </svg>

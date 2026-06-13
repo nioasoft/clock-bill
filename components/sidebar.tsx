@@ -23,6 +23,7 @@ import { GlobalSearch } from "./global-search";
 import { navItemDefs } from "@/lib/nav-items";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { brandName } from "@/lib/brand";
+import { BrandMark } from "@/components/brand-mark";
 
 const iconMap = { Home, Clock: Gauge, Users, FolderKanban, FileText, MessageSquare, Settings, Shield } as const;
 
@@ -94,7 +95,7 @@ export function Sidebar({
           <div className="w-12 h-12 relative flex items-center justify-center shrink-0">
             <ClockFaceMarks size={40} color="#D4A04A" className="absolute inset-0 m-auto" />
             <div className="w-10 h-10 bg-gradient-to-br from-accent to-accent/80 rounded-lg flex items-center justify-center relative z-10">
-              <Gauge className="h-6 w-6 text-sidebar" />
+              <BrandMark className="h-6 w-6 text-sidebar" />
             </div>
           </div>
           {!isCollapsed && (

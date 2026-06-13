@@ -3,8 +3,9 @@
 import { Link } from "@/src/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, useEffect } from "react";
-import { Gauge, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 import { brandName } from "@/lib/brand";
+import { BrandMark } from "@/components/brand-mark";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 
@@ -46,7 +47,7 @@ export function LandingNavbar() {
           <Link href="/" className="flex items-center gap-2">
             <div className="relative w-9 h-9 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center">
               <ClockFaceMarks size={24} className="absolute inset-0 m-auto text-primary-foreground/20" />
-              <Gauge className="relative h-5 w-5 text-primary-foreground" aria-hidden="true" />
+              <BrandMark className="relative h-5 w-5 text-primary-foreground" />
             </div>
             <span className="text-xl font-display font-bold text-foreground">
               {brandName(locale)}

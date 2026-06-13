@@ -9,32 +9,13 @@
   <!-- Brand surface: electric-yellow rounded square (matches in-app logo) -->
   <rect width="512" height="512" rx="112" fill="url(#bg)"/>
 
-  <!-- Decorative clock-tick ring (subtle; reads as texture at large sizes, vanishes at 16px) -->
-  <g stroke="#0a0a0a" stroke-linecap="round">
-    <!-- minute marks -->
-    <g stroke-width="4" opacity="0.12">
-      <line x1="362" y1="72.4" x2="354" y2="86.3"/>
-      <line x1="439.6" y1="150" x2="425.7" y2="158"/>
-      <line x1="439.6" y1="362" x2="425.7" y2="354"/>
-      <line x1="362" y1="439.6" x2="354" y2="425.7"/>
-      <line x1="150" y1="439.6" x2="158" y2="425.7"/>
-      <line x1="72.4" y1="362" x2="86.3" y2="354"/>
-      <line x1="72.4" y1="150" x2="86.3" y2="158"/>
-      <line x1="150" y1="72.4" x2="158" y2="86.3"/>
-    </g>
-    <!-- hour marks (12, 3, 6, 9) -->
-    <g stroke-width="6" opacity="0.2">
-      <line x1="256" y1="44" x2="256" y2="70"/>
-      <line x1="468" y1="256" x2="442" y2="256"/>
-      <line x1="256" y1="468" x2="256" y2="442"/>
-      <line x1="44" y1="256" x2="70" y2="256"/>
-    </g>
-  </g>
-
-  <!-- Gauge mark (lucide "gauge"), bold black, centered -->
-  <g transform="translate(100,74) scale(13)" stroke="#0a0a0a" stroke-width="2"
-     stroke-linecap="round" stroke-linejoin="round" fill="none">
-    <path d="M3.34 19a10 10 0 1 1 17.32 0"/>
-    <path d="m12 14 4-4"/>
+  <!-- ClockBill mark (4b · Play + stopwatch crown), bold black on yellow. -->
+  <g transform="translate(256 256) scale(8) translate(-24 -22.75)"
+     stroke="#0a0a0a" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M24 13 V8" stroke-width="3"/>
+    <path d="M20.5 8 H27.5" stroke-width="3"/>
+    <path d="M34 16.5 l2 -2" stroke-width="3"/>
+    <circle cx="24" cy="26" r="13" stroke-width="2.8"/>
+    <path d="M20 19.5 L30.5 26 L20 32.5 Z" fill="#0a0a0a" stroke="none"/>
   </g>
 </svg>
