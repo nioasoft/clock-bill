@@ -381,6 +381,16 @@ export const timeEntries = pgTable(
     index("idx_running_timers_per_user")
       .on(table.userId)
       .where(sql`${table.startTime} IS NOT NULL AND ${table.endTime} IS NULL`),
+    // SCALE NOTE (not yet created — deliberately deferred): the clients list
+    // (app/api/clients/route.ts) aggregates SUM(duration)/SUM(is_billable) over
+    // ALL of a user's entries via clients⟕projects⟕time_entries on every load.
+    // If a single user ever accumulates tens of thousands of entries and that
+    // endpoint slows, add a covering index out-of-band (Drizzle 0.45 can't
+    // express INCLUDE — mirror drizzle/0008):
+    //   CREATE INDEX CONCURRENTLY idx_time_entries_project_billing
+    //     ON time_entries (project_id) INCLUDE (duration, is_billable);
+    // Measured 2026-06-13: dev=12, prod=39 rows → seq-scan, index would be
+    // unused. Don't add it before the data justifies it.
     index("idx_time_entries_charge_document_id").on(table.chargeDocumentId),
     index("idx_time_entries_user_unbilled")
       .on(table.userId, table.projectId)

@@ -3,6 +3,10 @@ import type { PoolClient } from "pg";
 import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
 import { entryBodySchema } from "@/lib/schemas/entries";
+import { entrySelectColumns, mapEntryRow, type EntryRow } from "@/lib/transformers/entries";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("entries:item");
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -27,53 +31,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     const { query } = await import("@/lib/db");
 
-    const result = await query<{
-      id: string;
-      project_id: string;
-      description: string;
-      start_time: string | null;
-      end_time: string | null;
-      duration: number;
-      date: string;
-      tags: unknown;
-      notes: string | null;
-      is_billable: boolean;
-      created_at: string;
-      task_id: string | null;
-      billing_kind: string | null;
-      rate: number | null;
-      rate_label: string | null;
-      quantity: number | null;
-      item_ref: number | null;
-      unit: string | null;
-      project_name: string;
-      client_name: string;
-      client_id: string;
-      task_name: string | null;
-    }>(
+    const result = await query<EntryRow>(
       `SELECT
-        te.id,
-        te.project_id,
-        te.description,
-        te.start_time,
-        te.end_time,
-        te.duration,
-        te.date,
-        te.tags,
-        te.notes,
-        te.is_billable,
-        te.created_at,
-        te.task_id,
-        te.billing_kind,
-        te.rate,
-        te.rate_label,
-        te.quantity,
-        te.item_ref,
-        te.unit,
-        p.name as project_name,
-        c.name as client_name,
-        c.id as client_id,
-        tk.title as task_name
+        ${entrySelectColumns("te")}
       FROM time_entries te
       JOIN projects p ON te.project_id = p.id
       JOIN clients c ON p.client_id = c.id
@@ -89,41 +49,16 @@ export async function GET(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const entry = result.rows[0];
-
     return NextResponse.json({
       success: true,
-      entry: {
-        id: entry.id,
-        projectId: entry.project_id,
-        projectName: entry.project_name,
-        clientId: entry.client_id,
-        clientName: entry.client_name,
-        description: entry.description,
-        startTime: entry.start_time,
-        endTime: entry.end_time,
-        duration: entry.duration,
-        date: entry.date,
-        tags: entry.tags || [],
-        notes: entry.notes,
-        isBillable: entry.is_billable,
-        createdAt: entry.created_at,
-        taskId: entry.task_id,
-        taskName: entry.task_name,
-        billingKind: entry.billing_kind ?? "hourly",
-        rate: entry.rate,
-        rateLabel: entry.rate_label,
-        quantity: entry.quantity,
-        itemRef: entry.item_ref,
-        unit: entry.unit,
-      },
+      entry: mapEntryRow(result.rows[0]),
     }, {
       headers: {
         'Cache-Control': 'no-store, must-revalidate'
       }
     });
   } catch (error) {
-    console.error("Error fetching entry:", error);
+    logger.error("Error fetching entry", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת הרשומה" },
       { status: 500 }
@@ -188,7 +123,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         itemRef = ref.rows[0].assigned;
       }
 
-      const updated = await client.query<UpdatedRow>(
+      const updated = await client.query<EntryRow>(
         `WITH upd AS (
            UPDATE time_entries
            SET project_id = $1, task_id = $2, description = $3, duration = $4, date = $5,
@@ -198,10 +133,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
            RETURNING *
          )
          SELECT
-           upd.id, upd.project_id, upd.description, upd.start_time, upd.end_time,
-           upd.duration, upd.date, upd.tags, upd.notes, upd.is_billable, upd.created_at,
-           upd.task_id, upd.billing_kind, upd.rate, upd.rate_label, upd.quantity, upd.item_ref, upd.unit,
-           p.name as project_name, c.name as client_name, c.id as client_id, tk.title as task_name
+           ${entrySelectColumns("upd")}
          FROM upd
          JOIN projects p ON upd.project_id = p.id
          JOIN clients c ON p.client_id = c.id
@@ -239,68 +171,17 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const entry = result.row;
-
     return NextResponse.json({
       success: true,
-      entry: {
-        id: entry.id,
-        projectId: entry.project_id,
-        projectName: entry.project_name,
-        clientId: entry.client_id,
-        clientName: entry.client_name,
-        description: entry.description,
-        startTime: entry.start_time,
-        endTime: entry.end_time,
-        duration: entry.duration,
-        date: entry.date,
-        tags: entry.tags || [],
-        notes: entry.notes,
-        isBillable: entry.is_billable,
-        createdAt: entry.created_at,
-        taskId: entry.task_id,
-        taskName: entry.task_name,
-        billingKind: entry.billing_kind ?? "hourly",
-        rate: entry.rate,
-        rateLabel: entry.rate_label,
-        quantity: entry.quantity,
-        itemRef: entry.item_ref,
-        unit: entry.unit,
-      },
+      entry: mapEntryRow(result.row),
     });
   } catch (error) {
-    console.error("Error updating entry:", error);
+    logger.error("Error updating entry", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה בעדכון הרשומה" },
       { status: 500 }
     );
   }
-}
-
-/** Shape returned by the update CTE (time_entries.* + joined names). */
-interface UpdatedRow {
-  id: string;
-  project_id: string;
-  description: string;
-  start_time: string | null;
-  end_time: string | null;
-  duration: number;
-  date: string;
-  tags: unknown;
-  notes: string | null;
-  is_billable: boolean;
-  created_at: string;
-  task_id: string | null;
-  billing_kind: string | null;
-  rate: number | null;
-  rate_label: string | null;
-  quantity: number | null;
-  item_ref: number | null;
-  unit: string | null;
-  project_name: string;
-  client_name: string;
-  client_id: string;
-  task_name: string | null;
 }
 
 /**
@@ -340,7 +221,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       message: "הרשומה נמחקה בהצלחה",
     });
   } catch (error) {
-    console.error("Error deleting entry:", error);
+    logger.error("Error deleting entry", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה במחיקת הרשומה" },
       { status: 500 }

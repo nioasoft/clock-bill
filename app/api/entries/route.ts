@@ -3,6 +3,10 @@ import type { PoolClient } from "pg";
 import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
 import { entryBodySchema } from "@/lib/schemas/entries";
+import { entrySelectColumns, mapEntryRow, type EntryRow } from "@/lib/transformers/entries";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("entries:list");
 
 /** Default and maximum page size for the entries list to bound query cost. */
 const DEFAULT_LIMIT = 500;
@@ -74,32 +78,8 @@ export async function GET(request: NextRequest) {
     // COUNT(*) OVER() window on the same statement — no separate count round-trip.
     let queryText = `
       SELECT
-        te.id,
-        te.project_id,
-        te.description,
-        te.start_time,
-        te.end_time,
-        te.duration,
-        te.date,
-        te.tags,
-        te.notes,
-        te.is_billable,
-        te.created_at,
-        te.paused_at,
-        te.total_paused_time,
-        te.task_id,
-        te.billing_kind,
-        te.rate,
-        te.rate_label,
-        te.quantity,
-        te.item_ref,
-        te.unit,
-        COUNT(*) OVER() AS total_count,
-        p.name as project_name,
-        c.name as client_name,
-        c.id as client_id,
-        c.currency as currency,
-        tk.title as task_name
+        ${entrySelectColumns("te")},
+        COUNT(*) OVER() AS total_count
       FROM time_entries te
       JOIN projects p ON te.project_id = p.id
       JOIN clients c ON p.client_id = c.id
@@ -110,64 +90,11 @@ export async function GET(request: NextRequest) {
     queryText += ` LIMIT $${filterIndex} OFFSET $${filterIndex + 1}`;
     queryParams.push(limit, offset);
 
-    const result = await query<{
-      id: string;
-      project_id: string;
-      description: string;
-      start_time: string | null;
-      end_time: string | null;
-      duration: number;
-      date: string;
-      tags: unknown;
-      notes: string | null;
-      is_billable: boolean;
-      created_at: string;
-      paused_at: string | null;
-      total_paused_time: number | null;
-      task_id: string | null;
-      billing_kind: string | null;
-      rate: number | null;
-      rate_label: string | null;
-      quantity: number | null;
-      item_ref: number | null;
-      unit: string | null;
-      total_count: string;
-      project_name: string;
-      client_name: string;
-      client_id: string;
-      currency: string | null;
-      task_name: string | null;
-    }>(queryText, queryParams);
+    const result = await query<EntryRow & { total_count: string }>(queryText, queryParams);
 
     const total = parseInt(result.rows[0]?.total_count || "0", 10);
 
-    const entries = result.rows.map((entry) => ({
-      id: entry.id,
-      projectId: entry.project_id,
-      projectName: entry.project_name,
-      clientId: entry.client_id,
-      clientName: entry.client_name,
-      currency: entry.currency || "ILS",
-      description: entry.description,
-      startTime: entry.start_time,
-      endTime: entry.end_time,
-      duration: entry.duration,
-      date: entry.date,
-      tags: entry.tags || [],
-      notes: entry.notes,
-      isBillable: entry.is_billable,
-      createdAt: entry.created_at,
-      pausedAt: entry.paused_at,
-      totalPausedTime: entry.total_paused_time,
-      taskId: entry.task_id,
-      taskName: entry.task_name,
-      billingKind: entry.billing_kind ?? "hourly",
-      rate: entry.rate,
-      rateLabel: entry.rate_label,
-      quantity: entry.quantity,
-      itemRef: entry.item_ref,
-      unit: entry.unit,
-    }));
+    const entries = result.rows.map(mapEntryRow);
 
     return NextResponse.json({
       success: true,
@@ -184,7 +111,7 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error("Error fetching entries:", error);
+    logger.error("Error fetching entries", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת הרשומות" },
       { status: 500 }
@@ -248,7 +175,7 @@ export async function POST(request: NextRequest) {
         itemRef = ref.rows[0].assigned;
       }
 
-      const inserted = await client.query<CreatedRow>(
+      const inserted = await client.query<EntryRow>(
         `WITH ins AS (
            INSERT INTO time_entries
              (id, user_id, project_id, task_id, description, start_time, end_time, duration, date, tags, notes, is_billable, billing_kind, rate, rate_label, quantity, item_ref, unit)
@@ -257,11 +184,7 @@ export async function POST(request: NextRequest) {
            RETURNING *
          )
          SELECT
-           ins.id, ins.project_id, ins.description, ins.start_time, ins.end_time,
-           ins.duration, ins.date, ins.tags, ins.notes, ins.is_billable, ins.created_at,
-           ins.paused_at, ins.total_paused_time, ins.task_id, ins.billing_kind,
-           ins.rate, ins.rate_label, ins.quantity, ins.item_ref, ins.unit,
-           p.name as project_name, c.name as client_name, c.id as client_id, tk.title as task_name
+           ${entrySelectColumns("ins")}
          FROM ins
          JOIN projects p ON ins.project_id = p.id
          JOIN clients c ON p.client_id = c.id
@@ -296,39 +219,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const entry = result.row;
-
     return NextResponse.json({
       success: true,
-      entry: {
-        id: entry.id,
-        projectId: entry.project_id,
-        projectName: entry.project_name,
-        clientId: entry.client_id,
-        clientName: entry.client_name,
-        description: entry.description,
-        startTime: entry.start_time,
-        endTime: entry.end_time,
-        duration: entry.duration,
-        date: entry.date,
-        tags: entry.tags || [],
-        notes: entry.notes,
-        isBillable: entry.is_billable,
-        createdAt: entry.created_at,
-        pausedAt: entry.paused_at,
-        totalPausedTime: entry.total_paused_time,
-        taskId: entry.task_id,
-        taskName: entry.task_name,
-        billingKind: entry.billing_kind ?? "hourly",
-        rate: entry.rate,
-        rateLabel: entry.rate_label,
-        quantity: entry.quantity,
-        itemRef: entry.item_ref,
-        unit: entry.unit,
-      },
+      entry: mapEntryRow(result.row),
     });
   } catch (error) {
-    console.error("Error creating entry:", error);
+    logger.error("Error creating entry", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה ביצירת הרשומה" },
       { status: 500 }
@@ -336,30 +232,3 @@ export async function POST(request: NextRequest) {
   }
 }
 
-/** Shape returned by the create CTE (time_entries.* + joined names). */
-interface CreatedRow {
-  id: string;
-  project_id: string;
-  description: string;
-  start_time: string | null;
-  end_time: string | null;
-  duration: number;
-  date: string;
-  tags: unknown;
-  notes: string | null;
-  is_billable: boolean;
-  created_at: string;
-  paused_at: string | null;
-  total_paused_time: number | null;
-  task_id: string | null;
-  billing_kind: string | null;
-  rate: number | null;
-  rate_label: string | null;
-  quantity: number | null;
-  item_ref: number | null;
-  unit: string | null;
-  project_name: string;
-  client_name: string;
-  client_id: string;
-  task_name: string | null;
-}

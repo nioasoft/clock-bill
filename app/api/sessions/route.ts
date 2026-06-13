@@ -62,6 +62,8 @@ export async function GET(): Promise<NextResponse> {
     return NextResponse.json({
       success: true,
       sessions: sessionsWithCurrentFlag,
+    }, {
+      headers: { "Cache-Control": "no-store, must-revalidate" },
     });
   } catch (error) {
     console.error("Get sessions error:", error);

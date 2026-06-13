@@ -5,6 +5,9 @@ import { parseBody } from "@/lib/api-validation";
 import { createChargeDocumentSchema } from "@/lib/schemas/charge-documents";
 import { buildLineFromEntry, computeDocumentTotal, type BillableEntry, type ChargeLineDraft } from "@/lib/charge-documents";
 import { resolveRounding } from "@/lib/rounding";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("charge-documents:list");
 
 /** GET /api/charge-documents?clientId=&status= — list documents for the user. */
 export async function GET(request: NextRequest) {
@@ -32,7 +35,7 @@ export async function GET(request: NextRequest) {
     );
     return NextResponse.json({ success: true, data: rows.rows });
   } catch (error) {
-    console.error("GET /api/charge-documents failed:", error);
+    logger.error("GET /api/charge-documents failed", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת תעודות" }, { status: 500 });
   }
 }
@@ -178,7 +181,7 @@ export async function POST(request: NextRequest) {
     const msg = error instanceof Error ? error.message : "";
     if (msg === "CLIENT_NOT_FOUND") return NextResponse.json({ success: false, error_code: "CLIENT_NOT_FOUND", message: "לקוח לא נמצא" }, { status: 404 });
     if (msg === "ENTRY_STATE_CHANGED") return NextResponse.json({ success: false, error_code: "ENTRY_STATE_CHANGED", message: "חלק מהפריטים כבר חויבו או השתנו — רענן ונסה שוב" }, { status: 409 });
-    console.error("POST /api/charge-documents failed:", error);
+    logger.error("POST /api/charge-documents failed", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה ביצירת תעודה" }, { status: 500 });
   }
 }

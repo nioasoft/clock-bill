@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("projects:list");
 
 /** Body schema for creating a project. Cross-field rules stay inline below. */
 const createProjectSchema = z.object({
@@ -116,7 +119,7 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error("Error fetching projects:", error);
+    logger.error("Error fetching projects", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת הפרויקטים" },
       { status: 500 }
@@ -260,7 +263,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error creating project:", error);
+    logger.error("Error creating project", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה ביצירת הפרויקט" },
       { status: 500 }
