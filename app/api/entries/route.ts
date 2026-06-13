@@ -4,6 +4,9 @@ import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
 import { entryBodySchema } from "@/lib/schemas/entries";
 import { entrySelectColumns, mapEntryRow, type EntryRow } from "@/lib/transformers/entries";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("entries:list");
 
 /** Default and maximum page size for the entries list to bound query cost. */
 const DEFAULT_LIMIT = 500;
@@ -108,7 +111,7 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error("Error fetching entries:", error);
+    logger.error("Error fetching entries", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת הרשומות" },
       { status: 500 }
@@ -221,7 +224,7 @@ export async function POST(request: NextRequest) {
       entry: mapEntryRow(result.row),
     });
   } catch (error) {
-    console.error("Error creating entry:", error);
+    logger.error("Error creating entry", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה ביצירת הרשומה" },
       { status: 500 }

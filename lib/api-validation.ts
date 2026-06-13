@@ -18,6 +18,12 @@ export async function parseBody<T>(
   request: Request,
   schema: ZodType<T>
 ): Promise<{ ok: true; data: T } | { ok: false; response: NextResponse }> {
+  // `error_code` keeps the failure shape consistent with every route
+  // (`{ success, error_code, message }`) so the client's messageForError() can
+  // localize it. `message` is retained as the legacy/specific fallback — note
+  // the client prefers error_code, so it sees the generic localized string; the
+  // specific Zod message is fine to lose here because client-side validation is
+  // the primary gate and this only fires on a bypassed/drifted payload.
   let raw: unknown;
   try {
     raw = await request.json();
@@ -25,7 +31,7 @@ export async function parseBody<T>(
     return {
       ok: false,
       response: NextResponse.json(
-        { success: false, message: "גוף הבקשה אינו תקין" },
+        { success: false, error_code: "VALIDATION_ERROR", message: "גוף הבקשה אינו תקין" },
         { status: 400 }
       ),
     };
@@ -37,7 +43,7 @@ export async function parseBody<T>(
     return {
       ok: false,
       response: NextResponse.json(
-        { success: false, message: firstMessage },
+        { success: false, error_code: "VALIDATION_ERROR", message: firstMessage },
         { status: 400 }
       ),
     };

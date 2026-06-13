@@ -3,6 +3,9 @@ import { z } from "zod";
 import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
 import { clientRatesSchema } from "@/lib/schemas/rates";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("clients:list");
 
 /** Body schema for creating a client. Mirrors the previously inline checks. */
 const createClientSchema = z.object({
@@ -132,7 +135,7 @@ export async function GET(_request: NextRequest) {
       }
     );
   } catch (error) {
-    console.error("Error fetching clients:", error);
+    logger.error("Error fetching clients", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת הלקוחות" },
       { status: 500 }
@@ -294,7 +297,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error creating client:", error);
+    logger.error("Error creating client", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה ביצירת הלקוח" },
       { status: 500 }

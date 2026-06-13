@@ -4,6 +4,9 @@ import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
 import { entryBodySchema } from "@/lib/schemas/entries";
 import { entrySelectColumns, mapEntryRow, type EntryRow } from "@/lib/transformers/entries";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("entries:item");
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -55,7 +58,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       }
     });
   } catch (error) {
-    console.error("Error fetching entry:", error);
+    logger.error("Error fetching entry", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת הרשומה" },
       { status: 500 }
@@ -173,7 +176,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       entry: mapEntryRow(result.row),
     });
   } catch (error) {
-    console.error("Error updating entry:", error);
+    logger.error("Error updating entry", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה בעדכון הרשומה" },
       { status: 500 }
@@ -218,7 +221,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       message: "הרשומה נמחקה בהצלחה",
     });
   } catch (error) {
-    console.error("Error deleting entry:", error);
+    logger.error("Error deleting entry", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה במחיקת הרשומה" },
       { status: 500 }
