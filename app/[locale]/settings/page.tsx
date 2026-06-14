@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname, Link } from "@/src/i18n/navigation";
-import { MessageSquare, Bell } from "lucide-react";
+import { MessageSquare, Bell, BellOff, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { authClient } from "@/lib/auth/client";
 import { DeleteAccountSection } from "@/components/delete-account-section";
 import { AppLayout } from "@/components/app-layout";
@@ -11,6 +11,7 @@ import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { fieldClass } from "@/lib/form-styles";
 import { SimpleSelect } from "@/components/ui/simple-select";
+import { Tabs } from "@/components/ui/tabs";
 import { messageForError } from "@/lib/api-error";
 import { ROUNDING_MODES } from "@/lib/rounding";
 import { THEMES } from "@/lib/themes";
@@ -745,80 +746,19 @@ export default function SettingsPage() {
 
         {/* Tabs */}
         <div className="mb-8">
-          <nav className="flex gap-2 flex-wrap" role="tablist">
-            <button
-              onClick={() => setActiveTab("profile")}
-              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-                activeTab === "profile"
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-              role="tab"
-              aria-selected={activeTab === "profile"}
-            >
-              {t("tabs.profile")}
-            </button>
-            <button
-              onClick={() => setActiveTab("appearance")}
-              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-                activeTab === "appearance"
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-              role="tab"
-              aria-selected={activeTab === "appearance"}
-            >
-              {t("tabs.appearance")}
-            </button>
-            <button
-              onClick={() => setActiveTab("notifications")}
-              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-                activeTab === "notifications"
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-              role="tab"
-              aria-selected={activeTab === "notifications"}
-            >
-              {t("tabs.notifications")}
-            </button>
-            <button
-              onClick={() => setActiveTab("currencies")}
-              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-                activeTab === "currencies"
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-              role="tab"
-              aria-selected={activeTab === "currencies"}
-            >
-              {t("tabs.currencies")}
-            </button>
-            <button
-              onClick={() => setActiveTab("security")}
-              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-                activeTab === "security"
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-              role="tab"
-              aria-selected={activeTab === "security"}
-            >
-              {t("tabs.security")}
-            </button>
-            <button
-              onClick={() => setActiveTab("billing")}
-              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-                activeTab === "billing"
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-              role="tab"
-              aria-selected={activeTab === "billing"}
-            >
-              {t("billing.tabLabel")}
-            </button>
-          </nav>
+          <Tabs
+            ariaLabel={t("pageTitle")}
+            active={activeTab}
+            onChange={(k) => setActiveTab(k as typeof activeTab)}
+            tabs={[
+              { key: "profile", label: t("tabs.profile") },
+              { key: "appearance", label: t("tabs.appearance") },
+              { key: "notifications", label: t("tabs.notifications") },
+              { key: "currencies", label: t("tabs.currencies") },
+              { key: "security", label: t("tabs.security") },
+              { key: "billing", label: t("billing.tabLabel") },
+            ]}
+          />
         </div>
 
         {/* Currencies Tab Content */}
@@ -1055,17 +995,33 @@ export default function SettingsPage() {
                 {t("notifications.permissionDescription")}
               </p>
 
-              {/* Status (read-only) — kept separate from the action so the button
-                  below clearly reads as something to click, not a status badge. */}
-              <div className="p-4 rounded-[var(--radius-card)] border border-border bg-muted">
-                <p className="font-medium text-foreground">{t("notifications.permissionStatus")}</p>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  {notificationPermission === "granted" && t("notifications.statusGranted")}
-                  {notificationPermission === "denied" && t("notifications.statusDenied")}
-                  {notificationPermission === "default" && t("notifications.statusDefault")}
-                  {notificationPermission === null && t("notifications.statusUnsupported")}
-                </p>
-              </div>
+              {/* Status (read-only) — a semantic icon badge replaces the old inline
+                  emoji so the state reads consistently across platforms. Kept
+                  separate from the action below so the button still reads as a CTA. */}
+              {(() => {
+                const meta = {
+                  granted: { Icon: CheckCircle2, badge: "bg-success/10 text-success", label: t("notifications.statusGranted") },
+                  denied: { Icon: XCircle, badge: "bg-destructive/10 text-destructive", label: t("notifications.statusDenied") },
+                  default: { Icon: Clock, badge: "bg-warning/10 text-warning", label: t("notifications.statusDefault") },
+                  unsupported: { Icon: BellOff, badge: "bg-muted text-muted-foreground", label: t("notifications.statusUnsupported") },
+                } as const;
+                const key = notificationPermission === "granted" ? "granted"
+                  : notificationPermission === "denied" ? "denied"
+                  : notificationPermission === "default" ? "default"
+                  : "unsupported";
+                const { Icon, badge, label } = meta[key];
+                return (
+                  <div className="flex items-center gap-3 p-4 rounded-[var(--radius-card)] border border-border bg-muted/40">
+                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${badge}`}>
+                      <Icon className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-medium text-foreground">{t("notifications.permissionStatus")}</p>
+                      <p className="text-sm text-muted-foreground">{label}</p>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div className="mt-3 flex flex-col sm:flex-row gap-3">
                 {notificationPermission !== "granted" && notificationPermission !== null && (

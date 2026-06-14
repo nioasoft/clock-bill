@@ -71,8 +71,11 @@ export function PersistentTimerBar() {
   }
 
   if (runningTimers.length === 0) {
+    // Desktop-only: on mobile the floating timer FAB is the single primary entry
+    // point, so this idle CTA bar would be a redundant third affordance. When a
+    // timer IS running the bar shows on every breakpoint (see the block below).
     return (
-      <div className="border-b border-border bg-muted/20">
+      <div className="hidden border-b border-border bg-muted/20 lg:block">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
             <Clock className="h-4 w-4 opacity-60" />

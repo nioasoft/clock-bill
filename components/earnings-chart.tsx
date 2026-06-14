@@ -68,8 +68,10 @@ export function EarningsChart({ data, loading = false }: EarningsChartProps) {
       </p>
 
       {/* Vertical bars in plain flex — responsive and RTL-native, no fixed SVG
-          width that strands a lone bar on one side. */}
-      <div className="flex items-end gap-2 sm:gap-4">
+          width that strands a lone bar on one side. Each bar sits in a faint
+          full-height column track so even short/lone bars read as intentional,
+          and the row gets a hairline baseline axis. */}
+      <div className="flex items-end gap-3 border-b border-border/60 pb-px sm:gap-5">
         {earningsData.map((data) => {
           const pct = maxAmount > 0 ? (data.amount / maxAmount) * 100 : 0;
           return (
@@ -77,9 +79,9 @@ export function EarningsChart({ data, loading = false }: EarningsChartProps) {
               <span className="text-[11px] font-semibold tabular-nums text-foreground">
                 {data.formatted}
               </span>
-              <div className="flex h-40 w-full max-w-[44px] items-end">
+              <div className="flex h-40 w-full max-w-[64px] items-end justify-center rounded-t-[var(--radius)] bg-muted/30">
                 <div
-                  className="w-full rounded-t-md bg-primary transition-[height] duration-500 ease-out"
+                  className="w-full rounded-t-[var(--radius)] bg-gradient-to-t from-primary to-primary/75 transition-[height] duration-500 ease-out"
                   style={{ height: `${Math.max(pct, 3)}%` }}
                   role="img"
                   aria-label={`${formatMonthName(data.month)}: ${data.formatted}`}

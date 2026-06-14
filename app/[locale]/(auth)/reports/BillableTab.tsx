@@ -9,6 +9,9 @@ import { calcHourlyAmount, calcItemAmount, sumMoney } from "@/lib/money";
 import { roundBillableMinutes, type RoundingMode } from "@/lib/rounding";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MonthField } from "@/components/ui/month-field";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Users, FileText } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -275,19 +278,20 @@ export default function BillableTab({
           <label className="block text-sm font-medium mb-2 text-muted-foreground">
             {t("billable.monthLabel")}
           </label>
-          <input
-            type="month"
+          <MonthField
+            className="w-full"
+            locale={locale}
+            ariaLabel={t("billable.monthLabel")}
             value={periodMonth}
-            onChange={(e) => setPeriodMonth(e.target.value)}
-            className="flex h-10 min-h-[44px] w-full items-center rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary tabular-nums"
+            onChange={setPeriodMonth}
           />
         </div>
       </div>
 
       {/* States */}
       {!clientId && (
-        <div className="rounded-[var(--radius-card)] border border-border bg-card p-8 text-center">
-          <p className="text-muted-foreground">{t("billable.pickClientPrompt")}</p>
+        <div className="rounded-[var(--radius-card)] border border-border bg-card">
+          <EmptyState icon={Users} message={t("billable.pickClientPrompt")} />
         </div>
       )}
 
@@ -303,11 +307,8 @@ export default function BillableTab({
       )}
 
       {clientId && state === "ready" && !hasItems && (
-        <div className="rounded-[var(--radius-card)] border border-border bg-card p-8 text-center">
-          <p className="text-foreground text-lg mb-1">{t("billable.emptyTitle")}</p>
-          <p className="text-muted-foreground text-sm">
-            {t("billable.emptyBody")}
-          </p>
+        <div className="rounded-[var(--radius-card)] border border-border bg-card">
+          <EmptyState icon={FileText} message={t("billable.emptyTitle")} description={t("billable.emptyBody")} />
         </div>
       )}
 

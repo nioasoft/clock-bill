@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
+import { Tabs } from "@/components/ui/tabs";
 import AdHocReportTab from "./AdHocReportTab";
 import BillableTab from "./BillableTab";
 import DocumentsTab from "./DocumentsTab";
@@ -41,21 +42,13 @@ export default function SettlementPage() {
         <PageHeader title={t("pageTitle")} />
 
         {/* Tab bar */}
-        <div className="flex gap-2 border-b border-border mb-6">
-          {TAB_KEYS.map(([key, labelKey]) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setTab(key)}
-              className={`min-h-[44px] px-4 rounded-t-[var(--radius)] transition-colors ${
-                tab === key
-                  ? "bg-card text-foreground border border-border border-b-card"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t(labelKey)}
-            </button>
-          ))}
+        <div className="mb-6">
+          <Tabs
+            ariaLabel={t("pageTitle")}
+            active={tab}
+            onChange={(k) => setTab(k as Tab)}
+            tabs={TAB_KEYS.map(([key, labelKey]) => ({ key, label: t(labelKey) }))}
+          />
         </div>
 
         {tab === "billable" && (
