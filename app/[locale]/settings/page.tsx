@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname, Link } from "@/src/i18n/navigation";
-import { MessageSquare, Bell, BellOff, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { MessageSquare, Bell, BellOff, CheckCircle2, XCircle, Clock, LogOut } from "lucide-react";
 import { authClient } from "@/lib/auth/client";
 import { DeleteAccountSection } from "@/components/delete-account-section";
 import { AppLayout } from "@/components/app-layout";
@@ -72,6 +72,7 @@ interface CurrencyRate {
 
 export default function SettingsPage() {
   const t = useTranslations("Settings");
+  const tNav = useTranslations("Nav");
   const tRoot = useTranslations();
   const tRounding = useTranslations("Rounding");
   const locale = useLocale();
@@ -94,6 +95,7 @@ export default function SettingsPage() {
   const [signatureError, setSignatureError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [logoutAllLoading, setLogoutAllLoading] = useState(false);
+  const [logoutLoading, setLogoutLoading] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [exportingData, setExportingData] = useState(false);
   const [exportError, setExportError] = useState("");
@@ -277,6 +279,26 @@ export default function SettingsPage() {
     // In a real implementation, this would use user-agent parsing
     // For now, we return a generic device identifier
     return t("security.deviceLabel", { id: sessionId.slice(0, 8) });
+  };
+
+  // Log out the current device. Logout lives here (Settings) rather than as a
+  // top-level top-bar action on mobile.
+  const handleLogout = async () => {
+    setLogoutLoading(true);
+    try {
+      const response = await fetch("/api/auth/logout", { method: "POST" });
+      const data = await response.json();
+      if (data.success) {
+        router.push("/login");
+        router.refresh();
+      } else {
+        setError(t("toasts.networkError"));
+      }
+    } catch {
+      setError(t("toasts.networkError"));
+    } finally {
+      setLogoutLoading(false);
+    }
   };
 
   const handleLogoutAll = async () => {
@@ -2111,6 +2133,20 @@ export default function SettingsPage() {
             <MessageSquare className="h-4 w-4" />
             {t("support.cta")}
           </Link>
+        </div>
+
+        {/* Logout — lives in Settings (it was removed from the mobile top bar,
+            which now hosts the start-timer action instead). */}
+        <div className="mt-4 flex justify-center">
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={logoutLoading}
+            className="inline-flex items-center justify-center gap-2 rounded-[var(--radius)] px-4 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50 transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            {logoutLoading ? tNav("loggingOut") : tNav("logout")}
+          </button>
         </div>
 
       </PageContainer>
