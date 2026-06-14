@@ -13,7 +13,6 @@ import { useNotifications } from "@/hooks/use-notifications";
 import { OnboardingModal } from "@/components/onboarding-modal";
 import { useTimer } from "@/contexts/timer-context";
 import { Users, FolderOpen, Clock, StickyNote } from "lucide-react";
-import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 
 interface DashboardStats {
   today: {
@@ -511,9 +510,6 @@ export default function DashboardPage() {
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {/* Quick timer — start tracking time in one click */}
             <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-5 sm:p-6 relative overflow-hidden flex flex-col">
-              <div className="absolute inset-0 flex items-center justify-end pe-8 pointer-events-none">
-                <ClockFaceMarks size={120} className="opacity-[0.07]" />
-              </div>
               <div className="relative flex-1">
                 <div className="flex items-center gap-2">
                   <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">{t("quickTimer.title")}</h3>
@@ -523,7 +519,7 @@ export default function DashboardPage() {
               </div>
               <button
                 onClick={() => setShowTimerModal(true)}
-                className="relative mt-4 w-full rounded-md bg-primary px-8 py-4 text-lg font-semibold text-primary-foreground hover:bg-primary/90 transition-all hover:shadow-md"
+                className="relative mt-4 w-full rounded-[var(--radius)] bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
               >
                 {t("quickTimer.startButton")}
               </button>
@@ -540,16 +536,13 @@ export default function DashboardPage() {
 
             {/* Manual item — log billable work that wasn't timed (fixed sum or qty × rate) */}
             <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-5 sm:p-6 relative overflow-hidden flex flex-col">
-              <div className="absolute inset-0 flex items-center justify-end pe-8 pointer-events-none">
-                <ClockFaceMarks size={120} className="opacity-[0.07]" />
-              </div>
               <div className="relative flex-1">
                 <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">{t("billingItem.title")}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{t("billingItem.subtitle")}</p>
               </div>
               <Link
                 href="/entries?new=item"
-                className="relative mt-4 w-full rounded-md bg-primary px-8 py-4 text-center text-lg font-semibold text-primary-foreground hover:bg-primary/90 transition-all hover:shadow-md"
+                className="relative mt-4 w-full rounded-[var(--radius)] bg-primary px-4 py-2.5 text-center text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
               >
                 {t("billingItem.addButton")}
               </Link>
@@ -559,16 +552,13 @@ export default function DashboardPage() {
 
             {/* Add task — create a task (client/project/rate) for the Kanban board */}
             <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-5 sm:p-6 relative overflow-hidden flex flex-col">
-              <div className="absolute inset-0 flex items-center justify-end pe-8 pointer-events-none">
-                <ClockFaceMarks size={120} className="opacity-[0.07]" />
-              </div>
               <div className="relative flex-1">
                 <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">{t("task.title")}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{t("task.subtitle")}</p>
               </div>
               <Link
                 href="/tasks?create=true"
-                className="relative mt-4 w-full rounded-md bg-primary px-8 py-4 text-center text-lg font-semibold text-primary-foreground hover:bg-primary/90 transition-all hover:shadow-md"
+                className="relative mt-4 w-full rounded-[var(--radius)] bg-primary px-4 py-2.5 text-center text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
               >
                 {t("task.createButton")}
               </Link>

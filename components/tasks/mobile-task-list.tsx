@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useTimer } from "@/contexts/timer-context";
 import { TASK_STATUSES, type TaskRecord, type TaskStatus } from "@/lib/tasks-types";
+import { Tabs } from "@/components/ui/tabs";
 import { TaskCard } from "./task-card";
 import { TaskDetailSheet } from "./task-detail-sheet";
 import type { UseTasksBoardReturn } from "./use-tasks-board";
@@ -56,28 +57,19 @@ export function MobileTaskList({ board }: { board: UseTasksBoardReturn }) {
 
   return (
     <>
-      <div role="tablist" aria-label={t("filterByStatus")} className="mb-4 grid grid-cols-3 gap-1 rounded-[var(--radius)] border border-border bg-surface p-1">
-        {TASK_STATUSES.map((s) => {
-          const isActive = s === tab;
-          return (
-            <button
-              key={s}
-              id={`tab-${s}`}
-              role="tab"
-              aria-selected={isActive}
-              onClick={() => setActive(s)}
-              className={`min-h-[44px] rounded-[var(--radius)] px-2 py-2 text-sm font-medium transition-colors ${
-                isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {tStatus(s)}{" "}
-              <span className="tabular-nums">{byStatus(s).length}</span>
-            </button>
-          );
-        })}
-      </div>
+      <Tabs
+        className="mb-4"
+        ariaLabel={t("filterByStatus")}
+        active={tab}
+        onChange={(k) => setActive(k as TaskStatus)}
+        tabs={TASK_STATUSES.map((s) => ({
+          key: s,
+          label: tStatus(s),
+          count: byStatus(s).length,
+        }))}
+      />
 
-      <div role="tabpanel" aria-labelledby={`tab-${tab}`} className="flex flex-col gap-2">
+      <div role="tabpanel" className="flex flex-col gap-2">
         {tasks.length === 0 ? (
           <p className="px-2 py-10 text-center text-sm text-muted-foreground">{tEmpty(tab)}</p>
         ) : (

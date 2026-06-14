@@ -3,8 +3,8 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter, usePathname } from "@/src/i18n/navigation";
-import { Gauge } from "lucide-react";
 import { Sidebar } from "./sidebar";
+import { BrandMark } from "./brand-mark";
 import { MobileNav } from "./mobile-nav";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { ErrorBoundary } from "./error-boundary";
@@ -142,7 +142,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         <div role="status" aria-live="polite" className="flex flex-col items-center gap-4">
           <div className="relative">
             <div className="w-16 h-16 bg-gradient-to-br from-accent to-accent/80 rounded-2xl flex items-center justify-center animate-pulse">
-              <Gauge className="h-8 w-8 text-sidebar" />
+              <BrandMark className="h-9 w-9 text-primary-foreground" />
             </div>
             <div className="absolute -inset-2 border-2 border-accent/20 rounded-2xl animate-ping" />
           </div>

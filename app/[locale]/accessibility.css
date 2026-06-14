@@ -247,28 +247,12 @@ td {
   cursor: not-allowed;
 }
 
-/* Tab list accessibility */
-[role="tablist"] {
-  border-bottom: 1px solid var(--color-border);
-  display: flex;
-  gap: 0.5rem;
-}
-
-[role="tab"] {
-  padding: 0.75rem 1rem;
-  border: none;
-  border-bottom: 2px solid transparent;
-  background: none;
-  cursor: pointer;
-  color: var(--color-muted-foreground);
-}
-
-[role="tab"][aria-selected="true"] {
-  color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
-  font-weight: 500;
-}
-
+/* Tab accessibility.
+   NOTE: cosmetic tab styling (track, active state) is owned by each tab
+   component (see components/ui/tabs.tsx) — NOT here. A previous global
+   `[role="tab"] { border-bottom }` rule collided with pill-shaped tab buttons
+   and rendered the active underline as a curved arc ("hand-drawn" look). Only
+   the focus ring stays global so every tab is keyboard-accessible. */
 [role="tab"]:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;

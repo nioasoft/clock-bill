@@ -11,6 +11,7 @@ import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { fieldClass } from "@/lib/form-styles";
 import { SimpleSelect } from "@/components/ui/simple-select";
+import { Tabs } from "@/components/ui/tabs";
 import { messageForError } from "@/lib/api-error";
 import { ROUNDING_MODES } from "@/lib/rounding";
 import { THEMES } from "@/lib/themes";
@@ -745,80 +746,19 @@ export default function SettingsPage() {
 
         {/* Tabs */}
         <div className="mb-8">
-          <nav className="flex gap-2 flex-wrap" role="tablist">
-            <button
-              onClick={() => setActiveTab("profile")}
-              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-                activeTab === "profile"
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-              role="tab"
-              aria-selected={activeTab === "profile"}
-            >
-              {t("tabs.profile")}
-            </button>
-            <button
-              onClick={() => setActiveTab("appearance")}
-              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-                activeTab === "appearance"
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-              role="tab"
-              aria-selected={activeTab === "appearance"}
-            >
-              {t("tabs.appearance")}
-            </button>
-            <button
-              onClick={() => setActiveTab("notifications")}
-              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-                activeTab === "notifications"
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-              role="tab"
-              aria-selected={activeTab === "notifications"}
-            >
-              {t("tabs.notifications")}
-            </button>
-            <button
-              onClick={() => setActiveTab("currencies")}
-              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-                activeTab === "currencies"
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-              role="tab"
-              aria-selected={activeTab === "currencies"}
-            >
-              {t("tabs.currencies")}
-            </button>
-            <button
-              onClick={() => setActiveTab("security")}
-              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-                activeTab === "security"
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-              role="tab"
-              aria-selected={activeTab === "security"}
-            >
-              {t("tabs.security")}
-            </button>
-            <button
-              onClick={() => setActiveTab("billing")}
-              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-                activeTab === "billing"
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-              role="tab"
-              aria-selected={activeTab === "billing"}
-            >
-              {t("billing.tabLabel")}
-            </button>
-          </nav>
+          <Tabs
+            ariaLabel={t("pageTitle")}
+            active={activeTab}
+            onChange={(k) => setActiveTab(k as typeof activeTab)}
+            tabs={[
+              { key: "profile", label: t("tabs.profile") },
+              { key: "appearance", label: t("tabs.appearance") },
+              { key: "notifications", label: t("tabs.notifications") },
+              { key: "currencies", label: t("tabs.currencies") },
+              { key: "security", label: t("tabs.security") },
+              { key: "billing", label: t("billing.tabLabel") },
+            ]}
+          />
         </div>
 
         {/* Currencies Tab Content */}

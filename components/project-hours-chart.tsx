@@ -69,12 +69,12 @@ export function ProjectHoursChart({ data, loading = false }: ProjectHoursChartPr
                 </span>
               </div>
               <div
-                className="h-2.5 w-full overflow-hidden rounded-full bg-muted/50"
+                className="h-3 w-full overflow-hidden rounded-full bg-muted/40"
                 role="img"
                 aria-label={`${project.projectName}: ${project.formatted}`}
               >
                 <div
-                  className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out"
+                  className="h-full rounded-full bg-gradient-to-l from-primary to-primary/75 transition-[width] duration-500 ease-out"
                   style={{ width: `${Math.max(pct, 2)}%` }}
                 />
               </div>
