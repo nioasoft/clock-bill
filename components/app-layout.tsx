@@ -11,7 +11,7 @@ import { ErrorBoundary } from "./error-boundary";
 import { PersistentTimerBar } from "./persistent-timer-bar";
 import { TimerStartModal } from "./timer-start-modal";
 import { TimerStopModal } from "./timer-stop-modal";
-import { TimerFab } from "./timer-fab";
+import { TimerDeepLink } from "./timer-deeplink";
 import { brandName } from "@/lib/brand";
 
 interface User {
@@ -32,7 +32,6 @@ export function AppLayout({ children }: AppLayoutProps) {
   const tCommon = useTranslations("common");
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [, setLogoutLoading] = useState(false);
   // Guards the stored-locale sync so it runs once and can never loop.
   const localeSyncedRef = useRef(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -109,25 +108,6 @@ export function AppLayout({ children }: AppLayoutProps) {
     void syncLocale();
   }, [user, locale, router, pathname]);
 
-  const handleLogout = async () => {
-    setLogoutLoading(true);
-    try {
-      const response = await fetch("/api/auth/logout", { method: "POST" });
-      const data = await response.json();
-
-      if (data.success) {
-        router.push("/login");
-        router.refresh();
-      } else {
-        console.error("Logout failed:", data.message);
-      }
-    } catch (error) {
-      console.error("Logout error:", error);
-    } finally {
-      setLogoutLoading(false);
-    }
-  };
-
   const handleSidebarToggle = () => {
     setSidebarCollapsed((prev) => {
       const next = !prev;
@@ -161,7 +141,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <MobileNav userEmail={user.email} onLogout={handleLogout} userRole={user.role} />
+      <MobileNav userEmail={user.email} userRole={user.role} />
       <div className="hidden lg:flex">
         <div className="fixed ltr:left-0 rtl:right-0 top-0 h-screen z-30">
           <Sidebar
@@ -185,9 +165,8 @@ export function AppLayout({ children }: AppLayoutProps) {
       </div>
       <div className="lg:hidden pb-16 min-h-screen flex flex-col">
         <PersistentTimerBar />
-        {/* pb-20 clears the floating timer FAB so it can't cover the last
-            interactive element on a page (e.g. upload buttons in settings). */}
-        <main className="flex-1 overflow-x-hidden pb-20 motion-safe:animate-fade-in">
+        {/* pb clears the fixed bottom nav so the last element isn't hidden. */}
+        <main className="flex-1 overflow-x-hidden pb-6 motion-safe:animate-fade-in">
           <ErrorBoundary>{children}</ErrorBoundary>
         </main>
         <MobileBottomNav />
@@ -195,7 +174,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <TimerStartModal />
       <TimerStopModal />
       <Suspense fallback={null}>
-        <TimerFab />
+        <TimerDeepLink />
       </Suspense>
     </div>
   );
