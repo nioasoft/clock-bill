@@ -831,8 +831,9 @@ function ClientsPageContent() {
           </div>
         )}
 
-        {/* Clients List */}
-        <div className="rounded-[var(--radius-card)] bg-card shadow">
+        {/* Clients List — desktop is a single framed table; mobile is a stack of
+            distinct cards (the old shared divide-y container read as one card). */}
+        <div className="md:rounded-[var(--radius-card)] md:bg-card md:shadow">
           {clientsLoading ? (
             <div className="p-8 text-center text-muted-foreground">{t("loadingClients")}</div>
           ) : clients.length === 0 ? (
@@ -944,13 +945,17 @@ function ClientsPageContent() {
               </table>
             </div>
 
-            <div className="md:hidden divide-y divide-border">
+            <div className="md:hidden space-y-3">
               {clients.map((client) => (
-                <div key={client.id} className="p-4">
+                <div key={client.id} className="rounded-[var(--radius-card)] border border-border bg-card p-4">
                   <div className="flex items-start justify-between gap-2">
                     <Link
                       href={`/clients/${client.id}`}
-                      className="text-sm font-semibold text-primary hover:text-primary/90"
+                      className={`text-sm font-semibold ${
+                        client.isActive
+                          ? "text-primary hover:text-primary/90"
+                          : "text-foreground hover:text-foreground/80"
+                      }`}
                     >
                       {client.name}
                     </Link>

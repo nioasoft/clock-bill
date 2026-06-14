@@ -9,6 +9,7 @@ import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SimpleSelect } from "@/components/ui/simple-select";
+import { MonthField } from "@/components/ui/month-field";
 import { Clock, Pencil, Trash2 } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { messageForError } from "@/lib/api-error";
@@ -724,12 +725,12 @@ export default function EntriesPage() {
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div className="flex items-center gap-2">
               <label htmlFor="filterMonth" className="text-sm font-medium text-foreground">{t("filters.month")}</label>
-              <input
-                type="month"
+              <MonthField
                 id="filterMonth"
+                locale={locale}
+                ariaLabel={t("filters.month")}
                 value={filters.startDate ? filters.startDate.slice(0, 7) : ""}
-                onChange={(e) => handleMonthChange(e.target.value)}
-                className="rounded-[var(--radius)] border border-border bg-card px-3 py-2 text-sm tabular-nums focus:border-primary focus:outline-none focus:ring-primary"
+                onChange={handleMonthChange}
               />
               {(filters.clientId || filters.projectId) && (
                 <span className="bg-secondary text-secondary-foreground rounded-full text-xs px-2 py-0.5 font-semibold">
