@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname, Link } from "@/src/i18n/navigation";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Bell } from "lucide-react";
 import { authClient } from "@/lib/auth/client";
 import { DeleteAccountSection } from "@/components/delete-account-section";
 import { AppLayout } from "@/components/app-layout";
@@ -1055,33 +1055,37 @@ export default function SettingsPage() {
                 {t("notifications.permissionDescription")}
               </p>
 
-              <div className="flex items-center justify-between p-4 rounded-[var(--radius-card)] border border-border bg-muted">
-                <div>
-                  <p className="font-medium text-foreground">{t("notifications.permissionStatus")}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {notificationPermission === "granted" && t("notifications.statusGranted")}
-                    {notificationPermission === "denied" && t("notifications.statusDenied")}
-                    {notificationPermission === "default" && t("notifications.statusDefault")}
-                    {notificationPermission === null && t("notifications.statusUnsupported")}
-                  </p>
-                </div>
-                <div className="flex gap-3">
-                  {notificationPermission !== "granted" && notificationPermission !== null && (
-                    <button
-                      onClick={requestNotificationPermission}
-                      className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-[var(--radius)] hover:bg-primary/90 transition-colors"
-                    >
-                      {t("notifications.enablePermission")}
-                    </button>
-                  )}
+              {/* Status (read-only) — kept separate from the action so the button
+                  below clearly reads as something to click, not a status badge. */}
+              <div className="p-4 rounded-[var(--radius-card)] border border-border bg-muted">
+                <p className="font-medium text-foreground">{t("notifications.permissionStatus")}</p>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {notificationPermission === "granted" && t("notifications.statusGranted")}
+                  {notificationPermission === "denied" && t("notifications.statusDenied")}
+                  {notificationPermission === "default" && t("notifications.statusDefault")}
+                  {notificationPermission === null && t("notifications.statusUnsupported")}
+                </p>
+              </div>
+
+              <div className="mt-3 flex flex-col sm:flex-row gap-3">
+                {notificationPermission !== "granted" && notificationPermission !== null && (
                   <button
-                    onClick={handleTestNotification}
-                    disabled={testingNotification || notificationPermission !== "granted"}
-                    className="px-4 py-2 border border-border bg-card text-foreground text-sm font-medium rounded-[var(--radius)] hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    type="button"
+                    onClick={requestNotificationPermission}
+                    className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-[var(--radius)] shadow-sm hover:bg-primary/90 active:scale-[0.99] transition-all cursor-pointer"
                   >
-                    {testingNotification ? t("notifications.sending") : t("notifications.testButton")}
+                    <Bell className="h-4 w-4" aria-hidden="true" />
+                    {t("notifications.enablePermission")}
                   </button>
-                </div>
+                )}
+                <button
+                  type="button"
+                  onClick={handleTestNotification}
+                  disabled={testingNotification || notificationPermission !== "granted"}
+                  className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 border border-border bg-card text-foreground text-sm font-medium rounded-[var(--radius)] hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {testingNotification ? t("notifications.sending") : t("notifications.testButton")}
+                </button>
               </div>
             </div>
 
