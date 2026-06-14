@@ -26,6 +26,7 @@ export function TimerFab() {
   // the top. Resolves the FAB-over-content overlap without removing the single
   // always-available mobile timer entry point.
   const [hidden, setHidden] = useState(false);
+  const [typing, setTyping] = useState(false);
   const lastY = useRef(0);
 
   useEffect(() => {
@@ -47,6 +48,26 @@ export function TimerFab() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Also hide while a form control is focused so the FAB can never cover the
+  // field the user is editing (e.g. the business-name input in Settings).
+  useEffect(() => {
+    const isField = (el: EventTarget | null) =>
+      el instanceof HTMLElement &&
+      (el.matches("input, textarea, select") || el.isContentEditable);
+    const onFocusIn = (e: FocusEvent) => {
+      if (isField(e.target)) setTyping(true);
+    };
+    const onFocusOut = () => setTyping(false);
+    document.addEventListener("focusin", onFocusIn);
+    document.addEventListener("focusout", onFocusOut);
+    return () => {
+      document.removeEventListener("focusin", onFocusIn);
+      document.removeEventListener("focusout", onFocusOut);
+    };
+  }, []);
+
+  const isHidden = hidden || typing;
+
   // PWA shortcut / deep link: /dashboard?action=start-timer opens the modal.
   useEffect(() => {
     if (searchParams.get("action") === "start-timer") {
@@ -65,7 +86,7 @@ export function TimerFab() {
       }}
       aria-label={t("bar.startTimer")}
       className={`lg:hidden fixed end-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-300 active:scale-90 ${
-        hidden ? "pointer-events-none translate-y-24 opacity-0" : "translate-y-0 opacity-100"
+        isHidden ? "pointer-events-none translate-y-24 opacity-0" : "translate-y-0 opacity-100"
       }`}
       style={{ bottom: "calc(env(safe-area-inset-bottom) + 5rem)" }}
     >
