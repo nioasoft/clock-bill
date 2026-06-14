@@ -312,14 +312,14 @@ export default function DashboardPage() {
                 key={card.label}
                 className={`rounded-[var(--radius-card)] border p-2.5 sm:p-4 transition-colors motion-safe:animate-fade-up ${card.stagger} ${
                   card.accent
-                    ? "col-span-2 flex items-center justify-between sm:col-span-1 sm:block bg-primary/[0.06] border-primary/25 hover:border-primary/40"
+                    ? "col-span-2 order-first sm:order-none sm:col-span-1 bg-primary/[0.06] border-primary/25 hover:border-primary/40"
                     : "bg-card border-border hover:border-border-strong"
                 }`}
               >
                 <p className="text-[10px] sm:text-xs uppercase tracking-widest font-semibold text-muted-foreground">{card.label}</p>
                 <p className={`font-mono font-bold tabular-nums ${
                   card.accent
-                    ? "mt-0 sm:mt-2 text-lg sm:text-2xl text-primary"
+                    ? "mt-1 sm:mt-2 text-2xl text-primary"
                     : "mt-1 sm:mt-2 text-base sm:text-2xl text-foreground"
                 }`}>
                   {card.value}

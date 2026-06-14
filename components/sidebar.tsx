@@ -196,12 +196,12 @@ export function Sidebar({
           disabled={logoutLoading}
           title={isCollapsed ? t("logout") : undefined}
           aria-label={isCollapsed ? (logoutLoading ? t("loggingOut") : t("logout")) : undefined}
-          className={`flex items-center gap-3 rounded-lg text-sm font-medium text-destructive/80 hover:bg-destructive/10 transition-colors w-full disabled:opacity-50 disabled:cursor-not-allowed ${
+          className={`flex items-center gap-3 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors w-full disabled:opacity-50 disabled:cursor-not-allowed ${
             isCollapsed ? "justify-center px-2 py-2.5" : "px-4 py-2.5"
           }`}
         >
           {logoutLoading ? (
-            <div className="animate-spin rounded-full h-4 w-4 border-2 border-destructive border-t-transparent" />
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
           ) : (
             <LogOut className="h-4 w-4 shrink-0" />
           )}
