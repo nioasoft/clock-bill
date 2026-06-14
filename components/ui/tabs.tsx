@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export interface TabItem {
   /** Stable key returned via onChange and compared against `active`. */
@@ -23,15 +23,39 @@ interface TabsProps {
 /**
  * App-wide segmented-control tabs. One source of truth so every tabbed screen
  * looks identical: a subtle surface track with a filled accent pill on the
- * active tab. Scrolls horizontally on overflow (mobile) instead of wrapping to
- * a second row. Left/Right arrow keys move between tabs (roving selection).
+ * active tab. Left/Right arrow keys move between tabs (roving selection).
+ *
+ * When the tabs don't fit (e.g. 6 settings tabs on a phone) the track scrolls
+ * horizontally instead of wrapping — and the edges get a soft fade mask so a
+ * partially-visible tab reads as "scroll for more" rather than a hard clip.
+ * Selecting a tab scrolls it fully into view.
  *
  * Cosmetic styling lives ONLY here — there is no global `[role="tab"]` rule
  * (see app/[locale]/accessibility.css). Use design tokens, never raw colors,
  * so the control re-themes with the 12 account themes.
  */
 export function Tabs({ tabs, active, onChange, ariaLabel, className = "" }: TabsProps) {
+  const trackRef = useRef<HTMLDivElement>(null);
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [overflowing, setOverflowing] = useState(false);
+
+  // Detect whether the tabs overflow their track, so the fade mask only applies
+  // when there's actually hidden content to scroll to.
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    const check = () => setOverflowing(el.scrollWidth > el.clientWidth + 2);
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [tabs.length]);
+
+  // Keep the active tab fully visible (e.g. when a clipped tab is selected).
+  useEffect(() => {
+    const i = tabs.findIndex((t) => t.key === active);
+    refs.current[i]?.scrollIntoView({ inline: "nearest", block: "nearest" });
+  }, [active, tabs]);
 
   const focusTab = (index: number) => {
     const next = (index + tabs.length) % tabs.length;
@@ -42,9 +66,14 @@ export function Tabs({ tabs, active, onChange, ariaLabel, className = "" }: Tabs
 
   return (
     <div
+      ref={trackRef}
       role="tablist"
       aria-label={ariaLabel}
-      className={`flex gap-1 overflow-x-auto rounded-[var(--radius)] border border-border bg-surface p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${className}`}
+      className={`flex gap-1 overflow-x-auto rounded-[var(--radius)] border border-border bg-surface p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
+        overflowing
+          ? "[mask-image:linear-gradient(to_right,transparent,#000_1.25rem,#000_calc(100%-1.25rem),transparent)]"
+          : ""
+      } ${className}`}
     >
       {tabs.map((tab, i) => {
         const isActive = tab.key === active;
