@@ -42,8 +42,12 @@ type Zone = "cards" | "sections";
 const SAMPLE_VALUES: Record<string, string> = {
   hoursToday: "3:45",
   revenueToday: "₪620",
+  revenueTodayByHours: "₪480",
+  revenueTodayByItems: "₪140",
   hoursWeek: "18:30",
   revenueWeek: "₪3,100",
+  revenueWeekByHours: "₪2,400",
+  revenueWeekByItems: "₪700",
   hoursMonth: "82:15",
   revenueByHours: "₪12,400",
   revenueByItems: "₪2,800",

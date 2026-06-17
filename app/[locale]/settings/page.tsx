@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname, Link } from "@/src/i18n/navigation";
 import { DashboardCustomizer } from "@/components/dashboard-customizer";
+import { PdfPreview } from "@/components/pdf-preview";
 import { MessageSquare, Bell, BellOff, CheckCircle2, XCircle, Clock, LogOut } from "lucide-react";
 import { authClient } from "@/lib/auth/client";
 import { DeleteAccountSection } from "@/components/delete-account-section";
@@ -82,12 +83,16 @@ export default function SettingsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
-  const [activeTab, setActiveTab] = useState<"profile" | "appearance" | "dashboard" | "security" | "currencies" | "notifications" | "billing">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "appearance" | "account">("profile");
   const [sessions, setSessions] = useState<Session[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [currencyRates, setCurrencyRates] = useState<CurrencyRate[]>([]);
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
+  // Per-section save state (Profile & Business is split into independent
+  // save cards): which section is currently saving + the last result.
+  const [savingSection, setSavingSection] = useState<string | null>(null);
+  const [sectionResult, setSectionResult] = useState<{ section: string; ok: boolean } | null>(null);
   const [logoLoading, setLogoLoading] = useState(false);
   const [signatureLoading, setSignatureLoading] = useState(false);
   const [error, setError] = useState("");
@@ -130,6 +135,8 @@ export default function SettingsPage() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
+  const [addressStreet, setAddressStreet] = useState("");
+  const [addressCity, setAddressCity] = useState("");
   const [taxId, setTaxId] = useState("");
   const [website, setWebsite] = useState("");
   const [defaultCurrency, setDefaultCurrency] = useState("ILS");
@@ -153,26 +160,35 @@ export default function SettingsPage() {
   // useSearchParams() static-prerender Suspense requirement. Only known tabs.
   useEffect(() => {
     const requested = new URLSearchParams(window.location.search).get("tab");
-    const validTabs = ["profile", "appearance", "dashboard", "notifications", "currencies", "security", "billing"];
-    if (requested && validTabs.includes(requested)) {
-      setActiveTab(requested as typeof activeTab);
+    // Map legacy/sub-section deep-links onto the consolidated tabs.
+    const remap: Record<string, typeof activeTab> = {
+      profile: "profile",
+      appearance: "appearance",
+      dashboard: "appearance",
+      account: "account",
+      notifications: "account",
+      currencies: "profile",
+      security: "account",
+      billing: "account",
+    };
+    if (requested && remap[requested]) {
+      setActiveTab(remap[requested]);
     }
   }, []);
 
   useEffect(() => {
-    if (activeTab === "security") {
-      fetchSessions();
-    } else if (activeTab === "profile") {
+    if (activeTab === "profile") {
+      // Profile & Business: business profile + billing base + currency rates.
       fetchProfile();
-    } else if (activeTab === "currencies") {
       fetchCurrencyRates();
-    } else if (activeTab === "notifications") {
-      fetchProfile();
-      checkNotificationPermission();
-    } else if (activeTab === "billing") {
+    } else if (activeTab === "account") {
+      // Account: subscription + notifications + sessions.
       fetchBillingPlan();
       fetchProfile();
+      fetchSessions();
+      checkNotificationPermission();
     }
+    // "appearance" needs no fetch (theme is local; DashboardCustomizer self-loads).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
@@ -222,6 +238,20 @@ export default function SettingsPage() {
         setPhone(data.profile.phone || "");
         setEmail(data.profile.email || "");
         setAddress(data.profile.address || "");
+        // Structured address. Legacy fallback: if street/city were never set
+        // but a single-line address exists, seed the street field so existing
+        // users don't appear to lose their address (re-saving recomposes it).
+        {
+          const street = data.profile.addressStreet || "";
+          const city = data.profile.addressCity || "";
+          if (!street && !city && data.profile.address) {
+            setAddressStreet(data.profile.address);
+            setAddressCity("");
+          } else {
+            setAddressStreet(street);
+            setAddressCity(city);
+          }
+        }
         setTaxId(data.profile.taxId || "");
         setWebsite(data.profile.website || "");
         setDefaultCurrency(data.profile.defaultCurrency || "ILS");
@@ -390,6 +420,56 @@ export default function SettingsPage() {
       setProfileLoading(false);
     }
   };
+
+  // Save a single Profile & Business section (partial PATCH). Each card passes
+  // only its own fields; feedback is tracked per-section so the success tick /
+  // error shows on the right card.
+  const saveSection = async (section: string, fields: Record<string, unknown>) => {
+    setSavingSection(section);
+    setSectionResult(null);
+    try {
+      const response = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fields),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setProfile(data.profile);
+        setSectionResult({ section, ok: true });
+        setTimeout(() => setSectionResult((r) => (r?.section === section ? null : r)), 3000);
+      } else {
+        setSectionResult({ section, ok: false });
+      }
+    } catch {
+      setSectionResult({ section, ok: false });
+    } finally {
+      setSavingSection(null);
+    }
+  };
+
+  // Compose the legacy single-line address from the structured fields, so the
+  // value printed on invoices/reports (profile.address) stays correct.
+  const composedAddress = (): string =>
+    [addressStreet.trim(), addressCity.trim()].filter(Boolean).join(", ");
+
+  // Save button + inline result, shared by the Profile & Business cards.
+  const sectionSaveRow = (section: string) => (
+    <div className="flex items-center justify-end gap-3 pt-1">
+      {sectionResult?.section === section && (
+        <span className={`text-sm ${sectionResult.ok ? "text-success" : "text-destructive"}`}>
+          {sectionResult.ok ? t("toasts.profileSaved") : t("toasts.saveProfileError")}
+        </span>
+      )}
+      <button
+        type="submit"
+        disabled={savingSection === section}
+        className="px-5 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-[var(--radius)] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        {savingSection === section ? t("business.saving") : t("business.saveButton")}
+      </button>
+    </div>
+  );
 
   // Save notification settings
   const handleSaveNotificationSettings = async () => {
@@ -787,18 +867,20 @@ export default function SettingsPage() {
             tabs={[
               { key: "profile", label: t("tabs.profile") },
               { key: "appearance", label: t("tabs.appearance") },
-              { key: "dashboard", label: t("tabs.dashboard") },
-              { key: "notifications", label: t("tabs.notifications") },
-              { key: "currencies", label: t("tabs.currencies") },
-              { key: "security", label: t("tabs.security") },
-              { key: "billing", label: t("billing.tabLabel") },
+              { key: "account", label: t("tabs.account") },
             ]}
           />
         </div>
 
-        {/* Currencies Tab Content */}
-        {activeTab === "currencies" && (
-          <div className="space-y-6" role="tabpanel">
+        {/* Tab panels — a flex column so consolidated tabs (which now hold
+            several sections each) order their sections via order-* regardless
+            of source position, avoiding large JSX moves. Only the active tab's
+            panels render, so order values are per-tab. */}
+        <div className="flex flex-col gap-6">
+
+        {/* Currencies — moved under Profile & Business */}
+        {activeTab === "profile" && (
+          <div className="space-y-6 order-3" role="tabpanel">
             {/* Add Currency Rate Form */}
             <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-2">
@@ -977,7 +1059,7 @@ export default function SettingsPage() {
 
         {/* Appearance Tab Content */}
         {activeTab === "appearance" && (
-          <div className="space-y-6" role="tabpanel">
+          <div className="space-y-6 order-1" role="tabpanel">
             <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-2">
                 {t("appearance.title")}
@@ -1018,16 +1100,76 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Dashboard Tab Content */}
-        {activeTab === "dashboard" && (
-          <div role="tabpanel">
+        {/* Dashboard layout — moved under Appearance */}
+        {activeTab === "appearance" && (
+          <div className="order-2" role="tabpanel">
             <DashboardCustomizer />
           </div>
         )}
 
-        {/* Notifications Tab Content */}
-        {activeTab === "notifications" && (
-          <div className="space-y-6" role="tabpanel">
+        {/* Display preferences — date / time / language. Instant-save (no
+            button), consistent with theme + dashboard above. */}
+        {activeTab === "appearance" && (
+          <div className="space-y-6 order-3" role="tabpanel">
+            <div className="bg-card rounded-[var(--radius-card)] border border-border p-5 sm:p-6">
+              <h2 className="font-display text-lg font-bold text-foreground mb-1">
+                {t("display.sectionTitle")}
+              </h2>
+              <p className="text-sm text-muted-foreground mb-5">
+                {t("display.sectionDescription")}
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="dateFormat" className="block text-sm font-medium text-muted-foreground mb-1">
+                    {t("display.dateFormatLabel")}
+                  </label>
+                  <SimpleSelect
+                    id="dateFormat"
+                    value={dateFormat}
+                    onChange={(v) => { setDateFormat(v); saveSection("display", { dateFormat: v }); }}
+                    options={[
+                      { value: "DD/MM/YYYY", label: t("display.dateFormatDMY") },
+                      { value: "MM/DD/YYYY", label: t("display.dateFormatMDY") },
+                      { value: "YYYY-MM-DD", label: t("display.dateFormatYMD") },
+                    ]}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="timeFormat" className="block text-sm font-medium text-muted-foreground mb-1">
+                    {t("display.timeFormatLabel")}
+                  </label>
+                  <SimpleSelect
+                    id="timeFormat"
+                    value={timeFormat}
+                    onChange={(v) => { setTimeFormat(v); saveSection("display", { timeFormat: v }); }}
+                    options={[
+                      { value: "24h", label: t("display.timeFormat24h") },
+                      { value: "12h", label: t("display.timeFormat12h") },
+                    ]}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="interfaceLanguage" className="block text-sm font-medium text-muted-foreground mb-1">
+                    {t("display.language.label")}
+                  </label>
+                  <SimpleSelect
+                    id="interfaceLanguage"
+                    value={locale}
+                    onChange={handleLocaleChange}
+                    options={[
+                      { value: "he", label: t("display.language.he") },
+                      { value: "en", label: t("display.language.en") },
+                    ]}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Notifications — moved under Account */}
+        {activeTab === "account" && (
+          <div className="space-y-6 order-2" role="tabpanel">
             {/* Notification Permission */}
             <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-2">
@@ -1096,13 +1238,13 @@ export default function SettingsPage() {
                 {t("notifications.longTimerDescription")}
               </p>
 
-              {successMessage && activeTab === "notifications" && (
+              {successMessage && activeTab === "account" && (
                 <div className="rounded-[var(--radius-card)] bg-success/10 p-4 mb-4">
                   <p className="text-sm text-success">{successMessage}</p>
                 </div>
               )}
 
-              {profileError && activeTab === "notifications" && (
+              {profileError && activeTab === "account" && (
                 <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 mb-4">
                   <p className="text-sm text-destructive">{profileError}</p>
                 </div>
@@ -1275,9 +1417,9 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Billing Tab Content */}
-        {activeTab === "billing" && (
-          <div className="space-y-6" role="tabpanel">
+        {/* Subscription / plan — moved under Account */}
+        {activeTab === "account" && (
+          <div className="space-y-6 order-1" role="tabpanel">
             <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-6">
                 {t("billing.heading")}
@@ -1328,8 +1470,12 @@ export default function SettingsPage() {
                 </div>
               )}
             </div>
+          </div>
+        )}
 
-            {/* Default Billing Base */}
+        {/* Default billing base (rate + rounding) — moved under Profile & Business */}
+        {activeTab === "profile" && (
+          <div className="space-y-6 order-2" role="tabpanel">
             <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-2">
                 {t("billing.baseHeading")}
@@ -1338,13 +1484,13 @@ export default function SettingsPage() {
                 {t("billing.baseDescription")}
               </p>
 
-              {successMessage && activeTab === "billing" && (
+              {successMessage && activeTab === "profile" && (
                 <div className="rounded-[var(--radius-card)] bg-success/10 p-4 mb-4">
                   <p className="text-sm text-success">{successMessage}</p>
                 </div>
               )}
 
-              {profileError && activeTab === "billing" && (
+              {profileError && activeTab === "profile" && (
                 <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 mb-4">
                   <p className="text-sm text-destructive">{profileError}</p>
                 </div>
@@ -1413,9 +1559,9 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Security Tab Content */}
-        {activeTab === "security" && (
-          <div className="space-y-6" role="tabpanel">
+        {/* Security & data — moved under Account */}
+        {activeTab === "account" && (
+          <div className="space-y-6 order-3" role="tabpanel">
             {/* Active Sessions Section */}
             <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
               <div className="flex items-center justify-between mb-2">
@@ -1524,11 +1670,12 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Profile Tab Content */}
+        {/* Profile & Business — primary section of the Profile tab. Cards are a
+            flex column so business details lead (order-1), then logo/signature. */}
         {activeTab === "profile" && (
-          <div className="space-y-6" role="tabpanel">
+          <div className="flex flex-col gap-6 order-1" role="tabpanel">
             {/* Logo Upload Section */}
-            <div className="bg-card rounded-[var(--radius-card)] border border-border p-5 sm:p-6">
+            <div className="order-5 bg-card rounded-[var(--radius-card)] border border-border p-5 sm:p-6">
               {logoError && (
                 <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 mb-4">
                   <p className="text-sm text-destructive">{logoError}</p>
@@ -1589,7 +1736,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Signature Upload Section */}
-            <div className="bg-card rounded-[var(--radius-card)] border border-border p-5 sm:p-6">
+            <div className="order-6 bg-card rounded-[var(--radius-card)] border border-border p-5 sm:p-6">
               {signatureError && (
                 <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 mb-4">
                   <p className="text-sm text-destructive">{signatureError}</p>
@@ -1649,35 +1796,33 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Business Details Form */}
-            <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
+            {/* Business identity card — saves independently */}
+            <div className="order-1 bg-card rounded-[var(--radius-card)] border border-border p-5 sm:p-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-2">
                 {t("business.title")}
               </h2>
-              <p className="text-sm text-muted-foreground mb-6">
+              <p className="text-sm text-muted-foreground mb-5">
                 {t("business.description")}
               </p>
 
-              {profileError && (
-                <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 mb-4">
-                  <p className="text-sm text-destructive">{profileError}</p>
-                </div>
-              )}
-
-              {successMessage && (
-                <div className="rounded-[var(--radius-card)] bg-success/10 p-4 mb-4">
-                  <p className="text-sm text-success">{successMessage}</p>
-                </div>
-              )}
-
-              {loading ? (
-                <div className="text-center py-8">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
-                  <p className="mt-2 text-muted-foreground">{t("business.loading")}</p>
-                </div>
-              ) : (
-                <form onSubmit={handleSaveProfile} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  saveSection("business", {
+                    businessName: businessName || null,
+                    phone: phone || null,
+                    email: email || null,
+                    taxId: taxId || null,
+                    website: website || null,
+                    defaultCurrency: defaultCurrency || null,
+                    addressStreet: addressStreet || null,
+                    addressCity: addressCity || null,
+                    address: composedAddress() || null,
+                  });
+                }}
+                className="space-y-5"
+              >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Business Name */}
                     <div>
                       <label
@@ -1691,7 +1836,6 @@ export default function SettingsPage() {
                         id="businessName"
                         value={businessName}
                         onChange={(e) => setBusinessName(e.target.value)}
-                        placeholder={t("business.businessNamePlaceholder")}
                         className={fieldClass()}
                       />
                     </div>
@@ -1709,7 +1853,6 @@ export default function SettingsPage() {
                         id="phone"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        placeholder={t("business.phonePlaceholder")}
                         className={fieldClass()}
                       />
                     </div>
@@ -1727,7 +1870,6 @@ export default function SettingsPage() {
                         id="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder={t("business.emailPlaceholder")}
                         className={fieldClass()}
                       />
                     </div>
@@ -1745,7 +1887,6 @@ export default function SettingsPage() {
                         id="taxId"
                         value={taxId}
                         onChange={(e) => setTaxId(e.target.value)}
-                        placeholder={t("business.taxIdPlaceholder")}
                         className={fieldClass()}
                       />
                     </div>
@@ -1763,26 +1904,40 @@ export default function SettingsPage() {
                         id="website"
                         value={website}
                         onChange={(e) => setWebsite(e.target.value)}
-                        placeholder={t("business.websitePlaceholder")}
                         className={fieldClass()}
                       />
                     </div>
 
-                    {/* Address */}
-                    <div className="md:col-span-2">
+                    {/* Address — structured (street + city), small fields */}
+                    <div>
                       <label
-                        htmlFor="address"
+                        htmlFor="addressStreet"
                         className="block text-sm font-medium text-muted-foreground mb-1"
                       >
-                        {t("business.address")}
+                        {t("business.addressStreet")}
                       </label>
-                      <textarea
-                        id="address"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        placeholder={t("business.addressPlaceholder")}
-                        rows={3}
-                        className={`${fieldClass()} resize-none`}
+                      <input
+                        type="text"
+                        id="addressStreet"
+                        value={addressStreet}
+                        onChange={(e) => setAddressStreet(e.target.value)}
+                        className={fieldClass()}
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="addressCity"
+                        className="block text-sm font-medium text-muted-foreground mb-1"
+                      >
+                        {t("business.addressCity")}
+                      </label>
+                      <input
+                        type="text"
+                        id="addressCity"
+                        value={addressCity}
+                        onChange={(e) => setAddressCity(e.target.value)}
+                        className={fieldClass()}
                       />
                     </div>
 
@@ -1810,8 +1965,31 @@ export default function SettingsPage() {
                         {t("business.defaultCurrencyHint")}
                       </p>
                     </div>
+                  </div>
+                  {sectionSaveRow("business")}
+                </form>
+            </div>
 
-                    {/* Preferred PDF Template */}
+            {/* PDF appearance card — saves independently, with a live preview */}
+            <div className="order-2 bg-card rounded-[var(--radius-card)] border border-border p-5 sm:p-6">
+              <h2 className="font-display text-lg font-bold text-foreground mb-1">{t("pdf.sectionTitle")}</h2>
+              <p className="text-sm text-muted-foreground mb-5">{t("pdf.sectionDescription")}</p>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  saveSection("pdf", {
+                    preferredPdfTemplate: preferredPdfTemplate || null,
+                    pdfPrimaryColor: pdfPrimaryColor || "#A8622D",
+                    pdfAccentColor: pdfAccentColor || "#347B52",
+                  });
+                }}
+                className="space-y-4"
+              >
+                  {/* Compact row: template + the two colors (swatch above,
+                      hex below). Per-field hints dropped — the section
+                      description already explains it. */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
+                    {/* Default PDF template */}
                     <div>
                       <label
                         htmlFor="preferredPdfTemplate"
@@ -1832,12 +2010,9 @@ export default function SettingsPage() {
                           { value: "ocean", label: t("pdf.templateOcean") },
                         ]}
                       />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {t("pdf.templateHint")}
-                      </p>
                     </div>
 
-                    {/* PDF Primary Color */}
+                    {/* Primary color */}
                     <div>
                       <label
                         htmlFor="pdfPrimaryColor"
@@ -1845,30 +2020,25 @@ export default function SettingsPage() {
                       >
                         {t("pdf.primaryColorLabel")}
                       </label>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="color"
-                          id="pdfPrimaryColor"
-                          value={pdfPrimaryColor}
-                          onChange={(e) => setPdfPrimaryColor(e.target.value)}
-                          className="h-10 w-20 border border-border rounded-[var(--radius)] cursor-pointer bg-card"
-                        />
-                        <input
-                          type="text"
-                          value={pdfPrimaryColor}
-                          onChange={(e) => setPdfPrimaryColor(e.target.value)}
-                          placeholder="#A8622D"
-                          className={`${fieldClass()} flex-1 font-mono`}
-                          pattern="^#[0-9A-Fa-f]{6}$"
-                          maxLength={7}
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {t("pdf.primaryColorHint")}
-                      </p>
+                      <input
+                        type="color"
+                        id="pdfPrimaryColor"
+                        value={pdfPrimaryColor}
+                        onChange={(e) => setPdfPrimaryColor(e.target.value)}
+                        className="h-9 w-full rounded-[var(--radius)] border border-border cursor-pointer bg-card"
+                      />
+                      <input
+                        type="text"
+                        aria-label={t("pdf.primaryColorLabel")}
+                        value={pdfPrimaryColor}
+                        onChange={(e) => setPdfPrimaryColor(e.target.value)}
+                        className={`${fieldClass()} mt-1 font-mono text-xs text-center`}
+                        pattern="^#[0-9A-Fa-f]{6}$"
+                        maxLength={7}
+                      />
                     </div>
 
-                    {/* PDF Accent Color */}
+                    {/* Accent color */}
                     <div>
                       <label
                         htmlFor="pdfAccentColor"
@@ -1876,169 +2046,60 @@ export default function SettingsPage() {
                       >
                         {t("pdf.accentColorLabel")}
                       </label>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="color"
-                          id="pdfAccentColor"
-                          value={pdfAccentColor}
-                          onChange={(e) => setPdfAccentColor(e.target.value)}
-                          className="h-10 w-20 border border-border rounded-[var(--radius)] cursor-pointer bg-card"
-                        />
-                        <input
-                          type="text"
-                          value={pdfAccentColor}
-                          onChange={(e) => setPdfAccentColor(e.target.value)}
-                          placeholder="#347B52"
-                          className={`${fieldClass()} flex-1 font-mono`}
-                          pattern="^#[0-9A-Fa-f]{6}$"
-                          maxLength={7}
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {t("pdf.accentColorHint")}
-                      </p>
-                    </div>
-
-                    {/* Date Format */}
-                    <div>
-                      <label
-                        htmlFor="dateFormat"
-                        className="block text-sm font-medium text-muted-foreground mb-1"
-                      >
-                        {t("display.dateFormatLabel")}
-                      </label>
-                      <SimpleSelect
-                        id="dateFormat"
-                        value={dateFormat}
-                        onChange={setDateFormat}
-                        options={[
-                          { value: "DD/MM/YYYY", label: t("display.dateFormatDMY") },
-                          { value: "MM/DD/YYYY", label: t("display.dateFormatMDY") },
-                          { value: "YYYY-MM-DD", label: t("display.dateFormatYMD") },
-                        ]}
+                      <input
+                        type="color"
+                        id="pdfAccentColor"
+                        value={pdfAccentColor}
+                        onChange={(e) => setPdfAccentColor(e.target.value)}
+                        className="h-9 w-full rounded-[var(--radius)] border border-border cursor-pointer bg-card"
                       />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {t("display.dateFormatHint")}
-                      </p>
-                    </div>
-
-                    {/* Time Format */}
-                    <div>
-                      <label
-                        htmlFor="timeFormat"
-                        className="block text-sm font-medium text-muted-foreground mb-1"
-                      >
-                        {t("display.timeFormatLabel")}
-                      </label>
-                      <SimpleSelect
-                        id="timeFormat"
-                        value={timeFormat}
-                        onChange={setTimeFormat}
-                        options={[
-                          { value: "24h", label: t("display.timeFormat24h") },
-                          { value: "12h", label: t("display.timeFormat12h") },
-                        ]}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {t("display.timeFormatHint")}
-                      </p>
-                    </div>
-
-                    {/* Interface Language */}
-                    <div>
-                      <label
-                        htmlFor="interfaceLanguage"
-                        className="block text-sm font-medium text-muted-foreground mb-1"
-                      >
-                        {t("display.language.label")}
-                      </label>
-                      <SimpleSelect
-                        id="interfaceLanguage"
-                        value={locale}
-                        onChange={handleLocaleChange}
-                        options={[
-                          { value: "he", label: t("display.language.he") },
-                          { value: "en", label: t("display.language.en") },
-                        ]}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {t("display.language.hint")}
-                      </p>
-                    </div>
-
-                    {/* Invoice Prefix */}
-                    <div>
-                      <label
-                        htmlFor="invoicePrefix"
-                        className="block text-sm font-medium text-muted-foreground mb-1"
-                      >
-                        {t("invoice.prefixLabel")}
-                      </label>
                       <input
                         type="text"
-                        id="invoicePrefix"
-                        value={invoicePrefix}
-                        onChange={(e) => setInvoicePrefix(e.target.value)}
-                        placeholder={t("invoice.prefixPlaceholder")}
-                        className={fieldClass()}
+                        aria-label={t("pdf.accentColorLabel")}
+                        value={pdfAccentColor}
+                        onChange={(e) => setPdfAccentColor(e.target.value)}
+                        className={`${fieldClass()} mt-1 font-mono text-xs text-center`}
+                        pattern="^#[0-9A-Fa-f]{6}$"
+                        maxLength={7}
                       />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {t("invoice.prefixHint")}
-                      </p>
-                    </div>
-
-                    {/* Next Invoice Number */}
-                    <div>
-                      <label
-                        htmlFor="nextInvoiceNumber"
-                        className="block text-sm font-medium text-muted-foreground mb-1"
-                      >
-                        {t("invoice.nextNumberLabel")}
-                      </label>
-                      <input
-                        type="number"
-                        id="nextInvoiceNumber"
-                        value={nextInvoiceNumber}
-                        onChange={(e) => setNextInvoiceNumber(e.target.value)}
-                        placeholder={t("invoice.nextNumberPlaceholder")}
-                        min="1"
-                        className={fieldClass()}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {t("invoice.nextNumberHint")}
-                      </p>
-                    </div>
-
-                    {/* Payment Terms */}
-                    <div className="md:col-span-2">
-                      <label
-                        htmlFor="paymentTerms"
-                        className="block text-sm font-medium text-muted-foreground mb-1"
-                      >
-                        {t("invoice.paymentTermsLabel")}
-                      </label>
-                      <textarea
-                        id="paymentTerms"
-                        value={paymentTerms}
-                        onChange={(e) => setPaymentTerms(e.target.value)}
-                        placeholder={t("invoice.paymentTermsPlaceholder")}
-                        rows={3}
-                        className={`${fieldClass()} resize-none`}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {t("invoice.paymentTermsHint")}
-                      </p>
                     </div>
                   </div>
+                  {sectionSaveRow("pdf")}
+                </form>
+                <div className="mt-5">
+                  <PdfPreview
+                    template={preferredPdfTemplate}
+                    primaryColor={pdfPrimaryColor}
+                    accentColor={pdfAccentColor}
+                    businessName={businessName}
+                    addressStreet={addressStreet}
+                    addressCity={addressCity}
+                    logoUrl={profile?.logoUrl ?? null}
+                    label={t("pdf.previewLabel")}
+                    docTitle={t("pdf.previewDocTitle")}
+                  />
+                </div>
+            </div>
 
-                  {/* Bank Details Section */}
-                  <div className="border-t border-border pt-6 mt-6">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">{t("business.bankSectionTitle")}</h3>
-                    <p className="text-sm text-muted-foreground mb-6">
-                      {t("business.bankSectionDescription")}
-                    </p>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Bank details card — saves independently */}
+            <div className="order-4 bg-card rounded-[var(--radius-card)] border border-border p-5 sm:p-6">
+              <h2 className="font-display text-lg font-bold text-foreground mb-1">{t("business.bankSectionTitle")}</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                {t("business.bankSectionDescription")}
+              </p>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  saveSection("bank", {
+                    bankName: bankName || null,
+                    bankBranch: bankBranch || null,
+                    bankAccountNumber: bankAccountNumber || null,
+                    bankSwift: bankSwift || null,
+                  });
+                }}
+                className="space-y-5"
+              >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Bank Name */}
                       <div>
                         <label
@@ -2052,7 +2113,6 @@ export default function SettingsPage() {
                           id="bankName"
                           value={bankName}
                           onChange={(e) => setBankName(e.target.value)}
-                          placeholder={t("business.bankNamePlaceholder")}
                           className={fieldClass()}
                         />
                       </div>
@@ -2070,7 +2130,6 @@ export default function SettingsPage() {
                           id="bankBranch"
                           value={bankBranch}
                           onChange={(e) => setBankBranch(e.target.value)}
-                          placeholder={t("business.bankBranchPlaceholder")}
                           className={fieldClass()}
                         />
                       </div>
@@ -2088,7 +2147,6 @@ export default function SettingsPage() {
                           id="bankAccountNumber"
                           value={bankAccountNumber}
                           onChange={(e) => setBankAccountNumber(e.target.value)}
-                          placeholder={t("business.bankAccountNumberPlaceholder")}
                           className={fieldClass()}
                         />
                       </div>
@@ -2106,7 +2164,6 @@ export default function SettingsPage() {
                           id="bankSwift"
                           value={bankSwift}
                           onChange={(e) => setBankSwift(e.target.value)}
-                          placeholder={t("business.bankSwiftPlaceholder")}
                           className={fieldClass()}
                         />
                         <p className="text-xs text-muted-foreground mt-1">
@@ -2114,29 +2171,13 @@ export default function SettingsPage() {
                         </p>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="flex justify-end">
-                    <button
-                      type="submit"
-                      disabled={profileLoading}
-                      className="px-6 py-2 bg-primary text-primary-foreground font-medium rounded-[var(--radius)] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {profileLoading ? (
-                        <span className="flex items-center gap-2">
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-foreground border-t-transparent"></div>
-                          {t("business.saving")}
-                        </span>
-                      ) : (
-                        t("business.saveButton")
-                      )}
-                    </button>
-                  </div>
+                  {sectionSaveRow("bank")}
                 </form>
-              )}
             </div>
           </div>
         )}
+
+        </div>{/* end tab panels flex column */}
 
         {/* Feedback / support entry point. On mobile this is the only way to
             reach the feedback page (it was dropped from the bottom nav to make

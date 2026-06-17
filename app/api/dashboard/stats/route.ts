@@ -3,7 +3,7 @@ import { query } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { calculateFixedMonthlyCharges } from "@/lib/fixed-charges";
 import { addDays, appDateBoundaries } from "@/lib/dates";
-import { roundMoney } from "@/lib/money";
+import { roundMoney, addMoney } from "@/lib/money";
 import { normalizeDashboardConfig } from "@/lib/dashboard-widgets";
 
 /**
@@ -66,21 +66,21 @@ export async function GET(_request: NextRequest) {
       query<{
         hours_total: string;
         items_total: string;
-        revenue_today: string;
-        revenue_week: string;
+        revenue_today_hours: string;
+        revenue_today_items: string;
+        revenue_week_hours: string;
+        revenue_week_items: string;
         default_currency: string | null;
         dashboard_config: unknown;
       }>(
-        // Split monthly revenue by billing kind so the dashboard can show
-        // hours vs. items separately. Hourly lines use the per-entry snapshot
-        // rate; rows with NULL rate fall back to the client's CURRENT default
-        // hourly rate from client_rates (the single source of truth — not the
-        // legacy clients.default_rate mirror), so it agrees with the records list.
-        //
-        // revenue_today / revenue_week are date-bucketed totals (hourly + item
-        // combined) for the new customizable cards. The scan window is widened
-        // to LEAST(month, week) so the week bucket is covered even when the week
-        // started before the 1st. NOTE: these buckets are pure time-entry
+        // Revenue split by billing kind (hours vs. items) for each period, so
+        // the dashboard can show any combination as separate cards. Hourly
+        // lines use the per-entry snapshot rate; rows with NULL rate fall back
+        // to the client's CURRENT default hourly rate from client_rates (the
+        // single source of truth — not the legacy clients.default_rate mirror),
+        // so figures agree with the records list. The scan window is widened to
+        // LEAST(month, week) so the week bucket is covered even when the week
+        // started before the 1st. NOTE: today/week buckets are pure time-entry
         // revenue and deliberately EXCLUDE fixed monthly retainers — a retainer
         // isn't "earned today"; only the month total folds them in (below).
         `SELECT
@@ -88,16 +88,14 @@ export async function GET(_request: NextRequest) {
                 THEN (te.duration / 60.0) * COALESCE(te.rate, crd.rate, 0) ELSE 0 END), 0) AS hours_total,
            COALESCE(SUM(CASE WHEN te.date >= $2 AND te.billing_kind = 'item'
                 THEN COALESCE(te.quantity, 0) * COALESCE(te.rate, 0) ELSE 0 END), 0) AS items_total,
-           COALESCE(SUM(CASE WHEN te.date = $3
-                THEN (CASE WHEN te.billing_kind = 'item'
-                           THEN COALESCE(te.quantity, 0) * COALESCE(te.rate, 0)
-                           ELSE (te.duration / 60.0) * COALESCE(te.rate, crd.rate, 0) END)
-                ELSE 0 END), 0) AS revenue_today,
-           COALESCE(SUM(CASE WHEN te.date >= $4
-                THEN (CASE WHEN te.billing_kind = 'item'
-                           THEN COALESCE(te.quantity, 0) * COALESCE(te.rate, 0)
-                           ELSE (te.duration / 60.0) * COALESCE(te.rate, crd.rate, 0) END)
-                ELSE 0 END), 0) AS revenue_week,
+           COALESCE(SUM(CASE WHEN te.date = $3 AND te.billing_kind IS DISTINCT FROM 'item'
+                THEN (te.duration / 60.0) * COALESCE(te.rate, crd.rate, 0) ELSE 0 END), 0) AS revenue_today_hours,
+           COALESCE(SUM(CASE WHEN te.date = $3 AND te.billing_kind = 'item'
+                THEN COALESCE(te.quantity, 0) * COALESCE(te.rate, 0) ELSE 0 END), 0) AS revenue_today_items,
+           COALESCE(SUM(CASE WHEN te.date >= $4 AND te.billing_kind IS DISTINCT FROM 'item'
+                THEN (te.duration / 60.0) * COALESCE(te.rate, crd.rate, 0) ELSE 0 END), 0) AS revenue_week_hours,
+           COALESCE(SUM(CASE WHEN te.date >= $4 AND te.billing_kind = 'item'
+                THEN COALESCE(te.quantity, 0) * COALESCE(te.rate, 0) ELSE 0 END), 0) AS revenue_week_items,
            (SELECT default_currency FROM user_profiles WHERE user_id = $1) AS default_currency,
            (SELECT dashboard_config FROM user_profiles WHERE user_id = $1) AS dashboard_config
          FROM time_entries te
@@ -277,11 +275,15 @@ export async function GET(_request: NextRequest) {
     const hoursRevenue = parseFloat(earningsResult.rows[0]?.hours_total || '0') + fixedEarnings;
     const totalEarnings = hoursRevenue + itemsRevenue;
 
-    // Time-entry revenue for the new today/week cards (retainers excluded —
-    // see the earnings query comment). roundMoney snaps SUM() float drift to
-    // whole cents.
-    const revenueToday = roundMoney(parseFloat(earningsResult.rows[0]?.revenue_today || '0'));
-    const revenueWeek = roundMoney(parseFloat(earningsResult.rows[0]?.revenue_week || '0'));
+    // Time-entry revenue for the today/week cards, split by billing kind
+    // (retainers excluded — see the earnings query comment). roundMoney snaps
+    // SUM() float drift to whole cents; addMoney keeps the total clean too.
+    const revenueTodayHours = roundMoney(parseFloat(earningsResult.rows[0]?.revenue_today_hours || '0'));
+    const revenueTodayItems = roundMoney(parseFloat(earningsResult.rows[0]?.revenue_today_items || '0'));
+    const revenueToday = addMoney(revenueTodayHours, revenueTodayItems);
+    const revenueWeekHours = roundMoney(parseFloat(earningsResult.rows[0]?.revenue_week_hours || '0'));
+    const revenueWeekItems = roundMoney(parseFloat(earningsResult.rows[0]?.revenue_week_items || '0'));
+    const revenueWeek = addMoney(revenueWeekHours, revenueWeekItems);
 
     // Validate/normalize the stored layout server-side — never trust the blob.
     const dashboardConfig = normalizeDashboardConfig(earningsResult.rows[0]?.dashboard_config ?? null);
@@ -297,7 +299,15 @@ export async function GET(_request: NextRequest) {
           formatted: formatHours(parseFloat(timeSumsResult.rows[0]?.today || '0')),
           revenue: {
             amount: revenueToday,
-            formatted: `${getCurrencySymbol(userCurrency)}${revenueToday.toFixed(2)}`
+            formatted: `${getCurrencySymbol(userCurrency)}${revenueToday.toFixed(2)}`,
+            byHours: {
+              amount: revenueTodayHours,
+              formatted: `${getCurrencySymbol(userCurrency)}${revenueTodayHours.toFixed(2)}`
+            },
+            byItems: {
+              amount: revenueTodayItems,
+              formatted: `${getCurrencySymbol(userCurrency)}${revenueTodayItems.toFixed(2)}`
+            }
           }
         },
         week: {
@@ -305,7 +315,15 @@ export async function GET(_request: NextRequest) {
           formatted: formatHours(parseFloat(timeSumsResult.rows[0]?.week || '0')),
           revenue: {
             amount: revenueWeek,
-            formatted: `${getCurrencySymbol(userCurrency)}${revenueWeek.toFixed(2)}`
+            formatted: `${getCurrencySymbol(userCurrency)}${revenueWeek.toFixed(2)}`,
+            byHours: {
+              amount: revenueWeekHours,
+              formatted: `${getCurrencySymbol(userCurrency)}${revenueWeekHours.toFixed(2)}`
+            },
+            byItems: {
+              amount: revenueWeekItems,
+              formatted: `${getCurrencySymbol(userCurrency)}${revenueWeekItems.toFixed(2)}`
+            }
           }
         },
         month: {

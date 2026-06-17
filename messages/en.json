@@ -227,11 +227,15 @@
       "todayHours": "Today's hours",
       "weekHours": "This week's hours",
       "monthHours": "This month's hours",
-      "revenueToday": "Revenue today",
-      "revenueWeek": "Revenue this week",
-      "earningsByHours": "By hours",
-      "earningsByItems": "By items",
-      "totalEarnings": "Total earnings",
+      "revenueToday": "Revenue · today",
+      "revenueTodayByHours": "Hourly revenue · today",
+      "revenueTodayByItems": "Item revenue · today",
+      "revenueWeek": "Revenue · this week",
+      "revenueWeekByHours": "Hourly revenue · week",
+      "revenueWeekByItems": "Item revenue · week",
+      "earningsByHours": "Hourly revenue · month",
+      "earningsByItems": "Item revenue · month",
+      "totalEarnings": "Total revenue · month",
       "clientsCount": "Active clients",
       "projectsCount": "Active projects"
     },
@@ -721,8 +725,9 @@
   "Settings": {
     "pageTitle": "Settings",
     "tabs": {
-      "profile": "Profile",
+      "profile": "Profile & Business",
       "appearance": "Appearance",
+      "account": "Account",
       "dashboard": "Dashboard",
       "notifications": "Notifications",
       "currencies": "Currencies",
@@ -813,6 +818,8 @@
       "websitePlaceholder": "https://example.com",
       "address": "Address",
       "addressPlaceholder": "1 Herzl St., Tel Aviv",
+      "addressStreet": "Street & number",
+      "addressCity": "City",
       "defaultCurrency": "Default Currency",
       "defaultCurrencyHint": "The currency used by default for new projects",
       "bankSectionTitle": "Bank Details for Transfers",
@@ -830,6 +837,10 @@
       "saveButton": "Save Changes"
     },
     "pdf": {
+      "sectionTitle": "PDF appearance",
+      "sectionDescription": "Template and brand colors for your settlement documents and reports.",
+      "previewLabel": "Live preview",
+      "previewDocTitle": "Settlement statement",
       "templateLabel": "Default PDF Template",
       "templateModern": "Modern",
       "templateClassic": "Classic",
@@ -844,6 +855,8 @@
       "accentColorHint": "The accent color used for details and additional elements in the PDF"
     },
     "display": {
+      "sectionTitle": "Display",
+      "sectionDescription": "Date, time and interface language.",
       "dateFormatLabel": "Date Format",
       "dateFormatDMY": "Day/Month/Year (DD/MM/YYYY)",
       "dateFormatMDY": "Month/Day/Year (MM/DD/YYYY)",
@@ -861,6 +874,7 @@
       }
     },
     "invoice": {
+      "sectionTitle": "Settlement documents",
       "prefixLabel": "Document Number Prefix",
       "prefixPlaceholder": "DOC-",
       "prefixHint": "Appears before the document number (DOC-001, DOC-002). This is an internal settlement-document number — not a tax invoice.",

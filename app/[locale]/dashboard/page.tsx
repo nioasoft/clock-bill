@@ -36,16 +36,21 @@ interface RevenueValue {
   formatted: string;
 }
 
+interface PeriodRevenue extends RevenueValue {
+  byHours?: RevenueValue;
+  byItems?: RevenueValue;
+}
+
 interface DashboardStats {
   today: {
     hours: number;
     formatted: string;
-    revenue?: RevenueValue;
+    revenue?: PeriodRevenue;
   };
   week: {
     hours: number;
     formatted: string;
-    revenue?: RevenueValue;
+    revenue?: PeriodRevenue;
   };
   month: {
     hours: number;
@@ -249,8 +254,12 @@ export default function DashboardPage() {
     ? {
         hoursToday: stats.today.formatted,
         revenueToday: stats.today.revenue?.formatted ?? "—",
+        revenueTodayByHours: stats.today.revenue?.byHours?.formatted ?? "—",
+        revenueTodayByItems: stats.today.revenue?.byItems?.formatted ?? "—",
         hoursWeek: stats.week.formatted,
         revenueWeek: stats.week.revenue?.formatted ?? "—",
+        revenueWeekByHours: stats.week.revenue?.byHours?.formatted ?? "—",
+        revenueWeekByItems: stats.week.revenue?.byItems?.formatted ?? "—",
         hoursMonth: stats.month.formatted,
         revenueByHours: stats.earnings.byHours.formatted,
         revenueByItems: stats.earnings.byItems.formatted,
@@ -317,7 +326,7 @@ export default function DashboardPage() {
           subtitle={t("pageSubtitle")}
         >
           <Link
-            href="/settings?tab=dashboard"
+            href="/settings?tab=appearance"
             className="inline-flex items-center gap-2 rounded-[var(--radius)] border border-border bg-card px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-border-strong transition-colors min-h-[44px]"
           >
             <SlidersHorizontal className="h-4 w-4" />

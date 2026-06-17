@@ -104,7 +104,12 @@ export const userProfiles = pgTable("user_profiles", {
   logoUrl: text("logo_url"),
   phone: text("phone"),
   email: text("email"),
+  // Legacy single-line address — kept as the denormalized value printed on
+  // invoices/reports. The structured street/city below are the edit fields;
+  // address is recomposed from them on save (see settings save).
   address: text("address"),
+  addressStreet: text("address_street"),
+  addressCity: text("address_city"),
   taxId: text("tax_id"),
   website: text("website"),
   defaultCurrency: text("default_currency").default("ILS"),

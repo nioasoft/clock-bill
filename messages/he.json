@@ -227,11 +227,15 @@
       "todayHours": "שעות היום",
       "weekHours": "שעות השבוע",
       "monthHours": "שעות החודש",
-      "revenueToday": "הכנסות היום",
-      "revenueWeek": "הכנסות השבוע",
-      "earningsByHours": "לפי שעות",
-      "earningsByItems": "לפי פריטים",
-      "totalEarnings": "סך הכנסות",
+      "revenueToday": "הכנסות · היום",
+      "revenueTodayByHours": "הכנסות משעות · היום",
+      "revenueTodayByItems": "הכנסות מפריטים · היום",
+      "revenueWeek": "הכנסות · השבוע",
+      "revenueWeekByHours": "הכנסות משעות · השבוע",
+      "revenueWeekByItems": "הכנסות מפריטים · השבוע",
+      "earningsByHours": "הכנסות משעות · החודש",
+      "earningsByItems": "הכנסות מפריטים · החודש",
+      "totalEarnings": "סך הכנסות · החודש",
       "clientsCount": "לקוחות פעילים",
       "projectsCount": "פרויקטים פעילים"
     },
@@ -721,8 +725,9 @@
   "Settings": {
     "pageTitle": "הגדרות",
     "tabs": {
-      "profile": "פרופיל",
+      "profile": "פרופיל ועסק",
       "appearance": "מראה",
+      "account": "חשבון",
       "dashboard": "לוח בקרה",
       "notifications": "התראות",
       "currencies": "מטבעות",
@@ -813,6 +818,8 @@
       "websitePlaceholder": "https://example.com",
       "address": "כתובת",
       "addressPlaceholder": "רחוב הרצל 1, תל אביב",
+      "addressStreet": "רחוב ומספר",
+      "addressCity": "עיר",
       "defaultCurrency": "מטבע ברירת מחדל",
       "defaultCurrencyHint": "המטבע שיופיע כברירת מחדל בפרויקטים חדשים",
       "bankSectionTitle": "פרטי בנק להעברות",
@@ -830,6 +837,10 @@
       "saveButton": "שמור שינויים"
     },
     "pdf": {
+      "sectionTitle": "עיצוב ה-PDF",
+      "sectionDescription": "תבנית וצבעי מותג לתעודות ההתחשבנות והדוחות שלך.",
+      "previewLabel": "תצוגה מקדימה חיה",
+      "previewDocTitle": "תעודת התחשבנות",
       "templateLabel": "תבנית PDF ברירת מחדל",
       "templateModern": "מודרני (Modern)",
       "templateClassic": "קלאסי (Classic)",
@@ -844,6 +855,8 @@
       "accentColorHint": "הצבע המשני שיופיע בפרטים ואלמנטים נוספים ב-PDF"
     },
     "display": {
+      "sectionTitle": "תצוגה",
+      "sectionDescription": "תאריך, שעה ושפת הממשק.",
       "dateFormatLabel": "פורמט תאריך",
       "dateFormatDMY": "יום/חודש/שנה (DD/MM/YYYY)",
       "dateFormatMDY": "חודש/יום/שנה (MM/DD/YYYY)",
@@ -861,6 +874,7 @@
       }
     },
     "invoice": {
+      "sectionTitle": "מסמכי התחשבנות",
       "prefixLabel": "קידומת מספר מסמך",
       "prefixPlaceholder": "DOC-",
       "prefixHint": "מופיעה לפני מספר המסמך (DOC-001, DOC-002). זהו מספר למסמך התחשבנות פנימי — לא חשבונית מס.",

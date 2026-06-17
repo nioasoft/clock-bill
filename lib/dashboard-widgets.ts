@@ -32,15 +32,21 @@ export interface DashboardWidgetMeta {
  *  (dashboard page) + an i18n key. `normalizeDashboardConfig` then appends the
  *  new widget (hidden) to every existing user's stored config automatically. */
 export const DASHBOARD_WIDGETS: DashboardWidgetMeta[] = [
-  // Cards — top stat row
+  // Cards — top stat row. Revenue is offered per period (today / week / month)
+  // and per billing kind (total / from hours / from items) so the user can show
+  // any combination; "from items" = non-hourly billing-item revenue.
   { id: "hoursToday", labelKey: "stats.todayHours", kind: "card" },
   { id: "revenueToday", labelKey: "stats.revenueToday", kind: "card" },
+  { id: "revenueTodayByHours", labelKey: "stats.revenueTodayByHours", kind: "card" },
+  { id: "revenueTodayByItems", labelKey: "stats.revenueTodayByItems", kind: "card" },
   { id: "hoursWeek", labelKey: "stats.weekHours", kind: "card" },
   { id: "revenueWeek", labelKey: "stats.revenueWeek", kind: "card" },
+  { id: "revenueWeekByHours", labelKey: "stats.revenueWeekByHours", kind: "card" },
+  { id: "revenueWeekByItems", labelKey: "stats.revenueWeekByItems", kind: "card" },
   { id: "hoursMonth", labelKey: "stats.monthHours", kind: "card" },
+  { id: "revenueMonth", labelKey: "stats.totalEarnings", kind: "card", accent: true },
   { id: "revenueByHours", labelKey: "stats.earningsByHours", kind: "card" },
   { id: "revenueByItems", labelKey: "stats.earningsByItems", kind: "card" },
-  { id: "revenueMonth", labelKey: "stats.totalEarnings", kind: "card", accent: true },
   { id: "clientsCount", labelKey: "stats.clientsCount", kind: "card" },
   { id: "projectsCount", labelKey: "stats.projectsCount", kind: "card" },
   // Sections — lower stacked blocks
