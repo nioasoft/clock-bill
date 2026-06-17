@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname, Link } from "@/src/i18n/navigation";
+import { DashboardCustomizer } from "@/components/dashboard-customizer";
 import { MessageSquare, Bell, BellOff, CheckCircle2, XCircle, Clock, LogOut } from "lucide-react";
 import { authClient } from "@/lib/auth/client";
 import { DeleteAccountSection } from "@/components/delete-account-section";
@@ -81,7 +82,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
-  const [activeTab, setActiveTab] = useState<"profile" | "appearance" | "security" | "currencies" | "notifications" | "billing">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "appearance" | "dashboard" | "security" | "currencies" | "notifications" | "billing">("profile");
   const [sessions, setSessions] = useState<Session[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [currencyRates, setCurrencyRates] = useState<CurrencyRate[]>([]);
@@ -146,6 +147,17 @@ export default function SettingsPage() {
   const [pdfAccentColor, setPdfAccentColor] = useState("#347B52");
   const [dateFormat, setDateFormat] = useState("DD/MM/YYYY");
   const [timeFormat, setTimeFormat] = useState("24h");
+
+  // Deep-link support: /settings?tab=dashboard (used by the dashboard's
+  // "Customize" button). Read from the URL on mount client-side — avoids the
+  // useSearchParams() static-prerender Suspense requirement. Only known tabs.
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get("tab");
+    const validTabs = ["profile", "appearance", "dashboard", "notifications", "currencies", "security", "billing"];
+    if (requested && validTabs.includes(requested)) {
+      setActiveTab(requested as typeof activeTab);
+    }
+  }, []);
 
   useEffect(() => {
     if (activeTab === "security") {
@@ -775,6 +787,7 @@ export default function SettingsPage() {
             tabs={[
               { key: "profile", label: t("tabs.profile") },
               { key: "appearance", label: t("tabs.appearance") },
+              { key: "dashboard", label: t("tabs.dashboard") },
               { key: "notifications", label: t("tabs.notifications") },
               { key: "currencies", label: t("tabs.currencies") },
               { key: "security", label: t("tabs.security") },
@@ -1002,6 +1015,13 @@ export default function SettingsPage() {
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Dashboard Tab Content */}
+        {activeTab === "dashboard" && (
+          <div role="tabpanel">
+            <DashboardCustomizer />
           </div>
         )}
 

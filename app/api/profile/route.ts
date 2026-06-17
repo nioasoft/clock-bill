@@ -10,6 +10,7 @@ import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
 import { createLogger } from "@/lib/logger";
 import { isThemeId } from "@/lib/themes";
+import { normalizeDashboardConfig } from "@/lib/dashboard-widgets";
 import { isProfessionId } from "@/lib/professions";
 import { ROUNDING_MODES } from "@/lib/rounding";
 
@@ -54,6 +55,10 @@ const updateProfileSchema = z.object({
   // Validated against the theme registry (isThemeId) in the handler, not here,
   // so an invalid value returns a Hebrew 400 instead of a generic Zod error.
   theme: z.string().max(50).optional(),
+  // Customizable dashboard layout. Shape is validated/normalized server-side
+  // by normalizeDashboardConfig (drops unknown widgets, never throws), so the
+  // schema just accepts the raw blob here.
+  dashboardConfig: z.unknown().optional(),
   // Onboarding / billing base. profession + defaultBillingRounding are
   // allow-list-checked in the handler (Hebrew 400 on bad value).
   profession: z.string().max(50).nullable().optional(),
@@ -95,6 +100,9 @@ export interface Profile {
   firstDayOfWeek: string;
   locale: string;
   theme: string;
+  /** Raw stored dashboard layout (jsonb) or null when never customized.
+   *  Normalize with normalizeDashboardConfig before use. */
+  dashboardConfig: unknown;
   profession: string | null;
   defaultRate: number | null;
   defaultBillingRounding: string;
@@ -144,6 +152,7 @@ export async function GET(): Promise<NextResponse> {
               first_day_of_week as "firstDayOfWeek",
               COALESCE(locale, 'he') as "locale",
               COALESCE(theme, 'dark') as "theme",
+              dashboard_config as "dashboardConfig",
               profession as "profession",
               default_rate as "defaultRate",
               COALESCE(default_billing_rounding, 'none') as "defaultBillingRounding",
@@ -349,6 +358,15 @@ export async function PATCH(request: Request): Promise<NextResponse> {
       values.push(body.theme);
     }
 
+    if (body.dashboardConfig !== undefined) {
+      // Normalize against the widget catalog before persisting — unknown ids
+      // dropped, missing appended, bad shape → default. Always stores a valid
+      // config (never trust the client blob).
+      const normalized = normalizeDashboardConfig(body.dashboardConfig);
+      updates.push(`dashboard_config = $${paramIndex++}::jsonb`);
+      values.push(JSON.stringify(normalized));
+    }
+
     if (body.profession !== undefined) {
       // null clears the column; a value must be a known preset id.
       if (body.profession !== null && !isProfessionId(body.profession)) {
@@ -414,6 +432,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
                  first_day_of_week as "firstDayOfWeek",
                  COALESCE(locale, 'he') as "locale",
                  COALESCE(theme, 'dark') as "theme",
+                 dashboard_config as "dashboardConfig",
                  profession as "profession",
                  default_rate as "defaultRate",
                  COALESCE(default_billing_rounding, 'none') as "defaultBillingRounding",

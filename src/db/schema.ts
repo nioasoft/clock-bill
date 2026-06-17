@@ -148,6 +148,11 @@ export const userProfiles = pgTable("user_profiles", {
   locale: text("locale").default("he"),
   // Selected UI theme (Theme Set feature). Defaults to the dark theme.
   theme: text("theme").default("dark"),
+  // Customizable dashboard layout (which stat cards / sections show, in what
+  // order). Shape + validation live in lib/dashboard-widgets.ts. NULL = never
+  // customized → the code default (today's layout) is used, so existing users
+  // see no change (no backfill).
+  dashboardConfig: jsonb("dashboard_config"),
   // ─── Onboarding / billing base (cascade root) ────────────────────────
   // Chosen profession preset id (see lib/professions.ts); NULL = never chose.
   profession: text("profession"),

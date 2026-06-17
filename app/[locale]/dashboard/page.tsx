@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/src/i18n/navigation";
 import { AppLayout } from "@/components/app-layout";
@@ -12,16 +12,40 @@ import { ProjectHoursChart } from "@/components/project-hours-chart";
 import { useNotifications } from "@/hooks/use-notifications";
 import { OnboardingModal } from "@/components/onboarding-modal";
 import { useTimer } from "@/contexts/timer-context";
-import { Users, FolderOpen, Clock, StickyNote } from "lucide-react";
+import { Users, FolderOpen, Clock, StickyNote, SlidersHorizontal } from "lucide-react";
+import {
+  DEFAULT_DASHBOARD_CONFIG,
+  getWidgetMeta,
+  normalizeDashboardConfig,
+  type DashboardConfig,
+} from "@/lib/dashboard-widgets";
+
+// Count-aware grid classes for the stat-card row. Static full strings (not
+// interpolated) so Tailwind v4's JIT can see them. Capped at 5 columns; more
+// cards wrap to a second row.
+const CARD_GRID_BY_COUNT: Record<number, string> = {
+  1: "grid-cols-1",
+  2: "grid-cols-2",
+  3: "grid-cols-2 sm:grid-cols-3",
+  4: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4",
+  5: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5",
+};
+
+interface RevenueValue {
+  amount: number;
+  formatted: string;
+}
 
 interface DashboardStats {
   today: {
     hours: number;
     formatted: string;
+    revenue?: RevenueValue;
   };
   week: {
     hours: number;
     formatted: string;
+    revenue?: RevenueValue;
   };
   month: {
     hours: number;
@@ -72,6 +96,7 @@ export default function DashboardPage() {
   const [recentEntries, setRecentEntries] = useState<RecentEntry[]>([]);
   const [monthlyEarnings, setMonthlyEarnings] = useState<MonthlyEarnings[]>([]);
   const [projectHours, setProjectHours] = useState<ProjectHours[]>([]);
+  const [dashboardConfig, setDashboardConfig] = useState<DashboardConfig>(DEFAULT_DASHBOARD_CONFIG);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
@@ -141,6 +166,9 @@ export default function DashboardPage() {
         setRecentEntries(data.recentEntries || []);
         setMonthlyEarnings(data.monthlyEarnings || []);
         setProjectHours(data.projectHours || []);
+        // The API already normalizes; normalize again defensively so the page
+        // always renders a complete, valid layout.
+        setDashboardConfig(normalizeDashboardConfig(data.dashboardConfig));
         setStatsError(false);
       }
     } catch (error) {
@@ -214,6 +242,72 @@ export default function DashboardPage() {
     stats.today.hours === 0 &&
     stats.month.hours === 0;
 
+  // ── Customizable layout ────────────────────────────────────────────────
+  // The display value for each stat-card widget id. All values come from the
+  // single /api/dashboard/stats response — no per-widget fetches.
+  const cardValues: Record<string, string> = stats
+    ? {
+        hoursToday: stats.today.formatted,
+        revenueToday: stats.today.revenue?.formatted ?? "—",
+        hoursWeek: stats.week.formatted,
+        revenueWeek: stats.week.revenue?.formatted ?? "—",
+        hoursMonth: stats.month.formatted,
+        revenueByHours: stats.earnings.byHours.formatted,
+        revenueByItems: stats.earnings.byItems.formatted,
+        revenueMonth: stats.earnings.formatted,
+        clientsCount: String(stats.clientsCount),
+        projectsCount: String(stats.projectsCount),
+      }
+    : {};
+
+  const visibleCards = dashboardConfig.cards.filter(
+    (c) => c.visible && cardValues[c.id] !== undefined
+  );
+  const cardGridClass =
+    CARD_GRID_BY_COUNT[Math.min(visibleCards.length, 5)] ?? CARD_GRID_BY_COUNT[5];
+  // Skeleton count tracks the saved layout (config is already loaded by then on
+  // a warm cache; falls back to the default's visible count on first paint).
+  const expectedCardCount = dashboardConfig.cards.filter((c) => c.visible).length || 5;
+
+  const visibleSections = dashboardConfig.sections.filter((s) => s.visible);
+
+  // Each lower section renders its own card; the two charts sit one-per-column
+  // and recent-entries spans the full width — exactly the pre-customization
+  // layout when all three are visible in default order.
+  const renderSection = (id: string): ReactNode => {
+    switch (id) {
+      case "earningsChart":
+        return <EarningsChart data={monthlyEarnings} loading={statsLoading} />;
+      case "projectHours":
+        return <ProjectHoursChart data={projectHours} loading={statsLoading} />;
+      case "recentEntries":
+        return recentEntries.length > 0 ? (
+          <div>
+            <h3 className="font-display text-xl font-semibold text-foreground mb-4">{t("recentEntries.title")}</h3>
+            <div className="bg-card border border-border/50 rounded-[var(--radius-card)] overflow-hidden">
+              <ul className="divide-y divide-border">
+                {recentEntries.map((entry) => (
+                  <li key={entry.id} className="px-6 py-4 hover:bg-muted transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground">{entry.description}</p>
+                        <p className="text-sm text-muted-foreground">{new Date(entry.date).toLocaleDateString(intlLocale)}</p>
+                      </div>
+                      <div className="text-end">
+                        <p className="font-mono text-sm font-medium tabular-nums text-foreground">{entry.formattedDuration}</p>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ) : null;
+      default:
+        return null;
+    }
+  };
+
   return (
     <AppLayout>
       {showOnboarding && <OnboardingModal onDone={() => setShowOnboarding(false)} />}
@@ -221,7 +315,15 @@ export default function DashboardPage() {
         <PageHeader
           title={t("pageTitle")}
           subtitle={t("pageSubtitle")}
-        />
+        >
+          <Link
+            href="/settings?tab=dashboard"
+            className="inline-flex items-center gap-2 rounded-[var(--radius)] border border-border bg-card px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-border-strong transition-colors min-h-[44px]"
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            {t("customizeButton")}
+          </Link>
+        </PageHeader>
 
         {/* First-time user checklist */}
         {!statsLoading && !statsError && isFirstTimeUser && (
@@ -278,10 +380,11 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Stats Cards */}
+        {/* Stats Cards — order & visibility driven by the user's saved layout
+            (dashboardConfig). RTL: first item renders rightmost. */}
         {statsLoading ? (
-          <div className="mt-5 grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {[1, 2, 3, 4, 5].map((i) => (
+          <div className={`mt-5 grid gap-2 sm:gap-3 ${cardGridClass}`}>
+            {Array.from({ length: expectedCardCount }).map((_, i) => (
               <div key={i} className="bg-card border border-border rounded-[var(--radius-card)] p-3 sm:p-4">
                 <Skeleton className="h-3 w-1/2 mb-3" />
                 <Skeleton className="h-6 w-3/4" />
@@ -292,40 +395,34 @@ export default function DashboardPage() {
           <div className="mt-5 rounded-[var(--radius-card)] bg-destructive/10 border border-destructive/20 p-6 text-center">
             <p className="text-destructive">{t("stats.error")}</p>
           </div>
-        ) : stats && !isFirstTimeUser ? (
-          <div className="mt-5 grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {[
-              // RTL order: first item renders rightmost, last item leftmost.
-              // "שעות השבוע" was removed — a Sun-start week crosses the month
-              // boundary and read as inconsistent with the month-scoped records
-              // view. Today + month are unambiguous. Total revenue (סך הכנסות)
-              // is placed last so it sits at the far left.
-              { label: t("stats.todayHours"), value: stats.today.formatted, accent: false, stagger: "stagger-1" },
-              { label: t("stats.monthHours"), value: stats.month.formatted, accent: false, stagger: "stagger-2" },
-              { label: t("stats.earningsByHours"), value: stats.earnings.byHours.formatted, accent: false, stagger: "stagger-3" },
-              { label: t("stats.earningsByItems"), value: stats.earnings.byItems.formatted, accent: false, stagger: "stagger-4" },
-              { label: t("stats.totalEarnings"), value: stats.earnings.formatted, accent: true, stagger: "stagger-5" },
-            ].map((card) => (
+        ) : stats && !isFirstTimeUser && visibleCards.length > 0 ? (
+          <div className={`mt-5 grid gap-2 sm:gap-3 ${cardGridClass}`}>
+            {visibleCards.map((card, index) => {
+              const meta = getWidgetMeta(card.id);
+              const accent = Boolean(meta?.accent);
+              const label = meta ? t(meta.labelKey) : card.id;
               // Mobile: compact cards (tight padding, smaller digits); the
               // accent total spans both columns as a single label+value row.
-              <div
-                key={card.label}
-                className={`rounded-[var(--radius-card)] border p-2.5 sm:p-4 transition-colors motion-safe:animate-fade-up ${card.stagger} ${
-                  card.accent
-                    ? "col-span-2 order-first sm:order-none sm:col-span-1 bg-primary/[0.06] border-primary/25 hover:border-primary/40"
-                    : "bg-card border-border hover:border-border-strong"
-                }`}
-              >
-                <p className="text-[10px] sm:text-xs uppercase tracking-widest font-semibold text-muted-foreground">{card.label}</p>
-                <p className={`font-mono font-bold tabular-nums ${
-                  card.accent
-                    ? "mt-1 sm:mt-2 text-2xl text-primary"
-                    : "mt-1 sm:mt-2 text-base sm:text-2xl text-foreground"
-                }`}>
-                  {card.value}
-                </p>
-              </div>
-            ))}
+              return (
+                <div
+                  key={card.id}
+                  className={`rounded-[var(--radius-card)] border p-2.5 sm:p-4 transition-colors motion-safe:animate-fade-up stagger-${Math.min(index + 1, 5)} ${
+                    accent
+                      ? "col-span-2 order-first sm:order-none sm:col-span-1 bg-primary/[0.06] border-primary/25 hover:border-primary/40"
+                      : "bg-card border-border hover:border-border-strong"
+                  }`}
+                >
+                  <p className="text-[10px] sm:text-xs uppercase tracking-widest font-semibold text-muted-foreground">{label}</p>
+                  <p className={`font-mono font-bold tabular-nums ${
+                    accent
+                      ? "mt-1 sm:mt-2 text-2xl text-primary"
+                      : "mt-1 sm:mt-2 text-base sm:text-2xl text-foreground"
+                  }`}>
+                    {cardValues[card.id]}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         ) : null}
 
@@ -574,35 +671,22 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Charts Grid */}
-        {!isFirstTimeUser && (
+        {/* Lower sections — order & visibility from the saved layout. Charts
+            take one column each; recent-entries spans the full width. */}
+        {!isFirstTimeUser && visibleSections.length > 0 && (
           <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <EarningsChart data={monthlyEarnings} loading={statsLoading} />
-            <ProjectHoursChart data={projectHours} loading={statsLoading} />
-          </div>
-        )}
-
-        {/* Recent Entries */}
-        {recentEntries.length > 0 && (
-          <div className="mt-8">
-            <h3 className="font-display text-xl font-semibold text-foreground mb-4">{t("recentEntries.title")}</h3>
-            <div className="bg-card border border-border/50 rounded-[var(--radius-card)] overflow-hidden">
-              <ul className="divide-y divide-border">
-                {recentEntries.map((entry) => (
-                  <li key={entry.id} className="px-6 py-4 hover:bg-muted transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground">{entry.description}</p>
-                        <p className="text-sm text-muted-foreground">{new Date(entry.date).toLocaleDateString(intlLocale)}</p>
-                      </div>
-                      <div className="text-end">
-                        <p className="font-mono text-sm font-medium tabular-nums text-foreground">{entry.formattedDuration}</p>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {visibleSections.map((section) => {
+              const node = renderSection(section.id);
+              if (!node) return null;
+              return (
+                <div
+                  key={section.id}
+                  className={section.id === "recentEntries" ? "lg:col-span-2" : undefined}
+                >
+                  {node}
+                </div>
+              );
+            })}
           </div>
         )}
       </PageContainer>

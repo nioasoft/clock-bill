@@ -221,13 +221,19 @@
         "subtitle": "התחל לעקוב אחר שעות העבודה שלך"
       }
     },
+    "customizeButton": "התאמה אישית",
     "stats": {
       "error": "שגיאה בטעינת הנתונים. נסה לרענן את הדף.",
       "todayHours": "שעות היום",
+      "weekHours": "שעות השבוע",
       "monthHours": "שעות החודש",
+      "revenueToday": "הכנסות היום",
+      "revenueWeek": "הכנסות השבוע",
       "earningsByHours": "לפי שעות",
       "earningsByItems": "לפי פריטים",
-      "totalEarnings": "סך הכנסות"
+      "totalEarnings": "סך הכנסות",
+      "clientsCount": "לקוחות פעילים",
+      "projectsCount": "פרויקטים פעילים"
     },
     "activeTimers": {
       "title": "טיימרים פעילים",
@@ -717,6 +723,7 @@
     "tabs": {
       "profile": "פרופיל",
       "appearance": "מראה",
+      "dashboard": "לוח בקרה",
       "notifications": "התראות",
       "currencies": "מטבעות",
       "security": "אבטחה"
@@ -724,6 +731,31 @@
     "appearance": {
       "title": "מראה",
       "subtitle": "בחר/י את ערכת הנושא של הממשק"
+    },
+    "dashboard": {
+      "title": "מבנה לוח הבקרה",
+      "subtitle": "בחר/י אילו כרטיסיות וסקציות יופיעו בלוח הבקרה, ובאיזה סדר.",
+      "loading": "טוען…",
+      "loadError": "לא ניתן לטעון את מבנה לוח הבקרה. נסה/י לרענן את הדף.",
+      "saved": "נשמר",
+      "saveError": "השמירה נכשלה. נסה/י שוב.",
+      "minWarning": "יש להשאיר לפחות כרטיסייה אחת מוצגת.",
+      "preview": "תצוגה מקדימה",
+      "reset": "איפוס לברירת המחדל",
+      "cardsLabel": "כרטיסיות נתונים",
+      "sectionsLabel": "סקציות",
+      "show": "הצג",
+      "hide": "הסתר",
+      "moveUp": "העבר/י למעלה",
+      "moveDown": "העבר/י למטה",
+      "dragHandle": "גרור/י לשינוי הסדר",
+      "presets": {
+        "label": "פריסטים מהירים",
+        "default": "ברירת מחדל",
+        "todayFocus": "מיקוד היום",
+        "monthlyFocus": "מיקוד חודשי",
+        "byProject": "לפי פרויקט"
+      }
     },
     "billing": {
       "tabLabel": "חיוב",

@@ -221,13 +221,19 @@
         "subtitle": "Start tracking your work hours"
       }
     },
+    "customizeButton": "Customize",
     "stats": {
       "error": "Failed to load data. Try refreshing the page.",
       "todayHours": "Today's hours",
+      "weekHours": "This week's hours",
       "monthHours": "This month's hours",
+      "revenueToday": "Revenue today",
+      "revenueWeek": "Revenue this week",
       "earningsByHours": "By hours",
       "earningsByItems": "By items",
-      "totalEarnings": "Total earnings"
+      "totalEarnings": "Total earnings",
+      "clientsCount": "Active clients",
+      "projectsCount": "Active projects"
     },
     "activeTimers": {
       "title": "Active timers",
@@ -717,6 +723,7 @@
     "tabs": {
       "profile": "Profile",
       "appearance": "Appearance",
+      "dashboard": "Dashboard",
       "notifications": "Notifications",
       "currencies": "Currencies",
       "security": "Security"
@@ -724,6 +731,31 @@
     "appearance": {
       "title": "Appearance",
       "subtitle": "Choose your interface theme"
+    },
+    "dashboard": {
+      "title": "Dashboard layout",
+      "subtitle": "Choose which cards and sections appear on your dashboard, and their order.",
+      "loading": "Loading…",
+      "loadError": "Couldn't load your dashboard layout. Try refreshing the page.",
+      "saved": "Saved",
+      "saveError": "Couldn't save. Please try again.",
+      "minWarning": "Keep at least one card visible.",
+      "preview": "Preview",
+      "reset": "Reset to default",
+      "cardsLabel": "Stat cards",
+      "sectionsLabel": "Sections",
+      "show": "Show",
+      "hide": "Hide",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "dragHandle": "Drag to reorder",
+      "presets": {
+        "label": "Quick presets",
+        "default": "Default",
+        "todayFocus": "Today focus",
+        "monthlyFocus": "Monthly focus",
+        "byProject": "By project"
+      }
     },
     "billing": {
       "tabLabel": "Billing",
