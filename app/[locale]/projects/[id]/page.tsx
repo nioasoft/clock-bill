@@ -573,7 +573,7 @@ export default function ProjectDetailsPage() {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-4">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-muted-foreground">
                     {t("editForm.nameLabel")}
@@ -584,7 +584,7 @@ export default function ProjectDetailsPage() {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="mt-1 block w-full rounded-[var(--radius-card)] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className="mt-1 block w-full rounded-[var(--radius)] border border-border px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                     disabled={submitting}
                   />
                 </div>
@@ -598,7 +598,7 @@ export default function ProjectDetailsPage() {
                     id="clientName"
                     value={project.clientName}
                     disabled
-                    className="mt-1 block w-full rounded-[var(--radius-card)] border border-border bg-muted px-3 py-2 text-muted-foreground"
+                    className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-muted px-3 py-2 text-muted-foreground"
                   />
                 </div>
 
@@ -620,6 +620,7 @@ export default function ProjectDetailsPage() {
                   />
                 </div>
 
+                <div className="col-span-2 grid grid-cols-2 gap-3">
                 <div>
                   <label htmlFor="startDate" className="block text-sm font-medium text-muted-foreground">
                     {t("editForm.startDateLabel")}
@@ -629,7 +630,7 @@ export default function ProjectDetailsPage() {
                     id="startDate"
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className="mt-1 block w-full rounded-[var(--radius-card)] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className="mt-1 block w-full rounded-[var(--radius)] border border-border px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                     disabled={submitting}
                   />
                   {fieldErrors.startDate && <p className="mt-1 text-xs text-destructive">{fieldErrors.startDate}</p>}
@@ -644,13 +645,14 @@ export default function ProjectDetailsPage() {
                     id="endDate"
                     value={formData.endDate}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    className="mt-1 block w-full rounded-[var(--radius-card)] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className="mt-1 block w-full rounded-[var(--radius)] border border-border px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                     disabled={submitting}
                   />
                   {fieldErrors.endDate && <p className="mt-1 text-xs text-destructive">{fieldErrors.endDate}</p>}
                 </div>
+                </div>
 
-                <div className="sm:col-span-2">
+                <div className="col-span-2">
                   <label htmlFor="billingRounding" className="block text-sm font-medium text-muted-foreground">
                     {t("editForm.roundingLabel")}
                   </label>
@@ -673,7 +675,7 @@ export default function ProjectDetailsPage() {
                   </p>
                 </div>
 
-                <div className="sm:col-span-2">
+                <div className="col-span-2">
                   <div className="rounded-[var(--radius-card)] border border-border p-4">
                     <label className="flex items-center gap-2 text-sm font-medium text-foreground">
                       <input
@@ -700,8 +702,8 @@ export default function ProjectDetailsPage() {
                     </p>
 
                     {formData.fixedMonthlyEnabled && (
-                      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                        <div>
+                      <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-4">
+                        <div className="col-span-2">
                           <label htmlFor="fixedMonthlyFee" className="block text-sm font-medium text-foreground">
                             {t("editForm.monthlyFeeLabel")}
                           </label>
@@ -715,7 +717,7 @@ export default function ProjectDetailsPage() {
                               setFormData({ ...formData, fixedMonthlyFee: e.target.value });
                               setFieldErrors({ ...fieldErrors, fixedMonthlyFee: undefined });
                             }}
-                            className={`mt-1 block w-full rounded-[var(--radius-card)] border px-3 py-2 shadow-sm ${
+                            className={`mt-1 block w-full rounded-[var(--radius)] border px-3 py-2 ${
                               fieldErrors.fixedMonthlyFee ? "border-destructive" : "border-border"
                             }`}
                             disabled={submitting}
@@ -735,7 +737,7 @@ export default function ProjectDetailsPage() {
                               setFormData({ ...formData, fixedMonthlyStartDate: e.target.value });
                               setFieldErrors({ ...fieldErrors, fixedMonthlyStartDate: undefined });
                             }}
-                            className={`mt-1 block w-full rounded-[var(--radius-card)] border px-3 py-2 shadow-sm ${
+                            className={`mt-1 block w-full rounded-[var(--radius)] border px-3 py-2 ${
                               fieldErrors.fixedMonthlyStartDate ? "border-destructive" : "border-border"
                             }`}
                             disabled={submitting}
@@ -755,7 +757,7 @@ export default function ProjectDetailsPage() {
                               setFormData({ ...formData, fixedMonthlyEndDate: e.target.value });
                               setFieldErrors({ ...fieldErrors, fixedMonthlyEndDate: undefined });
                             }}
-                            className={`mt-1 block w-full rounded-[var(--radius-card)] border px-3 py-2 shadow-sm ${
+                            className={`mt-1 block w-full rounded-[var(--radius)] border px-3 py-2 ${
                               fieldErrors.fixedMonthlyEndDate ? "border-destructive" : "border-border"
                             }`}
                             disabled={submitting}
@@ -767,7 +769,7 @@ export default function ProjectDetailsPage() {
                   </div>
                 </div>
 
-                <div className="sm:col-span-2">
+                <div className="col-span-2">
                   <label htmlFor="notes" className="block text-sm font-medium text-muted-foreground">
                     {t("editForm.notesLabel")}
                   </label>
@@ -776,7 +778,7 @@ export default function ProjectDetailsPage() {
                     rows={3}
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    className="mt-1 block w-full rounded-[var(--radius-card)] border border-border px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className="mt-1 block w-full rounded-[var(--radius)] border border-border px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                     disabled={submitting}
                   />
                 </div>

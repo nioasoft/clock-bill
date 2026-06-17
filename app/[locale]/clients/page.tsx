@@ -530,7 +530,7 @@ function ClientsPageContent() {
                 <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                   {t("contactSection")}
                 </legend>
-                <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+                <div className="grid grid-cols-2 gap-x-3 gap-y-4">
                   <div>
                     <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-foreground">
                       {t("clientNameLabel")} <span className="text-primary">*</span>
@@ -606,7 +606,7 @@ function ClientsPageContent() {
                     {fieldErrors.phone && <p className="mt-1.5 text-xs text-destructive">{fieldErrors.phone}</p>}
                   </div>
 
-                  <div className="sm:col-span-2">
+                  <div className="col-span-2">
                     <label htmlFor="address" className="mb-1.5 block text-sm font-medium text-foreground">
                       {t("addressLabel")}
                     </label>
@@ -629,7 +629,7 @@ function ClientsPageContent() {
                   {t("billingSection")}
                 </legend>
 
-                <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+                <div className="grid grid-cols-2 gap-x-3 gap-y-4">
                   <div>
                     <label htmlFor="currency" className="mb-1.5 block text-sm font-medium text-foreground">
                       {t("currencyLabel")}
@@ -694,7 +694,7 @@ function ClientsPageContent() {
                 {/* Retainer fields */}
                 {formData.isRetainer && (
                   <div className="space-y-4 rounded-[var(--radius)] border border-border bg-background/50 p-4">
-                    <div className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-4">
                       <div>
                         <label htmlFor="retainerHours" className="mb-1.5 block text-sm font-medium text-foreground">
                           {t("retainerHoursLabel")}

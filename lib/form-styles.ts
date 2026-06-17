@@ -8,7 +8,7 @@
  */
 export function fieldClass(hasError = false): string {
   const base =
-    "block w-full rounded-[var(--radius)] border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 transition-colors focus:outline-none focus:ring-2 disabled:opacity-50";
+    "block w-full rounded-[var(--radius)] border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 transition-colors focus:outline-none focus:ring-2 disabled:opacity-50";
   const state = hasError
     ? "border-destructive/50 focus:border-destructive focus:ring-destructive/20"
     : "border-border focus:border-primary focus:ring-ring/30";

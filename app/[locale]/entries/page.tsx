@@ -798,7 +798,7 @@ export default function EntriesPage() {
                   id="filterStartDate"
                   value={filters.startDate}
                   onChange={(e) => handleFilterChange("startDate", e.target.value)}
-                  className="block w-full rounded-md border border-border/50 px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                  className="block w-full rounded-[var(--radius)] border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
@@ -811,7 +811,7 @@ export default function EntriesPage() {
                   id="filterEndDate"
                   value={filters.endDate}
                   onChange={(e) => handleFilterChange("endDate", e.target.value)}
-                  className="block w-full rounded-md border border-border/50 px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                  className="block w-full rounded-[var(--radius)] border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
@@ -883,9 +883,9 @@ export default function EntriesPage() {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-4">
                 {formMultiClient && (
-                  <div>
+                  <div className="col-span-2">
                     <label htmlFor="formClientId" className="block text-sm font-medium text-foreground">
                       {t("form.clientLabel")}
                     </label>
@@ -908,7 +908,7 @@ export default function EntriesPage() {
                   </div>
                 )}
 
-                <div>
+                <div className="col-span-2">
                   <label htmlFor="projectId" className="block text-sm font-medium text-foreground">
                     {t("form.projectLabel")}
                   </label>
@@ -942,7 +942,7 @@ export default function EntriesPage() {
                 </div>
 
                 {formData.projectId && formTasks.length > 0 && (
-                  <div>
+                  <div className="col-span-2">
                     <label htmlFor="taskId" className="block text-sm font-medium text-foreground">
                       {t("form.taskLabel")}
                     </label>
@@ -973,7 +973,7 @@ export default function EntriesPage() {
                     required
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.date ? "border border-destructive" : "border border-border/50"}`}
+                    className={`mt-1 block w-full rounded-[var(--radius)] px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${fieldErrors.date ? "border border-destructive" : "border border-border"}`}
                     disabled={submitting}
                   />
                   {fieldErrors.date && (
@@ -981,14 +981,14 @@ export default function EntriesPage() {
                   )}
                 </div>
 
-                {/* Billing type toggle: hours vs item */}
-                <div className="sm:col-span-2">
+                {/* Billing type toggle: hours vs item — pairs beside the date field */}
+                <div>
                   <label className="block text-sm font-medium text-foreground mb-1">{t("form.kindLabel")}</label>
-                  <div className="inline-flex rounded-md border border-border/50 p-0.5">
+                  <div className="flex w-full rounded-[var(--radius)] border border-border p-0.5">
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, billingKind: "hourly", rateId: "" })}
-                      className={`min-h-[44px] px-4 py-1.5 text-sm rounded ${formData.billingKind === "hourly" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                      className={`flex-1 min-h-[40px] px-2 py-1.5 text-sm rounded ${formData.billingKind === "hourly" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
                       disabled={submitting}
                     >
                       {t("form.kindHours")}
@@ -996,7 +996,7 @@ export default function EntriesPage() {
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, billingKind: "item", rateId: "" })}
-                      className={`min-h-[44px] px-4 py-1.5 text-sm rounded ${formData.billingKind === "item" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                      className={`flex-1 min-h-[40px] px-2 py-1.5 text-sm rounded ${formData.billingKind === "item" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
                       disabled={submitting}
                     >
                       {t("form.kindItem")}
@@ -1017,7 +1017,7 @@ export default function EntriesPage() {
                         step="1"
                         value={formData.duration}
                         onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                        className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.duration ? "border border-destructive" : "border border-border/50"}`}
+                        className={`mt-1 block w-full rounded-[var(--radius)] px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${fieldErrors.duration ? "border border-destructive" : "border border-border"}`}
                         disabled={submitting}
                         placeholder={t("form.durationPlaceholder")}
                       />
@@ -1028,7 +1028,7 @@ export default function EntriesPage() {
                     </div>
 
                     {formRates.some((r) => r.kind === "hourly") && (
-                      <div>
+                      <div className="col-span-2">
                         <label htmlFor="entryRate" className="block text-sm font-medium text-foreground">
                           {t("form.rateLabel")}
                         </label>
@@ -1050,7 +1050,7 @@ export default function EntriesPage() {
                   </>
                 ) : (
                   <>
-                    <div>
+                    <div className="col-span-2">
                       <label htmlFor="entryItem" className="block text-sm font-medium text-foreground">
                         {t("form.itemLabel")}
                       </label>
@@ -1075,7 +1075,7 @@ export default function EntriesPage() {
                     {/* Ad-hoc item: typed name + unit price, optionally saved to the client */}
                     {formData.rateId === ADHOC && (
                       <>
-                        <div>
+                        <div className="col-span-2">
                           <label htmlFor="adhocName" className="block text-sm font-medium text-foreground">
                             {t("form.adhocNameLabel")}
                           </label>
@@ -1084,7 +1084,7 @@ export default function EntriesPage() {
                             id="adhocName"
                             value={formData.adhocName}
                             onChange={(e) => setFormData({ ...formData, adhocName: e.target.value })}
-                            className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.adhocName ? "border border-destructive" : "border border-border/50"}`}
+                            className={`mt-1 block w-full rounded-[var(--radius)] px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${fieldErrors.adhocName ? "border border-destructive" : "border border-border"}`}
                             disabled={submitting}
                             placeholder={t("form.adhocNamePlaceholder")}
                           />
@@ -1104,7 +1104,7 @@ export default function EntriesPage() {
                             step="0.01"
                             value={formData.adhocPrice}
                             onChange={(e) => setFormData({ ...formData, adhocPrice: e.target.value })}
-                            className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.adhocPrice ? "border border-destructive" : "border border-border/50"}`}
+                            className={`mt-1 block w-full rounded-[var(--radius)] px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${fieldErrors.adhocPrice ? "border border-destructive" : "border border-border"}`}
                             disabled={submitting}
                             placeholder={t("form.adhocPricePlaceholder")}
                           />
@@ -1113,8 +1113,8 @@ export default function EntriesPage() {
                           )}
                         </div>
 
-                        <div className="sm:col-span-2">
-                          <label htmlFor="saveItemToClient" className="flex items-center cursor-pointer min-h-[44px]">
+                        <div className="self-end">
+                          <label htmlFor="saveItemToClient" className="flex items-center gap-2 cursor-pointer min-h-[44px]">
                             <input
                               type="checkbox"
                               id="saveItemToClient"
@@ -1123,7 +1123,7 @@ export default function EntriesPage() {
                               className="h-5 w-5 rounded border-border text-primary focus:ring-primary"
                               disabled={submitting}
                             />
-                            <span className="me-2 text-sm text-muted-foreground">{t("form.saveItemToClient")}</span>
+                            <span className="text-sm text-muted-foreground">{t("form.saveItemToClient")}</span>
                           </label>
                         </div>
                       </>
@@ -1140,9 +1140,8 @@ export default function EntriesPage() {
                         step="1"
                         value={formData.quantity}
                         onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                        className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.duration ? "border border-destructive" : "border border-border/50"}`}
+                        className={`mt-1 block w-full rounded-[var(--radius)] px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${fieldErrors.duration ? "border border-destructive" : "border border-border"}`}
                         disabled={submitting}
-                        placeholder={t("form.quantityPlaceholder")}
                       />
                       {fieldErrors.duration && (
                         <p className="mt-1 text-xs text-destructive">{fieldErrors.duration}</p>
@@ -1151,8 +1150,8 @@ export default function EntriesPage() {
                   </>
                 )}
 
-                <div className="flex items-center">
-                  <label htmlFor="isBillable" className="flex items-center cursor-pointer min-h-[44px]">
+                <div className="flex items-center self-end">
+                  <label htmlFor="isBillable" className="flex items-center gap-2 cursor-pointer min-h-[44px]">
                     <input
                       type="checkbox"
                       id="isBillable"
@@ -1161,11 +1160,11 @@ export default function EntriesPage() {
                       className="h-5 w-5 rounded border-border text-primary focus:ring-primary"
                       disabled={submitting}
                     />
-                    <span className="me-2 text-sm font-medium text-foreground">{t("form.billable")}</span>
+                    <span className="text-sm font-medium text-foreground">{t("form.billable")}</span>
                   </label>
                 </div>
 
-                <div className="sm:col-span-2">
+                <div className="col-span-2">
                   <label htmlFor="description" className="block text-sm font-medium text-foreground">
                     {formData.billingKind === "item" ? t("form.detailLabel") : t("form.descriptionLabel")}
                   </label>
@@ -1175,7 +1174,7 @@ export default function EntriesPage() {
                     required
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className={`mt-1 block w-full rounded-md px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary ${fieldErrors.description ? "border border-destructive" : "border border-border/50"}`}
+                    className={`mt-1 block w-full rounded-[var(--radius)] px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${fieldErrors.description ? "border border-destructive" : "border border-border"}`}
                     disabled={submitting}
                     placeholder={
                       formData.billingKind === "item"
@@ -1188,7 +1187,7 @@ export default function EntriesPage() {
                   )}
                 </div>
 
-                <div className="sm:col-span-2">
+                <div className="col-span-2">
                   <label htmlFor="notes" className="block text-sm font-medium text-foreground">
                     {t("form.notesLabel")}
                   </label>
@@ -1197,7 +1196,7 @@ export default function EntriesPage() {
                     rows={3}
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    className="mt-1 block w-full rounded-md border border-border/50 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                    className="mt-1 block w-full rounded-[var(--radius)] border border-border px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                     disabled={submitting}
                     placeholder={t("form.notesPlaceholder")}
                   />

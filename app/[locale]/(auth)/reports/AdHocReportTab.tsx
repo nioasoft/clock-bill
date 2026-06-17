@@ -560,9 +560,9 @@ export default function AdHocReportTab() {
           </div>
 
           {showFilters && (
-            <div className="bg-surface border border-border/50 rounded-[0.875rem] p-6 space-y-4 shadow-sm">
+            <div className="bg-surface border border-border/50 rounded-[0.875rem] p-6 space-y-4">
               {/* Date Range */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
                   <label className="block text-sm font-medium mb-2">{t("filters.startDate")}</label>
                   <input
@@ -976,7 +976,7 @@ export default function AdHocReportTab() {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-accent shadow-sm">
+              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-accent">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
                   {t("summary.totalHours")}
                 </h3>
@@ -984,7 +984,7 @@ export default function AdHocReportTab() {
                   {t("summary.hoursValue", { hours: reportData.summary.totalHours.toFixed(1) })}
                 </p>
               </div>
-              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-secondary shadow-sm">
+              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-secondary">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
                   {t("summary.totalEntries")}
                 </h3>
@@ -992,7 +992,7 @@ export default function AdHocReportTab() {
                   {reportData.summary.totalEntries}
                 </p>
               </div>
-              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-primary shadow-sm">
+              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-primary">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
                   {t("summary.totalAmount")} {displayCurrency !== "original" && `(${displayCurrency})`}
                 </h3>
@@ -1022,7 +1022,7 @@ export default function AdHocReportTab() {
                   <p className="text-lg text-muted-foreground">{t("summary.notAvailable")}</p>
                 )}
               </div>
-              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-accent shadow-sm">
+              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-accent">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
                   {t("sections.fixedCharges")} {displayCurrency !== "original" && `(${displayCurrency})`}
                 </h3>
@@ -1052,7 +1052,7 @@ export default function AdHocReportTab() {
                   <p className="text-lg text-muted-foreground">0.00</p>
                 )}
               </div>
-              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-success shadow-sm">
+              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-success">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
                   {t("summary.period")}
                 </h3>
@@ -1064,7 +1064,7 @@ export default function AdHocReportTab() {
 
             {/* By Client Summary */}
             {reportData.byClient.length > 0 && (
-              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 shadow-sm">
+              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6">
                 <h3 className="font-display text-lg font-bold mb-4">{t("sections.byClient")}</h3>
                 <div className="space-y-3">
                   {reportData.byClient.map((client) => (
@@ -1105,7 +1105,7 @@ export default function AdHocReportTab() {
 
             {/* By Project Summary */}
             {reportData.byProject.length > 0 && (
-              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 shadow-sm">
+              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6">
                 <h3 className="font-display text-lg font-bold mb-4">{t("sections.byProject")}</h3>
                 <div className="space-y-3">
                   {reportData.byProject.map((project) => (
@@ -1145,7 +1145,7 @@ export default function AdHocReportTab() {
 
             {/* By Rate Label Summary (breakdown by work-type / item) */}
             {reportData.byRateLabel && reportData.byRateLabel.length > 0 && (
-              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 shadow-sm">
+              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6">
                 <h3 className="font-display text-lg font-bold mb-4">{t("sections.byLabel")}</h3>
                 <div className="space-y-3">
                   {reportData.byRateLabel.map((row, index) => (
@@ -1175,7 +1175,7 @@ export default function AdHocReportTab() {
             )}
 
             {reportData.fixedCharges && reportData.fixedCharges.length > 0 && (
-              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 shadow-sm">
+              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6">
                 <h3 className="font-display text-lg font-bold mb-4">{t("sections.fixedCharges")}</h3>
                 <div className="space-y-3">
                   {reportData.fixedCharges.map((line, index) => (
@@ -1203,7 +1203,7 @@ export default function AdHocReportTab() {
 
             {/* By Date Summary (Daily Breakdown) */}
             {reportData.byDate && reportData.byDate.length > 0 && (
-              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 shadow-sm">
+              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6">
                 <h3 className="font-display text-lg font-bold mb-4">{t("sections.byDate")}</h3>
                 <div className="space-y-2">
                   {reportData.byDate.map((dateSummary) => (
@@ -1244,7 +1244,7 @@ export default function AdHocReportTab() {
 
             {/* By Week Summary (Weekly Breakdown) */}
             {reportData.byWeek && reportData.byWeek.length > 0 && (
-              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 shadow-sm">
+              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6">
                 <h3 className="font-display text-lg font-bold mb-4">{t("sections.byWeek")}</h3>
                 <div className="space-y-2">
                   {reportData.byWeek.map((weekSummary) => (
@@ -1287,7 +1287,7 @@ export default function AdHocReportTab() {
 
             {/* Detailed Entries Table */}
             {reportData.entries.length > 0 && (
-              <div className="bg-card border border-border/50 rounded-[0.875rem] overflow-hidden shadow-sm">
+              <div className="bg-card border border-border/50 rounded-[0.875rem] overflow-hidden">
                 <div className="p-6 border-b border-border">
                   <h3 className="font-display text-lg font-bold">{t("sections.detailedEntries")}</h3>
                 </div>
@@ -1471,7 +1471,7 @@ export default function AdHocReportTab() {
                 {presets.map((preset) => (
                   <div
                     key={preset.id}
-                    className="border rounded-[0.875rem] p-4 hover:border-primary/50 hover:shadow-sm transition-all"
+                    className="border rounded-[0.875rem] p-4 hover:border-primary/50 hover:transition-all"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">

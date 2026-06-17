@@ -248,7 +248,7 @@ export default function BillableTab({
   return (
     <div className="pb-28">
       {/* Top controls */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-6">
+      <div className="grid grid-cols-2 gap-3 mb-6">
         <div>
           <label className="block text-sm font-medium mb-2 text-muted-foreground">
             {t("billable.clientLabel")}

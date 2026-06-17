@@ -159,7 +159,7 @@ export default function ResetPasswordPage() {
     <div className="flex min-h-screen items-center justify-center bg-surface px-4">
       <LocaleSwitcher isCollapsed className="fixed top-4 end-4 z-50" />
       <div className="w-full max-w-md">
-        <div className="bg-card rounded-[var(--radius-card)] border border-border p-8 shadow-sm">
+        <div className="bg-card rounded-[var(--radius-card)] border border-border p-8">
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-3 mb-6">
               <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center relative">

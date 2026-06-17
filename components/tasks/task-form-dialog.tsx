@@ -266,6 +266,7 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
           </button>
 
           <div id="task-advanced" className={`${showAdvanced ? "" : "hidden"} sm:block space-y-4`}>
+            <div className="grid grid-cols-2 gap-3">
             <div>
               <label htmlFor="task-priority" className={labelClass}>{t("priority")}</label>
               <SimpleSelect
@@ -287,6 +288,7 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
                 className={`${fieldClass(false)} font-mono`}
                 disabled={submitting}
               />
+            </div>
             </div>
 
             <div>

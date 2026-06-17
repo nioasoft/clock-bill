@@ -250,8 +250,8 @@ export default function AdminUserDetailPage({
 
         {/* Tab content */}
         {activeTab === "profile" && (
-          <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-2">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">{t("detail.profile.email")}</p>
                 <p className="text-sm text-foreground">{user.email}</p>
@@ -315,7 +315,7 @@ export default function AdminUserDetailPage({
         )}
 
         {activeTab === "clients" && (
-          <div className="rounded-[var(--radius-card)] bg-card border border-border/50 shadow-sm overflow-hidden">
+          <div className="rounded-[var(--radius-card)] bg-card border border-border/50 overflow-hidden">
             {clients.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">{t("detail.clients.empty")}</div>
             ) : (
@@ -348,7 +348,7 @@ export default function AdminUserDetailPage({
         )}
 
         {activeTab === "projects" && (
-          <div className="rounded-[var(--radius-card)] bg-card border border-border/50 shadow-sm overflow-hidden">
+          <div className="rounded-[var(--radius-card)] bg-card border border-border/50 overflow-hidden">
             {projects.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">{t("detail.projects.empty")}</div>
             ) : (
@@ -381,7 +381,7 @@ export default function AdminUserDetailPage({
         )}
 
         {activeTab === "entries" && (
-          <div className="rounded-[var(--radius-card)] bg-card border border-border/50 shadow-sm overflow-hidden">
+          <div className="rounded-[var(--radius-card)] bg-card border border-border/50 overflow-hidden">
             {entries.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">{t("detail.entries.empty")}</div>
             ) : (
@@ -413,7 +413,7 @@ export default function AdminUserDetailPage({
 
         {activeTab === "sessions" && (
           <div className="space-y-4">
-            <div className="rounded-[var(--radius-card)] bg-card border border-border/50 shadow-sm overflow-hidden">
+            <div className="rounded-[var(--radius-card)] bg-card border border-border/50 overflow-hidden">
               {sessions.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground">{t("detail.sessions.empty")}</div>
               ) : (
@@ -495,7 +495,7 @@ export default function AdminUserDetailPage({
               </div>
             )}
 
-            <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm space-y-4">
+            <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 space-y-4">
               {/* Reset password */}
               <div className="flex items-center justify-between">
                 <div>

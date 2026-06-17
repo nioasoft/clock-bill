@@ -973,7 +973,7 @@ export default function SettingsPage() {
                 {t("appearance.subtitle")}
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 {THEMES.map((themeOption) => (
                   <button
                     key={themeOption.id}
@@ -1050,7 +1050,7 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={requestNotificationPermission}
-                    className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-[var(--radius)] shadow-sm hover:bg-primary/90 active:scale-[0.99] transition-all cursor-pointer"
+                    className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-[var(--radius)] hover:bg-primary/90 active:scale-[0.99] transition-all cursor-pointer"
                   >
                     <Bell className="h-4 w-4" aria-hidden="true" />
                     {t("notifications.enablePermission")}

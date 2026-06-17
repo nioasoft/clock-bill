@@ -586,7 +586,7 @@ export default function DashboardPage() {
         {recentEntries.length > 0 && (
           <div className="mt-8">
             <h3 className="font-display text-xl font-semibold text-foreground mb-4">{t("recentEntries.title")}</h3>
-            <div className="bg-card border border-border/50 rounded-[var(--radius-card)] shadow-sm overflow-hidden">
+            <div className="bg-card border border-border/50 rounded-[var(--radius-card)] overflow-hidden">
               <ul className="divide-y divide-border">
                 {recentEntries.map((entry) => (
                   <li key={entry.id} className="px-6 py-4 hover:bg-muted transition-colors">

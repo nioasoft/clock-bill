@@ -365,7 +365,7 @@
       "billable": "ניתן לחיוב",
       "detailLabel": "פירוט *",
       "descriptionLabel": "תיאור *",
-      "detailPlaceholder": "נושא / פירוט — יופיע בתעודת החיוב (למשל: בנושא הסכם שכירות)",
+      "detailPlaceholder": "נושא החיוב — יופיע בתעודה",
       "descriptionPlaceholder": "מה עשית?",
       "notesLabel": "הערות",
       "notesPlaceholder": "הערות נוספות (אופציונלי)",

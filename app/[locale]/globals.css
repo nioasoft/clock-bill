@@ -120,6 +120,35 @@ body {
   }
 }
 
+/* Native date/time inputs must never overflow their box. min-width:0 stops the
+   intrinsic (locale-dependent) content size from forcing the field wider than
+   its container; safe on every browser and keeps the desktop calendar icon. */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"],
+input[type="month"] {
+  min-width: 0;
+}
+input[type="date"]::-webkit-date-and-time-value,
+input[type="datetime-local"]::-webkit-date-and-time-value,
+input[type="time"]::-webkit-date-and-time-value,
+input[type="month"]::-webkit-date-and-time-value {
+  text-align: start;
+}
+/* Mobile/iOS: Safari ignores width:100% on date fields and lays them out at
+   full content width (in RTL that bleeds past the box). appearance:none makes
+   iOS honour the declared width; the native wheel picker still opens on focus,
+   so nothing is lost. Scoped to small screens so the desktop icon stays. */
+@media (max-width: 640px) {
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="time"],
+  input[type="month"] {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}
+
 /* Fluid timer display — large and legible on phones, capped on desktop.
    Use on the running-timer digits for a ClickHouse-style stat hero. */
 .timer-display {

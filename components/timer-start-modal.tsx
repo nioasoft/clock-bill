@@ -189,7 +189,7 @@ export function TimerStartModal() {
                     value={timerDescription}
                     onChange={(e) => setTimerDescription(e.target.value)}
                     placeholder={t("start.descriptionPlaceholder")}
-                    className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
+                    className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
                     disabled={startingTimer}
                   />
                 </div>

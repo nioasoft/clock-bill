@@ -365,7 +365,7 @@
       "billable": "Billable",
       "detailLabel": "Details *",
       "descriptionLabel": "Description *",
-      "detailPlaceholder": "Subject / details — will appear on the billing document (e.g. re: lease agreement)",
+      "detailPlaceholder": "Billing subject — shown on the document",
       "descriptionPlaceholder": "What did you do?",
       "notesLabel": "Notes",
       "notesPlaceholder": "Additional notes (optional)",

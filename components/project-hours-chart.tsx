@@ -24,7 +24,7 @@ export function ProjectHoursChart({ data, loading = false }: ProjectHoursChartPr
 
   if (loading) {
     return (
-      <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
+      <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6">
         <h3 className="font-display text-lg font-semibold text-foreground mb-4">{t("titleLoading")}</h3>
         <div className="h-48 flex items-center justify-center">
           <div className="animate-pulse text-muted-foreground">{t("loading")}</div>
@@ -35,7 +35,7 @@ export function ProjectHoursChart({ data, loading = false }: ProjectHoursChartPr
 
   if (projectHours.length === 0) {
     return (
-      <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
+      <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6">
         <h3 className="font-display text-lg font-semibold text-foreground mb-4">{t("titleLoading")}</h3>
         <div className="h-48 flex flex-col items-center justify-center gap-3">
           <HourglassSVG size={64} className="text-muted-foreground/30" />
@@ -52,7 +52,7 @@ export function ProjectHoursChart({ data, loading = false }: ProjectHoursChartPr
   const rows = [...projectHours].sort((a, b) => b.totalHours - a.totalHours);
 
   return (
-    <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 shadow-sm">
+    <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6">
       <h3 className="font-display text-lg font-semibold text-foreground">{t("title")}</h3>
       <p className="mt-0.5 mb-5 text-xs text-muted-foreground">{t("subtitle")}</p>
 

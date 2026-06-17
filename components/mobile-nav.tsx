@@ -30,7 +30,7 @@ export function MobileNav({ userEmail }: MobileNavProps) {
   const firstLetter = userEmail ? userEmail.charAt(0).toUpperCase() : "?";
 
   return (
-    <header className="lg:hidden bg-sidebar shadow-sm sticky top-0 z-40">
+    <header className="lg:hidden bg-sidebar sticky top-0 z-40">
       <div className="px-4 py-3 flex items-center justify-between gap-2">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 min-w-0">

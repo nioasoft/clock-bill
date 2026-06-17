@@ -345,8 +345,8 @@ function ProjectsPageContent() {
                 <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                   {t("form.detailsLegend")}
                 </legend>
-                <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
-                  <div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+                  <div className="col-span-2">
                     <label htmlFor="clientId" className="mb-1.5 block text-sm font-medium text-foreground">
                       {t("form.clientLabel")} <span className="text-primary">*</span>
                     </label>
@@ -412,7 +412,7 @@ function ProjectsPageContent() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2 grid grid-cols-2 gap-3">
                     <div>
                       <label htmlFor="startDate" className="mb-1.5 block text-sm font-medium text-foreground">
                         {t("form.startDateLabel")}
@@ -479,8 +479,8 @@ function ProjectsPageContent() {
                 </label>
 
                 {formData.fixedMonthlyEnabled && (
-                  <div className="grid grid-cols-1 gap-x-4 gap-y-4 rounded-[var(--radius)] border border-border bg-background/50 p-4 sm:grid-cols-3">
-                    <div>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-4 rounded-[var(--radius)] border border-border bg-background/50 p-4">
+                    <div className="col-span-2">
                       <label htmlFor="fixedMonthlyFee" className="mb-1.5 block text-sm font-medium text-foreground">
                         {t("form.monthlyFeeLabel")} <span className="text-primary">*</span>
                       </label>

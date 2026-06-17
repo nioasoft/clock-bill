@@ -69,7 +69,7 @@ export function TimerStopModal() {
               value={stopTimerDescription}
               onChange={(e) => setStopTimerDescription(e.target.value)}
               placeholder={t("stop.descriptionPlaceholder")}
-              className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
+              className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
               disabled={stoppingTimer}
             />
           </div>
@@ -88,7 +88,7 @@ export function TimerStopModal() {
               value={stopTimerNotes}
               onChange={(e) => setStopTimerNotes(e.target.value)}
               placeholder={t("stop.notesPlaceholder")}
-              className="w-full resize-y rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm placeholder:text-muted-foreground/50 focus:border-primary focus:ring-1 focus:ring-primary"
+              className="w-full resize-y rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/50 focus:border-primary focus:ring-2 focus:ring-primary/20"
               disabled={stoppingTimer}
             />
           </div>
@@ -106,7 +106,7 @@ export function TimerStopModal() {
                   value={stopTimerHours}
                   onChange={(e) => setStopTimerHours(e.target.value)}
                   placeholder="0"
-                  className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary font-mono"
+                  className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 font-mono"
                   disabled={stoppingTimer}
                 />
                 <p className="text-xs text-muted-foreground mt-1">{t("stop.hours")}</p>
@@ -120,7 +120,7 @@ export function TimerStopModal() {
                   value={stopTimerMinutes}
                   onChange={(e) => setStopTimerMinutes(e.target.value)}
                   placeholder="00"
-                  className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary font-mono"
+                  className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 font-mono"
                   disabled={stoppingTimer}
                 />
                 <p className="text-xs text-muted-foreground mt-1">{t("stop.minutes")}</p>
