@@ -516,7 +516,13 @@ export async function GET(request: NextRequest) {
         },
         byClient: Object.values(byClient),
         byProject: Object.values(byProject),
-        byDate: Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date)),
+        // `entry.date` is a pg DATE → a JS Date object server-side (it only
+        // looks like a string after JSON serialization), so localeCompare threw.
+        // Sort by timestamp — chronological and robust whether date is a Date,
+        // an ISO string, or "YYYY-MM-DD".
+        byDate: Object.values(byDate).sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        ),
         byWeek: Object.values(byWeek).sort((a, b) => a.weekStart.localeCompare(b.weekStart)),
         byRateLabel: Object.values(byRateLabel),
       },
