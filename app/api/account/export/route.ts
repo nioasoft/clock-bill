@@ -29,7 +29,6 @@ const USER_SCOPED_TABLES = [
   "charge_document_lines",
   "report_presets",
   "custom_tags",
-  "currency_rates",
 ] as const;
 
 export async function GET(): Promise<NextResponse> {

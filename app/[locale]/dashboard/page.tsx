@@ -613,67 +613,40 @@ export default function DashboardPage() {
             </div>
           </div>
         ) : (
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            {/* Quick timer — start tracking time in one click */}
-            <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-5 sm:p-6 relative overflow-hidden flex flex-col">
-              <div className="relative flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">{t("quickTimer.title")}</h3>
-                  <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">T</kbd>
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">{t("quickTimer.subtitle")}</p>
+          <div className="mt-6">
+            {/* One consolidated quick-actions card. The persistent timer bar (and
+                the T shortcut) are the primary way to start a timer; this card is
+                the discoverable entry point for the common create actions. */}
+            <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-5 sm:p-6">
+              <div className="flex items-center gap-2">
+                <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">{t("quickActions.title")}</h3>
+                <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">T</kbd>
               </div>
-              <button
-                onClick={() => setShowTimerModal(true)}
-                className="relative mt-4 w-full rounded-[var(--radius)] bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-              >
-                {t("quickTimer.startButton")}
-              </button>
-              {/* Manual time entry — a record entered by hand, no live timer */}
-              <div className="relative mt-3 flex flex-wrap gap-2">
+              <p className="mt-1 text-sm text-muted-foreground">{t("quickActions.subtitle")}</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  onClick={() => setShowTimerModal(true)}
+                  className="inline-flex items-center rounded-[var(--radius)] bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  {t("quickTimer.startButton")}
+                </button>
+                <Link
+                  href="/entries?new=item"
+                  className="inline-flex items-center rounded-[var(--radius)] border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-surface transition-colors"
+                >
+                  {t("billingItem.addButton")}
+                </Link>
+                <Link
+                  href="/tasks?create=true"
+                  className="inline-flex items-center rounded-[var(--radius)] border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-surface transition-colors"
+                >
+                  {t("task.createButton")}
+                </Link>
                 <Link
                   href="/entries?new=manual"
-                  className="inline-flex items-center rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition-colors"
+                  className="inline-flex items-center rounded-[var(--radius)] px-4 py-2.5 text-sm font-medium text-muted-foreground hover:bg-surface hover:text-foreground transition-colors"
                 >
                   {t("quickTimer.manualEntryButton")}
-                </Link>
-              </div>
-            </div>
-
-            {/* Manual item — log billable work that wasn't timed (fixed sum or qty × rate) */}
-            <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-5 sm:p-6 relative overflow-hidden flex flex-col">
-              <div className="relative flex-1">
-                <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">{t("billingItem.title")}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{t("billingItem.subtitle")}</p>
-              </div>
-              <Link
-                href="/entries?new=item"
-                className="relative mt-4 w-full rounded-[var(--radius)] bg-primary px-4 py-2.5 text-center text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-              >
-                {t("billingItem.addButton")}
-              </Link>
-              {/* Invisible spacer keeps this CTA aligned with the timer/task cards' secondary-link row */}
-              <div className="relative mt-3 h-10" aria-hidden="true" />
-            </div>
-
-            {/* Add task — create a task (client/project/rate) for the Kanban board */}
-            <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-5 sm:p-6 relative overflow-hidden flex flex-col">
-              <div className="relative flex-1">
-                <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground">{t("task.title")}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{t("task.subtitle")}</p>
-              </div>
-              <Link
-                href="/tasks?create=true"
-                className="relative mt-4 w-full rounded-[var(--radius)] bg-primary px-4 py-2.5 text-center text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-              >
-                {t("task.createButton")}
-              </Link>
-              <div className="relative mt-3 flex flex-wrap gap-2">
-                <Link
-                  href="/tasks"
-                  className="inline-flex items-center rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition-colors"
-                >
-                  {t("task.allTasksLink")}
                 </Link>
               </div>
             </div>

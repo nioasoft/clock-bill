@@ -198,11 +198,9 @@ export default function AdHocReportTab() {
   });
   const [error, setError] = useState("");
   const [showWorkTimes, setShowWorkTimes] = useState(false);
-  const [displayCurrency, setDisplayCurrency] = useState<string>("original");
-  const [currencyRates, setCurrencyRates] = useState<Record<string, Record<string, number>>>({});
 
-  // Single bootstrap call: profile + clients + projects + presets + currency
-  // rates in one request (one DB transaction) instead of five parallel fetches.
+  // Single bootstrap call: profile + clients + projects + presets in one
+  // request (one DB transaction) instead of four parallel fetches.
   useEffect(() => {
     const fetchInit = async () => {
       setClientsLoading(true);
@@ -231,18 +229,6 @@ export default function AdHocReportTab() {
         setClients(data.clients || []);
         setProjects(data.projects || []);
         setPresets(data.presets || []);
-
-        if (data.rates) {
-          // Build a nested map: rates[fromCurrency][toCurrency] = rate
-          const ratesMap: Record<string, Record<string, number>> = {};
-          data.rates.forEach((rate: { fromCurrency: string; toCurrency: string; rate: number }) => {
-            if (!ratesMap[rate.fromCurrency]) {
-              ratesMap[rate.fromCurrency] = {};
-            }
-            ratesMap[rate.fromCurrency][rate.toCurrency] = rate.rate;
-          });
-          setCurrencyRates(ratesMap);
-        }
       } catch (error) {
         console.error("Error loading reports init:", error);
       } finally {
@@ -428,28 +414,6 @@ export default function AdHocReportTab() {
   // Locale-aware short date for tables/labels.
   const formatDate = (date: string | Date) => formatDateLib(date, undefined, locale);
 
-  // Convert amount from one currency to another using stored rates
-  const convertCurrency = (amount: number, fromCurrency: string, toCurrency: string): number => {
-    if (fromCurrency === toCurrency) return amount;
-    if (!currencyRates[fromCurrency] || !currencyRates[fromCurrency][toCurrency]) {
-      console.warn(`No rate found for ${fromCurrency} -> ${toCurrency}`);
-      return amount; // Return original if no conversion rate available
-    }
-    return amount * currencyRates[fromCurrency][toCurrency];
-  };
-
-  // Convert totalAmounts object to target currency
-  const convertAmounts = (amounts: Record<string, number>, targetCurrency: string): number => {
-    if (targetCurrency === "original") {
-      // Return sum of all amounts (mixed currencies)
-      return Object.values(amounts).reduce((sum, amount) => sum + amount, 0);
-    }
-
-    return Object.entries(amounts).reduce((sum, [currency, amount]) => {
-      return sum + convertCurrency(amount, currency, targetCurrency);
-    }, 0);
-  };
-
   const handleExportPdf = () => {
     const template = (userProfile?.preferredPdfTemplate || "modern") as PdfTemplate;
     confirmExportPdf(template);
@@ -553,151 +517,121 @@ export default function AdHocReportTab() {
             <h2 className="font-display font-bold text-lg">{t("filters.title")}</h2>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="min-h-[44px] min-w-[44px] px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-[0.625rem] transition-colors"
+              className="min-h-[44px] px-4 py-2 text-sm font-medium text-primary hover:bg-primary-light rounded-[var(--radius-card)] transition-colors"
             >
               {showFilters ? t("filters.hide") : t("filters.show")}
             </button>
           </div>
 
           {showFilters && (
-            <div className="bg-surface border border-border/50 rounded-[0.875rem] p-6 space-y-4">
-              {/* Date Range */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
-                  <label className="block text-sm font-medium mb-2">{t("filters.startDate")}</label>
+            <div className="rounded-[var(--radius-card)] border border-border bg-card p-4 space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {/* Start date */}
+                <div>
+                  <label htmlFor="reportStartDate" className="block text-sm font-medium text-foreground mb-1">{t("filters.startDate")}</label>
                   <input
                     type="date"
+                    id="reportStartDate"
                     value={filters.startDate}
-                    onChange={(e) =>
-                      setFilters({ ...filters, startDate: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border rounded-[0.625rem] bg-background"
+                    onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+                    className="block w-full rounded-[var(--radius)] border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
-                <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
-                  <label className="block text-sm font-medium mb-2">{t("filters.endDate")}</label>
+
+                {/* End date */}
+                <div>
+                  <label htmlFor="reportEndDate" className="block text-sm font-medium text-foreground mb-1">{t("filters.endDate")}</label>
                   <input
                     type="date"
+                    id="reportEndDate"
                     value={filters.endDate}
-                    onChange={(e) =>
-                      setFilters({ ...filters, endDate: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border rounded-[0.625rem] bg-background"
+                    onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+                    className="block w-full rounded-[var(--radius)] border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+
+                {/* Client */}
+                <div>
+                  <label htmlFor="reportClient" className="block text-sm font-medium text-foreground mb-1">{t("filters.client")}</label>
+                  <SimpleSelect
+                    id="reportClient"
+                    value={filters.clientId}
+                    onChange={(v) => handleClientChange(v)}
+                    disabled={clientsLoading}
+                    options={[
+                      { value: "", label: t("filters.allClients") },
+                      ...clients.map((client) => ({ value: client.id, label: client.name })),
+                    ]}
+                  />
+                </div>
+
+                {/* Project */}
+                <div>
+                  <label htmlFor="reportProject" className="block text-sm font-medium text-foreground mb-1">{t("filters.project")}</label>
+                  <SimpleSelect
+                    id="reportProject"
+                    value={filters.projectId}
+                    onChange={(v) => setFilters({ ...filters, projectId: v })}
+                    disabled={projectsLoading || !filters.clientId}
+                    options={[
+                      { value: "", label: t("filters.allProjects") },
+                      ...getFilteredProjects().map((project) => ({ value: project.id, label: project.name })),
+                    ]}
                   />
                 </div>
               </div>
 
-              {/* Client Filter */}
-              <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
-                <label className="block text-sm font-medium mb-2">{t("filters.client")}</label>
-                <SimpleSelect
-                  value={filters.clientId}
-                  onChange={(v) => handleClientChange(v)}
-                  disabled={clientsLoading}
-                  options={[
-                    { value: "", label: t("filters.allClients") },
-                    ...clients.map((client) => ({
-                      value: client.id,
-                      label: client.name,
-                    })),
-                  ]}
-                />
-              </div>
-
-              {/* Project Filter */}
-              <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
-                <label className="block text-sm font-medium mb-2">{t("filters.project")}</label>
-                <SimpleSelect
-                  value={filters.projectId}
-                  onChange={(v) => setFilters({ ...filters, projectId: v })}
-                  disabled={projectsLoading || !filters.clientId}
-                  options={[
-                    { value: "", label: t("filters.allProjects") },
-                    ...getFilteredProjects().map((project) => ({
-                      value: project.id,
-                      label: project.name,
-                    })),
-                  ]}
-                />
-              </div>
-
-              {/* Display Currency Filter */}
-              <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
-                <label className="flex items-center gap-2 text-sm font-medium mb-2">
+              {/* Toggles */}
+              <div className="flex flex-col gap-3 border-t border-border pt-4">
+                <label className="flex items-start gap-2 text-sm font-medium cursor-pointer">
                   <input
                     type="checkbox"
                     checked={filters.includeFixedCharges}
-                    onChange={(e) =>
-                      setFilters({ ...filters, includeFixedCharges: e.target.checked })
-                    }
-                    className="h-4 w-4 rounded border-border"
+                    onChange={(e) => setFilters({ ...filters, includeFixedCharges: e.target.checked })}
+                    className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
                   />
-                  {t("filters.includeFixed")}
+                  <span>
+                    {t("filters.includeFixed")}
+                    <span className="block text-xs font-normal text-muted-foreground">{t("filters.includeFixedHint")}</span>
+                  </span>
                 </label>
-                <p className="text-xs text-muted-foreground">
-                  {t("filters.includeFixedHint")}
-                </p>
-              </div>
-
-              <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
-                <label className="flex items-center gap-2 text-sm font-medium mb-2">
+                <label className="flex items-start gap-2 text-sm font-medium cursor-pointer">
                   <input
                     type="checkbox"
                     checked={showWorkTimes}
                     onChange={(e) => setShowWorkTimes(e.target.checked)}
-                    className="h-4 w-4 rounded border-border"
+                    className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
                   />
-                  {t("filters.showWorkTimes")}
+                  <span>
+                    {t("filters.showWorkTimes")}
+                    <span className="block text-xs font-normal text-muted-foreground">{t("filters.showWorkTimesHint")}</span>
+                  </span>
                 </label>
-                <p className="text-xs text-muted-foreground">
-                  {t("filters.showWorkTimesHint")}
-                </p>
               </div>
 
-              <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
-                <label className="block text-sm font-medium mb-2">{t("filters.displayCurrency")}</label>
-                <SimpleSelect
-                  value={displayCurrency}
-                  onChange={(v) => setDisplayCurrency(v)}
-                  options={[
-                    { value: "original", label: t("filters.currencyOriginal") },
-                    { value: "ILS", label: t("filters.currencyILS") },
-                    { value: "USD", label: t("filters.currencyUSD") },
-                    { value: "USDT", label: t("filters.currencyUSDT") },
-                    { value: "BTC", label: t("filters.currencyBTC") },
-                    { value: "ETH", label: t("filters.currencyETH") },
-                  ]}
-                />
-                {displayCurrency !== "original" && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {!Object.keys(currencyRates).length ? t("filters.ratesMissing") : t("filters.ratesAvailable")}
-                  </p>
-                )}
-              </div>
-
-              {/* Generate Button */}
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setShowLoadPresetDialog(true)}
-                  disabled={presetsLoading || presets.length === 0}
-                  className="px-4 py-2 bg-secondary text-secondary-foreground rounded-full hover:bg-secondary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  title={presets.length === 0 ? t("preset.noneSaved") : t("preset.load")}
-                >
-                  📂 {t("preset.load")}
-                </button>
-                <button
-                  onClick={() => setShowSavePresetDialog(true)}
-                  className="px-4 py-2 bg-accent text-accent-foreground rounded-full hover:bg-accent/90 transition-colors"
-                  title={t("preset.save")}
-                >
-                  💾 {t("preset.save")}
-                </button>
+              {/* Actions */}
+              <div className="flex flex-wrap gap-2 border-t border-border pt-4">
                 <button
                   onClick={generateReport}
                   disabled={reportLoading}
-                  className="px-6 py-2 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="rounded-[var(--radius-card)] bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {reportLoading ? t("report.generating") : t("report.generate")}
+                </button>
+                <button
+                  onClick={() => setShowLoadPresetDialog(true)}
+                  disabled={presetsLoading || presets.length === 0}
+                  className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={presets.length === 0 ? t("preset.noneSaved") : t("preset.load")}
+                >
+                  {t("preset.load")}
+                </button>
+                <button
+                  onClick={() => setShowSavePresetDialog(true)}
+                  className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition-colors"
+                  title={t("preset.save")}
+                >
+                  {t("preset.save")}
                 </button>
                 <button
                   onClick={() =>
@@ -715,7 +649,7 @@ export default function AdHocReportTab() {
                       includeFixedCharges: true,
                     })
                   }
-                  className="px-6 py-2 border border-border rounded-full hover:bg-accent transition-colors"
+                  className="rounded-[var(--radius-card)] px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-surface hover:text-foreground transition-colors"
                 >
                   {t("filters.clear")}
                 </button>
@@ -726,7 +660,7 @@ export default function AdHocReportTab() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-destructive/10 border border-destructive rounded-[0.875rem]">
+          <div className="mb-6 p-4 bg-destructive/10 border border-destructive rounded-[var(--radius-card)]">
             <p className="text-destructive">{error}</p>
           </div>
         )}
@@ -976,7 +910,7 @@ export default function AdHocReportTab() {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-accent">
+              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-6 border-s-4 border-s-accent">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
                   {t("summary.totalHours")}
                 </h3>
@@ -984,7 +918,7 @@ export default function AdHocReportTab() {
                   {t("summary.hoursValue", { hours: reportData.summary.totalHours.toFixed(1) })}
                 </p>
               </div>
-              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-secondary">
+              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-6 border-s-4 border-s-secondary">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
                   {t("summary.totalEntries")}
                 </h3>
@@ -992,67 +926,49 @@ export default function AdHocReportTab() {
                   {reportData.summary.totalEntries}
                 </p>
               </div>
-              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-primary">
+              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-6 border-s-4 border-s-primary">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
-                  {t("summary.totalAmount")} {displayCurrency !== "original" && `(${displayCurrency})`}
+                  {t("summary.totalAmount")}
                 </h3>
                 {Object.keys(reportData.summary.totalAmounts).length > 0 ? (
-                  displayCurrency === "original" ? (
-                    <div className="space-y-1">
-                      {Object.entries(reportData.summary.totalAmounts).map(
-                        ([currency, amount]) => (
-                          <p
-                            key={currency}
-                            className="font-mono text-2xl font-bold tabular-nums"
-                          >
-                            {formatCurrency(amount, currency)}
-                          </p>
-                        )
-                      )}
-                    </div>
-                  ) : (
-                    <p className="font-mono text-2xl font-bold tabular-nums">
-                      {formatCurrency(
-                        convertAmounts(reportData.summary.totalAmounts, displayCurrency),
-                        displayCurrency
-                      )}
-                    </p>
-                  )
+                  <div className="space-y-1">
+                    {Object.entries(reportData.summary.totalAmounts).map(
+                      ([currency, amount]) => (
+                        <p
+                          key={currency}
+                          className="font-mono text-2xl font-bold tabular-nums"
+                        >
+                          {formatCurrency(amount, currency)}
+                        </p>
+                      )
+                    )}
+                  </div>
                 ) : (
                   <p className="text-lg text-muted-foreground">{t("summary.notAvailable")}</p>
                 )}
               </div>
-              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-accent">
+              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-6 border-s-4 border-s-accent">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
-                  {t("sections.fixedCharges")} {displayCurrency !== "original" && `(${displayCurrency})`}
+                  {t("sections.fixedCharges")}
                 </h3>
                 {Object.keys(reportData.summary.fixedAmounts || {}).length > 0 ? (
-                  displayCurrency === "original" ? (
-                    <div className="space-y-1">
-                      {Object.entries(reportData.summary.fixedAmounts).map(
-                        ([currency, amount]) => (
-                          <p
-                            key={currency}
-                            className="font-mono text-2xl font-bold tabular-nums"
-                          >
-                            {formatCurrency(amount, currency)}
-                          </p>
-                        )
-                      )}
-                    </div>
-                  ) : (
-                    <p className="font-mono text-2xl font-bold tabular-nums">
-                      {formatCurrency(
-                        convertAmounts(reportData.summary.fixedAmounts, displayCurrency),
-                        displayCurrency
-                      )}
-                    </p>
-                  )
+                  <div className="space-y-1">
+                    {Object.entries(reportData.summary.fixedAmounts).map(
+                      ([currency, amount]) => (
+                        <p
+                          key={currency}
+                          className="font-mono text-2xl font-bold tabular-nums"
+                        >
+                          {formatCurrency(amount, currency)}
+                        </p>
+                      )
+                    )}
+                  </div>
                 ) : (
                   <p className="text-lg text-muted-foreground">0.00</p>
                 )}
               </div>
-              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-success">
+              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-6 border-s-4 border-s-success">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
                   {t("summary.period")}
                 </h3>
@@ -1064,13 +980,13 @@ export default function AdHocReportTab() {
 
             {/* By Client Summary */}
             {reportData.byClient.length > 0 && (
-              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6">
+              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-6">
                 <h3 className="font-display text-lg font-bold mb-4">{t("sections.byClient")}</h3>
                 <div className="space-y-3">
                   {reportData.byClient.map((client) => (
                     <div
                       key={client.clientId}
-                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[0.625rem] border border-border/30 transition-colors"
+                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[var(--radius)] border border-border/30 transition-colors"
                     >
                       <div className="flex-1">
                         <p className="font-medium"><bdi>{client.clientName}</bdi></p>
@@ -1084,16 +1000,11 @@ export default function AdHocReportTab() {
                         </p>
                         {Object.keys(client.totalAmounts).length > 0 && (
                           <p className="text-sm text-muted-foreground">
-                            {displayCurrency === "original"
-                              ? Object.entries(client.totalAmounts)
-                                  .map(([currency, amount]) =>
-                                    formatCurrency(amount, currency)
-                                  )
-                                  .join(" + ")
-                              : formatCurrency(
-                                  convertAmounts(client.totalAmounts, displayCurrency),
-                                  displayCurrency
-                                )}
+                            {Object.entries(client.totalAmounts)
+                              .map(([currency, amount]) =>
+                                formatCurrency(amount, currency)
+                              )
+                              .join(" + ")}
                           </p>
                         )}
                       </div>
@@ -1105,13 +1016,13 @@ export default function AdHocReportTab() {
 
             {/* By Project Summary */}
             {reportData.byProject.length > 0 && (
-              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6">
+              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-6">
                 <h3 className="font-display text-lg font-bold mb-4">{t("sections.byProject")}</h3>
                 <div className="space-y-3">
                   {reportData.byProject.map((project) => (
                     <div
                       key={project.projectId}
-                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[0.625rem] border border-border/30 transition-colors"
+                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[var(--radius)] border border-border/30 transition-colors"
                     >
                       <div className="flex-1">
                         <p className="font-medium"><bdi>{project.projectName}</bdi></p>
@@ -1145,13 +1056,13 @@ export default function AdHocReportTab() {
 
             {/* By Rate Label Summary (breakdown by work-type / item) */}
             {reportData.byRateLabel && reportData.byRateLabel.length > 0 && (
-              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6">
+              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-6">
                 <h3 className="font-display text-lg font-bold mb-4">{t("sections.byLabel")}</h3>
                 <div className="space-y-3">
                   {reportData.byRateLabel.map((row, index) => (
                     <div
                       key={`${row.label}-${row.currency}-${index}`}
-                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[0.625rem] border border-border/30 transition-colors"
+                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[var(--radius)] border border-border/30 transition-colors"
                     >
                       <div className="flex-1">
                         <p className="font-medium">
@@ -1175,13 +1086,13 @@ export default function AdHocReportTab() {
             )}
 
             {reportData.fixedCharges && reportData.fixedCharges.length > 0 && (
-              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6">
+              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-6">
                 <h3 className="font-display text-lg font-bold mb-4">{t("sections.fixedCharges")}</h3>
                 <div className="space-y-3">
                   {reportData.fixedCharges.map((line, index) => (
                     <div
                       key={`${line.projectId}-${line.month}-${index}`}
-                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[0.625rem] border border-border/30 transition-colors"
+                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[var(--radius)] border border-border/30 transition-colors"
                     >
                       <div className="flex-1">
                         <p className="font-medium"><bdi>{line.projectName}</bdi></p>
@@ -1203,13 +1114,13 @@ export default function AdHocReportTab() {
 
             {/* By Date Summary (Daily Breakdown) */}
             {reportData.byDate && reportData.byDate.length > 0 && (
-              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6">
+              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-6">
                 <h3 className="font-display text-lg font-bold mb-4">{t("sections.byDate")}</h3>
                 <div className="space-y-2">
                   {reportData.byDate.map((dateSummary) => (
                     <div
                       key={dateSummary.date}
-                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[0.625rem] border border-border/30 transition-colors"
+                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[var(--radius)] border border-border/30 transition-colors"
                     >
                       <div className="flex-1">
                         <p className="font-medium">{formatDate(dateSummary.date)}</p>
@@ -1223,16 +1134,11 @@ export default function AdHocReportTab() {
                         </p>
                         {Object.keys(dateSummary.totalAmounts).length > 0 && (
                           <p className="text-sm text-muted-foreground">
-                            {displayCurrency === "original"
-                              ? Object.entries(dateSummary.totalAmounts)
-                                  .map(([currency, amount]) =>
-                                    formatCurrency(amount, currency)
-                                  )
-                                  .join(" + ")
-                              : formatCurrency(
-                                  convertAmounts(dateSummary.totalAmounts, displayCurrency),
-                                  displayCurrency
-                                )}
+                            {Object.entries(dateSummary.totalAmounts)
+                              .map(([currency, amount]) =>
+                                formatCurrency(amount, currency)
+                              )
+                              .join(" + ")}
                           </p>
                         )}
                       </div>
@@ -1244,13 +1150,13 @@ export default function AdHocReportTab() {
 
             {/* By Week Summary (Weekly Breakdown) */}
             {reportData.byWeek && reportData.byWeek.length > 0 && (
-              <div className="bg-card border border-border/50 rounded-[0.875rem] p-6">
+              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-6">
                 <h3 className="font-display text-lg font-bold mb-4">{t("sections.byWeek")}</h3>
                 <div className="space-y-2">
                   {reportData.byWeek.map((weekSummary) => (
                     <div
                       key={weekSummary.weekStart}
-                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[0.625rem] border border-border/30 transition-colors"
+                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[var(--radius)] border border-border/30 transition-colors"
                     >
                       <div className="flex-1">
                         <p className="font-medium">
@@ -1266,16 +1172,11 @@ export default function AdHocReportTab() {
                         </p>
                         {Object.keys(weekSummary.totalAmounts).length > 0 && (
                           <p className="text-sm text-muted-foreground">
-                            {displayCurrency === "original"
-                              ? Object.entries(weekSummary.totalAmounts)
-                                  .map(([currency, amount]) =>
-                                    formatCurrency(amount, currency)
-                                  )
-                                  .join(" + ")
-                              : formatCurrency(
-                                  convertAmounts(weekSummary.totalAmounts, displayCurrency),
-                                  displayCurrency
-                                )}
+                            {Object.entries(weekSummary.totalAmounts)
+                              .map(([currency, amount]) =>
+                                formatCurrency(amount, currency)
+                              )
+                              .join(" + ")}
                           </p>
                         )}
                       </div>
@@ -1287,7 +1188,7 @@ export default function AdHocReportTab() {
 
             {/* Detailed Entries Table */}
             {reportData.entries.length > 0 && (
-              <div className="bg-card border border-border/50 rounded-[0.875rem] overflow-hidden">
+              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] overflow-hidden">
                 <div className="p-6 border-b border-border">
                   <h3 className="font-display text-lg font-bold">{t("sections.detailedEntries")}</h3>
                 </div>
@@ -1351,7 +1252,7 @@ export default function AdHocReportTab() {
 
             {/* No Data Message */}
             {reportData.entries.length === 0 && (!reportData.fixedCharges || reportData.fixedCharges.length === 0) && (
-              <div className="bg-card border rounded-[0.875rem] p-12 text-center">
+              <div className="bg-card border rounded-[var(--radius-card)] p-12 text-center">
                 <p className="text-muted-foreground text-lg mb-4">
                   {t("report.noEntries")}
                 </p>
@@ -1370,7 +1271,7 @@ export default function AdHocReportTab() {
 
         {/* No Report Generated Yet */}
         {!reportData && !reportLoading && (
-          <div className="bg-card border rounded-[0.875rem] p-12 text-center">
+          <div className="bg-card border rounded-[var(--radius-card)] p-12 text-center">
             <p className="text-muted-foreground text-lg mb-4">
               {t("report.noReportYet")}
             </p>
@@ -1396,7 +1297,7 @@ export default function AdHocReportTab() {
                 value={presetName}
                 onChange={(e) => setPresetName(e.target.value)}
                 placeholder={t("preset.namePlaceholder")}
-                className="w-full px-3 py-2 border rounded-[0.625rem] bg-background"
+                className="w-full px-3 py-2 border rounded-[var(--radius)] bg-background"
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && presetName.trim()) {
@@ -1406,7 +1307,7 @@ export default function AdHocReportTab() {
               />
             </div>
 
-            <div className="bg-muted/50 rounded-[0.625rem] p-4 space-y-2 text-sm">
+            <div className="bg-muted/50 rounded-[var(--radius)] p-4 space-y-2 text-sm">
               <p className="font-medium">{t("preset.filterSettings")}</p>
               <div className="grid grid-cols-2 gap-2 text-muted-foreground">
                 <div>{t("preset.startDateLabel")}</div>
@@ -1471,7 +1372,7 @@ export default function AdHocReportTab() {
                 {presets.map((preset) => (
                   <div
                     key={preset.id}
-                    className="border rounded-[0.875rem] p-4 hover:border-primary/50 hover:transition-all"
+                    className="border rounded-[var(--radius-card)] p-4 hover:border-primary/50 hover:transition-all"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">

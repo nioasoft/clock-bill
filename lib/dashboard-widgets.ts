@@ -119,7 +119,7 @@ export function cloneConfig(config: DashboardConfig): DashboardConfig {
  * config means "use this", so existing users see zero change (no backfill).
  */
 export const DEFAULT_DASHBOARD_CONFIG: DashboardConfig = buildConfig(
-  ["hoursToday", "hoursMonth", "revenueByHours", "revenueByItems", "revenueMonth"],
+  ["hoursToday", "hoursWeek", "hoursMonth", "revenueToday", "revenueMonth"],
   ["earningsChart", "projectHours", "recentEntries"]
 );
 
@@ -145,7 +145,7 @@ export const DASHBOARD_PRESETS: DashboardPreset[] = [
     id: "monthlyFocus",
     labelKey: "monthlyFocus",
     config: buildConfig(
-      ["hoursMonth", "revenueByHours", "revenueByItems", "revenueMonth"],
+      ["hoursWeek", "hoursMonth", "revenueWeek", "revenueMonth"],
       ["earningsChart", "recentEntries"]
     ),
   },

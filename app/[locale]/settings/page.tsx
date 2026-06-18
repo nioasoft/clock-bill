@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname, Link } from "@/src/i18n/navigation";
 import { DashboardCustomizer } from "@/components/dashboard-customizer";
 import { PdfPreview } from "@/components/pdf-preview";
-import { MessageSquare, Bell, BellOff, CheckCircle2, XCircle, Clock, LogOut } from "lucide-react";
+import { MessageSquare, Bell, BellOff, CheckCircle2, XCircle, Clock, LogOut, ChevronDown } from "lucide-react";
 import { authClient } from "@/lib/auth/client";
 import { DeleteAccountSection } from "@/components/delete-account-section";
 import { AppLayout } from "@/components/app-layout";
@@ -60,15 +60,6 @@ interface Profile {
   updatedAt: string;
 }
 
-interface CurrencyRate {
-  id: string;
-  user_id: string;
-  fromCurrency: string;
-  toCurrency: string;
-  rate: number;
-  createdAt: string;
-  updatedAt: string;
-}
 
 export default function SettingsPage() {
   const t = useTranslations("Settings");
@@ -84,7 +75,6 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<"profile" | "appearance" | "account">("profile");
   const [sessions, setSessions] = useState<Session[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [currencyRates, setCurrencyRates] = useState<CurrencyRate[]>([]);
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
   // Per-section save state (Profile & Business is split into independent
@@ -118,19 +108,10 @@ export default function SettingsPage() {
   const [dailyReminderTime, setDailyReminderTime] = useState("09:00");
   const [testingNotification, setTestingNotification] = useState(false);
 
-  // Currency rates form state
-  const [fromCurrency, setFromCurrency] = useState("USD");
-  const [toCurrency, setToCurrency] = useState("ILS");
-  const [rate, setRate] = useState("");
-  const [rateSaving, setRateSaving] = useState(false);
-  const [rateError, setRateError] = useState("");
-  const [rateSuccess, setRateSuccess] = useState("");
-
   // Profile form state
   const [businessName, setBusinessName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [address, setAddress] = useState("");
   const [addressStreet, setAddressStreet] = useState("");
   const [addressCity, setAddressCity] = useState("");
   const [taxId, setTaxId] = useState("");
@@ -140,9 +121,6 @@ export default function SettingsPage() {
   const [preferredPdfTemplate, setPreferredPdfTemplate] = useState("modern");
   const [defaultRate, setDefaultRate] = useState<string>("");
   const [defaultBillingRounding, setDefaultBillingRounding] = useState<string>("none");
-  const [invoicePrefix, setInvoicePrefix] = useState("");
-  const [nextInvoiceNumber, setNextInvoiceNumber] = useState("");
-  const [paymentTerms, setPaymentTerms] = useState("");
   const [bankName, setBankName] = useState("");
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [bankBranch, setBankBranch] = useState("");
@@ -175,9 +153,8 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (activeTab === "profile") {
-      // Profile & Business: business profile + billing base + currency rates.
+      // Profile & Business: business profile + billing base.
       fetchProfile();
-      fetchCurrencyRates();
     } else if (activeTab === "account") {
       // Account: subscription + notifications + sessions.
       fetchBillingPlan();
@@ -234,7 +211,6 @@ export default function SettingsPage() {
         setBusinessName(data.profile.businessName || "");
         setPhone(data.profile.phone || "");
         setEmail(data.profile.email || "");
-        setAddress(data.profile.address || "");
         // Structured address. Legacy fallback: if street/city were never set
         // but a single-line address exists, seed the street field so existing
         // users don't appear to lose their address (re-saving recomposes it).
@@ -256,9 +232,6 @@ export default function SettingsPage() {
         setPreferredPdfTemplate(data.profile.preferredPdfTemplate || "modern");
         setDefaultRate(data.profile.defaultRate != null ? String(data.profile.defaultRate) : "");
         setDefaultBillingRounding(data.profile.defaultBillingRounding || "none");
-        setInvoicePrefix(data.profile.invoicePrefix || "");
-        setNextInvoiceNumber(data.profile.nextInvoiceNumber?.toString() || "");
-        setPaymentTerms(data.profile.paymentTerms || "");
         setBankName(data.profile.bankName || "");
         setBankAccountNumber(data.profile.bankAccountNumber || "");
         setBankBranch(data.profile.bankBranch || "");
@@ -361,59 +334,6 @@ export default function SettingsPage() {
       setShowConfirmDialog(false);
     } finally {
       setLogoutAllLoading(false);
-    }
-  };
-
-  // Save profile changes
-  const handleSaveProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setProfileLoading(true);
-    setProfileError("");
-    setSuccessMessage("");
-
-    try {
-      const response = await fetch("/api/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          businessName: businessName || null,
-          phone: phone || null,
-          email: email || null,
-          address: address || null,
-          taxId: taxId || null,
-          website: website || null,
-          defaultCurrency: defaultCurrency || null,
-          preferredPdfTemplate: preferredPdfTemplate || null,
-          defaultRate: defaultRate.trim() === "" ? null : Number(defaultRate),
-          defaultBillingRounding,
-          invoicePrefix: invoicePrefix || null,
-          nextInvoiceNumber: nextInvoiceNumber ? parseInt(nextInvoiceNumber, 10) : null,
-          paymentTerms: paymentTerms || null,
-          bankName: bankName || null,
-          bankAccountNumber: bankAccountNumber || null,
-          bankBranch: bankBranch || null,
-          bankSwift: bankSwift || null,
-          pdfPrimaryColor: pdfPrimaryColor || "#A8622D",
-          pdfAccentColor: pdfAccentColor || "#347B52",
-          dateFormat: dateFormat || "DD/MM/YYYY",
-          timeFormat: timeFormat || "24h",
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setProfile(data.profile);
-        setSuccessMessage(t("toasts.profileSaved"));
-        // Clear success message after 3 seconds
-        setTimeout(() => setSuccessMessage(""), 3000);
-      } else {
-        setProfileError(data.error_code ? messageForError(data, tRoot) : t("toasts.saveProfileError"));
-      }
-    } catch {
-      setProfileError(t("toasts.networkError"));
-    } finally {
-      setProfileLoading(false);
     }
   };
 
@@ -672,111 +592,6 @@ export default function SettingsPage() {
     }
   };
 
-  // Fetch currency rates
-  const fetchCurrencyRates = async () => {
-    setLoading(true);
-    setRateError("");
-    try {
-      const response = await fetch("/api/currency-rates");
-      const data = await response.json();
-
-      if (data.success) {
-        setCurrencyRates(data.rates || []);
-      } else {
-        setRateError(data.error_code ? messageForError(data, tRoot) : t("toasts.loadRatesError"));
-      }
-    } catch {
-      setRateError(t("toasts.networkError"));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Save currency rate
-  const handleSaveRate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setRateSaving(true);
-    setRateError("");
-    setRateSuccess("");
-
-    try {
-      const response = await fetch("/api/currency-rates", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fromCurrency,
-          toCurrency,
-          rate: parseFloat(rate),
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setRateSuccess(t("toasts.rateSaved"));
-        setTimeout(() => setRateSuccess(""), 3000);
-        // Refresh rates list
-        fetchCurrencyRates();
-        // Reset form
-        setFromCurrency("USD");
-        setToCurrency("ILS");
-        setRate("");
-      } else {
-        setRateError(data.error_code ? messageForError(data, tRoot) : t("toasts.saveRateError"));
-      }
-    } catch {
-      setRateError(t("toasts.networkError"));
-    } finally {
-      setRateSaving(false);
-    }
-  };
-
-  // Delete currency rate
-  const handleDeleteRate = async (rateId: string) => {
-    if (!confirm(t("toasts.deleteRateConfirm"))) return;
-
-    setRateError("");
-    setRateSuccess("");
-
-    try {
-      const response = await fetch("/api/currency-rates", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rateId }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setRateSuccess(t("toasts.rateDeleted"));
-        setTimeout(() => setRateSuccess(""), 3000);
-        // Refresh rates list
-        fetchCurrencyRates();
-      } else {
-        setRateError(data.error_code ? messageForError(data, tRoot) : t("toasts.deleteRateError"));
-      }
-    } catch {
-      setRateError(t("toasts.networkError"));
-    }
-  };
-
-  const getCurrencySymbol = (currency: string) => {
-    switch (currency) {
-      case "ILS":
-        return "₪";
-      case "USD":
-        return "$";
-      case "USDT":
-        return "₮";
-      case "BTC":
-        return "₿";
-      case "ETH":
-        return "Ξ";
-      default:
-        return currency;
-    }
-  };
-
   // Interface language. Persists the choice to the profile (drives transactional
   // email language + survives cookie loss) AND switches the UI immediately by
   // replacing the current route under the chosen locale (next-intl swaps the
@@ -872,184 +687,6 @@ export default function SettingsPage() {
             panels render, so order values are per-tab. */}
         <div className="flex flex-col gap-6">
 
-        {/* Currencies — moved under Profile & Business */}
-        {activeTab === "profile" && (
-          <div className="space-y-6 order-3" role="tabpanel">
-            {/* Add Currency Rate Form */}
-            <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
-              <h2 className="font-display text-lg font-bold text-foreground mb-2">
-                {t("currencies.addTitle")}
-              </h2>
-              <p className="text-sm text-muted-foreground mb-6">
-                {t("currencies.addDescription")}
-              </p>
-
-              {rateError && (
-                <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 mb-4">
-                  <p className="text-sm text-destructive">{rateError}</p>
-                </div>
-              )}
-
-              {rateSuccess && (
-                <div className="rounded-[var(--radius-card)] bg-success/10 p-4 mb-4">
-                  <p className="text-sm text-success">{rateSuccess}</p>
-                </div>
-              )}
-
-              <form onSubmit={handleSaveRate} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* From Currency */}
-                  <div>
-                    <label
-                      htmlFor="fromCurrency"
-                      className="block text-sm font-medium text-muted-foreground mb-1"
-                    >
-                      {t("currencies.fromLabel")}
-                    </label>
-                    <SimpleSelect
-                      id="fromCurrency"
-                      value={fromCurrency}
-                      onChange={setFromCurrency}
-                      disabled={rateSaving}
-                      options={[
-                        { value: "ILS", label: t("currencyOptions.ILS") },
-                        { value: "USD", label: t("currencyOptions.USD") },
-                        { value: "USDT", label: t("currencyOptions.USDT") },
-                        { value: "BTC", label: t("currencyOptions.BTC") },
-                        { value: "ETH", label: t("currencyOptions.ETH") },
-                      ]}
-                    />
-                  </div>
-
-                  {/* To Currency */}
-                  <div>
-                    <label
-                      htmlFor="toCurrency"
-                      className="block text-sm font-medium text-muted-foreground mb-1"
-                    >
-                      {t("currencies.toLabel")}
-                    </label>
-                    <SimpleSelect
-                      id="toCurrency"
-                      value={toCurrency}
-                      onChange={setToCurrency}
-                      disabled={rateSaving}
-                      options={[
-                        { value: "ILS", label: t("currencyOptions.ILS") },
-                        { value: "USD", label: t("currencyOptions.USD") },
-                        { value: "USDT", label: t("currencyOptions.USDT") },
-                        { value: "BTC", label: t("currencyOptions.BTC") },
-                        { value: "ETH", label: t("currencyOptions.ETH") },
-                      ]}
-                    />
-                  </div>
-
-                  {/* Rate */}
-                  <div>
-                    <label
-                      htmlFor="rate"
-                      className="block text-sm font-medium text-muted-foreground mb-1"
-                    >
-                      {t("currencies.rateLabel")}
-                    </label>
-                    <input
-                      type="number"
-                      id="rate"
-                      value={rate}
-                      onChange={(e) => setRate(e.target.value)}
-                      placeholder={t("currencies.ratePlaceholder")}
-                      step="0.00000001"
-                      min="0"
-                      required
-                      className={fieldClass()}
-                      disabled={rateSaving}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {t("currencies.rateHint", {
-                        to: getCurrencySymbol(toCurrency),
-                        from: getCurrencySymbol(fromCurrency),
-                      })}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    disabled={rateSaving || fromCurrency === toCurrency}
-                    className="px-6 py-2 bg-primary text-primary-foreground font-medium rounded-[var(--radius)] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {rateSaving ? t("currencies.saving") : t("currencies.saveButton")}
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            {/* Existing Rates List */}
-            <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
-              <h2 className="font-display text-lg font-bold text-foreground mb-4">
-                {t("currencies.listTitle")}
-              </h2>
-
-              {loading ? (
-                <div className="text-center py-8">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
-                  <p className="mt-2 text-muted-foreground">{t("currencies.loadingRates")}</p>
-                </div>
-              ) : currencyRates.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">
-                  {t("currencies.emptyRates")}
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {currencyRates.map((rate) => (
-                    <div
-                      key={rate.id}
-                      className="flex items-center justify-between p-4 rounded-[var(--radius-card)] border border-border bg-muted"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-lg font-semibold text-foreground">
-                            {getCurrencySymbol(rate.fromCurrency)}
-                          </span>
-                          <span className="text-sm text-muted-foreground">({rate.fromCurrency})</span>
-                        </div>
-                        <svg
-                          className="w-5 h-5 text-muted-foreground"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M14 5l7 7m0 0l-7 7m7-7H3"
-                          />
-                        </svg>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-lg font-semibold text-foreground">
-                            {getCurrencySymbol(rate.toCurrency)}
-                          </span>
-                          <span className="text-sm text-muted-foreground">({rate.toCurrency})</span>
-                        </div>
-                        <span className="font-mono text-2xl font-bold text-accent">
-                          {rate.rate}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => handleDeleteRate(rate.id)}
-                        className="px-3 py-1 text-destructive text-sm font-medium rounded hover:bg-destructive/10 transition-colors"
-                      >
-                        {t("currencies.delete")}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Appearance Tab Content */}
         {activeTab === "appearance" && (
@@ -1223,13 +860,13 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Long Timer Notification */}
+            {/* Alerts — long-timer + daily reminder, merged into one card */}
             <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-2">
-                {t("notifications.longTimerTitle")}
+                {t("notifications.alertsTitle")}
               </h2>
               <p className="text-sm text-muted-foreground mb-6">
-                {t("notifications.longTimerDescription")}
+                {t("notifications.alertsDescription")}
               </p>
 
               {successMessage && activeTab === "account" && (
@@ -1244,94 +881,84 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              <div className="space-y-6">
-                {/* Enable/Disable */}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">{t("notifications.longTimerToggle")}</label>
-                    <p className="text-xs text-muted-foreground mt-1">{t("notifications.longTimerToggleHint")}</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={longTimerEnabled}
-                      onChange={(e) => setLongTimerEnabled(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:rtl:after:-translate-x-full peer-checked:ltr:after:translate-x-full peer-checked:after:border-primary-foreground after:content-[''] after:absolute after:top-[2px] rtl:after:right-[2px] ltr:after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                  </label>
-                </div>
-
-                {/* Threshold */}
-                {longTimerEnabled && (
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground block mb-2">
-                      {t("notifications.thresholdLabel")}
+              <div className="space-y-8">
+                {/* Long timer */}
+                <section className="space-y-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-foreground">{t("notifications.longTimerTitle")}</label>
+                      <p className="text-xs text-muted-foreground mt-1">{t("notifications.longTimerToggleHint")}</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={longTimerEnabled}
+                        onChange={(e) => setLongTimerEnabled(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:rtl:after:-translate-x-full peer-checked:ltr:after:translate-x-full peer-checked:after:border-primary-foreground after:content-[''] after:absolute after:top-[2px] rtl:after:right-[2px] ltr:after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                     </label>
-                    <input
-                      type="number"
-                      value={longTimerThreshold}
-                      onChange={(e) => setLongTimerThreshold(e.target.value)}
-                      min="30"
-                      max="480"
-                      step="30"
-                      className={fieldClass()}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {t("notifications.thresholdHint", {
-                        minutes: parseInt(longTimerThreshold, 10),
-                        hours: (parseInt(longTimerThreshold, 10) / 60).toFixed(1),
-                      })}
-                    </p>
                   </div>
-                )}
-              </div>
-            </div>
+                  {longTimerEnabled && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground block mb-2">
+                        {t("notifications.thresholdLabel")}
+                      </label>
+                      <input
+                        type="number"
+                        value={longTimerThreshold}
+                        onChange={(e) => setLongTimerThreshold(e.target.value)}
+                        min="30"
+                        max="480"
+                        step="30"
+                        className={fieldClass()}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {t("notifications.thresholdHint", {
+                          minutes: parseInt(longTimerThreshold, 10),
+                          hours: (parseInt(longTimerThreshold, 10) / 60).toFixed(1),
+                        })}
+                      </p>
+                    </div>
+                  )}
+                </section>
 
-            {/* Daily Reminder */}
-            <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
-              <h2 className="font-display text-lg font-bold text-foreground mb-2">
-                {t("notifications.dailyReminderTitle")}
-              </h2>
-              <p className="text-sm text-muted-foreground mb-6">
-                {t("notifications.dailyReminderDescription")}
-              </p>
+                <div className="border-t border-border" />
 
-              <div className="space-y-6">
-                {/* Enable/Disable */}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">{t("notifications.dailyReminderToggle")}</label>
-                    <p className="text-xs text-muted-foreground mt-1">{t("notifications.dailyReminderToggleHint")}</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={dailyReminderEnabled}
-                      onChange={(e) => setDailyReminderEnabled(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:rtl:after:-translate-x-full peer-checked:ltr:after:translate-x-full peer-checked:after:border-primary-foreground after:content-[''] after:absolute after:top-[2px] rtl:after:right-[2px] ltr:after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                  </label>
-                </div>
-
-                {/* Time */}
-                {dailyReminderEnabled && (
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground block mb-2">
-                      {t("notifications.reminderTimeLabel")}
+                {/* Daily reminder */}
+                <section className="space-y-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-foreground">{t("notifications.dailyReminderTitle")}</label>
+                      <p className="text-xs text-muted-foreground mt-1">{t("notifications.dailyReminderToggleHint")}</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={dailyReminderEnabled}
+                        onChange={(e) => setDailyReminderEnabled(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:rtl:after:-translate-x-full peer-checked:ltr:after:translate-x-full peer-checked:after:border-primary-foreground after:content-[''] after:absolute after:top-[2px] rtl:after:right-[2px] ltr:after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                     </label>
-                    <input
-                      type="time"
-                      value={dailyReminderTime}
-                      onChange={(e) => setDailyReminderTime(e.target.value)}
-                      className={fieldClass()}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {t("notifications.reminderTimeHint", { time: dailyReminderTime })}
-                    </p>
                   </div>
-                )}
+                  {dailyReminderEnabled && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground block mb-2">
+                        {t("notifications.reminderTimeLabel")}
+                      </label>
+                      <input
+                        type="time"
+                        value={dailyReminderTime}
+                        onChange={(e) => setDailyReminderTime(e.target.value)}
+                        className={fieldClass()}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {t("notifications.reminderTimeHint", { time: dailyReminderTime })}
+                      </p>
+                    </div>
+                  )}
+                </section>
               </div>
             </div>
 
@@ -1412,91 +1039,6 @@ export default function SettingsPage() {
         )}
 
         {/* Default billing base (rate + rounding) — moved under Profile & Business */}
-        {activeTab === "profile" && (
-          <div className="space-y-6 order-2" role="tabpanel">
-            <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
-              <h2 className="font-display text-lg font-bold text-foreground mb-2">
-                {t("billing.baseHeading")}
-              </h2>
-              <p className="text-sm text-muted-foreground mb-6">
-                {t("billing.baseDescription")}
-              </p>
-
-              {successMessage && activeTab === "profile" && (
-                <div className="rounded-[var(--radius-card)] bg-success/10 p-4 mb-4">
-                  <p className="text-sm text-success">{successMessage}</p>
-                </div>
-              )}
-
-              {profileError && activeTab === "profile" && (
-                <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 mb-4">
-                  <p className="text-sm text-destructive">{profileError}</p>
-                </div>
-              )}
-
-              <form onSubmit={handleSaveProfile} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Default hourly rate */}
-                  <div>
-                    <label
-                      htmlFor="defaultRate"
-                      className="block text-sm font-medium text-muted-foreground mb-1"
-                    >
-                      {t("billing.defaultRateLabel")}
-                    </label>
-                    <input
-                      id="defaultRate"
-                      type="number"
-                      inputMode="decimal"
-                      min="0"
-                      step="0.01"
-                      value={defaultRate}
-                      onChange={(e) => setDefaultRate(e.target.value)}
-                      className={fieldClass()}
-                    />
-                  </div>
-
-                  {/* Default billing rounding */}
-                  <div>
-                    <label
-                      htmlFor="defaultBillingRounding"
-                      className="block text-sm font-medium text-muted-foreground mb-1"
-                    >
-                      {t("billing.defaultRoundingLabel")}
-                    </label>
-                    <SimpleSelect
-                      id="defaultBillingRounding"
-                      value={defaultBillingRounding}
-                      onChange={setDefaultBillingRounding}
-                      options={ROUNDING_MODES.map((m) => ({
-                        value: m,
-                        label: tRounding(m),
-                      }))}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    disabled={profileLoading}
-                    className="px-6 py-2 bg-primary text-primary-foreground font-medium rounded-[var(--radius)] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {profileLoading ? (
-                      <span className="flex items-center gap-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-foreground border-t-transparent"></div>
-                        {t("business.saving")}
-                      </span>
-                    ) : (
-                      t("business.saveButton")
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
         {/* Security & data — moved under Account */}
         {activeTab === "account" && (
           <div className="space-y-6 order-3" role="tabpanel">
@@ -1754,6 +1296,8 @@ export default function SettingsPage() {
                     taxId: taxId || null,
                     website: website || null,
                     defaultCurrency: defaultCurrency || null,
+                    defaultRate: defaultRate.trim() === "" ? null : Number(defaultRate),
+                    defaultBillingRounding,
                     addressStreet: addressStreet || null,
                     addressCity: addressCity || null,
                     address: composedAddress() || null,
@@ -1913,6 +1457,45 @@ export default function SettingsPage() {
                         {t("business.defaultCurrencyHint")}
                       </p>
                     </div>
+
+                    {/* Default hourly rate — billing base for new clients/projects */}
+                    <div>
+                      <label
+                        htmlFor="defaultRate"
+                        className="block text-sm font-medium text-muted-foreground mb-1"
+                      >
+                        {t("billing.defaultRateLabel")}
+                      </label>
+                      <input
+                        id="defaultRate"
+                        type="number"
+                        inputMode="decimal"
+                        min="0"
+                        step="0.01"
+                        value={defaultRate}
+                        onChange={(e) => setDefaultRate(e.target.value)}
+                        className={fieldClass()}
+                      />
+                    </div>
+
+                    {/* Default billing rounding */}
+                    <div>
+                      <label
+                        htmlFor="defaultBillingRounding"
+                        className="block text-sm font-medium text-muted-foreground mb-1"
+                      >
+                        {t("billing.defaultRoundingLabel")}
+                      </label>
+                      <SimpleSelect
+                        id="defaultBillingRounding"
+                        value={defaultBillingRounding}
+                        onChange={setDefaultBillingRounding}
+                        options={ROUNDING_MODES.map((m) => ({
+                          value: m,
+                          label: tRounding(m),
+                        }))}
+                      />
+                    </div>
                   </div>
                   {sectionSaveRow("business")}
                 </form>
@@ -2031,11 +1614,18 @@ export default function SettingsPage() {
 
             {/* Bank details card — saves independently. Placed last (low
                 priority); appears on the settlement document when filled. */}
-            <div className="order-7 bg-card rounded-[var(--radius-card)] border border-border p-5 sm:p-6">
-              <h2 className="font-display text-lg font-bold text-foreground mb-1">{t("business.bankSectionTitle")}</h2>
-              <p className="text-sm text-muted-foreground mb-4">
-                {t("business.bankSectionDescription")}
-              </p>
+            {/* Bank details — optional, collapsed by default (only printed on
+                settlement docs when filled). Native <details> = no JS, accessible. */}
+            <details className="order-7 group bg-card rounded-[var(--radius-card)] border border-border">
+              <summary className="flex items-center justify-between gap-3 p-5 sm:p-6 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                <div className="min-w-0">
+                  <h2 className="font-display text-lg font-bold text-foreground mb-1">{t("business.bankSectionTitle")}</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {t("business.bankSectionDescription")}
+                  </p>
+                </div>
+                <ChevronDown className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
+              </summary>
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -2046,7 +1636,7 @@ export default function SettingsPage() {
                     bankSwift: bankSwift || null,
                   });
                 }}
-                className="space-y-5"
+                className="space-y-5 px-5 sm:px-6 pb-5 sm:pb-6"
               >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Bank Name */}
@@ -2122,7 +1712,7 @@ export default function SettingsPage() {
                     </div>
                   {sectionSaveRow("bank")}
                 </form>
-            </div>
+            </details>
           </div>
         )}
 

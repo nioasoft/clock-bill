@@ -252,6 +252,10 @@
       "pausingButton": "משהה...",
       "stopButton": "עצור טיימר"
     },
+    "quickActions": {
+      "title": "פעולות מהירות",
+      "subtitle": "התחל טיימר, הוסף פריט חיוב או צור משימה"
+    },
     "quickTimer": {
       "title": "טיימר מהיר",
       "subtitle": "התחל לעקוב אחר הזמן בלחיצה אחת",
@@ -730,7 +734,6 @@
       "account": "חשבון",
       "dashboard": "לוח בקרה",
       "notifications": "התראות",
-      "currencies": "מטבעות",
       "security": "אבטחה"
     },
     "appearance": {
@@ -897,6 +900,8 @@
       "enablePermission": "אפשר התראות",
       "sending": "שולח...",
       "testButton": "נסה התראה",
+      "alertsTitle": "התראות",
+      "alertsDescription": "בחר אילו תזכורות האפליקציה תשלח לך.",
       "longTimerTitle": "התראת טיימר ארוך",
       "longTimerDescription": "קבל התראה כאשר הטיימר רץ לפרק זמן ארוך (למשל, יותר מ-2 שעות).",
       "longTimerToggle": "אפשר התראת טיימר ארוך",
@@ -922,21 +927,6 @@
       "firstDayHintMonday": "השבוע מתחיל ביום שני",
       "saving": "שומר...",
       "saveButton": "שמור הגדרות התראות"
-    },
-    "currencies": {
-      "addTitle": "הוסף שער חליפין",
-      "addDescription": "הגדר שערי חליפין בין מטבעות שונים. שערים אלו ישמשו להמרת מטבעות בדוחות.",
-      "fromLabel": "ממטבע",
-      "toLabel": "למטבע",
-      "rateLabel": "שער חליפין",
-      "ratePlaceholder": "3.5",
-      "rateHint": "כמה {to} מקבלים עבור 1 {from}",
-      "saving": "שומר...",
-      "saveButton": "שמור שער",
-      "listTitle": "שערי חליפין שהוגדרו",
-      "loadingRates": "טוען שערים...",
-      "emptyRates": "לא הוגדרו שערי חליפין עדיין",
-      "delete": "מחק"
     },
     "security": {
       "sessionsTitle": "פעולות פעילות",
@@ -995,13 +985,7 @@
       "uploadSignatureError": "שגיאה בהעלאת החתימה",
       "removeSignatureConfirm": "האם אתה בטוח שברצונך להסיר את החתימה?",
       "signatureRemoved": "החתימה הוסרה בהצלחה!",
-      "removeSignatureError": "שגיאה בהסרת החתימה",
-      "loadRatesError": "שגיאה בטעינת שערי חליפין",
-      "rateSaved": "שער החליפין נשמר בהצלחה!",
-      "saveRateError": "שגיאה בשמירת שער חליפין",
-      "deleteRateConfirm": "האם למחוק את שער חליפין זה?",
-      "rateDeleted": "שער החליפין נמחק בהצלחה!",
-      "deleteRateError": "שגיאה במחיקת שער חליפין"
+      "removeSignatureError": "שגיאה בהסרת החתימה"
     },
     "data": {
       "title": "הנתונים והפרטיות שלך",
@@ -1944,15 +1928,6 @@
       "includeFixedHint": "מוסיף לדוח רכיבי חיוב חודשי קבועים ברמת פרויקט.",
       "showWorkTimes": "הצג שעות עבודה (ממתי עד מתי)",
       "showWorkTimesHint": "מוסיף לדוח את שעת ההתחלה והסיום של כל רשומת עבודה.",
-      "displayCurrency": "הצג סכומים במטבע",
-      "currencyOriginal": "מטבע מקורי (מרובה)",
-      "currencyILS": "₪ - שקל ישראלי (ILS)",
-      "currencyUSD": "$ - דולר אמריקני (USD)",
-      "currencyUSDT": "₮ - טתר (USDT)",
-      "currencyBTC": "₿ - ביטקוין (BTC)",
-      "currencyETH": "Ξ - אתריום (ETH)",
-      "ratesMissing": "⚠️ לא הוגדרו שערי חליפין",
-      "ratesAvailable": "✓ שערי חליפין זמינים",
       "clear": "נקה פילטרים"
     },
     "report": {

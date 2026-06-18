@@ -69,7 +69,7 @@ export function Tabs({ tabs, active, onChange, ariaLabel, className = "" }: Tabs
       ref={trackRef}
       role="tablist"
       aria-label={ariaLabel}
-      className={`flex gap-1 overflow-x-auto rounded-[var(--radius)] border border-border bg-surface p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
+      className={`flex w-fit max-w-full gap-1 overflow-x-auto rounded-[var(--radius)] border border-border bg-surface p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
         overflowing
           ? "[mask-image:linear-gradient(to_right,transparent,#000_1.25rem,#000_calc(100%-1.25rem),transparent)]"
           : ""
@@ -98,7 +98,7 @@ export function Tabs({ tabs, active, onChange, ariaLabel, className = "" }: Tabs
                 focusTab(i - 1);
               }
             }}
-            className={`min-h-[40px] flex-1 whitespace-nowrap rounded-[calc(var(--radius)-2px)] px-3 py-2 text-sm font-medium transition-colors ${
+            className={`min-h-[40px] whitespace-nowrap rounded-[calc(var(--radius)-2px)] px-4 py-2 text-sm font-medium transition-colors ${
               isActive
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground"

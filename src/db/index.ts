@@ -10,7 +10,7 @@ import * as schema from "./schema";
  * This handle runs on a bare pooled connection WITHOUT binding the per-request
  * tenant context (`app.current_user_id`) that `query()`/`withTransaction()` in
  * lib/db.ts set. RLS is FORCE-enabled on every user-data table (clients, projects,
- * tasks, time_entries, client_rates, currency_rates, user_profiles, custom_tags),
+ * tasks, time_entries, client_rates, user_profiles, custom_tags),
  * so using `db` against any of those FAILS CLOSED: reads return 0 rows and inserts
  * fail the WITH CHECK — silently, not with a clear error. Do NOT "fix" that by
  * loosening RLS.
