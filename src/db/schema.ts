@@ -112,6 +112,8 @@ export const userProfiles = pgTable("user_profiles", {
   addressCity: text("address_city"),
   taxId: text("tax_id"),
   website: text("website"),
+  // Whether the website is printed on the settlement document/PDF.
+  showWebsiteOnDoc: boolean("show_website_on_doc").default(false),
   defaultCurrency: text("default_currency").default("ILS"),
   preferredPdfTemplate: text("preferred_pdf_template").default("modern"),
   // Invoice settings

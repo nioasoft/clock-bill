@@ -815,6 +815,7 @@
       "taxId": "Company / VAT ID",
       "taxIdPlaceholder": "123456789",
       "website": "Website",
+      "showWebsiteOnDoc": "Show on settlement documents",
       "websitePlaceholder": "https://example.com",
       "address": "Address",
       "addressPlaceholder": "1 Herzl St., Tel Aviv",
@@ -1976,7 +1977,10 @@
     },
     "pdf": {
       "button": "Export to PDF",
-      "taxId": "Business / Company ID"
+      "taxId": "Business / Company ID",
+      "bankName": "Bank",
+      "bankBranch": "Branch",
+      "bankAccount": "Account"
     },
     "excel": {
       "button": "Export to Excel",
@@ -2098,7 +2102,9 @@
       "pdfStatus": "Status: {status}",
       "pdfIssueDate": "Issue date: {date}",
       "pdfFor": "For",
-      "notesHeading": "Notes"
+      "notesHeading": "Notes",
+      "paymentDetails": "Payment details",
+      "signature": "Signature"
     }
   }
 }

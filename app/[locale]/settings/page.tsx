@@ -54,10 +54,8 @@ interface Profile {
   dailyReminderEnabled: boolean;
   dailyReminderTime: string;
   lastReminderDate: string | null;
-  workingHours: number;
   dateFormat: string;
   timeFormat: string;
-  firstDayOfWeek: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -118,8 +116,6 @@ export default function SettingsPage() {
   const [longTimerThreshold, setLongTimerThreshold] = useState("120");
   const [dailyReminderEnabled, setDailyReminderEnabled] = useState(false);
   const [dailyReminderTime, setDailyReminderTime] = useState("09:00");
-  const [workingHours, setWorkingHours] = useState("8");
-  const [firstDayOfWeek, setFirstDayOfWeek] = useState("sunday");
   const [testingNotification, setTestingNotification] = useState(false);
 
   // Currency rates form state
@@ -139,6 +135,7 @@ export default function SettingsPage() {
   const [addressCity, setAddressCity] = useState("");
   const [taxId, setTaxId] = useState("");
   const [website, setWebsite] = useState("");
+  const [showWebsiteOnDoc, setShowWebsiteOnDoc] = useState(false);
   const [defaultCurrency, setDefaultCurrency] = useState("ILS");
   const [preferredPdfTemplate, setPreferredPdfTemplate] = useState("modern");
   const [defaultRate, setDefaultRate] = useState<string>("");
@@ -254,6 +251,7 @@ export default function SettingsPage() {
         }
         setTaxId(data.profile.taxId || "");
         setWebsite(data.profile.website || "");
+        setShowWebsiteOnDoc(Boolean(data.profile.showWebsiteOnDoc));
         setDefaultCurrency(data.profile.defaultCurrency || "ILS");
         setPreferredPdfTemplate(data.profile.preferredPdfTemplate || "modern");
         setDefaultRate(data.profile.defaultRate != null ? String(data.profile.defaultRate) : "");
@@ -272,8 +270,6 @@ export default function SettingsPage() {
         setLongTimerThreshold((data.profile.longTimerThreshold ?? 120).toString());
         setDailyReminderEnabled(data.profile.dailyReminderEnabled ?? false);
         setDailyReminderTime(data.profile.dailyReminderTime ?? "09:00");
-        setWorkingHours((data.profile.workingHours ?? 8).toString());
-        setFirstDayOfWeek(data.profile.firstDayOfWeek ?? "sunday");
         // Initialize format preferences
         setDateFormat(data.profile.dateFormat || "DD/MM/YYYY");
         setTimeFormat(data.profile.timeFormat || "24h");
@@ -486,8 +482,6 @@ export default function SettingsPage() {
           longTimerThreshold: parseInt(longTimerThreshold, 10),
           dailyReminderEnabled,
           dailyReminderTime,
-          workingHours: parseFloat(workingHours),
-          firstDayOfWeek,
         }),
       });
 
@@ -1341,62 +1335,6 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Working Hours */}
-            <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
-              <h2 className="font-display text-lg font-bold text-foreground mb-2">
-                {t("notifications.workingHoursTitle")}
-              </h2>
-              <p className="text-sm text-muted-foreground mb-6">
-                {t("notifications.workingHoursDescription")}
-              </p>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground block mb-2">
-                  {t("notifications.workingHoursLabel")}
-                </label>
-                <input
-                  type="number"
-                  value={workingHours}
-                  onChange={(e) => setWorkingHours(e.target.value)}
-                  min="1"
-                  max="24"
-                  step="0.5"
-                  className={fieldClass()}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {t("notifications.workingHoursHint", { hours: workingHours })}
-                </p>
-              </div>
-            </div>
-
-            {/* First Day of Week */}
-            <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
-              <h2 className="font-display text-lg font-bold text-foreground mb-2">
-                {t("notifications.firstDayTitle")}
-              </h2>
-              <p className="text-sm text-muted-foreground mb-6">
-                {t("notifications.firstDayDescription")}
-              </p>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground block mb-2">
-                  {t("notifications.firstDayLabel")}
-                </label>
-                <SimpleSelect
-                  value={firstDayOfWeek}
-                  onChange={setFirstDayOfWeek}
-                  aria-label={t("notifications.firstDayLabel")}
-                  options={[
-                    { value: "sunday", label: t("notifications.firstDaySunday") },
-                    { value: "monday", label: t("notifications.firstDayMonday") },
-                  ]}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {firstDayOfWeek === "sunday" ? t("notifications.firstDayHintSunday") : t("notifications.firstDayHintMonday")}
-                </p>
-              </div>
-            </div>
-
             {/* Save Button */}
             <div className="flex justify-end">
               <button
@@ -1809,6 +1747,7 @@ export default function SettingsPage() {
                 onSubmit={(e) => {
                   e.preventDefault();
                   saveSection("business", {
+                    showWebsiteOnDoc,
                     businessName: businessName || null,
                     phone: phone || null,
                     email: email || null,
@@ -1906,6 +1845,15 @@ export default function SettingsPage() {
                         onChange={(e) => setWebsite(e.target.value)}
                         className={fieldClass()}
                       />
+                      <label className="mt-2 flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={showWebsiteOnDoc}
+                          onChange={(e) => setShowWebsiteOnDoc(e.target.checked)}
+                          className="h-4 w-4 rounded border-border accent-primary"
+                        />
+                        {t("business.showWebsiteOnDoc")}
+                      </label>
                     </div>
 
                     {/* Address — structured (street + city), small fields */}
@@ -2081,8 +2029,9 @@ export default function SettingsPage() {
                 </div>
             </div>
 
-            {/* Bank details card — saves independently */}
-            <div className="order-4 bg-card rounded-[var(--radius-card)] border border-border p-5 sm:p-6">
+            {/* Bank details card — saves independently. Placed last (low
+                priority); appears on the settlement document when filled. */}
+            <div className="order-7 bg-card rounded-[var(--radius-card)] border border-border p-5 sm:p-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-1">{t("business.bankSectionTitle")}</h2>
               <p className="text-sm text-muted-foreground mb-4">
                 {t("business.bankSectionDescription")}

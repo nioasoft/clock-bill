@@ -34,6 +34,7 @@ const updateProfileSchema = z.object({
   addressCity: z.string().max(500).nullable().optional(),
   taxId: z.string().max(100).nullable().optional(),
   website: z.string().max(500).nullable().optional(),
+  showWebsiteOnDoc: z.boolean().optional(),
   defaultCurrency: z.string().max(10).nullable().optional(),
   preferredPdfTemplate: z.string().max(100).nullable().optional(),
   invoicePrefix: z.string().max(100).nullable().optional(),
@@ -82,6 +83,7 @@ export interface Profile {
   addressCity: string | null;
   taxId: string | null;
   website: string | null;
+  showWebsiteOnDoc: boolean;
   defaultCurrency: string;
   preferredPdfTemplate: string;
   invoicePrefix: string | null;
@@ -143,6 +145,7 @@ export async function GET(): Promise<NextResponse> {
     const result = await query<Record<string, unknown>>(
       `SELECT id, user_id as "userId", business_name as "businessName",
               logo_url as "logoUrl", signature_url as "signatureUrl", phone, email, address, address_street as "addressStreet", address_city as "addressCity", tax_id as "taxId", website,
+              COALESCE(show_website_on_doc, false) as "showWebsiteOnDoc",
               default_currency as "defaultCurrency", preferred_pdf_template as "preferredPdfTemplate",
               invoice_prefix as "invoicePrefix", next_invoice_number as "nextInvoiceNumber",
               payment_terms as "paymentTerms", bank_name as "bankName",
@@ -257,6 +260,11 @@ export async function PATCH(request: Request): Promise<NextResponse> {
     if (body.website !== undefined) {
       updates.push(`website = $${paramIndex++}`);
       values.push(body.website);
+    }
+
+    if (body.showWebsiteOnDoc !== undefined) {
+      updates.push(`show_website_on_doc = $${paramIndex++}`);
+      values.push(body.showWebsiteOnDoc);
     }
 
     if (body.defaultCurrency !== undefined) {
@@ -433,6 +441,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
        WHERE user_id = $${paramIndex}
        RETURNING id, user_id as "userId", business_name as "businessName",
                  logo_url as "logoUrl", signature_url as "signatureUrl", phone, email, address, address_street as "addressStreet", address_city as "addressCity", tax_id as "taxId", website,
+              COALESCE(show_website_on_doc, false) as "showWebsiteOnDoc",
                  default_currency as "defaultCurrency", preferred_pdf_template as "preferredPdfTemplate",
                  invoice_prefix as "invoicePrefix", next_invoice_number as "nextInvoiceNumber",
                  payment_terms as "paymentTerms", bank_name as "bankName",

@@ -51,10 +51,17 @@ interface ChargeDocument {
 interface BusinessProfile {
   businessName: string | null;
   logoUrl: string | null;
+  signatureUrl: string | null;
   taxId: string | null;
   address: string | null;
   phone: string | null;
   email: string | null;
+  website: string | null;
+  showWebsiteOnDoc: boolean | null;
+  bankName: string | null;
+  bankBranch: string | null;
+  bankAccountNumber: string | null;
+  bankSwift: string | null;
   preferredPdfTemplate: string | null;
   pdfPrimaryColor: string | null;
   pdfAccentColor: string | null;
@@ -738,6 +745,7 @@ export default function ChargeDocumentView({
                     {profile.address && <div><bdi>{profile.address}</bdi></div>}
                     {profile.phone && <div><bdi>{profile.phone}</bdi></div>}
                     {profile.email && <div><bdi>{profile.email}</bdi></div>}
+                    {profile.showWebsiteOnDoc && profile.website && <div><bdi>{profile.website}</bdi></div>}
                   </div>
                 </>
               )}
@@ -830,6 +838,41 @@ export default function ChargeDocumentView({
           <div className="pdf-section" style={{ marginTop: "1.25rem", fontSize: "12px", color: "#475569" }}>
             <div style={{ fontWeight: 600, marginBottom: "0.25rem" }}>{t("doc.notesHeading")}</div>
             <div><bdi>{doc.notes}</bdi></div>
+          </div>
+        )}
+
+        {/* Footer: bank/payment details (left) + signature (right). Each shows
+            only when filled. Signature falls back to the typed business name. */}
+        {(profile?.bankName || profile?.bankAccountNumber || profile?.bankBranch || profile?.bankSwift || profile?.signatureUrl || profile?.businessName) && (
+          <div
+            className="pdf-section"
+            style={{ marginTop: "1.75rem", display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: "1.5rem", flexWrap: "wrap" }}
+          >
+            {(profile?.bankName || profile?.bankAccountNumber || profile?.bankBranch || profile?.bankSwift) ? (
+              <div style={{ fontSize: "12px", color: "#475569", lineHeight: 1.6 }}>
+                <div style={{ fontWeight: 600, marginBottom: "0.25rem" }}>{t("doc.paymentDetails")}</div>
+                {profile.bankName && <div>{t("pdf.bankName")}: <bdi>{profile.bankName}</bdi></div>}
+                {profile.bankBranch && <div>{t("pdf.bankBranch")}: <bdi>{profile.bankBranch}</bdi></div>}
+                {profile.bankAccountNumber && <div>{t("pdf.bankAccount")}: <bdi>{profile.bankAccountNumber}</bdi></div>}
+                {profile.bankSwift && <div>SWIFT/IBAN: <bdi>{profile.bankSwift}</bdi></div>}
+              </div>
+            ) : <div />}
+
+            {(profile?.signatureUrl || profile?.businessName) && (
+              <div style={{ textAlign: "center", minWidth: "150px" }}>
+                {profile.signatureUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={profile.signatureUrl} alt="" style={{ height: 46, objectFit: "contain", margin: "0 auto" }} />
+                ) : (
+                  <div style={{ fontFamily: "'Segoe Script','Brush Script MT',cursive", fontSize: "22px", color: "#1e293b", lineHeight: 1.3 }}>
+                    <bdi>{profile.businessName}</bdi>
+                  </div>
+                )}
+                <div style={{ borderTop: "1px solid #cbd5e1", marginTop: "4px", paddingTop: "4px", fontSize: "11px", color: "#94a3b8" }}>
+                  {t("doc.signature")}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
