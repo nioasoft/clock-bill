@@ -218,19 +218,44 @@ export default function DashboardPage() {
     }
   }, [runningTimers, timerLoading, fetchStats]);
 
-  // Check for daily reminder every minute
+  // Check for the daily reminder every minute — but only while the tab is
+  // visible. A backgrounded tab stops the interval entirely (mirrors the timer
+  // context) and re-checks the moment it's shown again, so we don't keep firing
+  // on hidden tabs.
   useEffect(() => {
-    const checkDailyReminderInterval = setInterval(() => {
-      if (stats) {
-        checkDailyReminder(stats.today.hours);
+    if (!stats) return;
+    const todayHours = stats.today.hours;
+
+    let interval: ReturnType<typeof setInterval> | null = null;
+    const startInterval = () => {
+      if (interval === null) {
+        interval = setInterval(() => checkDailyReminder(todayHours), 60000);
       }
-    }, 60000);
+    };
+    const stopInterval = () => {
+      if (interval !== null) {
+        clearInterval(interval);
+        interval = null;
+      }
+    };
 
-    if (stats) {
-      checkDailyReminder(stats.today.hours);
-    }
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        checkDailyReminder(todayHours);
+        startInterval();
+      } else {
+        stopInterval();
+      }
+    };
 
-    return () => clearInterval(checkDailyReminderInterval);
+    checkDailyReminder(todayHours);
+    if (document.visibilityState === "visible") startInterval();
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      stopInterval();
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
   }, [stats, checkDailyReminder]);
 
   const isFirstTimeUser = stats &&
