@@ -252,6 +252,10 @@
       "pausingButton": "Pausing…",
       "stopButton": "Stop timer"
     },
+    "quickActions": {
+      "title": "Quick actions",
+      "subtitle": "Start a timer, add a billing item, or create a task"
+    },
     "quickTimer": {
       "title": "Quick timer",
       "subtitle": "Start tracking time in one click",
@@ -730,7 +734,6 @@
       "account": "Account",
       "dashboard": "Dashboard",
       "notifications": "Notifications",
-      "currencies": "Currencies",
       "security": "Security"
     },
     "appearance": {
@@ -897,6 +900,8 @@
       "enablePermission": "Enable Notifications",
       "sending": "Sending...",
       "testButton": "Test Notification",
+      "alertsTitle": "Alerts",
+      "alertsDescription": "Choose which reminders the app sends you.",
       "longTimerTitle": "Long Timer Alert",
       "longTimerDescription": "Get an alert when the timer has been running for a long time (e.g. more than 2 hours).",
       "longTimerToggle": "Enable long timer alert",
@@ -922,21 +927,6 @@
       "firstDayHintMonday": "The week starts on Monday",
       "saving": "Saving...",
       "saveButton": "Save Notification Settings"
-    },
-    "currencies": {
-      "addTitle": "Add Exchange Rate",
-      "addDescription": "Define exchange rates between different currencies. These rates are used to convert currencies in reports.",
-      "fromLabel": "From Currency",
-      "toLabel": "To Currency",
-      "rateLabel": "Exchange Rate",
-      "ratePlaceholder": "3.5",
-      "rateHint": "How much {to} you get for 1 {from}",
-      "saving": "Saving...",
-      "saveButton": "Save Rate",
-      "listTitle": "Defined Exchange Rates",
-      "loadingRates": "Loading rates...",
-      "emptyRates": "No exchange rates defined yet",
-      "delete": "Delete"
     },
     "security": {
       "sessionsTitle": "Active Sessions",
@@ -995,13 +985,7 @@
       "uploadSignatureError": "Failed to upload signature",
       "removeSignatureConfirm": "Are you sure you want to remove the signature?",
       "signatureRemoved": "Signature removed successfully!",
-      "removeSignatureError": "Failed to remove signature",
-      "loadRatesError": "Failed to load exchange rates",
-      "rateSaved": "Exchange rate saved successfully!",
-      "saveRateError": "Failed to save exchange rate",
-      "deleteRateConfirm": "Delete this exchange rate?",
-      "rateDeleted": "Exchange rate deleted successfully!",
-      "deleteRateError": "Failed to delete exchange rate"
+      "removeSignatureError": "Failed to remove signature"
     },
     "data": {
       "title": "Your data & privacy",
@@ -1944,15 +1928,6 @@
       "includeFixedHint": "Adds recurring monthly charge items at the project level to the report.",
       "showWorkTimes": "Show work hours (from/to)",
       "showWorkTimesHint": "Adds the start and end time of each work entry to the report.",
-      "displayCurrency": "Display amounts in currency",
-      "currencyOriginal": "Original currency (mixed)",
-      "currencyILS": "₪ - Israeli Shekel (ILS)",
-      "currencyUSD": "$ - US Dollar (USD)",
-      "currencyUSDT": "₮ - Tether (USDT)",
-      "currencyBTC": "₿ - Bitcoin (BTC)",
-      "currencyETH": "Ξ - Ethereum (ETH)",
-      "ratesMissing": "⚠️ No exchange rates configured",
-      "ratesAvailable": "✓ Exchange rates available",
       "clear": "Clear filters"
     },
     "report": {

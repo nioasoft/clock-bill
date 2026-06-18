@@ -9,13 +9,13 @@ const logger = createLogger("api:reports:init");
 /**
  * GET /api/reports/init
  *
- * One-shot bootstrap for the reports page. Replaces five separate fetches
- * (profile, clients, projects, presets, currency-rates) — which each opened
- * their own DB transaction and re-resolved the session — with a single request
- * that runs all five queries inside ONE transaction (one tenant-context bind).
+ * One-shot bootstrap for the reports page. Replaces four separate fetches
+ * (profile, clients, projects, presets) — which each opened their own DB
+ * transaction and re-resolved the session — with a single request that runs
+ * all four queries inside ONE transaction (one tenant-context bind).
  *
  * The queries below are kept byte-for-byte in sync with their source routes:
- *   /api/profile · /api/clients · /api/projects · /api/reports/presets · /api/currency-rates
+ *   /api/profile · /api/clients · /api/projects · /api/reports/presets
  * If you change a source query, mirror it here.
  */
 export async function GET(): Promise<NextResponse> {
@@ -96,16 +96,7 @@ export async function GET(): Promise<NextResponse> {
         [user.id]
       );
 
-      // ── currency rates (mirror: /api/currency-rates GET) ────────────────
-      const ratesRes = await client.query(
-        `SELECT id, user_id, from_currency as "fromCurrency", to_currency as "toCurrency", rate, created_at as "createdAt", updated_at as "updatedAt"
-         FROM currency_rates
-         WHERE user_id = $1
-         ORDER BY from_currency, to_currency`,
-        [user.id]
-      );
-
-      return { profileRes, clientsRes, projectsRes, presetsRes, ratesRes };
+      return { profileRes, clientsRes, projectsRes, presetsRes };
     });
 
     const profile = data.profileRes.rows[0] ?? null;
@@ -158,7 +149,7 @@ export async function GET(): Promise<NextResponse> {
     }));
 
     return NextResponse.json(
-      { success: true, profile, clients, projects, presets, rates: data.ratesRes.rows },
+      { success: true, profile, clients, projects, presets },
       { headers: { "Cache-Control": "no-store, must-revalidate" } }
     );
   } catch (error) {

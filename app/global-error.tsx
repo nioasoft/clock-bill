@@ -3,7 +3,9 @@
 import { useEffect } from 'react';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
 import Link from 'next/link';
-import { logError } from '@/lib/error-logging';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('global-error');
 
 export default function GlobalError({
   error,
@@ -13,8 +15,9 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    logError(error, {
+    log.error('Unhandled global error', error, {
       action: 'global_error',
+      digest: error.digest,
       route: typeof window !== 'undefined' ? window.location.pathname : undefined,
     });
   }, [error]);

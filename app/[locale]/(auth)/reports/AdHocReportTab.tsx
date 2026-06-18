@@ -198,11 +198,9 @@ export default function AdHocReportTab() {
   });
   const [error, setError] = useState("");
   const [showWorkTimes, setShowWorkTimes] = useState(false);
-  const [displayCurrency, setDisplayCurrency] = useState<string>("original");
-  const [currencyRates, setCurrencyRates] = useState<Record<string, Record<string, number>>>({});
 
-  // Single bootstrap call: profile + clients + projects + presets + currency
-  // rates in one request (one DB transaction) instead of five parallel fetches.
+  // Single bootstrap call: profile + clients + projects + presets in one
+  // request (one DB transaction) instead of four parallel fetches.
   useEffect(() => {
     const fetchInit = async () => {
       setClientsLoading(true);
@@ -231,18 +229,6 @@ export default function AdHocReportTab() {
         setClients(data.clients || []);
         setProjects(data.projects || []);
         setPresets(data.presets || []);
-
-        if (data.rates) {
-          // Build a nested map: rates[fromCurrency][toCurrency] = rate
-          const ratesMap: Record<string, Record<string, number>> = {};
-          data.rates.forEach((rate: { fromCurrency: string; toCurrency: string; rate: number }) => {
-            if (!ratesMap[rate.fromCurrency]) {
-              ratesMap[rate.fromCurrency] = {};
-            }
-            ratesMap[rate.fromCurrency][rate.toCurrency] = rate.rate;
-          });
-          setCurrencyRates(ratesMap);
-        }
       } catch (error) {
         console.error("Error loading reports init:", error);
       } finally {
@@ -427,28 +413,6 @@ export default function AdHocReportTab() {
 
   // Locale-aware short date for tables/labels.
   const formatDate = (date: string | Date) => formatDateLib(date, undefined, locale);
-
-  // Convert amount from one currency to another using stored rates
-  const convertCurrency = (amount: number, fromCurrency: string, toCurrency: string): number => {
-    if (fromCurrency === toCurrency) return amount;
-    if (!currencyRates[fromCurrency] || !currencyRates[fromCurrency][toCurrency]) {
-      console.warn(`No rate found for ${fromCurrency} -> ${toCurrency}`);
-      return amount; // Return original if no conversion rate available
-    }
-    return amount * currencyRates[fromCurrency][toCurrency];
-  };
-
-  // Convert totalAmounts object to target currency
-  const convertAmounts = (amounts: Record<string, number>, targetCurrency: string): number => {
-    if (targetCurrency === "original") {
-      // Return sum of all amounts (mixed currencies)
-      return Object.values(amounts).reduce((sum, amount) => sum + amount, 0);
-    }
-
-    return Object.entries(amounts).reduce((sum, [currency, amount]) => {
-      return sum + convertCurrency(amount, currency, targetCurrency);
-    }, 0);
-  };
 
   const handleExportPdf = () => {
     const template = (userProfile?.preferredPdfTemplate || "modern") as PdfTemplate;
@@ -652,27 +616,6 @@ export default function AdHocReportTab() {
                 <p className="text-xs text-muted-foreground">
                   {t("filters.showWorkTimesHint")}
                 </p>
-              </div>
-
-              <div className="bg-card rounded-[0.625rem] p-4 border border-border/30">
-                <label className="block text-sm font-medium mb-2">{t("filters.displayCurrency")}</label>
-                <SimpleSelect
-                  value={displayCurrency}
-                  onChange={(v) => setDisplayCurrency(v)}
-                  options={[
-                    { value: "original", label: t("filters.currencyOriginal") },
-                    { value: "ILS", label: t("filters.currencyILS") },
-                    { value: "USD", label: t("filters.currencyUSD") },
-                    { value: "USDT", label: t("filters.currencyUSDT") },
-                    { value: "BTC", label: t("filters.currencyBTC") },
-                    { value: "ETH", label: t("filters.currencyETH") },
-                  ]}
-                />
-                {displayCurrency !== "original" && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {!Object.keys(currencyRates).length ? t("filters.ratesMissing") : t("filters.ratesAvailable")}
-                  </p>
-                )}
               </div>
 
               {/* Generate Button */}
@@ -994,60 +937,42 @@ export default function AdHocReportTab() {
               </div>
               <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-primary">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
-                  {t("summary.totalAmount")} {displayCurrency !== "original" && `(${displayCurrency})`}
+                  {t("summary.totalAmount")}
                 </h3>
                 {Object.keys(reportData.summary.totalAmounts).length > 0 ? (
-                  displayCurrency === "original" ? (
-                    <div className="space-y-1">
-                      {Object.entries(reportData.summary.totalAmounts).map(
-                        ([currency, amount]) => (
-                          <p
-                            key={currency}
-                            className="font-mono text-2xl font-bold tabular-nums"
-                          >
-                            {formatCurrency(amount, currency)}
-                          </p>
-                        )
-                      )}
-                    </div>
-                  ) : (
-                    <p className="font-mono text-2xl font-bold tabular-nums">
-                      {formatCurrency(
-                        convertAmounts(reportData.summary.totalAmounts, displayCurrency),
-                        displayCurrency
-                      )}
-                    </p>
-                  )
+                  <div className="space-y-1">
+                    {Object.entries(reportData.summary.totalAmounts).map(
+                      ([currency, amount]) => (
+                        <p
+                          key={currency}
+                          className="font-mono text-2xl font-bold tabular-nums"
+                        >
+                          {formatCurrency(amount, currency)}
+                        </p>
+                      )
+                    )}
+                  </div>
                 ) : (
                   <p className="text-lg text-muted-foreground">{t("summary.notAvailable")}</p>
                 )}
               </div>
               <div className="bg-card border border-border/50 rounded-[0.875rem] p-6 border-s-4 border-s-accent">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
-                  {t("sections.fixedCharges")} {displayCurrency !== "original" && `(${displayCurrency})`}
+                  {t("sections.fixedCharges")}
                 </h3>
                 {Object.keys(reportData.summary.fixedAmounts || {}).length > 0 ? (
-                  displayCurrency === "original" ? (
-                    <div className="space-y-1">
-                      {Object.entries(reportData.summary.fixedAmounts).map(
-                        ([currency, amount]) => (
-                          <p
-                            key={currency}
-                            className="font-mono text-2xl font-bold tabular-nums"
-                          >
-                            {formatCurrency(amount, currency)}
-                          </p>
-                        )
-                      )}
-                    </div>
-                  ) : (
-                    <p className="font-mono text-2xl font-bold tabular-nums">
-                      {formatCurrency(
-                        convertAmounts(reportData.summary.fixedAmounts, displayCurrency),
-                        displayCurrency
-                      )}
-                    </p>
-                  )
+                  <div className="space-y-1">
+                    {Object.entries(reportData.summary.fixedAmounts).map(
+                      ([currency, amount]) => (
+                        <p
+                          key={currency}
+                          className="font-mono text-2xl font-bold tabular-nums"
+                        >
+                          {formatCurrency(amount, currency)}
+                        </p>
+                      )
+                    )}
+                  </div>
                 ) : (
                   <p className="text-lg text-muted-foreground">0.00</p>
                 )}
@@ -1084,16 +1009,11 @@ export default function AdHocReportTab() {
                         </p>
                         {Object.keys(client.totalAmounts).length > 0 && (
                           <p className="text-sm text-muted-foreground">
-                            {displayCurrency === "original"
-                              ? Object.entries(client.totalAmounts)
-                                  .map(([currency, amount]) =>
-                                    formatCurrency(amount, currency)
-                                  )
-                                  .join(" + ")
-                              : formatCurrency(
-                                  convertAmounts(client.totalAmounts, displayCurrency),
-                                  displayCurrency
-                                )}
+                            {Object.entries(client.totalAmounts)
+                              .map(([currency, amount]) =>
+                                formatCurrency(amount, currency)
+                              )
+                              .join(" + ")}
                           </p>
                         )}
                       </div>
@@ -1223,16 +1143,11 @@ export default function AdHocReportTab() {
                         </p>
                         {Object.keys(dateSummary.totalAmounts).length > 0 && (
                           <p className="text-sm text-muted-foreground">
-                            {displayCurrency === "original"
-                              ? Object.entries(dateSummary.totalAmounts)
-                                  .map(([currency, amount]) =>
-                                    formatCurrency(amount, currency)
-                                  )
-                                  .join(" + ")
-                              : formatCurrency(
-                                  convertAmounts(dateSummary.totalAmounts, displayCurrency),
-                                  displayCurrency
-                                )}
+                            {Object.entries(dateSummary.totalAmounts)
+                              .map(([currency, amount]) =>
+                                formatCurrency(amount, currency)
+                              )
+                              .join(" + ")}
                           </p>
                         )}
                       </div>
@@ -1266,16 +1181,11 @@ export default function AdHocReportTab() {
                         </p>
                         {Object.keys(weekSummary.totalAmounts).length > 0 && (
                           <p className="text-sm text-muted-foreground">
-                            {displayCurrency === "original"
-                              ? Object.entries(weekSummary.totalAmounts)
-                                  .map(([currency, amount]) =>
-                                    formatCurrency(amount, currency)
-                                  )
-                                  .join(" + ")
-                              : formatCurrency(
-                                  convertAmounts(weekSummary.totalAmounts, displayCurrency),
-                                  displayCurrency
-                                )}
+                            {Object.entries(weekSummary.totalAmounts)
+                              .map(([currency, amount]) =>
+                                formatCurrency(amount, currency)
+                              )
+                              .join(" + ")}
                           </p>
                         )}
                       </div>

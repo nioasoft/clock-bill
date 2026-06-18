@@ -3,7 +3,9 @@
 import React from 'react';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
 import Link from 'next/link';
-import { logReactError } from '@/lib/error-logging';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('error-boundary');
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -35,9 +37,9 @@ export class ErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error Boundary caught an error:', error, errorInfo);
-    logReactError(error, errorInfo, {
+    log.error('React error boundary caught an error', error, {
       action: 'component_error',
+      componentStack: errorInfo.componentStack ?? undefined,
     });
   }
 

@@ -462,25 +462,6 @@ export const reportPresets = pgTable(
   (table) => [index("idx_report_presets_user_id").on(table.userId)]
 );
 
-// ─── Currency Rates ─────────────────────────────────────────────────
-
-export const currencyRates = pgTable(
-  "currency_rates",
-  {
-    id: text("id").primaryKey(),
-    userId: text("user_id").notNull(),
-    fromCurrency: text("from_currency").notNull(),
-    toCurrency: text("to_currency").notNull(),
-    rate: real("rate").notNull(),
-    createdAt: timestamp("created_at").defaultNow(),
-    updatedAt: timestamp("updated_at").defaultNow(),
-  },
-  (table) => [
-    unique().on(table.userId, table.fromCurrency, table.toCurrency),
-    index("idx_currency_rates_user_id").on(table.userId),
-  ]
-);
-
 // ─── Charge Documents (internal settlement) ─────────────────────────
 
 export const chargeDocuments = pgTable(
