@@ -11,14 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MonthField } from "@/components/ui/month-field";
 import { EmptyState } from "@/components/ui/empty-state";
+import { SimpleSelect } from "@/components/ui/simple-select";
 import { Users, FileText } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface Client {
   id: string;
@@ -246,45 +240,38 @@ export default function BillableTab({
     !!data && (data.entries.length > 0 || data.computedLines.length > 0);
 
   return (
-    <div className="pb-28">
-      {/* Top controls */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <div>
-          <label className="block text-sm font-medium mb-2 text-muted-foreground">
-            {t("billable.clientLabel")}
-          </label>
-          <Select
-            dir={locale === "he" ? "rtl" : "ltr"}
-            value={clientId}
-            onValueChange={setClientId}
-            disabled={clientsLoading}
-          >
-            <SelectTrigger className="min-h-[44px] text-start">
-              <SelectValue
-                placeholder={clientsLoading ? t("billable.clientLoading") : t("billable.clientPlaceholder")}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {clients.map((client) => (
-                <SelectItem key={client.id} value={client.id}>
-                  {client.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+    <div className="pb-36 lg:pb-28">
+      {/* Filter bar — compact, inline labels, in a card (matches Entries). */}
+      <div className="mb-6 rounded-[var(--radius-card)] border border-border bg-card p-4">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          <div className="flex items-center gap-2">
+            <label htmlFor="billClient" className="text-sm font-medium text-foreground whitespace-nowrap">
+              {t("billable.clientLabel")}
+            </label>
+            <SimpleSelect
+              id="billClient"
+              className="w-full sm:w-60"
+              value={clientId}
+              onChange={setClientId}
+              disabled={clientsLoading}
+              placeholder={clientsLoading ? t("billable.clientLoading") : t("billable.clientPlaceholder")}
+              options={clients.map((client) => ({ value: client.id, label: client.name }))}
+            />
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-2 text-muted-foreground">
-            {t("billable.monthLabel")}
-          </label>
-          <MonthField
-            className="w-full"
-            locale={locale}
-            ariaLabel={t("billable.monthLabel")}
-            value={periodMonth}
-            onChange={setPeriodMonth}
-          />
+          <div className="flex items-center gap-2">
+            <label htmlFor="billMonth" className="text-sm font-medium text-foreground whitespace-nowrap">
+              {t("billable.monthLabel")}
+            </label>
+            <MonthField
+              id="billMonth"
+              className="w-44"
+              locale={locale}
+              ariaLabel={t("billable.monthLabel")}
+              value={periodMonth}
+              onChange={setPeriodMonth}
+            />
+          </div>
         </div>
       </div>
 
@@ -424,12 +411,13 @@ export default function BillableTab({
         </div>
       )}
 
-      {/* Sticky footer */}
+      {/* Sticky footer — aligns with the content column on desktop by honoring
+          the sidebar width (var set in AppLayout); full-width on mobile. */}
       <div
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur"
+        className="fixed inset-x-0 bottom-16 lg:bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur transition-[margin] duration-200 lg:[margin-inline-start:var(--app-sidebar-w)]"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
           <div className="min-w-0">
             <p className="text-xs text-muted-foreground">{t("billable.selectedTotal")}</p>
             <p className="text-lg font-bold text-foreground tabular-nums">

@@ -140,7 +140,13 @@ export function AppLayout({ children }: AppLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    // Expose the desktop sidebar width as a CSS var so viewport-fixed bars a
+    // page renders (e.g. the billable sticky footer) can align with the content
+    // column instead of spanning under the sidebar. Inherits to all descendants.
+    <div
+      className="min-h-screen bg-background"
+      style={{ "--app-sidebar-w": sidebarCollapsed ? "4rem" : "16rem" } as React.CSSProperties}
+    >
       <MobileNav userEmail={user.email} userRole={user.role} />
       <div className="hidden lg:flex">
         <div className="fixed ltr:left-0 rtl:right-0 top-0 h-screen z-30">
