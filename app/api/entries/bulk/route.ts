@@ -52,24 +52,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const { query } = await import("@/lib/db");
-
-    // If projectId is provided, verify it belongs to user
-    if (projectId) {
-      const projectCheck = await query<{ id: string }>(
-        `SELECT p.id FROM projects p
-         JOIN clients c ON p.client_id = c.id
-         WHERE p.id = $1 AND c.user_id = $2`,
-        [projectId, user.id]
-      );
-
-      if (projectCheck.rows.length === 0) {
-        return NextResponse.json(
-          { success: false, error_code: "PROJECT_NOT_FOUND", message: "הפרויקט לא נמצא" },
-          { status: 404 }
-        );
-      }
-    }
+    const { withTransaction } = await import("@/lib/db");
 
     // Build dynamic UPDATE query based on provided fields
     const updateFields: string[] = [];
@@ -105,12 +88,34 @@ export async function PATCH(request: NextRequest) {
       WHERE id IN (${entryIdsPlaceholder}) AND user_id = $${paramIndex}
     `;
 
-    const result = await query(updateQuery, updateValues);
+    // One transaction: the optional project-ownership check and the bulk update
+    // share a single RLS bind / connection and are atomic (no check-then-write
+    // race, no two separate round-trip triples).
+    const outcome = await withTransaction(async (client) => {
+      if (projectId) {
+        const projectCheck = await client.query<{ id: string }>(
+          `SELECT p.id FROM projects p
+           JOIN clients c ON p.client_id = c.id
+           WHERE p.id = $1 AND c.user_id = $2`,
+          [projectId, user.id]
+        );
+        if (projectCheck.rows.length === 0) return { notFound: true as const };
+      }
+      const result = await client.query(updateQuery, updateValues);
+      return { rowCount: result.rowCount ?? 0 };
+    });
+
+    if ("notFound" in outcome) {
+      return NextResponse.json(
+        { success: false, error_code: "PROJECT_NOT_FOUND", message: "הפרויקט לא נמצא" },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      message: `עודכנו ${result.rowCount} רשומות`,
-      updatedCount: result.rowCount,
+      message: `עודכנו ${outcome.rowCount} רשומות`,
+      updatedCount: outcome.rowCount,
     });
   } catch (error) {
     console.error("Error bulk updating entries:", error);

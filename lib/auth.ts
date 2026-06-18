@@ -5,7 +5,13 @@
  * also feeds the DB layer's RLS tenant binding. The legacy custom scrypt/JWT/
  * cookie-session helpers (hashPassword, verifyJWT, COOKIE_OPTIONS, …) were
  * removed once Better Auth became the sole auth path — they had no callers.
+ *
+ * Both are wrapped in React `cache()` so they resolve the session AT MOST ONCE
+ * per request: a route that calls getUser() and then makes N query() calls (each
+ * of which resolves the tenant id via getSessionUserId()) no longer re-runs the
+ * session lookup N times — the first call memoizes for the rest of the request.
  */
+import { cache } from "react";
 
 /**
  * User object returned by getUser
@@ -25,7 +31,7 @@ export interface User {
  * This is the single source of identity for every API route's tenant-isolation
  * filter (`WHERE user_id = $`). Keep the returned shape stable.
  */
-export async function getUser(): Promise<User | null> {
+export const getUser = cache(async (): Promise<User | null> => {
   try {
     const { headers } = await import("next/headers");
     const { auth } = await import("./auth/better-auth");
@@ -54,7 +60,7 @@ export async function getUser(): Promise<User | null> {
   } catch {
     return null;
   }
-}
+});
 
 // Short-lived per-token cache so the many query() calls in one request don't
 // each re-resolve the session. Better Auth's cookieCache makes getSession cheap,
@@ -66,7 +72,7 @@ const sessionIdCache = new Map<string, { id: string; exp: number }>();
  * binding inside the DB layer. Returns null when unauthenticated. Cached briefly
  * by session token. Safe outside a request context (returns null, never throws).
  */
-export async function getSessionUserId(): Promise<string | null> {
+export const getSessionUserId = cache(async (): Promise<string | null> => {
   try {
     const { cookies, headers } = await import("next/headers");
     const cookieStore = await cookies();
@@ -97,4 +103,4 @@ export async function getSessionUserId(): Promise<string | null> {
   } catch {
     return null;
   }
-}
+});

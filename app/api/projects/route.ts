@@ -172,50 +172,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { query } = await import("@/lib/db");
+    const { withTransaction } = await import("@/lib/db");
 
-    // Verify the client belongs to this user
-    const clientCheck = await query<{ id: string }>(
-      `SELECT id FROM clients WHERE id = $1 AND user_id = $2`,
-      [clientId, user.id]
-    );
-
-    if (clientCheck.rows.length === 0) {
-      return NextResponse.json(
-        { success: false, error_code: "CLIENT_NOT_FOUND", message: "הלקוח לא נמצא" },
-        { status: 404 }
-      );
-    }
-
-    // Insert project
-    const insertResult = await query<{ id: string }>(
-      `INSERT INTO projects (
-        id, user_id, client_id, name, status, start_date, end_date,
-        fixed_monthly_enabled, fixed_monthly_fee, fixed_monthly_start_date, fixed_monthly_end_date,
-        billing_rounding, notes
-      )
-       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-       RETURNING id`,
-      [
-        user.id,
-        clientId,
-        name.trim(),
-        status || "active",
-        startDate || null,
-        endDate || null,
-        fixedMonthlyEnabled ?? false,
-        fixedMonthlyEnabled ? fixedMonthlyFee : null,
-        fixedMonthlyEnabled ? (fixedMonthlyStartDate || null) : null,
-        fixedMonthlyEnabled ? (fixedMonthlyEndDate || null) : null,
-        billingRounding ?? null,
-        notes?.trim() || null,
-      ]
-    );
-
-    const projectId = insertResult.rows[0].id;
-
-    // Fetch the created project with client info
-    const projectResult = await query<{
+    // Ownership check + insert + read-back in ONE transaction: a single RLS bind
+    // and one pooled connection instead of three separate query() round-trip
+    // triples, and the check+insert are now atomic.
+    type ProjectRow = {
       id: string;
       name: string;
       client_id: string;
@@ -230,18 +192,56 @@ export async function POST(request: NextRequest) {
       billing_rounding: string | null;
       notes: string | null;
       created_at: string;
-    }>(
-      `SELECT p.id, p.name, p.client_id, c.name as client_name,
-              p.status, p.start_date, p.end_date,
-              p.fixed_monthly_enabled, p.fixed_monthly_fee, p.fixed_monthly_start_date, p.fixed_monthly_end_date,
-              p.billing_rounding, p.notes, p.created_at
-       FROM projects p
-       JOIN clients c ON p.client_id = c.id
-       WHERE p.id = $1`,
-      [projectId]
-    );
+    };
+    const txResult = await withTransaction(async (client) => {
+      // Verify the client belongs to this user
+      const clientCheck = await client.query<{ id: string }>(
+        `SELECT id FROM clients WHERE id = $1 AND user_id = $2`,
+        [clientId, user.id]
+      );
+      if (clientCheck.rows.length === 0) return null;
 
-    const project = projectResult.rows[0];
+      // Insert + read back with client name in one statement (CTE).
+      const inserted = await client.query<ProjectRow>(
+        `WITH ins AS (
+           INSERT INTO projects (
+             id, user_id, client_id, name, status, start_date, end_date,
+             fixed_monthly_enabled, fixed_monthly_fee, fixed_monthly_start_date, fixed_monthly_end_date,
+             billing_rounding, notes
+           )
+           VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+           RETURNING id, name, client_id, status, start_date, end_date,
+                     fixed_monthly_enabled, fixed_monthly_fee, fixed_monthly_start_date,
+                     fixed_monthly_end_date, billing_rounding, notes, created_at
+         )
+         SELECT ins.*, c.name AS client_name
+           FROM ins JOIN clients c ON c.id = ins.client_id`,
+        [
+          user.id,
+          clientId,
+          name.trim(),
+          status || "active",
+          startDate || null,
+          endDate || null,
+          fixedMonthlyEnabled ?? false,
+          fixedMonthlyEnabled ? fixedMonthlyFee : null,
+          fixedMonthlyEnabled ? (fixedMonthlyStartDate || null) : null,
+          fixedMonthlyEnabled ? (fixedMonthlyEndDate || null) : null,
+          billingRounding ?? null,
+          notes?.trim() || null,
+        ]
+      );
+      return inserted.rows[0];
+    });
+
+    if (!txResult) {
+      return NextResponse.json(
+        { success: false, error_code: "CLIENT_NOT_FOUND", message: "הלקוח לא נמצא" },
+        { status: 404 }
+      );
+    }
+
+    const project = txResult;
 
     return NextResponse.json({
       success: true,
