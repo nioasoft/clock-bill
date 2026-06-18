@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { DEFAULT_THEME, isThemeId } from "@/lib/themes";
+import { useProfile, usePatchProfile } from "@/hooks/use-profile";
 
 interface ThemeContextValue {
   theme: string;
@@ -39,11 +40,11 @@ export function ThemeProvider({
   // SSR-known value is the static default; the real theme is applied client-side
   // (the inline no-flash script already set data-theme before paint).
   const [theme, setThemeState] = useState(isThemeId(initialTheme) ? initialTheme : DEFAULT_THEME);
+  // Shared profile query (one fetch per page, deduped across all consumers).
+  const { data: profile } = useProfile();
+  const patchProfile = usePatchProfile();
 
-  // On mount: sync state to the theme already on <html> / in the cookie. If there
-  // is NO cookie (a device that never set one), pull the saved theme from the
-  // account so it follows the user across devices — a one-time correction.
-  //
+  // On mount: sync state to the theme already on <html> / in the cookie.
   // These reads (`document`, cookie) are client-only external values unavailable
   // during SSR, so the sync must happen in an effect rather than during render.
   // The state update is wrapped in queueMicrotask to keep it out of the synchronous
@@ -62,55 +63,48 @@ export function ThemeProvider({
         if (active) setThemeState(current);
       });
     }
-
-    // With a valid cookie there's nothing to pull — the device already chose.
-    if (cookie && isThemeId(cookie)) {
-      return () => {
-        active = false;
-      };
-    }
-
-    // No cookie → new device. Pull the saved theme from the account (DB → cookie).
-    fetch("/api/profile")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data: { profile?: { theme?: string } } | null) => {
-        const saved = data?.profile?.theme;
-        // Re-check the cookie: if the user switched themes while this fetch was in
-        // flight (which writes a cookie), don't clobber their choice with the DB value.
-        if (active && !readCookie() && isThemeId(saved)) {
-          setThemeState(saved);
-          document.documentElement.dataset.theme = saved;
-          writeCookie(saved);
-        }
-      })
-      .catch(() => {});
     return () => {
       active = false;
     };
   }, []);
 
-  const setTheme = useCallback((id: string) => {
-    if (!isThemeId(id)) return;
-    setThemeState((prev) => {
-      document.documentElement.dataset.theme = id; // optimistic, no flash
-      writeCookie(id);
-      fetch("/api/profile", {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ theme: id }),
-      })
-        .then((r) => {
-          if (!r.ok) throw new Error("theme save failed");
-        })
-        .catch(() => {
-          // rollback on failure
-          setThemeState(prev);
-          document.documentElement.dataset.theme = prev;
-          writeCookie(prev);
-        });
-      return id;
-    });
-  }, []);
+  // No cookie → new device. Apply the account's saved theme (from the shared
+  // profile query) so it follows the user across devices — a one-time correction.
+  // Re-check the cookie at apply time: if the user switched themes while the
+  // profile was loading (which writes a cookie), don't clobber their choice.
+  useEffect(() => {
+    const saved = profile?.theme;
+    if (!readCookie() && isThemeId(saved)) {
+      // queueMicrotask keeps the setState out of the synchronous effect body
+      // (react-hooks/set-state-in-effect); DOM + cookie are external systems.
+      document.documentElement.dataset.theme = saved;
+      writeCookie(saved);
+      queueMicrotask(() => setThemeState(saved));
+    }
+  }, [profile?.theme]);
+
+  const setTheme = useCallback(
+    (id: string) => {
+      if (!isThemeId(id)) return;
+      setThemeState((prev) => {
+        document.documentElement.dataset.theme = id; // optimistic, no flash
+        writeCookie(id);
+        patchProfile.mutate(
+          { theme: id },
+          {
+            onError: () => {
+              // rollback on failure
+              setThemeState(prev);
+              document.documentElement.dataset.theme = prev;
+              writeCookie(prev);
+            },
+          }
+        );
+        return id;
+      });
+    },
+    [patchProfile]
+  );
 
   return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>;
 }

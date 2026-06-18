@@ -33,6 +33,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { SimpleSelect } from "@/components/ui/simple-select";
+import { useProfile } from "@/hooks/use-profile";
 
 interface Client {
   id: string;
@@ -147,22 +148,11 @@ function ClientsPageContent() {
     }
   }, [searchParams, t]);
 
-  // Fetch the user's profession once so we can prefill the retainer toggle.
+  // Profession from the shared profile query, used to prefill the retainer toggle.
+  const { data: profile } = useProfile();
   useEffect(() => {
-    const fetchProfession = async () => {
-      try {
-        const response = await fetch("/api/profile");
-        const data = await response.json();
-        if (data.success && data.profile) {
-          setProfessionId(data.profile.profession ?? null);
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      }
-    };
-
-    fetchProfession();
-  }, []);
+    if (profile) setProfessionId(profile.profession ?? null);
+  }, [profile]);
 
   // Create-mode default: once the profession resolves, prefill the retainer
   // toggle ON if it's suggested — but only while the create form is open, the

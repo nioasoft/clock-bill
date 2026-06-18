@@ -3,8 +3,8 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useProfile } from "@/hooks/use-profile";
 import {
   checkNotificationPermission,
   requestNotificationPermission,
@@ -14,8 +14,6 @@ import {
   shouldShowDailyReminder,
   isReminderTime,
 } from "@/lib/notifications";
-
-const PUBLIC_ROUTES = ["/", "/login", "/register", "/forgot-password", "/reset-password"];
 
 export interface NotificationSettings {
   longTimerEnabled: boolean;
@@ -27,10 +25,10 @@ export interface NotificationSettings {
 
 export function useNotifications() {
   const t = useTranslations("Dashboard.notifications");
-  const pathname = usePathname();
-  const isPublicRoute = PUBLIC_ROUTES.some((route) =>
-    route === "/" ? pathname === "/" : pathname.startsWith(route)
-  );
+  // Notification settings are derived from the shared profile query — no
+  // separate /api/profile fetch (this hook mounts twice per page: once in the
+  // timer context and once on the dashboard).
+  const { data: profile } = useProfile();
   const [permission, setPermission] = useState<NotificationPermission | null>(() =>
     checkNotificationPermission()
   );
@@ -134,59 +132,23 @@ export function useNotifications() {
     });
   }, []);
 
-  /**
-   * Load notification settings from API
-   */
-  const loadSettings = useCallback(async () => {
-    try {
-      const response = await fetch("/api/profile");
-      const data = await response.json();
-
-      if (data.success && data.profile) {
-        setSettings({
-          longTimerEnabled: data.profile.longTimerEnabled ?? true,
-          longTimerThreshold: data.profile.longTimerThreshold ?? 120,
-          dailyReminderEnabled: data.profile.dailyReminderEnabled ?? false,
-          dailyReminderTime: data.profile.dailyReminderTime ?? "09:00",
-          lastReminderDate: data.profile.lastReminderDate ?? null,
-        });
-      }
-    } catch (error) {
-      console.error("Failed to load notification settings:", error);
-    }
-  }, []);
-
-  // Load settings on mount (skip on public routes)
+  // Map the shared profile into local notification settings whenever it loads
+  // or changes. (`updateSettings` and the reminder-shown POST still mutate this
+  // local copy for the current session.)
   useEffect(() => {
-    if (isPublicRoute) return;
-
-    let cancelled = false;
-
-    async function fetchSettings() {
-      try {
-        const response = await fetch("/api/profile");
-        const data = await response.json();
-
-        if (!cancelled && data.success && data.profile) {
-          setSettings({
-            longTimerEnabled: data.profile.longTimerEnabled ?? true,
-            longTimerThreshold: data.profile.longTimerThreshold ?? 120,
-            dailyReminderEnabled: data.profile.dailyReminderEnabled ?? false,
-            dailyReminderTime: data.profile.dailyReminderTime ?? "09:00",
-            lastReminderDate: data.profile.lastReminderDate ?? null,
-          });
-        }
-      } catch (error) {
-        console.error("Failed to load notification settings:", error);
-      }
-    }
-
-    fetchSettings();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isPublicRoute]);
+    if (!profile) return;
+    // queueMicrotask keeps setState out of the synchronous effect body
+    // (react-hooks/set-state-in-effect).
+    queueMicrotask(() =>
+      setSettings({
+        longTimerEnabled: profile.longTimerEnabled ?? true,
+        longTimerThreshold: profile.longTimerThreshold ?? 120,
+        dailyReminderEnabled: profile.dailyReminderEnabled ?? false,
+        dailyReminderTime: profile.dailyReminderTime ?? "09:00",
+        lastReminderDate: profile.lastReminderDate ?? null,
+      })
+    );
+  }, [profile]);
 
   return {
     permission,
@@ -197,6 +159,5 @@ export function useNotifications() {
     resetLongTimerNotification,
     checkDailyReminder,
     updateSettings,
-    loadSettings,
   };
 }

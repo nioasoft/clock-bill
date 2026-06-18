@@ -13,6 +13,7 @@ import { TimerStartModal } from "./timer-start-modal";
 import { TimerStopModal } from "./timer-stop-modal";
 import { TimerDeepLink } from "./timer-deeplink";
 import { brandName } from "@/lib/brand";
+import { useProfile } from "@/hooks/use-profile";
 
 interface User {
   id: string;
@@ -32,6 +33,8 @@ export function AppLayout({ children }: AppLayoutProps) {
   const tCommon = useTranslations("common");
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  // Shared profile query (deduped with theme/notifications/page consumers).
+  const { data: profile } = useProfile();
   // Guards the stored-locale sync so it runs once and can never loop.
   const localeSyncedRef = useRef(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -85,28 +88,17 @@ export function AppLayout({ children }: AppLayoutProps) {
   // it, then do a single soft switch to the stored locale. The switcher in
   // Settings remains the way to change it explicitly.
   useEffect(() => {
-    if (!user || localeSyncedRef.current) return;
+    if (!user || !profile || localeSyncedRef.current) return;
     localeSyncedRef.current = true;
 
-    const syncLocale = async () => {
-      try {
-        const res = await fetch("/api/profile");
-        const data = await res.json();
-        const stored: unknown = data?.profile?.locale;
-        if ((stored === "he" || stored === "en") && stored !== locale) {
-          // Persist so a hard reload / new visit picks it up immediately.
-          document.cookie = `NEXT_LOCALE=${stored}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
-          // Single soft switch to the stored locale on the current path.
-          router.replace(pathname, { locale: stored });
-        }
-      } catch {
-        // Non-fatal: the UI stays on the current locale; the user can switch
-        // manually in Settings.
-      }
-    };
-
-    void syncLocale();
-  }, [user, locale, router, pathname]);
+    const stored = profile.locale;
+    if ((stored === "he" || stored === "en") && stored !== locale) {
+      // Persist so a hard reload / new visit picks it up immediately.
+      document.cookie = `NEXT_LOCALE=${stored}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+      // Single soft switch to the stored locale on the current path.
+      router.replace(pathname, { locale: stored });
+    }
+  }, [user, profile, locale, router, pathname]);
 
   const handleSidebarToggle = () => {
     setSidebarCollapsed((prev) => {

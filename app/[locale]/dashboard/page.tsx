@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EarningsChart } from "@/components/earnings-chart";
 import { ProjectHoursChart } from "@/components/project-hours-chart";
 import { useNotifications } from "@/hooks/use-notifications";
+import { useProfile } from "@/hooks/use-profile";
 import { OnboardingModal } from "@/components/onboarding-modal";
 import { useTimer } from "@/contexts/timer-context";
 import { Users, FolderOpen, Clock, StickyNote, SlidersHorizontal } from "lucide-react";
@@ -104,20 +105,11 @@ export default function DashboardPage() {
   const [dashboardConfig, setDashboardConfig] = useState<DashboardConfig>(DEFAULT_DASHBOARD_CONFIG);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
+  // Onboarding flag from the shared profile query (no separate /api/profile fetch).
+  const { data: profile } = useProfile();
   useEffect(() => {
-    let active = true;
-    fetch("/api/profile")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (active && data?.profile && data.profile.onboarded === false) {
-          setShowOnboarding(true);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, []);
+    if (profile && profile.onboarded === false) setShowOnboarding(true);
+  }, [profile]);
 
   // Timer from global context
   const {
