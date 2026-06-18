@@ -128,12 +128,18 @@ a:focus-visible {
    FORM ACCESSIBILITY
    ============================================================================ */
 
-/* Ensure form labels are associated with inputs */
-label {
-  font-weight: 500;
-  color: var(--color-foreground);
-  margin-bottom: 0.25rem;
-  display: block;
+/* Default form-label styling. Wrapped in @layer base so Tailwind utilities
+   (which live in the later `utilities` layer) win — otherwise this unlayered
+   rule's `display: block` silently overrides `.flex`/`.grid`/`.inline-flex`
+   on any <label> (e.g. a clickable row that is itself the label), collapsing
+   the intended layout. Base-layer keeps the block default for plain labels. */
+@layer base {
+  label {
+    font-weight: 500;
+    color: var(--color-foreground);
+    margin-bottom: 0.25rem;
+    display: block;
+  }
 }
 
 /* Error states should be clearly visible */

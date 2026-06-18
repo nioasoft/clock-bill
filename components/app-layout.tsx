@@ -148,35 +148,36 @@ export function AppLayout({ children }: AppLayoutProps) {
       style={{ "--app-sidebar-w": sidebarCollapsed ? "4rem" : "16rem" } as React.CSSProperties}
     >
       <MobileNav userEmail={user.email} userRole={user.role} />
-      <div className="hidden lg:flex">
-        <div className="fixed ltr:left-0 rtl:right-0 top-0 h-screen z-30">
-          <Sidebar
-            isCollapsed={sidebarCollapsed}
-            onToggle={handleSidebarToggle}
-            userRole={user.role}
-            userName={user.name}
-            userEmail={user.email}
-          />
-        </div>
-        <div
-          className={`flex-1 min-h-screen flex flex-col transition-[margin] duration-200 ${
-            sidebarCollapsed ? "ms-16" : "ms-64"
-          }`}
-        >
-          <PersistentTimerBar />
-          <main className="flex-1 overflow-x-hidden motion-safe:animate-fade-in">
-            <ErrorBoundary>{children}</ErrorBoundary>
-          </main>
-        </div>
+
+      {/* Desktop sidebar — fixed; hidden on mobile (mobile uses MobileNav +
+          the bottom nav below). */}
+      <div className="hidden lg:block fixed ltr:left-0 rtl:right-0 top-0 h-screen z-30">
+        <Sidebar
+          isCollapsed={sidebarCollapsed}
+          onToggle={handleSidebarToggle}
+          userRole={user.role}
+          userName={user.name}
+          userEmail={user.email}
+        />
       </div>
-      <div className="lg:hidden pb-16 min-h-screen flex flex-col">
+
+      {/* Single content column — children render ONCE (previously this tree was
+          duplicated for desktop/mobile, which mounted every page twice and ran
+          every data-fetch effect twice). Full width on mobile; offset by the
+          sidebar on desktop. The pb on mobile clears the fixed bottom nav. */}
+      <div
+        className={`min-h-screen flex flex-col transition-[margin] duration-200 ${
+          sidebarCollapsed ? "lg:ms-16" : "lg:ms-64"
+        }`}
+      >
         <PersistentTimerBar />
-        {/* pb clears the fixed bottom nav so the last element isn't hidden. */}
-        <main className="flex-1 overflow-x-hidden pb-6 motion-safe:animate-fade-in">
+        <main className="flex-1 overflow-x-hidden pb-16 lg:pb-0 motion-safe:animate-fade-in">
           <ErrorBoundary>{children}</ErrorBoundary>
         </main>
-        <MobileBottomNav />
       </div>
+
+      <MobileBottomNav />
+
       <TimerStartModal />
       <TimerStopModal />
       <Suspense fallback={null}>
