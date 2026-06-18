@@ -15,6 +15,7 @@ import { SimpleSelect } from "@/components/ui/simple-select";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { pickDefaultHourlyRate, type ClientRate } from "@/lib/schemas/rates";
 import { TASK_PRIORITIES, type TaskPriority, type TaskRecord } from "@/lib/tasks-types";
+import { useClients, useProjects } from "@/hooks/use-clients";
 
 interface ClientOption { id: string; name: string }
 interface ProjectOption { id: string; name: string; clientId: string }
@@ -37,8 +38,18 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
   const isEdit = props.mode === "edit";
   const task = isEdit ? props.task : null;
 
-  const [clients, setClients] = useState<ClientOption[]>([]);
-  const [projects, setProjects] = useState<ProjectOption[]>([]);
+  // Shared clients/projects lists (cache-deduped across the app).
+  const { data: clientsRaw = [], isError: clientsError } =
+    useClients<ClientOption & { isActive: boolean }>();
+  const { data: projectsRaw = [], isError: projectsError } = useProjects<ProjectOption>();
+  const clients = useMemo(
+    () => clientsRaw.filter((c) => c.isActive).map((c) => ({ id: c.id, name: c.name })),
+    [clientsRaw]
+  );
+  const projects = useMemo(
+    () => projectsRaw.map((p) => ({ id: p.id, name: p.name, clientId: p.clientId })),
+    [projectsRaw]
+  );
   const [rates, setRates] = useState<ClientRate[]>([]);
 
   const [clientId, setClientId] = useState(task?.clientId ?? "");
@@ -60,34 +71,10 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
   );
   const [showAdvanced, setShowAdvanced] = useState<boolean>(isEdit && hasAdvancedValues);
 
-  // Load clients + projects once on mount.
+  // Surface a load error for the shared clients/projects queries.
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const [cRes, pRes] = await Promise.all([fetch("/api/clients"), fetch("/api/projects")]);
-        const [cData, pData] = await Promise.all([cRes.json(), pRes.json()]);
-        if (cancelled) return;
-        if (cData.success) {
-          setClients(
-            (cData.clients as Array<ClientOption & { isActive: boolean }>)
-              .filter((c) => c.isActive)
-              .map((c) => ({ id: c.id, name: c.name }))
-          );
-        }
-        if (pData.success) {
-          setProjects(
-            (pData.projects as ProjectOption[]).map((p) => ({ id: p.id, name: p.name, clientId: p.clientId }))
-          );
-        }
-      } catch (error) {
-        console.error("Error loading task form options:", error);
-        showErrorToast(tToasts("loadDataError"));
-      }
-    })();
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (clientsError || projectsError) showErrorToast(tToasts("loadDataError"));
+  }, [clientsError, projectsError, tToasts]);
 
   // When a client is chosen, fetch its hourly rates and preselect a default.
   // In edit mode keep the task's existing rate if it's still in the list.

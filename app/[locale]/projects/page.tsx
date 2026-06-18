@@ -1,6 +1,7 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/src/i18n/navigation";
 import { Link } from "@/src/i18n/navigation";
@@ -16,6 +17,7 @@ import { fieldClass } from "@/lib/form-styles";
 import { ROUNDING_MODES, type RoundingMode } from "@/lib/rounding";
 import { useTranslations, useLocale } from "next-intl";
 import { SimpleSelect } from "@/components/ui/simple-select";
+import { useClients, projectsQueryKey } from "@/hooks/use-clients";
 
 interface Client {
   id: string;
@@ -55,7 +57,10 @@ function ProjectsPageContent() {
   const resolveValidation = useValidationMessage();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [clients, setClients] = useState<Client[]>([]);
+  // Shared clients list (cache-deduped); only active clients in the picker.
+  const { data: allClients = [] } = useClients<Client>();
+  const clients = useMemo(() => allClients.filter((c) => c.isActive), [allClients]);
+  const queryClient = useQueryClient();
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<"active" | "archived">("active");
@@ -97,23 +102,6 @@ function ProjectsPageContent() {
       }
     }
   }, [searchParams]);
-
-  useEffect(() => {
-    const fetchClients = async () => {
-      try {
-        const response = await fetch("/api/clients");
-        const data = await response.json();
-
-        if (data.success) {
-          setClients(data.clients.filter((c: Client) => c.isActive && true));
-        }
-      } catch (error) {
-        console.error("Error fetching clients:", error);
-      }
-    };
-
-    fetchClients();
-  }, []);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -219,6 +207,8 @@ function ProjectsPageContent() {
       if (data.success) {
         // Add the new project to the list
         setProjects([data.project, ...projects]);
+        // Refresh the shared projects list (timer start modal, entries picker).
+        void queryClient.invalidateQueries({ queryKey: projectsQueryKey });
         // Reset form and close
         setFormData({
           clientId: "",
@@ -279,6 +269,8 @@ function ProjectsPageContent() {
       if (data.success) {
         // Remove the restored project from the list
         setProjects(projects.filter((p) => p.id !== projectId));
+        // Status changed → refresh the shared projects list (pickers).
+        void queryClient.invalidateQueries({ queryKey: projectsQueryKey });
       } else {
         alert(data.error_code ? messageForError(data, tRoot) : t("errors.restoreFailed"));
       }

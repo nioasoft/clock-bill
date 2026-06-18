@@ -34,6 +34,8 @@ import {
 } from "@/components/ui/dialog";
 import { SimpleSelect } from "@/components/ui/simple-select";
 import { useProfile } from "@/hooks/use-profile";
+import { useQueryClient } from "@tanstack/react-query";
+import { clientsQueryKey } from "@/hooks/use-clients";
 
 interface Client {
   id: string;
@@ -96,6 +98,8 @@ function ClientsPageContent() {
   // When it's "retainer" we prefill the NEW-client retainer toggle ON (one-time
   // default, never forced — the user's choice always wins).
   const [professionId, setProfessionId] = useState<string | null>(null);
+  // Refresh the shared (dropdown) clients cache after local mutations.
+  const queryClient = useQueryClient();
   const suggestsRetainer = useMemo(
     () => getProfession(professionId)?.defaults.suggestedBillingModel === "retainer",
     [professionId],
@@ -300,6 +304,8 @@ function ClientsPageContent() {
           // Keep the usage banner fresh (only count genuine creates)
           setPlan((p) => (p ? { ...p, activeCount: p.activeCount + 1 } : p));
         }
+        // Refresh the shared clients list used by dropdowns elsewhere.
+        void queryClient.invalidateQueries({ queryKey: clientsQueryKey });
         // Reset form and close
         setFormData({
           name: "",
@@ -421,6 +427,7 @@ function ClientsPageContent() {
         setClients(clients.map((c) => (c.id === clientToDelete.id ? { ...c, isActive: false } : c)));
         // Archiving frees a slot — keep the usage banner fresh
         setPlan((p) => (p ? { ...p, activeCount: Math.max(0, p.activeCount - 1) } : p));
+        void queryClient.invalidateQueries({ queryKey: clientsQueryKey });
         setClientToDelete(null);
         // Close edit form if open
         setShowForm(false);
@@ -450,6 +457,7 @@ function ClientsPageContent() {
         setClients(clients.map((c) => (c.id === client.id ? { ...c, isActive: true } : c)));
         // Restoring consumes a slot — keep the usage banner fresh
         setPlan((p) => (p ? { ...p, activeCount: p.activeCount + 1 } : p));
+        void queryClient.invalidateQueries({ queryKey: clientsQueryKey });
         // Close edit form if open
         setShowForm(false);
         setEditingClient(null);

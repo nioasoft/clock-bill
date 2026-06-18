@@ -12,6 +12,7 @@ import {
 import { usePathname } from "next/navigation";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
+import { useProjects } from "@/hooks/use-clients";
 import React from "react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { ToastAction, type ToastActionElement } from "@/components/ui/toast";
@@ -193,7 +194,8 @@ export function TimerProvider({ children }: TimerProviderProps) {
 
   const [runningTimers, setRunningTimers] = useState<RunningTimer[]>([]);
   const [timerLoading, setTimerLoading] = useState(true);
-  const [projects, setProjects] = useState<Project[]>([]);
+  // Shared projects list (cache-deduped with the entries page / task dialog).
+  const { data: projects = [], refetch: refetchProjects } = useProjects<Project>();
   const [showTimerModal, setShowTimerModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedTask, setSelectedTask] = useState("");
@@ -297,28 +299,13 @@ export function TimerProvider({ children }: TimerProviderProps) {
     };
   }, [isPublicRoute, fetchRunningTimer]);
 
-  // Fetch projects for start modal — refetch when modal opens to catch newly created projects
+  // Refetch projects when the start modal opens, to catch projects created
+  // since the shared list was last loaded. (Initial load is handled by the
+  // useProjects query above.)
   useEffect(() => {
-    if (isPublicRoute) return;
-    if (!showTimerModal && projects.length > 0) return;
-
-    const fetchProjects = async () => {
-      try {
-        const response = await fetch("/api/projects");
-        const data = await response.json();
-        if (data.success) {
-          setProjects(data.projects || []);
-        }
-      } catch (error) {
-        console.error("Error fetching projects:", error);
-      }
-    };
-
-    fetchProjects();
-    // `projects.length` is read only as an early-exit guard; depending on it would
-    // re-run this effect after it calls setProjects, causing a fetch loop.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPublicRoute, showTimerModal]);
+    if (isPublicRoute || !showTimerModal) return;
+    void refetchProjects();
+  }, [isPublicRoute, showTimerModal, refetchProjects]);
 
   // Fetch tasks when project changes (for timer start modal)
   useEffect(() => {
