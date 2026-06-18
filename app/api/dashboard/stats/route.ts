@@ -118,19 +118,30 @@ export async function GET(_request: NextRequest) {
         duration: number;
         project_id: string;
         billing_kind: string;
-        item_amount: string;
+        amount: string;
       }>(
         // Running timers (end_time NULL) are excluded — they'd show as 0:00.
-        // item_amount lets the dashboard show a price for item entries, which
-        // have no duration.
-        `SELECT id, description, date, duration, project_id, billing_kind,
-                CASE WHEN billing_kind = 'item'
-                     THEN COALESCE(quantity, 0) * COALESCE(rate, 0)
-                     ELSE 0 END AS item_amount
-         FROM time_entries
-         WHERE user_id = $1
-           AND NOT (start_time IS NOT NULL AND end_time IS NULL)
-         ORDER BY date DESC, created_at DESC
+        // `amount` is the billed value of each line so the dashboard can show a
+        // price alongside the duration: item lines use quantity × rate; hourly
+        // (timer) lines use (duration/60) × the per-entry snapshot rate, falling
+        // back to the client's default hourly rate — the same math as the
+        // revenue cards above, so the figures agree.
+        `SELECT te.id, te.description, te.date, te.duration, te.project_id, te.billing_kind,
+                CASE WHEN te.billing_kind = 'item'
+                     THEN COALESCE(te.quantity, 0) * COALESCE(te.rate, 0)
+                     ELSE (te.duration / 60.0) * COALESCE(te.rate, crd.rate, 0)
+                END AS amount
+         FROM time_entries te
+         JOIN projects p ON te.project_id = p.id
+         LEFT JOIN LATERAL (
+           SELECT cr.rate FROM client_rates cr
+           WHERE cr.client_id = p.client_id AND cr.user_id = $1
+             AND cr.kind = 'hourly' AND cr.is_default
+           LIMIT 1
+         ) crd ON TRUE
+         WHERE te.user_id = $1
+           AND NOT (te.start_time IS NOT NULL AND te.end_time IS NULL)
+         ORDER BY te.date DESC, te.created_at DESC
          LIMIT 5`,
         [userId]
       ),
@@ -346,17 +357,24 @@ export async function GET(_request: NextRequest) {
           currency: userCurrency
         }
       },
-      recentEntries: recentEntriesResult.rows.map(entry => ({
-        id: entry.id,
-        description: entry.description,
-        date: entry.date,
-        duration: entry.duration,
-        // Item entries have no duration — show their price instead of 0:00.
-        formattedDuration: entry.billing_kind === 'item'
-          ? `${getCurrencySymbol(userCurrency)}${parseFloat(entry.item_amount || '0').toFixed(2)}`
-          : formatHours(entry.duration),
-        projectId: entry.project_id
-      })),
+      recentEntries: recentEntriesResult.rows.map(entry => {
+        const isItem = entry.billing_kind === 'item';
+        const amount = parseFloat(entry.amount || '0');
+        return {
+          id: entry.id,
+          description: entry.description,
+          date: entry.date,
+          duration: entry.duration,
+          // Item lines have no duration → only an amount. Timer (hourly) lines
+          // show the tracked time, plus the billed amount when there's a rate
+          // (skip ₪0.00 for unrated / non-billable timers).
+          formattedDuration: isItem ? null : formatHours(entry.duration),
+          formattedAmount: isItem || amount > 0
+            ? `${getCurrencySymbol(userCurrency)}${amount.toFixed(2)}`
+            : null,
+          projectId: entry.project_id
+        };
+      }),
       upcomingDeadlines: upcomingDeadlinesResult.rows.map(project => ({
         id: project.id,
         name: project.name,

@@ -73,7 +73,8 @@ interface RecentEntry {
   description: string;
   date: string;
   duration: number;
-  formattedDuration: string;
+  formattedDuration: string | null;
+  formattedAmount: string | null;
   projectId: string;
 }
 
@@ -320,7 +321,12 @@ export default function DashboardPage() {
                         <p className="text-sm text-muted-foreground">{new Date(entry.date).toLocaleDateString(intlLocale)}</p>
                       </div>
                       <div className="text-end">
-                        <p className="font-mono text-sm font-medium tabular-nums text-foreground">{entry.formattedDuration}</p>
+                        <p className="font-mono text-sm font-medium tabular-nums text-foreground">
+                          {entry.formattedAmount ?? entry.formattedDuration}
+                        </p>
+                        {entry.formattedAmount && entry.formattedDuration && (
+                          <p className="font-mono text-xs tabular-nums text-muted-foreground">{entry.formattedDuration}</p>
+                        )}
                       </div>
                     </div>
                   </li>
