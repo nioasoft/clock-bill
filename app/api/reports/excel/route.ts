@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { query } = await import("@/lib/db");
+    const { withTransaction } = await import("@/lib/db");
 
     const { searchParams } = new URL(request.url);
     const clientId = searchParams.get("clientId");
@@ -185,32 +185,88 @@ export async function GET(request: NextRequest) {
 
     queryText += ` ORDER BY te.date DESC, te.created_at DESC`;
 
-    const result = await query<{
-      id: string;
+    // Build the (optional) fixed-monthly-projects query up front so the entries
+    // query and the fixed-projects query run inside ONE transaction (one RLS
+    // bind / round-trip set) instead of two serial ones.
+    const includeFixed = Boolean(includeFixedCharges && startDate && endDate);
+    let fixedProjectsQuery = "";
+    let fixedProjectsParams: (string | number | boolean | null)[] = [];
+    if (includeFixed) {
+      fixedProjectsQuery = `
+        SELECT
+          p.id as project_id,
+          p.name as project_name,
+          c.id as client_id,
+          c.name as client_name,
+          c.currency,
+          p.fixed_monthly_fee,
+          p.fixed_monthly_start_date,
+          p.fixed_monthly_end_date
+        FROM projects p
+        JOIN clients c ON p.client_id = c.id
+        WHERE p.user_id = $1
+          AND p.fixed_monthly_enabled = TRUE
+          AND COALESCE(p.fixed_monthly_fee, 0) > 0
+      `;
+      fixedProjectsParams = [user.id];
+      let fixedParamIndex = 2;
+      if (clientId) {
+        fixedProjectsQuery += ` AND c.id = $${fixedParamIndex}`;
+        fixedProjectsParams.push(clientId);
+        fixedParamIndex++;
+      }
+      if (projectId) {
+        fixedProjectsQuery += ` AND p.id = $${fixedParamIndex}`;
+        fixedProjectsParams.push(projectId);
+        fixedParamIndex++;
+      }
+    }
+
+    type FixedProjectRow = {
       project_id: string;
-      description: string;
-      start_time: string | null;
-      end_time: string | null;
-      duration: number;
-      date: string;
-      tags: unknown;
-      notes: string | null;
-      is_billable: boolean;
-      created_at: string;
-      billing_kind: string | null;
-      rate: number | null;
-      rate_label: string | null;
-      quantity: number | null;
       project_name: string;
-      hourly_rate: number | null;
-      currency: string;
-      client_name: string;
       client_id: string;
-      client_contact_name: string | null;
-      client_email: string | null;
-      client_phone: string | null;
-      client_address: string | null;
-    }>(queryText, queryParams);
+      client_name: string;
+      currency: string;
+      fixed_monthly_fee: number;
+      fixed_monthly_start_date: string | null;
+      fixed_monthly_end_date: string | null;
+    };
+
+    const { entryRows, fixedRows } = await withTransaction(async (client) => {
+      const entriesRes = await client.query<{
+        id: string;
+        project_id: string;
+        description: string;
+        start_time: string | null;
+        end_time: string | null;
+        duration: number;
+        date: string;
+        tags: unknown;
+        notes: string | null;
+        is_billable: boolean;
+        created_at: string;
+        billing_kind: string | null;
+        rate: number | null;
+        rate_label: string | null;
+        quantity: number | null;
+        project_name: string;
+        hourly_rate: number | null;
+        currency: string;
+        client_name: string;
+        client_id: string;
+        client_contact_name: string | null;
+        client_email: string | null;
+        client_phone: string | null;
+        client_address: string | null;
+      }>(queryText, queryParams);
+      const fixedRes = includeFixed
+        ? await client.query<FixedProjectRow>(fixedProjectsQuery, fixedProjectsParams)
+        : { rows: [] as FixedProjectRow[] };
+      return { entryRows: entriesRes.rows, fixedRows: fixedRes.rows };
+    });
+
+    const result = { rows: entryRows };
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = L.creator;
@@ -290,51 +346,9 @@ export async function GET(request: NextRequest) {
     let fixedCharges: ReturnType<typeof calculateFixedMonthlyCharges> = [];
     const fixedAmounts: Record<string, number> = {};
 
-    if (includeFixedCharges && startDate && endDate) {
-      let fixedProjectsQuery = `
-        SELECT
-          p.id as project_id,
-          p.name as project_name,
-          c.id as client_id,
-          c.name as client_name,
-          c.currency,
-          p.fixed_monthly_fee,
-          p.fixed_monthly_start_date,
-          p.fixed_monthly_end_date
-        FROM projects p
-        JOIN clients c ON p.client_id = c.id
-        WHERE p.user_id = $1
-          AND p.fixed_monthly_enabled = TRUE
-          AND COALESCE(p.fixed_monthly_fee, 0) > 0
-      `;
-      const fixedProjectsParams: (string | number | boolean | null)[] = [user.id];
-      let fixedParamIndex = 2;
-
-      if (clientId) {
-        fixedProjectsQuery += ` AND c.id = $${fixedParamIndex}`;
-        fixedProjectsParams.push(clientId);
-        fixedParamIndex++;
-      }
-
-      if (projectId) {
-        fixedProjectsQuery += ` AND p.id = $${fixedParamIndex}`;
-        fixedProjectsParams.push(projectId);
-        fixedParamIndex++;
-      }
-
-      const fixedProjects = await query<{
-        project_id: string;
-        project_name: string;
-        client_id: string;
-        client_name: string;
-        currency: string;
-        fixed_monthly_fee: number;
-        fixed_monthly_start_date: string | null;
-        fixed_monthly_end_date: string | null;
-      }>(fixedProjectsQuery, fixedProjectsParams);
-
+    if (includeFixed && startDate && endDate) {
       fixedCharges = calculateFixedMonthlyCharges(
-        fixedProjects.rows.map((p) => ({
+        fixedRows.map((p) => ({
           projectId: p.project_id,
           projectName: p.project_name,
           clientId: p.client_id,

@@ -26,6 +26,7 @@
     "@polar-sh/better-auth": "^1.8.4",
     "@polar-sh/sdk": "^0.47.0",
     "@sentry/nextjs": "^10.55.0",
+    "@tanstack/react-query": "^5.101.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "better-auth": "^1.6.12",
@@ -50,6 +51,7 @@
   "devDependencies": {
     "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
+    "@tanstack/react-query-devtools": "^5.101.0",
     "@types/node": "20.19.32",
     "@types/pg": "^8.16.0",
     "@types/react": "19.2.13",

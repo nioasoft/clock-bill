@@ -19,6 +19,7 @@ import { pickDefaultHourlyRate, type ClientRate } from "@/lib/schemas/rates";
 import { calcHourlyAmount, calcItemAmount } from "@/lib/money";
 import { formatCurrency } from "@/lib/currency";
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
+import { useClients, useProjects } from "@/hooks/use-clients";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +40,11 @@ interface Client {
   id: string;
   name: string;
 }
+
+// Stable empty defaults — a fresh `[]` per render would change identity and
+// re-trigger the rates effect (which depends on `projects`).
+const EMPTY_PROJECTS: Project[] = [];
+const EMPTY_CLIENTS: Client[] = [];
 
 interface TaskOption {
   id: string;
@@ -111,10 +117,12 @@ export default function EntriesPage() {
   const resolveValidation = useValidationMessage();
   const [entries, setEntries] = useState<TimeEntry[]>([]);
   const [entriesLoading, setEntriesLoading] = useState(true);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [projectsLoading, setProjectsLoading] = useState(true);
-  const [clients, setClients] = useState<Client[]>([]);
-  const [clientsLoading, setClientsLoading] = useState(true);
+  // Shared, cache-deduped lists (one fetch per app, reused across navigation).
+  // Stable empty defaults keep array identity constant while loading.
+  const { data: projectsData, isPending: projectsLoading } = useProjects<Project>();
+  const { data: clientsData, isPending: clientsLoading } = useClients<Client>();
+  const projects = projectsData ?? EMPTY_PROJECTS;
+  const clients = clientsData ?? EMPTY_CLIENTS;
   const [showForm, setShowForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState<TimeEntry | null>(null);
   // Two-step form selection: with several clients, pick the client first and
@@ -190,48 +198,6 @@ export default function EntriesPage() {
   });
 
   // Escape closes the form via the Dialog's own onOpenChange — no shortcut needed.
-
-  useEffect(() => {
-    // Fetch clients when component mounts
-    const fetchClients = async () => {
-      try {
-        setClientsLoading(true);
-        const response = await fetch("/api/clients");
-        const data = await response.json();
-
-        if (data.success) {
-          setClients(data.clients || []);
-        }
-      } catch (error) {
-        console.error("Error fetching clients:", error);
-      } finally {
-        setClientsLoading(false);
-      }
-    };
-
-    fetchClients();
-  }, []);
-
-  useEffect(() => {
-    // Fetch projects when component mounts
-    const fetchProjects = async () => {
-      try {
-        setProjectsLoading(true);
-        const response = await fetch("/api/projects");
-        const data = await response.json();
-
-        if (data.success) {
-          setProjects(data.projects || []);
-        }
-      } catch (error) {
-        console.error("Error fetching projects:", error);
-      } finally {
-        setProjectsLoading(false);
-      }
-    };
-
-    fetchProjects();
-  }, []);
 
   // Fetch entries for the current filters. `silent` skips the loading state so a
   // background refresh (e.g. after a timer stops) doesn't flash the whole table.

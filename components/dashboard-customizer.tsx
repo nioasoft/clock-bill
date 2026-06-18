@@ -35,6 +35,7 @@ import {
   type DashboardConfig,
   type DashboardWidgetState,
 } from "@/lib/dashboard-widgets";
+import { useProfile, usePatchProfile } from "@/hooks/use-profile";
 
 type Zone = "cards" | "sections";
 
@@ -69,55 +70,48 @@ export function DashboardCustomizer() {
   const tDash = useTranslations("Dashboard");
 
   const [config, setConfig] = useState<DashboardConfig | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saved, setSaved] = useState(false);
+
+  // Read the dashboard config from the shared profile query (one fetch per page).
+  const { data: profile, isPending, isError } = useProfile();
+  const patchProfile = usePatchProfile();
+  const loading = isPending;
+  const loadError = isError;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor)
   );
 
+  // Seed local editable config once the profile arrives. queueMicrotask keeps
+  // setState out of the synchronous effect body (react-hooks/set-state-in-effect).
   useEffect(() => {
-    let active = true;
-    fetch("/api/profile")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (!active) return;
-        if (data?.success) {
-          setConfig(normalizeDashboardConfig(data.profile?.dashboardConfig));
-        } else {
-          setLoadError(true);
-        }
-      })
-      .catch(() => active && setLoadError(true))
-      .finally(() => active && setLoading(false));
-    return () => {
-      active = false;
-    };
-  }, []);
+    if (profile) {
+      const next = normalizeDashboardConfig(profile.dashboardConfig);
+      queueMicrotask(() => setConfig(next));
+    }
+  }, [profile]);
 
   // Optimistic save with rollback (fire-and-forget, like setTheme).
-  const persist = useCallback((next: DashboardConfig, prev: DashboardConfig) => {
-    setConfig(next);
-    setSaveError("");
-    setSaved(false);
-    fetch("/api/profile", {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ dashboardConfig: next }),
-    })
-      .then((r) => r.json())
-      .then((d) => {
-        if (!d?.success) throw new Error("save failed");
-        setSaved(true);
-      })
-      .catch(() => {
-        setConfig(prev);
-        setSaveError(t("saveError"));
-      });
-  }, [t]);
+  const persist = useCallback(
+    (next: DashboardConfig, prev: DashboardConfig) => {
+      setConfig(next);
+      setSaveError("");
+      setSaved(false);
+      patchProfile.mutate(
+        { dashboardConfig: next },
+        {
+          onSuccess: () => setSaved(true),
+          onError: () => {
+            setConfig(prev);
+            setSaveError(t("saveError"));
+          },
+        }
+      );
+    },
+    [patchProfile, t]
+  );
 
   const applyPreset = (preset: DashboardConfig) => {
     if (!config) return;

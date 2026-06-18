@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EarningsChart } from "@/components/earnings-chart";
 import { ProjectHoursChart } from "@/components/project-hours-chart";
 import { useNotifications } from "@/hooks/use-notifications";
+import { useProfile } from "@/hooks/use-profile";
 import { OnboardingModal } from "@/components/onboarding-modal";
 import { useTimer } from "@/contexts/timer-context";
 import { Users, FolderOpen, Clock, StickyNote, SlidersHorizontal } from "lucide-react";
@@ -104,20 +105,11 @@ export default function DashboardPage() {
   const [dashboardConfig, setDashboardConfig] = useState<DashboardConfig>(DEFAULT_DASHBOARD_CONFIG);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
+  // Onboarding flag from the shared profile query (no separate /api/profile fetch).
+  const { data: profile } = useProfile();
   useEffect(() => {
-    let active = true;
-    fetch("/api/profile")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (active && data?.profile && data.profile.onboarded === false) {
-          setShowOnboarding(true);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, []);
+    if (profile && profile.onboarded === false) setShowOnboarding(true);
+  }, [profile]);
 
   // Timer from global context
   const {
@@ -226,19 +218,44 @@ export default function DashboardPage() {
     }
   }, [runningTimers, timerLoading, fetchStats]);
 
-  // Check for daily reminder every minute
+  // Check for the daily reminder every minute — but only while the tab is
+  // visible. A backgrounded tab stops the interval entirely (mirrors the timer
+  // context) and re-checks the moment it's shown again, so we don't keep firing
+  // on hidden tabs.
   useEffect(() => {
-    const checkDailyReminderInterval = setInterval(() => {
-      if (stats) {
-        checkDailyReminder(stats.today.hours);
+    if (!stats) return;
+    const todayHours = stats.today.hours;
+
+    let interval: ReturnType<typeof setInterval> | null = null;
+    const startInterval = () => {
+      if (interval === null) {
+        interval = setInterval(() => checkDailyReminder(todayHours), 60000);
       }
-    }, 60000);
+    };
+    const stopInterval = () => {
+      if (interval !== null) {
+        clearInterval(interval);
+        interval = null;
+      }
+    };
 
-    if (stats) {
-      checkDailyReminder(stats.today.hours);
-    }
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        checkDailyReminder(todayHours);
+        startInterval();
+      } else {
+        stopInterval();
+      }
+    };
 
-    return () => clearInterval(checkDailyReminderInterval);
+    checkDailyReminder(todayHours);
+    if (document.visibilityState === "visible") startInterval();
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      stopInterval();
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
   }, [stats, checkDailyReminder]);
 
   const isFirstTimeUser = stats &&

@@ -13,6 +13,7 @@ import { resolveRounding, ROUNDING_MODES, type RoundingMode } from "@/lib/roundi
 import { messageForError } from "@/lib/api-error";
 import { useTranslations, useLocale } from "next-intl";
 import { SimpleSelect } from "@/components/ui/simple-select";
+import { useProfile } from "@/hooks/use-profile";
 
 interface Project {
   id: string;
@@ -181,20 +182,11 @@ export default function ProjectDetailsPage() {
     fetchProjectEntries();
   }, [projectId]);
 
+  // Profile-level default rounding from the shared profile query.
+  const { data: profile } = useProfile();
   useEffect(() => {
-    let active = true;
-    fetch("/api/profile")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (active && data?.profile) {
-          setProfileRounding(data.profile.defaultBillingRounding ?? null);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, []);
+    if (profile) setProfileRounding(profile.defaultBillingRounding ?? null);
+  }, [profile]);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();

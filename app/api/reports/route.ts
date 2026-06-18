@@ -19,16 +19,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { query } = await import("@/lib/db");
-
-    // Profile-level billing base: the cascade's lowest tier (project > client >
-    // profile > 'none'). Read once per request, used for rounding + rate fallback.
-    const profileBase = await query<{ default_billing_rounding: string | null; default_rate: number | null }>(
-      `SELECT default_billing_rounding, default_rate FROM user_profiles WHERE user_id = $1`,
-      [user.id]
-    );
-    const baseRounding = profileBase.rows[0]?.default_billing_rounding ?? null;
-    const baseRate = profileBase.rows[0]?.default_rate ?? null;
+    const { withTransaction } = await import("@/lib/db");
 
     // Get query parameters for filtering
     const { searchParams } = new URL(request.url);
@@ -103,38 +94,101 @@ export async function GET(request: NextRequest) {
 
     queryText += ` ORDER BY te.date DESC, te.created_at DESC`;
 
-    const result = await query<{
-      id: string;
-      project_id: string;
-      description: string;
-      start_time: string | null;
-      end_time: string | null;
-      duration: number;
-      date: string;
-      tags: unknown;
-      notes: string | null;
-      is_billable: boolean;
-      created_at: string;
-      billing_kind: string | null;
-      rate: number | null;
-      rate_label: string | null;
-      quantity: number | null;
-      item_ref: number | null;
-      unit: string | null;
-      project_name: string;
-      project_rounding: string | null;
-      hourly_rate: number | null;
-      client_rounding: string | null;
-      currency: string;
-      client_name: string;
-      client_id: string;
-      client_contact_name: string | null;
-      client_email: string | null;
-      client_phone: string | null;
-      client_address: string | null;
-    }>(queryText, queryParams);
+    // Build the (optional) fixed-monthly-projects query up front so the profile
+    // base, the entries query, and the fixed-projects query all run inside ONE
+    // transaction (one RLS bind / round-trip set) instead of three serial ones.
+    const includeFixed = Boolean(includeFixedCharges && startDate && endDate);
+    let fixedProjectsQuery = "";
+    let fixedProjectsParams: (string | number | boolean | null)[] = [];
+    if (includeFixed) {
+      fixedProjectsQuery = `
+        SELECT
+          p.id as project_id,
+          p.name as project_name,
+          c.id as client_id,
+          c.name as client_name,
+          c.currency,
+          p.fixed_monthly_fee,
+          p.fixed_monthly_start_date,
+          p.fixed_monthly_end_date
+        FROM projects p
+        JOIN clients c ON p.client_id = c.id
+        WHERE p.user_id = $1
+          AND p.fixed_monthly_enabled = TRUE
+          AND COALESCE(p.fixed_monthly_fee, 0) > 0
+      `;
+      fixedProjectsParams = [user.id];
+      let fixedParamIndex = 2;
+      if (clientId) {
+        fixedProjectsQuery += ` AND c.id = $${fixedParamIndex}`;
+        fixedProjectsParams.push(clientId);
+        fixedParamIndex++;
+      }
+      if (projectId) {
+        fixedProjectsQuery += ` AND p.id = $${fixedParamIndex}`;
+        fixedProjectsParams.push(projectId);
+        fixedParamIndex++;
+      }
+    }
 
-    const entries = result.rows.map((entry) => {
+    type FixedProjectRow = {
+      project_id: string;
+      project_name: string;
+      client_id: string;
+      client_name: string;
+      currency: string;
+      fixed_monthly_fee: number;
+      fixed_monthly_start_date: string | null;
+      fixed_monthly_end_date: string | null;
+    };
+
+    // Profile-level billing base (cascade's lowest tier: project > client >
+    // profile > 'none'), entries, and fixed projects — one transaction.
+    const { profileRow, entryRows, fixedRows } = await withTransaction(async (client) => {
+      const profile = await client.query<{ default_billing_rounding: string | null; default_rate: number | null }>(
+        `SELECT default_billing_rounding, default_rate FROM user_profiles WHERE user_id = $1`,
+        [user.id]
+      );
+      const entriesRes = await client.query<{
+        id: string;
+        project_id: string;
+        description: string;
+        start_time: string | null;
+        end_time: string | null;
+        duration: number;
+        date: string;
+        tags: unknown;
+        notes: string | null;
+        is_billable: boolean;
+        created_at: string;
+        billing_kind: string | null;
+        rate: number | null;
+        rate_label: string | null;
+        quantity: number | null;
+        item_ref: number | null;
+        unit: string | null;
+        project_name: string;
+        project_rounding: string | null;
+        hourly_rate: number | null;
+        client_rounding: string | null;
+        currency: string;
+        client_name: string;
+        client_id: string;
+        client_contact_name: string | null;
+        client_email: string | null;
+        client_phone: string | null;
+        client_address: string | null;
+      }>(queryText, queryParams);
+      const fixedRes = includeFixed
+        ? await client.query<FixedProjectRow>(fixedProjectsQuery, fixedProjectsParams)
+        : { rows: [] as FixedProjectRow[] };
+      return { profileRow: profile.rows[0], entryRows: entriesRes.rows, fixedRows: fixedRes.rows };
+    });
+
+    const baseRounding = profileRow?.default_billing_rounding ?? null;
+    const baseRate = profileRow?.default_rate ?? null;
+
+    const entries = entryRows.map((entry) => {
       const isItem = entry.billing_kind === "item";
       // Hourly lines fall back to the client default_rate when no snapshot rate.
       const effectiveRate = entry.rate ?? entry.hourly_rate ?? baseRate;
@@ -377,51 +431,9 @@ export async function GET(request: NextRequest) {
     let fixedCharges: ReturnType<typeof calculateFixedMonthlyCharges> = [];
     const fixedAmountsByCurrency: Record<string, number> = {};
 
-    if (includeFixedCharges && startDate && endDate) {
-      let fixedProjectsQuery = `
-        SELECT
-          p.id as project_id,
-          p.name as project_name,
-          c.id as client_id,
-          c.name as client_name,
-          c.currency,
-          p.fixed_monthly_fee,
-          p.fixed_monthly_start_date,
-          p.fixed_monthly_end_date
-        FROM projects p
-        JOIN clients c ON p.client_id = c.id
-        WHERE p.user_id = $1
-          AND p.fixed_monthly_enabled = TRUE
-          AND COALESCE(p.fixed_monthly_fee, 0) > 0
-      `;
-      const fixedProjectsParams: (string | number | boolean | null)[] = [user.id];
-      let fixedParamIndex = 2;
-
-      if (clientId) {
-        fixedProjectsQuery += ` AND c.id = $${fixedParamIndex}`;
-        fixedProjectsParams.push(clientId);
-        fixedParamIndex++;
-      }
-
-      if (projectId) {
-        fixedProjectsQuery += ` AND p.id = $${fixedParamIndex}`;
-        fixedProjectsParams.push(projectId);
-        fixedParamIndex++;
-      }
-
-      const fixedProjects = await query<{
-        project_id: string;
-        project_name: string;
-        client_id: string;
-        client_name: string;
-        currency: string;
-        fixed_monthly_fee: number;
-        fixed_monthly_start_date: string | null;
-        fixed_monthly_end_date: string | null;
-      }>(fixedProjectsQuery, fixedProjectsParams);
-
+    if (includeFixed && startDate && endDate) {
       fixedCharges = calculateFixedMonthlyCharges(
-        fixedProjects.rows.map((p) => ({
+        fixedRows.map((p) => ({
           projectId: p.project_id,
           projectName: p.project_name,
           clientId: p.client_id,
@@ -504,7 +516,13 @@ export async function GET(request: NextRequest) {
         },
         byClient: Object.values(byClient),
         byProject: Object.values(byProject),
-        byDate: Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date)),
+        // `entry.date` is a pg DATE → a JS Date object server-side (it only
+        // looks like a string after JSON serialization), so localeCompare threw.
+        // Sort by timestamp — chronological and robust whether date is a Date,
+        // an ISO string, or "YYYY-MM-DD".
+        byDate: Object.values(byDate).sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        ),
         byWeek: Object.values(byWeek).sort((a, b) => a.weekStart.localeCompare(b.weekStart)),
         byRateLabel: Object.values(byRateLabel),
       },
