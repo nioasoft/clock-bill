@@ -41,6 +41,11 @@ interface Client {
   name: string;
 }
 
+// Stable empty defaults — a fresh `[]` per render would change identity and
+// re-trigger the rates effect (which depends on `projects`).
+const EMPTY_PROJECTS: Project[] = [];
+const EMPTY_CLIENTS: Client[] = [];
+
 interface TaskOption {
   id: string;
   name: string;
@@ -113,8 +118,11 @@ export default function EntriesPage() {
   const [entries, setEntries] = useState<TimeEntry[]>([]);
   const [entriesLoading, setEntriesLoading] = useState(true);
   // Shared, cache-deduped lists (one fetch per app, reused across navigation).
-  const { data: projects = [], isPending: projectsLoading } = useProjects<Project>();
-  const { data: clients = [], isPending: clientsLoading } = useClients<Client>();
+  // Stable empty defaults keep array identity constant while loading.
+  const { data: projectsData, isPending: projectsLoading } = useProjects<Project>();
+  const { data: clientsData, isPending: clientsLoading } = useClients<Client>();
+  const projects = projectsData ?? EMPTY_PROJECTS;
+  const clients = clientsData ?? EMPTY_CLIENTS;
   const [showForm, setShowForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState<TimeEntry | null>(null);
   // Two-step form selection: with several clients, pick the client first and

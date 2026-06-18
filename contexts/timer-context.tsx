@@ -38,6 +38,10 @@ interface Project {
   clientName: string;
 }
 
+// Stable empty default for the projects query so an unloaded list keeps a
+// constant identity (see usage — effects depend on `projects`).
+const EMPTY_PROJECTS: Project[] = [];
+
 interface TaskOption {
   id: string;
   name: string;
@@ -195,7 +199,10 @@ export function TimerProvider({ children }: TimerProviderProps) {
   const [runningTimers, setRunningTimers] = useState<RunningTimer[]>([]);
   const [timerLoading, setTimerLoading] = useState(true);
   // Shared projects list (cache-deduped with the entries page / task dialog).
-  const { data: projects = [], refetch: refetchProjects } = useProjects<Project>();
+  // Default to a STABLE empty array (module constant) — a fresh `[]` per render
+  // would change identity and spin the rates effect (deps include `projects`).
+  const { data: projectsData, refetch: refetchProjects } = useProjects<Project>();
+  const projects = projectsData ?? EMPTY_PROJECTS;
   const [showTimerModal, setShowTimerModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedTask, setSelectedTask] = useState("");
