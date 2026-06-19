@@ -360,6 +360,13 @@ export const auth = betterAuth({
                ON CONFLICT (user_id) DO NOTHING`,
               [createdUser.id, startedAt.toISOString(), endsAt.toISOString()]
             );
+            // Day-0 welcome (best-effort; sendEmail no-ops without RESEND_API_KEY).
+            const { trialWelcomeEmail } = await import("@/lib/emails/trial");
+            const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.clock-bill.com";
+            const { subject, html } = trialWelcomeEmail("he", appUrl);
+            if (createdUser.email) {
+              await sendEmail({ to: createdUser.email, subject, html });
+            }
           } catch (error) {
             logger.error("Failed to seed user_profile / start trial on signup", error);
           }
