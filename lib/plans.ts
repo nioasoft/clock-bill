@@ -26,3 +26,23 @@ export function canAddClient(tier: PlanTier, activeCount: number): boolean {
 export function isPlanTier(value: string): value is PlanTier {
   return (PLAN_TIERS as readonly string[]).includes(value);
 }
+
+/** Length of the free Unlimited trial for new accounts, in days. */
+export const TRIAL_DAYS = 14;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Trial end = start + TRIAL_DAYS (returns a new Date; does not mutate). */
+export function computeTrialEnd(start: Date): Date {
+  return new Date(start.getTime() + TRIAL_DAYS * DAY_MS);
+}
+
+/** True while the trial is still running (end in the future). */
+export function isTrialActive(endsAt: Date | null, now: Date): boolean {
+  return endsAt !== null && now.getTime() < endsAt.getTime();
+}
+
+/** Whole days remaining, ceil'd, never below 0. */
+export function trialDaysLeft(endsAt: Date, now: Date): number {
+  return Math.max(0, Math.ceil((endsAt.getTime() - now.getTime()) / DAY_MS));
+}
