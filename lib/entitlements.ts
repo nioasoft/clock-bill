@@ -20,13 +20,13 @@ export interface UserPlan {
 }
 
 /** Raw user_profiles columns needed to resolve a plan. */
-export interface PlanRow {
+export type PlanRow = {
   subscription_tier: string | null;
   subscription_status: string | null;
   subscription_period_end: string | null;
   founding: boolean | null;
   trial_ends_at: string | null;
-}
+};
 
 /** Pure plan resolution: founding > paid > active trial > free. */
 export function resolvePlan(row: PlanRow | undefined, now: Date): UserPlan {

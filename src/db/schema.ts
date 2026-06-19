@@ -184,7 +184,7 @@ export const userProfiles = pgTable("user_profiles", {
   // ─── Trial (14-day Unlimited on signup; see lib/plans.ts TRIAL_DAYS) ──
   trialStartedAt: timestamp("trial_started_at"),
   trialEndsAt: timestamp("trial_ends_at"),
-  trialUsed: boolean("trial_used").default(false),
+  trialUsed: boolean("trial_used").notNull().default(false),
   // Timestamps
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

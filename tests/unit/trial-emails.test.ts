@@ -30,6 +30,7 @@ runner.test("en welcome: LTR html + 14 + subject", () => {
   assert(subject.length > 0, "subject empty");
   assert(html.includes('dir="ltr"'), "expected LTR");
   assert(html.includes("14"), "expected trial days");
+  assert(html.includes("https://www.clock-bill.com"), "expected CTA url");
 });
 
 runner.run();
