@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations, useLocale, NextIntlClientProvider } from "next-intl";
 import { STATUS_META, type ChargeDocStatus } from "./statusMeta";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { formatDate } from "@/lib/format";
 import { formatCurrency } from "@/lib/currency";
+import { resolveDocumentLocale, type DocumentLanguage } from "@/lib/document-language";
+import { useDocumentMessages } from "@/lib/document-messages";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -17,6 +19,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { printPdfContent, type PdfTemplate } from "./printStyles";
+import { PdfChargeDocument } from "./PdfChargeDocument";
 
 interface DocumentLine {
   id: string;
@@ -45,6 +48,10 @@ interface ChargeDocument {
   paid_at: string | null;
   client_name: string;
   pdf_template: string | null;
+  /** Snapshotted document language at issuance ("he" | "en"); null on legacy docs. */
+  document_language: string | null;
+  /** The client's CURRENT document-language setting (for legacy-doc fallback). */
+  client_document_language: string | null;
 }
 
 /** Business-profile fields needed for the PDF header + template/colors. */
@@ -113,6 +120,21 @@ export default function ChargeDocumentView({
   const [doc, setDoc] = useState<ChargeDocument | null>(null);
   const [lines, setLines] = useState<DocumentLine[]>([]);
   const [profile, setProfile] = useState<BusinessProfile | null>(null);
+
+  // ── Document language (printed PDF) ──────────────────────────────────────
+  // A SAVED charge document prints in the language SNAPSHOTTED at issuance.
+  // Legacy docs (null snapshot) fall back to the client's resolved language.
+  // A manual He/En toggle overrides per print WITHOUT mutating the snapshot.
+  const snapshotLang = (doc?.document_language ?? null) as DocumentLanguage | null;
+  const effectiveDefault: DocumentLanguage =
+    snapshotLang ??
+    resolveDocumentLocale(
+      (doc?.client_document_language ?? null) as DocumentLanguage | null,
+      doc?.currency || "ILS"
+    );
+  const [docLangOverride, setDocLangOverride] = useState<DocumentLanguage | null>(null);
+  const docLocale: DocumentLanguage = docLangOverride ?? effectiveDefault;
+  const docMessages = useDocumentMessages(docLocale);
 
   // Document-level notes draft (only editable while pending).
   const [notesDraft, setNotesDraft] = useState("");
@@ -328,6 +350,9 @@ export default function ChargeDocumentView({
   }, [confirm]);
 
   const handleExportPdf = useCallback((): void => {
+    // Guard: the print routine clones `#pdf-content`, which only renders once
+    // the document-language messages have loaded. Never print an empty subtree.
+    if (!docMessages) return;
     const template = asTemplate(doc?.pdf_template ?? profile?.preferredPdfTemplate);
     const primary = profile?.pdfPrimaryColor || "#A8622D";
     const accent = profile?.pdfAccentColor || "#347B52";
@@ -335,9 +360,10 @@ export default function ChargeDocumentView({
     const filename = `${t("doc.pdfFilenamePrefix")}_${doc?.doc_number ?? ""}_${doc?.client_name ?? ""}`
       .replace(/[/\s]+/g, "_")
       .trim();
-    // Hebrew documents print RTL, English LTR.
-    printPdfContent(template, primary, accent, filename, locale === "he" ? "rtl" : "ltr");
-  }, [doc, profile, t, locale]);
+    // Hebrew documents print RTL, English LTR — keyed on the DOCUMENT locale
+    // (the snapshotted language / manual override), not the UI locale.
+    printPdfContent(template, primary, accent, filename, docLocale === "he" ? "rtl" : "ltr");
+  }, [doc, profile, t, docLocale, docMessages]);
 
   // ── States ──────────────────────────────────────────────────────────────
   if (state === "loading") {
@@ -572,9 +598,52 @@ export default function ChargeDocumentView({
         )}
       </div>
 
+      {/* ── Document-language toggle ── */}
+      {/* Which language the printed PDF renders in. Defaults to the document's
+          SNAPSHOTTED language; the He/En override applies per print only and
+          does NOT mutate the saved snapshot. */}
+      <div
+        role="group"
+        aria-label={t("documentLanguageToggle")}
+        className="flex items-center gap-2"
+      >
+        <span className="text-sm text-muted-foreground">{t("documentLanguageToggle")}</span>
+        <div className="flex items-center gap-1 rounded-[var(--radius)] border border-border p-1">
+          <button
+            type="button"
+            onClick={() => setDocLangOverride("he")}
+            aria-pressed={docLocale === "he"}
+            className={`min-h-11 rounded-[var(--radius)] px-3 py-2 text-sm font-medium transition-colors ${
+              docLocale === "he"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t("documentLanguageHe")}
+          </button>
+          <button
+            type="button"
+            onClick={() => setDocLangOverride("en")}
+            aria-pressed={docLocale === "en"}
+            className={`min-h-11 rounded-[var(--radius)] px-3 py-2 text-sm font-medium transition-colors ${
+              docLocale === "en"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t("documentLanguageEn")}
+          </button>
+        </div>
+      </div>
+
       {/* ── Actions ── */}
       <div className="flex flex-wrap gap-3 border-t border-border pt-4">
-        <Button onClick={handleExportPdf} variant="secondary" className="min-h-[44px]">
+        <Button
+          onClick={handleExportPdf}
+          variant="secondary"
+          disabled={!docMessages}
+          className="min-h-[44px]"
+        >
           {t("doc.exportPdf")}
         </Button>
 
@@ -709,173 +778,16 @@ export default function ChargeDocumentView({
         </DialogContent>
       </Dialog>
 
-      {/* ── Hidden PDF print block (light/print styling) ── */}
-      <div id="pdf-content" className="print-only" dir={locale === "he" ? "rtl" : "ltr"}>
-        <div
-          className="pdf-header"
-          style={{
-            marginBottom: "2rem",
-            paddingBottom: "1.5rem",
-            borderBottom: "2px solid #e2e8f0",
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div style={{ flex: 1 }}>
-              {profile?.logoUrl && (
-                // Plain <img>: next/image's lazy-loading/optimization breaks print rendering.
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={profile.logoUrl}
-                  alt="Logo"
-                  style={{ maxHeight: "50px", marginBottom: "10px" }}
-                />
-              )}
-              {/* Business identity shows ONLY when there is a real business name —
-                  never fall back to the document title (that would duplicate the h2). */}
-              {profile?.businessName && (
-                <>
-                  <h1
-                    className="pdf-business-name"
-                    style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "0.25rem" }}
-                  >
-                    <bdi>{profile.businessName}</bdi>
-                  </h1>
-                  <div style={{ fontSize: "12px", color: "#64748b", lineHeight: 1.6 }}>
-                    {profile.taxId && <div>{t("pdf.taxId")}: <bdi>{profile.taxId}</bdi></div>}
-                    {profile.address && <div><bdi>{profile.address}</bdi></div>}
-                    {profile.phone && <div><bdi>{profile.phone}</bdi></div>}
-                    {profile.email && <div><bdi>{profile.email}</bdi></div>}
-                    {profile.showWebsiteOnDoc && profile.website && <div><bdi>{profile.website}</bdi></div>}
-                  </div>
-                </>
-              )}
-            </div>
-            <div style={{ textAlign: "start" }}>
-              <h2 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "0.5rem" }}>
-                {t("doc.settlementDocTitle")}
-              </h2>
-              <div style={{ fontSize: "13px", color: "#64748b" }}>
-                <div>{t("doc.pdfNumber", { number: doc.doc_number })}</div>
-                <div>{t("doc.pdfStatus", { status: t(status.labelKey) })}</div>
-                <div style={{ marginTop: "0.5rem" }}>
-                  {t("doc.pdfIssueDate", { date: formatDate(doc.issued_at, undefined, locale) })}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div
-            style={{
-              marginTop: "1.5rem",
-              padding: "1rem",
-              backgroundColor: "#f8fafc",
-              borderRadius: "8px",
-            }}
-          >
-            <div
-              style={{
-                fontSize: "11px",
-                color: "#94a3b8",
-                marginBottom: "0.25rem",
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
-              }}
-            >
-              {t("doc.pdfFor")}
-            </div>
-            <div style={{ fontWeight: 600, fontSize: "16px" }}><bdi>{doc.client_name}</bdi></div>
-          </div>
-        </div>
-
-        <table className="pdf-table" style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ backgroundColor: "#f8fafc" }}>
-              <th style={{ padding: "0.5rem 0.75rem", textAlign: "start" }}>{t("doc.colItem")}</th>
-              <th style={{ padding: "0.5rem 0.75rem", textAlign: "start" }}>{t("doc.colDetails")}</th>
-              <th style={{ padding: "0.5rem 0.75rem", textAlign: "start" }}>{t("doc.colQtyRate")}</th>
-              <th style={{ padding: "0.5rem 0.75rem", textAlign: "start" }}>{t("doc.colAmount")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {lines.map((line) => (
-              <tr key={line.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>
-                  <bdi>{line.label}</bdi>
-                  {isItemLine(line) && line.item_ref != null && (
-                    <span style={{ color: "#94a3b8" }}> · {t("units.ref", { ref: line.item_ref })}</span>
-                  )}
-                </td>
-                <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>
-                  <bdi>{line.description || ""}{line.notes ? ` (${line.notes})` : ""}</bdi>
-                </td>
-                <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>
-                  {isItemLine(line) && line.quantity != null && line.rate != null
-                    ? `${line.quantity}${line.unit ? ` ${line.unit}` : ""} × ${formatCurrency(line.rate, doc.currency, locale)}`
-                    : ""}
-                </td>
-                <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>
-                  {formatCurrency(line.amount, doc.currency, locale)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr>
-              <td colSpan={3} style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: 600 }}>
-                {t("doc.total")}
-              </td>
-              <td style={{ padding: "0.5rem 0.75rem", fontWeight: 600, whiteSpace: "nowrap" }}>
-                {formatCurrency(doc.total, doc.currency, locale)}
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-
-        <div style={{ marginTop: "0.5rem", fontSize: "11px", color: "#94a3b8" }}>{t("preVatNote")}</div>
-
-        {doc.notes && (
-          <div className="pdf-section" style={{ marginTop: "1.25rem", fontSize: "12px", color: "#475569" }}>
-            <div style={{ fontWeight: 600, marginBottom: "0.25rem" }}>{t("doc.notesHeading")}</div>
-            <div><bdi>{doc.notes}</bdi></div>
-          </div>
-        )}
-
-        {/* Footer: bank/payment details (left) + signature (right). Each shows
-            only when filled. Signature falls back to the typed business name. */}
-        {(profile?.bankName || profile?.bankAccountNumber || profile?.bankBranch || profile?.bankSwift || profile?.signatureUrl || profile?.businessName) && (
-          <div
-            className="pdf-section"
-            style={{ marginTop: "1.75rem", display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: "1.5rem", flexWrap: "wrap" }}
-          >
-            {(profile?.bankName || profile?.bankAccountNumber || profile?.bankBranch || profile?.bankSwift) ? (
-              <div style={{ fontSize: "12px", color: "#475569", lineHeight: 1.6 }}>
-                <div style={{ fontWeight: 600, marginBottom: "0.25rem" }}>{t("doc.paymentDetails")}</div>
-                {profile.bankName && <div>{t("pdf.bankName")}: <bdi>{profile.bankName}</bdi></div>}
-                {profile.bankBranch && <div>{t("pdf.bankBranch")}: <bdi>{profile.bankBranch}</bdi></div>}
-                {profile.bankAccountNumber && <div>{t("pdf.bankAccount")}: <bdi>{profile.bankAccountNumber}</bdi></div>}
-                {profile.bankSwift && <div>SWIFT/IBAN: <bdi>{profile.bankSwift}</bdi></div>}
-              </div>
-            ) : <div />}
-
-            {(profile?.signatureUrl || profile?.businessName) && (
-              <div style={{ textAlign: "center", minWidth: "150px" }}>
-                {profile.signatureUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={profile.signatureUrl} alt="" style={{ height: 46, objectFit: "contain", margin: "0 auto" }} />
-                ) : (
-                  <div style={{ fontFamily: "'Segoe Script','Brush Script MT',cursive", fontSize: "22px", color: "#1e293b", lineHeight: 1.3 }}>
-                    <bdi>{profile.businessName}</bdi>
-                  </div>
-                )}
-                <div style={{ borderTop: "1px solid #cbd5e1", marginTop: "4px", paddingTop: "4px", fontSize: "11px", color: "#94a3b8" }}>
-                  {t("doc.signature")}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      {/* ── Hidden PDF print block (light/print styling) ──
+          Rendered under a nested provider in the DOCUMENT'S language (own
+          useTranslations/useLocale). Cloned to <body> by the print routine.
+          Gated on docMessages so the subtree is mounted before window.print()
+          runs (same 3-layer guard as the ad-hoc report). */}
+      {docMessages && (
+        <NextIntlClientProvider locale={docLocale} messages={docMessages}>
+          <PdfChargeDocument doc={doc} lines={lines} profile={profile} />
+        </NextIntlClientProvider>
+      )}
     </div>
   );
 }
