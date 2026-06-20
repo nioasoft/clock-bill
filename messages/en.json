@@ -473,7 +473,9 @@
       "locked": "Locked",
       "makeActive": "Make active",
       "upgradeToUnlock": "Upgrade to unlock",
-      "dataSafe": "Your data is safe"
+      "dataSafe": "Your data is safe",
+      "madeActiveSuccess": "Client activated successfully",
+      "errorMakeActive": "Error activating client"
     },
     "pageTitle": "Clients",
     "clientDetails": "Client Details",

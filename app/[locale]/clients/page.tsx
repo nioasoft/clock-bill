@@ -8,7 +8,7 @@ import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { PlanUsageBanner } from "@/components/plan-usage-banner";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Users } from "lucide-react";
+import { Lock, Users } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { messageForError } from "@/lib/api-error";
 import { fieldClass } from "@/lib/form-styles";
@@ -91,6 +91,7 @@ function ClientsPageContent() {
   const searchParams = useSearchParams();
   const [clients, setClients] = useState<Client[]>([]);
   const [plan, setPlan] = useState<{ activeCount: number; clientLimit: number | null } | null>(null);
+  const [lockedIds, setLockedIds] = useState<Set<string>>(new Set());
   const [clientsLoading, setClientsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -206,6 +207,7 @@ function ClientsPageContent() {
           if (data.plan) {
             setPlan({ activeCount: data.plan.activeCount, clientLimit: data.plan.clientLimit });
           }
+          setLockedIds(new Set<string>(Array.isArray(data.lockedClientIds) ? (data.lockedClientIds as string[]) : []));
         }
       } catch (error) {
         console.error("Error fetching clients:", error);
@@ -468,6 +470,49 @@ function ClientsPageContent() {
     } catch (error) {
       console.error("Error restoring client:", error);
       showErrorToast(t("errorRestoreClient"));
+    }
+  };
+
+  const handleMakeActive = async (clientId: string) => {
+    try {
+      const response = await fetch(`/api/clients/${clientId}/make-active`, {
+        method: "POST",
+      });
+      const data = await response.json() as { success: boolean; error_code?: string };
+      if (data.success) {
+        // Remove from locked set and refetch to get the updated list + plan counts.
+        setLockedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(clientId);
+          return next;
+        });
+        // Full refetch to sync plan counts and client status from server.
+        try {
+          const res = await fetch("/api/clients");
+          const fresh = await res.json() as {
+            success: boolean;
+            clients?: Client[];
+            plan?: { activeCount: number; clientLimit: number | null };
+            lockedClientIds?: string[];
+          };
+          if (fresh.success) {
+            setClients(fresh.clients ?? []);
+            if (fresh.plan) {
+              setPlan({ activeCount: fresh.plan.activeCount, clientLimit: fresh.plan.clientLimit });
+            }
+            setLockedIds(new Set<string>(Array.isArray(fresh.lockedClientIds) ? fresh.lockedClientIds : []));
+          }
+        } catch (fetchErr) {
+          console.error("Error refetching clients after make-active:", fetchErr);
+        }
+        void queryClient.invalidateQueries({ queryKey: clientsQueryKey });
+        showSuccessToast(t("usage.madeActiveSuccess"));
+      } else {
+        showErrorToast(data.error_code ? messageForError(data, tRoot) : t("usage.errorMakeActive"));
+      }
+    } catch (error) {
+      console.error("Error making client active:", error);
+      showErrorToast(t("usage.errorMakeActive"));
     }
   };
 
@@ -929,13 +974,37 @@ function ClientsPageContent() {
                           </span>
                         )}
                       </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm">
-                        <button
-                          onClick={() => handleEdit(client)}
-                          className="text-primary hover:text-primary/90 font-medium ms-2"
-                        >
-                          {t("edit")}
-                        </button>
+                      <td className="px-6 py-4 text-sm">
+                        {lockedIds.has(client.id) ? (
+                          <div className="flex flex-col gap-1.5">
+                            <span className="inline-flex w-fit items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                              <Lock className="h-3 w-3" />
+                              {t("usage.locked")}
+                            </span>
+                            <p className="text-xs text-muted-foreground">{t("usage.dataSafe")}</p>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <button
+                                onClick={() => handleMakeActive(client.id)}
+                                className="rounded-[var(--radius)] bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                              >
+                                {t("usage.makeActive")}
+                              </button>
+                              <Link
+                                href="/pricing"
+                                className="rounded-[var(--radius)] border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted"
+                              >
+                                {t("usage.upgradeToUnlock")}
+                              </Link>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleEdit(client)}
+                            className="whitespace-nowrap text-primary hover:text-primary/90 font-medium ms-2"
+                          >
+                            {t("edit")}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -993,14 +1062,40 @@ function ClientsPageContent() {
                     </span>
                   </div>
 
-                  <div className="mt-3">
-                    <button
-                      onClick={() => handleEdit(client)}
-                      className="min-h-[44px] rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface"
-                    >
-                      {t("edit")}
-                    </button>
-                  </div>
+                  {lockedIds.has(client.id) ? (
+                    <div className="mt-3 flex flex-col gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                          <Lock className="h-3 w-3" />
+                          {t("usage.locked")}
+                        </span>
+                        <span className="text-xs text-muted-foreground">{t("usage.dataSafe")}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => handleMakeActive(client.id)}
+                          className="min-h-[44px] rounded-[var(--radius)] bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                        >
+                          {t("usage.makeActive")}
+                        </button>
+                        <Link
+                          href="/pricing"
+                          className="inline-flex min-h-[44px] items-center rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
+                        >
+                          {t("usage.upgradeToUnlock")}
+                        </Link>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-3">
+                      <button
+                        onClick={() => handleEdit(client)}
+                        className="min-h-[44px] rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface"
+                      >
+                        {t("edit")}
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

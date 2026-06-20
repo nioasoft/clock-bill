@@ -473,7 +473,9 @@
       "locked": "נעול",
       "makeActive": "הפוך לפעיל",
       "upgradeToUnlock": "שדרג כדי לפתוח",
-      "dataSafe": "הנתונים שלך שמורים"
+      "dataSafe": "הנתונים שלך שמורים",
+      "madeActiveSuccess": "הלקוח הופעל בהצלחה",
+      "errorMakeActive": "שגיאה בהפעלת הלקוח"
     },
     "pageTitle": "לקוחות",
     "clientDetails": "פרטי לקוח",
