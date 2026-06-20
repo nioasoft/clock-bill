@@ -72,8 +72,17 @@ export async function GET(request: NextRequest) {
       lockedCount: Math.max(0, row.active_client_count - 1),
     });
     const ok = await sendEmail({ to: row.email, subject, html });
-    if (ok) sent++;
-    else logger.error("trial email send failed", { userId: row.user_id, key: due });
+    if (ok) {
+      sent++;
+    } else {
+      // Release the reservation so a later run retries instead of suppressing
+      // this email forever (the reserve still prevents concurrent double-sends).
+      await adminQuery(
+        `DELETE FROM trial_emails_sent WHERE user_id = $1 AND email_key = $2`,
+        [row.user_id, due]
+      );
+      logger.error("trial email send failed; released reservation for retry", { userId: row.user_id, key: due });
+    }
   }
 
   logger.info("trial-lifecycle run complete", { candidates: rows.rows.length, sent });
