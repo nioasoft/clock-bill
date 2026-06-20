@@ -10,6 +10,7 @@
  */
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { createAuthMiddleware, APIError } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { polar, checkout, portal, webhooks } from "@polar-sh/better-auth";
 import { db } from "@/src/db";
@@ -240,6 +241,23 @@ const polarPlugin = polarEnabled
     })
   : null;
 
+// Server-side password policy. minPasswordLength (8) is enforced by Better Auth,
+// but the client-only strength meter can be bypassed via direct API calls — so we
+// re-check complexity in a before-hook on the endpoints that accept a new password.
+const PASSWORD_PATHS = new Set(["/sign-up/email", "/reset-password"]);
+
+function assertStrongPassword(password: unknown): void {
+  if (typeof password !== "string" || password.length < 8) {
+    throw new APIError("BAD_REQUEST", { message: "הסיסמה חייבת להכיל לפחות 8 תווים" });
+  }
+  const classes = [/[a-z]/, /[A-Z]/, /[0-9]/].filter((re) => re.test(password)).length;
+  if (classes < 3) {
+    throw new APIError("BAD_REQUEST", {
+      message: "הסיסמה חייבת לכלול אות גדולה, אות קטנה וספרה",
+    });
+  }
+}
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
@@ -365,6 +383,14 @@ export const auth = betterAuth({
       // Not settable by the client during signup; managed server-side.
       role: { type: "string", required: false, defaultValue: "user", input: false },
     },
+  },
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      // Enforce password complexity server-side on the new-password endpoints.
+      if (PASSWORD_PATHS.has(ctx.path)) {
+        assertStrongPassword((ctx.body as { password?: unknown } | undefined)?.password);
+      }
+    }),
   },
   databaseHooks: {
     user: {
