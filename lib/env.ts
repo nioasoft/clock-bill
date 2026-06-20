@@ -40,10 +40,16 @@ const ENV_SCHEMA: EnvVarSchema[] = [
   {
     name: "BETTER_AUTH_SECRET",
     required: true,
-    description: "Secret key for authentication (at least 32 characters)",
+    description:
+      "Secret key for authentication (at least 32 high-entropy characters; not a placeholder)",
     validator: (value) => {
-      // Should be at least 32 characters for security
-      return value.length >= 32;
+      // At least 32 chars AND not an obvious placeholder / low-entropy value.
+      if (value.length < 32) return false;
+      const lowered = value.toLowerCase();
+      const placeholders = ["your-secret", "changeme", "example", "placeholder", "secret-key-at-least"];
+      if (placeholders.some((p) => lowered.includes(p))) return false;
+      if (/^(.)\1+$/.test(value)) return false; // all the same character
+      return true;
     },
   },
   {
@@ -209,6 +215,19 @@ interface ValidationError {
 }
 
 /**
+ * True when the connection string points at a local/dev database (which won't
+ * have TLS), so the production sslmode requirement can safely skip it.
+ */
+function isLocalDatabaseUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return host === "localhost" || host === "127.0.0.1" || host === "::1";
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Validate all environment variables
  * Throws an error if validation fails
  */
@@ -252,6 +271,24 @@ export function validateEnv(): void {
           message: `Warning: ${schema.name} has invalid value: ${schema.description}`,
         });
       }
+    }
+  }
+
+  // Production-only hardening (fail closed). These would break local dev if
+  // applied everywhere, so they are gated on NODE_ENV=production.
+  if (process.env.NODE_ENV === "production") {
+    if (!process.env.CRON_SECRET) {
+      errors.push({
+        varName: "CRON_SECRET",
+        message: "CRON_SECRET is required in production to protect /api/cron/* endpoints",
+      });
+    }
+    const dbUrl = process.env.DATABASE_URL ?? "";
+    if (dbUrl && !isLocalDatabaseUrl(dbUrl) && !/[?&]sslmode=require\b/.test(dbUrl)) {
+      errors.push({
+        varName: "DATABASE_URL",
+        message: "Production DATABASE_URL must enforce TLS (append ?sslmode=require)",
+      });
     }
   }
 
