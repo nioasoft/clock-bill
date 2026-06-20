@@ -117,6 +117,9 @@ export async function GET(_request: NextRequest) {
     const plan = await getUserPlan(user.id);
     const activeCount = clients.filter((c) => c.isActive).length;
 
+    const { getLockedClientIds } = await import("@/lib/plan-guard");
+    const lockedClientIds = Array.from(await getLockedClientIds(user.id));
+
     return NextResponse.json(
       {
         success: true,
@@ -127,6 +130,7 @@ export async function GET(_request: NextRequest) {
           clientLimit: Number.isFinite(plan.clientLimit) ? plan.clientLimit : null,
           activeCount,
         },
+        lockedClientIds,
       },
       {
         headers: {
