@@ -223,6 +223,35 @@ export async function withTransaction<T>(
 }
 
 /**
+ * Run a transaction on the PRIVILEGED admin connection (BYPASSRLS). No tenant
+ * context is bound, so callers MUST gate with getAdminUser() and pass explicit
+ * `user_id` filters. Use for cross-tenant admin mutations (e.g. deleting a
+ * user's data across every table) that RLS would otherwise silently block.
+ */
+export async function withAdminTransaction<T>(
+  callback: (client: PoolClient) => Promise<T>
+): Promise<T> {
+  return withConnRetry(async () => {
+    const client = await getAdminPool().connect();
+    try {
+      await client.query("BEGIN");
+      const result = await callback(client);
+      await client.query("COMMIT");
+      return result;
+    } catch (error) {
+      try {
+        await client.query("ROLLBACK");
+      } catch {
+        // ignore rollback failure (connection may already be dead)
+      }
+      throw error;
+    } finally {
+      client.release();
+    }
+  });
+}
+
+/**
  * Close the connection pool
  */
 export async function closeDb(): Promise<void> {

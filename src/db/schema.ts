@@ -654,3 +654,28 @@ export const trialEmailsSent = pgTable(
   },
   (table) => [uniqueIndex("trial_emails_sent_user_key").on(table.userId, table.emailKey)]
 );
+
+// ─── Audit events (append-only) ───────────────────────────────────────────
+// Immutable trail of sensitive actions (admin user ops, financial mutations).
+// Written ONLY via the privileged adminQuery()/withAdminTransaction() path; RLS
+// is ENABLE+FORCE with no policies so the restricted tenant role can never read
+// or write it. Never UPDATE/DELETE — append only.
+export const auditEvents = pgTable(
+  "audit_events",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()::text`),
+    actorId: text("actor_id").notNull(),
+    action: text("action").notNull(),
+    targetType: text("target_type"),
+    targetId: text("target_id"),
+    ip: text("ip"),
+    userAgent: text("user_agent"),
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_audit_events_actor_id").on(table.actorId),
+    index("idx_audit_events_target").on(table.targetType, table.targetId),
+    index("idx_audit_events_created_at").on(table.createdAt),
+  ]
+);
