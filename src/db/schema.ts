@@ -218,6 +218,9 @@ export const clients = pgTable(
     overageRate: real("overage_rate"),
     notes: text("notes"),
     isActive: boolean("is_active").default(true),
+    // Explicit "keep this client active" bump for the plan cap. NULL => rank by
+    // activity/age. Set to NOW() by the make-active action. See lib/plan-guard.ts.
+    planPriorityAt: timestamp("plan_priority_at"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
