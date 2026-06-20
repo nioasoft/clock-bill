@@ -1863,6 +1863,9 @@
   "Reports": {
     "preVatNote": "All amounts are pre-VAT",
     "pageTitle": "Settlement",
+    "documentLanguageToggle": "Document language",
+    "documentLanguageHe": "Hebrew",
+    "documentLanguageEn": "English",
     "tabs": {
       "billable": "To bill",
       "documents": "Documents",
@@ -1967,6 +1970,7 @@
     "pdf": {
       "button": "Export to PDF",
       "taxId": "Business / Company ID",
+      "logoAlt": "Logo",
       "bankName": "Bank",
       "bankBranch": "Branch",
       "bankAccount": "Account"

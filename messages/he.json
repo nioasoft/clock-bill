@@ -1863,6 +1863,9 @@
   "Reports": {
     "preVatNote": "כל הסכומים הם לפני מע\"מ",
     "pageTitle": "התחשבנות",
+    "documentLanguageToggle": "שפת המסמך",
+    "documentLanguageHe": "עברית",
+    "documentLanguageEn": "אנגלית",
     "tabs": {
       "billable": "לחיוב",
       "documents": "תעודות",
@@ -1967,6 +1970,7 @@
     "pdf": {
       "button": "יצא ל-PDF",
       "taxId": "ע.מ / ח.פ",
+      "logoAlt": "לוגו",
       "bankName": "בנק",
       "bankBranch": "סניף",
       "bankAccount": "חשבון"

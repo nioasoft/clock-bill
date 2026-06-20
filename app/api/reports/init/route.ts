@@ -53,7 +53,7 @@ export async function GET(): Promise<NextResponse> {
       // ── clients (mirror: /api/clients GET) ──────────────────────────────
       const clientsRes = await client.query(
         `SELECT c.id, c.name, c.contact_name, c.email, c.phone, c.address, c.default_rate,
-                c.currency, c.is_retainer, c.retainer_hours, c.retainer_monthly_fee, c.overage_rate,
+                c.currency, c.document_language, c.is_retainer, c.retainer_hours, c.retainer_monthly_fee, c.overage_rate,
                 c.notes, c.is_active, c.created_at,
                 COALESCE(SUM(
                   CASE
@@ -68,7 +68,7 @@ export async function GET(): Promise<NextResponse> {
          LEFT JOIN time_entries te ON te.project_id = p.id
          WHERE c.user_id = $1
          GROUP BY c.id, c.name, c.contact_name, c.email, c.phone, c.address, c.default_rate,
-                c.currency, c.is_retainer, c.retainer_hours, c.retainer_monthly_fee, c.overage_rate,
+                c.currency, c.document_language, c.is_retainer, c.retainer_hours, c.retainer_monthly_fee, c.overage_rate,
                 c.notes, c.is_active, c.created_at
          ORDER BY c.created_at DESC`,
         [user.id]
@@ -110,6 +110,7 @@ export async function GET(): Promise<NextResponse> {
       address: c.address,
       defaultRate: c.default_rate,
       currency: c.currency || "ILS",
+      documentLanguage: c.document_language ?? null,
       isRetainer: c.is_retainer ?? false,
       retainerHours: c.retainer_hours,
       retainerMonthlyFee: c.retainer_monthly_fee,
