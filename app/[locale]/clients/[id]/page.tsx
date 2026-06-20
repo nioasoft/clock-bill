@@ -15,6 +15,7 @@ import { ROUNDING_MODES, type RoundingMode } from "@/lib/rounding";
 import { messageForError } from "@/lib/api-error";
 import { useTranslations, useLocale } from "next-intl";
 import { SimpleSelect } from "@/components/ui/simple-select";
+import { resolveDocumentLocale } from "@/lib/document-language";
 
 const CURRENCIES = [
   { value: "ILS", label: "₪ ILS" },
@@ -42,6 +43,7 @@ interface Client {
   isActive: boolean;
   createdAt: string;
   rates?: ClientRate[];
+  documentLanguage: string | null;
 }
 
 /** Map a loaded client into the edit form's controlled state. */
@@ -67,6 +69,7 @@ function clientToFormData(client: Client) {
       isDefault: r.isDefault,
       unit: r.unit ?? null,
     })) as ClientRateInput[],
+    documentLanguage: (client.documentLanguage ?? "") as "" | "he" | "en",
   };
 }
 
@@ -99,6 +102,7 @@ export default function ClientDetailsPage() {
     overageRate: "",
     notes: "",
     rates: [] as ClientRateInput[],
+    documentLanguage: "" as "" | "he" | "en",
   });
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -199,6 +203,7 @@ export default function ClientDetailsPage() {
           overageRate: formData.isRetainer && formData.hasOverageRate && formData.overageRate ? parseFloat(formData.overageRate) : undefined,
           notes: formData.notes || undefined,
           rates: cleanedRates,
+          documentLanguage: formData.documentLanguage === "" ? null : formData.documentLanguage,
         }),
       });
 
@@ -408,6 +413,34 @@ export default function ClientDetailsPage() {
                     <p className="mt-1 text-xs text-muted-foreground">
                       {t("roundingHint")}
                     </p>
+                  </div>
+
+                  <div>
+                    <label htmlFor="documentLanguage" className="mb-1.5 block text-sm font-medium text-foreground">
+                      {t("documentLanguageLabel")}
+                    </label>
+                    <SimpleSelect
+                      id="documentLanguage"
+                      value={formData.documentLanguage}
+                      onChange={(v) =>
+                        setFormData({ ...formData, documentLanguage: v as "" | "he" | "en" })
+                      }
+                      disabled={submitting}
+                      options={[
+                        {
+                          value: "",
+                          label: t("documentLanguageAutoResolved", {
+                            lang:
+                              resolveDocumentLocale(null, formData.currency) === "he"
+                                ? t("documentLanguageHe")
+                                : t("documentLanguageEn"),
+                          }),
+                        },
+                        { value: "he", label: t("documentLanguageHe") },
+                        { value: "en", label: t("documentLanguageEn") },
+                      ]}
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">{t("documentLanguageHint")}</p>
                   </div>
                 </div>
 
