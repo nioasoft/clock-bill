@@ -117,6 +117,34 @@ export async function POST(request: NextRequest) {
         if (entries.length !== timeEntryIds.length) throw new Error("ENTRY_STATE_CHANGED");
       }
 
+      // Server-authoritative computed-line amounts: the client sends the amount,
+      // but a fixed_monthly line must equal a real project fixed_monthly_fee for
+      // this client, and a retainer line must equal the client's retainer fee.
+      // Reject anything fabricated (float-tolerant compare on the `real` columns).
+      if (computedLines.length > 0) {
+        const within = (a: number, b: number) => Math.abs(a - b) < 0.005;
+        const feeRows = await client.query<{ fee: number }>(
+          `SELECT DISTINCT fixed_monthly_fee AS fee
+             FROM projects
+            WHERE client_id = $1 AND user_id = $2 AND fixed_monthly_fee > 0`,
+          [clientId, user.id]
+        );
+        const allowedFixed = feeRows.rows.map((r) => Number(r.fee));
+        const retainerRow = await client.query<{ fee: number | null }>(
+          `SELECT retainer_monthly_fee AS fee FROM clients WHERE id = $1 AND user_id = $2`,
+          [clientId, user.id]
+        );
+        const retainerFee =
+          retainerRow.rows[0]?.fee == null ? null : Number(retainerRow.rows[0].fee);
+        for (const c of computedLines) {
+          const ok =
+            c.sourceType === "retainer"
+              ? retainerFee !== null && within(c.amount, retainerFee)
+              : allowedFixed.some((f) => within(c.amount, f));
+          if (!ok) throw new Error("COMPUTED_LINE_INVALID");
+        }
+      }
+
       const entryLines: ChargeLineDraft[] = entries.map(buildLineFromEntry);
       const computedDrafts: ChargeLineDraft[] = computedLines.map((c) => ({
         sourceType: c.sourceType,
@@ -206,6 +234,7 @@ export async function POST(request: NextRequest) {
     if (msg === "CLIENT_NOT_FOUND") return NextResponse.json({ success: false, error_code: "CLIENT_NOT_FOUND", message: "לקוח לא נמצא" }, { status: 404 });
     if (msg === "CLIENT_PLAN_LOCKED") { const { lockedClientResponse } = await import("@/lib/plan-guard"); return lockedClientResponse(); }
     if (msg === "ENTRY_STATE_CHANGED") return NextResponse.json({ success: false, error_code: "ENTRY_STATE_CHANGED", message: "חלק מהפריטים כבר חויבו או השתנו — רענן ונסה שוב" }, { status: 409 });
+    if (msg === "COMPUTED_LINE_INVALID") return NextResponse.json({ success: false, error_code: "VALIDATION_ERROR", message: "סכום חיוב קבוע אינו תואם את נתוני הפרויקט — רענן ונסה שוב" }, { status: 400 });
     logger.error("POST /api/charge-documents failed", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה ביצירת תעודה" }, { status: 500 });
   }
