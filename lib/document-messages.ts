@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { AbstractIntlMessages } from "use-intl/core";
+import type { AbstractIntlMessages } from "next-intl";
 import type { DocumentLanguage } from "@/lib/document-language";
 
 // Module-level cache: a locale's messages bundle is loaded once per session.
