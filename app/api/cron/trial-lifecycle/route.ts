@@ -17,7 +17,7 @@ interface TrialUserRow extends Record<string, unknown> {
   email: string | null;
   locale: string | null;
   trial_started_at: string;
-  trial_ends_at: string;
+  trial_ends_at: string | null;
   sent_keys: string[]; // aggregated already-sent keys
   active_client_count: number;
 }
@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
         AND COALESCE(up.founding, FALSE) = FALSE
         AND COALESCE(up.subscription_tier, 'free') = 'free'
         AND u.email IS NOT NULL
+        AND u.email_verified = TRUE
       GROUP BY up.user_id, u.email, up.locale, up.trial_started_at, up.trial_ends_at`,
     []
   );
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
     const startedMs = new Date(row.trial_started_at).getTime();
     const daysSinceStart = Math.floor((now - startedMs) / DAY_MS);
     const due = pickDueEmail(daysSinceStart, new Set(row.sent_keys));
-    if (!due || !row.email) continue;
+    if (!due || !row.email || !row.trial_ends_at) continue;
 
     // Reserve the send atomically: only proceed if WE inserted the row (no prior send).
     const reserve = await adminQuery(
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest) {
        ON CONFLICT (user_id, email_key) DO NOTHING`,
       [row.user_id, due]
     );
-    if (reserve.rowCount === 0) continue; // already sent by a concurrent/earlier run
+    if ((reserve.rowCount ?? 0) === 0) continue; // already sent by a concurrent/earlier run
 
     const endsMs = new Date(row.trial_ends_at).getTime();
     const daysLeft = Math.max(0, Math.ceil((endsMs - now) / DAY_MS));
