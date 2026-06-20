@@ -327,6 +327,13 @@ export const auth = betterAuth({
     // on next re-auth.
     encryptOAuthTokens: true,
   },
+  verification: {
+    // Hash verification identifiers (which embed reset/verify tokens) so a DB
+    // read can't recover a live token → no DB-read-to-account-takeover path.
+    // Better Auth hashes on both write and lookup, so this is internally
+    // consistent; in-flight tokens issued before deploy become invalid.
+    storeIdentifier: "hashed",
+  },
   session: {
     // Cache session data in a signed cookie so getSession() (called by the RLS
     // tenant resolver on each query) is cheap — no DB hit for ~5 minutes.
