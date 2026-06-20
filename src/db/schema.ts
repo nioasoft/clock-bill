@@ -603,7 +603,11 @@ export const chargeDocumentLines = pgTable(
   (table) => [
     index("idx_charge_document_lines_document_id").on(table.documentId),
     index("idx_charge_document_lines_user_id").on(table.userId),
-    index("idx_charge_document_lines_time_entry_id").on(table.timeEntryId),
+    // One active charge line per time entry (also serves lookups). Canceled docs
+    // NULL their lines' time_entry_id so freed entries can be re-billed.
+    uniqueIndex("uq_charge_document_lines_time_entry_id")
+      .on(table.timeEntryId)
+      .where(sql`${table.timeEntryId} IS NOT NULL`),
     check("charge_document_lines_amount_check", sql`${table.amount} IS NULL OR ${table.amount} >= 0`),
     check("charge_document_lines_rate_check", sql`${table.rate} IS NULL OR ${table.rate} >= 0`),
     check("charge_document_lines_quantity_check", sql`${table.quantity} IS NULL OR ${table.quantity} >= 0`),

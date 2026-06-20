@@ -24,6 +24,13 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
         `UPDATE time_entries SET charge_document_id = NULL WHERE charge_document_id = $1 AND user_id = $2`,
         [id, user.id]
       );
+      // Release the entry link on this doc's lines so the freed entries can be
+      // re-billed without colliding with the unique index on time_entry_id. The
+      // lines keep their amounts/labels as a historical record of the canceled doc.
+      await client.query(
+        `UPDATE charge_document_lines SET time_entry_id = NULL WHERE document_id = $1 AND user_id = $2`,
+        [id, user.id]
+      );
       await client.query(
         `UPDATE charge_documents SET status = 'canceled', canceled_at = NOW(), updated_at = NOW()
           WHERE id = $1 AND user_id = $2`,
