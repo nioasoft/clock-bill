@@ -274,9 +274,14 @@ export const auth = betterAuth({
             <p style="margin:0;font-size:13px;color:#71717a;line-height:1.6;">${t.ignore}</p>`,
         }),
       });
-      // Dev parity / fallback when email isn't configured: log the link.
-      if (!sent) {
+      // Dev parity / fallback when email isn't configured: log the link — but
+      // ONLY outside production. In prod a send failure (e.g. transient Resend
+      // outage) must never write the live reset token (the URL is the
+      // credential) to logs; log identity only.
+      if (!sent && process.env.NODE_ENV !== "production") {
         logger.info(`Password reset link for ${user.email}: ${url}`);
+      } else if (!sent) {
+        logger.warn("Password reset email failed to send", { userId: user.id });
       }
     },
   },
@@ -300,8 +305,11 @@ export const auth = betterAuth({
             <p style="margin:0;font-size:13px;color:#71717a;line-height:1.6;">${t.ignore}</p>`,
         }),
       });
-      if (!sent) {
+      // Only log the verification link outside production (see reset note above).
+      if (!sent && process.env.NODE_ENV !== "production") {
         logger.info(`Email verification link for ${user.email}: ${url}`);
+      } else if (!sent) {
+        logger.warn("Verification email failed to send", { userId: user.id });
       }
     },
   },
