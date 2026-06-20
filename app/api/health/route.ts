@@ -15,26 +15,18 @@ export async function GET() {
     // and releases it internally (even on error), so there's no leak on failure.
     await query("SELECT 1");
 
-    // Return healthy status
+    // 200 = healthy. Deliberately do NOT expose infrastructure state (e.g. DB
+    // connection status) to unauthenticated callers — the status code is enough
+    // for load balancers / uptime checks.
     return NextResponse.json(
-      {
-        status: "healthy",
-        timestamp: new Date().toISOString(),
-        database: "connected",
-      },
+      { status: "ok", timestamp: new Date().toISOString() },
       { status: 200 }
     );
   } catch (error) {
-    // Log the detailed error server-side; keep the client response generic so we
-    // don't leak DB engine/connection details to unauthenticated callers.
+    // Log details server-side; keep the client response generic.
     logger.error("Health check failed", error);
     return NextResponse.json(
-      {
-        status: "unhealthy",
-        timestamp: new Date().toISOString(),
-        database: "disconnected",
-        error: "Database connection failed",
-      },
+      { status: "error", timestamp: new Date().toISOString() },
       { status: 503 }
     );
   }
