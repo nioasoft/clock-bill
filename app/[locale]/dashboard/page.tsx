@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Link, useRouter } from "@/src/i18n/navigation";
+import { Link } from "@/src/i18n/navigation";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
@@ -21,6 +21,7 @@ import {
   type DashboardConfig,
 } from "@/lib/dashboard-widgets";
 import { TrialCard } from "@/components/trial-card";
+import { UpgradeModal } from "@/components/upgrade-modal";
 
 // Count-aware grid classes for the stat-card row. Static full strings (not
 // interpolated) so Tailwind v4's JIT can see them. Capped at 5 columns; more
@@ -97,7 +98,6 @@ export default function DashboardPage() {
   const t = useTranslations("Dashboard");
   // Reuses the timer-bar notes strings so the two editors stay in sync.
   const tTimer = useTranslations("Timer");
-  const router = useRouter();
   const intlLocale = useLocale() === "en" ? "en-US" : "he-IL";
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -107,6 +107,7 @@ export default function DashboardPage() {
   const [projectHours, setProjectHours] = useState<ProjectHours[]>([]);
   const [dashboardConfig, setDashboardConfig] = useState<DashboardConfig>(DEFAULT_DASHBOARD_CONFIG);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   // Onboarding flag from the shared profile query (no separate /api/profile fetch).
   const { data: profile } = useProfile();
@@ -359,7 +360,8 @@ export default function DashboardPage() {
           </Link>
         </PageHeader>
 
-        <TrialCard onUpgrade={() => router.push("/pricing")} />
+        <TrialCard onUpgrade={() => setUpgradeOpen(true)} />
+        <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} />
 
         {/* First-time user checklist */}
         {!statsLoading && !statsError && isFirstTimeUser && (
