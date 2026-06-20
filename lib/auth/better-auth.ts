@@ -335,6 +335,11 @@ export const auth = betterAuth({
     storeIdentifier: "hashed",
   },
   session: {
+    // Explicit session lifetime (don't rely on library defaults): sessions
+    // expire after 7 days, with a sliding refresh once per day of activity so
+    // an idle stolen token has a bounded window.
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24, // refresh at most once per day
     // Cache session data in a signed cookie so getSession() (called by the RLS
     // tenant resolver on each query) is cheap — no DB hit for ~5 minutes.
     cookieCache: { enabled: true, maxAge: 300 },
