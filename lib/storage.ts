@@ -5,8 +5,44 @@
 
 import { writeFile, mkdir, unlink } from "fs/promises";
 import { existsSync } from "fs";
+import { randomUUID } from "crypto";
 import * as path from "path";
 import { isProduction } from "./env";
+
+interface SniffResult {
+  mime: string;
+  ext: string;
+}
+
+/**
+ * Identify an image by its magic bytes (not the client-supplied MIME/extension,
+ * which are forgeable). Returns null for anything that isn't an allowed image,
+ * so an HTML/script polyglot named photo.png is rejected before it's stored as
+ * same-origin content. Thrown as UNSUPPORTED_FILE_CONTENT by the adapters.
+ */
+export function sniffImageType(buf: Buffer): SniffResult | null {
+  if (buf.length >= 8 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) {
+    return { mime: "image/png", ext: "png" };
+  }
+  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) {
+    return { mime: "image/jpeg", ext: "jpg" };
+  }
+  if (buf.length >= 6 && buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x38) {
+    return { mime: "image/gif", ext: "gif" };
+  }
+  if (buf.length >= 12 && buf.toString("ascii", 0, 4) === "RIFF" && buf.toString("ascii", 8, 12) === "WEBP") {
+    return { mime: "image/webp", ext: "webp" };
+  }
+  return null;
+}
+
+/** Read the file's bytes and validate them as an allowed image, or throw. */
+async function readValidatedImage(file: File): Promise<{ buffer: Buffer; ext: string }> {
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const sniff = sniffImageType(buffer);
+  if (!sniff) throw new Error("UNSUPPORTED_FILE_CONTENT");
+  return { buffer, ext: sniff.ext };
+}
 
 /**
  * Storage interface for file operations
@@ -27,7 +63,7 @@ interface VercelBlobPutResult {
 }
 
 // Dynamic import for Vercel Blob (only available in production when package is installed)
-let blobPut: ((filename: string, file: File, options: VercelBlobPutOptions) => Promise<VercelBlobPutResult>) | null = null;
+let blobPut: ((filename: string, file: File | Buffer, options: VercelBlobPutOptions) => Promise<VercelBlobPutResult>) | null = null;
 let blobDel: ((pathname: string) => Promise<void>) | null = null;
 let blobInitialized = false;
 
@@ -62,21 +98,14 @@ class LocalStorageAdapter implements StorageAdapter {
     }
   }
 
-  private generateFilename(userId: string, originalName: string): string {
-    const timestamp = Date.now();
-    const extension = path.extname(originalName) || ".png";
-    return `${userId}_${timestamp}${extension}`;
-  }
-
-  async upload(file: File, userId: string, prefix: string): Promise<string> {
+  async upload(file: File, _userId: string, prefix: string): Promise<string> {
     await this.ensureUploadDir(prefix);
 
-    const filename = this.generateFilename(userId, file.name);
+    // Validate by magic bytes and derive a safe extension; random-UUID name so
+    // the key leaks no user id / timestamp and can never be an executable .html.
+    const { buffer, ext } = await readValidatedImage(file);
+    const filename = `${randomUUID()}.${ext}`;
     const filepath = path.join(this.getUploadDir(prefix), filename);
-
-    // Convert File to Buffer and save
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
     await writeFile(filepath, buffer);
 
     return `/uploads/${prefix}/${filename}`;
@@ -104,16 +133,16 @@ class LocalStorageAdapter implements StorageAdapter {
  * Vercel Blob storage (production)
  */
 class BlobStorageAdapter implements StorageAdapter {
-  async upload(file: File, userId: string, prefix: string): Promise<string> {
+  async upload(file: File, _userId: string, prefix: string): Promise<string> {
     if (!blobPut) {
       throw new Error("Vercel Blob not available");
     }
 
-    const timestamp = Date.now();
-    const extension = path.extname(file.name) || ".png";
-    const filename = `${prefix}/${userId}_${timestamp}${extension}`;
+    // Magic-byte validation + random-UUID key (no user id / timestamp leak).
+    const { buffer, ext } = await readValidatedImage(file);
+    const filename = `${prefix}/${randomUUID()}.${ext}`;
 
-    const blob = await blobPut(filename, file, {
+    const blob = await blobPut(filename, buffer, {
       access: "public",
     });
 

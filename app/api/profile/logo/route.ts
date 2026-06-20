@@ -109,6 +109,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       logoUrl: logoUrl,
     });
   } catch (error) {
+    if (error instanceof Error && error.message === "UNSUPPORTED_FILE_CONTENT") {
+      return NextResponse.json(
+        { success: false, error_code: "INVALID_FILE_TYPE", message: "Invalid file type. Allowed: JPEG, PNG, GIF, WebP" },
+        { status: 400 }
+      );
+    }
     console.error("Logo upload error:", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "Internal server error" },
