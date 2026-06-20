@@ -290,6 +290,15 @@ export function validateEnv(): void {
         message: "Production DATABASE_URL must enforce TLS (append ?sslmode=require)",
       });
     }
+    // Email must be configured in prod, otherwise requireEmailVerification
+    // silently falls open and accounts can be created without verification.
+    if (!process.env.RESEND_API_KEY) {
+      errors.push({
+        varName: "RESEND_API_KEY",
+        message:
+          "RESEND_API_KEY is required in production so email verification is enforced (fail closed)",
+      });
+    }
   }
 
   // Log warnings
