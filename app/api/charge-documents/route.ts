@@ -33,7 +33,8 @@ export async function GET(request: NextRequest) {
          FROM charge_documents d
          JOIN clients c ON d.client_id = c.id
         WHERE ${where}
-        ORDER BY d.doc_number DESC`,
+        ORDER BY d.doc_number DESC
+        LIMIT 5000`,
       params
     );
     return NextResponse.json({ success: true, data: rows.rows });
