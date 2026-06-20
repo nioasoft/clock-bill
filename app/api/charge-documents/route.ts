@@ -6,6 +6,7 @@ import { createChargeDocumentSchema } from "@/lib/schemas/charge-documents";
 import { buildLineFromEntry, computeDocumentTotal, type BillableEntry, type ChargeLineDraft } from "@/lib/charge-documents";
 import { resolveRounding } from "@/lib/rounding";
 import { createLogger } from "@/lib/logger";
+import { resolveDocumentLocale } from "@/lib/document-language";
 
 const logger = createLogger("charge-documents:list");
 
@@ -54,11 +55,15 @@ export async function POST(request: NextRequest) {
 
     const result = await withTransaction(async (client: PoolClient) => {
       const clientRow = await client.query(
-        `SELECT currency FROM clients WHERE id = $1 AND user_id = $2`,
+        `SELECT currency, document_language FROM clients WHERE id = $1 AND user_id = $2`,
         [clientId, user.id]
       );
       if (clientRow.rowCount === 0) throw new Error("CLIENT_NOT_FOUND");
       const currency: string = clientRow.rows[0].currency ?? "ILS";
+      const documentLanguage = resolveDocumentLocale(
+        (clientRow.rows[0].document_language ?? null) as "he" | "en" | null,
+        currency
+      );
 
       const { getLockedClientIds } = await import("@/lib/plan-guard");
       if ((await getLockedClientIds(user.id)).has(clientId)) throw new Error("CLIENT_PLAN_LOCKED");
@@ -128,10 +133,10 @@ export async function POST(request: NextRequest) {
 
       const doc = await client.query(
         `INSERT INTO charge_documents
-           (id, user_id, client_id, doc_number, status, currency, total, notes, pdf_template, issued_at)
-         VALUES (gen_random_uuid()::text, $1, $2, $3, 'pending', $4, $5, $6, $7, NOW())
+           (id, user_id, client_id, doc_number, status, currency, total, notes, pdf_template, document_language, issued_at)
+         VALUES (gen_random_uuid()::text, $1, $2, $3, 'pending', $4, $5, $6, $7, $8, NOW())
          RETURNING id, doc_number`,
-        [user.id, clientId, docNumber, currency, total, notes ?? null, pdfTemplate]
+        [user.id, clientId, docNumber, currency, total, notes ?? null, pdfTemplate, documentLanguage]
       );
       const documentId: string = doc.rows[0].id;
 
