@@ -213,6 +213,9 @@ export async function PUT(
       const { getLockedClientIds } = await import("@/lib/plan-guard");
       if ((await getLockedClientIds(user.id)).has(clientId)) return { planLocked: true as const };
 
+      // document_language uses direct assignment (NOT COALESCE): an explicit null
+      // clears the client back to Auto. Callers (the client edit form) MUST always
+      // include documentLanguage in the PUT body — omitting it would null the column.
       const updateResult = await db.query<ClientRow>(
         `UPDATE clients
          SET name = $1, contact_name = $2, email = $3, phone = $4, address = $5, default_rate = COALESCE($6, default_rate),
