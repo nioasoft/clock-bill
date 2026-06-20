@@ -4,6 +4,7 @@ import { sendEmail, type EmailLocale } from "@/lib/email";
 import { pickDueEmail } from "@/lib/trial-emails-schedule";
 import { trialEmailFor } from "@/lib/emails/trial";
 import { createLogger } from "@/lib/logger";
+import { isAuthorizedCron } from "@/lib/cron-auth";
 
 const logger = createLogger("cron:trial-lifecycle");
 export const runtime = "nodejs";
@@ -23,10 +24,8 @@ interface TrialUserRow extends Record<string, unknown> {
 }
 
 export async function GET(request: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (secret) {
-    const auth = request.headers.get("authorization");
-    if (auth !== `Bearer ${secret}`) return NextResponse.json({ ok: false }, { status: 401 });
+  if (!isAuthorizedCron(request)) {
+    return NextResponse.json({ ok: false }, { status: 401 });
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.clock-bill.com";
