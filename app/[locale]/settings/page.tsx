@@ -1608,6 +1608,7 @@ export default function SettingsPage() {
                     logoUrl={profile?.logoUrl ?? null}
                     label={t("pdf.previewLabel")}
                     docTitle={t("pdf.previewDocTitle")}
+                    isHebrew={isHebrew}
                   />
                 </div>
             </div>
