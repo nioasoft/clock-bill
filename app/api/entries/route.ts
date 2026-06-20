@@ -150,14 +150,19 @@ export async function POST(request: NextRequest) {
     // One transaction (one tenant-context bind): ownership check → assign the
     // per-user item_ref (item lines only) → INSERT ... RETURNING joined names.
     const result = await withTransaction(async (client: PoolClient) => {
-      const projectCheck = await client.query<{ id: string }>(
-        `SELECT p.id FROM projects p
+      const projectCheck = await client.query<{ id: string; client_id: string }>(
+        `SELECT p.id, c.id AS client_id FROM projects p
          JOIN clients c ON p.client_id = c.id
          WHERE p.id = $1 AND c.user_id = $2`,
         [projectId, user.id]
       );
       if (projectCheck.rows.length === 0) {
         return { notFound: true as const };
+      }
+
+      const { getLockedClientIds } = await import("@/lib/plan-guard");
+      if ((await getLockedClientIds(user.id)).has(projectCheck.rows[0].client_id)) {
+        return { planLocked: true as const };
       }
 
       // Item lines get a stable, per-user, never-reused reference number.
@@ -218,6 +223,9 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    const { isPlanLockedSentinel, lockedClientResponse } = await import("@/lib/plan-guard");
+    if (isPlanLockedSentinel(result)) return lockedClientResponse();
 
     return NextResponse.json({
       success: true,

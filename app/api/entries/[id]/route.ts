@@ -99,13 +99,18 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       );
       if (entryCheck.rows.length === 0) return { error: "entry" as const };
 
-      const projectCheck = await client.query<{ id: string }>(
-        `SELECT p.id FROM projects p
+      const projectCheck = await client.query<{ id: string; client_id: string }>(
+        `SELECT p.id, c.id AS client_id FROM projects p
          JOIN clients c ON p.client_id = c.id
          WHERE p.id = $1 AND c.user_id = $2`,
         [projectId, user.id]
       );
       if (projectCheck.rows.length === 0) return { error: "project" as const };
+
+      const { getLockedClientIds } = await import("@/lib/plan-guard");
+      if ((await getLockedClientIds(user.id)).has(projectCheck.rows[0].client_id)) {
+        return { planLocked: true as const };
+      }
 
       // Item lines carry a reference number: keep the existing one, assign a new
       // one if this line is becoming an item and has none. Hourly lines clear it.
@@ -170,6 +175,9 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         { status: 404 }
       );
     }
+
+    const { isPlanLockedSentinel, lockedClientResponse } = await import("@/lib/plan-guard");
+    if (isPlanLockedSentinel(result)) return lockedClientResponse();
 
     return NextResponse.json({
       success: true,

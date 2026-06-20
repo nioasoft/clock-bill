@@ -83,6 +83,9 @@ export async function POST(
       );
       if (owns.rows.length === 0) return { notFound: true as const };
 
+      const { getLockedClientIds } = await import("@/lib/plan-guard");
+      if ((await getLockedClientIds(user.id)).has(clientId)) return { planLocked: true as const };
+
       // Already defined for this client? Leave it untouched (case-insensitive match).
       const existing = await client.query<{ id: string; name: string; rate: number; unit: string | null }>(
         `SELECT id, name, rate, unit FROM client_rates
@@ -106,6 +109,9 @@ export async function POST(
     if ("notFound" in result) {
       return NextResponse.json({ success: false, error_code: "CLIENT_NOT_FOUND", message: "הלקוח לא נמצא" }, { status: 404 });
     }
+
+    const { isPlanLockedSentinel, lockedClientResponse } = await import("@/lib/plan-guard");
+    if (isPlanLockedSentinel(result)) return lockedClientResponse();
 
     return NextResponse.json({
       success: true,

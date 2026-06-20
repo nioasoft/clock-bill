@@ -60,6 +60,9 @@ export async function POST(request: NextRequest) {
       if (clientRow.rowCount === 0) throw new Error("CLIENT_NOT_FOUND");
       const currency: string = clientRow.rows[0].currency ?? "ILS";
 
+      const { getLockedClientIds } = await import("@/lib/plan-guard");
+      if ((await getLockedClientIds(user.id)).has(clientId)) throw new Error("CLIENT_PLAN_LOCKED");
+
       // Profile-level billing base (cascade's lowest tier). Read once; used as
       // the rounding fallback when neither project nor client sets a mode.
       const profileBaseRow = await client.query(
@@ -180,6 +183,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const msg = error instanceof Error ? error.message : "";
     if (msg === "CLIENT_NOT_FOUND") return NextResponse.json({ success: false, error_code: "CLIENT_NOT_FOUND", message: "לקוח לא נמצא" }, { status: 404 });
+    if (msg === "CLIENT_PLAN_LOCKED") { const { lockedClientResponse } = await import("@/lib/plan-guard"); return lockedClientResponse(); }
     if (msg === "ENTRY_STATE_CHANGED") return NextResponse.json({ success: false, error_code: "ENTRY_STATE_CHANGED", message: "חלק מהפריטים כבר חויבו או השתנו — רענן ונסה שוב" }, { status: 409 });
     logger.error("POST /api/charge-documents failed", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה ביצירת תעודה" }, { status: 500 });

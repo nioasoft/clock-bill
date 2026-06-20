@@ -201,6 +201,9 @@ export async function POST(request: NextRequest) {
       );
       if (clientCheck.rows.length === 0) return null;
 
+      const { getLockedClientIds } = await import("@/lib/plan-guard");
+      if ((await getLockedClientIds(user.id)).has(clientId)) return { planLocked: true as const };
+
       // Insert + read back with client name in one statement (CTE).
       const inserted = await client.query<ProjectRow>(
         `WITH ins AS (
@@ -240,6 +243,9 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    const { isPlanLockedSentinel, lockedClientResponse } = await import("@/lib/plan-guard");
+    if (isPlanLockedSentinel(txResult)) return lockedClientResponse();
 
     const project = txResult;
 

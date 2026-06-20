@@ -77,6 +77,11 @@ export async function POST(
 
       const original = originalResult.rows[0];
 
+      const { getLockedClientIds } = await import("@/lib/plan-guard");
+      if ((await getLockedClientIds(user.id)).has(original.client_id)) {
+        return { notFound: false as const, planLocked: true as const };
+      }
+
       // Fetch every existing name that could collide with a "(העתק)" copy in one
       // query, then compute the next free suffix in JS (no per-candidate query).
       // Escape LIKE wildcards in the base name so the prefix matches literally;
@@ -145,6 +150,11 @@ export async function POST(
         { success: false, error_code: "PROJECT_NOT_FOUND", message: "הפרויקט לא נמצא" },
         { status: 404 }
       );
+    }
+
+    if ("planLocked" in result && result.planLocked) {
+      const { lockedClientResponse } = await import("@/lib/plan-guard");
+      return lockedClientResponse();
     }
 
     const project = result.project;

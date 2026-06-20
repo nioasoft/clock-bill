@@ -29,15 +29,19 @@ export async function PATCH(
     const { query, withTransaction } = await import("@/lib/db");
 
     const existing = await query<{
-      status: string; project_id: string; rate: number | null; rate_label: string | null; title: string;
+      status: string; client_id: string; project_id: string; rate: number | null; rate_label: string | null; title: string;
     }>(
-      `SELECT status, project_id, rate, rate_label, title FROM tasks WHERE id = $1 AND user_id = $2`,
+      `SELECT status, client_id, project_id, rate, rate_label, title FROM tasks WHERE id = $1 AND user_id = $2`,
       [id, user.id]
     );
     if (existing.rows.length === 0)
       return NextResponse.json({ success: false, error_code: "TASK_NOT_FOUND", message: "המשימה לא נמצאה" }, { status: 404 });
 
     const task = existing.rows[0];
+
+    const { getLockedClientIds, lockedClientResponse } = await import("@/lib/plan-guard");
+    if ((await getLockedClientIds(user.id)).has(task.client_id)) return lockedClientResponse();
+
     const enteringInProgress = status === "in_progress" && task.status !== "in_progress";
 
     // Return the timer entry id from the transaction so the closure variable

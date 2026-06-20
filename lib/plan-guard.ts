@@ -39,6 +39,11 @@ export async function getLockedClientIds(userId: string): Promise<Set<string>> {
   return new Set(computeLockedClientIds(ranked, plan.clientLimit));
 }
 
+/** Type guard for the in-transaction plan-locked sentinel returned by routes. */
+export function isPlanLockedSentinel(value: unknown): value is { planLocked: true } {
+  return typeof value === "object" && value !== null && (value as { planLocked?: unknown }).planLocked === true;
+}
+
 /** Standard 402 response for a blocked write to a plan-locked client. */
 export function lockedClientResponse(): NextResponse {
   return NextResponse.json(
