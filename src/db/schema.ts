@@ -11,6 +11,7 @@ import {
   unique,
   index,
   check,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -560,4 +561,18 @@ export const pushSubscriptions = pgTable(
     createdAt: timestamp("created_at").defaultNow(),
   },
   (table) => [index("idx_push_subscriptions_user_id").on(table.userId)]
+);
+
+// ─── Trial emails sent (idempotency log) ──────────────────────────────────
+// One row per (user, email_key) to prevent duplicate trial lifecycle emails.
+// Cron reads via adminQuery() (bypasses RLS). No user-facing queries.
+export const trialEmailsSent = pgTable(
+  "trial_emails_sent",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()::text`),
+    userId: text("user_id").notNull(),
+    emailKey: text("email_key").notNull(),
+    sentAt: timestamp("sent_at").defaultNow().notNull(),
+  },
+  (table) => [uniqueIndex("trial_emails_sent_user_key").on(table.userId, table.emailKey)]
 );
