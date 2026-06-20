@@ -51,11 +51,16 @@ export function Tabs({ tabs, active, onChange, ariaLabel, className = "" }: Tabs
     return () => ro.disconnect();
   }, [tabs.length]);
 
-  // Keep the active tab fully visible (e.g. when a clipped tab is selected).
+  // Keep the active tab fully visible within the horizontal track when a clipped
+  // tab is selected. Depend on the active INDEX (a number), not the `tabs` array:
+  // callers often pass a fresh `tabs` array every render, and depending on it
+  // re-ran scrollIntoView on every parent re-render — which, when scrolled down
+  // the page, yanked the whole window back to the top (block:"nearest" scrolls
+  // vertical ancestors too). Keying on the index only fires on a real tab change.
+  const activeIndex = tabs.findIndex((t) => t.key === active);
   useEffect(() => {
-    const i = tabs.findIndex((t) => t.key === active);
-    refs.current[i]?.scrollIntoView({ inline: "nearest", block: "nearest" });
-  }, [active, tabs]);
+    refs.current[activeIndex]?.scrollIntoView({ inline: "nearest", block: "nearest" });
+  }, [activeIndex]);
 
   const focusTab = (index: number) => {
     const next = (index + tabs.length) % tabs.length;

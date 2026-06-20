@@ -61,17 +61,21 @@ export function templateRules(
     ${S} .pdf-banner-meta { text-align: start; white-space: nowrap; }
     ${S} .pdf-body { padding: 20px 26px 8px; }
 
-    ${S} .pdf-client-box { border-inline-start: 3px solid ${primary}; background: #f6f8fb; padding: 12px 16px; border-radius: 8px; margin-bottom: 18px; }
-    ${S} .pdf-client-label { color: ${primary}; }
+    /* Accent = the secondary brand color. It owns the client bar + the table
+       header underline + the summary title, so picking a second color is always
+       visible (primary owns the banner + grand total). nature flips these since
+       its banner already uses the accent. */
+    ${S} .pdf-client-box { border-inline-start: 3px solid ${accent}; background: #f6f8fb; padding: 12px 16px; border-radius: 8px; margin-bottom: 18px; }
+    ${S} .pdf-client-label { color: ${accent}; }
 
     ${S} .pdf-summary { border: 1px solid #e6e8ec; border-radius: 8px; overflow: hidden; margin-bottom: 18px; }
-    ${S} .pdf-summary-title { background: #f1f5f9; color: ${primary}; border-bottom: 1px solid #e6e8ec; }
+    ${S} .pdf-summary-title { background: #f1f5f9; color: ${accent}; border-bottom: 1px solid #e6e8ec; }
     ${S} .pdf-summary-table th { color: #64748b; text-transform: uppercase; letter-spacing: 0.3px; font-size: 10.5px; border-bottom: 1px solid #eef1f4; }
     ${S} .pdf-summary-table td { border-bottom: 1px solid #f3f5f7; }
     ${S} .pdf-summary-table tr:last-child td { border-bottom: none; }
 
     ${S} .pdf-table { width: 100%; border-collapse: collapse; }
-    ${S} .pdf-table th { padding: 9px 12px; text-align: start; font-size: 10.5px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.3px; background: #f5f6f8; border-bottom: 2px solid ${primary}; }
+    ${S} .pdf-table th { padding: 9px 12px; text-align: start; font-size: 10.5px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.3px; background: #f5f6f8; border-bottom: 2px solid ${accent}; }
     ${S} .pdf-table td { padding: 8px 12px; text-align: start; font-size: 12px; border-bottom: 1px solid #eef1f4; }
 
     ${S} .pdf-totals-row td { padding: 4px 12px; }
@@ -103,7 +107,7 @@ export function templateRules(
       ${S} .pdf-banner .pdf-business-name { color: ${primary}; font-family: Georgia, serif; letter-spacing: 0.5px; }
       ${S} .pdf-banner .pdf-doc-title { color: #334155; font-variant: small-caps; }
       ${S} .pdf-banner-sub { color: #64748b; }
-      ${S} .pdf-table th { background: transparent; border-bottom: 1px solid #333; color: #333; font-family: Georgia, serif; letter-spacing: 0; text-transform: none; font-size: 11.5px; }
+      ${S} .pdf-table th { background: transparent; border-bottom: 1px solid ${accent}; color: #333; font-family: Georgia, serif; letter-spacing: 0; text-transform: none; font-size: 11.5px; }
       ${S} .pdf-table td { border-bottom: 1px solid #ddd; }
       ${S} .pdf-summary-title { background: transparent; border-bottom: 1px solid #333; }
       ${S} .pdf-totals-grand td { background: transparent; }
@@ -125,7 +129,7 @@ export function templateRules(
       ${S} .pdf-banner .pdf-business-name { color: ${primary}; font-weight: 400; letter-spacing: 1.5px; font-size: 20px; }
       ${S} .pdf-banner .pdf-doc-title { color: #64748b; font-weight: 400; letter-spacing: 1px; text-transform: uppercase; font-size: 13px; }
       ${S} .pdf-banner-sub { color: #94a3b8; }
-      ${S} .pdf-table th { background: transparent; border-bottom: 1px solid #e2e2e2; color: #8a8a8a; font-weight: 400; letter-spacing: 0.8px; font-size: 10px; }
+      ${S} .pdf-table th { background: transparent; border-bottom: 1px solid ${accent}; color: #8a8a8a; font-weight: 400; letter-spacing: 0.8px; font-size: 10px; }
       ${S} .pdf-table td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; }
       ${S} .pdf-summary-title { background: transparent; }
       ${S} .pdf-totals-grand td { background: transparent; }
@@ -136,8 +140,11 @@ export function templateRules(
       ${S} .pdf-banner { background: ${accent}; color: #fff; }
       ${S} .pdf-banner .pdf-business-name, ${S} .pdf-banner .pdf-doc-title { color: #fff; }
       ${S} .pdf-banner-sub { color: rgba(255,255,255,0.9); }
-      ${S} .pdf-client-box { border-inline-start-color: ${accent}; }
-      ${S} .pdf-table th { background: #f4f8f5; border-bottom: 2px solid ${accent}; }
+      /* Banner already uses the accent, so the secondary spots flip to primary. */
+      ${S} .pdf-client-box { border-inline-start-color: ${primary}; }
+      ${S} .pdf-client-label { color: ${primary}; }
+      ${S} .pdf-summary-title { color: ${primary}; }
+      ${S} .pdf-table th { background: #f4f8f5; border-bottom: 2px solid ${primary}; }
       ${S} .pdf-table tbody tr:nth-child(even) td { background: #fafdfb; }
       ${S} .pdf-totals-grand td { background: transparent; }
       ${S} .pdf-totals-grand .pdf-totals-label { border-top: none; color: #fff; background: ${accent}; border-start-start-radius: 999px; border-end-start-radius: 999px; padding: 6px 6px 6px 14px; }
