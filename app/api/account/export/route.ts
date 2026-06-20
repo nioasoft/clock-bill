@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { getUser } from "@/lib/auth";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("account:export");
@@ -38,6 +39,8 @@ export async function GET(): Promise<NextResponse> {
     if (!user) {
       return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
     }
+    const limited = await enforceRateLimit({ name: "account-export", identifier: user.id, limit: 5, windowSec: 300 });
+    if (limited) return limited;
     userId = user.id;
     const uid = user.id;
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { calculateFixedMonthlyCharges } from "@/lib/fixed-charges";
 import { addMoney, calcHourlyAmount, calcItemAmount } from "@/lib/money";
 import { resolveRounding, roundBillableMinutes } from "@/lib/rounding";
@@ -18,6 +19,9 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
     }
+
+    const limited = await enforceRateLimit({ name: "reports", identifier: user.id, limit: 20, windowSec: 60 });
+    if (limited) return limited;
 
     const { withTransaction } = await import("@/lib/db");
 

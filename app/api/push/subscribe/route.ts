@@ -3,6 +3,7 @@ import { query } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { createLogger } from "@/lib/logger";
 import { isAllowedPushEndpoint } from "@/lib/push";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 const logger = createLogger("api:push:subscribe");
 
@@ -31,6 +32,9 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
+
+    const limited = await enforceRateLimit({ name: "push-subscribe", identifier: user.id, limit: 20, windowSec: 60 });
+    if (limited) return limited;
 
     const body = (await request.json().catch(() => ({}))) as SubscribeBody;
     const endpoint = body.endpoint;

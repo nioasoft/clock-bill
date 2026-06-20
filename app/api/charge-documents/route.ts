@@ -5,6 +5,7 @@ import { parseBody } from "@/lib/api-validation";
 import { createChargeDocumentSchema } from "@/lib/schemas/charge-documents";
 import { buildLineFromEntry, computeDocumentTotal, type BillableEntry, type ChargeLineDraft } from "@/lib/charge-documents";
 import { resolveRounding } from "@/lib/rounding";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { createLogger } from "@/lib/logger";
 import { resolveDocumentLocale } from "@/lib/document-language";
 import { resolveVatRate, type ClientVatMode } from "@/lib/vat";
@@ -47,6 +48,9 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getUser();
     if (!user) return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
+
+    const limited = await enforceRateLimit({ name: "charge-doc-create", identifier: user.id, limit: 30, windowSec: 60 });
+    if (limited) return limited;
 
     const parsed = await parseBody(request, createChargeDocumentSchema);
     if (!parsed.ok) return parsed.response;

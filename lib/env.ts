@@ -196,6 +196,16 @@ const ENV_SCHEMA: EnvVarSchema[] = [
     description: "Bearer token Vercel attaches to cron invocations; required to protect /api/cron/* in prod",
   },
   {
+    name: "UPSTASH_REDIS_REST_URL",
+    required: false,
+    description: "Upstash Redis REST URL for durable rate limiting (optional; rate limiting no-ops without it)",
+  },
+  {
+    name: "UPSTASH_REDIS_REST_TOKEN",
+    required: false,
+    description: "Upstash Redis REST token for durable rate limiting (optional)",
+  },
+  {
     name: "BLOB_READ_WRITE_TOKEN",
     required: false,
     description: "Vercel Blob storage read-write token (required in production for file uploads)",
