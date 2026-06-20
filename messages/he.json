@@ -2093,6 +2093,7 @@
   "Trial": {
     "pillActive": "ניסיון Unlimited · נותרו {days} ימים",
     "pillEnding": "הניסיון מסתיים בעוד {days} ימים",
+    "pricingTrialNote": "אתה בניסיון Unlimited — נותרו {days} ימים. שדרג עכשיו כדי לשמור עליו.",
     "cardHeading": "אתה על Unlimited",
     "cardBody": "עקוב אחר לקוחות ופרויקטים ללא הגבלה. נותרו {days} ימים בניסיון.",
     "cardCta": "שדרג עכשיו",
