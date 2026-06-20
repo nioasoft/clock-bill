@@ -108,7 +108,8 @@ export function AppLayout({ children }: AppLayoutProps) {
     const stored = profile.locale;
     if ((stored === "he" || stored === "en") && stored !== locale) {
       // Persist so a hard reload / new visit picks it up immediately.
-      document.cookie = `NEXT_LOCALE=${stored}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+      const secure = location.protocol === "https:" ? "; Secure" : "";
+      document.cookie = `NEXT_LOCALE=${stored}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax${secure}`;
       // Single soft switch to the stored locale on the current path.
       router.replace(pathname, { locale: stored });
     }

@@ -27,7 +27,9 @@ function readCookie(): string | null {
 
 function writeCookie(id: string) {
   // 1 year, root path, Lax. Not httpOnly on purpose — the client owns switching.
-  document.cookie = `${COOKIE}=${id}; path=/; max-age=31536000; samesite=lax`;
+  // Secure over HTTPS (omitted on http://localhost so dev still sets it).
+  const secure = location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${COOKIE}=${id}; path=/; max-age=31536000; samesite=lax${secure}`;
 }
 
 export function ThemeProvider({
