@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:search");
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 
@@ -115,7 +117,7 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error("Search API error:", error);
+    logger.error("Search API error:", error);
     return NextResponse.json(
       {
         success: false,

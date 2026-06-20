@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:sessions");
 /**
  * Sessions API endpoint
  * Returns all active sessions for the current user (Better Auth backed).
@@ -66,7 +68,7 @@ export async function GET(): Promise<NextResponse> {
       headers: { "Cache-Control": "no-store, must-revalidate" },
     });
   } catch (error) {
-    console.error("Get sessions error:", error);
+    logger.error("Get sessions error:", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאת שרת" },
       { status: 500 }
@@ -116,7 +118,7 @@ export async function DELETE(): Promise<NextResponse> {
       message: "התנתקת מכל המכשירים האחרים",
     });
   } catch (error) {
-    console.error("Logout all devices error:", error);
+    logger.error("Logout all devices error:", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאת שרת" },
       { status: 500 }

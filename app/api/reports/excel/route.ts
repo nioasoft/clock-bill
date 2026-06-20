@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:reports:excel");
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { enforceRateLimit } from "@/lib/rate-limit";
@@ -584,7 +586,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error generating Excel:", error);
+    logger.error("Error generating Excel:", error);
     return NextResponse.json(
       { success: false, error_code: "EXCEL_GENERATION_ERROR", message: "שגיאה ביצירת קובץ Excel" },
       { status: 500 }

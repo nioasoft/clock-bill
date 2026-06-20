@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:charge-documents:id:pay");
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 
@@ -18,7 +20,7 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
     if (r.rowCount === 0) return NextResponse.json({ success: false, error_code: "PAY_REQUIRES_PENDING", message: "לא ניתן לסמן כשולם (התעודה אינה ממתינה)" }, { status: 409 });
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("POST pay failed:", error);
+    logger.error("POST pay failed:", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בסימון תשלום" }, { status: 500 });
   }
 }

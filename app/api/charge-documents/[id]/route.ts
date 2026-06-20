@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:charge-documents:id");
 import { NextRequest, NextResponse } from "next/server";
 import type { PoolClient } from "pg";
 import { getUser } from "@/lib/auth";
@@ -31,7 +33,7 @@ export async function GET(_request: NextRequest, ctx: Ctx) {
     );
     return NextResponse.json({ success: true, data: { document: doc.rows[0], lines: lines.rows } });
   } catch (error) {
-    console.error("GET /api/charge-documents/[id] failed:", error);
+    logger.error("GET /api/charge-documents/[id] failed:", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת תעודה" }, { status: 500 });
   }
 }
@@ -143,7 +145,7 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
     if (msg === "LOCKED") return NextResponse.json({ success: false, error_code: "DOCUMENT_LOCKED", message: "התעודה נעולה — בטל תשלום כדי לערוך" }, { status: 409 });
     if (msg === "LINE_NOT_FOUND") return NextResponse.json({ success: false, error_code: "LINE_NOT_FOUND", message: "שורה לא נמצאה" }, { status: 404 });
     if (msg === "ENTRY_UNAVAILABLE") return NextResponse.json({ success: false, error_code: "ENTRY_UNAVAILABLE", message: "הפריט כבר חויב או אינו זמין" }, { status: 409 });
-    console.error("PATCH /api/charge-documents/[id] failed:", error);
+    logger.error("PATCH /api/charge-documents/[id] failed:", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בעדכון תעודה" }, { status: 500 });
   }
 }
@@ -162,7 +164,7 @@ export async function DELETE(_request: NextRequest, ctx: Ctx) {
     if (r.rowCount === 0) return NextResponse.json({ success: false, error_code: "DELETE_REQUIRES_CANCELED", message: "ניתן למחוק רק תעודה מבוטלת" }, { status: 409 });
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("DELETE /api/charge-documents/[id] failed:", error);
+    logger.error("DELETE /api/charge-documents/[id] failed:", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה במחיקת תעודה" }, { status: 500 });
   }
 }

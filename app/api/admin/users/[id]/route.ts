@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:admin:users:id");
 /**
  * GET /api/admin/users/[id]
  * Returns detailed user information for admin view
@@ -113,7 +115,7 @@ export async function GET(
       })),
     });
   } catch (error) {
-    console.error("Admin user detail error:", error);
+    logger.error("Admin user detail error:", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאת שרת" }, { status: 500 });
   }
 }

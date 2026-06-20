@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:charge-documents:id:cancel");
 import { NextRequest, NextResponse } from "next/server";
 import type { PoolClient } from "pg";
 import { getUser } from "@/lib/auth";
@@ -43,7 +45,7 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
     const msg = error instanceof Error ? error.message : "";
     if (msg === "NOT_FOUND") return NextResponse.json({ success: false, error_code: "DOCUMENT_NOT_FOUND", message: "תעודה לא נמצאה" }, { status: 404 });
     if (msg === "BAD_STATE") return NextResponse.json({ success: false, error_code: "CANCEL_REQUIRES_PENDING", message: "ניתן לבטל רק תעודה ממתינה" }, { status: 409 });
-    console.error("POST cancel failed:", error);
+    logger.error("POST cancel failed:", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בביטול תעודה" }, { status: 500 });
   }
 }

@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:entries:bulk");
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getUser } from "@/lib/auth";
@@ -128,7 +130,7 @@ export async function PATCH(request: NextRequest) {
       updatedCount: outcome.rowCount,
     });
   } catch (error) {
-    console.error("Error bulk updating entries:", error);
+    logger.error("Error bulk updating entries:", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה בעדכון הרשומות" },
       { status: 500 }
@@ -174,7 +176,7 @@ export async function DELETE(request: NextRequest) {
       deletedCount: result.rowCount,
     });
   } catch (error) {
-    console.error("Error bulk deleting entries:", error);
+    logger.error("Error bulk deleting entries:", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה במחיקת הרשומות" },
       { status: 500 }

@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:reports");
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { enforceRateLimit } from "@/lib/rate-limit";
@@ -538,7 +540,7 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error("Error generating report:", error);
+    logger.error("Error generating report:", error);
     return NextResponse.json(
       { success: false, error_code: "REPORT_GENERATION_ERROR", message: "שגיאה ביצירת הדוח" },
       { status: 500 }

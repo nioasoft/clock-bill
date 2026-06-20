@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:projects:id");
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getUser } from "@/lib/auth";
@@ -126,7 +128,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error("Error fetching project:", error);
+    logger.error("Error fetching project:", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת הפרויקט" },
       { status: 500 }
@@ -355,7 +357,7 @@ export async function PUT(
       },
     });
   } catch (error) {
-    console.error("Error updating project:", error);
+    logger.error("Error updating project:", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה בעדכון הפרויקט" },
       { status: 500 }
@@ -408,7 +410,7 @@ export async function DELETE(
       message: "הפרויקט נמחק בהצלחה",
     });
   } catch (error) {
-    console.error("Error deleting project:", error);
+    logger.error("Error deleting project:", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה במחיקת הפרויקט" },
       { status: 500 }

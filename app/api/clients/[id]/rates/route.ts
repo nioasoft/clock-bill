@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:clients:id:rates");
 import { NextRequest, NextResponse } from "next/server";
 import type { PoolClient } from "pg";
 import { getUser } from "@/lib/auth";
@@ -46,7 +48,7 @@ export async function GET(
       })),
     }, { headers: { "Cache-Control": "no-store, must-revalidate" } });
   } catch (error) {
-    console.error("Error fetching client rates:", error);
+    logger.error("Error fetching client rates:", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת התעריפים" }, { status: 500 });
   }
 }
@@ -119,7 +121,7 @@ export async function POST(
       rate: { id: result.rate.id, kind: "item" as const, name: result.rate.name, rate: result.rate.rate, isDefault: false, unit: result.rate.unit ?? null },
     });
   } catch (error) {
-    console.error("Error adding client item:", error);
+    logger.error("Error adding client item:", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בשמירת הפריט" }, { status: 500 });
   }
 }

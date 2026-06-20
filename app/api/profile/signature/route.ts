@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:profile:signature");
 /**
  * Signature Upload API endpoint
  * POST: Upload user signature
@@ -73,7 +75,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       try {
         await deleteFile(oldSignatureUrl);
       } catch (error) {
-        console.error("Failed to delete old signature:", error);
+        logger.error("Failed to delete old signature:", error);
         // Continue even if old file deletion fails
       }
     }
@@ -115,7 +117,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         { status: 400 }
       );
     }
-    console.error("Signature upload error:", error);
+    logger.error("Signature upload error:", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "Internal server error" },
       { status: 500 }
@@ -157,7 +159,7 @@ export async function DELETE(): Promise<NextResponse> {
     try {
       await deleteFile(signatureUrl);
     } catch (error) {
-      console.error("Failed to delete signature file:", error);
+      logger.error("Failed to delete signature file:", error);
       // Continue even if file deletion fails
     }
 
@@ -174,7 +176,7 @@ export async function DELETE(): Promise<NextResponse> {
       message: "Signature removed successfully",
     });
   } catch (error) {
-    console.error("Signature delete error:", error);
+    logger.error("Signature delete error:", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "Internal server error" },
       { status: 500 }

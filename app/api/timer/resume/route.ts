@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:timer:resume");
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { withTransaction } from "@/lib/db";
@@ -81,7 +83,7 @@ export async function POST(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error("Error resuming timer:", error);
+    logger.error("Error resuming timer:", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה בחידוש הטיימר" },
       { status: 500 }

@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:charge-documents:id:unpay");
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 
@@ -18,7 +20,7 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
     if (r.rowCount === 0) return NextResponse.json({ success: false, error_code: "UNPAY_REQUIRES_PAID", message: "לא ניתן לבטל תשלום (התעודה אינה משולמת)" }, { status: 409 });
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("POST unpay failed:", error);
+    logger.error("POST unpay failed:", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בביטול תשלום" }, { status: 500 });
   }
 }
