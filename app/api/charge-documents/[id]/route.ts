@@ -4,6 +4,7 @@ import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
 import { patchChargeDocumentSchema } from "@/lib/schemas/charge-documents";
 import { buildLineFromEntry, computeDocumentTotal, type BillableEntry } from "@/lib/charge-documents";
+import { resolveRounding } from "@/lib/rounding";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -89,14 +90,35 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
         const er = await client.query(
           `SELECT te.id, te.description, te.notes, te.billing_kind AS "billingKind", te.duration,
                   te.quantity, te.rate, te.rate_label AS "rateLabel", te.item_ref AS "itemRef", te.unit AS "unit",
-                  p.name AS "projectName"
-             FROM time_entries te JOIN projects p ON te.project_id = p.id
+                  p.name AS "projectName",
+                  p.billing_rounding AS "projectRounding",
+                  c.billing_rounding AS "clientRounding"
+             FROM time_entries te
+             JOIN projects p ON te.project_id = p.id
+             JOIN clients  c ON p.client_id = c.id
             WHERE te.id = $1 AND te.user_id = $2 AND p.client_id = $3
               AND te.charge_document_id IS NULL AND te.is_billable = true`,
           [addTimeEntryId, user.id, clientId]
         );
         if (er.rowCount === 0) throw new Error("ENTRY_UNAVAILABLE");
-        const l = buildLineFromEntry(er.rows[0] as BillableEntry);
+        // Resolve the rounding cascade exactly like the POST create path, so a
+        // line added via PATCH bills the same rounded minutes as on creation.
+        const baseRow = await client.query<{ base: string | null }>(
+          `SELECT default_billing_rounding AS base FROM user_profiles WHERE user_id = $1`,
+          [user.id]
+        );
+        const row = er.rows[0] as BillableEntry & {
+          projectRounding: string | null;
+          clientRounding: string | null;
+        };
+        const l = buildLineFromEntry({
+          ...row,
+          billingRounding: resolveRounding(
+            row.projectRounding,
+            row.clientRounding,
+            baseRow.rows[0]?.base ?? null
+          ),
+        });
         await client.query(
           `INSERT INTO charge_document_lines
              (id, user_id, document_id, source_type, time_entry_id, period_month, label,
