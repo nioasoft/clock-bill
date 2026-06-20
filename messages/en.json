@@ -588,7 +588,13 @@
     "noHourlyRates": "No hourly rates defined — the default rate will be used.",
     "rateScopeLabel": "Applies to:",
     "rateScopeAll": "All projects",
-    "rateScopeAria": "Specific project"
+    "rateScopeAria": "Specific project",
+    "documentLanguageLabel": "Document language",
+    "documentLanguageHint": "The language reports, charge documents and Excel are generated in for this client",
+    "documentLanguageAuto": "Automatic",
+    "documentLanguageAutoResolved": "Automatic ({lang})",
+    "documentLanguageHe": "Hebrew",
+    "documentLanguageEn": "English"
   },
   "Projects": {
     "pageTitle": "Projects",
@@ -1857,6 +1863,9 @@
   "Reports": {
     "preVatNote": "All amounts are pre-VAT",
     "pageTitle": "Settlement",
+    "documentLanguageToggle": "Document language",
+    "documentLanguageHe": "Hebrew",
+    "documentLanguageEn": "English",
     "tabs": {
       "billable": "To bill",
       "documents": "Documents",
@@ -1961,6 +1970,7 @@
     "pdf": {
       "button": "Export to PDF",
       "taxId": "Business / Company ID",
+      "logoAlt": "Logo",
       "bankName": "Bank",
       "bankBranch": "Branch",
       "bankAccount": "Account"

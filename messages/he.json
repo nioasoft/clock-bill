@@ -588,7 +588,13 @@
     "noHourlyRates": "לא הוגדרו תעריפים שעתיים — ייעשה שימוש בתעריף ברירת המחדל.",
     "rateScopeLabel": "תקף ל:",
     "rateScopeAll": "כל הפרויקטים",
-    "rateScopeAria": "פרויקט ספציפי"
+    "rateScopeAria": "פרויקט ספציפי",
+    "documentLanguageLabel": "שפת המסמך המופק",
+    "documentLanguageHint": "השפה שבה יופקו דוחות, מסמכי חיוב ו-Excel ללקוח זה",
+    "documentLanguageAuto": "אוטומטי",
+    "documentLanguageAutoResolved": "אוטומטי ({lang})",
+    "documentLanguageHe": "עברית",
+    "documentLanguageEn": "אנגלית"
   },
   "Projects": {
     "pageTitle": "פרויקטים",
@@ -1857,6 +1863,9 @@
   "Reports": {
     "preVatNote": "כל הסכומים הם לפני מע\"מ",
     "pageTitle": "התחשבנות",
+    "documentLanguageToggle": "שפת המסמך",
+    "documentLanguageHe": "עברית",
+    "documentLanguageEn": "אנגלית",
     "tabs": {
       "billable": "לחיוב",
       "documents": "תעודות",
@@ -1961,6 +1970,7 @@
     "pdf": {
       "button": "יצא ל-PDF",
       "taxId": "ע.מ / ח.פ",
+      "logoAlt": "לוגו",
       "bankName": "בנק",
       "bankBranch": "סניף",
       "bankAccount": "חשבון"
