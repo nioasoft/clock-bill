@@ -33,6 +33,37 @@ export function isPushConfigured(): boolean {
   return true;
 }
 
+// Known Web Push provider host suffixes. A real browser subscription always
+// resolves to one of these; restricting to them is the SSRF guard, since the
+// cron later issues server-side requests to whatever endpoint we stored.
+const ALLOWED_PUSH_HOST_SUFFIXES = [
+  ".googleapis.com", // FCM (Chrome/Edge/Android): fcm.googleapis.com
+  ".push.apple.com", // Apple (Safari/iOS): web.push.apple.com
+  ".push.services.mozilla.com", // Firefox: updates.push.services.mozilla.com
+  ".notify.windows.com", // WNS (legacy Edge/Windows)
+  ".push.microsoft.com",
+  ".wns.windows.com",
+];
+
+/**
+ * True only for an https URL hosted by a known push provider. Rejects IP
+ * literals, internal hosts, and the cloud metadata endpoint, so an authenticated
+ * user cannot register an SSRF target the notifications cron would later POST to.
+ */
+export function isAllowedPushEndpoint(endpoint: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(endpoint);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "https:") return false;
+  const host = url.hostname.toLowerCase();
+  return ALLOWED_PUSH_HOST_SUFFIXES.some(
+    (suffix) => host.endsWith(suffix) && host.length > suffix.length
+  );
+}
+
 /** Notification payload delivered to the service worker's `push` handler. */
 export interface PushPayload {
   title: string;
@@ -72,6 +103,12 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
 
   await Promise.all(
     rows.map(async (sub) => {
+      // Defense-in-depth: never POST server-side to a non-provider endpoint,
+      // even if an older row predates subscribe-time validation.
+      if (!isAllowedPushEndpoint(sub.endpoint)) {
+        logger.warn(`skipping non-allowed push endpoint ${sub.endpoint.slice(0, 40)}…`);
+        return;
+      }
       try {
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
