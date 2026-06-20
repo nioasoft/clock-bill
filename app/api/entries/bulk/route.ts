@@ -94,13 +94,19 @@ export async function PATCH(request: NextRequest) {
     // race, no two separate round-trip triples).
     const outcome = await withTransaction(async (client) => {
       if (projectId) {
-        const projectCheck = await client.query<{ id: string }>(
-          `SELECT p.id FROM projects p
+        const projectCheck = await client.query<{ id: string; client_id: string }>(
+          `SELECT p.id, c.id AS client_id FROM projects p
            JOIN clients c ON p.client_id = c.id
            WHERE p.id = $1 AND c.user_id = $2`,
           [projectId, user.id]
         );
         if (projectCheck.rows.length === 0) return { notFound: true as const };
+        // Mirror the single-entry paths: don't let a bulk reassign move entries
+        // onto a plan-locked client's project (paywall consistency).
+        const { getLockedClientIds } = await import("@/lib/plan-guard");
+        if ((await getLockedClientIds(user.id)).has(projectCheck.rows[0].client_id)) {
+          return { planLocked: true as const };
+        }
       }
       const result = await client.query(updateQuery, updateValues);
       return { rowCount: result.rowCount ?? 0 };
@@ -112,6 +118,9 @@ export async function PATCH(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    const { isPlanLockedSentinel, lockedClientResponse } = await import("@/lib/plan-guard");
+    if (isPlanLockedSentinel(outcome)) return lockedClientResponse();
 
     return NextResponse.json({
       success: true,
