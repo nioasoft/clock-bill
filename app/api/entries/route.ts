@@ -165,6 +165,18 @@ export async function POST(request: NextRequest) {
         return { planLocked: true as const };
       }
 
+      // A supplied task must belong to this user AND this project (the FK only
+      // proves existence, not ownership).
+      if (taskId) {
+        const taskCheck = await client.query<{ id: string }>(
+          `SELECT id FROM tasks WHERE id = $1 AND user_id = $2 AND project_id = $3`,
+          [taskId, user.id, projectId]
+        );
+        if (taskCheck.rows.length === 0) {
+          return { taskInvalid: true as const };
+        }
+      }
+
       // Item lines get a stable, per-user, never-reused reference number.
       // Atomic upsert on the user's counter; creates a minimal profile row if
       // none exists yet (id + user_id are the only required columns).
@@ -220,6 +232,13 @@ export async function POST(request: NextRequest) {
     if ("notFound" in result) {
       return NextResponse.json(
         { success: false, error_code: "PROJECT_NOT_FOUND", message: "הפרויקט לא נמצא" },
+        { status: 404 }
+      );
+    }
+
+    if ("taskInvalid" in result) {
+      return NextResponse.json(
+        { success: false, error_code: "TASK_NOT_FOUND", message: "המשימה לא נמצאה" },
         { status: 404 }
       );
     }

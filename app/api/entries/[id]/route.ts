@@ -112,6 +112,16 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         return { planLocked: true as const };
       }
 
+      // A supplied task must belong to this user AND the (possibly reassigned)
+      // project — not just exist.
+      if (taskId) {
+        const taskCheck = await client.query<{ id: string }>(
+          `SELECT id FROM tasks WHERE id = $1 AND user_id = $2 AND project_id = $3`,
+          [taskId, user.id, projectId]
+        );
+        if (taskCheck.rows.length === 0) return { error: "task" as const };
+      }
+
       // Item lines carry a reference number: keep the existing one, assign a new
       // one if this line is becoming an item and has none. Hourly lines clear it.
       let itemRef: number | null = entryCheck.rows[0].item_ref;
@@ -166,14 +176,11 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     });
 
     if ("error" in result) {
-      return NextResponse.json(
-        {
-          success: false,
-          error_code: result.error === "entry" ? "ENTRY_NOT_FOUND" : "PROJECT_NOT_FOUND",
-          message: result.error === "entry" ? "הרשומה לא נמצאה" : "הפרויקט לא נמצא",
-        },
-        { status: 404 }
-      );
+      const code =
+        result.error === "entry" ? "ENTRY_NOT_FOUND" : result.error === "task" ? "TASK_NOT_FOUND" : "PROJECT_NOT_FOUND";
+      const message =
+        result.error === "entry" ? "הרשומה לא נמצאה" : result.error === "task" ? "המשימה לא נמצאה" : "הפרויקט לא נמצא";
+      return NextResponse.json({ success: false, error_code: code, message }, { status: 404 });
     }
 
     const { isPlanLockedSentinel, lockedClientResponse } = await import("@/lib/plan-guard");
