@@ -469,7 +469,14 @@
       "count": "{active} מתוך {limit} לקוחות",
       "unlimited": "{active} לקוחות · ללא הגבלה",
       "atLimit": "הגעת למגבלת התוכנית.",
-      "upgrade": "שדרגו"
+      "upgrade": "שדרגו",
+      "locked": "נעול",
+      "makeActive": "הפוך לפעיל",
+      "upgradeToUnlock": "שדרג כדי לפתוח",
+      "dataSafe": "הנתונים שלך שמורים",
+      "madeActiveSuccess": "הלקוח הופעל בהצלחה",
+      "errorMakeActive": "שגיאה בהפעלת הלקוח",
+      "refreshFailed": "הפעולה הצליחה, רענן את הדף לראות את העדכון"
     },
     "pageTitle": "לקוחות",
     "clientDetails": "פרטי לקוח",
@@ -1787,6 +1794,7 @@
   "errors": {
     "UNAUTHORIZED": "לא מחובר",
     "PLAN_LIMIT_REACHED": "הגעת למגבלת הלקוחות בתוכנית שלך. שדרגו כדי להוסיף עוד.",
+    "CLIENT_PLAN_LOCKED": "הלקוח נעול. שדרג את המסלול או הפוך אותו ללקוח הפעיל.",
     "FORBIDDEN": "אין הרשאה",
     "SERVER_ERROR": "שגיאת שרת",
     "INVALID_REQUEST": "בקשה לא תקינה",
@@ -2081,5 +2089,18 @@
       "paymentDetails": "פרטי תשלום",
       "signature": "חתימה"
     }
+  },
+  "Trial": {
+    "pillActive": "ניסיון Unlimited · נותרו {days} ימים",
+    "pillEnding": "הניסיון מסתיים בעוד {days} ימים",
+    "cardHeading": "אתה על Unlimited",
+    "cardBody": "עקוב אחר לקוחות ופרויקטים ללא הגבלה. נותרו {days} ימים בניסיון.",
+    "cardCta": "נעל את המסלול",
+    "endedHeading": "הניסיון הסתיים",
+    "endedBody": "אתה על המסלול החינמי ({limit} לקוח פעיל). שדרג כדי לפתוח את כל הלקוחות.",
+    "upgradeTitle": "שדרג כדי לשמור על הכל",
+    "upgradeBody": "המסלול החינמי תומך ב-{limit} לקוח פעיל. יש לך {count}. שדרג כדי לפתוח את כולם.",
+    "upgradeCta": "צפה במסלולים",
+    "maybeLater": "אולי מאוחר יותר"
   }
 }

@@ -344,19 +344,31 @@ export const auth = betterAuth({
     user: {
       create: {
         after: async (createdUser) => {
-          // Seed a profile row so app code that reads user_profiles can assume
-          // it exists. Best-effort: never fail signup because of this.
+          // Seed a profile row + start the 14-day Unlimited trial. Best-effort:
+          // never fail signup because of this.
           try {
+            const { buildTrialStart } = await import("@/lib/trial");
+            const { startedAt, endsAt } = buildTrialStart(new Date());
             // Bind the tenant context so the INSERT satisfies RLS once enforced.
             setUserContext(createdUser.id);
             await query(
-              `INSERT INTO user_profiles (id, user_id, default_currency, preferred_pdf_template, theme, created_at, updated_at)
-               VALUES (gen_random_uuid()::text, $1, 'ILS', 'modern', 'dark', NOW(), NOW())
+              `INSERT INTO user_profiles
+                 (id, user_id, default_currency, preferred_pdf_template, theme,
+                  trial_started_at, trial_ends_at, trial_used, created_at, updated_at)
+               VALUES (gen_random_uuid()::text, $1, 'ILS', 'modern', 'dark',
+                  $2, $3, true, NOW(), NOW())
                ON CONFLICT (user_id) DO NOTHING`,
-              [createdUser.id]
+              [createdUser.id, startedAt.toISOString(), endsAt.toISOString()]
             );
+            // Day-0 welcome (best-effort; sendEmail no-ops without RESEND_API_KEY).
+            const { trialWelcomeEmail } = await import("@/lib/emails/trial");
+            const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.clock-bill.com";
+            const { subject, html } = trialWelcomeEmail("he", appUrl);
+            if (createdUser.email) {
+              await sendEmail({ to: createdUser.email, subject, html });
+            }
           } catch (error) {
-            logger.error("Failed to seed user_profile on signup", error);
+            logger.error("Failed to seed user_profile / start trial on signup", error);
           }
         },
       },

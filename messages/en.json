@@ -469,7 +469,14 @@
       "count": "{active} of {limit} clients",
       "unlimited": "{active} clients · unlimited",
       "atLimit": "You've reached your plan limit.",
-      "upgrade": "Upgrade"
+      "upgrade": "Upgrade",
+      "locked": "Locked",
+      "makeActive": "Make active",
+      "upgradeToUnlock": "Upgrade to unlock",
+      "dataSafe": "Your data is safe",
+      "madeActiveSuccess": "Client activated successfully",
+      "errorMakeActive": "Error activating client",
+      "refreshFailed": "Done — refresh the page to see the update"
     },
     "pageTitle": "Clients",
     "clientDetails": "Client Details",
@@ -1787,6 +1794,7 @@
   "errors": {
     "UNAUTHORIZED": "Not authenticated",
     "PLAN_LIMIT_REACHED": "You've reached your plan's client limit. Upgrade to add more.",
+    "CLIENT_PLAN_LOCKED": "This client is locked. Upgrade your plan or make it your active client.",
     "FORBIDDEN": "No permission",
     "SERVER_ERROR": "Server error",
     "INVALID_REQUEST": "Invalid request",
@@ -2081,5 +2089,18 @@
       "paymentDetails": "Payment details",
       "signature": "Signature"
     }
+  },
+  "Trial": {
+    "pillActive": "Unlimited trial · {days} days left",
+    "pillEnding": "Trial ends in {days} days",
+    "cardHeading": "You're on Unlimited",
+    "cardBody": "Track unlimited clients and projects. {days} days left in your trial.",
+    "cardCta": "Lock in your plan",
+    "endedHeading": "Your trial has ended",
+    "endedBody": "You're on the Free plan ({limit} active client). Upgrade to unlock all your clients.",
+    "upgradeTitle": "Upgrade to keep everything",
+    "upgradeBody": "Your Free plan supports {limit} active client. You have {count}. Upgrade to unlock them all.",
+    "upgradeCta": "See plans",
+    "maybeLater": "Maybe later"
   }
 }

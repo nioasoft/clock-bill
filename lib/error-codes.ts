@@ -57,6 +57,7 @@ export type ErrorCode =
   | "SELF_ACTION_FORBIDDEN"
   | "PASSWORD_RESET_UNSUPPORTED"
   | "PLAN_LIMIT_REACHED"
+  | "CLIENT_PLAN_LOCKED"
   | "UNKNOWN_ACTION";
 
 /** Every known error code, for runtime checks / exhaustiveness. */
@@ -111,5 +112,6 @@ export const ERROR_CODES: readonly ErrorCode[] = [
   "SELF_ACTION_FORBIDDEN",
   "PASSWORD_RESET_UNSUPPORTED",
   "PLAN_LIMIT_REACHED",
+  "CLIENT_PLAN_LOCKED",
   "UNKNOWN_ACTION",
 ] as const;

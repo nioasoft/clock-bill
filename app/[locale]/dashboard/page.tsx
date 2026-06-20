@@ -20,6 +20,8 @@ import {
   normalizeDashboardConfig,
   type DashboardConfig,
 } from "@/lib/dashboard-widgets";
+import { TrialCard } from "@/components/trial-card";
+import { UpgradeModal } from "@/components/upgrade-modal";
 
 // Count-aware grid classes for the stat-card row. Static full strings (not
 // interpolated) so Tailwind v4's JIT can see them. Capped at 5 columns; more
@@ -105,6 +107,7 @@ export default function DashboardPage() {
   const [projectHours, setProjectHours] = useState<ProjectHours[]>([]);
   const [dashboardConfig, setDashboardConfig] = useState<DashboardConfig>(DEFAULT_DASHBOARD_CONFIG);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   // Onboarding flag from the shared profile query (no separate /api/profile fetch).
   const { data: profile } = useProfile();
@@ -356,6 +359,9 @@ export default function DashboardPage() {
             {t("customizeButton")}
           </Link>
         </PageHeader>
+
+        <TrialCard onUpgrade={() => setUpgradeOpen(true)} />
+        <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} />
 
         {/* First-time user checklist */}
         {!statsLoading && !statsError && isFirstTimeUser && (

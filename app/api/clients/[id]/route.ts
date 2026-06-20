@@ -199,6 +199,16 @@ export async function PUT(
     // Update client + replace rates + re-read both, all in ONE transaction
     // (single connection, single begin/commit; still scoped by user_id; RLS bound).
     const txResult = await withTransaction(async (db) => {
+      // Verify ownership first, then plan-lock check, before the write.
+      const ownsCheck = await db.query<{ id: string }>(
+        `SELECT id FROM clients WHERE id = $1 AND user_id = $2`,
+        [clientId, user.id]
+      );
+      if (ownsCheck.rows.length === 0) return { notFound: true as const };
+
+      const { getLockedClientIds } = await import("@/lib/plan-guard");
+      if ((await getLockedClientIds(user.id)).has(clientId)) return { planLocked: true as const };
+
       const updateResult = await db.query<ClientRow>(
         `UPDATE clients
          SET name = $1, contact_name = $2, email = $3, phone = $4, address = $5, default_rate = COALESCE($6, default_rate),
@@ -282,6 +292,9 @@ export async function PUT(
         { status: 400 }
       );
     }
+
+    const { isPlanLockedSentinel, lockedClientResponse } = await import("@/lib/plan-guard");
+    if (isPlanLockedSentinel(txResult)) return lockedClientResponse();
 
     if (txResult.notFound) {
       return NextResponse.json(

@@ -42,11 +42,14 @@ export async function POST(request: NextRequest) {
 
     const newEntry = await withTransaction(async (client) => {
       // Verify the project belongs to the user.
-      const projectCheck = await client.query<{ id: string }>(
-        `SELECT id FROM projects WHERE id = $1 AND user_id = $2`,
+      const projectCheck = await client.query<{ id: string; client_id: string }>(
+        `SELECT id, client_id FROM projects WHERE id = $1 AND user_id = $2`,
         [projectId, userId]
       );
       if (projectCheck.rows.length === 0) return null;
+
+      const { getLockedClientIds } = await import("@/lib/plan-guard");
+      if ((await getLockedClientIds(userId!)).has(projectCheck.rows[0].client_id)) return { planLocked: true as const };
 
       // Create the running time entry. Multiple concurrent running timers per
       // user are allowed (e.g. two projects at once).
@@ -75,8 +78,12 @@ export async function POST(request: NextRequest) {
       return result.rows[0];
     });
 
+    const { isPlanLockedSentinel, lockedClientResponse } = await import("@/lib/plan-guard");
     if (!newEntry) {
       return NextResponse.json({ success: false, error_code: "PROJECT_NOT_FOUND", message: "הפרויקט לא נמצא" }, { status: 404 });
+    }
+    if (isPlanLockedSentinel(newEntry)) {
+      return lockedClientResponse();
     }
 
     return NextResponse.json({

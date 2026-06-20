@@ -34,8 +34,10 @@ const PAID_TIERS: PaidTier[] = ["starter", "unlimited"];
  */
 export function PricingClient() {
   const t = useTranslations("Pricing");
+  const tTrial = useTranslations("Trial");
   const [interval, setInterval] = useState<Interval>("annual");
   const [currentTier, setCurrentTier] = useState<Tier | null>(null);
+  const [activeClientCount, setActiveClientCount] = useState<number>(0);
   const [error, setError] = useState("");
   const [busyTier, setBusyTier] = useState<PaidTier | null>(null);
 
@@ -44,6 +46,9 @@ export function PricingClient() {
       .then((r) => r.json())
       .then((d) => {
         if (d?.success && d.plan?.tier) setCurrentTier(d.plan.tier as Tier);
+        if (d?.success && typeof d.activeClientCount === "number") {
+          setActiveClientCount(d.activeClientCount);
+        }
       })
       .catch(() => {
         /* Unauthenticated / network error → no current tier; CTAs still work. */
@@ -91,6 +96,11 @@ export function PricingClient() {
           <p className="mt-3 text-muted-foreground leading-relaxed">
             {t("subtitle")}
           </p>
+          {currentTier === "free" && activeClientCount > 1 && (
+            <p className="mt-4 text-sm text-muted-foreground">
+              {tTrial("upgradeBody", { limit: 1, count: activeClientCount })}
+            </p>
+          )}
         </header>
 
         {/* Interval toggle */}

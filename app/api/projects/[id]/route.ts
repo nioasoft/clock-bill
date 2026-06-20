@@ -175,6 +175,7 @@ export async function PUT(
     // existence/ownership check (0 rows => 404), removing the redundant EXISTS query.
     const result = await withTransaction(async (client) => {
       const currentResult = await client.query<{
+        client_id: string;
         name: string;
         status: string;
         start_date: string | null;
@@ -186,7 +187,7 @@ export async function PUT(
         billing_rounding: string | null;
         notes: string | null;
       }>(
-        `SELECT name, status, start_date, end_date,
+        `SELECT client_id, name, status, start_date, end_date,
                 fixed_monthly_enabled, fixed_monthly_fee, fixed_monthly_start_date, fixed_monthly_end_date,
                 billing_rounding, notes
          FROM projects
@@ -196,6 +197,11 @@ export async function PUT(
 
       if (currentResult.rows.length === 0) {
         return { notFound: true as const };
+      }
+
+      const { getLockedClientIds } = await import("@/lib/plan-guard");
+      if ((await getLockedClientIds(user.id)).has(currentResult.rows[0].client_id)) {
+        return { planLocked: true as const };
       }
 
       const current = currentResult.rows[0];
@@ -316,6 +322,9 @@ export async function PUT(
         { status: 404 }
       );
     }
+
+    const { isPlanLockedSentinel, lockedClientResponse } = await import("@/lib/plan-guard");
+    if (isPlanLockedSentinel(result)) return lockedClientResponse();
 
     if ("validationError" in result) {
       return NextResponse.json(

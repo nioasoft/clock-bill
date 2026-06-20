@@ -78,13 +78,17 @@ export async function POST(request: NextRequest) {
     // read is folded into the INSERT as a subselect, removing a statement and the
     // read/write race on `position`.
     const outcome = await withTransaction(
-      async (client): Promise<{ error: { code: string; message: string; status: number } } | { id: string }> => {
+      async (client): Promise<{ error: { code: string; message: string; status: number } } | { id: string } | { planLocked: true }> => {
       const projectCheck = await client.query<{ id: string }>(
         `SELECT id FROM projects WHERE id = $1 AND client_id = $2 AND user_id = $3`,
         [projectId, clientId, user.id]
       );
       if (projectCheck.rows.length === 0)
         return { error: { code: "PROJECT_NOT_FOUND", message: "הפרויקט לא נמצא", status: 404 } as const };
+
+      const { getLockedClientIds } = await import("@/lib/plan-guard");
+      if ((await getLockedClientIds(user.id)).has(clientId))
+        return { planLocked: true as const };
 
       const rateCheck = await client.query<{ id: string; rate: number; name: string }>(
         `SELECT id, rate, name FROM client_rates
@@ -113,6 +117,9 @@ export async function POST(request: NextRequest) {
 
     if ("error" in outcome)
       return NextResponse.json({ success: false, error_code: outcome.error.code, message: outcome.error.message }, { status: outcome.error.status });
+
+    const { isPlanLockedSentinel, lockedClientResponse } = await import("@/lib/plan-guard");
+    if (isPlanLockedSentinel(outcome)) return lockedClientResponse();
 
     return NextResponse.json({ success: true, id: outcome.id });
   } catch (error) {
