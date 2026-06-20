@@ -37,6 +37,8 @@ interface Profile {
   email: string | null;
   address: string | null;
   taxId: string | null;
+  vatRegistered: boolean;
+  vatRate: number | null;
   website: string | null;
   defaultCurrency: string;
   preferredPdfTemplate: string;
@@ -115,6 +117,8 @@ export default function SettingsPage() {
   const [addressStreet, setAddressStreet] = useState("");
   const [addressCity, setAddressCity] = useState("");
   const [taxId, setTaxId] = useState("");
+  const [vatRegistered, setVatRegistered] = useState(false);
+  const [vatRate, setVatRate] = useState<string>("18");
   const [website, setWebsite] = useState("");
   const [showWebsiteOnDoc, setShowWebsiteOnDoc] = useState(false);
   const [defaultCurrency, setDefaultCurrency] = useState("ILS");
@@ -226,6 +230,8 @@ export default function SettingsPage() {
           }
         }
         setTaxId(data.profile.taxId || "");
+        setVatRegistered(Boolean(data.profile.vatRegistered));
+        setVatRate(data.profile.vatRate != null ? String(data.profile.vatRate) : "18");
         setWebsite(data.profile.website || "");
         setShowWebsiteOnDoc(Boolean(data.profile.showWebsiteOnDoc));
         setDefaultCurrency(data.profile.defaultCurrency || "ILS");
@@ -1294,6 +1300,8 @@ export default function SettingsPage() {
                     phone: phone || null,
                     email: email || null,
                     taxId: taxId || null,
+                    vatRegistered,
+                    vatRate: vatRate.trim() === "" ? null : Number(vatRate),
                     website: website || null,
                     defaultCurrency: defaultCurrency || null,
                     defaultRate: defaultRate.trim() === "" ? null : Number(defaultRate),
@@ -1372,6 +1380,40 @@ export default function SettingsPage() {
                         onChange={(e) => setTaxId(e.target.value)}
                         className={fieldClass()}
                       />
+                    </div>
+
+                    {/* VAT (מע״מ) */}
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-1">
+                        {t("business.vatLabel")}
+                      </label>
+                      <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={vatRegistered}
+                          onChange={(e) => setVatRegistered(e.target.checked)}
+                          className="h-4 w-4 rounded border-border accent-primary"
+                        />
+                        {t("business.vatRegistered")}
+                      </label>
+                      {vatRegistered && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.1"
+                            inputMode="decimal"
+                            id="vatRate"
+                            aria-label={t("business.vatRate")}
+                            value={vatRate}
+                            onChange={(e) => setVatRate(e.target.value)}
+                            className={fieldClass()}
+                          />
+                          <span className="text-sm text-muted-foreground">%</span>
+                        </div>
+                      )}
+                      <p className="mt-1 text-xs text-muted-foreground">{t("business.vatHint")}</p>
                     </div>
 
                     {/* Website */}
@@ -1516,33 +1558,43 @@ export default function SettingsPage() {
                 }}
                 className="space-y-4"
               >
-                  {/* Compact row: template + the two colors (swatch above,
-                      hex below). Per-field hints dropped — the section
-                      description already explains it. */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
-                    {/* Default PDF template */}
-                    <div>
-                      <label
-                        htmlFor="preferredPdfTemplate"
-                        className="block text-sm font-medium text-muted-foreground mb-1"
-                      >
-                        {t("pdf.templateLabel")}
-                      </label>
-                      <SimpleSelect
-                        id="preferredPdfTemplate"
-                        value={preferredPdfTemplate}
-                        onChange={setPreferredPdfTemplate}
-                        options={[
-                          { value: "modern", label: t("pdf.templateModern") },
-                          { value: "classic", label: t("pdf.templateClassic") },
-                          { value: "bold", label: t("pdf.templateBold") },
-                          { value: "elegant", label: t("pdf.templateElegant") },
-                          { value: "nature", label: t("pdf.templateNature") },
-                          { value: "ocean", label: t("pdf.templateOcean") },
-                        ]}
-                      />
+                  {/* Template picker — visual buttons, not a dropdown: a Radix
+                      Select scroll-locks the page (it jumped to the top on pick),
+                      and buttons read better for a visual choice anyway. */}
+                  <div>
+                    <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                      {t("pdf.templateLabel")}
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { value: "modern", label: t("pdf.templateModern") },
+                        { value: "classic", label: t("pdf.templateClassic") },
+                        { value: "bold", label: t("pdf.templateBold") },
+                        { value: "elegant", label: t("pdf.templateElegant") },
+                        { value: "nature", label: t("pdf.templateNature") },
+                        { value: "ocean", label: t("pdf.templateOcean") },
+                      ].map((opt) => {
+                        const active = preferredPdfTemplate === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => setPreferredPdfTemplate(opt.value)}
+                            aria-pressed={active}
+                            className={`min-h-11 rounded-[var(--radius)] border px-3 py-2 text-sm font-medium transition-colors ${
+                              active
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-border text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
                     </div>
+                  </div>
 
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                     {/* Primary color */}
                     <div>
                       <label

@@ -115,6 +115,11 @@ export const userProfiles = pgTable("user_profiles", {
   website: text("website"),
   // Whether the website is printed on the settlement document/PDF.
   showWebsiteOnDoc: boolean("show_website_on_doc").default(false),
+  // ─── VAT (מע״מ) ─────────────────────────────────────────────────────
+  // Global business VAT status: registered (עוסק מורשה) charges VAT at vatRate.
+  // Per-client overrides live on clients.vatMode; see lib/vat.ts.
+  vatRegistered: boolean("vat_registered").default(false),
+  vatRate: real("vat_rate"),
   defaultCurrency: text("default_currency").default("ILS"),
   preferredPdfTemplate: text("preferred_pdf_template").default("modern"),
   // Invoice settings
@@ -194,6 +199,10 @@ export const userProfiles = pgTable("user_profiles", {
     "user_profiles_default_billing_rounding_check",
     sql`${table.defaultBillingRounding} IN ('none', 'tenth_hour_up', 'quarter_hour_up', 'half_hour_up', 'hour_up')`
   ),
+  check(
+    "user_profiles_vat_rate_check",
+    sql`${table.vatRate} IS NULL OR (${table.vatRate} >= 0 AND ${table.vatRate} <= 100)`
+  ),
 ]);
 
 // ─── Clients ────────────────────────────────────────────────────────
@@ -217,6 +226,10 @@ export const clients = pgTable(
     // (resolved from currency via lib/document-language.ts). See spec
     // 2026-06-20-client-document-language.
     documentLanguage: text("document_language"),
+    // Per-client VAT override for generated documents. NULL = inherit the global
+    // business setting; 'add' = always charge VAT; 'exempt' = never (e.g. a
+    // foreign/export client billed net). Resolved via lib/vat.ts.
+    vatMode: text("vat_mode"),
     isRetainer: boolean("is_retainer").default(false),
     retainerHours: real("retainer_hours"),
     retainerMonthlyFee: real("retainer_monthly_fee"),
@@ -239,6 +252,10 @@ export const clients = pgTable(
     check(
       "clients_document_language_check",
       sql`${table.documentLanguage} IS NULL OR ${table.documentLanguage} IN ('he', 'en')`
+    ),
+    check(
+      "clients_vat_mode_check",
+      sql`${table.vatMode} IS NULL OR ${table.vatMode} IN ('add', 'exempt')`
     ),
   ]
 );
@@ -496,6 +513,13 @@ export const chargeDocuments = pgTable(
     pdfTemplate: text("pdf_template"),
     // Language snapshot at issue time. NULL = resolve live from the client.
     documentLanguage: text("document_language"),
+    // VAT rate (%) snapshot at issue time, resolved via lib/vat.ts. NULL = no VAT
+    // applied (exempt / not-registered / legacy doc). `total` stays the NET
+    // subtotal; VAT + gross are derived at render from this rate.
+    vatRateSnapshot: real("vat_rate_snapshot"),
+    // Optional summary block at the top of the document: NULL = none,
+    // 'project' = group by project, 'type' = group by work type (line label).
+    summaryMode: text("summary_mode"),
     issuedAt: timestamp("issued_at"),
     paidAt: timestamp("paid_at"),
     canceledAt: timestamp("canceled_at"),
@@ -514,6 +538,14 @@ export const chargeDocuments = pgTable(
     check(
       "charge_documents_document_language_check",
       sql`${table.documentLanguage} IS NULL OR ${table.documentLanguage} IN ('he', 'en')`
+    ),
+    check(
+      "charge_documents_vat_rate_snapshot_check",
+      sql`${table.vatRateSnapshot} IS NULL OR (${table.vatRateSnapshot} >= 0 AND ${table.vatRateSnapshot} <= 100)`
+    ),
+    check(
+      "charge_documents_summary_mode_check",
+      sql`${table.summaryMode} IS NULL OR ${table.summaryMode} IN ('project', 'type')`
     ),
   ]
 );
@@ -540,6 +572,9 @@ export const chargeDocumentLines = pgTable(
     unit: text("unit"), // item unit-noun snapshot at issue time
     rate: real("rate"),
     amount: real("amount"),
+    // Project-name snapshot at issue time, used by the by-project summary block.
+    // NULL for fixed/retainer lines and legacy docs created before this column.
+    projectName: text("project_name"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },

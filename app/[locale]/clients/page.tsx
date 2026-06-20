@@ -58,6 +58,7 @@ interface Client {
   totalBilled: number;
   totalHours: number;
   documentLanguage: string | null;
+  vatMode: string | null;
 }
 
 /**
@@ -134,6 +135,7 @@ function ClientsPageContent() {
     notes: "",
     rates: [] as ClientRateInput[],
     documentLanguage: "" as "" | "he" | "en",
+    vatMode: "" as "" | "add" | "exempt",
   });
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -296,6 +298,7 @@ function ClientsPageContent() {
           notes: formData.notes || undefined,
           rates: cleanedRates,
           documentLanguage: formData.documentLanguage === "" ? null : formData.documentLanguage,
+          vatMode: formData.vatMode === "" ? null : formData.vatMode,
         }),
       });
 
@@ -331,6 +334,7 @@ function ClientsPageContent() {
           notes: "",
           rates: [],
           documentLanguage: "" as "" | "he" | "en",
+          vatMode: "" as "" | "add" | "exempt",
         });
         setRetainerTouched(false);
         setShowForm(false);
@@ -371,6 +375,7 @@ function ClientsPageContent() {
       notes: client.notes || "",
       rates: [],
       documentLanguage: (client.documentLanguage ?? "") as "" | "he" | "en",
+      vatMode: (client.vatMode ?? "") as "" | "add" | "exempt",
     });
     setShowForm(true);
 
@@ -413,6 +418,7 @@ function ClientsPageContent() {
       notes: "",
       rates: [],
       documentLanguage: "" as "" | "he" | "en",
+      vatMode: "" as "" | "add" | "exempt",
     });
     setShowForm(false);
   };
@@ -737,6 +743,26 @@ function ClientsPageContent() {
                       ]}
                     />
                     <p className="mt-1 text-xs text-muted-foreground">{t("documentLanguageHint")}</p>
+                  </div>
+
+                  <div>
+                    <label htmlFor="vatMode" className="mb-1.5 block text-sm font-medium text-foreground">
+                      {t("vatModeLabel")}
+                    </label>
+                    <SimpleSelect
+                      id="vatMode"
+                      value={formData.vatMode}
+                      onChange={(v) =>
+                        setFormData({ ...formData, vatMode: v as "" | "add" | "exempt" })
+                      }
+                      disabled={submitting}
+                      options={[
+                        { value: "", label: t("vatModeInherit") },
+                        { value: "add", label: t("vatModeAdd") },
+                        { value: "exempt", label: t("vatModeExempt") },
+                      ]}
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">{t("vatModeHint")}</p>
                   </div>
 
                 </div>

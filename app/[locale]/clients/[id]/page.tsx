@@ -44,6 +44,7 @@ interface Client {
   createdAt: string;
   rates?: ClientRate[];
   documentLanguage: string | null;
+  vatMode: string | null;
 }
 
 /** Map a loaded client into the edit form's controlled state. */
@@ -70,6 +71,7 @@ function clientToFormData(client: Client) {
       unit: r.unit ?? null,
     })) as ClientRateInput[],
     documentLanguage: (client.documentLanguage ?? "") as "" | "he" | "en",
+    vatMode: (client.vatMode ?? "") as "" | "add" | "exempt",
   };
 }
 
@@ -103,6 +105,7 @@ export default function ClientDetailsPage() {
     notes: "",
     rates: [] as ClientRateInput[],
     documentLanguage: "" as "" | "he" | "en",
+    vatMode: "" as "" | "add" | "exempt",
   });
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -204,6 +207,7 @@ export default function ClientDetailsPage() {
           notes: formData.notes || undefined,
           rates: cleanedRates,
           documentLanguage: formData.documentLanguage === "" ? null : formData.documentLanguage,
+          vatMode: formData.vatMode === "" ? null : formData.vatMode,
         }),
       });
 
@@ -441,6 +445,26 @@ export default function ClientDetailsPage() {
                       ]}
                     />
                     <p className="mt-1 text-xs text-muted-foreground">{t("documentLanguageHint")}</p>
+                  </div>
+
+                  <div>
+                    <label htmlFor="vatMode" className="mb-1.5 block text-sm font-medium text-foreground">
+                      {t("vatModeLabel")}
+                    </label>
+                    <SimpleSelect
+                      id="vatMode"
+                      value={formData.vatMode}
+                      onChange={(v) =>
+                        setFormData({ ...formData, vatMode: v as "" | "add" | "exempt" })
+                      }
+                      disabled={submitting}
+                      options={[
+                        { value: "", label: t("vatModeInherit") },
+                        { value: "add", label: t("vatModeAdd") },
+                        { value: "exempt", label: t("vatModeExempt") },
+                      ]}
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">{t("vatModeHint")}</p>
                   </div>
                 </div>
 

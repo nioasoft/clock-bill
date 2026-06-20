@@ -448,9 +448,22 @@
     "perYear": "/ שנה",
     "currentPlan": "התוכנית הנוכחית שלך",
     "manage": "ניהול מנוי",
-    "free": { "name": "חינם", "price": "$0", "tagline": "ללקוח אחד", "cta": "התוכנית הנוכחית" },
-    "starter": { "name": "Starter", "tagline": "עד 5 לקוחות", "cta": "שדרגו ל-Starter" },
-    "unlimited": { "name": "Unlimited", "tagline": "לקוחות ללא הגבלה", "cta": "שדרגו ל-Unlimited" },
+    "free": {
+      "name": "חינם",
+      "price": "$0",
+      "tagline": "ללקוח אחד",
+      "cta": "התוכנית הנוכחית"
+    },
+    "starter": {
+      "name": "Starter",
+      "tagline": "עד 5 לקוחות",
+      "cta": "שדרגו ל-Starter"
+    },
+    "unlimited": {
+      "name": "Unlimited",
+      "tagline": "לקוחות ללא הגבלה",
+      "cta": "שדרגו ל-Unlimited"
+    },
     "features": {
       "allFeatures": "כל הפיצ'רים — טיימר, משימות, דוחות PDF, רב-מטבע",
       "clients1": "לקוח אחד",
@@ -594,7 +607,12 @@
     "documentLanguageAuto": "אוטומטי",
     "documentLanguageAutoResolved": "אוטומטי ({lang})",
     "documentLanguageHe": "עברית",
-    "documentLanguageEn": "אנגלית"
+    "documentLanguageEn": "אנגלית",
+    "vatModeLabel": "מע״מ (מסמכים)",
+    "vatModeInherit": "ברירת מחדל (לפי הגדרת העוסק)",
+    "vatModeAdd": "הוסף מע״מ",
+    "vatModeExempt": "ללא מע״מ",
+    "vatModeHint": "דריסת מע״מ עבור לקוח זה. ברירת מחדל = לפי הגדרת העוסק (למשל לקוח חו״ל ללא מע״מ)."
   },
   "Projects": {
     "pageTitle": "פרויקטים",
@@ -851,7 +869,11 @@
       "bankSwiftPlaceholder": "POHALILIT",
       "bankSwiftHint": "נדרש להעברות בינלאומיות בלבד",
       "saving": "שומר...",
-      "saveButton": "שמור שינויים"
+      "saveButton": "שמור שינויים",
+      "vatLabel": "מע״מ",
+      "vatRegistered": "עוסק מורשה (חייב במע״מ)",
+      "vatRate": "שיעור מע״מ (%)",
+      "vatHint": "כשמופעל, מסמכי חיוב יחושבו עם מע״מ בשיעור זה. ניתן לדרוס פר לקוח."
     },
     "pdf": {
       "sectionTitle": "עיצוב ה-PDF",
@@ -2097,7 +2119,21 @@
       "pdfFor": "עבור",
       "notesHeading": "הערות",
       "paymentDetails": "פרטי תשלום",
-      "signature": "חתימה"
+      "signature": "חתימה",
+      "subtotal": "סכום ביניים",
+      "vat": "מע״מ {rate}%",
+      "totalDue": "סה״כ לתשלום",
+      "noVatNote": "ללא מע״מ",
+      "inclVatNote": "כולל מע״מ {rate}%",
+      "summaryHeading": "סיכום",
+      "summaryToggle": "סיכום בראש המסמך",
+      "summaryNone": "ללא",
+      "summaryByProject": "לפי פרויקט",
+      "summaryByType": "לפי סוג עבודה",
+      "summaryColProject": "פרויקט",
+      "summaryColType": "סוג עבודה",
+      "summaryColHours": "שעות",
+      "summaryNoProject": "ללא פרויקט"
     }
   },
   "Trial": {

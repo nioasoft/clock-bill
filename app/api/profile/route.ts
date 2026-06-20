@@ -46,6 +46,9 @@ const updateProfileSchema = z.object({
   bankSwift: z.string().max(100).nullable().optional(),
   pdfPrimaryColor: z.string().max(50).nullable().optional(),
   pdfAccentColor: z.string().max(50).nullable().optional(),
+  // VAT (מע״מ): global business status + rate (0–100, validated in handler too).
+  vatRegistered: z.boolean().optional(),
+  vatRate: z.number().min(0).max(100).nullable().optional(),
   longTimerEnabled: z.boolean().optional(),
   longTimerThreshold: z.number().optional(),
   dailyReminderEnabled: z.boolean().optional(),
@@ -95,6 +98,8 @@ export interface Profile {
   bankSwift: string | null;
   pdfPrimaryColor: string;
   pdfAccentColor: string;
+  vatRegistered: boolean;
+  vatRate: number | null;
   longTimerEnabled: boolean;
   longTimerThreshold: number;
   dailyReminderEnabled: boolean;
@@ -152,6 +157,7 @@ export async function GET(): Promise<NextResponse> {
               bank_account_number as "bankAccountNumber", bank_branch as "bankBranch",
               bank_swift as "bankSwift", pdf_primary_color as "pdfPrimaryColor",
               pdf_accent_color as "pdfAccentColor",
+              COALESCE(vat_registered, false) as "vatRegistered", vat_rate as "vatRate",
               long_timer_enabled as "longTimerEnabled", long_timer_threshold as "longTimerThreshold",
               daily_reminder_enabled as "dailyReminderEnabled", daily_reminder_time as "dailyReminderTime",
               last_reminder_date as "lastReminderDate", working_hours as "workingHours",
@@ -320,6 +326,22 @@ export async function PATCH(request: Request): Promise<NextResponse> {
     if (body.pdfAccentColor !== undefined) {
       updates.push(`pdf_accent_color = $${paramIndex++}`);
       values.push(body.pdfAccentColor);
+    }
+
+    if (body.vatRegistered !== undefined) {
+      updates.push(`vat_registered = $${paramIndex++}`);
+      values.push(body.vatRegistered);
+    }
+
+    if (body.vatRate !== undefined) {
+      if (body.vatRate !== null && (body.vatRate < 0 || body.vatRate > 100)) {
+        return NextResponse.json(
+          { success: false, error_code: "INVALID_VAT_RATE", message: "שיעור מע״מ לא תקין" },
+          { status: 400 }
+        );
+      }
+      updates.push(`vat_rate = $${paramIndex++}`);
+      values.push(body.vatRate);
     }
 
     if (body.longTimerEnabled !== undefined) {

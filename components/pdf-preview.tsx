@@ -1,11 +1,18 @@
 /**
- * Lightweight live preview of the invoice/PDF appearance for the settings PDF
- * card. It is NOT a pixel-accurate render of the 6 print templates — it gives a
- * quick sense of how the chosen template + brand colors + business header look,
- * updating live as the user edits. Printed documents are light, so this uses
- * explicit light colors + inline styles (the documented exception to the dark
- * design system) rather than the dark theme tokens.
+ * WYSIWYG live preview of the charge-document template for the settings PDF card.
+ *
+ * It renders a small SAMPLE document using the very same `.pdf-*` class hooks as
+ * the real printed document, and injects the same `templateRules(...)` CSS scoped
+ * to this preview's root. So picking a template / changing the brand colors shows
+ * exactly what the printed document will look like — the preview can't drift from
+ * the real output. Printed documents are light, so this stays light (the
+ * documented exception to the dark design system).
  */
+"use client";
+
+import { useEffect, useId, useRef } from "react";
+import { templateRules, type PdfTemplate } from "@/app/[locale]/(auth)/reports/printStyles";
+
 interface PdfPreviewProps {
   template: string;
   primaryColor: string;
@@ -21,6 +28,7 @@ interface PdfPreviewProps {
 }
 
 const HEX = /^#[0-9A-Fa-f]{6}$/;
+const KNOWN: readonly PdfTemplate[] = ["modern", "classic", "bold", "elegant", "nature", "ocean"];
 
 export function PdfPreview({
   template,
@@ -36,71 +44,128 @@ export function PdfPreview({
 }: PdfPreviewProps) {
   const primary = HEX.test(primaryColor) ? primaryColor : "#A8622D";
   const accent = HEX.test(accentColor) ? accentColor : "#347B52";
-  // Sample copy follows the UI locale (the preview is illustrative, not real data).
-  const tx = isHebrew
-    ? { fallbackName: "שם העסק", description: "תיאור", amount: "סכום", lineConsulting: "ייעוץ — 8 שעות", lineItem: "פריט חיוב", total: "סה״כ ₪1,500" }
-    : { fallbackName: "Business name", description: "Description", amount: "Amount", lineConsulting: "Consulting — 8 hrs", lineItem: "Billing item", total: "Total ₪1,500" };
-  const name = businessName.trim() || tx.fallbackName;
+  const tpl: PdfTemplate = (KNOWN as readonly string[]).includes(template)
+    ? (template as PdfTemplate)
+    : "modern";
+
+  // Unique, CSS-safe scope id so the injected rules only hit this preview.
+  const scopeId = "pdftpl-" + useId().replace(/[^a-zA-Z0-9_-]/g, "");
+
+  const name = businessName.trim() || (isHebrew ? "שם העסק" : "Business name");
   const addr = [addressStreet.trim(), addressCity.trim()].filter(Boolean).join(", ");
-  // Header style varies a little by template so the choice is visibly reflected.
-  const outlinedHeader = template === "classic" || template === "elegant";
-  const headerStyle = outlinedHeader
-    ? { background: "#ffffff", color: "#1a1a1a", borderBottom: `3px solid ${primary}` }
-    : { background: primary, color: "#ffffff" };
+  const tx = isHebrew
+    ? { for: "עבור", client: "לקוח לדוגמה", number: "מספר 1", date: "01/01/2026",
+        item: "פריט", details: "פירוט", qty: "כמות / תעריף", amount: "סכום",
+        line1: "תכנות", line1d: "פיתוח עמוד", line2: "עיצוב",
+        subtotal: "סכום ביניים", vat: "מע״מ 18%", total: "סה״כ לתשלום", hours: "8ש׳" }
+    : { for: "For", client: "Sample client", number: "No. 1", date: "01/01/2026",
+        item: "Item", details: "Details", qty: "Qty / Rate", amount: "Amount",
+        line1: "Development", line1d: "Landing page", line2: "Design",
+        subtotal: "Subtotal", vat: "VAT 18%", total: "Total due", hours: "8h" };
+
+  // The same rules that style the printed document, scoped to this preview only.
+  const css = templateRules(tpl, primary, accent, `#${scopeId}`);
+
+  // Inject the rules into <head> (created once, updated in place, removed on
+  // unmount) instead of rendering a <style> in the body tree — re-rendering a
+  // body-level <style> on every color/template change churns layout and made
+  // the settings page jump to the top.
+  const styleRef = useRef<HTMLStyleElement | null>(null);
+  useEffect(() => {
+    const el = document.createElement("style");
+    el.setAttribute("data-pdf-preview", scopeId);
+    document.head.appendChild(el);
+    styleRef.current = el;
+    return () => {
+      el.remove();
+      styleRef.current = null;
+    };
+  }, [scopeId]);
+  useEffect(() => {
+    if (styleRef.current) styleRef.current.textContent = css;
+  }, [css]);
 
   return (
     <div>
       <p className="text-xs font-medium text-muted-foreground mb-2">{label}</p>
       <div
+        id={scopeId}
         dir={isHebrew ? "rtl" : "ltr"}
         className="overflow-hidden rounded-[var(--radius)] border border-border"
-        style={{ background: "#ffffff", color: "#1a1a1a" }}
+        style={{ background: "#ffffff" }}
       >
-        {/* Header */}
-        <div className="flex items-center gap-3" style={{ ...headerStyle, padding: "14px 16px" }}>
-          {logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={logoUrl}
-              alt=""
-              style={{ height: 34, width: 34, objectFit: "contain", borderRadius: 4, background: "#fff", flexShrink: 0 }}
-            />
-          ) : null}
-          <div className="min-w-0">
-            <div className="truncate" style={{ fontWeight: 700, fontSize: 14 }}>{name}</div>
-            {addr ? (
-              <div className="truncate" style={{ fontSize: 11, opacity: 0.85 }}>{addr}</div>
+        {/* Banner */}
+        <div className="pdf-banner">
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt="" className="pdf-banner-logo" />
             ) : null}
+            <div className="pdf-business-name">{name}</div>
+            {addr ? <div className="pdf-banner-sub">{addr}</div> : null}
           </div>
-          <div style={{ marginInlineStart: "auto", fontSize: 12, fontWeight: 600, whiteSpace: "nowrap" }}>{docTitle}</div>
+          <div className="pdf-banner-meta">
+            <div className="pdf-doc-title">{docTitle}</div>
+            <div className="pdf-banner-sub">
+              <div>{tx.number}</div>
+              <div>{tx.date}</div>
+            </div>
+          </div>
         </div>
 
-        {/* Body — sample lines */}
-        <div style={{ padding: "14px 16px" }}>
-          <table style={{ width: "100%", fontSize: 11, borderCollapse: "collapse" }}>
+        <div className="pdf-body">
+          {/* Client box */}
+          <div className="pdf-client-box">
+            <div className="pdf-client-label" style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.6px" }}>
+              {tx.for}
+            </div>
+            <div style={{ fontWeight: 600, fontSize: 15 }}>{tx.client}</div>
+          </div>
+
+          {/* Detail table */}
+          <table className="pdf-table">
             <thead>
-              <tr style={{ color: accent, borderBottom: "1px solid #e7e7e7" }}>
-                <th style={{ textAlign: "start", padding: "4px 0", fontWeight: 600 }}>{tx.description}</th>
-                <th style={{ textAlign: "end", padding: "4px 0", fontWeight: 600 }}>{tx.amount}</th>
+              <tr>
+                <th>{tx.item}</th>
+                <th>{tx.details}</th>
+                <th>{tx.qty}</th>
+                <th>{tx.amount}</th>
               </tr>
             </thead>
-            <tbody style={{ color: "#333" }}>
+            <tbody>
               <tr>
-                <td style={{ padding: "4px 0" }}>{tx.lineConsulting}</td>
-                <td style={{ textAlign: "end" }}>₪1,200</td>
+                <td>{tx.line1}</td>
+                <td>{tx.line1d}</td>
+                <td style={{ whiteSpace: "nowrap" }}>{tx.hours} × ₪150</td>
+                <td style={{ whiteSpace: "nowrap" }}>₪1,200</td>
               </tr>
               <tr>
-                <td style={{ padding: "4px 0" }}>{tx.lineItem}</td>
-                <td style={{ textAlign: "end" }}>₪300</td>
+                <td>{tx.line2}</td>
+                <td>—</td>
+                <td style={{ whiteSpace: "nowrap" }}>1 × ₪300</td>
+                <td style={{ whiteSpace: "nowrap" }}>₪300</td>
               </tr>
             </tbody>
           </table>
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 10 }}>
-            <div
-              style={{ background: accent, color: "#fff", padding: "4px 12px", borderRadius: 4, fontSize: 12, fontWeight: 700 }}
-            >
-              {tx.total}
-            </div>
+
+          {/* Totals */}
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+            <table style={{ minWidth: 200, borderCollapse: "collapse" }}>
+              <tbody>
+                <tr className="pdf-totals-row">
+                  <td className="pdf-totals-label" style={{ fontSize: 12 }}>{tx.subtotal}</td>
+                  <td className="pdf-totals-value" style={{ fontSize: 12 }}>₪1,500</td>
+                </tr>
+                <tr className="pdf-totals-row">
+                  <td className="pdf-totals-label" style={{ fontSize: 12 }}>{tx.vat}</td>
+                  <td className="pdf-totals-value" style={{ fontSize: 12 }}>₪270</td>
+                </tr>
+                <tr className="pdf-totals-row pdf-totals-grand">
+                  <td className="pdf-totals-label">{tx.total}</td>
+                  <td className="pdf-totals-value">₪1,770</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

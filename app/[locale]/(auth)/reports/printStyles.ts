@@ -1,12 +1,20 @@
 /**
- * Shared PDF print helper for the reports screen.
+ * Shared PDF template styling + print helper for the reports screen.
  *
- * Both the ad-hoc report and the charge-document view need an identical
- * print routine: build the @media print CSS for the chosen template, clone the
- * on-page `#pdf-content` block into a body-level container (so the print CSS
- * isn't suppressed by ancestor rules deep in the React tree), call
- * `window.print()`, then clean up. This module is the single source of truth
- * for that logic — extracted verbatim from AdHocReportTab.confirmExportPdf.
+ * The 6 templates are defined ONCE as scopeable CSS rules (`templateRules`) so
+ * the same look drives BOTH:
+ *   - the printed charge document (scoped to `#pdf-content`, inside @media print)
+ *   - the live settings preview (scoped to the preview root, on screen)
+ * → the preview is genuinely WYSIWYG; it can never drift from the real output.
+ *
+ * Design rules:
+ *  - The user's brand colors ALWAYS win (every template routes through
+ *    `${primary}` / `${accent}`, never a hardcoded brand color).
+ *  - Templates are visually DISTINCT by structure, not just fonts:
+ *    modern (filled banner) · classic (serif, outlined) · bold (filled banner +
+ *    filled table head + solid total bar) · elegant (hairline, airy, light) ·
+ *    nature (accent-led, striped, pill total) · ocean (side-band header, striped).
+ *  - The charge document uses `.pdf-banner`; the ad-hoc report keeps `.pdf-header`.
  */
 
 export type PdfTemplate =
@@ -20,14 +28,139 @@ export type PdfTemplate =
 /** Print document direction. Hebrew documents print RTL, English LTR. */
 export type PrintDirection = "rtl" | "ltr";
 
+export const PDF_TEMPLATES: readonly PdfTemplate[] = [
+  "modern",
+  "classic",
+  "bold",
+  "elegant",
+  "nature",
+  "ocean",
+];
+
 /**
- * Build the `@media print` CSS for a template. Colors come from the user's
- * profile (with the same defaults the ad-hoc report uses).
- * @param template - which of the 6 PDF templates to style for
- * @param primaryColor - profile pdfPrimaryColor (hex)
- * @param accentColor - profile pdfAccentColor (hex)
+ * The CSS rules for one template, every selector prefixed with `scope` so the
+ * same rules can target the print container OR an on-screen preview root.
+ * @param scope - selector prefix, e.g. "#pdf-content" or "#tpl-preview-xyz"
+ */
+export function templateRules(
+  template: PdfTemplate,
+  primary: string,
+  accent: string,
+  scope: string
+): string {
+  const S = scope;
+
+  // ── Shared skeleton (neutral) — templates override the expressive bits ──
+  const base = `
+    ${S} { font-family: -apple-system, 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #1a1a1a; line-height: 1.5; }
+    ${S} .pdf-banner { display: flex; justify-content: space-between; align-items: flex-start; gap: 1.5rem; padding: 22px 26px; }
+    ${S} .pdf-business-name { font-size: 21px; font-weight: 700; margin: 0 0 3px; }
+    ${S} .pdf-doc-title { font-size: 16px; font-weight: 700; margin-bottom: 5px; }
+    ${S} .pdf-banner-sub { font-size: 11.5px; line-height: 1.65; }
+    ${S} .pdf-banner-logo { max-height: 50px; background: #fff; border-radius: 6px; padding: 4px; margin-bottom: 10px; }
+    ${S} .pdf-banner-meta { text-align: start; white-space: nowrap; }
+    ${S} .pdf-body { padding: 20px 26px 8px; }
+
+    ${S} .pdf-client-box { border-inline-start: 3px solid ${primary}; background: #f6f8fb; padding: 12px 16px; border-radius: 8px; margin-bottom: 18px; }
+    ${S} .pdf-client-label { color: ${primary}; }
+
+    ${S} .pdf-summary { border: 1px solid #e6e8ec; border-radius: 8px; overflow: hidden; margin-bottom: 18px; }
+    ${S} .pdf-summary-title { background: #f1f5f9; color: ${primary}; border-bottom: 1px solid #e6e8ec; }
+    ${S} .pdf-summary-table th { color: #64748b; text-transform: uppercase; letter-spacing: 0.3px; font-size: 10.5px; border-bottom: 1px solid #eef1f4; }
+    ${S} .pdf-summary-table td { border-bottom: 1px solid #f3f5f7; }
+    ${S} .pdf-summary-table tr:last-child td { border-bottom: none; }
+
+    ${S} .pdf-table { width: 100%; border-collapse: collapse; }
+    ${S} .pdf-table th { padding: 9px 12px; text-align: start; font-size: 10.5px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.3px; background: #f5f6f8; border-bottom: 2px solid ${primary}; }
+    ${S} .pdf-table td { padding: 8px 12px; text-align: start; font-size: 12px; border-bottom: 1px solid #eef1f4; }
+
+    ${S} .pdf-totals-row td { padding: 4px 12px; }
+    ${S} .pdf-totals-label { color: #64748b; text-align: end; }
+    ${S} .pdf-totals-value { text-align: start; white-space: nowrap; }
+    ${S} .pdf-totals-grand td { background: #f6f8fb; }
+    ${S} .pdf-totals-grand .pdf-totals-label, ${S} .pdf-totals-grand .pdf-totals-value { color: ${primary}; font-weight: 700; font-size: 15px; border-top: 2px solid ${primary}; padding-top: 8px; }
+
+    ${S} .pdf-note { font-size: 11px; color: #94a3b8; }
+
+    /* Ad-hoc report (no banner) keeps a simple colored header. */
+    ${S} .pdf-header { margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 2px solid ${primary}; }
+    ${S} .pdf-section { margin-bottom: 1rem; }
+    ${S} .pdf-section-title { font-size: 14px; font-weight: 700; margin: 0; color: ${primary}; border-bottom: 1px solid #e5e5e5; padding-bottom: 6px; margin-bottom: 8px; }
+  `;
+
+  const byTemplate: Record<PdfTemplate, string> = {
+    // FILLED banner, clean grey table head with primary underline.
+    modern: `
+      ${S} .pdf-banner { background: ${primary}; color: #fff; }
+      ${S} .pdf-banner .pdf-business-name, ${S} .pdf-banner .pdf-doc-title { color: #fff; }
+      ${S} .pdf-banner-sub { color: rgba(255,255,255,0.88); }
+      ${S} .pdf-header .pdf-business-name { color: ${primary}; font-size: 20px; }
+    `,
+    // OUTLINED serif header, traditional ledger look, no fills/stripes.
+    classic: `
+      ${S} { font-family: Georgia, 'Times New Roman', serif; }
+      ${S} .pdf-banner { background: #fff; color: #1a1a1a; border-bottom: 3px double ${primary}; }
+      ${S} .pdf-banner .pdf-business-name { color: ${primary}; font-family: Georgia, serif; letter-spacing: 0.5px; }
+      ${S} .pdf-banner .pdf-doc-title { color: #334155; font-variant: small-caps; }
+      ${S} .pdf-banner-sub { color: #64748b; }
+      ${S} .pdf-table th { background: transparent; border-bottom: 1px solid #333; color: #333; font-family: Georgia, serif; letter-spacing: 0; text-transform: none; font-size: 11.5px; }
+      ${S} .pdf-table td { border-bottom: 1px solid #ddd; }
+      ${S} .pdf-summary-title { background: transparent; border-bottom: 1px solid #333; }
+      ${S} .pdf-totals-grand td { background: transparent; }
+      ${S} .pdf-totals-grand .pdf-totals-label, ${S} .pdf-totals-grand .pdf-totals-value { border-top: 1px double #333; }
+    `,
+    // HIGH-CONTRAST: filled banner, filled table head, solid total bar.
+    bold: `
+      ${S} .pdf-banner { background: ${primary}; color: #fff; padding: 26px; }
+      ${S} .pdf-banner .pdf-business-name { color: #fff; font-weight: 900; font-size: 24px; }
+      ${S} .pdf-banner .pdf-doc-title { color: #fff; text-transform: uppercase; letter-spacing: 1px; }
+      ${S} .pdf-banner-sub { color: rgba(255,255,255,0.9); }
+      ${S} .pdf-table th { background: ${primary}; color: #fff; border-bottom: none; text-transform: uppercase; letter-spacing: 0.5px; }
+      ${S} .pdf-totals-grand td { background: ${primary}; }
+      ${S} .pdf-totals-grand .pdf-totals-label, ${S} .pdf-totals-grand .pdf-totals-value { color: #fff; border-top: none; font-size: 16px; padding: 8px 12px; }
+    `,
+    // AIRY & light: hairline outlined header, thin weights, lots of space.
+    elegant: `
+      ${S} .pdf-banner { background: #fff; color: #1a1a1a; border-bottom: 1px solid ${primary}; padding: 26px 26px 20px; }
+      ${S} .pdf-banner .pdf-business-name { color: ${primary}; font-weight: 400; letter-spacing: 1.5px; font-size: 20px; }
+      ${S} .pdf-banner .pdf-doc-title { color: #64748b; font-weight: 400; letter-spacing: 1px; text-transform: uppercase; font-size: 13px; }
+      ${S} .pdf-banner-sub { color: #94a3b8; }
+      ${S} .pdf-table th { background: transparent; border-bottom: 1px solid #e2e2e2; color: #8a8a8a; font-weight: 400; letter-spacing: 0.8px; font-size: 10px; }
+      ${S} .pdf-table td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; }
+      ${S} .pdf-summary-title { background: transparent; }
+      ${S} .pdf-totals-grand td { background: transparent; }
+      ${S} .pdf-totals-grand .pdf-totals-label, ${S} .pdf-totals-grand .pdf-totals-value { font-weight: 400; border-top: 1px solid ${primary}; }
+    `,
+    // ACCENT-led, soft, striped rows, pill-shaped grand total.
+    nature: `
+      ${S} .pdf-banner { background: ${accent}; color: #fff; }
+      ${S} .pdf-banner .pdf-business-name, ${S} .pdf-banner .pdf-doc-title { color: #fff; }
+      ${S} .pdf-banner-sub { color: rgba(255,255,255,0.9); }
+      ${S} .pdf-client-box { border-inline-start-color: ${accent}; }
+      ${S} .pdf-table th { background: #f4f8f5; border-bottom: 2px solid ${accent}; }
+      ${S} .pdf-table tbody tr:nth-child(even) td { background: #fafdfb; }
+      ${S} .pdf-totals-grand td { background: transparent; }
+      ${S} .pdf-totals-grand .pdf-totals-label { border-top: none; color: #fff; background: ${accent}; border-start-start-radius: 999px; border-end-start-radius: 999px; padding: 6px 6px 6px 14px; }
+      ${S} .pdf-totals-grand .pdf-totals-value { border-top: none; color: #fff; background: ${accent}; border-start-end-radius: 999px; border-end-end-radius: 999px; padding: 6px 14px 6px 6px; }
+    `,
+    // SIDE-BAND header (thick primary band on the start edge), cool striped table.
+    ocean: `
+      ${S} .pdf-banner { background: #f7fafd; color: #1a1a1a; border-inline-start: 6px solid ${primary}; border-bottom: 1px solid #e3edf6; }
+      ${S} .pdf-banner .pdf-business-name { color: ${primary}; }
+      ${S} .pdf-banner .pdf-doc-title { color: #334155; }
+      ${S} .pdf-banner-sub { color: #64748b; }
+      ${S} .pdf-table th { background: #f3f7fc; }
+      ${S} .pdf-table tbody tr:nth-child(even) td { background: #fafcff; }
+    `,
+  };
+
+  return base + byTemplate[template];
+}
+
+/**
+ * Build the `@media print` CSS for a charge document: hide everything else,
+ * set the page box, then apply the template rules scoped to `#pdf-content`.
  * @param direction - document direction ("rtl" for Hebrew, "ltr" for English)
- * @returns the full CSS string to inject into a <style> element
  */
 export function buildPrintStyles(
   template: PdfTemplate,
@@ -35,109 +168,27 @@ export function buildPrintStyles(
   accentColor: string,
   direction: PrintDirection = "rtl"
 ): string {
-  // Logical `text-align: start` follows the document direction, so the same
-  // table styles render right-aligned in RTL and left-aligned in LTR.
-  const baseStyles = `
+  return `
     @media print {
       body > *:not(#pdf-content) { display: none !important; }
       #pdf-content {
         display: block !important;
         direction: ${direction} !important;
-        font-family: -apple-system, 'Segoe UI', Arial, sans-serif;
-        font-size: 13px;
-        color: #1a1a1a;
-        line-height: 1.5;
+        /* Internal inset so the banner color + text are never flush to the paper
+           edge — keeps content inside the printer's safe area even if the print
+           dialog margins are set to "None" (@page alone isn't enough then). */
+        padding: 10mm 12mm;
       }
-      @page { size: A4; margin: 18mm 15mm; }
+      @page { size: A4; margin: 6mm; }
       body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-      .pdf-header { margin-bottom: 1.5rem; }
-      .pdf-section { margin-bottom: 1.25rem; }
-      .pdf-table { width: 100%; border-collapse: collapse; }
-      .pdf-table th { padding: 8px 10px; text-align: start; font-size: 11px; font-weight: 600; }
-      .pdf-table td { padding: 7px 10px; text-align: start; font-size: 12px; }
-      .pdf-table tfoot td { font-weight: 600; }
-      .pdf-section-title { font-size: 14px; font-weight: 700; margin: 0; }
+      ${templateRules(template, primaryColor, accentColor, "#pdf-content")}
     }
   `;
-
-  const templateStyles: Record<PdfTemplate, string> = {
-    modern: `
-      ${baseStyles}
-      @media print {
-        .pdf-header { border-bottom: 3px solid ${primaryColor}; padding-bottom: 1.25rem; }
-        .pdf-business-name { color: ${primaryColor}; font-size: 20px; }
-        .pdf-section-title { color: ${primaryColor}; border-bottom: 1px solid #e5e5e5; padding-bottom: 6px; margin-bottom: 8px; }
-        .pdf-table th { background: #f5f5f0 !important; color: #555; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid ${primaryColor}; }
-        .pdf-table td { border-bottom: 1px solid #eee; }
-        .pdf-table tfoot td { border-top: 2px solid ${primaryColor}; background: #faf9f7 !important; }
-      }
-    `,
-    classic: `
-      ${baseStyles}
-      @media print {
-        .pdf-header { border-bottom: 1px solid #333; padding-bottom: 1.25rem; }
-        .pdf-business-name { font-size: 22px; font-weight: 700; font-family: Georgia, 'Times New Roman', serif; }
-        .pdf-section-title { font-family: Georgia, serif; border-bottom: 1px double #999; padding-bottom: 4px; margin-bottom: 8px; }
-        .pdf-table th { background: #f8f8f8 !important; color: #333; border-bottom: 2px solid #333; font-family: Georgia, serif; }
-        .pdf-table td { border-bottom: 1px solid #ddd; }
-        .pdf-table tfoot td { border-top: 2px solid #333; }
-      }
-    `,
-    bold: `
-      ${baseStyles}
-      @media print {
-        .pdf-header { border-right: 5px solid ${primaryColor}; padding-right: 1rem; padding-bottom: 1rem; }
-        .pdf-business-name { font-size: 24px; font-weight: 900; color: ${primaryColor}; }
-        .pdf-section-title { color: #1a1a1a; background: #f0ebe4 !important; padding: 6px 10px; margin-bottom: 0; }
-        .pdf-table th { background: ${primaryColor} !important; color: white !important; text-transform: uppercase; letter-spacing: 0.5px; }
-        .pdf-table td { border-bottom: 1px solid #e8e4de; }
-        .pdf-table tfoot td { background: #f0ebe4 !important; border-top: 3px solid ${primaryColor}; }
-      }
-    `,
-    elegant: `
-      ${baseStyles}
-      @media print {
-        .pdf-header { border-bottom: 1px solid #d4c5b0; padding-bottom: 1.25rem; }
-        .pdf-business-name { font-size: 20px; font-weight: 400; letter-spacing: 1px; color: #4a3728; }
-        .pdf-section-title { color: #4a3728; font-weight: 400; letter-spacing: 0.5px; border-bottom: 1px solid #e8dfd4; padding-bottom: 4px; margin-bottom: 8px; }
-        .pdf-table th { color: #8a7560; font-weight: 400; text-transform: uppercase; letter-spacing: 0.8px; font-size: 10px; border-bottom: 1px solid #d4c5b0; }
-        .pdf-table td { border-bottom: 1px solid #f0ebe4; }
-        .pdf-table tfoot td { border-top: 1px solid #d4c5b0; }
-      }
-    `,
-    nature: `
-      ${baseStyles}
-      @media print {
-        .pdf-header { border-bottom: 3px solid ${accentColor}; padding-bottom: 1.25rem; }
-        .pdf-business-name { color: ${accentColor}; font-size: 20px; }
-        .pdf-section-title { color: ${accentColor}; border-bottom: 1px solid #c8e6d5; padding-bottom: 6px; margin-bottom: 8px; }
-        .pdf-table th { background: #eef7f1 !important; color: #2d5a3e; border-bottom: 2px solid ${accentColor}; }
-        .pdf-table td { border-bottom: 1px solid #e8f4ec; }
-        .pdf-table tbody tr:nth-child(even) td { background: #f7fbf9 !important; }
-        .pdf-table tfoot td { border-top: 2px solid ${accentColor}; background: #eef7f1 !important; }
-      }
-    `,
-    ocean: `
-      ${baseStyles}
-      @media print {
-        .pdf-header { border-bottom: 3px solid #2563EB; padding-bottom: 1.25rem; }
-        .pdf-business-name { color: #1e40af; font-size: 20px; }
-        .pdf-section-title { color: #1e40af; border-bottom: 1px solid #dbeafe; padding-bottom: 6px; margin-bottom: 8px; }
-        .pdf-table th { background: #eff6ff !important; color: #1e40af; border-bottom: 2px solid #2563EB; }
-        .pdf-table td { border-bottom: 1px solid #e8f0fe; }
-        .pdf-table tbody tr:nth-child(even) td { background: #f8fbff !important; }
-        .pdf-table tfoot td { border-top: 2px solid #2563EB; background: #eff6ff !important; }
-      }
-    `,
-  };
-
-  return templateStyles[template] || templateStyles.modern;
 }
 
 /**
  * Inject the print styles, clone `#pdf-content` into a body-level container,
- * trigger the browser print dialog, and clean up afterwards. Behavior is
- * identical to the original inline routine in AdHocReportTab.confirmExportPdf.
+ * trigger the browser print dialog, and clean up afterwards.
  * Caller must have an element with id `pdf-content` mounted in the DOM.
  * @param direction - document direction ("rtl" for Hebrew, "ltr" for English)
  */

@@ -5,7 +5,10 @@ import {
   canTransition,
   computeDocumentTotal,
   buildLineFromEntry,
+  lineQtyRate,
+  summarizeLines,
   type BillableEntry,
+  type SummaryLine,
 } from "../../lib/charge-documents";
 
 class TestRunner {
@@ -100,12 +103,96 @@ runner.test("buildLineFromEntry: hourly entry gets null unit", () => {
   };
   assertEqual(buildLineFromEntry(entry).unit, null);
 });
+runner.test("buildLineFromEntry: hourly entry stores billed hours in quantity", () => {
+  const entry: BillableEntry = {
+    id: "e13", description: "תכנות", notes: null, billingKind: "hourly",
+    duration: 90, quantity: null, rate: 200, rateLabel: "תכנות", itemRef: null,
+  };
+  // 90 min, no rounding → 1.5 billed hours.
+  assertEqual(buildLineFromEntry(entry).quantity, 1.5);
+});
+runner.test("buildLineFromEntry: hourly quantity reflects rounding (40min→quarter_hour_up=0.75h)", () => {
+  const entry: BillableEntry = {
+    id: "e14", description: "ייעוץ", notes: null, billingKind: "hourly",
+    duration: 40, quantity: null, rate: 100, rateLabel: "ייעוץ", itemRef: null,
+    billingRounding: "quarter_hour_up",
+  };
+  // 40 min rounds up to 45 → 0.75 h.
+  assertEqual(buildLineFromEntry(entry).quantity, 0.75);
+});
+runner.test("buildLineFromEntry: carries projectName into the draft", () => {
+  const entry: BillableEntry = {
+    id: "e15", description: "תכנות", notes: null, billingKind: "hourly",
+    duration: 60, quantity: null, rate: 100, rateLabel: "תכנות", itemRef: null,
+    projectName: "אתר תדמית",
+  };
+  assertEqual(buildLineFromEntry(entry).projectName, "אתר תדמית");
+});
 runner.test("buildLineFromEntry: item without unit -> null unit", () => {
   const entry: BillableEntry = {
     id: "e12", description: "מכתב", notes: null, billingKind: "item",
     duration: 0, quantity: 2, rate: 100, rateLabel: "מכתב", itemRef: 8,
   };
   assertEqual(buildLineFromEntry(entry).unit, null);
+});
+
+// ── lineQtyRate ─────────────────────────────────────────────────────────────
+runner.test("lineQtyRate: hourly with stored hours → hours + rate", () => {
+  const qr = lineQtyRate({ billing_kind: "hourly", quantity: 1.5, unit: null, rate: 200, amount: 300 });
+  assertEqual(qr?.isHourly, true);
+  assertEqual(qr?.qty, 1.5);
+  assertEqual(qr?.rate, 200);
+});
+runner.test("lineQtyRate: legacy hourly (quantity null) derives hours from amount/rate", () => {
+  const qr = lineQtyRate({ billing_kind: "hourly", quantity: null, unit: null, rate: 80, amount: 40 });
+  assertEqual(qr?.isHourly, true);
+  assertEqual(qr?.qty, 0.5);
+});
+runner.test("lineQtyRate: item → qty + unit + rate", () => {
+  const qr = lineQtyRate({ billing_kind: "item", quantity: 3, unit: "פגישה", rate: 100, amount: 300 });
+  assertEqual(qr?.isHourly, false);
+  assertEqual(qr?.qty, 3);
+  assertEqual(qr?.unit, "פגישה");
+});
+runner.test("lineQtyRate: fixed line → null", () => {
+  assertEqual(lineQtyRate({ billing_kind: "fixed", quantity: null, unit: null, rate: null, amount: 500 }), null);
+});
+runner.test("lineQtyRate: no rate → null", () => {
+  assertEqual(lineQtyRate({ billing_kind: "hourly", quantity: 2, unit: null, rate: 0, amount: 0 }), null);
+});
+
+// ── summarizeLines ──────────────────────────────────────────────────────────
+const sLines: SummaryLine[] = [
+  { billing_kind: "hourly", label: "תכנות", project_name: "אתר", quantity: 2, unit: null, rate: 100, amount: 200 },
+  { billing_kind: "hourly", label: "תכנות", project_name: "אפליקציה", quantity: 1, unit: null, rate: 100, amount: 100 },
+  { billing_kind: "item", label: "עיצוב", project_name: "אתר", quantity: 1, unit: "פגישה", rate: 300, amount: 300 },
+  { billing_kind: "fixed", label: "ריטיינר", project_name: null, quantity: null, unit: null, rate: null, amount: 500 },
+];
+
+runner.test("summarizeLines by type: groups by label, sums hours + amount", () => {
+  const g = summarizeLines(sLines, "type");
+  assertEqual(g.length, 3); // תכנות, עיצוב, ריטיינר
+  const prog = g.find((x) => x.key === "תכנות")!;
+  assertEqual(prog.hours, 3);
+  assertEqual(prog.amount, 300);
+  const design = g.find((x) => x.key === "עיצוב")!;
+  assertEqual(design.hours, 0); // item line contributes amount only
+  assertEqual(design.amount, 300);
+});
+runner.test("summarizeLines by project: groups by project_name, null = its own bucket", () => {
+  const g = summarizeLines(sLines, "project");
+  assertEqual(g.length, 3); // אתר, אפליקציה, null
+  const site = g.find((x) => x.key === "אתר")!;
+  assertEqual(site.hours, 2);
+  assertEqual(site.amount, 500); // 200 hourly + 300 item
+  const none = g.find((x) => x.key === null)!;
+  assertEqual(none.amount, 500); // the fixed retainer line
+});
+runner.test("summarizeLines preserves first-appearance order", () => {
+  const g = summarizeLines(sLines, "type");
+  assertEqual(g[0].key, "תכנות");
+  assertEqual(g[1].key, "עיצוב");
+  assertEqual(g[2].key, "ריטיינר");
 });
 
 runner.run().then((ok) => process.exit(ok ? 0 : 1));

@@ -7,6 +7,8 @@ import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { formatDate } from "@/lib/format";
 import { formatCurrency } from "@/lib/currency";
 import { resolveDocumentLocale, type DocumentLanguage } from "@/lib/document-language";
+import { lineQtyRate, summarizeLines, type SummaryMode, type SummaryLine } from "@/lib/charge-documents";
+import { computeVatBreakdown } from "@/lib/vat";
 import { useDocumentMessages } from "@/lib/document-messages";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,6 +37,7 @@ interface DocumentLine {
   unit: string | null;
   rate: number | null;
   amount: number;
+  project_name: string | null;
 }
 
 interface ChargeDocument {
@@ -52,6 +55,10 @@ interface ChargeDocument {
   document_language: string | null;
   /** The client's CURRENT document-language setting (for legacy-doc fallback). */
   client_document_language: string | null;
+  /** VAT rate (%) snapshot, or null when no VAT applies. */
+  vat_rate_snapshot: number | null;
+  /** Optional summary grouping: 'project' | 'type' | null. */
+  summary_mode: string | null;
 }
 
 /** Business-profile fields needed for the PDF header + template/colors. */
@@ -139,6 +146,9 @@ export default function ChargeDocumentView({
   // Document-level notes draft (only editable while pending).
   const [notesDraft, setNotesDraft] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
+
+  // Summary-block grouping (only editable while pending; persisted on the doc).
+  const [savingSummary, setSavingSummary] = useState(false);
 
   // Inline line editor: which line is open + its draft text.
   const [editingLineId, setEditingLineId] = useState<string | null>(null);
@@ -249,6 +259,15 @@ export default function ChargeDocumentView({
     if (ok) showSuccessToast(t("doc.notesSaved"));
     setSavingNotes(false);
   }, [isPending, notesDraft, patchDocument, t]);
+
+  const handleSetSummary = useCallback(
+    async (mode: SummaryMode | null): Promise<void> => {
+      setSavingSummary(true);
+      await patchDocument({ summaryMode: mode });
+      setSavingSummary(false);
+    },
+    [patchDocument]
+  );
 
   const startEditLine = useCallback((line: DocumentLine): void => {
     setEditingLineId(line.id);
@@ -401,6 +420,19 @@ export default function ChargeDocumentView({
 
   const status = STATUS_META[doc.status as ChargeDocStatus] ?? STATUS_META.pending;
 
+  // VAT breakdown derived from the snapshotted rate (null = no VAT applied).
+  const vat = computeVatBreakdown(doc.total, doc.vat_rate_snapshot);
+  const hasVat = doc.vat_rate_snapshot != null && doc.vat_rate_snapshot > 0;
+
+  // Optional summary groups (mirrors the printed PDF).
+  const summaryMode =
+    doc.summary_mode === "project" || doc.summary_mode === "type"
+      ? (doc.summary_mode as SummaryMode)
+      : null;
+  const summary = summaryMode
+    ? summarizeLines(lines as unknown as SummaryLine[], summaryMode)
+    : [];
+
   return (
     <div className="space-y-6">
       {/* ── Header ── */}
@@ -423,11 +455,15 @@ export default function ChargeDocumentView({
           </p>
         </div>
         <div className="text-end">
-          <div className="text-xs text-muted-foreground">{t("doc.total")}</div>
+          <div className="text-xs text-muted-foreground">{hasVat ? t("doc.totalDue") : t("doc.total")}</div>
           <div className="font-mono text-2xl font-bold tabular-nums text-foreground">
-            {formatCurrency(doc.total, doc.currency, locale)}
+            {formatCurrency(vat.total, doc.currency, locale)}
           </div>
-          <div className="text-xs text-muted-foreground">{t("preVatNote")}</div>
+          <div className="text-xs text-muted-foreground">
+            {hasVat
+              ? t("doc.inclVatNote", { rate: Number((doc.vat_rate_snapshot as number).toFixed(2)) })
+              : t("doc.noVatNote")}
+          </div>
         </div>
       </div>
 
@@ -441,6 +477,39 @@ export default function ChargeDocumentView({
         <p className="rounded-[var(--radius)] border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
           {t("doc.lockedNotice")}
         </p>
+      )}
+
+      {/* ── Summary (optional, grouped) ── */}
+      {summaryMode && summary.length > 0 && (
+        <div className="overflow-hidden rounded-[var(--radius-card)] border border-border">
+          <div className="border-b border-border bg-card-elevated px-3 py-2 text-sm font-medium text-foreground">
+            {t("doc.summaryHeading")}
+          </div>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border text-muted-foreground">
+                <th className="px-3 py-2 text-start font-medium">
+                  {summaryMode === "project" ? t("doc.summaryColProject") : t("doc.summaryColType")}
+                </th>
+                <th className="px-3 py-2 text-start font-medium">{t("doc.summaryColHours")}</th>
+                <th className="px-3 py-2 text-end font-medium">{t("doc.colAmount")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {summary.map((g, i) => (
+                <tr key={g.key ?? `__none__${i}`} className="border-b border-border last:border-b-0">
+                  <td className="px-3 py-2 text-foreground"><bdi>{g.key ?? t("doc.summaryNoProject")}</bdi></td>
+                  <td className="px-3 py-2 font-mono tabular-nums text-muted-foreground">
+                    {g.hours > 0 ? t("units.hoursMeasure", { hours: Number(g.hours.toFixed(2)) }) : "—"}
+                  </td>
+                  <td className="px-3 py-2 text-end font-mono tabular-nums text-foreground">
+                    {formatCurrency(g.amount, doc.currency, locale)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {/* ── Lines ── */}
@@ -507,13 +576,19 @@ export default function ChargeDocumentView({
                     )}
                   </td>
                   <td className="px-3 py-3 text-muted-foreground">
-                    {isItemLine(line) && line.quantity != null && line.rate != null ? (
-                      <span className="font-mono tabular-nums">
-                        {line.quantity}{line.unit ? <> <bdi>{line.unit}</bdi></> : null} × {formatCurrency(line.rate, doc.currency, locale)}
-                      </span>
-                    ) : (
-                      "—"
-                    )}
+                    {(() => {
+                      const qr = lineQtyRate(line);
+                      if (!qr) return "—";
+                      return (
+                        <span className="font-mono tabular-nums">
+                          {qr.isHourly
+                            ? t("units.hoursMeasure", { hours: Number(qr.qty.toFixed(2)) })
+                            : <>{Number(qr.qty.toFixed(2))}{qr.unit ? <> <bdi>{qr.unit}</bdi></> : null}</>}
+                          {" × "}
+                          {formatCurrency(qr.rate, doc.currency, locale)}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td className="px-3 py-3 text-end font-mono tabular-nums text-foreground">
                     {formatCurrency(line.amount, doc.currency, locale)}
@@ -568,6 +643,36 @@ export default function ChargeDocumentView({
           </tbody>
         </table>
       </div>
+
+      {/* ── Totals breakdown (only when VAT applies) ── */}
+      {hasVat && (
+        <div className="flex justify-end">
+          <table className="text-sm">
+            <tbody>
+              <tr>
+                <td className="px-3 py-1 text-end text-muted-foreground">{t("doc.subtotal")}</td>
+                <td className="px-3 py-1 text-start font-mono tabular-nums text-foreground">
+                  {formatCurrency(vat.subtotal, doc.currency, locale)}
+                </td>
+              </tr>
+              <tr>
+                <td className="px-3 py-1 text-end text-muted-foreground">
+                  {t("doc.vat", { rate: Number((doc.vat_rate_snapshot as number).toFixed(2)) })}
+                </td>
+                <td className="px-3 py-1 text-start font-mono tabular-nums text-foreground">
+                  {formatCurrency(vat.vatAmount, doc.currency, locale)}
+                </td>
+              </tr>
+              <tr className="border-t border-border">
+                <td className="px-3 py-1.5 text-end font-semibold text-foreground">{t("doc.totalDue")}</td>
+                <td className="px-3 py-1.5 text-start font-mono font-bold tabular-nums text-foreground">
+                  {formatCurrency(vat.total, doc.currency, locale)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* ── Document notes ── */}
       <div className="space-y-2">
@@ -635,6 +740,38 @@ export default function ChargeDocumentView({
           </button>
         </div>
       </div>
+
+      {/* ── Summary-block control (pending only) ── */}
+      {/* Whether the document opens with a grouped summary, and how it groups.
+          Persisted on the document; the print PDF mirrors it. */}
+      {isPending && (
+        <div role="group" aria-label={t("doc.summaryToggle")} className="flex flex-wrap items-center gap-2">
+          <span className="text-sm text-muted-foreground">{t("doc.summaryToggle")}</span>
+          <div className="flex items-center gap-1 rounded-[var(--radius)] border border-border p-1">
+            {([
+              { value: null, label: t("doc.summaryNone") },
+              { value: "project" as const, label: t("doc.summaryByProject") },
+              { value: "type" as const, label: t("doc.summaryByType") },
+            ]).map((opt) => {
+              const active = (doc.summary_mode ?? null) === opt.value;
+              return (
+                <button
+                  key={opt.value ?? "none"}
+                  type="button"
+                  onClick={() => void handleSetSummary(opt.value)}
+                  disabled={savingSummary}
+                  aria-pressed={active}
+                  className={`min-h-11 rounded-[var(--radius)] px-3 py-2 text-sm font-medium transition-colors ${
+                    active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* ── Actions ── */}
       <div className="flex flex-wrap gap-3 border-t border-border pt-4">

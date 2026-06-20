@@ -43,7 +43,7 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
     const { id } = await ctx.params;
     const parsed = await parseBody(request, patchChargeDocumentSchema);
     if (!parsed.ok) return parsed.response;
-    const { notes, editLine, removeLineId, addTimeEntryId } = parsed.data;
+    const { notes, editLine, removeLineId, addTimeEntryId, summaryMode } = parsed.data;
     const { withTransaction } = await import("@/lib/db");
 
     const total = await withTransaction(async (client: PoolClient) => {
@@ -57,6 +57,10 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
 
       if (typeof notes !== "undefined") {
         await client.query(`UPDATE charge_documents SET notes = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3`, [notes, id, user.id]);
+      }
+
+      if (typeof summaryMode !== "undefined") {
+        await client.query(`UPDATE charge_documents SET summary_mode = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3`, [summaryMode, id, user.id]);
       }
 
       if (editLine) {
@@ -84,7 +88,8 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
       if (addTimeEntryId) {
         const er = await client.query(
           `SELECT te.id, te.description, te.notes, te.billing_kind AS "billingKind", te.duration,
-                  te.quantity, te.rate, te.rate_label AS "rateLabel", te.item_ref AS "itemRef", te.unit AS "unit"
+                  te.quantity, te.rate, te.rate_label AS "rateLabel", te.item_ref AS "itemRef", te.unit AS "unit",
+                  p.name AS "projectName"
              FROM time_entries te JOIN projects p ON te.project_id = p.id
             WHERE te.id = $1 AND te.user_id = $2 AND p.client_id = $3
               AND te.charge_document_id IS NULL AND te.is_billable = true`,
@@ -95,10 +100,10 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
         await client.query(
           `INSERT INTO charge_document_lines
              (id, user_id, document_id, source_type, time_entry_id, period_month, label,
-              description, notes, item_ref, billing_kind, quantity, rate, amount, unit)
-           VALUES (gen_random_uuid()::text,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+              description, notes, item_ref, billing_kind, quantity, rate, amount, unit, project_name)
+           VALUES (gen_random_uuid()::text,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
           [user.id, id, l.sourceType, l.timeEntryId, l.periodMonth, l.label, l.description,
-           l.notes, l.itemRef, l.billingKind, l.quantity, l.rate, l.amount, l.unit]
+           l.notes, l.itemRef, l.billingKind, l.quantity, l.rate, l.amount, l.unit, l.projectName]
         );
         await client.query(`UPDATE time_entries SET charge_document_id = $1 WHERE id = $2 AND user_id = $3 AND charge_document_id IS NULL`, [id, addTimeEntryId, user.id]);
       }

@@ -3,6 +3,13 @@
 import { useTranslations, useLocale } from "next-intl";
 import { formatDate as formatDateLib } from "@/lib/format";
 import { formatCurrency as formatCurrencyLib } from "@/lib/currency";
+import {
+  lineQtyRate,
+  summarizeLines,
+  type SummaryMode,
+  type SummaryLine,
+} from "@/lib/charge-documents";
+import { computeVatBreakdown } from "@/lib/vat";
 import { STATUS_META, type ChargeDocStatus } from "./statusMeta";
 
 /** One billed line on a charge document (printed PDF). */
@@ -20,6 +27,7 @@ export interface PdfDocumentLine {
   unit: string | null;
   rate: number | null;
   amount: number;
+  project_name: string | null;
 }
 
 /** Charge-document fields the printed PDF header/table needs. */
@@ -31,6 +39,10 @@ export interface PdfChargeDocument {
   notes: string | null;
   issued_at: string;
   client_name: string;
+  /** VAT rate (%) snapshot, or null when no VAT applies. */
+  vat_rate_snapshot: number | null;
+  /** Optional summary grouping: 'project' | 'type' | null. */
+  summary_mode: string | null;
 }
 
 /** Business-profile fields rendered in the PDF header/footer. */
@@ -61,6 +73,11 @@ function isItemLine(line: PdfDocumentLine): boolean {
   return line.billing_kind === "item";
 }
 
+/** Tidy a numeric quantity for display (strip trailing zeros, max 2 dp). */
+function tidyNumber(n: number): number {
+  return Number(n.toFixed(2));
+}
+
 /**
  * Printable charge-document subtree (hidden until print). Renders in the
  * DOCUMENT language: it calls its OWN useTranslations/useLocale — the captured
@@ -80,130 +97,180 @@ export function PdfChargeDocument({ doc, lines, profile }: PdfChargeDocumentProp
 
   const status = STATUS_META[doc.status as ChargeDocStatus] ?? STATUS_META.pending;
 
+  // VAT breakdown derived from the snapshotted rate (null = no VAT).
+  const vat = computeVatBreakdown(doc.total, doc.vat_rate_snapshot);
+  const hasVat = doc.vat_rate_snapshot != null && doc.vat_rate_snapshot > 0;
+
+  // Optional summary groups.
+  const summaryMode =
+    doc.summary_mode === "project" || doc.summary_mode === "type"
+      ? (doc.summary_mode as SummaryMode)
+      : null;
+  const summary = summaryMode
+    ? summarizeLines(lines as unknown as SummaryLine[], summaryMode)
+    : [];
+
   return (
     <div id="pdf-content" className="print-only" dir={locale === "he" ? "rtl" : "ltr"}>
-      <div
-        className="pdf-header"
-        style={{
-          marginBottom: "2rem",
-          paddingBottom: "1.5rem",
-          borderBottom: "2px solid #e2e8f0",
-        }}
-      >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div style={{ flex: 1 }}>
-            {profile?.logoUrl && (
-              // Plain <img>: next/image's lazy-loading/optimization breaks print rendering.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={profile.logoUrl}
-                alt="Logo"
-                style={{ maxHeight: "50px", marginBottom: "10px" }}
-              />
-            )}
-            {/* Business identity shows ONLY when there is a real business name —
-                never fall back to the document title (that would duplicate the h2). */}
-            {profile?.businessName && (
-              <>
-                <h1
-                  className="pdf-business-name"
-                  style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "0.25rem" }}
-                >
-                  <bdi>{profile.businessName}</bdi>
-                </h1>
-                <div style={{ fontSize: "12px", color: "#64748b", lineHeight: 1.6 }}>
-                  {profile.taxId && <div>{t("pdf.taxId")}: <bdi>{profile.taxId}</bdi></div>}
-                  {profile.address && <div><bdi>{profile.address}</bdi></div>}
-                  {profile.phone && <div><bdi>{profile.phone}</bdi></div>}
-                  {profile.email && <div><bdi>{profile.email}</bdi></div>}
-                  {profile.showWebsiteOnDoc && profile.website && <div><bdi>{profile.website}</bdi></div>}
-                </div>
-              </>
-            )}
-          </div>
-          <div style={{ textAlign: "start" }}>
-            <h2 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "0.5rem" }}>
-              {t("doc.settlementDocTitle")}
-            </h2>
-            <div style={{ fontSize: "13px", color: "#64748b" }}>
-              <div>{t("doc.pdfNumber", { number: doc.doc_number })}</div>
-              <div>{t("doc.pdfStatus", { status: t(status.labelKey) })}</div>
-              <div style={{ marginTop: "0.5rem" }}>
-                {t("doc.pdfIssueDate", { date: formatDate(doc.issued_at) })}
+      {/* ── Header banner (colored, mirrors the settings template preview) ── */}
+      <div className="pdf-banner">
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {profile?.logoUrl && (
+            // Plain <img>: next/image's lazy-loading/optimization breaks print rendering.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={profile.logoUrl} alt="Logo" className="pdf-banner-logo" />
+          )}
+          {/* Business identity shows ONLY when there is a real business name —
+              never fall back to the document title (that would duplicate it). */}
+          {profile?.businessName && (
+            <>
+              <h1 className="pdf-business-name"><bdi>{profile.businessName}</bdi></h1>
+              <div className="pdf-banner-sub">
+                {profile.taxId && <div>{t("pdf.taxId")}: <bdi>{profile.taxId}</bdi></div>}
+                {profile.address && <div><bdi>{profile.address}</bdi></div>}
+                {profile.phone && <div><bdi>{profile.phone}</bdi></div>}
+                {profile.email && <div><bdi>{profile.email}</bdi></div>}
+                {profile.showWebsiteOnDoc && profile.website && <div><bdi>{profile.website}</bdi></div>}
               </div>
-            </div>
-          </div>
+            </>
+          )}
         </div>
-
-        <div
-          style={{
-            marginTop: "1.5rem",
-            padding: "1rem",
-            backgroundColor: "#f8fafc",
-            borderRadius: "8px",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "11px",
-              color: "#94a3b8",
-              marginBottom: "0.25rem",
-              fontWeight: 600,
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-            }}
-          >
-            {t("doc.pdfFor")}
+        <div className="pdf-banner-meta">
+          <div className="pdf-doc-title">{t("doc.settlementDocTitle")}</div>
+          <div className="pdf-banner-sub">
+            <div>{t("doc.pdfNumber", { number: doc.doc_number })}</div>
+            <div>{t("doc.pdfStatus", { status: t(status.labelKey) })}</div>
+            <div>{t("doc.pdfIssueDate", { date: formatDate(doc.issued_at) })}</div>
           </div>
-          <div style={{ fontWeight: 600, fontSize: "16px" }}><bdi>{doc.client_name}</bdi></div>
         </div>
       </div>
 
+      {/* ── Body (padded) ── */}
+      <div className="pdf-body">
+      <div className="pdf-client-box">
+        <div
+          className="pdf-client-label"
+          style={{ fontSize: "10px", marginBottom: "0.2rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.6px" }}
+        >
+          {t("doc.pdfFor")}
+        </div>
+        <div style={{ fontWeight: 600, fontSize: "16px" }}><bdi>{doc.client_name}</bdi></div>
+      </div>
+
+      {/* Optional summary block */}
+      {summaryMode && summary.length > 0 && (
+        <div className="pdf-summary pdf-section" style={{ marginBottom: "1.25rem" }}>
+          <div
+            className="pdf-summary-title"
+            style={{ fontSize: "12px", fontWeight: 700, padding: "0.6rem 0.85rem", borderBottom: "1px solid #eee" }}
+          >
+            {t("doc.summaryHeading")}
+          </div>
+          <table className="pdf-summary-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                <th style={{ padding: "0.4rem 0.85rem", textAlign: "start", fontSize: "11px", fontWeight: 600 }}>
+                  {summaryMode === "project" ? t("doc.summaryColProject") : t("doc.summaryColType")}
+                </th>
+                <th style={{ padding: "0.4rem 0.85rem", textAlign: "start", fontSize: "11px", fontWeight: 600, whiteSpace: "nowrap" }}>
+                  {t("doc.summaryColHours")}
+                </th>
+                <th style={{ padding: "0.4rem 0.85rem", textAlign: "start", fontSize: "11px", fontWeight: 600, whiteSpace: "nowrap" }}>
+                  {t("doc.colAmount")}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {summary.map((g, i) => (
+                <tr key={g.key ?? `__none__${i}`}>
+                  <td style={{ padding: "0.4rem 0.85rem", fontSize: "12px" }}>
+                    <bdi>{g.key ?? t("doc.summaryNoProject")}</bdi>
+                  </td>
+                  <td style={{ padding: "0.4rem 0.85rem", fontSize: "12px", whiteSpace: "nowrap" }}>
+                    {g.hours > 0 ? t("units.hoursMeasure", { hours: tidyNumber(g.hours) }) : "—"}
+                  </td>
+                  <td style={{ padding: "0.4rem 0.85rem", fontSize: "12px", whiteSpace: "nowrap" }}>
+                    {formatCurrency(g.amount, doc.currency)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       <table className="pdf-table" style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
-          <tr style={{ backgroundColor: "#f8fafc" }}>
-            <th style={{ padding: "0.5rem 0.75rem", textAlign: "start" }}>{t("doc.colItem")}</th>
-            <th style={{ padding: "0.5rem 0.75rem", textAlign: "start" }}>{t("doc.colDetails")}</th>
-            <th style={{ padding: "0.5rem 0.75rem", textAlign: "start" }}>{t("doc.colQtyRate")}</th>
-            <th style={{ padding: "0.5rem 0.75rem", textAlign: "start" }}>{t("doc.colAmount")}</th>
+          <tr>
+            <th>{t("doc.colItem")}</th>
+            <th>{t("doc.colDetails")}</th>
+            <th>{t("doc.colQtyRate")}</th>
+            <th>{t("doc.colAmount")}</th>
           </tr>
         </thead>
         <tbody>
-          {lines.map((line) => (
-            <tr key={line.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-              <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>
-                <bdi>{line.label}</bdi>
-                {isItemLine(line) && line.item_ref != null && (
-                  <span style={{ color: "#94a3b8" }}> · {t("units.ref", { ref: line.item_ref })}</span>
-                )}
-              </td>
-              <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px" }}>
-                <bdi>{line.description || ""}{line.notes ? ` (${line.notes})` : ""}</bdi>
-              </td>
-              <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>
-                {isItemLine(line) && line.quantity != null && line.rate != null
-                  ? `${line.quantity}${line.unit ? ` ${line.unit}` : ""} × ${formatCurrency(line.rate, doc.currency)}`
-                  : ""}
-              </td>
-              <td style={{ padding: "0.5rem 0.75rem", fontSize: "12px", whiteSpace: "nowrap" }}>
-                {formatCurrency(line.amount, doc.currency)}
-              </td>
-            </tr>
-          ))}
+          {lines.map((line) => {
+            const qr = lineQtyRate(line);
+            return (
+              <tr key={line.id}>
+                <td style={{ fontSize: "12px" }}>
+                  <bdi>{line.label}</bdi>
+                  {isItemLine(line) && line.item_ref != null && (
+                    <span style={{ color: "#94a3b8" }}> · {t("units.ref", { ref: line.item_ref })}</span>
+                  )}
+                </td>
+                <td style={{ fontSize: "12px" }}>
+                  <bdi>{line.description || ""}{line.notes ? ` (${line.notes})` : ""}</bdi>
+                </td>
+                <td style={{ fontSize: "12px", whiteSpace: "nowrap" }}>
+                  {qr
+                    ? `${
+                        qr.isHourly
+                          ? t("units.hoursMeasure", { hours: tidyNumber(qr.qty) })
+                          : `${tidyNumber(qr.qty)}${qr.unit ? ` ${qr.unit}` : ""}`
+                      } × ${formatCurrency(qr.rate, doc.currency)}`
+                    : ""}
+                </td>
+                <td style={{ fontSize: "12px", whiteSpace: "nowrap" }}>
+                  {formatCurrency(line.amount, doc.currency)}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
-        <tfoot>
-          <tr>
-            <td colSpan={3} style={{ padding: "0.5rem 0.75rem", textAlign: "start", fontWeight: 600 }}>
-              {t("doc.total")}
-            </td>
-            <td style={{ padding: "0.5rem 0.75rem", fontWeight: 600, whiteSpace: "nowrap" }}>
-              {formatCurrency(doc.total, doc.currency)}
-            </td>
-          </tr>
-        </tfoot>
       </table>
 
-      <div style={{ marginTop: "0.5rem", fontSize: "11px", color: "#94a3b8" }}>{t("preVatNote")}</div>
+      {/* Totals block (subtotal / VAT / grand total) — aligned to the amount side. */}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "0.75rem" }}>
+        <table style={{ minWidth: "240px", borderCollapse: "collapse" }}>
+          <tbody>
+            {hasVat && (
+              <>
+                <tr className="pdf-totals-row">
+                  <td className="pdf-totals-label" style={{ fontSize: "12px" }}>{t("doc.subtotal")}</td>
+                  <td className="pdf-totals-value" style={{ fontSize: "12px" }}>{formatCurrency(vat.subtotal, doc.currency)}</td>
+                </tr>
+                <tr className="pdf-totals-row">
+                  <td className="pdf-totals-label" style={{ fontSize: "12px" }}>
+                    {t("doc.vat", { rate: tidyNumber(doc.vat_rate_snapshot as number) })}
+                  </td>
+                  <td className="pdf-totals-value" style={{ fontSize: "12px" }}>{formatCurrency(vat.vatAmount, doc.currency)}</td>
+                </tr>
+              </>
+            )}
+            <tr className="pdf-totals-row pdf-totals-grand">
+              <td className="pdf-totals-label">{hasVat ? t("doc.totalDue") : t("doc.total")}</td>
+              <td className="pdf-totals-value">{formatCurrency(vat.total, doc.currency)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {!hasVat && (
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <div className="pdf-note" style={{ marginTop: "0.3rem", textAlign: "end" }}>{t("doc.noVatNote")}</div>
+        </div>
+      )}
 
       {doc.notes && (
         <div className="pdf-section" style={{ marginTop: "1.25rem", fontSize: "12px", color: "#475569" }}>
@@ -212,7 +279,7 @@ export function PdfChargeDocument({ doc, lines, profile }: PdfChargeDocumentProp
         </div>
       )}
 
-      {/* Footer: bank/payment details (left) + signature (right). Each shows
+      {/* Footer: bank/payment details (start) + signature (end). Each shows
           only when filled. Signature falls back to the typed business name. */}
       {(profile?.bankName || profile?.bankAccountNumber || profile?.bankBranch || profile?.bankSwift || profile?.signatureUrl || profile?.businessName) && (
         <div
@@ -246,6 +313,7 @@ export function PdfChargeDocument({ doc, lines, profile }: PdfChargeDocumentProp
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }

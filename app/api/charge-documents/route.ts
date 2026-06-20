@@ -7,6 +7,7 @@ import { buildLineFromEntry, computeDocumentTotal, type BillableEntry, type Char
 import { resolveRounding } from "@/lib/rounding";
 import { createLogger } from "@/lib/logger";
 import { resolveDocumentLocale } from "@/lib/document-language";
+import { resolveVatRate, type ClientVatMode } from "@/lib/vat";
 
 const logger = createLogger("charge-documents:list");
 
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     const result = await withTransaction(async (client: PoolClient) => {
       const clientRow = await client.query(
-        `SELECT currency, document_language FROM clients WHERE id = $1 AND user_id = $2`,
+        `SELECT currency, document_language, vat_mode FROM clients WHERE id = $1 AND user_id = $2`,
         [clientId, user.id]
       );
       if (clientRow.rowCount === 0) throw new Error("CLIENT_NOT_FOUND");
@@ -71,10 +72,18 @@ export async function POST(request: NextRequest) {
       // Profile-level billing base (cascade's lowest tier). Read once; used as
       // the rounding fallback when neither project nor client sets a mode.
       const profileBaseRow = await client.query(
-        `SELECT default_billing_rounding FROM user_profiles WHERE user_id = $1`,
+        `SELECT default_billing_rounding, vat_registered, vat_rate FROM user_profiles WHERE user_id = $1`,
         [user.id]
       );
       const baseRounding: string | null = profileBaseRow.rows[0]?.default_billing_rounding ?? null;
+
+      // Snapshot the VAT rate at issue time: per-client override over the global
+      // business setting. NULL = no VAT applied (exempt / not registered).
+      const vatRateSnapshot = resolveVatRate(
+        (clientRow.rows[0].vat_mode ?? null) as ClientVatMode,
+        profileBaseRow.rows[0]?.vat_registered ?? false,
+        profileBaseRow.rows[0]?.vat_rate ?? null
+      );
 
       let entries: BillableEntry[] = [];
       if (timeEntryIds.length > 0) {
@@ -83,6 +92,7 @@ export async function POST(request: NextRequest) {
                   te.duration, te.quantity, te.rate, te.rate_label AS "rateLabel",
                   te.unit AS "unit",
                   te.item_ref AS "itemRef",
+                  p.name AS "projectName",
                   p.billing_rounding AS "projectRounding",
                   c.billing_rounding AS "clientRounding"
              FROM time_entries te
@@ -117,6 +127,7 @@ export async function POST(request: NextRequest) {
         unit: null,
         rate: null,
         amount: c.amount,
+        projectName: null,
       }));
       const allLines = [...entryLines, ...computedDrafts];
       const total = computeDocumentTotal(allLines);
@@ -133,10 +144,10 @@ export async function POST(request: NextRequest) {
 
       const doc = await client.query(
         `INSERT INTO charge_documents
-           (id, user_id, client_id, doc_number, status, currency, total, notes, pdf_template, document_language, issued_at)
-         VALUES (gen_random_uuid()::text, $1, $2, $3, 'pending', $4, $5, $6, $7, $8, NOW())
+           (id, user_id, client_id, doc_number, status, currency, total, notes, pdf_template, document_language, vat_rate_snapshot, issued_at)
+         VALUES (gen_random_uuid()::text, $1, $2, $3, 'pending', $4, $5, $6, $7, $8, $9, NOW())
          RETURNING id, doc_number`,
-        [user.id, clientId, docNumber, currency, total, notes ?? null, pdfTemplate, documentLanguage]
+        [user.id, clientId, docNumber, currency, total, notes ?? null, pdfTemplate, documentLanguage, vatRateSnapshot]
       );
       const documentId: string = doc.rows[0].id;
 
@@ -146,14 +157,14 @@ export async function POST(request: NextRequest) {
         await client.query(
           `INSERT INTO charge_document_lines
              (id, user_id, document_id, source_type, time_entry_id, period_month, label,
-              description, notes, item_ref, billing_kind, quantity, rate, amount, unit)
+              description, notes, item_ref, billing_kind, quantity, rate, amount, unit, project_name)
            SELECT gen_random_uuid()::text, $1, $2, t.source_type, t.time_entry_id, t.period_month,
-                  t.label, t.description, t.notes, t.item_ref, t.billing_kind, t.quantity, t.rate, t.amount, t.unit
+                  t.label, t.description, t.notes, t.item_ref, t.billing_kind, t.quantity, t.rate, t.amount, t.unit, t.project_name
              FROM unnest(
                $3::text[], $4::text[], $5::text[], $6::text[], $7::text[],
-               $8::text[], $9::int[], $10::text[], $11::numeric[], $12::numeric[], $13::numeric[], $14::text[]
+               $8::text[], $9::int[], $10::text[], $11::numeric[], $12::numeric[], $13::numeric[], $14::text[], $15::text[]
              ) AS t(source_type, time_entry_id, period_month, label, description,
-                    notes, item_ref, billing_kind, quantity, rate, amount, unit)`,
+                    notes, item_ref, billing_kind, quantity, rate, amount, unit, project_name)`,
           [
             user.id,
             documentId,
@@ -169,6 +180,7 @@ export async function POST(request: NextRequest) {
             allLines.map((l) => l.rate),
             allLines.map((l) => l.amount),
             allLines.map((l) => l.unit),
+            allLines.map((l) => l.projectName),
           ]
         );
       }

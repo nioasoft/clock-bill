@@ -448,9 +448,22 @@
     "perYear": "/ yr",
     "currentPlan": "Your current plan",
     "manage": "Manage subscription",
-    "free": { "name": "Free", "price": "$0", "tagline": "For one client", "cta": "Current plan" },
-    "starter": { "name": "Starter", "tagline": "Up to 5 clients", "cta": "Upgrade to Starter" },
-    "unlimited": { "name": "Unlimited", "tagline": "Unlimited clients", "cta": "Upgrade to Unlimited" },
+    "free": {
+      "name": "Free",
+      "price": "$0",
+      "tagline": "For one client",
+      "cta": "Current plan"
+    },
+    "starter": {
+      "name": "Starter",
+      "tagline": "Up to 5 clients",
+      "cta": "Upgrade to Starter"
+    },
+    "unlimited": {
+      "name": "Unlimited",
+      "tagline": "Unlimited clients",
+      "cta": "Upgrade to Unlimited"
+    },
     "features": {
       "allFeatures": "All features — timer, tasks, PDF reports, multi-currency",
       "clients1": "1 client",
@@ -594,7 +607,12 @@
     "documentLanguageAuto": "Automatic",
     "documentLanguageAutoResolved": "Automatic ({lang})",
     "documentLanguageHe": "Hebrew",
-    "documentLanguageEn": "English"
+    "documentLanguageEn": "English",
+    "vatModeLabel": "VAT (documents)",
+    "vatModeInherit": "Default (business setting)",
+    "vatModeAdd": "Add VAT",
+    "vatModeExempt": "No VAT",
+    "vatModeHint": "Override VAT for this client. Default follows your business setting (e.g. a foreign client billed net)."
   },
   "Projects": {
     "pageTitle": "Projects",
@@ -851,7 +869,11 @@
       "bankSwiftPlaceholder": "POHALILIT",
       "bankSwiftHint": "Required for international transfers only",
       "saving": "Saving...",
-      "saveButton": "Save Changes"
+      "saveButton": "Save Changes",
+      "vatLabel": "VAT",
+      "vatRegistered": "VAT-registered (charge VAT)",
+      "vatRate": "VAT rate (%)",
+      "vatHint": "When on, charge documents add VAT at this rate. Can be overridden per client."
     },
     "pdf": {
       "sectionTitle": "PDF appearance",
@@ -2097,7 +2119,21 @@
       "pdfFor": "For",
       "notesHeading": "Notes",
       "paymentDetails": "Payment details",
-      "signature": "Signature"
+      "signature": "Signature",
+      "subtotal": "Subtotal",
+      "vat": "VAT {rate}%",
+      "totalDue": "Total due",
+      "noVatNote": "Excl. VAT",
+      "inclVatNote": "Incl. VAT {rate}%",
+      "summaryHeading": "Summary",
+      "summaryToggle": "Summary at top",
+      "summaryNone": "None",
+      "summaryByProject": "By project",
+      "summaryByType": "By work type",
+      "summaryColProject": "Project",
+      "summaryColType": "Work type",
+      "summaryColHours": "Hours",
+      "summaryNoProject": "No project"
     }
   },
   "Trial": {

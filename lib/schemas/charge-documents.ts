@@ -39,13 +39,16 @@ export const patchChargeDocumentSchema = z
     editLine: patchChargeLineSchema.optional(),
     removeLineId: z.string().min(1).optional(),
     addTimeEntryId: z.string().min(1).optional(),
+    // Summary grouping: 'project' | 'type' | null (null = no summary block).
+    summaryMode: z.enum(["project", "type"]).nullable().optional(),
   })
   .refine(
     (d) =>
       d.notes !== undefined ||
       d.editLine !== undefined ||
       d.removeLineId !== undefined ||
-      d.addTimeEntryId !== undefined,
+      d.addTimeEntryId !== undefined ||
+      d.summaryMode !== undefined,
     { message: "נא לספק לפחות שדה אחד לעדכון" }
   );
 
