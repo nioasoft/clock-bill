@@ -18,7 +18,6 @@ interface PdfPreviewProps {
   primaryColor: string;
   accentColor: string;
   primaryText: string;
-  accentText: string;
   businessName: string;
   addressStreet: string;
   addressCity: string;
@@ -37,7 +36,6 @@ export function PdfPreview({
   primaryColor,
   accentColor,
   primaryText,
-  accentText,
   businessName,
   addressStreet,
   addressCity,
@@ -68,9 +66,8 @@ export function PdfPreview({
         subtotal: "Subtotal", vat: "VAT 18%", total: "Total due", hours: "8h" };
 
   const pText: OnColorText = primaryText === "dark" ? "dark" : "light";
-  const aText: OnColorText = accentText === "dark" ? "dark" : "light";
   // The same rules that style the printed document, scoped to this preview only.
-  const css = templateRules(tpl, primary, accent, `#${scopeId}`, pText, aText);
+  const css = templateRules(tpl, primary, accent, `#${scopeId}`, pText);
 
   // Inject the rules into <head> (created once, updated in place, removed on
   // unmount) instead of rendering a <style> in the body tree — re-rendering a

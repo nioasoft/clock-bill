@@ -378,14 +378,13 @@ export default function ChargeDocumentView({
     const primary = profile?.pdfPrimaryColor || "#A8622D";
     const accent = profile?.pdfAccentColor || "#347B52";
     const primaryText: OnColorText = profile?.pdfPrimaryText === "dark" ? "dark" : "light";
-    const accentText: OnColorText = profile?.pdfAccentText === "dark" ? "dark" : "light";
     // Sanitize: collapse "/" and whitespace runs to "_" so it's a safe filename.
     const filename = `${t("doc.pdfFilenamePrefix")}_${doc?.doc_number ?? ""}_${doc?.client_name ?? ""}`
       .replace(/[/\s]+/g, "_")
       .trim();
     // Hebrew documents print RTL, English LTR — keyed on the DOCUMENT locale
     // (the snapshotted language / manual override), not the UI locale.
-    printPdfContent(template, primary, accent, filename, docLocale === "he" ? "rtl" : "ltr", primaryText, accentText);
+    printPdfContent(template, primary, accent, filename, docLocale === "he" ? "rtl" : "ltr", primaryText);
   }, [doc, profile, t, docLocale, docMessages]);
 
   // ── States ──────────────────────────────────────────────────────────────

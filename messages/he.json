@@ -892,7 +892,7 @@
       "primaryColorHint": "הצבע הראשי שיופיע בכותרות ואלמנטים מרכזיים ב-PDF",
       "accentColorLabel": "צבע משני ל-PDF",
       "accentColorHint": "הצבע המשני שיופיע בפרטים ואלמנטים נוספים ב-PDF",
-      "textOnColorLabel": "צבע הטקסט",
+      "textOnColorLabel": "צבע טקסט הכותרת",
       "textLight": "בהיר",
       "textDark": "כהה"
     },
