@@ -321,6 +321,12 @@ export const auth = betterAuth({
         },
       }
     : {},
+  account: {
+    // Encrypt OAuth access/refresh/id tokens at rest so a DB read can't recover
+    // a live Google credential. Applies to new writes; existing rows re-encrypt
+    // on next re-auth.
+    encryptOAuthTokens: true,
+  },
   session: {
     // Cache session data in a signed cookie so getSession() (called by the RLS
     // tenant resolver on each query) is cheap — no DB hit for ~5 minutes.
