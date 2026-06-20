@@ -94,6 +94,16 @@ const EMAIL_FOOTER: Record<EmailLocale, string> = {
  * (not the app's dark theme). The locale sets `<html lang/dir>`, text direction,
  * the brand label, and the footer line — defaults to Hebrew/RTL for back-compat.
  */
+/** Escape text for safe embedding in HTML/email (text or double-quoted attr). */
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export function emailLayout(opts: {
   heading: string;
   bodyHtml: string;
@@ -124,7 +134,7 @@ export function emailLayout(opts: {
             </tr>
             <tr>
               <td style="padding:28px;color:#18181b;">
-                <h1 style="margin:0 0 16px;font-size:20px;color:#18181b;">${opts.heading}</h1>
+                <h1 style="margin:0 0 16px;font-size:20px;color:#18181b;">${escapeHtml(opts.heading)}</h1>
                 ${opts.bodyHtml}
               </td>
             </tr>
@@ -146,7 +156,7 @@ export function emailButton(url: string, label: string): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:20px 0;">
     <tr>
       <td style="border-radius:8px;background-color:#faff69;">
-        <a href="${url}" style="display:inline-block;padding:12px 28px;font-size:15px;font-weight:bold;color:#0a0a0a;text-decoration:none;border-radius:8px;">${label}</a>
+        <a href="${escapeHtml(url)}" style="display:inline-block;padding:12px 28px;font-size:15px;font-weight:bold;color:#0a0a0a;text-decoration:none;border-radius:8px;">${escapeHtml(label)}</a>
       </td>
     </tr>
   </table>`;
