@@ -43,7 +43,7 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
             {t("upgradeBody", { limit: 1, count })}
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="mt-2 gap-2 sm:gap-0">
+        <DialogFooter className="mt-2 gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t("maybeLater")}
           </Button>
