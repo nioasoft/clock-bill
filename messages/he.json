@@ -1794,6 +1794,7 @@
   "errors": {
     "UNAUTHORIZED": "לא מחובר",
     "PLAN_LIMIT_REACHED": "הגעת למגבלת הלקוחות בתוכנית שלך. שדרגו כדי להוסיף עוד.",
+    "CLIENT_PLAN_LOCKED": "הלקוח נעול. שדרג את המסלול או הפוך אותו ללקוח הפעיל.",
     "FORBIDDEN": "אין הרשאה",
     "SERVER_ERROR": "שגיאת שרת",
     "INVALID_REQUEST": "בקשה לא תקינה",

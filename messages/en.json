@@ -1794,6 +1794,7 @@
   "errors": {
     "UNAUTHORIZED": "Not authenticated",
     "PLAN_LIMIT_REACHED": "You've reached your plan's client limit. Upgrade to add more.",
+    "CLIENT_PLAN_LOCKED": "This client is locked. Upgrade your plan or make it your active client.",
     "FORBIDDEN": "No permission",
     "SERVER_ERROR": "Server error",
     "INVALID_REQUEST": "Invalid request",

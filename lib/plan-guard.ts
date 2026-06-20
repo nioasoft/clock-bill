@@ -32,7 +32,7 @@ export async function getLockedClientIds(userId: string): Promise<Set<string>> {
       ORDER BY GREATEST(
         COALESCE(c.plan_priority_at, c.created_at),
         COALESCE(MAX(te.created_at), c.created_at)
-      ) DESC`,
+      ) DESC, c.created_at DESC, c.id DESC`,
     [userId]
   );
   const ranked = result.rows.map((r) => r.id);

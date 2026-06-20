@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
 import { useProjects } from "@/hooks/use-clients";
@@ -18,6 +19,7 @@ import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { ToastAction, type ToastActionElement } from "@/components/ui/toast";
 import { haptic } from "@/lib/haptics";
 import { pickDefaultHourlyRate, type ClientRate } from "@/lib/schemas/rates";
+import { messageForError } from "@/lib/api-error";
 
 interface RunningTimer {
   id: string;
@@ -190,6 +192,8 @@ export function TimerProvider({ children }: TimerProviderProps) {
   const isPublicRoute = PUBLIC_ROUTES.some((route) =>
     route === "/" ? pathname === "/" : pathname.startsWith(route)
   );
+  // Root translator so messageForError can resolve errors.* keys locale-aware.
+  const tRoot = useTranslations();
 
   // Auth is derived from API responses (a 401 from /api/timer/running) rather
   // than a separate up-front /api/auth/session fetch — that round-trip used to
@@ -472,7 +476,11 @@ export function TimerProvider({ children }: TimerProviderProps) {
         await fetchRunningTimer();
         onTimerStartedRef.current.forEach((cb) => cb());
       } else {
-        showErrorToast(data.message || "שגיאה בהתחלת הטיימר");
+        showErrorToast(
+          data.error_code
+            ? messageForError(data, tRoot)
+            : (data.message || "שגיאה בהתחלת הטיימר")
+        );
       }
     } catch (error) {
       console.error("Error starting timer:", error);
@@ -480,7 +488,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
     } finally {
       setStartingTimer(false);
     }
-  }, [selectedProject, selectedTask, timerDescription, timerTasks, timerRates, selectedRateId, fetchRunningTimer]);
+  }, [selectedProject, selectedTask, timerDescription, timerTasks, timerRates, selectedRateId, fetchRunningTimer, tRoot]);
 
   const handleStopTimer = useCallback(
     (entryId: string, opts?: { managed?: boolean }) => {
