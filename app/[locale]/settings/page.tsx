@@ -51,6 +51,8 @@ interface Profile {
   bankSwift: string | null;
   pdfPrimaryColor: string;
   pdfAccentColor: string;
+  pdfPrimaryText: string;
+  pdfAccentText: string;
   longTimerEnabled: boolean;
   longTimerThreshold: number;
   dailyReminderEnabled: boolean;
@@ -131,6 +133,8 @@ export default function SettingsPage() {
   const [bankSwift, setBankSwift] = useState("");
   const [pdfPrimaryColor, setPdfPrimaryColor] = useState("#A8622D");
   const [pdfAccentColor, setPdfAccentColor] = useState("#347B52");
+  const [pdfPrimaryText, setPdfPrimaryText] = useState<"light" | "dark">("light");
+  const [pdfAccentText, setPdfAccentText] = useState<"light" | "dark">("light");
   const [dateFormat, setDateFormat] = useState("DD/MM/YYYY");
   const [timeFormat, setTimeFormat] = useState("24h");
 
@@ -244,6 +248,8 @@ export default function SettingsPage() {
         setBankSwift(data.profile.bankSwift || "");
         setPdfPrimaryColor(data.profile.pdfPrimaryColor || "#A8622D");
         setPdfAccentColor(data.profile.pdfAccentColor || "#347B52");
+        setPdfPrimaryText(data.profile.pdfPrimaryText === "dark" ? "dark" : "light");
+        setPdfAccentText(data.profile.pdfAccentText === "dark" ? "dark" : "light");
         // Initialize notification settings
         setLongTimerEnabled(data.profile.longTimerEnabled ?? true);
         setLongTimerThreshold((data.profile.longTimerThreshold ?? 120).toString());
@@ -1554,6 +1560,8 @@ export default function SettingsPage() {
                     preferredPdfTemplate: preferredPdfTemplate || null,
                     pdfPrimaryColor: pdfPrimaryColor || "#A8622D",
                     pdfAccentColor: pdfAccentColor || "#347B52",
+                    pdfPrimaryText,
+                    pdfAccentText,
                   });
                 }}
                 className="space-y-4"
@@ -1619,6 +1627,25 @@ export default function SettingsPage() {
                         pattern="^#[0-9A-Fa-f]{6}$"
                         maxLength={7}
                       />
+                      {/* Text-on-color: keeps the banner legible on a light brand color. */}
+                      <div className="mt-2 flex items-center gap-1.5">
+                        <span className="text-xs text-muted-foreground">{t("pdf.textOnColorLabel")}</span>
+                        <div className="flex items-center gap-0.5 rounded-[var(--radius)] border border-border p-0.5">
+                          {(["light", "dark"] as const).map((m) => (
+                            <button
+                              key={m}
+                              type="button"
+                              onClick={() => setPdfPrimaryText(m)}
+                              aria-pressed={pdfPrimaryText === m}
+                              className={`min-h-8 rounded-[var(--radius)] px-2.5 py-1 text-xs font-medium transition-colors ${
+                                pdfPrimaryText === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                              }`}
+                            >
+                              {m === "light" ? t("pdf.textLight") : t("pdf.textDark")}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
 
                     {/* Accent color */}
@@ -1645,6 +1672,24 @@ export default function SettingsPage() {
                         pattern="^#[0-9A-Fa-f]{6}$"
                         maxLength={7}
                       />
+                      <div className="mt-2 flex items-center gap-1.5">
+                        <span className="text-xs text-muted-foreground">{t("pdf.textOnColorLabel")}</span>
+                        <div className="flex items-center gap-0.5 rounded-[var(--radius)] border border-border p-0.5">
+                          {(["light", "dark"] as const).map((m) => (
+                            <button
+                              key={m}
+                              type="button"
+                              onClick={() => setPdfAccentText(m)}
+                              aria-pressed={pdfAccentText === m}
+                              className={`min-h-8 rounded-[var(--radius)] px-2.5 py-1 text-xs font-medium transition-colors ${
+                                pdfAccentText === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                              }`}
+                            >
+                              {m === "light" ? t("pdf.textLight") : t("pdf.textDark")}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                   {sectionSaveRow("pdf")}
@@ -1654,6 +1699,8 @@ export default function SettingsPage() {
                     template={preferredPdfTemplate}
                     primaryColor={pdfPrimaryColor}
                     accentColor={pdfAccentColor}
+                    primaryText={pdfPrimaryText}
+                    accentText={pdfAccentText}
                     businessName={businessName}
                     addressStreet={addressStreet}
                     addressCity={addressCity}

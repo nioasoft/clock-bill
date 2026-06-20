@@ -11,12 +11,14 @@
 "use client";
 
 import { useEffect, useId, useRef } from "react";
-import { templateRules, type PdfTemplate } from "@/app/[locale]/(auth)/reports/printStyles";
+import { templateRules, type PdfTemplate, type OnColorText } from "@/app/[locale]/(auth)/reports/printStyles";
 
 interface PdfPreviewProps {
   template: string;
   primaryColor: string;
   accentColor: string;
+  primaryText: string;
+  accentText: string;
   businessName: string;
   addressStreet: string;
   addressCity: string;
@@ -34,6 +36,8 @@ export function PdfPreview({
   template,
   primaryColor,
   accentColor,
+  primaryText,
+  accentText,
   businessName,
   addressStreet,
   addressCity,
@@ -63,8 +67,10 @@ export function PdfPreview({
         line1: "Development", line1d: "Landing page", line2: "Design",
         subtotal: "Subtotal", vat: "VAT 18%", total: "Total due", hours: "8h" };
 
+  const pText: OnColorText = primaryText === "dark" ? "dark" : "light";
+  const aText: OnColorText = accentText === "dark" ? "dark" : "light";
   // The same rules that style the printed document, scoped to this preview only.
-  const css = templateRules(tpl, primary, accent, `#${scopeId}`);
+  const css = templateRules(tpl, primary, accent, `#${scopeId}`, pText, aText);
 
   // Inject the rules into <head> (created once, updated in place, removed on
   // unmount) instead of rendering a <style> in the body tree — re-rendering a

@@ -891,7 +891,10 @@
       "primaryColorLabel": "PDF Primary Color",
       "primaryColorHint": "The primary color used for headings and key elements in the PDF",
       "accentColorLabel": "PDF Accent Color",
-      "accentColorHint": "The accent color used for details and additional elements in the PDF"
+      "accentColorHint": "The accent color used for details and additional elements in the PDF",
+      "textOnColorLabel": "Text",
+      "textLight": "Light",
+      "textDark": "Dark"
     },
     "display": {
       "sectionTitle": "Display",

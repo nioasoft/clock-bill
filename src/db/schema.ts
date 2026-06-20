@@ -140,6 +140,10 @@ export const userProfiles = pgTable("user_profiles", {
   // PDF customization
   pdfPrimaryColor: text("pdf_primary_color").default("#2563EB"),
   pdfAccentColor: text("pdf_accent_color").default("#059669"),
+  // Text color ON the filled brand colors (banner / filled table head / pill):
+  // 'light' (white) or 'dark' (near-black) so a light brand color stays legible.
+  pdfPrimaryText: text("pdf_primary_text").default("light"),
+  pdfAccentText: text("pdf_accent_text").default("light"),
   // Working hours
   workingHours: real("working_hours").default(8),
   // Notification settings
@@ -202,6 +206,14 @@ export const userProfiles = pgTable("user_profiles", {
   check(
     "user_profiles_vat_rate_check",
     sql`${table.vatRate} IS NULL OR (${table.vatRate} >= 0 AND ${table.vatRate} <= 100)`
+  ),
+  check(
+    "user_profiles_pdf_primary_text_check",
+    sql`${table.pdfPrimaryText} IS NULL OR ${table.pdfPrimaryText} IN ('light', 'dark')`
+  ),
+  check(
+    "user_profiles_pdf_accent_text_check",
+    sql`${table.pdfAccentText} IS NULL OR ${table.pdfAccentText} IN ('light', 'dark')`
   ),
 ]);
 

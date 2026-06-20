@@ -39,6 +39,7 @@ export async function GET(): Promise<NextResponse> {
                 bank_account_number as "bankAccountNumber", bank_branch as "bankBranch",
                 bank_swift as "bankSwift", pdf_primary_color as "pdfPrimaryColor",
                 pdf_accent_color as "pdfAccentColor",
+                COALESCE(pdf_primary_text, 'light') as "pdfPrimaryText", COALESCE(pdf_accent_text, 'light') as "pdfAccentText",
                 COALESCE(vat_registered, false) as "vatRegistered", vat_rate as "vatRate",
                 long_timer_enabled as "longTimerEnabled", long_timer_threshold as "longTimerThreshold",
                 daily_reminder_enabled as "dailyReminderEnabled", daily_reminder_time as "dailyReminderTime",

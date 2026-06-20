@@ -46,6 +46,8 @@ const updateProfileSchema = z.object({
   bankSwift: z.string().max(100).nullable().optional(),
   pdfPrimaryColor: z.string().max(50).nullable().optional(),
   pdfAccentColor: z.string().max(50).nullable().optional(),
+  pdfPrimaryText: z.enum(["light", "dark"]).optional(),
+  pdfAccentText: z.enum(["light", "dark"]).optional(),
   // VAT (מע״מ): global business status + rate (0–100, validated in handler too).
   vatRegistered: z.boolean().optional(),
   vatRate: z.number().min(0).max(100).nullable().optional(),
@@ -98,6 +100,8 @@ export interface Profile {
   bankSwift: string | null;
   pdfPrimaryColor: string;
   pdfAccentColor: string;
+  pdfPrimaryText: string;
+  pdfAccentText: string;
   vatRegistered: boolean;
   vatRate: number | null;
   longTimerEnabled: boolean;
@@ -157,6 +161,7 @@ export async function GET(): Promise<NextResponse> {
               bank_account_number as "bankAccountNumber", bank_branch as "bankBranch",
               bank_swift as "bankSwift", pdf_primary_color as "pdfPrimaryColor",
               pdf_accent_color as "pdfAccentColor",
+              COALESCE(pdf_primary_text, 'light') as "pdfPrimaryText", COALESCE(pdf_accent_text, 'light') as "pdfAccentText",
               COALESCE(vat_registered, false) as "vatRegistered", vat_rate as "vatRate",
               long_timer_enabled as "longTimerEnabled", long_timer_threshold as "longTimerThreshold",
               daily_reminder_enabled as "dailyReminderEnabled", daily_reminder_time as "dailyReminderTime",
@@ -326,6 +331,16 @@ export async function PATCH(request: Request): Promise<NextResponse> {
     if (body.pdfAccentColor !== undefined) {
       updates.push(`pdf_accent_color = $${paramIndex++}`);
       values.push(body.pdfAccentColor);
+    }
+
+    if (body.pdfPrimaryText !== undefined) {
+      updates.push(`pdf_primary_text = $${paramIndex++}`);
+      values.push(body.pdfPrimaryText);
+    }
+
+    if (body.pdfAccentText !== undefined) {
+      updates.push(`pdf_accent_text = $${paramIndex++}`);
+      values.push(body.pdfAccentText);
     }
 
     if (body.vatRegistered !== undefined) {

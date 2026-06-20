@@ -42,13 +42,24 @@ export const PDF_TEMPLATES: readonly PdfTemplate[] = [
  * same rules can target the print container OR an on-screen preview root.
  * @param scope - selector prefix, e.g. "#pdf-content" or "#tpl-preview-xyz"
  */
+/** Text color sitting ON a filled brand color. */
+export type OnColorText = "light" | "dark";
+
 export function templateRules(
   template: PdfTemplate,
   primary: string,
   accent: string,
-  scope: string
+  scope: string,
+  primaryText: OnColorText = "light",
+  accentText: OnColorText = "light"
 ): string {
   const S = scope;
+  // Resolve the on-color text + a softer "sub" tone for secondary lines, so a
+  // light brand color can use dark text (and vice-versa) and stay legible.
+  const pText = primaryText === "dark" ? "#111827" : "#ffffff";
+  const pSub = primaryText === "dark" ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.85)";
+  const aText = accentText === "dark" ? "#111827" : "#ffffff";
+  const aSub = accentText === "dark" ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.85)";
 
   // ── Shared skeleton (neutral) — templates override the expressive bits ──
   const base = `
@@ -95,9 +106,9 @@ export function templateRules(
   const byTemplate: Record<PdfTemplate, string> = {
     // FILLED banner, clean grey table head with primary underline.
     modern: `
-      ${S} .pdf-banner { background: ${primary}; color: #fff; }
-      ${S} .pdf-banner .pdf-business-name, ${S} .pdf-banner .pdf-doc-title { color: #fff; }
-      ${S} .pdf-banner-sub { color: rgba(255,255,255,0.88); }
+      ${S} .pdf-banner { background: ${primary}; color: ${pText}; }
+      ${S} .pdf-banner .pdf-business-name, ${S} .pdf-banner .pdf-doc-title { color: ${pText}; }
+      ${S} .pdf-banner-sub { color: ${pSub}; }
       ${S} .pdf-header .pdf-business-name { color: ${primary}; font-size: 20px; }
     `,
     // OUTLINED serif header, traditional ledger look, no fills/stripes.
@@ -115,13 +126,13 @@ export function templateRules(
     `,
     // HIGH-CONTRAST: filled banner, filled table head, solid total bar.
     bold: `
-      ${S} .pdf-banner { background: ${primary}; color: #fff; padding: 26px; }
-      ${S} .pdf-banner .pdf-business-name { color: #fff; font-weight: 900; font-size: 24px; }
-      ${S} .pdf-banner .pdf-doc-title { color: #fff; text-transform: uppercase; letter-spacing: 1px; }
-      ${S} .pdf-banner-sub { color: rgba(255,255,255,0.9); }
-      ${S} .pdf-table th { background: ${primary}; color: #fff; border-bottom: none; text-transform: uppercase; letter-spacing: 0.5px; }
+      ${S} .pdf-banner { background: ${primary}; color: ${pText}; padding: 26px; }
+      ${S} .pdf-banner .pdf-business-name { color: ${pText}; font-weight: 900; font-size: 24px; }
+      ${S} .pdf-banner .pdf-doc-title { color: ${pText}; text-transform: uppercase; letter-spacing: 1px; }
+      ${S} .pdf-banner-sub { color: ${pSub}; }
+      ${S} .pdf-table th { background: ${primary}; color: ${pText}; border-bottom: none; text-transform: uppercase; letter-spacing: 0.5px; }
       ${S} .pdf-totals-grand td { background: ${primary}; }
-      ${S} .pdf-totals-grand .pdf-totals-label, ${S} .pdf-totals-grand .pdf-totals-value { color: #fff; border-top: none; font-size: 16px; padding: 8px 12px; }
+      ${S} .pdf-totals-grand .pdf-totals-label, ${S} .pdf-totals-grand .pdf-totals-value { color: ${pText}; border-top: none; font-size: 16px; padding: 8px 12px; }
     `,
     // AIRY & light: hairline outlined header, thin weights, lots of space.
     elegant: `
@@ -137,9 +148,9 @@ export function templateRules(
     `,
     // ACCENT-led, soft, striped rows, pill-shaped grand total.
     nature: `
-      ${S} .pdf-banner { background: ${accent}; color: #fff; }
-      ${S} .pdf-banner .pdf-business-name, ${S} .pdf-banner .pdf-doc-title { color: #fff; }
-      ${S} .pdf-banner-sub { color: rgba(255,255,255,0.9); }
+      ${S} .pdf-banner { background: ${accent}; color: ${aText}; }
+      ${S} .pdf-banner .pdf-business-name, ${S} .pdf-banner .pdf-doc-title { color: ${aText}; }
+      ${S} .pdf-banner-sub { color: ${aSub}; }
       /* Banner already uses the accent, so the secondary spots flip to primary. */
       ${S} .pdf-client-box { border-inline-start-color: ${primary}; }
       ${S} .pdf-client-label { color: ${primary}; }
@@ -147,8 +158,8 @@ export function templateRules(
       ${S} .pdf-table th { background: #f4f8f5; border-bottom: 2px solid ${primary}; }
       ${S} .pdf-table tbody tr:nth-child(even) td { background: #fafdfb; }
       ${S} .pdf-totals-grand td { background: transparent; }
-      ${S} .pdf-totals-grand .pdf-totals-label { border-top: none; color: #fff; background: ${accent}; border-start-start-radius: 999px; border-end-start-radius: 999px; padding: 6px 6px 6px 14px; }
-      ${S} .pdf-totals-grand .pdf-totals-value { border-top: none; color: #fff; background: ${accent}; border-start-end-radius: 999px; border-end-end-radius: 999px; padding: 6px 14px 6px 6px; }
+      ${S} .pdf-totals-grand .pdf-totals-label { border-top: none; color: ${aText}; background: ${accent}; border-start-start-radius: 999px; border-end-start-radius: 999px; padding: 6px 6px 6px 14px; }
+      ${S} .pdf-totals-grand .pdf-totals-value { border-top: none; color: ${aText}; background: ${accent}; border-start-end-radius: 999px; border-end-end-radius: 999px; padding: 6px 14px 6px 6px; }
     `,
     // SIDE-BAND header (thick primary band on the start edge), cool striped table.
     ocean: `
@@ -173,7 +184,9 @@ export function buildPrintStyles(
   template: PdfTemplate,
   primaryColor: string,
   accentColor: string,
-  direction: PrintDirection = "rtl"
+  direction: PrintDirection = "rtl",
+  primaryText: OnColorText = "light",
+  accentText: OnColorText = "light"
 ): string {
   return `
     @media print {
@@ -188,7 +201,7 @@ export function buildPrintStyles(
       }
       @page { size: A4; margin: 6mm; }
       body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-      ${templateRules(template, primaryColor, accentColor, "#pdf-content")}
+      ${templateRules(template, primaryColor, accentColor, "#pdf-content", primaryText, accentText)}
     }
   `;
 }
@@ -204,7 +217,9 @@ export function printPdfContent(
   primaryColor: string,
   accentColor: string,
   filename?: string,
-  direction: PrintDirection = "rtl"
+  direction: PrintDirection = "rtl",
+  primaryText: OnColorText = "light",
+  accentText: OnColorText = "light"
 ): void {
   // Optionally override the document title so the browser's "Save as PDF"
   // dialog suggests a meaningful filename; restore it during cleanup.
@@ -221,7 +236,7 @@ export function printPdfContent(
     styleEl.id = styleId;
     document.head.appendChild(styleEl);
   }
-  styleEl.textContent = buildPrintStyles(template, primaryColor, accentColor, direction);
+  styleEl.textContent = buildPrintStyles(template, primaryColor, accentColor, direction, primaryText, accentText);
 
   // Clone #pdf-content and append directly to body so print CSS works reliably
   // (the original is nested deep in the React tree and gets hidden by ancestor rules).
