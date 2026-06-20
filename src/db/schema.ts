@@ -213,6 +213,10 @@ export const clients = pgTable(
     // Billing time-rounding policy for hourly lines: 'none' | 'hour_up' | 'half_hour_up'.
     // Applied at billing time (report/charge-doc); never alters the raw worked duration.
     billingRounding: text("billing_rounding").default("none"),
+    // Document language for generated PDFs/Excel/charge docs. NULL = Auto
+    // (resolved from currency via lib/document-language.ts). See spec
+    // 2026-06-20-client-document-language.
+    documentLanguage: text("document_language"),
     isRetainer: boolean("is_retainer").default(false),
     retainerHours: real("retainer_hours"),
     retainerMonthlyFee: real("retainer_monthly_fee"),
@@ -231,6 +235,10 @@ export const clients = pgTable(
     check(
       "clients_billing_rounding_check",
       sql`${table.billingRounding} IS NULL OR ${table.billingRounding} IN ('none', 'tenth_hour_up', 'quarter_hour_up', 'half_hour_up', 'hour_up')`
+    ),
+    check(
+      "clients_document_language_check",
+      sql`${table.documentLanguage} IS NULL OR ${table.documentLanguage} IN ('he', 'en')`
     ),
   ]
 );
@@ -486,6 +494,8 @@ export const chargeDocuments = pgTable(
     total: real("total"),
     notes: text("notes"),
     pdfTemplate: text("pdf_template"),
+    // Language snapshot at issue time. NULL = resolve live from the client.
+    documentLanguage: text("document_language"),
     issuedAt: timestamp("issued_at"),
     paidAt: timestamp("paid_at"),
     canceledAt: timestamp("canceled_at"),
@@ -500,6 +510,10 @@ export const chargeDocuments = pgTable(
     check(
       "charge_documents_status_check",
       sql`${table.status} IN ('pending', 'paid', 'canceled')`
+    ),
+    check(
+      "charge_documents_document_language_check",
+      sql`${table.documentLanguage} IS NULL OR ${table.documentLanguage} IN ('he', 'en')`
     ),
   ]
 );
