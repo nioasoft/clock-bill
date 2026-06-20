@@ -16,6 +16,8 @@ interface PdfPreviewProps {
   logoUrl: string | null;
   label: string;
   docTitle: string;
+  /** Follows the UI locale so the sample content matches the language. */
+  isHebrew: boolean;
 }
 
 const HEX = /^#[0-9A-Fa-f]{6}$/;
@@ -30,10 +32,15 @@ export function PdfPreview({
   logoUrl,
   label,
   docTitle,
+  isHebrew,
 }: PdfPreviewProps) {
   const primary = HEX.test(primaryColor) ? primaryColor : "#A8622D";
   const accent = HEX.test(accentColor) ? accentColor : "#347B52";
-  const name = businessName.trim() || "שם העסק";
+  // Sample copy follows the UI locale (the preview is illustrative, not real data).
+  const tx = isHebrew
+    ? { fallbackName: "שם העסק", description: "תיאור", amount: "סכום", lineConsulting: "ייעוץ — 8 שעות", lineItem: "פריט חיוב", total: "סה״כ ₪1,500" }
+    : { fallbackName: "Business name", description: "Description", amount: "Amount", lineConsulting: "Consulting — 8 hrs", lineItem: "Billing item", total: "Total ₪1,500" };
+  const name = businessName.trim() || tx.fallbackName;
   const addr = [addressStreet.trim(), addressCity.trim()].filter(Boolean).join(", ");
   // Header style varies a little by template so the choice is visibly reflected.
   const outlinedHeader = template === "classic" || template === "elegant";
@@ -45,6 +52,7 @@ export function PdfPreview({
     <div>
       <p className="text-xs font-medium text-muted-foreground mb-2">{label}</p>
       <div
+        dir={isHebrew ? "rtl" : "ltr"}
         className="overflow-hidden rounded-[var(--radius)] border border-border"
         style={{ background: "#ffffff", color: "#1a1a1a" }}
       >
@@ -72,17 +80,17 @@ export function PdfPreview({
           <table style={{ width: "100%", fontSize: 11, borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ color: accent, borderBottom: "1px solid #e7e7e7" }}>
-                <th style={{ textAlign: "start", padding: "4px 0", fontWeight: 600 }}>תיאור</th>
-                <th style={{ textAlign: "end", padding: "4px 0", fontWeight: 600 }}>סכום</th>
+                <th style={{ textAlign: "start", padding: "4px 0", fontWeight: 600 }}>{tx.description}</th>
+                <th style={{ textAlign: "end", padding: "4px 0", fontWeight: 600 }}>{tx.amount}</th>
               </tr>
             </thead>
             <tbody style={{ color: "#333" }}>
               <tr>
-                <td style={{ padding: "4px 0" }}>ייעוץ — 8 שעות</td>
+                <td style={{ padding: "4px 0" }}>{tx.lineConsulting}</td>
                 <td style={{ textAlign: "end" }}>₪1,200</td>
               </tr>
               <tr>
-                <td style={{ padding: "4px 0" }}>פריט חיוב</td>
+                <td style={{ padding: "4px 0" }}>{tx.lineItem}</td>
                 <td style={{ textAlign: "end" }}>₪300</td>
               </tr>
             </tbody>
@@ -91,7 +99,7 @@ export function PdfPreview({
             <div
               style={{ background: accent, color: "#fff", padding: "4px 12px", borderRadius: 4, fontSize: 12, fontWeight: 700 }}
             >
-              סה״כ ₪1,500
+              {tx.total}
             </div>
           </div>
         </div>

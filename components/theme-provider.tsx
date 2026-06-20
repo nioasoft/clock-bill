@@ -44,43 +44,41 @@ export function ThemeProvider({
   const { data: profile } = useProfile();
   const patchProfile = usePatchProfile();
 
-  // On mount: sync state to the theme already on <html> / in the cookie.
-  // These reads (`document`, cookie) are client-only external values unavailable
-  // during SSR, so the sync must happen in an effect rather than during render.
-  // The state update is wrapped in queueMicrotask to keep it out of the synchronous
-  // effect body (which the react-hooks lint flags as a cascading-render risk); the
-  // visible theme is already correct via the inline script, so this only aligns the
-  // React-side `theme` value used by the settings selector.
+  // Keep the DOM `data-theme` and the React state aligned with the source of
+  // truth across mounts and navigations. This is critical: the root layout
+  // renders `<html data-theme={DEFAULT_THEME}>`, so a locale switch (which
+  // re-renders the layout tree) RESETS the attribute back to the default and
+  // clobbers the runtime theme. The inline no-flash script only runs on a full
+  // document load, not on client navigations — so we must re-assert here.
+  //
+  // Resolution order: the `theme` cookie (the user's most recent local choice)
+  // wins; otherwise the account's saved theme (new device / cleared cookie);
+  // otherwise whatever is already on <html>. We re-write the DOM attribute (to
+  // undo a layout reset) and persist the cookie when only the account had it.
+  // Runs on mount and whenever the saved profile theme loads. The state update
+  // is wrapped in queueMicrotask to keep it out of the synchronous effect body
+  // (react-hooks/set-state-in-effect); DOM + cookie are external systems.
   useEffect(() => {
     let active = true;
     const cookie = readCookie();
-    const fromDom = document.documentElement.dataset.theme;
-    // The cookie wins; otherwise fall back to whatever the inline script rendered.
-    const current = cookie && isThemeId(cookie) ? cookie : fromDom;
+    const saved = profile?.theme;
+    const resolved =
+      cookie && isThemeId(cookie)
+        ? cookie
+        : isThemeId(saved)
+          ? saved
+          : document.documentElement.dataset.theme;
 
-    if (isThemeId(current)) {
+    if (isThemeId(resolved)) {
+      document.documentElement.dataset.theme = resolved;
+      if (!cookie) writeCookie(resolved);
       queueMicrotask(() => {
-        if (active) setThemeState(current);
+        if (active) setThemeState(resolved);
       });
     }
     return () => {
       active = false;
     };
-  }, []);
-
-  // No cookie → new device. Apply the account's saved theme (from the shared
-  // profile query) so it follows the user across devices — a one-time correction.
-  // Re-check the cookie at apply time: if the user switched themes while the
-  // profile was loading (which writes a cookie), don't clobber their choice.
-  useEffect(() => {
-    const saved = profile?.theme;
-    if (!readCookie() && isThemeId(saved)) {
-      // queueMicrotask keeps the setState out of the synchronous effect body
-      // (react-hooks/set-state-in-effect); DOM + cookie are external systems.
-      document.documentElement.dataset.theme = saved;
-      writeCookie(saved);
-      queueMicrotask(() => setThemeState(saved));
-    }
   }, [profile?.theme]);
 
   const setTheme = useCallback(
