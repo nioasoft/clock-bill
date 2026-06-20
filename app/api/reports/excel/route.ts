@@ -187,7 +187,8 @@ export async function GET(request: NextRequest) {
       paramIndex++;
     }
 
-    queryText += ` ORDER BY te.date DESC, te.created_at DESC`;
+    // Hard cap so a huge dataset can't be streamed into ExcelJS unbounded.
+    queryText += ` ORDER BY te.date DESC, te.created_at DESC LIMIT 50000`;
 
     // Build the (optional) fixed-monthly-projects query up front so the entries
     // query and the fixed-projects query run inside ONE transaction (one RLS

@@ -96,7 +96,9 @@ export async function GET(request: NextRequest) {
       paramIndex++;
     }
 
-    queryText += ` ORDER BY te.date DESC, te.created_at DESC`;
+    // Hard cap so an account with years of data can't fetch + aggregate an
+    // unbounded result set in memory on every request.
+    queryText += ` ORDER BY te.date DESC, te.created_at DESC LIMIT 50000`;
 
     // Build the (optional) fixed-monthly-projects query up front so the profile
     // base, the entries query, and the fixed-projects query all run inside ONE
