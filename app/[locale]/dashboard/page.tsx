@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Link } from "@/src/i18n/navigation";
+import { Link, useRouter } from "@/src/i18n/navigation";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
@@ -20,6 +20,7 @@ import {
   normalizeDashboardConfig,
   type DashboardConfig,
 } from "@/lib/dashboard-widgets";
+import { TrialCard } from "@/components/trial-card";
 
 // Count-aware grid classes for the stat-card row. Static full strings (not
 // interpolated) so Tailwind v4's JIT can see them. Capped at 5 columns; more
@@ -96,6 +97,7 @@ export default function DashboardPage() {
   const t = useTranslations("Dashboard");
   // Reuses the timer-bar notes strings so the two editors stay in sync.
   const tTimer = useTranslations("Timer");
+  const router = useRouter();
   const intlLocale = useLocale() === "en" ? "en-US" : "he-IL";
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -356,6 +358,8 @@ export default function DashboardPage() {
             {t("customizeButton")}
           </Link>
         </PageHeader>
+
+        <TrialCard onUpgrade={() => router.push("/pricing")} />
 
         {/* First-time user checklist */}
         {!statsLoading && !statsError && isFirstTimeUser && (

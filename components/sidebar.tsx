@@ -24,6 +24,7 @@ import { navItemDefs } from "@/lib/nav-items";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { brandName } from "@/lib/brand";
 import { BrandMark } from "@/components/brand-mark";
+import { TrialPill } from "@/components/trial-pill";
 
 const iconMap = { Home, Clock: Gauge, Users, FolderKanban, FileText, MessageSquare, Settings, Shield } as const;
 
@@ -191,6 +192,11 @@ export function Sidebar({
             </div>
           )}
         </Link>
+        {!isCollapsed && (
+          <div className="px-4 pb-1">
+            <TrialPill />
+          </div>
+        )}
         <button
           onClick={handleLogout}
           disabled={logoutLoading}
