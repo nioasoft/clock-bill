@@ -81,12 +81,10 @@ export function AppLayout({ children }: AppLayoutProps) {
             }
           }
         } else {
-          document.cookie = "session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
           router.push("/login");
         }
       } catch (error) {
         console.error("Error fetching user:", error);
-        document.cookie = "session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
         router.push("/login");
       } finally {
         setLoading(false);
