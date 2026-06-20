@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
+import { entryDate } from "@/lib/schemas/entries";
 
 /** Maximum number of entry IDs accepted in a single bulk operation. */
 const MAX_BULK_ENTRIES = 1000;
@@ -13,7 +14,7 @@ const bulkUpdateSchema = z.object({
     .min(1, "יש לבחור לפחות רשומה אחת")
     .max(MAX_BULK_ENTRIES, `ניתן לעדכן עד ${MAX_BULK_ENTRIES} רשומות בבת אחת`),
   projectId: z.string().min(1).optional(),
-  date: z.string().min(1).optional(),
+  date: entryDate.optional(),
   isBillable: z.boolean().optional(),
 });
 
