@@ -33,6 +33,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { SimpleSelect } from "@/components/ui/simple-select";
+import { resolveDocumentLocale } from "@/lib/document-language";
 import { useProfile } from "@/hooks/use-profile";
 import { useQueryClient } from "@tanstack/react-query";
 import { clientsQueryKey } from "@/hooks/use-clients";
@@ -56,6 +57,7 @@ interface Client {
   createdAt: string;
   totalBilled: number;
   totalHours: number;
+  documentLanguage: string | null;
 }
 
 /**
@@ -131,6 +133,7 @@ function ClientsPageContent() {
     overageRate: "",
     notes: "",
     rates: [] as ClientRateInput[],
+    documentLanguage: "" as "" | "he" | "en",
   });
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -292,6 +295,7 @@ function ClientsPageContent() {
           overageRate: formData.isRetainer && formData.hasOverageRate && formData.overageRate ? parseFloat(formData.overageRate) : undefined,
           notes: formData.notes || undefined,
           rates: cleanedRates,
+          documentLanguage: formData.documentLanguage === "" ? null : formData.documentLanguage,
         }),
       });
 
@@ -326,6 +330,7 @@ function ClientsPageContent() {
           overageRate: "",
           notes: "",
           rates: [],
+          documentLanguage: "" as "" | "he" | "en",
         });
         setRetainerTouched(false);
         setShowForm(false);
@@ -365,6 +370,7 @@ function ClientsPageContent() {
       overageRate: client.overageRate?.toString() || "",
       notes: client.notes || "",
       rates: [],
+      documentLanguage: (client.documentLanguage ?? "") as "" | "he" | "en",
     });
     setShowForm(true);
 
@@ -406,6 +412,7 @@ function ClientsPageContent() {
       overageRate: "",
       notes: "",
       rates: [],
+      documentLanguage: "" as "" | "he" | "en",
     });
     setShowForm(false);
   };
@@ -702,6 +709,34 @@ function ClientsPageContent() {
                         ...ROUNDING_MODES.map((m) => ({ value: m, label: tRounding(m) })),
                       ]}
                     />
+                  </div>
+
+                  <div>
+                    <label htmlFor="documentLanguage" className="mb-1.5 block text-sm font-medium text-foreground">
+                      {t("documentLanguageLabel")}
+                    </label>
+                    <SimpleSelect
+                      id="documentLanguage"
+                      value={formData.documentLanguage}
+                      onChange={(v) =>
+                        setFormData({ ...formData, documentLanguage: v as "" | "he" | "en" })
+                      }
+                      disabled={submitting}
+                      options={[
+                        {
+                          value: "",
+                          label: t("documentLanguageAutoResolved", {
+                            lang:
+                              resolveDocumentLocale(null, formData.currency) === "he"
+                                ? t("documentLanguageHe")
+                                : t("documentLanguageEn"),
+                          }),
+                        },
+                        { value: "he", label: t("documentLanguageHe") },
+                        { value: "en", label: t("documentLanguageEn") },
+                      ]}
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">{t("documentLanguageHint")}</p>
                   </div>
 
                 </div>
