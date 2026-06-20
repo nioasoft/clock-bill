@@ -2093,6 +2093,7 @@
   "Trial": {
     "pillActive": "Unlimited trial · {days} days left",
     "pillEnding": "Trial ends in {days} days",
+    "pricingTrialNote": "You're on an Unlimited trial — {days} days left. Subscribe now to keep it.",
     "cardHeading": "You're on Unlimited",
     "cardBody": "Track unlimited clients and projects. {days} days left in your trial.",
     "cardCta": "Lock in your plan",

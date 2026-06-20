@@ -38,6 +38,10 @@ export function PricingClient() {
   const [interval, setInterval] = useState<Interval>("annual");
   const [currentTier, setCurrentTier] = useState<Tier | null>(null);
   const [activeClientCount, setActiveClientCount] = useState<number>(0);
+  // During the trial the effective tier is "unlimited", but the user has NO paid
+  // subscription — so paid cards must still offer checkout, not "current plan".
+  const [trialActive, setTrialActive] = useState(false);
+  const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [busyTier, setBusyTier] = useState<PaidTier | null>(null);
 
@@ -49,11 +53,21 @@ export function PricingClient() {
         if (d?.success && typeof d.activeClientCount === "number") {
           setActiveClientCount(d.activeClientCount);
         }
+        if (d?.success && d.plan?.trial?.active) {
+          setTrialActive(true);
+          setTrialDaysLeft(
+            typeof d.plan.trial.daysLeft === "number" ? d.plan.trial.daysLeft : null
+          );
+        }
       })
       .catch(() => {
         /* Unauthenticated / network error → no current tier; CTAs still work. */
       });
   }, []);
+
+  // A trialing user has unlimited *access* but no paid subscription. Treat them
+  // as having no subscribed tier so every paid plan shows a real checkout CTA.
+  const subscribedTier: Tier | null = trialActive ? null : currentTier;
 
   async function upgrade(tier: PaidTier) {
     setBusyTier(tier);
@@ -96,11 +110,15 @@ export function PricingClient() {
           <p className="mt-3 text-muted-foreground leading-relaxed">
             {t("subtitle")}
           </p>
-          {currentTier === "free" && activeClientCount > 1 && (
+          {trialActive ? (
+            <p className="mt-4 text-sm text-muted-foreground">
+              {tTrial("pricingTrialNote", { days: trialDaysLeft ?? 0 })}
+            </p>
+          ) : currentTier === "free" && activeClientCount > 1 ? (
             <p className="mt-4 text-sm text-muted-foreground">
               {tTrial("upgradeBody", { limit: 1, count: activeClientCount })}
             </p>
-          )}
+          ) : null}
         </header>
 
         {/* Interval toggle */}
@@ -155,17 +173,17 @@ export function PricingClient() {
             priceSuffix=""
             featureKeys={FEATURES.free}
             t={t}
-            isCurrent={currentTier === "free"}
+            isCurrent={subscribedTier === "free"}
             highlight={false}
           >
             <Button variant="outline" className="w-full" disabled>
-              {currentTier === "free" ? t("currentPlan") : t("free.cta")}
+              {subscribedTier === "free" ? t("currentPlan") : t("free.cta")}
             </Button>
           </PlanCard>
 
           {/* Paid tiers */}
           {PAID_TIERS.map((tier) => {
-            const isCurrent = currentTier === tier;
+            const isCurrent = subscribedTier === tier;
             const busy = busyTier === tier;
             return (
               <PlanCard
