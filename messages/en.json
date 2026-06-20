@@ -475,7 +475,8 @@
       "upgradeToUnlock": "Upgrade to unlock",
       "dataSafe": "Your data is safe",
       "madeActiveSuccess": "Client activated successfully",
-      "errorMakeActive": "Error activating client"
+      "errorMakeActive": "Error activating client",
+      "refreshFailed": "Done — refresh the page to see the update"
     },
     "pageTitle": "Clients",
     "clientDetails": "Client Details",

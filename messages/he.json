@@ -475,7 +475,8 @@
       "upgradeToUnlock": "שדרג כדי לפתוח",
       "dataSafe": "הנתונים שלך שמורים",
       "madeActiveSuccess": "הלקוח הופעל בהצלחה",
-      "errorMakeActive": "שגיאה בהפעלת הלקוח"
+      "errorMakeActive": "שגיאה בהפעלת הלקוח",
+      "refreshFailed": "הפעולה הצליחה, רענן את הדף לראות את העדכון"
     },
     "pageTitle": "לקוחות",
     "clientDetails": "פרטי לקוח",

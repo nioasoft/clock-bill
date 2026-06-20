@@ -136,6 +136,7 @@ function ClientsPageContent() {
   const [submitting, setSubmitting] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [makingActiveId, setMakingActiveId] = useState<string | null>(null);
 
   // Field validation errors
   const [fieldErrors, setFieldErrors] = useState<{
@@ -474,19 +475,15 @@ function ClientsPageContent() {
   };
 
   const handleMakeActive = async (clientId: string) => {
+    setMakingActiveId(clientId);
     try {
       const response = await fetch(`/api/clients/${clientId}/make-active`, {
         method: "POST",
       });
       const data = await response.json() as { success: boolean; error_code?: string };
       if (data.success) {
-        // Remove from locked set and refetch to get the updated list + plan counts.
-        setLockedIds((prev) => {
-          const next = new Set(prev);
-          next.delete(clientId);
-          return next;
-        });
-        // Full refetch to sync plan counts and client status from server.
+        // Full refetch to sync plan counts, client status, and locked set from server.
+        // No optimistic mutation — rely solely on the server response for consistency.
         try {
           const res = await fetch("/api/clients");
           const fresh = await res.json() as {
@@ -501,9 +498,12 @@ function ClientsPageContent() {
               setPlan({ activeCount: fresh.plan.activeCount, clientLimit: fresh.plan.clientLimit });
             }
             setLockedIds(new Set<string>(Array.isArray(fresh.lockedClientIds) ? fresh.lockedClientIds : []));
+          } else {
+            showErrorToast(t("usage.refreshFailed"));
           }
         } catch (fetchErr) {
           console.error("Error refetching clients after make-active:", fetchErr);
+          showErrorToast(t("usage.refreshFailed"));
         }
         void queryClient.invalidateQueries({ queryKey: clientsQueryKey });
         showSuccessToast(t("usage.madeActiveSuccess"));
@@ -513,6 +513,8 @@ function ClientsPageContent() {
     } catch (error) {
       console.error("Error making client active:", error);
       showErrorToast(t("usage.errorMakeActive"));
+    } finally {
+      setMakingActiveId(null);
     }
   };
 
@@ -985,9 +987,10 @@ function ClientsPageContent() {
                             <div className="flex flex-wrap items-center gap-2">
                               <button
                                 onClick={() => handleMakeActive(client.id)}
-                                className="rounded-[var(--radius)] bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                                disabled={makingActiveId === client.id}
+                                className="rounded-[var(--radius)] bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                {t("usage.makeActive")}
+                                {makingActiveId === client.id ? t("saving") : t("usage.makeActive")}
                               </button>
                               <Link
                                 href="/pricing"
@@ -1074,9 +1077,10 @@ function ClientsPageContent() {
                       <div className="flex flex-wrap gap-2">
                         <button
                           onClick={() => handleMakeActive(client.id)}
-                          className="min-h-[44px] rounded-[var(--radius)] bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                          disabled={makingActiveId === client.id}
+                          className="min-h-[44px] rounded-[var(--radius)] bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {t("usage.makeActive")}
+                          {makingActiveId === client.id ? t("saving") : t("usage.makeActive")}
                         </button>
                         <Link
                           href="/pricing"
