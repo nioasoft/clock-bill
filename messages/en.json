@@ -2213,8 +2213,5 @@
     "upgradeBody": "Your Free plan supports {limit} active client. You have {count}. Upgrade to unlock them all.",
     "upgradeCta": "See plans",
     "maybeLater": "Maybe later"
-  },
-  "PublicDoc": {
-    "paymentSummary": "Paid {paid} of {total} · {outstanding} remaining"
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { NextIntlClientProvider, useTranslations } from "next-intl";
+import { NextIntlClientProvider } from "next-intl";
 import { useDocumentMessages } from "@/lib/document-messages";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,8 +46,6 @@ export default function PublicChargeDocument(props: Props) {
   const template = asTemplate(props.template);
   const primaryText: OnColorText = props.primaryText;
   const dir = locale === "he" ? "rtl" : "ltr";
-  const t = useTranslations("PublicDoc");
-
   // Locale-bound formatter re-created against the document locale (closure-safe pattern).
   const formatCurrency = (amount: number, currency: string) =>
     formatCurrencyLib(amount, currency, locale);
@@ -105,11 +103,14 @@ export default function PublicChargeDocument(props: Props) {
               fontSize: 14,
               color: "#3f3f46",
             }}>
-              {t("paymentSummary", {
-                paid: formatCurrency(paidSum, doc.currency),
-                total: formatCurrency(money.gross, doc.currency),
-                outstanding: formatCurrency(outstandingAmount, doc.currency),
-              })}
+              {(() => {
+                const paid = formatCurrency(paidSum, doc.currency);
+                const total = formatCurrency(money.gross, doc.currency);
+                const outstandingStr = formatCurrency(outstandingAmount, doc.currency);
+                return locale === "he"
+                  ? `שולם ${paid} מתוך ${total} · נותר לתשלום ${outstandingStr}`
+                  : `Paid ${paid} of ${total} · ${outstandingStr} remaining`;
+              })()}
             </div>
           );
         })()}
