@@ -1,6 +1,9 @@
 import { z } from "zod";
+import { PAYMENT_METHODS } from "@/lib/charge-documents";
 
 const PERIOD_MONTH = /^\d{4}-\d{2}$/;
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const MAX_PAYMENT_AMOUNT = 10_000_000;
 export const KNOWN_TEMPLATES = ["modern", "classic", "bold", "elegant", "nature", "ocean"] as const;
 
 /** Hard caps on a single charge document's inputs (DoS / absurd-value guard).
@@ -8,6 +11,38 @@ export const KNOWN_TEMPLATES = ["modern", "classic", "bold", "elegant", "nature"
 const MAX_LINE_AMOUNT = 10_000_000;
 const MAX_TIME_ENTRIES = 5000;
 const MAX_COMPUTED_LINES = 500;
+
+/** POST /api/charge-documents/[id]/payments body. */
+export const createPaymentSchema = z.object({
+  amount: z.number().positive("סכום חייב להיות גדול מ-0").max(MAX_PAYMENT_AMOUNT, "סכום לא תקין"),
+  paidAt: z.string().regex(ISO_DATE, "תאריך לא תקין"),
+  method: z.enum(PAYMENT_METHODS).nullish(),
+  note: z.string().max(500).nullish(),
+});
+export type CreatePaymentBody = z.infer<typeof createPaymentSchema>;
+
+/** PATCH /api/charge-documents/[id]/payments/[paymentId] body. */
+export const updatePaymentSchema = z
+  .object({
+    amount: z.number().positive("סכום חייב להיות גדול מ-0").max(MAX_PAYMENT_AMOUNT, "סכום לא תקין").optional(),
+    paidAt: z.string().regex(ISO_DATE, "תאריך לא תקין").optional(),
+    method: z.enum(PAYMENT_METHODS).nullish(),
+    note: z.string().max(500).nullish(),
+  })
+  .refine(
+    (d) => d.amount !== undefined || d.paidAt !== undefined || d.method !== undefined || d.note !== undefined,
+    { message: "נא לספק לפחות שדה אחד לעדכון" }
+  );
+export type UpdatePaymentBody = z.infer<typeof updatePaymentSchema>;
+
+/** Discount sub-object for the document PATCH (null = clear discount). */
+export const discountSchema = z
+  .object({
+    type: z.enum(["percent", "amount"]),
+    value: z.number().min(0, "ערך לא תקין"),
+  })
+  .refine((d) => d.type !== "percent" || d.value <= 100, { message: "אחוז הנחה לא יכול לעלות על 100" })
+  .nullable();
 
 /** A computed (non-time-entry) line the client chose to include. */
 export const computedLineSchema = z.object({
@@ -47,6 +82,7 @@ export const patchChargeDocumentSchema = z
     addTimeEntryId: z.string().min(1).optional(),
     // Summary grouping: 'project' | 'type' | null (null = no summary block).
     summaryMode: z.enum(["project", "type"]).nullable().optional(),
+    discount: discountSchema.optional(),
   })
   .refine(
     (d) =>
@@ -54,7 +90,8 @@ export const patchChargeDocumentSchema = z
       d.editLine !== undefined ||
       d.removeLineId !== undefined ||
       d.addTimeEntryId !== undefined ||
-      d.summaryMode !== undefined,
+      d.summaryMode !== undefined ||
+      d.discount !== undefined,
     { message: "נא לספק לפחות שדה אחד לעדכון" }
   );
 
