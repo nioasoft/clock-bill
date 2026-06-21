@@ -541,6 +541,13 @@ export const chargeDocuments = pgTable(
     // Optional summary block at the top of the document: NULL = none,
     // 'project' = group by project, 'type' = group by work type (line label).
     summaryMode: text("summary_mode"),
+    // Public share: unguessable token backing the no-login client view at
+    // /[locale]/doc/[token]. NULL until the document is first sent; regenerated
+    // to revoke an old link. See spec 2026-06-21-charge-document-email.
+    publicToken: text("public_token"),
+    // Last time this document was emailed to the client + the address used.
+    lastSentAt: timestamp("last_sent_at"),
+    sentToEmail: text("sent_to_email"),
     issuedAt: timestamp("issued_at"),
     paidAt: timestamp("paid_at"),
     canceledAt: timestamp("canceled_at"),
@@ -569,6 +576,9 @@ export const chargeDocuments = pgTable(
       "charge_documents_summary_mode_check",
       sql`${table.summaryMode} IS NULL OR ${table.summaryMode} IN ('project', 'type')`
     ),
+    uniqueIndex("uq_charge_documents_public_token")
+      .on(table.publicToken)
+      .where(sql`${table.publicToken} IS NOT NULL`),
   ]
 );
 
