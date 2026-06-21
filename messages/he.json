@@ -1912,6 +1912,7 @@
     },
     "status": {
       "pending": "ממתין",
+      "partial": "שולם חלקית",
       "paid": "שולם",
       "canceled": "בוטל"
     },
@@ -2078,6 +2079,7 @@
       "docNumber": "תעודה #{number}"
     },
     "doc": {
+      "outstandingShort": "נותר {amount}",
       "loadErrorTitle": "לא הצלחנו לטעון את התעודה",
       "loadErrorBody": "ייתכן שהיא נמחקה או שאירעה תקלה.",
       "issuedOn": "הופקה: {date}",

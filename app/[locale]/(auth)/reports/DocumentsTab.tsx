@@ -15,6 +15,8 @@ interface DocumentRow {
   status: string;
   currency: string;
   total: number;
+  gross: number;
+  outstanding: number;
   issued_at: string;
   paid_at: string | null;
   canceled_at: string | null;
@@ -35,8 +37,8 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-/** Status sort order: pending first, then paid, then canceled. */
-const STATUS_ORDER: Record<string, number> = { pending: 0, paid: 1, canceled: 2 };
+/** Status sort order: pending first, then partial, then paid, then canceled. */
+const STATUS_ORDER: Record<string, number> = { pending: 0, partial: 1, paid: 2, canceled: 3 };
 
 /** Pending → paid → canceled; within each group, newest doc_number first. */
 function sortDocs(rows: DocumentRow[]): DocumentRow[] {
@@ -183,8 +185,13 @@ export default function DocumentsTab({
               <bdi>{d.client_name}</bdi> · {formatDate(d.issued_at, undefined, locale)}
             </div>
           </div>
-          <div className="font-mono text-lg font-semibold tabular-nums text-foreground">
-            {formatCurrency(d.total, d.currency, locale)}
+          <div className="text-end">
+            <div className="font-mono text-lg font-semibold tabular-nums text-foreground">{formatCurrency(d.gross, d.currency, locale)}</div>
+            {d.status === "partial" && (
+              <div className="text-xs text-muted-foreground">
+                {t("doc.outstandingShort", { amount: formatCurrency(d.outstanding, d.currency, locale) })}
+              </div>
+            )}
           </div>
         </button>
         );

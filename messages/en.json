@@ -1912,6 +1912,7 @@
     },
     "status": {
       "pending": "Pending",
+      "partial": "Partially paid",
       "paid": "Paid",
       "canceled": "Canceled"
     },
@@ -2078,6 +2079,7 @@
       "docNumber": "Document #{number}"
     },
     "doc": {
+      "outstandingShort": "{amount} left",
       "loadErrorTitle": "We couldn't load the document",
       "loadErrorBody": "It may have been deleted, or a problem occurred.",
       "issuedOn": "Issued: {date}",
