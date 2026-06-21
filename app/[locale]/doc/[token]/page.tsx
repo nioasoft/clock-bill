@@ -23,6 +23,7 @@ interface LoadResult {
   accentColor: string;
   primaryText: "light" | "dark";
   locale: "he" | "en";
+  paidSum: number;
 }
 
 /** Token-scoped public read via the privileged connection (RLS bypass). */
@@ -93,6 +94,14 @@ async function loadByToken(token: string): Promise<LoadResult | null> {
   const setting = (d.document_language as "he" | "en" | null) ?? (d.client_doc_language as "he" | "en" | null);
   const locale: "he" | "en" = setting ?? (doc.currency === "ILS" ? "he" : "en");
 
+  const payRes = await adminQuery(
+    `SELECT COALESCE(SUM(amount), 0) AS paid_sum
+       FROM charge_document_payments
+      WHERE document_id = (SELECT id FROM charge_documents WHERE public_token = $1)`,
+    [token]
+  );
+  const paidSum = Number(payRes.rows[0]?.paid_sum ?? 0);
+
   return {
     doc,
     lines: linesRes.rows as unknown as PdfDocumentLine[],
@@ -102,6 +111,7 @@ async function loadByToken(token: string): Promise<LoadResult | null> {
     accentColor: (p.pdf_accent_color as string) || "#347B52",
     primaryText: p.pdf_primary_text === "dark" ? "dark" : "light",
     locale,
+    paidSum,
   };
 }
 

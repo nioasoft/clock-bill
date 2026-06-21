@@ -2213,5 +2213,8 @@
     "upgradeBody": "המסלול החינמי תומך ב-{limit} לקוח פעיל. יש לך {count}. שדרג כדי לפתוח את כולם.",
     "upgradeCta": "צפה במסלולים",
     "maybeLater": "אולי מאוחר יותר"
+  },
+  "PublicDoc": {
+    "paymentSummary": "שולם {paid} מתוך {total} · נותר לתשלום {outstanding}"
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { NextIntlClientProvider } from "next-intl";
+import { NextIntlClientProvider, useTranslations } from "next-intl";
 import { useDocumentMessages } from "@/lib/document-messages";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,8 @@ import {
   type PdfTemplate,
   type OnColorText,
 } from "@/app/[locale]/(auth)/reports/printStyles";
+import { documentMoney, outstanding } from "@/lib/charge-documents";
+import { formatCurrency as formatCurrencyLib } from "@/lib/currency";
 import "@/app/[locale]/(auth)/reports/pdf-styles.css";
 import "@/app/[locale]/(auth)/reports/pdf-templates.css";
 
@@ -35,14 +37,20 @@ interface Props {
   accentColor: string;
   primaryText: "light" | "dark";
   locale: "he" | "en";
+  paidSum: number;
 }
 
 export default function PublicChargeDocument(props: Props) {
-  const { doc, lines, profile, primaryColor, accentColor, locale } = props;
+  const { doc, lines, profile, primaryColor, accentColor, locale, paidSum } = props;
   const messages = useDocumentMessages(locale);
   const template = asTemplate(props.template);
   const primaryText: OnColorText = props.primaryText;
   const dir = locale === "he" ? "rtl" : "ltr";
+  const t = useTranslations("PublicDoc");
+
+  // Locale-bound formatter re-created against the document locale (closure-safe pattern).
+  const formatCurrency = (amount: number, currency: string) =>
+    formatCurrencyLib(amount, currency, locale);
 
   // On-screen styling: un-hide #pdf-content, restore table display, apply the
   // SAME template color rules the print routine uses. Print itself reuses
@@ -78,6 +86,33 @@ export default function PublicChargeDocument(props: Props) {
             </NextIntlClientProvider>
           )}
         </div>
+        {paidSum > 0 && (() => {
+          const money = documentMoney({
+            total: doc.total,
+            discountType: doc.discount_type,
+            discountValue: doc.discount_value,
+            vatRate: doc.vat_rate_snapshot,
+          });
+          const outstandingAmount = outstanding(money.gross, paidSum);
+          return (
+            <div style={{
+              marginTop: 12,
+              padding: "12px 16px",
+              background: "white",
+              borderRadius: 8,
+              boxShadow: "0 1px 3px rgba(0,0,0,.08)",
+              textAlign: "center",
+              fontSize: 14,
+              color: "#3f3f46",
+            }}>
+              {t("paymentSummary", {
+                paid: formatCurrency(paidSum, doc.currency),
+                total: formatCurrency(money.gross, doc.currency),
+                outstanding: formatCurrency(outstandingAmount, doc.currency),
+              })}
+            </div>
+          );
+        })()}
         <p style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "#71717a" }}>
           {locale === "he" ? "הופק ב-" : "Generated with "}
           <a href="https://www.clock-bill.com" style={{ color: "#0a0a0a", fontWeight: 600 }}>ClockBill</a>
