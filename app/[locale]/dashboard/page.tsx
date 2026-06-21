@@ -22,6 +22,7 @@ import {
 } from "@/lib/dashboard-widgets";
 import { TrialCard } from "@/components/trial-card";
 import { UpgradeModal } from "@/components/upgrade-modal";
+import { SettlementsDueCard } from "@/components/settlements-due-card";
 
 // Count-aware grid classes for the stat-card row. Static full strings (not
 // interpolated) so Tailwind v4's JIT can see them. Capped at 5 columns; more
@@ -306,6 +307,8 @@ export default function DashboardPage() {
   // layout when all three are visible in default order.
   const renderSection = (id: string): ReactNode => {
     switch (id) {
+      case "settlementsDue":
+        return <SettlementsDueCard />;
       case "earningsChart":
         return <EarningsChart data={monthlyEarnings} loading={statsLoading} />;
       case "projectHours":
@@ -692,7 +695,7 @@ export default function DashboardPage() {
               return (
                 <div
                   key={section.id}
-                  className={section.id === "recentEntries" ? "lg:col-span-2" : undefined}
+                  className={section.id === "recentEntries" || section.id === "settlementsDue" ? "lg:col-span-2" : undefined}
                 >
                   {node}
                 </div>

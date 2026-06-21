@@ -53,6 +53,7 @@ export const DASHBOARD_WIDGETS: DashboardWidgetMeta[] = [
   { id: "earningsChart", labelKey: "earningsChart.title", kind: "section" },
   { id: "projectHours", labelKey: "projectHoursChart.title", kind: "section" },
   { id: "recentEntries", labelKey: "recentEntries.title", kind: "section" },
+  { id: "settlementsDue", labelKey: "settlementsDue.title", kind: "section" },
 ];
 
 export type WidgetId = (typeof DASHBOARD_WIDGETS)[number]["id"];
@@ -120,7 +121,7 @@ export function cloneConfig(config: DashboardConfig): DashboardConfig {
  */
 export const DEFAULT_DASHBOARD_CONFIG: DashboardConfig = buildConfig(
   ["hoursToday", "hoursWeek", "hoursMonth", "revenueToday", "revenueMonth"],
-  ["earningsChart", "projectHours", "recentEntries"]
+  ["settlementsDue", "earningsChart", "projectHours", "recentEntries"]
 );
 
 export interface DashboardPreset {

@@ -276,6 +276,15 @@
     "recentEntries": {
       "title": "רשומות אחרונות"
     },
+    "settlementsDue": {
+      "title": "התחשבנויות לביצוע",
+      "empty": "אין התחשבנויות לביצוע 🎉",
+      "amountDue": "לחיוב",
+      "overdueDays": "{days} ימים מאז מועד החיוב",
+      "dueToday": "מועד החיוב היום",
+      "createDocument": "צור התחשבנות",
+      "error": "שגיאה בטעינת ההתחשבנויות"
+    },
     "earningsChart": {
       "title": "הכנסות חודשיות",
       "loading": "טוען נתונים...",
