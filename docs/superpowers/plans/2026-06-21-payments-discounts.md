@@ -1250,6 +1250,12 @@ export function ChargePaymentsPanel({ documentId, currency, locale, onChanged }:
 }
 ```
 
+**Inline edit (required — decision 3 says rows are editable):** add edit support to the panel so the PATCH endpoint (Task 4) has a UI caller:
+- Add state `const [editingId, setEditingId] = useState<string | null>(null);`.
+- Add an `editPayment(p: PaymentRow)` handler that sets `editingId = p.id` and pre-fills the form fields (`setAmount(String(p.amount)); setPaidAt(p.paid_at.slice(0,10)); setMethod(p.method ?? ""); setNote(p.note ?? "");`).
+- When `editingId` is set, the form's primary button reads `t("payments.saveEdit")` and calls a `saveEdit()` that `PATCH`es `/api/charge-documents/${documentId}/payments/${editingId}` with `{ amount: Number(amount), paidAt, method: method || null, note: note || null }`, then on success clears `editingId`, resets the form, `refetch()` + `onChanged()`. Show a "cancel edit" ghost button that clears `editingId` and the form. (Add `t("payments.saveEdit")` and `t("payments.cancelEdit")` to both catalogs in Step 3.)
+- Each row in the list gets an "edit" ghost button (`t("actions.edit")`) next to "delete" that calls `editPayment(p)`.
+
 > Note: confirm the import paths for `showSuccessToast`/`showErrorToast` match what `ChargeDocumentView.tsx` already imports (copy that exact import line). Same for `Button`.
 
 - [ ] **Step 2: Wire the panel into ChargeDocumentView; remove pay/unpay buttons**
@@ -1358,8 +1364,8 @@ to:
 Add under `Reports.doc`: `discount`, `discountLabel`, `discountType`, `discountValue`, `discountNone`, `discountPercent`, `discountAmount`.
 Add a new `Reports.payments` block: `title`, `outstanding`, `markFullyPaid`, `amount`, `date`, `methodLabel`, `methodNone`, `note`, `add`, `saved`, `saveFailed`, `deleted`, `deleteFailed`, `loadError`, `invalidAmount`, `empty`, and `method.{bank_transfer,bit,cash,check,credit,other}`. Also `actions.retry` and `actions.delete` if not already present.
 
-Hebrew values (examples): `payments.title`="תשלומים", `outstanding`="נותר לתשלום", `markFullyPaid`="סמן כשולם במלואו", `amount`="סכום", `date`="תאריך", `methodLabel`="אמצעי תשלום", `methodNone`="ללא", `note`="הערה", `add`="הוסף תשלום", `empty`="טרם נרשמו תשלומים", `method.bank_transfer`="העברה בנקאית", `method.bit`="ביט", `method.cash`="מזומן", `method.check`="צ׳ק", `method.credit`="כרטיס אשראי", `method.other`="אחר". `doc.discount`="הנחה", `doc.discountLabel`="הנחה", `doc.discountNone`="ללא הנחה", `doc.discountPercent`="אחוז", `doc.discountAmount`="סכום".
-English values mirror these (e.g. `method.bit`="Bit", `discount`="Discount", etc.). Add to BOTH files with identical keys.
+Hebrew values (examples): `payments.title`="תשלומים", `outstanding`="נותר לתשלום", `markFullyPaid`="סמן כשולם במלואו", `amount`="סכום", `date`="תאריך", `methodLabel`="אמצעי תשלום", `methodNone`="ללא", `note`="הערה", `add`="הוסף תשלום", `saveEdit`="שמור שינוי", `cancelEdit`="ביטול", `empty`="טרם נרשמו תשלומים", `method.bank_transfer`="העברה בנקאית", `method.bit`="ביט", `method.cash`="מזומן", `method.check`="צ׳ק", `method.credit`="כרטיס אשראי", `method.other`="אחר". `doc.discount`="הנחה", `doc.discountLabel`="הנחה", `doc.discountNone`="ללא הנחה", `doc.discountPercent`="אחוז", `doc.discountAmount`="סכום". Also ensure `actions.edit`="עריכה", `actions.delete`="מחיקה", `actions.retry`="נסה שוב" exist (reuse if already present).
+English values mirror these (e.g. `method.bit`="Bit", `discount`="Discount", `saveEdit`="Save change", `cancelEdit`="Cancel", etc.). Add to BOTH files with identical keys.
 
 - [ ] **Step 4: Typecheck, lint, i18n parity, build**
 
@@ -1372,7 +1378,7 @@ Open a `pending` document:
 1. Set a 10% discount → header total + totals table reflect the discounted gross; a "הנחה" row appears.
 2. Add a partial payment → outstanding drops, status badge becomes "שולם חלקית", panel lists it.
 3. One-click "סמן כשולם במלואו" → outstanding 0, status "שולם".
-4. Delete a payment → status reverts. Edit (if edit UI added) recomputes.
+4. Delete a payment → status reverts. Edit a payment (change amount) → status + outstanding recompute.
 5. Confirm RTL layout, four states (load/empty/error/success), tap targets ≥44px, tokens only.
 
 - [ ] **Step 6: Commit**
