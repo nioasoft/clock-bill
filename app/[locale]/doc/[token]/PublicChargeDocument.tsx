@@ -1,6 +1,7 @@
 "use client";
 
-import { NextIntlClientProvider, useMessages } from "next-intl";
+import { NextIntlClientProvider } from "next-intl";
+import { useDocumentMessages } from "@/lib/document-messages";
 import { Button } from "@/components/ui/button";
 import {
   PdfChargeDocument,
@@ -38,7 +39,7 @@ interface Props {
 
 export default function PublicChargeDocument(props: Props) {
   const { doc, lines, profile, primaryColor, accentColor, locale } = props;
-  const messages = useMessages();
+  const messages = useDocumentMessages(locale);
   const template = asTemplate(props.template);
   const primaryText: OnColorText = props.primaryText;
   const dir = locale === "he" ? "rtl" : "ltr";
@@ -62,24 +63,26 @@ export default function PublicChargeDocument(props: Props) {
   }
 
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
+    <div dir={dir} style={{ minHeight: "100vh", background: "#f4f4f5", padding: "24px 12px" }}>
       <style dangerouslySetInnerHTML={{ __html: screenCss }} />
-      <div dir={dir} style={{ minHeight: "100vh", background: "#f4f4f5", padding: "24px 12px" }}>
-        <div style={{ maxWidth: 800, margin: "0 auto" }}>
-          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
-            <Button onClick={handlePrint} className="min-h-[44px]">
-              {locale === "he" ? "הדפס / שמור כ-PDF" : "Print / Save as PDF"}
-            </Button>
-          </div>
-          <div style={{ background: "white", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,.08)" }}>
-            <PdfChargeDocument doc={doc} lines={lines} profile={profile} />
-          </div>
-          <p style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "#71717a" }}>
-            {locale === "he" ? "הופק ב-" : "Generated with "}
-            <a href="https://www.clock-bill.com" style={{ color: "#0a0a0a", fontWeight: 600 }}>ClockBill</a>
-          </p>
+      <div style={{ maxWidth: 800, margin: "0 auto" }}>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+          <Button onClick={handlePrint} className="min-h-[44px]">
+            {locale === "he" ? "הדפס / שמור כ-PDF" : "Print / Save as PDF"}
+          </Button>
         </div>
+        <div style={{ background: "white", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,.08)" }}>
+          {messages && (
+            <NextIntlClientProvider locale={locale} messages={messages}>
+              <PdfChargeDocument doc={doc} lines={lines} profile={profile} />
+            </NextIntlClientProvider>
+          )}
+        </div>
+        <p style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "#71717a" }}>
+          {locale === "he" ? "הופק ב-" : "Generated with "}
+          <a href="https://www.clock-bill.com" style={{ color: "#0a0a0a", fontWeight: 600 }}>ClockBill</a>
+        </p>
       </div>
-    </NextIntlClientProvider>
+    </div>
   );
 }
