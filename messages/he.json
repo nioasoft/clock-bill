@@ -283,6 +283,11 @@
       "createDocument": "צור התחשבנות",
       "error": "שגיאה בטעינת ההתחשבנויות"
     },
+    "openForCollection": {
+      "title": "פתוח לגבייה",
+      "viewAll": "לכל ההתחשבנויות",
+      "error": "שגיאה בטעינת פתוח לגבייה"
+    },
     "earningsChart": {
       "title": "הכנסות חודשיות",
       "loading": "טוען נתונים...",

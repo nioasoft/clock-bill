@@ -283,6 +283,11 @@
       "createDocument": "Create charge document",
       "error": "Failed to load settlements"
     },
+    "openForCollection": {
+      "title": "Open for collection",
+      "viewAll": "View all",
+      "error": "Failed to load open balances"
+    },
     "earningsChart": {
       "title": "Monthly earnings",
       "loading": "Loading data…",
