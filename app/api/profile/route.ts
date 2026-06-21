@@ -44,8 +44,10 @@ const updateProfileSchema = z.object({
   bankAccountNumber: z.string().max(100).nullable().optional(),
   bankBranch: z.string().max(100).nullable().optional(),
   bankSwift: z.string().max(100).nullable().optional(),
-  pdfPrimaryColor: z.string().max(50).nullable().optional(),
-  pdfAccentColor: z.string().max(50).nullable().optional(),
+  // Strict 6-digit hex only — these are interpolated into generated print CSS,
+  // so a loose string could inject extra CSS declarations.
+  pdfPrimaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "צבע לא תקין").nullable().optional(),
+  pdfAccentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "צבע לא תקין").nullable().optional(),
   pdfPrimaryText: z.enum(["light", "dark"]).optional(),
   pdfAccentText: z.enum(["light", "dark"]).optional(),
   // VAT (מע״מ): global business status + rate (0–100, validated in handler too).

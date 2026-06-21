@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:clients:id");
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getUser } from "@/lib/auth";
@@ -135,7 +137,7 @@ export async function GET(
       }
     });
   } catch (error) {
-    console.error("Error fetching client:", error);
+    logger.error("Error fetching client:", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת הלקוח" },
       { status: 500 }
@@ -346,7 +348,7 @@ export async function PUT(
       },
     });
   } catch (error) {
-    console.error("Error updating client:", error);
+    logger.error("Error updating client:", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה בעדכון הלקוח" },
       { status: 500 }
@@ -459,7 +461,7 @@ export async function PATCH(
       },
     });
   } catch (error) {
-    console.error("Error restoring client:", error);
+    logger.error("Error restoring client:", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה בשחזור הלקוח" },
       { status: 500 }
@@ -510,7 +512,7 @@ export async function DELETE(
       message: "הלקוח נמחק בהצלחה",
     });
   } catch (error) {
-    console.error("Error deleting client:", error);
+    logger.error("Error deleting client:", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה במחיקת הלקוח" },
       { status: 500 }

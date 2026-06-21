@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
        JOIN clients c ON c.id = t.client_id
        JOIN projects p ON p.id = t.project_id
        ${where}
-       ORDER BY t.status, t.position ASC`,
+       ORDER BY t.status, t.position ASC
+       LIMIT 5000`,
       params
     );
 

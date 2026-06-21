@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:charge-documents:billable");
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { calculateFixedMonthlyCharges, type FixedChargeProject } from "@/lib/fixed-charges";
@@ -118,7 +120,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: { entries, computedLines } });
   } catch (error) {
-    console.error("GET /api/charge-documents/billable failed:", error);
+    logger.error("GET /api/charge-documents/billable failed:", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת פריטים לחיוב" }, { status: 500 });
   }
 }

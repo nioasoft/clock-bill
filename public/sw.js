@@ -38,8 +38,10 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // Never cache API/auth responses (tenant data, sessions).
-  if (url.pathname.startsWith("/api/")) return;
+  // Never cache API/auth responses (tenant data, sessions) or user uploads
+  // (signatures/logos) — these can be user-specific and must not persist in a
+  // shared-device cache after logout.
+  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/uploads/")) return;
 
   // HTML navigations: network-first, fall back to cache, then offline page.
   if (request.mode === "navigate") {
@@ -78,9 +80,14 @@ self.addEventListener("fetch", (event) => {
   }
 });
 
-// Allow the page to trigger an immediate activation after an update.
+// Allow the page to trigger an immediate activation after an update, and to
+// purge cached navigations/assets on logout (so a shared device doesn't keep a
+// previous user's cached app shell).
 self.addEventListener("message", (event) => {
   if (event.data === "SKIP_WAITING") self.skipWaiting();
+  if (event.data === "CLEAR_CACHE") {
+    event.waitUntil(caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k)))));
+  }
 });
 
 // Web Push: show the notification carried in the push payload.

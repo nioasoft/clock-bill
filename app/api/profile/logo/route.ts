@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:profile:logo");
 /**
  * Logo Upload API endpoint
  * POST: Upload user logo
@@ -73,7 +75,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       try {
         await deleteFile(oldLogoUrl);
       } catch (error) {
-        console.error("Failed to delete old logo:", error);
+        logger.error("Failed to delete old logo:", error);
         // Continue even if old file deletion fails
       }
     }
@@ -109,7 +111,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       logoUrl: logoUrl,
     });
   } catch (error) {
-    console.error("Logo upload error:", error);
+    if (error instanceof Error && error.message === "UNSUPPORTED_FILE_CONTENT") {
+      return NextResponse.json(
+        { success: false, error_code: "INVALID_FILE_TYPE", message: "Invalid file type. Allowed: JPEG, PNG, GIF, WebP" },
+        { status: 400 }
+      );
+    }
+    logger.error("Logo upload error:", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "Internal server error" },
       { status: 500 }
@@ -151,7 +159,7 @@ export async function DELETE(): Promise<NextResponse> {
     try {
       await deleteFile(logoUrl);
     } catch (error) {
-      console.error("Failed to delete logo file:", error);
+      logger.error("Failed to delete logo file:", error);
       // Continue even if file deletion fails
     }
 
@@ -168,7 +176,7 @@ export async function DELETE(): Promise<NextResponse> {
       message: "Logo removed successfully",
     });
   } catch (error) {
-    console.error("Logo delete error:", error);
+    logger.error("Logo delete error:", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "Internal server error" },
       { status: 500 }

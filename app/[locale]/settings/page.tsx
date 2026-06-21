@@ -309,6 +309,7 @@ export default function SettingsPage() {
       const response = await fetch("/api/auth/logout", { method: "POST" });
       const data = await response.json();
       if (data.success) {
+        navigator.serviceWorker?.controller?.postMessage("CLEAR_CACHE");
         router.push("/login");
         router.refresh();
       } else {
@@ -333,6 +334,7 @@ export default function SettingsPage() {
 
       if (data.success) {
         // Redirect to login page after successful logout
+        navigator.serviceWorker?.controller?.postMessage("CLEAR_CACHE");
         router.push("/login");
       } else {
         setError(data.error_code ? messageForError(data, tRoot) : t("toasts.logoutAllError"));

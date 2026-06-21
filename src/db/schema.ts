@@ -199,6 +199,7 @@ export const userProfiles = pgTable("user_profiles", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
+  check("user_profiles_default_rate_check", sql`${table.defaultRate} IS NULL OR ${table.defaultRate} >= 0`),
   check(
     "user_profiles_default_billing_rounding_check",
     sql`${table.defaultBillingRounding} IN ('none', 'tenth_hour_up', 'quarter_hour_up', 'half_hour_up', 'hour_up')`
@@ -257,6 +258,9 @@ export const clients = pgTable(
   (table) => [
     index("idx_clients_user_id").on(table.userId),
     index("idx_clients_user_id_is_active").on(table.userId, table.isActive),
+    check("clients_default_rate_check", sql`${table.defaultRate} IS NULL OR ${table.defaultRate} >= 0`),
+    check("clients_retainer_monthly_fee_check", sql`${table.retainerMonthlyFee} IS NULL OR ${table.retainerMonthlyFee} >= 0`),
+    check("clients_overage_rate_check", sql`${table.overageRate} IS NULL OR ${table.overageRate} >= 0`),
     check(
       "clients_billing_rounding_check",
       sql`${table.billingRounding} IS NULL OR ${table.billingRounding} IN ('none', 'tenth_hour_up', 'quarter_hour_up', 'half_hour_up', 'hour_up')`
@@ -304,6 +308,7 @@ export const clientRates = pgTable(
     index("idx_client_rates_user_id").on(table.userId),
     index("idx_client_rates_project_id").on(table.projectId),
     check("client_rates_kind_check", sql`${table.kind} IN ('hourly', 'item')`),
+    check("client_rates_rate_check", sql`${table.rate} >= 0`),
   ]
 );
 
@@ -336,6 +341,7 @@ export const projects = pgTable(
     index("idx_projects_user_id").on(table.userId),
     index("idx_projects_client_id").on(table.clientId),
     index("idx_projects_user_id_status").on(table.userId, table.status),
+    check("projects_fixed_monthly_fee_check", sql`${table.fixedMonthlyFee} IS NULL OR ${table.fixedMonthlyFee} >= 0`),
     check(
       "projects_status_check",
       sql`${table.status} IN ('active', 'completed', 'paused', 'archived')`
@@ -380,6 +386,7 @@ export const tasks = pgTable(
     index("idx_tasks_user_status_position").on(table.userId, table.status, table.position),
     check("tasks_status_check", sql`${table.status} IN ('todo', 'in_progress', 'done')`),
     check("tasks_priority_check", sql`${table.priority} IN ('normal', 'high', 'urgent')`),
+    check("tasks_rate_check", sql`${table.rate} IS NULL OR ${table.rate} >= 0`),
   ]
 );
 
@@ -426,6 +433,8 @@ export const timeEntries = pgTable(
     updatedAt: timestamp("updated_at").defaultNow(),
   },
   (table) => [
+    check("time_entries_rate_check", sql`${table.rate} IS NULL OR ${table.rate} >= 0`),
+    check("time_entries_duration_check", sql`${table.duration} >= 0`),
     index("idx_time_entries_user_id").on(table.userId),
     index("idx_time_entries_project_id").on(table.projectId),
     index("idx_time_entries_task_id").on(table.taskId),
@@ -543,6 +552,7 @@ export const chargeDocuments = pgTable(
     index("idx_charge_documents_user_id").on(table.userId),
     index("idx_charge_documents_user_id_client_id").on(table.userId, table.clientId),
     index("idx_charge_documents_user_id_status").on(table.userId, table.status),
+    check("charge_documents_total_check", sql`${table.total} IS NULL OR ${table.total} >= 0`),
     check(
       "charge_documents_status_check",
       sql`${table.status} IN ('pending', 'paid', 'canceled')`
@@ -593,7 +603,14 @@ export const chargeDocumentLines = pgTable(
   (table) => [
     index("idx_charge_document_lines_document_id").on(table.documentId),
     index("idx_charge_document_lines_user_id").on(table.userId),
-    index("idx_charge_document_lines_time_entry_id").on(table.timeEntryId),
+    // One active charge line per time entry (also serves lookups). Canceled docs
+    // NULL their lines' time_entry_id so freed entries can be re-billed.
+    uniqueIndex("uq_charge_document_lines_time_entry_id")
+      .on(table.timeEntryId)
+      .where(sql`${table.timeEntryId} IS NOT NULL`),
+    check("charge_document_lines_amount_check", sql`${table.amount} IS NULL OR ${table.amount} >= 0`),
+    check("charge_document_lines_rate_check", sql`${table.rate} IS NULL OR ${table.rate} >= 0`),
+    check("charge_document_lines_quantity_check", sql`${table.quantity} IS NULL OR ${table.quantity} >= 0`),
     check(
       "charge_document_lines_source_type_check",
       sql`${table.sourceType} IN ('time_entry', 'fixed_monthly', 'retainer')`
@@ -636,4 +653,29 @@ export const trialEmailsSent = pgTable(
     sentAt: timestamp("sent_at").defaultNow().notNull(),
   },
   (table) => [uniqueIndex("trial_emails_sent_user_key").on(table.userId, table.emailKey)]
+);
+
+// ─── Audit events (append-only) ───────────────────────────────────────────
+// Immutable trail of sensitive actions (admin user ops, financial mutations).
+// Written ONLY via the privileged adminQuery()/withAdminTransaction() path; RLS
+// is ENABLE+FORCE with no policies so the restricted tenant role can never read
+// or write it. Never UPDATE/DELETE — append only.
+export const auditEvents = pgTable(
+  "audit_events",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()::text`),
+    actorId: text("actor_id").notNull(),
+    action: text("action").notNull(),
+    targetType: text("target_type"),
+    targetId: text("target_id"),
+    ip: text("ip"),
+    userAgent: text("user_agent"),
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_audit_events_actor_id").on(table.actorId),
+    index("idx_audit_events_target").on(table.targetType, table.targetId),
+    index("idx_audit_events_created_at").on(table.createdAt),
+  ]
 );

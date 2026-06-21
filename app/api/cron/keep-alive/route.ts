@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPool } from "@/lib/db";
 import { createLogger } from "@/lib/logger";
+import { isAuthorizedCron } from "@/lib/cron-auth";
 
 const logger = createLogger("cron:keep-alive");
 
@@ -19,12 +20,8 @@ export const dynamic = "force-dynamic";
  * to cron invocations; we require it so the endpoint can't be abused publicly.
  */
 export async function GET(request: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (secret) {
-    const auth = request.headers.get("authorization");
-    if (auth !== `Bearer ${secret}`) {
-      return NextResponse.json({ ok: false }, { status: 401 });
-    }
+  if (!isAuthorizedCron(request)) {
+    return NextResponse.json({ ok: false }, { status: 401 });
   }
 
   try {

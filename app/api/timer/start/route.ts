@@ -51,6 +51,16 @@ export async function POST(request: NextRequest) {
       const { getLockedClientIds } = await import("@/lib/plan-guard");
       if ((await getLockedClientIds(userId!)).has(projectCheck.rows[0].client_id)) return { planLocked: true as const };
 
+      // If a task was supplied it must belong to THIS user AND THIS project —
+      // the FK alone only proves the task id exists, not that it's the caller's.
+      if (taskId) {
+        const taskCheck = await client.query<{ id: string }>(
+          `SELECT id FROM tasks WHERE id = $1 AND user_id = $2 AND project_id = $3`,
+          [taskId, userId, projectId]
+        );
+        if (taskCheck.rows.length === 0) return { taskInvalid: true as const };
+      }
+
       // Create the running time entry. Multiple concurrent running timers per
       // user are allowed (e.g. two projects at once).
       const result = await client.query<{ id: string }>(
@@ -84,6 +94,9 @@ export async function POST(request: NextRequest) {
     }
     if (isPlanLockedSentinel(newEntry)) {
       return lockedClientResponse();
+    }
+    if ("taskInvalid" in newEntry) {
+      return NextResponse.json({ success: false, error_code: "TASK_NOT_FOUND", message: "המשימה לא נמצאה" }, { status: 404 });
     }
 
     return NextResponse.json({

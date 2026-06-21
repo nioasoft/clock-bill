@@ -4,6 +4,7 @@ import { sendEmail, type EmailLocale } from "@/lib/email";
 import { pickDueEmail } from "@/lib/trial-emails-schedule";
 import { trialEmailFor } from "@/lib/emails/trial";
 import { createLogger } from "@/lib/logger";
+import { isAuthorizedCron } from "@/lib/cron-auth";
 
 const logger = createLogger("cron:trial-lifecycle");
 export const runtime = "nodejs";
@@ -23,10 +24,8 @@ interface TrialUserRow extends Record<string, unknown> {
 }
 
 export async function GET(request: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (secret) {
-    const auth = request.headers.get("authorization");
-    if (auth !== `Bearer ${secret}`) return NextResponse.json({ ok: false }, { status: 401 });
+  if (!isAuthorizedCron(request)) {
+    return NextResponse.json({ ok: false }, { status: 401 });
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.clock-bill.com";
@@ -73,8 +72,17 @@ export async function GET(request: NextRequest) {
       lockedCount: Math.max(0, row.active_client_count - 1),
     });
     const ok = await sendEmail({ to: row.email, subject, html });
-    if (ok) sent++;
-    else logger.error("trial email send failed", { userId: row.user_id, key: due });
+    if (ok) {
+      sent++;
+    } else {
+      // Release the reservation so a later run retries instead of suppressing
+      // this email forever (the reserve still prevents concurrent double-sends).
+      await adminQuery(
+        `DELETE FROM trial_emails_sent WHERE user_id = $1 AND email_key = $2`,
+        [row.user_id, due]
+      );
+      logger.error("trial email send failed; released reservation for retry", { userId: row.user_id, key: due });
+    }
   }
 
   logger.info("trial-lifecycle run complete", { candidates: rows.rows.length, sent });

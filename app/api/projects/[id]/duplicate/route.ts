@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:projects:id:duplicate");
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 
@@ -178,7 +180,7 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error("Error duplicating project:", error);
+    logger.error("Error duplicating project:", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה בשכפול הפרויקט" },
       { status: 500 }

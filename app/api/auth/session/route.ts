@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:auth:session");
 /**
  * Session check API endpoint (frontend-facing).
  * Thin wrapper over Better Auth via getUser() so existing client code that
@@ -43,7 +45,7 @@ export async function GET(): Promise<NextResponse> {
       },
     });
   } catch (error) {
-    console.error("Session check error:", error);
+    logger.error("Session check error:", error);
     return NextResponse.json(
       { success: false, message: "Internal server error" },
       { status: 500 }

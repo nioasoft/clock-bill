@@ -11,6 +11,24 @@ export enum LogLevel {
   NONE = 4,
 }
 
+/** Keys whose values must never reach stdout / Sentry. */
+const SENSITIVE_KEY = /pass(word)?|token|secret|authorization|cookie|api[-_]?key|jwt|session/i;
+
+/**
+ * Recursively redact sensitive values from log metadata before serialization,
+ * so a caller that accidentally passes a password/token/cookie can't leak it to
+ * logs or Sentry. Depth-bounded to avoid pathological/circular structures.
+ */
+function redactSensitive(value: unknown, depth = 0): unknown {
+  if (depth > 6 || value === null || typeof value !== "object") return value;
+  if (Array.isArray(value)) return value.map((v) => redactSensitive(v, depth + 1));
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+    out[k] = SENSITIVE_KEY.test(k) ? "[REDACTED]" : redactSensitive(v, depth + 1);
+  }
+  return out;
+}
+
 /**
  * Logger configuration
  */
@@ -117,7 +135,7 @@ export class Logger {
     // Add metadata if provided
     if (meta && Object.keys(meta).length > 0) {
       try {
-        const metaStr = JSON.stringify(meta, null, 2);
+        const metaStr = JSON.stringify(redactSensitive(meta), null, 2);
         parts.push('\n' + colorize(metaStr, colors.dim, this.config.enableColors));
       } catch {
         parts.push('\n' + colorize('[Unable to stringify metadata]', colors.dim, this.config.enableColors));
@@ -200,7 +218,7 @@ export class Logger {
         .then((Sentry) => {
           Sentry.captureException(captured, {
             tags: this.config.prefix ? { module: this.config.prefix } : undefined,
-            extra: { message, ...meta },
+            extra: redactSensitive({ message, ...meta }) as Record<string, unknown>,
           });
         })
         .catch(() => {

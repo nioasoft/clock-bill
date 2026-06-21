@@ -1,15 +1,21 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:timer:stop");
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { withTransaction } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
 
+/** A single entry can't bill more than 24h (1440 min) — caps the client-supplied
+ *  duration override so a stopped timer can't be inflated to fabricated hours. */
+const MAX_ENTRY_MINUTES = 24 * 60;
+
 /** Body schema for stopping a timer. */
 const stopTimerSchema = z.object({
   entryId: z.string({ message: "הטיימר לא נמצא או כבר הופסק" }).min(1, "הטיימר לא נמצא או כבר הופסק"),
   description: z.string().max(5000).nullish(),
   notes: z.string().max(5000).nullish(),
-  duration: z.number().nullish(),
+  duration: z.number().min(0).max(MAX_ENTRY_MINUTES).nullish(),
   markTaskDone: z.boolean().nullish(),
 });
 
@@ -133,7 +139,7 @@ export async function POST(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error("Error stopping timer:", error);
+    logger.error("Error stopping timer:", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה בעצירת הטיימר" },
       { status: 500 }

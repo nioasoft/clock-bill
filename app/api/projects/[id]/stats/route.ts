@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:projects:id:stats");
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 
@@ -58,7 +60,7 @@ export async function GET(
       }
     });
   } catch (error) {
-    console.error("Error fetching project stats:", error);
+    logger.error("Error fetching project stats:", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת נתוני הפרויקט" },
       { status: 500 }

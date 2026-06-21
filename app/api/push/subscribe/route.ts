@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { createLogger } from "@/lib/logger";
+import { isAllowedPushEndpoint } from "@/lib/push";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 const logger = createLogger("api:push:subscribe");
 
@@ -31,6 +33,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const limited = await enforceRateLimit({ name: "push-subscribe", identifier: user.id, limit: 20, windowSec: 60 });
+    if (limited) return limited;
+
     const body = (await request.json().catch(() => ({}))) as SubscribeBody;
     const endpoint = body.endpoint;
     const p256dh = body.keys?.p256dh;
@@ -39,6 +44,15 @@ export async function POST(request: NextRequest) {
     if (!endpoint || !p256dh || !auth) {
       return NextResponse.json(
         { success: false, error_code: "INVALID_INPUT", message: "פרטי הרשמה חסרים" },
+        { status: 400 }
+      );
+    }
+
+    // SSRF guard: only store endpoints hosted by a known push provider, so the
+    // notifications cron can't be steered to POST at an internal/metadata URL.
+    if (!isAllowedPushEndpoint(endpoint)) {
+      return NextResponse.json(
+        { success: false, error_code: "INVALID_ENDPOINT", message: "כתובת התראות לא נתמכת" },
         { status: 400 }
       );
     }

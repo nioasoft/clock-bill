@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminQuery } from "@/lib/db";
 import { isPushConfigured, sendPushToUser } from "@/lib/push";
 import { createLogger } from "@/lib/logger";
+import { isAuthorizedCron } from "@/lib/cron-auth";
 
 const logger = createLogger("cron:notifications");
 
@@ -68,12 +69,8 @@ interface LongTimerRow extends Record<string, unknown> {
  * (bypasses RLS). Protected by CRON_SECRET when set, like keep-alive.
  */
 export async function GET(request: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (secret) {
-    const auth = request.headers.get("authorization");
-    if (auth !== `Bearer ${secret}`) {
-      return NextResponse.json({ ok: false }, { status: 401 });
-    }
+  if (!isAuthorizedCron(request)) {
+    return NextResponse.json({ ok: false }, { status: 401 });
   }
 
   if (!isPushConfigured()) {

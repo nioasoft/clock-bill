@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:admin:stats");
 /**
  * GET /api/admin/stats
  * Returns admin dashboard overview statistics
@@ -80,7 +82,7 @@ export async function GET(): Promise<NextResponse> {
       }
     });
   } catch (error) {
-    console.error("Admin stats error:", error);
+    logger.error("Admin stats error:", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאת שרת" }, { status: 500 });
   }
 }

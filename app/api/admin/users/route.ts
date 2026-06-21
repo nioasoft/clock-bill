@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:admin:users");
 /**
  * GET /api/admin/users
  * Returns paginated user list with search
@@ -92,7 +94,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       },
     });
   } catch (error) {
-    console.error("Admin users error:", error);
+    logger.error("Admin users error:", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאת שרת" }, { status: 500 });
   }
 }

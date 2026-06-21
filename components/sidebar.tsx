@@ -71,6 +71,8 @@ export function Sidebar({
       const data = await response.json();
 
       if (data.success) {
+        // Purge the SW cache so a shared device keeps no cached app shell.
+        navigator.serviceWorker?.controller?.postMessage("CLEAR_CACHE");
         router.push("/login");
         router.refresh();
       } else {

@@ -29,7 +29,7 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO cl
 DO $$
 DECLARE t text;
 BEGIN
-  FOREACH t IN ARRAY ARRAY['user_profiles','clients','projects','tasks','time_entries','report_presets','client_rates','currency_rates','charge_documents','charge_document_lines','push_subscriptions']
+  FOREACH t IN ARRAY ARRAY['user_profiles','clients','projects','tasks','time_entries','report_presets','client_rates','currency_rates','charge_documents','charge_document_lines','push_subscriptions','trial_emails_sent']
   LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
     EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY', t);
@@ -54,3 +54,14 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON client_rates TO clockbill_app;
 -- charge_documents / charge_document_lines: explicit grants (defense in depth).
 GRANT SELECT, INSERT, UPDATE, DELETE ON charge_documents      TO clockbill_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON charge_document_lines TO clockbill_app;
+
+-- audit_events is intentionally NOT tenant-scoped: it is ENABLE+FORCE RLS with
+-- NO policy (see drizzle/0030_audit_events.sql), so the restricted app role can
+-- neither read nor write it. Only the privileged admin connection touches it.
+
+-- Drift check (run as admin): every user-scoped table must have RLS enabled+forced.
+-- SELECT relname, relrowsecurity, relforcerowsecurity FROM pg_class
+-- WHERE relname = ANY(ARRAY['user_profiles','clients','projects','tasks','time_entries',
+--   'report_presets','client_rates','currency_rates','charge_documents',
+--   'charge_document_lines','push_subscriptions','trial_emails_sent','custom_tags','audit_events'])
+-- ORDER BY relname;  -- expect all t/t. See scripts/check-rls.mjs.

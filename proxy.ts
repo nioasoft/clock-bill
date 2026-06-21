@@ -120,7 +120,7 @@ function geoDefaultLocale(request: NextRequest): NextResponse | null {
     const url = request.nextUrl.clone();
     url.pathname = `/en${request.nextUrl.pathname === "/" ? "" : request.nextUrl.pathname}`;
     const redirect = NextResponse.redirect(url);
-    redirect.cookies.set("NEXT_LOCALE", "en", { path: "/" });
+    redirect.cookies.set("NEXT_LOCALE", "en", { path: "/", secure: process.env.NODE_ENV === "production" });
     return redirect;
   }
 
@@ -147,7 +147,7 @@ export function proxy(request: NextRequest) {
   // If geo applied (no cookie, no explicit prefix) and resolved to Hebrew,
   // stamp NEXT_LOCALE=he so the geo pre-step is skipped on subsequent requests.
   if (noCookie && !hasLocalePrefix) {
-    response.cookies.set("NEXT_LOCALE", "he", { path: "/" });
+    response.cookies.set("NEXT_LOCALE", "he", { path: "/", secure: process.env.NODE_ENV === "production" });
   }
 
   // Step 2: layer auth gating on top, using the locale-stripped path.

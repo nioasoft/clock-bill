@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:charge-documents:id:cancel");
 import { NextRequest, NextResponse } from "next/server";
 import type { PoolClient } from "pg";
 import { getUser } from "@/lib/auth";
@@ -24,6 +26,13 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
         `UPDATE time_entries SET charge_document_id = NULL WHERE charge_document_id = $1 AND user_id = $2`,
         [id, user.id]
       );
+      // Release the entry link on this doc's lines so the freed entries can be
+      // re-billed without colliding with the unique index on time_entry_id. The
+      // lines keep their amounts/labels as a historical record of the canceled doc.
+      await client.query(
+        `UPDATE charge_document_lines SET time_entry_id = NULL WHERE document_id = $1 AND user_id = $2`,
+        [id, user.id]
+      );
       await client.query(
         `UPDATE charge_documents SET status = 'canceled', canceled_at = NOW(), updated_at = NOW()
           WHERE id = $1 AND user_id = $2`,
@@ -36,7 +45,7 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
     const msg = error instanceof Error ? error.message : "";
     if (msg === "NOT_FOUND") return NextResponse.json({ success: false, error_code: "DOCUMENT_NOT_FOUND", message: "תעודה לא נמצאה" }, { status: 404 });
     if (msg === "BAD_STATE") return NextResponse.json({ success: false, error_code: "CANCEL_REQUIRES_PENDING", message: "ניתן לבטל רק תעודה ממתינה" }, { status: 409 });
-    console.error("POST cancel failed:", error);
+    logger.error("POST cancel failed:", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בביטול תעודה" }, { status: 500 });
   }
 }

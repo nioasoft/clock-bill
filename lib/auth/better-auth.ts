@@ -10,6 +10,7 @@
  */
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { createAuthMiddleware, APIError } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { polar, checkout, portal, webhooks } from "@polar-sh/better-auth";
 import { db } from "@/src/db";
@@ -240,6 +241,23 @@ const polarPlugin = polarEnabled
     })
   : null;
 
+// Server-side password policy. minPasswordLength (8) is enforced by Better Auth,
+// but the client-only strength meter can be bypassed via direct API calls — so we
+// re-check complexity in a before-hook on the endpoints that accept a new password.
+const PASSWORD_PATHS = new Set(["/sign-up/email", "/reset-password"]);
+
+function assertStrongPassword(password: unknown): void {
+  if (typeof password !== "string" || password.length < 8) {
+    throw new APIError("BAD_REQUEST", { message: "הסיסמה חייבת להכיל לפחות 8 תווים" });
+  }
+  const classes = [/[a-z]/, /[A-Z]/, /[0-9]/].filter((re) => re.test(password)).length;
+  if (classes < 3) {
+    throw new APIError("BAD_REQUEST", {
+      message: "הסיסמה חייבת לכלול אות גדולה, אות קטנה וספרה",
+    });
+  }
+}
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
@@ -274,9 +292,14 @@ export const auth = betterAuth({
             <p style="margin:0;font-size:13px;color:#71717a;line-height:1.6;">${t.ignore}</p>`,
         }),
       });
-      // Dev parity / fallback when email isn't configured: log the link.
-      if (!sent) {
+      // Dev parity / fallback when email isn't configured: log the link — but
+      // ONLY outside production. In prod a send failure (e.g. transient Resend
+      // outage) must never write the live reset token (the URL is the
+      // credential) to logs; log identity only.
+      if (!sent && process.env.NODE_ENV !== "production") {
         logger.info(`Password reset link for ${user.email}: ${url}`);
+      } else if (!sent) {
+        logger.warn("Password reset email failed to send", { userId: user.id });
       }
     },
   },
@@ -300,8 +323,11 @@ export const auth = betterAuth({
             <p style="margin:0;font-size:13px;color:#71717a;line-height:1.6;">${t.ignore}</p>`,
         }),
       });
-      if (!sent) {
+      // Only log the verification link outside production (see reset note above).
+      if (!sent && process.env.NODE_ENV !== "production") {
         logger.info(`Email verification link for ${user.email}: ${url}`);
+      } else if (!sent) {
+        logger.warn("Verification email failed to send", { userId: user.id });
       }
     },
   },
@@ -313,7 +339,25 @@ export const auth = betterAuth({
         },
       }
     : {},
+  account: {
+    // Encrypt OAuth access/refresh/id tokens at rest so a DB read can't recover
+    // a live Google credential. Applies to new writes; existing rows re-encrypt
+    // on next re-auth.
+    encryptOAuthTokens: true,
+  },
+  verification: {
+    // Hash verification identifiers (which embed reset/verify tokens) so a DB
+    // read can't recover a live token → no DB-read-to-account-takeover path.
+    // Better Auth hashes on both write and lookup, so this is internally
+    // consistent; in-flight tokens issued before deploy become invalid.
+    storeIdentifier: "hashed",
+  },
   session: {
+    // Explicit session lifetime (don't rely on library defaults): sessions
+    // expire after 7 days, with a sliding refresh once per day of activity so
+    // an idle stolen token has a bounded window.
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24, // refresh at most once per day
     // Cache session data in a signed cookie so getSession() (called by the RLS
     // tenant resolver on each query) is cheap — no DB hit for ~5 minutes.
     cookieCache: { enabled: true, maxAge: 300 },
@@ -339,6 +383,14 @@ export const auth = betterAuth({
       // Not settable by the client during signup; managed server-side.
       role: { type: "string", required: false, defaultValue: "user", input: false },
     },
+  },
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      // Enforce password complexity server-side on the new-password endpoints.
+      if (PASSWORD_PATHS.has(ctx.path)) {
+        assertStrongPassword((ctx.body as { password?: unknown } | undefined)?.password);
+      }
+    }),
   },
   databaseHooks: {
     user: {

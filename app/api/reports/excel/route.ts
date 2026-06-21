@@ -1,5 +1,8 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:reports:excel");
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { calculateFixedMonthlyCharges } from "@/lib/fixed-charges";
 import { addMoney, calcHourlyAmount, calcItemAmount } from "@/lib/money";
 import ExcelJS from "exceljs";
@@ -18,6 +21,9 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
     }
+
+    const limited = await enforceRateLimit({ name: "reports-excel", identifier: user.id, limit: 10, windowSec: 60 });
+    if (limited) return limited;
 
     const { withTransaction } = await import("@/lib/db");
 
@@ -183,7 +189,8 @@ export async function GET(request: NextRequest) {
       paramIndex++;
     }
 
-    queryText += ` ORDER BY te.date DESC, te.created_at DESC`;
+    // Hard cap so a huge dataset can't be streamed into ExcelJS unbounded.
+    queryText += ` ORDER BY te.date DESC, te.created_at DESC LIMIT 50000`;
 
     // Build the (optional) fixed-monthly-projects query up front so the entries
     // query and the fixed-projects query run inside ONE transaction (one RLS
@@ -579,7 +586,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error generating Excel:", error);
+    logger.error("Error generating Excel:", error);
     return NextResponse.json(
       { success: false, error_code: "EXCEL_GENERATION_ERROR", message: "שגיאה ביצירת קובץ Excel" },
       { status: 500 }

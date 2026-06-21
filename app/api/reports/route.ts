@@ -1,5 +1,8 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:reports");
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { calculateFixedMonthlyCharges } from "@/lib/fixed-charges";
 import { addMoney, calcHourlyAmount, calcItemAmount } from "@/lib/money";
 import { resolveRounding, roundBillableMinutes } from "@/lib/rounding";
@@ -18,6 +21,9 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
     }
+
+    const limited = await enforceRateLimit({ name: "reports", identifier: user.id, limit: 20, windowSec: 60 });
+    if (limited) return limited;
 
     const { withTransaction } = await import("@/lib/db");
 
@@ -92,7 +98,9 @@ export async function GET(request: NextRequest) {
       paramIndex++;
     }
 
-    queryText += ` ORDER BY te.date DESC, te.created_at DESC`;
+    // Hard cap so an account with years of data can't fetch + aggregate an
+    // unbounded result set in memory on every request.
+    queryText += ` ORDER BY te.date DESC, te.created_at DESC LIMIT 50000`;
 
     // Build the (optional) fixed-monthly-projects query up front so the profile
     // base, the entries query, and the fixed-projects query all run inside ONE
@@ -532,7 +540,7 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error("Error generating report:", error);
+    logger.error("Error generating report:", error);
     return NextResponse.json(
       { success: false, error_code: "REPORT_GENERATION_ERROR", message: "שגיאה ביצירת הדוח" },
       { status: 500 }

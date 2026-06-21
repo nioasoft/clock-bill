@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { sendEmail, emailLayout } from "@/lib/email";
 import { feedbackSchema, CATEGORY_LABELS_HE } from "@/lib/schemas/feedback";
 
@@ -26,6 +27,9 @@ export async function POST(request: NextRequest) {
   if (!user) {
     return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
   }
+
+  const limited = await enforceRateLimit({ name: "feedback", identifier: user.id, limit: 10, windowSec: 60 });
+  if (limited) return limited;
 
   let body: unknown;
   try {

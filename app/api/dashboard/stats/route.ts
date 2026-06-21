@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:dashboard:stats");
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { getUser } from "@/lib/auth";
@@ -414,7 +416,7 @@ export async function GET(_request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error("Error fetching dashboard stats:", error);
+    logger.error("Error fetching dashboard stats:", error);
     return NextResponse.json(
       { success: false, message: "שגיאה בטעינת הנתונים" },
       { status: 500 }

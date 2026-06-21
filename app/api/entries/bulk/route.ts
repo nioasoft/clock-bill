@@ -1,7 +1,10 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:entries:bulk");
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
+import { entryDate } from "@/lib/schemas/entries";
 
 /** Maximum number of entry IDs accepted in a single bulk operation. */
 const MAX_BULK_ENTRIES = 1000;
@@ -13,7 +16,7 @@ const bulkUpdateSchema = z.object({
     .min(1, "יש לבחור לפחות רשומה אחת")
     .max(MAX_BULK_ENTRIES, `ניתן לעדכן עד ${MAX_BULK_ENTRIES} רשומות בבת אחת`),
   projectId: z.string().min(1).optional(),
-  date: z.string().min(1).optional(),
+  date: entryDate.optional(),
   isBillable: z.boolean().optional(),
 });
 
@@ -93,13 +96,19 @@ export async function PATCH(request: NextRequest) {
     // race, no two separate round-trip triples).
     const outcome = await withTransaction(async (client) => {
       if (projectId) {
-        const projectCheck = await client.query<{ id: string }>(
-          `SELECT p.id FROM projects p
+        const projectCheck = await client.query<{ id: string; client_id: string }>(
+          `SELECT p.id, c.id AS client_id FROM projects p
            JOIN clients c ON p.client_id = c.id
            WHERE p.id = $1 AND c.user_id = $2`,
           [projectId, user.id]
         );
         if (projectCheck.rows.length === 0) return { notFound: true as const };
+        // Mirror the single-entry paths: don't let a bulk reassign move entries
+        // onto a plan-locked client's project (paywall consistency).
+        const { getLockedClientIds } = await import("@/lib/plan-guard");
+        if ((await getLockedClientIds(user.id)).has(projectCheck.rows[0].client_id)) {
+          return { planLocked: true as const };
+        }
       }
       const result = await client.query(updateQuery, updateValues);
       return { rowCount: result.rowCount ?? 0 };
@@ -112,13 +121,16 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    const { isPlanLockedSentinel, lockedClientResponse } = await import("@/lib/plan-guard");
+    if (isPlanLockedSentinel(outcome)) return lockedClientResponse();
+
     return NextResponse.json({
       success: true,
       message: `עודכנו ${outcome.rowCount} רשומות`,
       updatedCount: outcome.rowCount,
     });
   } catch (error) {
-    console.error("Error bulk updating entries:", error);
+    logger.error("Error bulk updating entries:", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה בעדכון הרשומות" },
       { status: 500 }
@@ -164,7 +176,7 @@ export async function DELETE(request: NextRequest) {
       deletedCount: result.rowCount,
     });
   } catch (error) {
-    console.error("Error bulk deleting entries:", error);
+    logger.error("Error bulk deleting entries:", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה במחיקת הרשומות" },
       { status: 500 }

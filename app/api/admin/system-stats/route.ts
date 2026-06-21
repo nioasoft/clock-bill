@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:admin:system-stats");
 /**
  * GET /api/admin/system-stats
  * Returns deep system analytics
@@ -79,7 +81,7 @@ export async function GET(): Promise<NextResponse> {
       },
     });
   } catch (error) {
-    console.error("Admin system stats error:", error);
+    logger.error("Admin system stats error:", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאת שרת" }, { status: 500 });
   }
 }

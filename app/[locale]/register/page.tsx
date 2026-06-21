@@ -97,9 +97,18 @@ export default function RegisterPage() {
         router.refresh();
       } else {
         // Verification required, no session yet — stash the business name and
-        // apply it on the first authenticated load (AppLayout).
+        // apply it on the first authenticated load (AppLayout). Bind it to this
+        // signup email + a short TTL so it can't be applied to a DIFFERENT user
+        // who later logs in on a shared browser.
         if (businessName.trim()) {
-          localStorage.setItem("pendingBusinessName", businessName.trim());
+          localStorage.setItem(
+            "pendingBusinessName",
+            JSON.stringify({
+              name: businessName.trim(),
+              email: email.trim().toLowerCase(),
+              expiresAt: Date.now() + 30 * 60 * 1000, // 30 minutes
+            })
+          );
         }
         setVerificationSent(true);
       }

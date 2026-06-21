@@ -92,7 +92,8 @@ export async function GET(_request: NextRequest) {
        GROUP BY c.id, c.name, c.contact_name, c.email, c.phone, c.address, c.default_rate,
               c.currency, c.billing_rounding, c.document_language, c.vat_mode, c.is_retainer, c.retainer_hours, c.retainer_monthly_fee, c.overage_rate,
               c.notes, c.is_active, c.created_at
-       ORDER BY c.created_at DESC`,
+       ORDER BY c.created_at DESC
+       LIMIT 5000`,
       [user.id]
     );
 

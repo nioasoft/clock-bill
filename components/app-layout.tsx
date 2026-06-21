@@ -55,24 +55,36 @@ export function AppLayout({ children }: AppLayoutProps) {
           // Apply a business name captured at signup. Email verification means
           // the profile PATCH can't run during registration (no session yet),
           // so it's stashed and applied here on the first authenticated load.
-          const pendingBusinessName = localStorage.getItem("pendingBusinessName");
-          if (pendingBusinessName) {
+          // Only apply when the stash is bound to THIS user's email and is
+          // unexpired — so a stale value can't bleed onto a different user on a
+          // shared browser.
+          const raw = localStorage.getItem("pendingBusinessName");
+          if (raw) {
             localStorage.removeItem("pendingBusinessName");
-            void fetch("/api/profile", {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ businessName: pendingBusinessName }),
-            }).catch(() => {
-              // Non-fatal: the user can set the business name later in settings.
-            });
+            try {
+              const stash = JSON.parse(raw) as { name?: string; email?: string; expiresAt?: number };
+              const fresh = typeof stash.expiresAt === "number" && stash.expiresAt > Date.now();
+              const sameUser =
+                typeof stash.email === "string" &&
+                stash.email === String(data.user.email ?? "").toLowerCase();
+              if (stash.name && fresh && sameUser) {
+                void fetch("/api/profile", {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ businessName: stash.name }),
+                }).catch(() => {
+                  // Non-fatal: the user can set the business name later in settings.
+                });
+              }
+            } catch {
+              // Malformed/legacy value — ignore (already removed).
+            }
           }
         } else {
-          document.cookie = "session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
           router.push("/login");
         }
       } catch (error) {
         console.error("Error fetching user:", error);
-        document.cookie = "session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
         router.push("/login");
       } finally {
         setLoading(false);
@@ -94,7 +106,8 @@ export function AppLayout({ children }: AppLayoutProps) {
     const stored = profile.locale;
     if ((stored === "he" || stored === "en") && stored !== locale) {
       // Persist so a hard reload / new visit picks it up immediately.
-      document.cookie = `NEXT_LOCALE=${stored}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+      const secure = location.protocol === "https:" ? "; Secure" : "";
+      document.cookie = `NEXT_LOCALE=${stored}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax${secure}`;
       // Single soft switch to the stored locale on the current path.
       router.replace(pathname, { locale: stored });
     }

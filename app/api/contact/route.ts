@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendEmail, emailLayout } from "@/lib/email";
 import { contactSchema } from "@/lib/schemas/contact";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 /** Where public contact messages are delivered. Overridable via env. */
 const CONTACT_RECIPIENT =
@@ -52,6 +53,11 @@ export async function POST(request: NextRequest) {
       { status: 429 }
     );
   }
+
+  // Durable per-IP layer (survives cold starts / spans instances) on top of the
+  // in-memory limiter above. No-ops when Upstash isn't configured.
+  const limited = await enforceRateLimit({ name: "contact", identifier: ip, limit: 5, windowSec: 3600 });
+  if (limited) return limited;
 
   let body: unknown;
   try {

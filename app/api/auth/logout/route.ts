@@ -1,3 +1,5 @@
+import { createLogger } from "@/lib/logger";
+const logger = createLogger("api:auth:logout");
 /**
  * User logout API endpoint (frontend-facing).
  * Thin wrapper over Better Auth sign-out so existing client code that POSTs to
@@ -24,7 +26,7 @@ export async function POST(): Promise<NextResponse> {
       message: "Logout successful",
     });
   } catch (error) {
-    console.error("Logout error:", error);
+    logger.error("Logout error:", error);
     return NextResponse.json(
       { success: false, message: "Internal server error" },
       { status: 500 }
