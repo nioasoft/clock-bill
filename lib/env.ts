@@ -294,10 +294,10 @@ export function validateEnv(): void {
       });
     }
     const dbUrl = process.env.DATABASE_URL ?? "";
-    if (dbUrl && !isLocalDatabaseUrl(dbUrl) && !/[?&]sslmode=require\b/.test(dbUrl)) {
+    if (dbUrl && !isLocalDatabaseUrl(dbUrl) && !/[?&]sslmode=(require|verify-ca|verify-full)\b/.test(dbUrl)) {
       errors.push({
         varName: "DATABASE_URL",
-        message: "Production DATABASE_URL must enforce TLS (append ?sslmode=require)",
+        message: "Production DATABASE_URL must enforce TLS (append ?sslmode=verify-full)",
       });
     }
     // Email must be configured in prod, otherwise requireEmailVerification
@@ -389,6 +389,24 @@ export function getAppUrl(): string {
 }
 
 /**
+ * pg-connection-string currently treats sslmode=require|verify-ca as aliases for
+ * verify-full (full certificate + hostname verification). In pg v9 /
+ * pg-connection-string v3 these adopt standard libpq semantics, which are weaker
+ * (encrypt, but skip cert verification) — a silent security downgrade on upgrade,
+ * and the source of pg's runtime deprecation warning. Pin to verify-full
+ * explicitly so behavior stays identical across the upgrade. Local/dev DBs have
+ * no TLS, so they are left untouched.
+ */
+const DEPRECATED_SSL_ALIAS = /([?&]sslmode=)(require|verify-ca)\b/i;
+
+function normalizeDatabaseSsl(url: string): string {
+  if (isLocalDatabaseUrl(url)) {
+    return url;
+  }
+  return url.replace(DEPRECATED_SSL_ALIAS, "$1verify-full");
+}
+
+/**
  * Get the database URL
  */
 export function getDatabaseUrl(): string {
@@ -396,7 +414,7 @@ export function getDatabaseUrl(): string {
   if (!url) {
     throw new Error("DATABASE_URL environment variable is required");
   }
-  return url;
+  return normalizeDatabaseSsl(url);
 }
 
 /**
@@ -407,7 +425,8 @@ export function getDatabaseUrl(): string {
  * gate usage with getAdminUser(); this connection is not RLS-constrained.
  */
 export function getAdminDatabaseUrl(): string {
-  return process.env.DATABASE_URL_ADMIN || getDatabaseUrl();
+  const adminUrl = process.env.DATABASE_URL_ADMIN;
+  return adminUrl ? normalizeDatabaseSsl(adminUrl) : getDatabaseUrl();
 }
 
 /**
