@@ -10,7 +10,7 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SimpleSelect } from "@/components/ui/simple-select";
 import { MonthField } from "@/components/ui/month-field";
-import { Clock, Pencil, Trash2 } from "lucide-react";
+import { Clock, Lock, Pencil, Trash2 } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { messageForError } from "@/lib/api-error";
 import { validateRequired, validateDate, validateNumber } from "@/lib/validation";
@@ -77,6 +77,9 @@ interface TimeEntry {
   quantity?: number | null;
   itemRef?: number | null;
   currency?: string;
+  chargeDocumentId?: string | null;
+  chargeDocNumber?: number | null;
+  chargeDocStatus?: "pending" | "paid" | "canceled" | null;
 }
 
 /** First/last day of a date's month + its YYYY-MM key, as local-date strings. */
@@ -506,6 +509,12 @@ export default function EntriesPage() {
   };
 
   const handleEdit = (entry: TimeEntry) => {
+    // Entries claimed by a charge document are locked (edit + delete). The
+    // buttons are already disabled; this guards any other call path.
+    if (entry.chargeDocumentId) {
+      showErrorToast(t("entry.billedLocked", { number: entry.chargeDocNumber ?? 0 }));
+      return;
+    }
     setEditingEntry(entry);
     setFormClientId(entry.clientId);
     setFormData({
@@ -1278,6 +1287,12 @@ export default function EntriesPage() {
                           {!entry.isBillable && (
                             <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">{t("entry.notBillable")}</span>
                           )}
+                          {entry.chargeDocumentId && (
+                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                              <Lock className="h-3 w-3" />
+                              {t("entry.billedBadge", { number: entry.chargeDocNumber ?? 0 })}
+                            </span>
+                          )}
                         </div>
                         {(() => {
                           const sub: string[] = [];
@@ -1315,11 +1330,12 @@ export default function EntriesPage() {
                       <td className="w-px whitespace-nowrap px-4 py-4 text-start">
                         <button
                           onClick={() => handleEdit(entry)}
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
+                          disabled={!!entry.chargeDocumentId}
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-surface hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
                           aria-label={t("entry.editAria")}
-                          title={t("entry.editTitle")}
+                          title={entry.chargeDocumentId ? t("entry.billedLocked", { number: entry.chargeDocNumber ?? 0 }) : t("entry.editTitle")}
                         >
-                          <Pencil className="h-4 w-4" />
+                          {entry.chargeDocumentId ? <Lock className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
                         </button>
                       </td>
                     </tr>
@@ -1355,6 +1371,12 @@ export default function EntriesPage() {
                           {t("entry.notBillable")}
                         </span>
                       )}
+                      {entry.chargeDocumentId && (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                          <Lock className="h-3 w-3" />
+                          {t("entry.billedBadge", { number: entry.chargeDocNumber ?? 0 })}
+                        </span>
+                      )}
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
                       <span className="font-mono text-base font-bold tabular-nums text-foreground">
@@ -1362,11 +1384,12 @@ export default function EntriesPage() {
                       </span>
                       <button
                         onClick={() => handleEdit(entry)}
-                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius)] border border-border text-muted-foreground transition-colors hover:bg-surface hover:text-foreground active:bg-surface/80"
+                        disabled={!!entry.chargeDocumentId}
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius)] border border-border text-muted-foreground transition-colors hover:bg-surface hover:text-foreground active:bg-surface/80 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
                         aria-label={t("entry.editAria")}
-                        title={t("entry.editTitle")}
+                        title={entry.chargeDocumentId ? t("entry.billedLocked", { number: entry.chargeDocNumber ?? 0 }) : t("entry.editTitle")}
                       >
-                        <Pencil className="h-4 w-4" />
+                        {entry.chargeDocumentId ? <Lock className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
                       </button>
                     </div>
                   </div>

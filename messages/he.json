@@ -428,7 +428,9 @@
       "reference": "אסמכתא {ref}",
       "quantity": "{quantity} יח׳",
       "editAria": "ערוך רשומה",
-      "editTitle": "ערוך"
+      "editTitle": "ערוך",
+      "billedBadge": "חויב בתעודה #{number}",
+      "billedLocked": "הרשומה כלולה בתעודת התחשבנות #{number}. בטל את התעודה כדי לערוך או למחוק."
     },
     "deleteDialog": {
       "title": "מחק רישום זמן",
@@ -1838,6 +1840,7 @@
     "PROJECT_NOT_FOUND": "הפרויקט לא נמצא",
     "TASK_NOT_FOUND": "המשימה לא נמצאה",
     "ENTRY_NOT_FOUND": "הרשומה לא נמצאה",
+    "ENTRY_BILLED": "הרשומה כלולה בתעודת התחשבנות. יש לבטל את התעודה כדי לערוך או למחוק אותה.",
     "RATE_NOT_FOUND": "התעריף לא נמצא",
     "PROFILE_NOT_FOUND": "פרופיל לא נמצא",
     "USER_NOT_FOUND": "משתמש לא נמצא",

@@ -13,8 +13,10 @@
 /**
  * The column list every entry query must select, aliased to the time_entries
  * table alias used by that query (`te` for plain selects, `ins`/`upd` for the
- * insert/update CTEs). The joined `projects p`, `clients c` and `tasks tk`
- * aliases are fixed.
+ * insert/update CTEs). The joined `projects p`, `clients c`, `tasks tk` and
+ * `charge_documents cd` aliases are fixed — every caller must
+ * `LEFT JOIN charge_documents cd ON <alias>.charge_document_id = cd.id` so the
+ * billed-status columns resolve (NULL when the entry isn't on a document).
  */
 export function entrySelectColumns(te: string): string {
   return `${te}.id,
@@ -37,11 +39,14 @@ export function entrySelectColumns(te: string): string {
     ${te}.quantity,
     ${te}.item_ref,
     ${te}.unit,
+    ${te}.charge_document_id,
     p.name as project_name,
     c.name as client_name,
     c.id as client_id,
     c.currency as currency,
-    tk.title as task_name`;
+    tk.title as task_name,
+    cd.doc_number as charge_doc_number,
+    cd.status as charge_doc_status`;
 }
 
 /**
@@ -70,11 +75,14 @@ export type EntryRow = {
   quantity: number | null;
   item_ref: number | null;
   unit: string | null;
+  charge_document_id: string | null;
   project_name: string;
   client_name: string;
   client_id: string;
   currency: string | null;
   task_name: string | null;
+  charge_doc_number: number | null;
+  charge_doc_status: string | null;
 };
 
 /** CamelCase entry object returned by the API. */
@@ -104,6 +112,12 @@ export interface EntryResponse {
   quantity: number | null;
   itemRef: number | null;
   unit: string | null;
+  /** Set when this entry is claimed by a charge document (pending/paid). NULL once freed/canceled. */
+  chargeDocumentId: string | null;
+  /** Per-user document number of the claiming charge document, for display. */
+  chargeDocNumber: number | null;
+  /** Status of the claiming charge document (`pending` | `paid`); NULL when not billed. */
+  chargeDocStatus: "pending" | "paid" | "canceled" | null;
 }
 
 /** Map a joined `time_entries` row to the canonical API entry object. */
@@ -134,5 +148,8 @@ export function mapEntryRow(row: EntryRow): EntryResponse {
     quantity: row.quantity,
     itemRef: row.item_ref,
     unit: row.unit,
+    chargeDocumentId: row.charge_document_id,
+    chargeDocNumber: row.charge_doc_number,
+    chargeDocStatus: (row.charge_doc_status as EntryResponse["chargeDocStatus"]) ?? null,
   };
 }

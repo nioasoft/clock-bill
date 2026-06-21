@@ -20,6 +20,7 @@ export type ErrorCode =
   | "PROJECT_NOT_FOUND"
   | "TASK_NOT_FOUND"
   | "ENTRY_NOT_FOUND"
+  | "ENTRY_BILLED"
   | "RATE_NOT_FOUND"
   | "PROFILE_NOT_FOUND"
   | "USER_NOT_FOUND"
@@ -75,6 +76,7 @@ export const ERROR_CODES: readonly ErrorCode[] = [
   "PROJECT_NOT_FOUND",
   "TASK_NOT_FOUND",
   "ENTRY_NOT_FOUND",
+  "ENTRY_BILLED",
   "RATE_NOT_FOUND",
   "PROFILE_NOT_FOUND",
   "USER_NOT_FOUND",

@@ -55,11 +55,14 @@ const fullRow: EntryRow = {
   quantity: null,
   item_ref: null,
   unit: null,
+  charge_document_id: null,
   project_name: "אתר",
   client_name: "לקוח",
   client_id: "c1",
   currency: "USD",
   task_name: "משימה",
+  charge_doc_number: null,
+  charge_doc_status: null,
 };
 
 const runner = new TestRunner();
@@ -70,6 +73,7 @@ const REQUIRED_KEYS = [
   "description", "startTime", "endTime", "duration", "date", "tags", "notes",
   "isBillable", "createdAt", "pausedAt", "totalPausedTime", "taskId", "taskName",
   "billingKind", "rate", "rateLabel", "quantity", "itemRef", "unit",
+  "chargeDocumentId", "chargeDocNumber", "chargeDocStatus",
 ] as const;
 
 runner.test("mapEntryRow returns the full field set", () => {
@@ -107,6 +111,31 @@ runner.test("paused fields pass through null", () => {
   const out = mapEntryRow({ ...fullRow, paused_at: null, total_paused_time: null });
   assert(out.pausedAt === null, "pausedAt null");
   assert(out.totalPausedTime === null, "totalPausedTime null");
+});
+
+// ── billed status (charge-document lock) ─────────────────────────────────────
+runner.test("unbilled entry maps charge-document fields to null", () => {
+  const out = mapEntryRow(fullRow);
+  assert(out.chargeDocumentId === null, "chargeDocumentId null");
+  assert(out.chargeDocNumber === null, "chargeDocNumber null");
+  assert(out.chargeDocStatus === null, "chargeDocStatus null");
+});
+runner.test("billed entry passes through charge-document fields", () => {
+  const out = mapEntryRow({
+    ...fullRow,
+    charge_document_id: "doc1",
+    charge_doc_number: 42,
+    charge_doc_status: "pending",
+  });
+  assert(out.chargeDocumentId === "doc1", "chargeDocumentId");
+  assert(out.chargeDocNumber === 42, "chargeDocNumber");
+  assert(out.chargeDocStatus === "pending", "chargeDocStatus");
+});
+runner.test("entrySelectColumns selects the billed-status columns", () => {
+  const cols = entrySelectColumns("te");
+  assert(cols.includes("te.charge_document_id"), "charge_document_id column");
+  assert(cols.includes("cd.doc_number as charge_doc_number"), "charge_doc_number column");
+  assert(cols.includes("cd.status as charge_doc_status"), "charge_doc_status column");
 });
 
 // ── column list ─────────────────────────────────────────────────────────────

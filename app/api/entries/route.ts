@@ -83,7 +83,8 @@ export async function GET(request: NextRequest) {
       FROM time_entries te
       JOIN projects p ON te.project_id = p.id
       JOIN clients c ON p.client_id = c.id
-      LEFT JOIN tasks tk ON te.task_id = tk.id${whereClause}`;
+      LEFT JOIN tasks tk ON te.task_id = tk.id
+      LEFT JOIN charge_documents cd ON te.charge_document_id = cd.id${whereClause}`;
     const queryParams: (string | number | boolean | null)[] = [...filterParams];
 
     queryText += ` ORDER BY te.date DESC, te.created_at DESC`;
@@ -205,7 +206,8 @@ export async function POST(request: NextRequest) {
          FROM ins
          JOIN projects p ON ins.project_id = p.id
          JOIN clients c ON p.client_id = c.id
-         LEFT JOIN tasks tk ON ins.task_id = tk.id`,
+         LEFT JOIN tasks tk ON ins.task_id = tk.id
+         LEFT JOIN charge_documents cd ON ins.charge_document_id = cd.id`,
         [
           user.id,
           projectId,
