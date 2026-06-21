@@ -38,6 +38,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       JOIN projects p ON te.project_id = p.id
       JOIN clients c ON p.client_id = c.id
       LEFT JOIN tasks tk ON te.task_id = tk.id
+      LEFT JOIN charge_documents cd ON te.charge_document_id = cd.id
       WHERE te.id = $1 AND te.user_id = $2`,
       [id, user.id]
     );
@@ -92,12 +93,22 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     const { withTransaction } = await import("@/lib/db");
 
     const result = await withTransaction(async (client: PoolClient) => {
-      // Ownership + current item_ref (so we never reassign an existing one).
-      const entryCheck = await client.query<{ id: string; item_ref: number | null }>(
-        `SELECT id, item_ref FROM time_entries WHERE id = $1 AND user_id = $2`,
+      // Ownership + current item_ref (so we never reassign an existing one) +
+      // billed-status (an entry claimed by a charge document is locked).
+      const entryCheck = await client.query<{
+        id: string;
+        item_ref: number | null;
+        charge_document_id: string | null;
+      }>(
+        `SELECT id, item_ref, charge_document_id FROM time_entries WHERE id = $1 AND user_id = $2`,
         [id, user.id]
       );
       if (entryCheck.rows.length === 0) return { error: "entry" as const };
+
+      // A non-null charge_document_id means an active (pending/paid) document
+      // claims this entry. Canceling a document frees its entries, so this is a
+      // reliable lock. Editing is blocked — cancel the document first.
+      if (entryCheck.rows[0].charge_document_id) return { billed: true as const };
 
       const projectCheck = await client.query<{ id: string; client_id: string }>(
         `SELECT p.id, c.id AS client_id FROM projects p
@@ -152,7 +163,8 @@ export async function PUT(request: NextRequest, context: RouteContext) {
          FROM upd
          JOIN projects p ON upd.project_id = p.id
          JOIN clients c ON p.client_id = c.id
-         LEFT JOIN tasks tk ON upd.task_id = tk.id`,
+         LEFT JOIN tasks tk ON upd.task_id = tk.id
+         LEFT JOIN charge_documents cd ON upd.charge_document_id = cd.id`,
         [
           projectId,
           taskId || null,
@@ -181,6 +193,17 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       const message =
         result.error === "entry" ? "הרשומה לא נמצאה" : result.error === "task" ? "המשימה לא נמצאה" : "הפרויקט לא נמצא";
       return NextResponse.json({ success: false, error_code: code, message }, { status: 404 });
+    }
+
+    if ("billed" in result) {
+      return NextResponse.json(
+        {
+          success: false,
+          error_code: "ENTRY_BILLED",
+          message: "הרשומה כלולה בתעודת התחשבנות. יש לבטל את התעודה כדי לערוך או למחוק אותה.",
+        },
+        { status: 409 }
+      );
     }
 
     const { isPlanLockedSentinel, lockedClientResponse } = await import("@/lib/plan-guard");
@@ -218,16 +241,37 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     const { query } = await import("@/lib/db");
 
-    // Delete the entry, scoped to the user; RETURNING lets us detect not-found in one round-trip
+    // Delete only if the entry is NOT claimed by a charge document; RETURNING
+    // lets us detect "deleted nothing" in one round-trip. A claimed entry is
+    // locked — the document must be canceled first (canceling frees entries).
     const deleted = await query<{ id: string }>(
-      `DELETE FROM time_entries WHERE id = $1 AND user_id = $2 RETURNING id`,
+      `DELETE FROM time_entries
+       WHERE id = $1 AND user_id = $2 AND charge_document_id IS NULL
+       RETURNING id`,
       [id, user.id]
     );
 
     if (deleted.rows.length === 0) {
+      // Disambiguate: a missing entry is 404; an existing-but-billed entry is 409.
+      const existing = await query<{ charge_document_id: string | null }>(
+        `SELECT charge_document_id FROM time_entries WHERE id = $1 AND user_id = $2`,
+        [id, user.id]
+      );
+
+      if (existing.rows.length === 0) {
+        return NextResponse.json(
+          { success: false, error_code: "ENTRY_NOT_FOUND", message: "הרשומה לא נמצאה" },
+          { status: 404 }
+        );
+      }
+
       return NextResponse.json(
-        { success: false, error_code: "ENTRY_NOT_FOUND", message: "הרשומה לא נמצאה" },
-        { status: 404 }
+        {
+          success: false,
+          error_code: "ENTRY_BILLED",
+          message: "הרשומה כלולה בתעודת התחשבנות. יש לבטל את התעודה כדי לערוך או למחוק אותה.",
+        },
+        { status: 409 }
       );
     }
 
