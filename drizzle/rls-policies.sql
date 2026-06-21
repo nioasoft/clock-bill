@@ -29,7 +29,7 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO cl
 DO $$
 DECLARE t text;
 BEGIN
-  FOREACH t IN ARRAY ARRAY['user_profiles','clients','projects','tasks','time_entries','report_presets','client_rates','currency_rates','charge_documents','charge_document_lines','push_subscriptions','trial_emails_sent']
+  FOREACH t IN ARRAY ARRAY['user_profiles','clients','projects','tasks','time_entries','report_presets','client_rates','currency_rates','charge_documents','charge_document_lines','charge_document_payments','push_subscriptions','trial_emails_sent']
   LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
     EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY', t);
@@ -63,5 +63,5 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON charge_document_lines TO clockbill_app;
 -- SELECT relname, relrowsecurity, relforcerowsecurity FROM pg_class
 -- WHERE relname = ANY(ARRAY['user_profiles','clients','projects','tasks','time_entries',
 --   'report_presets','client_rates','currency_rates','charge_documents',
---   'charge_document_lines','push_subscriptions','trial_emails_sent','custom_tags','audit_events'])
+--   'charge_document_lines','charge_document_payments','push_subscriptions','trial_emails_sent','custom_tags','audit_events'])
 -- ORDER BY relname;  -- expect all t/t. See scripts/check-rls.mjs.
