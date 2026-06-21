@@ -1924,6 +1924,7 @@
       "save": "שמור",
       "saving": "שומר…",
       "edit": "ערוך",
+      "delete": "מחק",
       "working": "מבצע…"
     },
     "columns": {
@@ -2161,7 +2162,42 @@
       "resend": "שלח שוב",
       "sendNoEmail": "ללקוח אין כתובת מייל. הוסף כתובת בפרטי הלקוח כדי לשלוח.",
       "sendError": "שליחת המסמך נכשלה. נסה שוב.",
-      "sendSuccess": "המסמך נשלח ללקוח"
+      "sendSuccess": "המסמך נשלח ללקוח",
+      "discount": "הנחה",
+      "discountLabel": "הנחה",
+      "discountType": "סוג הנחה",
+      "discountValue": "ערך הנחה",
+      "discountNone": "ללא הנחה",
+      "discountPercent": "אחוז",
+      "discountAmount": "סכום"
+    },
+    "payments": {
+      "title": "תשלומים",
+      "outstanding": "נותר לתשלום",
+      "markFullyPaid": "סמן כשולם במלואו",
+      "amount": "סכום",
+      "date": "תאריך",
+      "methodLabel": "אמצעי תשלום",
+      "methodNone": "ללא",
+      "note": "הערה",
+      "add": "הוסף תשלום",
+      "saveEdit": "שמור שינוי",
+      "cancelEdit": "ביטול",
+      "empty": "טרם נרשמו תשלומים",
+      "loadError": "שגיאה בטעינת התשלומים",
+      "invalidAmount": "יש להזין סכום תקין גדול מ-0",
+      "saveFailed": "שמירת התשלום נכשלה",
+      "saved": "התשלום נשמר",
+      "deleteFailed": "מחיקת התשלום נכשלה",
+      "deleted": "התשלום נמחק",
+      "method": {
+        "bank_transfer": "העברה בנקאית",
+        "bit": "ביט",
+        "cash": "מזומן",
+        "check": "צ׳ק",
+        "credit": "כרטיס אשראי",
+        "other": "אחר"
+      }
     }
   },
   "Trial": {

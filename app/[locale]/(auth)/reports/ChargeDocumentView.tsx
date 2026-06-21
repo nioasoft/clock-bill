@@ -7,8 +7,8 @@ import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { formatDate } from "@/lib/format";
 import { formatCurrency } from "@/lib/currency";
 import { resolveDocumentLocale, type DocumentLanguage } from "@/lib/document-language";
-import { lineQtyRate, summarizeLines, type SummaryMode, type SummaryLine } from "@/lib/charge-documents";
-import { computeVatBreakdown } from "@/lib/vat";
+import { lineQtyRate, summarizeLines, documentMoney, type SummaryMode, type SummaryLine } from "@/lib/charge-documents";
+import { ChargePaymentsPanel } from "./ChargePaymentsPanel";
 import { useDocumentMessages } from "@/lib/document-messages";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -65,6 +65,10 @@ interface ChargeDocument {
   sent_to_email: string | null;
   /** The client's current email address (used as the send recipient suggestion). */
   client_email: string | null;
+  /** Document-level discount type ('percent' | 'amount'), or null when none. */
+  discount_type: string | null;
+  /** Document-level discount value (percentage or absolute), or null when none. */
+  discount_value: number | null;
 }
 
 /** Business-profile fields needed for the PDF header + template/colors. */
@@ -460,9 +464,15 @@ export default function ChargeDocumentView({
 
   const status = STATUS_META[doc.status as ChargeDocStatus] ?? STATUS_META.pending;
 
-  // VAT breakdown derived from the snapshotted rate (null = no VAT applied).
-  const vat = computeVatBreakdown(doc.total, doc.vat_rate_snapshot);
+  // Full money breakdown: net subtotal → discount → discounted net → VAT → gross.
+  const money = documentMoney({
+    total: doc.total,
+    discountType: (doc.discount_type as "percent" | "amount" | null) ?? null,
+    discountValue: doc.discount_value ?? null,
+    vatRate: doc.vat_rate_snapshot,
+  });
   const hasVat = doc.vat_rate_snapshot != null && doc.vat_rate_snapshot > 0;
+  const hasDiscount = money.discountAmount > 0;
 
   // Optional summary groups (mirrors the printed PDF).
   const summaryMode =
@@ -497,7 +507,7 @@ export default function ChargeDocumentView({
         <div className="text-end">
           <div className="text-xs text-muted-foreground">{hasVat ? t("doc.totalDue") : t("doc.total")}</div>
           <div className="font-mono text-2xl font-bold tabular-nums text-foreground">
-            {formatCurrency(vat.total, doc.currency, locale)}
+            {formatCurrency(money.gross, doc.currency, locale)}
           </div>
           <div className="text-xs text-muted-foreground">
             {hasVat
@@ -684,34 +694,54 @@ export default function ChargeDocumentView({
         </table>
       </div>
 
-      {/* ── Totals breakdown (only when VAT applies) ── */}
-      {hasVat && (
+      {/* ── Totals breakdown (when VAT or discount applies) ── */}
+      {(hasVat || hasDiscount) && (
         <div className="flex justify-end">
           <table className="text-sm">
             <tbody>
               <tr>
                 <td className="px-3 py-1 text-end text-muted-foreground">{t("doc.subtotal")}</td>
                 <td className="px-3 py-1 text-start font-mono tabular-nums text-foreground">
-                  {formatCurrency(vat.subtotal, doc.currency, locale)}
+                  {formatCurrency(money.netSubtotal, doc.currency, locale)}
                 </td>
               </tr>
-              <tr>
-                <td className="px-3 py-1 text-end text-muted-foreground">
-                  {t("doc.vat", { rate: Number((doc.vat_rate_snapshot as number).toFixed(2)) })}
-                </td>
-                <td className="px-3 py-1 text-start font-mono tabular-nums text-foreground">
-                  {formatCurrency(vat.vatAmount, doc.currency, locale)}
-                </td>
-              </tr>
+              {hasDiscount && (
+                <tr>
+                  <td className="px-3 py-1 text-end text-muted-foreground">{t("doc.discount")}</td>
+                  <td className="px-3 py-1 text-start font-mono tabular-nums text-foreground">
+                    −{formatCurrency(money.discountAmount, doc.currency, locale)}
+                  </td>
+                </tr>
+              )}
+              {hasVat && (
+                <tr>
+                  <td className="px-3 py-1 text-end text-muted-foreground">
+                    {t("doc.vat", { rate: Number((doc.vat_rate_snapshot as number).toFixed(2)) })}
+                  </td>
+                  <td className="px-3 py-1 text-start font-mono tabular-nums text-foreground">
+                    {formatCurrency(money.vatAmount, doc.currency, locale)}
+                  </td>
+                </tr>
+              )}
               <tr className="border-t border-border">
                 <td className="px-3 py-1.5 text-end font-semibold text-foreground">{t("doc.totalDue")}</td>
                 <td className="px-3 py-1.5 text-start font-mono font-bold tabular-nums text-foreground">
-                  {formatCurrency(vat.total, doc.currency, locale)}
+                  {formatCurrency(money.gross, doc.currency, locale)}
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* ── Payments panel (all non-canceled documents) ── */}
+      {!isCanceled && (
+        <ChargePaymentsPanel
+          documentId={documentId}
+          currency={doc.currency}
+          locale={locale as "he" | "en"}
+          onChanged={() => { refetch(); onChanged?.(); }}
+        />
       )}
 
       {/* ── Document notes ── */}
@@ -823,6 +853,43 @@ export default function ChargeDocumentView({
         </div>
       )}
 
+      {/* ── Discount editor (pending or partial documents) ── */}
+      {(isPending || doc.status === "partial") && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm text-muted-foreground">{t("doc.discountLabel")}</span>
+          <select
+            aria-label={t("doc.discountType")}
+            value={doc.discount_type ?? ""}
+            onChange={(e) => {
+              const type = e.target.value as "percent" | "amount" | "";
+              if (!type) void patchDocument({ discount: null });
+              else void patchDocument({ discount: { type, value: doc.discount_value ?? 0 } });
+            }}
+            className="rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">{t("doc.discountNone")}</option>
+            <option value="percent">{t("doc.discountPercent")}</option>
+            <option value="amount">{t("doc.discountAmount")}</option>
+          </select>
+          {doc.discount_type && (
+            <input
+              inputMode="decimal"
+              defaultValue={doc.discount_value ?? 0}
+              aria-label={t("doc.discountValue")}
+              onBlur={(e) =>
+                void patchDocument({
+                  discount: {
+                    type: doc.discount_type as "percent" | "amount",
+                    value: Number(e.target.value) || 0,
+                  },
+                })
+              }
+              className="w-24 rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          )}
+        </div>
+      )}
+
       {/* ── Actions ── */}
       <div className="flex flex-wrap gap-3 border-t border-border pt-4">
         <Button
@@ -852,57 +919,21 @@ export default function ChargeDocumentView({
         )}
 
         {isPending && (
-          <>
-            <Button
-              onClick={() =>
-                setConfirm({
-                  title: t("doc.markPaidTitle"),
-                  description: t("doc.markPaidBody"),
-                  actionLabel: t("doc.markPaidAction"),
-                  destructive: false,
-                  run: () => postAction("pay", t("doc.markedPaid"), false),
-                })
-              }
-              disabled={actionBusy}
-              className="min-h-[44px]"
-            >
-              {t("doc.markPaidAction")}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() =>
-                setConfirm({
-                  title: t("doc.cancelDocTitle"),
-                  description: t("doc.cancelDocBody"),
-                  actionLabel: t("doc.cancelDocAction"),
-                  destructive: true,
-                  run: () => postAction("cancel", t("doc.docCanceled"), true),
-                })
-              }
-              disabled={actionBusy}
-              className="min-h-[44px]"
-            >
-              {t("doc.cancelDocAction")}
-            </Button>
-          </>
-        )}
-
-        {isPaid && (
           <Button
-            variant="outline"
+            variant="destructive"
             onClick={() =>
               setConfirm({
-                title: t("doc.unpayTitle"),
-                description: t("doc.unpayBody"),
-                actionLabel: t("doc.unpayAction"),
-                destructive: false,
-                run: () => postAction("unpay", t("doc.unpaid"), false),
+                title: t("doc.cancelDocTitle"),
+                description: t("doc.cancelDocBody"),
+                actionLabel: t("doc.cancelDocAction"),
+                destructive: true,
+                run: () => postAction("cancel", t("doc.docCanceled"), true),
               })
             }
             disabled={actionBusy}
             className="min-h-[44px]"
           >
-            {t("doc.unpayAction")}
+            {t("doc.cancelDocAction")}
           </Button>
         )}
 

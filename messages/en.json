@@ -1924,6 +1924,7 @@
       "save": "Save",
       "saving": "Saving…",
       "edit": "Edit",
+      "delete": "Delete",
       "working": "Working…"
     },
     "columns": {
@@ -2161,7 +2162,42 @@
       "resend": "Send again",
       "sendNoEmail": "This client has no email address. Add one in the client details to send.",
       "sendError": "Sending the document failed. Please try again.",
-      "sendSuccess": "The document was sent to the client"
+      "sendSuccess": "The document was sent to the client",
+      "discount": "Discount",
+      "discountLabel": "Discount",
+      "discountType": "Discount type",
+      "discountValue": "Discount value",
+      "discountNone": "No discount",
+      "discountPercent": "Percent",
+      "discountAmount": "Amount"
+    },
+    "payments": {
+      "title": "Payments",
+      "outstanding": "Outstanding",
+      "markFullyPaid": "Mark as fully paid",
+      "amount": "Amount",
+      "date": "Date",
+      "methodLabel": "Payment method",
+      "methodNone": "None",
+      "note": "Note",
+      "add": "Add payment",
+      "saveEdit": "Save change",
+      "cancelEdit": "Cancel",
+      "empty": "No payments recorded yet",
+      "loadError": "Error loading payments",
+      "invalidAmount": "Please enter a valid amount greater than 0",
+      "saveFailed": "Failed to save payment",
+      "saved": "Payment saved",
+      "deleteFailed": "Failed to delete payment",
+      "deleted": "Payment deleted",
+      "method": {
+        "bank_transfer": "Bank transfer",
+        "bit": "Bit",
+        "cash": "Cash",
+        "check": "Check",
+        "credit": "Credit card",
+        "other": "Other"
+      }
     }
   },
   "Trial": {
