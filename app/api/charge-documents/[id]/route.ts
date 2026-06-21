@@ -7,6 +7,7 @@ import { parseBody } from "@/lib/api-validation";
 import { patchChargeDocumentSchema } from "@/lib/schemas/charge-documents";
 import { buildLineFromEntry, computeDocumentTotal, type BillableEntry } from "@/lib/charge-documents";
 import { resolveRounding } from "@/lib/rounding";
+import { recomputeChargeStatus } from "@/lib/charge-documents-server";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -47,7 +48,7 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
     const { id } = await ctx.params;
     const parsed = await parseBody(request, patchChargeDocumentSchema);
     if (!parsed.ok) return parsed.response;
-    const { notes, editLine, removeLineId, addTimeEntryId, summaryMode } = parsed.data;
+    const { notes, editLine, removeLineId, addTimeEntryId, summaryMode, discount } = parsed.data;
     const { withTransaction } = await import("@/lib/db");
 
     const total = await withTransaction(async (client: PoolClient) => {
@@ -56,7 +57,8 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
         [id, user.id]
       );
       if (doc.rowCount === 0) throw new Error("NOT_FOUND");
-      if (doc.rows[0].status !== "pending") throw new Error("LOCKED");
+      const docStatus: string = doc.rows[0].status;
+      if (docStatus !== "pending" && docStatus !== "partial") throw new Error("LOCKED");
       const clientId: string = doc.rows[0].client_id;
 
       if (typeof notes !== "undefined") {
@@ -65,6 +67,14 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
 
       if (typeof summaryMode !== "undefined") {
         await client.query(`UPDATE charge_documents SET summary_mode = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3`, [summaryMode, id, user.id]);
+      }
+
+      if (typeof discount !== "undefined") {
+        await client.query(
+          `UPDATE charge_documents SET discount_type = $1, discount_value = $2, updated_at = NOW()
+            WHERE id = $3 AND user_id = $4`,
+          [discount?.type ?? null, discount?.value ?? null, id, user.id]
+        );
       }
 
       if (editLine) {
@@ -136,6 +146,7 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
       const sum = await client.query(`SELECT amount FROM charge_document_lines WHERE document_id = $1 AND user_id = $2`, [id, user.id]);
       const total = computeDocumentTotal(sum.rows as Array<{ amount: number | null }>);
       await client.query(`UPDATE charge_documents SET total = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3`, [total, id, user.id]);
+      await recomputeChargeStatus(client, id, user.id);
       return total;
     });
 

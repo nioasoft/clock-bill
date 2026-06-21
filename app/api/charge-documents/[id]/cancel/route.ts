@@ -22,6 +22,12 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
       if (doc.rowCount === 0) throw new Error("NOT_FOUND");
       if (doc.rows[0].status !== "pending") throw new Error("BAD_STATE");
 
+      const pay = await client.query(
+        `SELECT 1 FROM charge_document_payments WHERE document_id = $1 AND user_id = $2 LIMIT 1`,
+        [id, user.id]
+      );
+      if (pay.rowCount && pay.rowCount > 0) throw new Error("HAS_PAYMENTS");
+
       await client.query(
         `UPDATE time_entries SET charge_document_id = NULL WHERE charge_document_id = $1 AND user_id = $2`,
         [id, user.id]
@@ -45,6 +51,7 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
     const msg = error instanceof Error ? error.message : "";
     if (msg === "NOT_FOUND") return NextResponse.json({ success: false, error_code: "DOCUMENT_NOT_FOUND", message: "תעודה לא נמצאה" }, { status: 404 });
     if (msg === "BAD_STATE") return NextResponse.json({ success: false, error_code: "CANCEL_REQUIRES_PENDING", message: "ניתן לבטל רק תעודה ממתינה" }, { status: 409 });
+    if (msg === "HAS_PAYMENTS") return NextResponse.json({ success: false, error_code: "CANCEL_HAS_PAYMENTS", message: "לא ניתן לבטל תעודה עם תשלומים רשומים — מחק קודם את התשלומים" }, { status: 409 });
     logger.error("POST cancel failed:", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בביטול תעודה" }, { status: 500 });
   }
