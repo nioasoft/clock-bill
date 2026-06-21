@@ -23,6 +23,7 @@ interface LoadResult {
   accentColor: string;
   primaryText: "light" | "dark";
   locale: "he" | "en";
+  paidSum: number;
 }
 
 /** Token-scoped public read via the privileged connection (RLS bypass). */
@@ -30,6 +31,7 @@ async function loadByToken(token: string): Promise<LoadResult | null> {
   const docRes = await adminQuery(
     `SELECT d.doc_number, d.status, d.currency, d.total, d.notes, d.issued_at,
             d.vat_rate_snapshot, d.summary_mode, d.pdf_template, d.document_language,
+            d.discount_type, d.discount_value,
             c.name AS client_name, c.document_language AS client_doc_language,
             d.user_id
        FROM charge_documents d
@@ -68,6 +70,8 @@ async function loadByToken(token: string): Promise<LoadResult | null> {
     issued_at: (d.issued_at ? new Date(d.issued_at as string).toISOString() : ""),
     client_name: d.client_name as string,
     vat_rate_snapshot: (d.vat_rate_snapshot as number | null) ?? null,
+    discount_type: (d.discount_type as "percent" | "amount" | null) ?? null,
+    discount_value: (d.discount_value as number | null) ?? null,
     summary_mode: (d.summary_mode as string | null) ?? null,
   };
 
@@ -90,6 +94,14 @@ async function loadByToken(token: string): Promise<LoadResult | null> {
   const setting = (d.document_language as "he" | "en" | null) ?? (d.client_doc_language as "he" | "en" | null);
   const locale: "he" | "en" = setting ?? (doc.currency === "ILS" ? "he" : "en");
 
+  const payRes = await adminQuery(
+    `SELECT COALESCE(SUM(amount), 0) AS paid_sum
+       FROM charge_document_payments
+      WHERE document_id = (SELECT id FROM charge_documents WHERE public_token = $1)`,
+    [token]
+  );
+  const paidSum = Number(payRes.rows[0]?.paid_sum ?? 0);
+
   return {
     doc,
     lines: linesRes.rows as unknown as PdfDocumentLine[],
@@ -99,6 +111,7 @@ async function loadByToken(token: string): Promise<LoadResult | null> {
     accentColor: (p.pdf_accent_color as string) || "#347B52",
     primaryText: p.pdf_primary_text === "dark" ? "dark" : "light",
     locale,
+    paidSum,
   };
 }
 

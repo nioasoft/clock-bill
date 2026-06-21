@@ -283,6 +283,11 @@
       "createDocument": "Create charge document",
       "error": "Failed to load settlements"
     },
+    "openForCollection": {
+      "title": "Open for collection",
+      "viewAll": "View all",
+      "error": "Failed to load open balances"
+    },
     "earningsChart": {
       "title": "Monthly earnings",
       "loading": "Loading data…",
@@ -1912,6 +1917,7 @@
     },
     "status": {
       "pending": "Pending",
+      "partial": "Partially paid",
       "paid": "Paid",
       "canceled": "Canceled"
     },
@@ -1923,6 +1929,7 @@
       "save": "Save",
       "saving": "Saving…",
       "edit": "Edit",
+      "delete": "Delete",
       "working": "Working…"
     },
     "columns": {
@@ -2078,6 +2085,7 @@
       "docNumber": "Document #{number}"
     },
     "doc": {
+      "outstandingShort": "{amount} left",
       "loadErrorTitle": "We couldn't load the document",
       "loadErrorBody": "It may have been deleted, or a problem occurred.",
       "issuedOn": "Issued: {date}",
@@ -2109,18 +2117,10 @@
       "deleteFailed": "Delete failed",
       "deleted": "Document deleted",
       "exportPdf": "Export PDF",
-      "markPaidTitle": "Mark as paid",
-      "markPaidBody": "Mark this document as paid? It will be locked for editing until you cancel the payment.",
-      "markPaidAction": "Mark as paid",
-      "markedPaid": "Marked as paid",
       "cancelDocTitle": "Cancel document",
       "cancelDocBody": "Cancel this document? This action is irreversible. Items that originated from time entries will return to the billable items list.",
       "cancelDocAction": "Cancel document",
       "docCanceled": "Document canceled",
-      "unpayTitle": "Cancel payment",
-      "unpayBody": "Cancel the payment mark and reopen the document for editing?",
-      "unpayAction": "Cancel payment",
-      "unpaid": "Payment canceled",
       "deleteDocTitle": "Delete document",
       "deleteDocBody": "Permanently delete this canceled document? It cannot be restored.",
       "deleteDocAction": "Delete document",
@@ -2159,7 +2159,42 @@
       "resend": "Send again",
       "sendNoEmail": "This client has no email address. Add one in the client details to send.",
       "sendError": "Sending the document failed. Please try again.",
-      "sendSuccess": "The document was sent to the client"
+      "sendSuccess": "The document was sent to the client",
+      "discount": "Discount",
+      "discountLabel": "Discount",
+      "discountType": "Discount type",
+      "discountValue": "Discount value",
+      "discountNone": "No discount",
+      "discountPercent": "Percent",
+      "discountAmount": "Amount"
+    },
+    "payments": {
+      "title": "Payments",
+      "outstanding": "Outstanding",
+      "markFullyPaid": "Mark as fully paid",
+      "amount": "Amount",
+      "date": "Date",
+      "methodLabel": "Payment method",
+      "methodNone": "None",
+      "note": "Note",
+      "add": "Add payment",
+      "saveEdit": "Save change",
+      "cancelEdit": "Cancel",
+      "empty": "No payments recorded yet",
+      "loadError": "Error loading payments",
+      "invalidAmount": "Please enter a valid amount greater than 0",
+      "saveFailed": "Failed to save payment",
+      "saved": "Payment saved",
+      "deleteFailed": "Failed to delete payment",
+      "deleted": "Payment deleted",
+      "method": {
+        "bank_transfer": "Bank transfer",
+        "bit": "Bit",
+        "cash": "Cash",
+        "check": "Check",
+        "credit": "Credit card",
+        "other": "Other"
+      }
     }
   },
   "Trial": {

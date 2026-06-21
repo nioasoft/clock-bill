@@ -283,6 +283,11 @@
       "createDocument": "צור התחשבנות",
       "error": "שגיאה בטעינת ההתחשבנויות"
     },
+    "openForCollection": {
+      "title": "פתוח לגבייה",
+      "viewAll": "לכל ההתחשבנויות",
+      "error": "שגיאה בטעינת פתוח לגבייה"
+    },
     "earningsChart": {
       "title": "הכנסות חודשיות",
       "loading": "טוען נתונים...",
@@ -1912,6 +1917,7 @@
     },
     "status": {
       "pending": "ממתין",
+      "partial": "שולם חלקית",
       "paid": "שולם",
       "canceled": "בוטל"
     },
@@ -1923,6 +1929,7 @@
       "save": "שמור",
       "saving": "שומר…",
       "edit": "ערוך",
+      "delete": "מחק",
       "working": "מבצע…"
     },
     "columns": {
@@ -2078,6 +2085,7 @@
       "docNumber": "תעודה #{number}"
     },
     "doc": {
+      "outstandingShort": "נותר {amount}",
       "loadErrorTitle": "לא הצלחנו לטעון את התעודה",
       "loadErrorBody": "ייתכן שהיא נמחקה או שאירעה תקלה.",
       "issuedOn": "הופקה: {date}",
@@ -2109,18 +2117,10 @@
       "deleteFailed": "מחיקה נכשלה",
       "deleted": "התעודה נמחקה",
       "exportPdf": "ייצוא PDF",
-      "markPaidTitle": "סימון כשולם",
-      "markPaidBody": "לסמן את התעודה כשולמה? היא תינעל לעריכה עד שתבטל את התשלום.",
-      "markPaidAction": "סמן כשולם",
-      "markedPaid": "סומן כשולם",
       "cancelDocTitle": "ביטול תעודה",
       "cancelDocBody": "לבטל את התעודה? הפעולה אינה הפיכה. הפריטים שמקורם ברישום זמן יחזרו לרשימת הפריטים לחיוב.",
       "cancelDocAction": "בטל תעודה",
       "docCanceled": "התעודה בוטלה",
-      "unpayTitle": "ביטול תשלום",
-      "unpayBody": "לבטל את סימון התשלום ולפתוח את התעודה לעריכה מחדש?",
-      "unpayAction": "בטל תשלום",
-      "unpaid": "התשלום בוטל",
       "deleteDocTitle": "מחיקת תעודה",
       "deleteDocBody": "למחוק לצמיתות את התעודה המבוטלת? לא ניתן לשחזר.",
       "deleteDocAction": "מחק תעודה",
@@ -2159,7 +2159,42 @@
       "resend": "שלח שוב",
       "sendNoEmail": "ללקוח אין כתובת מייל. הוסף כתובת בפרטי הלקוח כדי לשלוח.",
       "sendError": "שליחת המסמך נכשלה. נסה שוב.",
-      "sendSuccess": "המסמך נשלח ללקוח"
+      "sendSuccess": "המסמך נשלח ללקוח",
+      "discount": "הנחה",
+      "discountLabel": "הנחה",
+      "discountType": "סוג הנחה",
+      "discountValue": "ערך הנחה",
+      "discountNone": "ללא הנחה",
+      "discountPercent": "אחוז",
+      "discountAmount": "סכום"
+    },
+    "payments": {
+      "title": "תשלומים",
+      "outstanding": "נותר לתשלום",
+      "markFullyPaid": "סמן כשולם במלואו",
+      "amount": "סכום",
+      "date": "תאריך",
+      "methodLabel": "אמצעי תשלום",
+      "methodNone": "ללא",
+      "note": "הערה",
+      "add": "הוסף תשלום",
+      "saveEdit": "שמור שינוי",
+      "cancelEdit": "ביטול",
+      "empty": "טרם נרשמו תשלומים",
+      "loadError": "שגיאה בטעינת התשלומים",
+      "invalidAmount": "יש להזין סכום תקין גדול מ-0",
+      "saveFailed": "שמירת התשלום נכשלה",
+      "saved": "התשלום נשמר",
+      "deleteFailed": "מחיקת התשלום נכשלה",
+      "deleted": "התשלום נמחק",
+      "method": {
+        "bank_transfer": "העברה בנקאית",
+        "bit": "ביט",
+        "cash": "מזומן",
+        "check": "צ׳ק",
+        "credit": "כרטיס אשראי",
+        "other": "אחר"
+      }
     }
   },
   "Trial": {

@@ -1,5 +1,5 @@
 /** Translation key + token classes per charge-document status. Shared by the documents tab and the document view. */
-export type ChargeDocStatus = "pending" | "paid" | "canceled";
+export type ChargeDocStatus = "pending" | "partial" | "paid" | "canceled";
 /**
  * `labelKey` is a `Reports` namespace key resolved at the call site via
  * `useTranslations("Reports")` (this is a plain module, so it can't call hooks).
@@ -14,6 +14,11 @@ export const STATUS_META: Record<
     labelKey: "status.pending",
     badge: "bg-primary/15 text-primary border-primary/30",
     accent: "border-s-primary",
+  },
+  partial: {
+    labelKey: "status.partial",
+    badge: "bg-warning/15 text-warning border-warning/30",
+    accent: "border-s-warning",
   },
   paid: {
     labelKey: "status.paid",

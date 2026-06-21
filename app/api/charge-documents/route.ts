@@ -3,7 +3,7 @@ import type { PoolClient } from "pg";
 import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
 import { createChargeDocumentSchema } from "@/lib/schemas/charge-documents";
-import { buildLineFromEntry, computeDocumentTotal, type BillableEntry, type ChargeLineDraft } from "@/lib/charge-documents";
+import { buildLineFromEntry, computeDocumentTotal, documentMoney, outstanding, type BillableEntry, type ChargeLineDraft } from "@/lib/charge-documents";
 import { resolveRounding } from "@/lib/rounding";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { createLogger } from "@/lib/logger";
@@ -29,7 +29,10 @@ export async function GET(request: NextRequest) {
 
     const rows = await query(
       `SELECT d.id, d.doc_number, d.status, d.currency, d.total, d.issued_at, d.paid_at,
-              d.canceled_at, c.name AS client_name
+              d.canceled_at, c.name AS client_name,
+              d.vat_rate_snapshot, d.discount_type, d.discount_value,
+              COALESCE((SELECT SUM(amount) FROM charge_document_payments p
+                         WHERE p.document_id = d.id AND p.user_id = d.user_id), 0) AS paid_sum
          FROM charge_documents d
          JOIN clients c ON d.client_id = c.id
         WHERE ${where}
@@ -37,7 +40,20 @@ export async function GET(request: NextRequest) {
         LIMIT 5000`,
       params
     );
-    return NextResponse.json({ success: true, data: rows.rows });
+    const data = rows.rows.map((r) => {
+      const row = r as {
+        total: number | null; discount_type: "percent" | "amount" | null;
+        discount_value: number | null; vat_rate_snapshot: number | null; paid_sum: number;
+      };
+      const { gross } = documentMoney({
+        total: row.total ?? 0,
+        discountType: row.discount_type,
+        discountValue: row.discount_value,
+        vatRate: row.vat_rate_snapshot,
+      });
+      return { ...r, gross, outstanding: outstanding(gross, Number(row.paid_sum)) };
+    });
+    return NextResponse.json({ success: true, data });
   } catch (error) {
     logger.error("GET /api/charge-documents failed", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בטעינת תעודות" }, { status: 500 });

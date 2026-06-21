@@ -552,6 +552,10 @@ export const chargeDocuments = pgTable(
     // Optional summary block at the top of the document: NULL = none,
     // 'project' = group by project, 'type' = group by work type (line label).
     summaryMode: text("summary_mode"),
+    // Document-level discount, applied to the net subtotal before VAT.
+    // discountType: 'percent' | 'amount' | NULL (no discount).
+    discountType: text("discount_type"),
+    discountValue: real("discount_value"),
     // Public share: unguessable token backing the no-login client view at
     // /[locale]/doc/[token]. NULL until the document is first sent; regenerated
     // to revoke an old link. See spec 2026-06-21-charge-document-email.
@@ -573,7 +577,15 @@ export const chargeDocuments = pgTable(
     check("charge_documents_total_check", sql`${table.total} IS NULL OR ${table.total} >= 0`),
     check(
       "charge_documents_status_check",
-      sql`${table.status} IN ('pending', 'paid', 'canceled')`
+      sql`${table.status} IN ('pending', 'partial', 'paid', 'canceled')`
+    ),
+    check(
+      "charge_documents_discount_type_check",
+      sql`${table.discountType} IS NULL OR ${table.discountType} IN ('percent', 'amount')`
+    ),
+    check(
+      "charge_documents_discount_value_check",
+      sql`${table.discountValue} IS NULL OR (${table.discountValue} >= 0 AND (${table.discountType} <> 'percent' OR ${table.discountValue} <= 100))`
     ),
     check(
       "charge_documents_document_language_check",
@@ -639,6 +651,32 @@ export const chargeDocumentLines = pgTable(
     check(
       "charge_document_lines_period_month_check",
       sql`${table.periodMonth} IS NULL OR ${table.periodMonth} ~ '^\\d{4}-\\d{2}$'`
+    ),
+  ]
+);
+
+export const chargeDocumentPayments = pgTable(
+  "charge_document_payments",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => chargeDocuments.id, { onDelete: "cascade" }),
+    amount: real("amount").notNull(),
+    paidAt: date("paid_at").notNull(),
+    method: text("method"),
+    note: text("note"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_charge_document_payments_user_id").on(table.userId),
+    index("idx_charge_document_payments_document_id").on(table.documentId),
+    check("charge_document_payments_amount_check", sql`${table.amount} > 0`),
+    check(
+      "charge_document_payments_method_check",
+      sql`${table.method} IS NULL OR ${table.method} IN ('bank_transfer', 'bit', 'cash', 'check', 'credit', 'other')`
     ),
   ]
 );
