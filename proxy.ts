@@ -34,6 +34,7 @@ const publicRoutes = [
   "/contact",
   "/pricing",
   "/monitoring",
+  "/doc", // public charge-document share links (/doc/[token]) — no login required
 ];
 
 /**

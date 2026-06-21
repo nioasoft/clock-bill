@@ -52,8 +52,9 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
       `SELECT business_name, email FROM user_profiles WHERE user_id = $1`,
       [user.id]
     );
-    const businessName: string = profRes.rows[0]?.business_name || user.email;
-    const replyTo = resolveReplyTo(profRes.rows[0]?.email, user.email);
+    const prof = profRes.rows[0] as { business_name?: string; email?: string } | undefined;
+    const businessName: string = prof?.business_name || user.email;
+    const replyTo = resolveReplyTo(prof?.email, user.email);
 
     // Resolve the document's language (snapshot → else client setting → else by currency).
     const docLocale = resolveDocumentLocale(
