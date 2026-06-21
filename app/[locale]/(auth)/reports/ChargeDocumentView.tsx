@@ -181,6 +181,7 @@ export default function ChargeDocumentView({
   // Send-to-client state.
   const [sending, setSending] = useState(false);
   const [sendConfirmOpen, setSendConfirmOpen] = useState(false);
+  const [noEmailNotice, setNoEmailNotice] = useState(false);
 
   // Post-issue PDF prompt: show a one-time "create PDF now?" dialog after the
   // document first loads. The ref guards against re-showing on later refetches.
@@ -375,17 +376,20 @@ export default function ChargeDocumentView({
       const res = await fetch(`/api/charge-documents/${documentId}/send`, { method: "POST" });
       const json = await res.json();
       if (!res.ok || !json.success) {
+        setSendConfirmOpen(false);
         if (json.error_code === "CLIENT_HAS_NO_EMAIL") {
-          showErrorToast(t("doc.sendNoEmail"));
+          setNoEmailNotice(true);
         } else {
           showErrorToast(json.message || t("doc.sendError"));
         }
         return;
       }
+      setNoEmailNotice(false);
       showSuccessToast(t("doc.sendSuccess"));
       setSendConfirmOpen(false);
       refetch();
     } catch {
+      setSendConfirmOpen(false);
       showErrorToast(t("doc.sendError"));
     } finally {
       setSending(false);
@@ -839,6 +843,12 @@ export default function ChargeDocumentView({
           >
             {sending ? "…" : doc.last_sent_at ? t("doc.resend") : t("doc.sendToClient")}
           </Button>
+        )}
+
+        {noEmailNotice && (
+          <p className="w-full text-sm text-destructive">
+            {t("doc.sendNoEmail")}
+          </p>
         )}
 
         {isPending && (
