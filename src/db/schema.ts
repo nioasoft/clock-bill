@@ -243,6 +243,13 @@ export const clients = pgTable(
     // business setting; 'add' = always charge VAT; 'exempt' = never (e.g. a
     // foreign/export client billed net). Resolved via lib/vat.ts.
     vatMode: text("vat_mode"),
+    // Monthly settlement reminder: day-of-month (1-31) the freelancer settles
+    // this client. NULL = reminders off. Effective day clamps to month length
+    // (store 31 = "end of month"). See spec 2026-06-21-settlement-reminders.
+    settlementBillingDay: integer("settlement_billing_day"),
+    // Date the once-per-cycle push+email was last sent for this client (guards
+    // against re-firing within the same cycle). NULL = never reminded.
+    settlementRemindedAt: date("settlement_reminded_at"),
     isRetainer: boolean("is_retainer").default(false),
     retainerHours: real("retainer_hours"),
     retainerMonthlyFee: real("retainer_monthly_fee"),
@@ -272,6 +279,10 @@ export const clients = pgTable(
     check(
       "clients_vat_mode_check",
       sql`${table.vatMode} IS NULL OR ${table.vatMode} IN ('add', 'exempt')`
+    ),
+    check(
+      "clients_settlement_billing_day_check",
+      sql`${table.settlementBillingDay} IS NULL OR (${table.settlementBillingDay} >= 1 AND ${table.settlementBillingDay} <= 31)`
     ),
   ]
 );
