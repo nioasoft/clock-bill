@@ -30,6 +30,7 @@ async function loadByToken(token: string): Promise<LoadResult | null> {
   const docRes = await adminQuery(
     `SELECT d.doc_number, d.status, d.currency, d.total, d.notes, d.issued_at,
             d.vat_rate_snapshot, d.summary_mode, d.pdf_template, d.document_language,
+            d.discount_type, d.discount_value,
             c.name AS client_name, c.document_language AS client_doc_language,
             d.user_id
        FROM charge_documents d
@@ -68,6 +69,8 @@ async function loadByToken(token: string): Promise<LoadResult | null> {
     issued_at: (d.issued_at ? new Date(d.issued_at as string).toISOString() : ""),
     client_name: d.client_name as string,
     vat_rate_snapshot: (d.vat_rate_snapshot as number | null) ?? null,
+    discount_type: (d.discount_type as "percent" | "amount" | null) ?? null,
+    discount_value: (d.discount_value as number | null) ?? null,
     summary_mode: (d.summary_mode as string | null) ?? null,
   };
 

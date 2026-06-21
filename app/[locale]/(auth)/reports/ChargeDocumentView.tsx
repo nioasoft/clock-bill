@@ -1049,7 +1049,14 @@ export default function ChargeDocumentView({
           runs (same 3-layer guard as the ad-hoc report). */}
       {docMessages && (
         <NextIntlClientProvider locale={docLocale} messages={docMessages}>
-          <PdfChargeDocument doc={doc} lines={lines} profile={profile} />
+          <PdfChargeDocument
+            doc={{
+              ...doc,
+              discount_type: doc.discount_type as "percent" | "amount" | null,
+            }}
+            lines={lines}
+            profile={profile}
+          />
         </NextIntlClientProvider>
       )}
     </div>

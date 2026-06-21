@@ -6,10 +6,10 @@ import { formatCurrency as formatCurrencyLib } from "@/lib/currency";
 import {
   lineQtyRate,
   summarizeLines,
+  documentMoney,
   type SummaryMode,
   type SummaryLine,
 } from "@/lib/charge-documents";
-import { computeVatBreakdown } from "@/lib/vat";
 import { STATUS_META, type ChargeDocStatus } from "./statusMeta";
 
 /** One billed line on a charge document (printed PDF). */
@@ -41,6 +41,9 @@ export interface PdfChargeDocument {
   client_name: string;
   /** VAT rate (%) snapshot, or null when no VAT applies. */
   vat_rate_snapshot: number | null;
+  /** Document-level discount snapshot. */
+  discount_type: "percent" | "amount" | null;
+  discount_value: number | null;
   /** Optional summary grouping: 'project' | 'type' | null. */
   summary_mode: string | null;
 }
@@ -97,9 +100,15 @@ export function PdfChargeDocument({ doc, lines, profile }: PdfChargeDocumentProp
 
   const status = STATUS_META[doc.status as ChargeDocStatus] ?? STATUS_META.pending;
 
-  // VAT breakdown derived from the snapshotted rate (null = no VAT).
-  const vat = computeVatBreakdown(doc.total, doc.vat_rate_snapshot);
+  // Money breakdown: subtotal → discount → VAT → gross.
+  const money = documentMoney({
+    total: doc.total,
+    discountType: doc.discount_type,
+    discountValue: doc.discount_value,
+    vatRate: doc.vat_rate_snapshot,
+  });
   const hasVat = doc.vat_rate_snapshot != null && doc.vat_rate_snapshot > 0;
+  const hasDiscount = money.discountAmount > 0;
 
   // Optional summary groups.
   const summaryMode =
@@ -248,19 +257,31 @@ export function PdfChargeDocument({ doc, lines, profile }: PdfChargeDocumentProp
               <>
                 <tr className="pdf-totals-row">
                   <td className="pdf-totals-label" style={{ fontSize: "12px" }}>{t("doc.subtotal")}</td>
-                  <td className="pdf-totals-value" style={{ fontSize: "12px" }}>{formatCurrency(vat.subtotal, doc.currency)}</td>
+                  <td className="pdf-totals-value" style={{ fontSize: "12px" }}>{formatCurrency(money.netSubtotal, doc.currency)}</td>
                 </tr>
+                {hasDiscount && (
+                  <tr className="pdf-totals-row">
+                    <td className="pdf-totals-label" style={{ fontSize: "12px" }}>{t("doc.discount")}</td>
+                    <td className="pdf-totals-value" style={{ fontSize: "12px" }}>−{formatCurrency(money.discountAmount, doc.currency)}</td>
+                  </tr>
+                )}
                 <tr className="pdf-totals-row">
                   <td className="pdf-totals-label" style={{ fontSize: "12px" }}>
                     {t("doc.vat", { rate: tidyNumber(doc.vat_rate_snapshot as number) })}
                   </td>
-                  <td className="pdf-totals-value" style={{ fontSize: "12px" }}>{formatCurrency(vat.vatAmount, doc.currency)}</td>
+                  <td className="pdf-totals-value" style={{ fontSize: "12px" }}>{formatCurrency(money.vatAmount, doc.currency)}</td>
                 </tr>
               </>
             )}
+            {!hasVat && hasDiscount && (
+              <tr className="pdf-totals-row">
+                <td className="pdf-totals-label" style={{ fontSize: "12px" }}>{t("doc.discount")}</td>
+                <td className="pdf-totals-value" style={{ fontSize: "12px" }}>−{formatCurrency(money.discountAmount, doc.currency)}</td>
+              </tr>
+            )}
             <tr className="pdf-totals-row pdf-totals-grand">
               <td className="pdf-totals-label">{hasVat ? t("doc.totalDue") : t("doc.total")}</td>
-              <td className="pdf-totals-value">{formatCurrency(vat.total, doc.currency)}</td>
+              <td className="pdf-totals-value">{formatCurrency(money.gross, doc.currency)}</td>
             </tr>
           </tbody>
         </table>
