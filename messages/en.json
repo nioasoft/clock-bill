@@ -278,8 +278,6 @@
     },
     "settlementsDue": {
       "title": "Settlements due",
-      "empty": "No settlements due 🎉",
-      "amountDue": "to bill",
       "overdueDays": "{days} days since billing date",
       "dueToday": "Billing day is today",
       "createDocument": "Create charge document",

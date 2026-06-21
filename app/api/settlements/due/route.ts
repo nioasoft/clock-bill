@@ -2,7 +2,7 @@ import { createLogger } from "@/lib/logger";
 const logger = createLogger("api:settlements:due");
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
-import { hasReachedBillingDay } from "@/lib/settlements";
+import { hasReachedBillingDay, effectiveBillingDay } from "@/lib/settlements";
 import { formatCurrency } from "@/lib/currency";
 
 /**
@@ -74,7 +74,7 @@ export async function GET(_request: NextRequest) {
         unbilledTotal: r.unbilled_total,
         amountLabel: formatCurrency(r.unbilled_total, r.currency, locale),
         billingDay: r.settlement_billing_day,
-        daysOverdue: Math.max(0, today.local_day - Math.min(r.settlement_billing_day, today.local_day)),
+        daysOverdue: Math.max(0, today.local_day - effectiveBillingDay(r.settlement_billing_day, today.local_year, today.local_month)),
       }));
 
     return NextResponse.json({ success: true, data: { clients } });
