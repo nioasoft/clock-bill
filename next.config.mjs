@@ -32,7 +32,12 @@ const securityHeaders = [
     key: "Strict-Transport-Security",
     value: "max-age=63072000; includeSubDomains; preload",
   },
-  { key: "Content-Security-Policy-Report-Only", value: cspReportOnly },
+  // Report-only CSP in PRODUCTION only: dev (Turbopack HMR) legitimately uses
+  // eval(), which would flood the console with false-positive reports. Prod is
+  // where the observation actually matters before we move CSP to enforcing.
+  ...(process.env.NODE_ENV === "production"
+    ? [{ key: "Content-Security-Policy-Report-Only", value: cspReportOnly }]
+    : []),
 ];
 
 /** @type {import('next').NextConfig} */
