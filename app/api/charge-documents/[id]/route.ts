@@ -19,7 +19,8 @@ export async function GET(_request: NextRequest, ctx: Ctx) {
     const { query } = await import("@/lib/db");
 
     const doc = await query(
-      `SELECT d.*, c.name AS client_name, c.document_language AS client_document_language
+      `SELECT d.*, c.name AS client_name, c.document_language AS client_document_language,
+              c.email AS client_email
          FROM charge_documents d
          JOIN clients c ON d.client_id = c.id
         WHERE d.id = $1 AND d.user_id = $2`,

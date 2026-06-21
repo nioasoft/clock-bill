@@ -2139,7 +2139,16 @@
       "summaryColProject": "Project",
       "summaryColType": "Work type",
       "summaryColHours": "Hours",
-      "summaryNoProject": "No project"
+      "summaryNoProject": "No project",
+      "sendToClient": "Send to client",
+      "sendConfirmTitle": "Send statement to client",
+      "sendConfirmBody": "The document will be sent to {email}. The client's replies will reach you.",
+      "sendConfirmAction": "Send",
+      "sentStatus": "Sent on {date} to {email}",
+      "resend": "Send again",
+      "sendNoEmail": "This client has no email address. Add one in the client details to send.",
+      "sendError": "Sending the document failed. Please try again.",
+      "sendSuccess": "The document was sent to the client"
     }
   },
   "Trial": {

@@ -2139,7 +2139,16 @@
       "summaryColProject": "פרויקט",
       "summaryColType": "סוג עבודה",
       "summaryColHours": "שעות",
-      "summaryNoProject": "ללא פרויקט"
+      "summaryNoProject": "ללא פרויקט",
+      "sendToClient": "שלח ללקוח",
+      "sendConfirmTitle": "שליחת התחשבנות ללקוח",
+      "sendConfirmBody": "המסמך יישלח אל {email}. תשובות הלקוח יגיעו אליך.",
+      "sendConfirmAction": "שלח",
+      "sentStatus": "נשלח ב-{date} אל {email}",
+      "resend": "שלח שוב",
+      "sendNoEmail": "ללקוח אין כתובת מייל. הוסף כתובת בפרטי הלקוח כדי לשלוח.",
+      "sendError": "שליחת המסמך נכשלה. נסה שוב.",
+      "sendSuccess": "המסמך נשלח ללקוח"
     }
   },
   "Trial": {

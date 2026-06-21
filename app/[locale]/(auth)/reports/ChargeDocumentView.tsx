@@ -59,6 +59,12 @@ interface ChargeDocument {
   vat_rate_snapshot: number | null;
   /** Optional summary grouping: 'project' | 'type' | null. */
   summary_mode: string | null;
+  /** When the document was last emailed to the client (ISO timestamp), or null. */
+  last_sent_at: string | null;
+  /** The email address the document was last sent to, or null. */
+  sent_to_email: string | null;
+  /** The client's current email address (used as the send recipient suggestion). */
+  client_email: string | null;
 }
 
 /** Business-profile fields needed for the PDF header + template/colors. */
@@ -171,6 +177,10 @@ export default function ChargeDocumentView({
   const [confirmBusy, setConfirmBusy] = useState(false);
 
   const [actionBusy, setActionBusy] = useState(false);
+
+  // Send-to-client state.
+  const [sending, setSending] = useState(false);
+  const [sendConfirmOpen, setSendConfirmOpen] = useState(false);
 
   // Post-issue PDF prompt: show a one-time "create PDF now?" dialog after the
   // document first loads. The ref guards against re-showing on later refetches.
@@ -358,6 +368,29 @@ export default function ChargeDocumentView({
       setActionBusy(false);
     }
   }, [documentId, onChanged, onClose, t]);
+
+  const handleSend = useCallback(async (): Promise<void> => {
+    setSending(true);
+    try {
+      const res = await fetch(`/api/charge-documents/${documentId}/send`, { method: "POST" });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        if (json.error_code === "CLIENT_HAS_NO_EMAIL") {
+          showErrorToast(t("doc.sendNoEmail"));
+        } else {
+          showErrorToast(json.message || t("doc.sendError"));
+        }
+        return;
+      }
+      showSuccessToast(t("doc.sendSuccess"));
+      setSendConfirmOpen(false);
+      refetch();
+    } catch {
+      showErrorToast(t("doc.sendError"));
+    } finally {
+      setSending(false);
+    }
+  }, [documentId, t, refetch]);
 
   const runConfirm = useCallback(async (): Promise<void> => {
     if (!confirm) return;
@@ -706,6 +739,16 @@ export default function ChargeDocumentView({
         )}
       </div>
 
+      {/* ── Sent status ── */}
+      {doc.last_sent_at && (
+        <p className="text-xs text-muted-foreground">
+          {t("doc.sentStatus", {
+            date: new Date(doc.last_sent_at).toLocaleDateString(locale === "he" ? "he-IL" : "en-US"),
+            email: doc.sent_to_email ?? "",
+          })}
+        </p>
+      )}
+
       {/* ── Document-language toggle ── */}
       {/* Which language the printed PDF renders in. Defaults to the document's
           SNAPSHOTTED language; the He/En override applies per print only and
@@ -786,6 +829,17 @@ export default function ChargeDocumentView({
         >
           {t("doc.exportPdf")}
         </Button>
+
+        {!isCanceled && (
+          <Button
+            variant="outline"
+            className="min-h-[44px]"
+            disabled={sending}
+            onClick={() => setSendConfirmOpen(true)}
+          >
+            {sending ? "…" : doc.last_sent_at ? t("doc.resend") : t("doc.sendToClient")}
+          </Button>
+        )}
 
         {isPending && (
           <>
@@ -913,6 +967,35 @@ export default function ChargeDocumentView({
               className="min-h-[44px]"
             >
               {t("doc.pdfPromptConfirm")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Send to client confirm dialog ── */}
+      <Dialog open={sendConfirmOpen} onOpenChange={setSendConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("doc.sendConfirmTitle")}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-foreground">
+            {t("doc.sendConfirmBody", { email: doc.client_email ?? doc.sent_to_email ?? "" })}
+          </p>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="ghost"
+              className="min-h-[44px]"
+              onClick={() => setSendConfirmOpen(false)}
+              disabled={sending}
+            >
+              {t("actions.cancel")}
+            </Button>
+            <Button
+              className="min-h-[44px]"
+              disabled={sending}
+              onClick={() => void handleSend()}
+            >
+              {sending ? "…" : t("doc.sendConfirmAction")}
             </Button>
           </DialogFooter>
         </DialogContent>
