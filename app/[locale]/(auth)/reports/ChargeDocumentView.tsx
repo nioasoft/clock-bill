@@ -865,7 +865,7 @@ export default function ChargeDocumentView({
               if (!type) void patchDocument({ discount: null });
               else void patchDocument({ discount: { type, value: doc.discount_value ?? 0 } });
             }}
-            className="rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="min-h-[44px] rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="">{t("doc.discountNone")}</option>
             <option value="percent">{t("doc.discountPercent")}</option>
@@ -884,7 +884,7 @@ export default function ChargeDocumentView({
                   },
                 })
               }
-              className="w-24 rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-24 min-h-[44px] rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           )}
         </div>

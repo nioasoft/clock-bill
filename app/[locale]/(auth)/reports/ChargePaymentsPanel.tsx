@@ -268,20 +268,20 @@ export function ChargePaymentsPanel({
           onChange={(e) => setAmount(e.target.value)}
           placeholder={t("payments.amount")}
           aria-label={t("payments.amount")}
-          className="rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className="min-h-[44px] rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
         <input
           type="date"
           value={paidAt}
           onChange={(e) => setPaidAt(e.target.value)}
           aria-label={t("payments.date")}
-          className="rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className="min-h-[44px] rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
         <select
           value={method}
           onChange={(e) => setMethod(e.target.value as PaymentMethod | "")}
           aria-label={t("payments.methodLabel")}
-          className="rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className="min-h-[44px] rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         >
           <option value="">{t("payments.methodNone")}</option>
           {PAYMENT_METHODS.map((m) => (
@@ -295,7 +295,7 @@ export function ChargePaymentsPanel({
           onChange={(e) => setNote(e.target.value)}
           placeholder={t("payments.note")}
           aria-label={t("payments.note")}
-          className="rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className="min-h-[44px] rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
