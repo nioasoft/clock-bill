@@ -25,6 +25,7 @@ const updateClientSchema = z.object({
   billingRounding: z.enum(["none", "tenth_hour_up", "quarter_hour_up", "half_hour_up", "hour_up"]).nullish(),
   documentLanguage: z.enum(["he", "en"]).nullish(),
   vatMode: z.enum(["add", "exempt"]).nullish(),
+  settlementBillingDay: z.number().int().min(1).max(31).nullable().optional(),
   isRetainer: z.boolean().nullish(),
   retainerHours: z.number().nullish(),
   retainerMonthlyFee: z.number().nullish(),
@@ -70,6 +71,7 @@ export async function GET(
         billing_rounding: string | null;
         document_language: string | null;
         vat_mode: string | null;
+        settlement_billing_day: number | null;
         is_retainer: boolean | null;
         retainer_hours: number | null;
         retainer_monthly_fee: number | null;
@@ -79,7 +81,7 @@ export async function GET(
         created_at: string;
       }>(
         `SELECT id, name, contact_name, email, phone, address, default_rate,
-                currency, billing_rounding, document_language, vat_mode, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate,
+                currency, billing_rounding, document_language, vat_mode, settlement_billing_day, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate,
                 notes, is_active, created_at
          FROM clients
          WHERE id = $1 AND user_id = $2`,
@@ -122,6 +124,7 @@ export async function GET(
         billingRounding: client.billing_rounding,
         documentLanguage: client.document_language ?? null,
         vatMode: client.vat_mode ?? null,
+        settlementBillingDay: client.settlement_billing_day ?? null,
         isRetainer: client.is_retainer ?? false,
         retainerHours: client.retainer_hours,
         retainerMonthlyFee: client.retainer_monthly_fee,
@@ -165,7 +168,7 @@ export async function PUT(
 
     const parsed = await parseBody(request, updateClientSchema);
     if (!parsed.ok) return parsed.response;
-    const { name, contactName, email, phone, address, defaultRate, currency, billingRounding, documentLanguage, vatMode, isRetainer, retainerHours, retainerMonthlyFee, overageRate, notes, rates } = parsed.data;
+    const { name, contactName, email, phone, address, defaultRate, currency, billingRounding, documentLanguage, vatMode, settlementBillingDay, isRetainer, retainerHours, retainerMonthlyFee, overageRate, notes, rates } = parsed.data;
     const { id: clientId } = await params;
 
     const { withTransaction } = await import("@/lib/db");
@@ -196,6 +199,7 @@ export async function PUT(
       billing_rounding: string | null;
       document_language: string | null;
       vat_mode: string | null;
+      settlement_billing_day: number | null;
       is_retainer: boolean | null;
       retainer_hours: number | null;
       retainer_monthly_fee: number | null;
@@ -226,10 +230,11 @@ export async function PUT(
         `UPDATE clients
          SET name = $1, contact_name = $2, email = $3, phone = $4, address = $5, default_rate = COALESCE($6, default_rate),
              currency = $7, is_retainer = $8, retainer_hours = $9, retainer_monthly_fee = $10, overage_rate = $11,
-             notes = $12, billing_rounding = COALESCE($13, billing_rounding), document_language = $14, vat_mode = $15
-         WHERE id = $16 AND user_id = $17
+             notes = $12, billing_rounding = COALESCE($13, billing_rounding), document_language = $14, vat_mode = $15,
+             settlement_billing_day = $16
+         WHERE id = $17 AND user_id = $18
          RETURNING id, name, contact_name, email, phone, address, default_rate,
-                   currency, billing_rounding, document_language, vat_mode, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate,
+                   currency, billing_rounding, document_language, vat_mode, settlement_billing_day, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate,
                    notes, is_active, created_at`,
         [
           name.trim(),
@@ -247,6 +252,7 @@ export async function PUT(
           billingRounding ?? null,
           documentLanguage ?? null,
           vatMode ?? null,
+          settlementBillingDay ?? null,
           clientId,
           user.id,
         ]
@@ -337,6 +343,7 @@ export async function PUT(
         billingRounding: client.billing_rounding,
         documentLanguage: client.document_language ?? null,
         vatMode: client.vat_mode ?? null,
+        settlementBillingDay: client.settlement_billing_day ?? null,
         isRetainer: client.is_retainer ?? false,
         retainerHours: client.retainer_hours,
         retainerMonthlyFee: client.retainer_monthly_fee,

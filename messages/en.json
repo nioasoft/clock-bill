@@ -623,7 +623,11 @@
     "vatModeInherit": "Default (business setting)",
     "vatModeAdd": "Add VAT",
     "vatModeExempt": "No VAT",
-    "vatModeHint": "Override VAT for this client. Default follows your business setting (e.g. a foreign client billed net)."
+    "vatModeHint": "Override VAT for this client. Default follows your business setting (e.g. a foreign client billed net).",
+    "settlementDay": "Settlement day",
+    "settlementDayNone": "No reminder",
+    "settlementDayEndOfMonth": "End of month",
+    "settlementDayHint": "Monthly reminder to settle with this client"
   },
   "Projects": {
     "pageTitle": "Projects",

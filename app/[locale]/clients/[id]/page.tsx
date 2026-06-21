@@ -45,6 +45,7 @@ interface Client {
   rates?: ClientRate[];
   documentLanguage: string | null;
   vatMode: string | null;
+  settlementBillingDay: number | null;
 }
 
 /** Map a loaded client into the edit form's controlled state. */
@@ -72,6 +73,7 @@ function clientToFormData(client: Client) {
     })) as ClientRateInput[],
     documentLanguage: (client.documentLanguage ?? "") as "" | "he" | "en",
     vatMode: (client.vatMode ?? "") as "" | "add" | "exempt",
+    settlementBillingDay: client.settlementBillingDay ?? null,
   };
 }
 
@@ -106,6 +108,7 @@ export default function ClientDetailsPage() {
     rates: [] as ClientRateInput[],
     documentLanguage: "" as "" | "he" | "en",
     vatMode: "" as "" | "add" | "exempt",
+    settlementBillingDay: null as number | null,
   });
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -208,6 +211,7 @@ export default function ClientDetailsPage() {
           rates: cleanedRates,
           documentLanguage: formData.documentLanguage === "" ? null : formData.documentLanguage,
           vatMode: formData.vatMode === "" ? null : formData.vatMode,
+          settlementBillingDay: formData.settlementBillingDay,
         }),
       });
 
@@ -465,6 +469,26 @@ export default function ClientDetailsPage() {
                       ]}
                     />
                     <p className="mt-1 text-xs text-muted-foreground">{t("vatModeHint")}</p>
+                  </div>
+
+                  <div>
+                    <label htmlFor="settlementBillingDay" className="mb-1.5 block text-sm font-medium text-foreground">
+                      {t("settlementDay")}
+                    </label>
+                    <SimpleSelect
+                      id="settlementBillingDay"
+                      value={formData.settlementBillingDay === null ? "" : String(formData.settlementBillingDay)}
+                      onChange={(v) =>
+                        setFormData({ ...formData, settlementBillingDay: v === "" ? null : Number(v) })
+                      }
+                      disabled={submitting}
+                      options={[
+                        { value: "", label: t("settlementDayNone") },
+                        ...Array.from({ length: 28 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) })),
+                        { value: "31", label: t("settlementDayEndOfMonth") },
+                      ]}
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">{t("settlementDayHint")}</p>
                   </div>
                 </div>
 

@@ -623,7 +623,11 @@
     "vatModeInherit": "ברירת מחדל (לפי הגדרת העוסק)",
     "vatModeAdd": "הוסף מע״מ",
     "vatModeExempt": "ללא מע״מ",
-    "vatModeHint": "דריסת מע״מ עבור לקוח זה. ברירת מחדל = לפי הגדרת העוסק (למשל לקוח חו״ל ללא מע״מ)."
+    "vatModeHint": "דריסת מע״מ עבור לקוח זה. ברירת מחדל = לפי הגדרת העוסק (למשל לקוח חו״ל ללא מע״מ).",
+    "settlementDay": "יום התחשבנות",
+    "settlementDayNone": "ללא תזכורת",
+    "settlementDayEndOfMonth": "סוף החודש",
+    "settlementDayHint": "תזכורת חודשית להפיק התחשבנות ללקוח"
   },
   "Projects": {
     "pageTitle": "פרויקטים",
