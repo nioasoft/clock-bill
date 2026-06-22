@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { Clock, Boxes, LayoutGrid, ArrowLeft } from "lucide-react";
+import { Clock, Boxes, LayoutGrid, ArrowLeft, Wallet } from "lucide-react";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 
 /**
@@ -126,7 +126,44 @@ function FlowMock({ t }: { t: ReturnType<typeof useTranslations> }) {
   );
 }
 
-const icons = [Clock, Boxes, LayoutGrid];
+/** Get-paid flow: a settlement document sent to the client, paid down to zero. */
+function GetPaidMock({ t }: { t: ReturnType<typeof useTranslations> }) {
+  return (
+    <div className="w-full rounded-[var(--radius-card)] border border-border bg-card p-5">
+      <div className="mb-4 flex items-center justify-between">
+        <span className="text-sm font-medium text-foreground">{t("highlights.getPaid.mock.docLabel")}</span>
+        <span className="rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success">
+          {t("highlights.getPaid.mock.sent")}
+        </span>
+      </div>
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">{t("highlights.getPaid.mock.subtotal")}</span>
+          <span className="font-mono text-sm tabular-nums text-foreground">₪1,820</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">{t("highlights.getPaid.mock.discount")}</span>
+          <span className="font-mono text-sm tabular-nums text-muted-foreground">−₪180</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">{t("highlights.getPaid.mock.paid")}</span>
+          <span className="font-mono text-sm tabular-nums text-foreground">₪1,640</span>
+        </div>
+      </div>
+      <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
+        <span className="text-sm font-medium text-foreground">{t("highlights.getPaid.mock.balance")}</span>
+        <span className="flex items-center gap-2">
+          <span className="font-mono text-base font-bold tabular-nums text-foreground">₪0</span>
+          <span className="rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success">
+            {t("highlights.getPaid.mock.settled")}
+          </span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+const icons = [Clock, Boxes, LayoutGrid, Wallet];
 
 export function Highlights() {
   const t = useTranslations("Landing");
@@ -148,6 +185,12 @@ export function Highlights() {
       title: t("highlights.flow.title"),
       body: t("highlights.flow.body"),
       visual: <FlowMock t={t} />,
+    },
+    {
+      eyebrow: t("highlights.getPaid.eyebrow"),
+      title: t("highlights.getPaid.title"),
+      body: t("highlights.getPaid.body"),
+      visual: <GetPaidMock t={t} />,
     },
   ];
   return (

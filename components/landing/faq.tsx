@@ -44,6 +44,18 @@ export function FAQ() {
       question: t("faq.q9.question"),
       answer: t("faq.q9.answer"),
     },
+    {
+      question: t("faq.q10.question"),
+      answer: t("faq.q10.answer"),
+    },
+    {
+      question: t("faq.q11.question"),
+      answer: t("faq.q11.answer"),
+    },
+    {
+      question: t("faq.q12.question"),
+      answer: t("faq.q12.answer"),
+    },
   ];
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 

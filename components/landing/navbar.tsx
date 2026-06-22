@@ -69,6 +69,12 @@ export function LandingNavbar() {
               {t("nav.features")}
             </a>
             <a
+              href="#themes"
+              className="rounded-full px-4 py-1.5 text-sm text-muted-foreground hover:bg-foreground/5 hover:text-foreground transition-colors"
+            >
+              {t("nav.themes")}
+            </a>
+            <a
               href="#faq"
               className="rounded-full px-4 py-1.5 text-sm text-muted-foreground hover:bg-foreground/5 hover:text-foreground transition-colors"
             >

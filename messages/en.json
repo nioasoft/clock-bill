@@ -1467,6 +1467,7 @@
       "ariaLabel": "Main navigation",
       "howItWorks": "How it works",
       "features": "Features",
+      "themes": "Themes",
       "faq": "FAQ",
       "login": "Log in",
       "ctaStart": "Start free"
@@ -1474,7 +1475,7 @@
     "hero": {
       "headlinePrefix": "Your time is worth money",
       "headlineSuffix": "helps you collect it.",
-      "subhead": "Time tracking, client management, and professional reports — all in one place, free.",
+      "subhead": "Time tracking, client management, professional reports, and getting paid — all in one place, in exactly the look you like.",
       "ctaPrimary": "Start tracking — free",
       "ctaNote": "Free during the beta. No credit card, no commitment.",
       "mock": {
@@ -1544,6 +1545,18 @@
       "dashboard": {
         "title": "Dashboard and insights",
         "description": "How much came in this month — by hours, by items, and by project."
+      },
+      "getPaid": {
+        "title": "Send the bill, get paid",
+        "description": "Email the statement to your client, they open it with a no-login link, and you log payments, discounts, and VAT until the balance closes."
+      },
+      "customDashboard": {
+        "title": "A dashboard that fits you",
+        "description": "Choose which stats and sections show, and in what order. Drag, reorder, and save — or pick a ready-made preset."
+      },
+      "mobile": {
+        "title": "Works on your phone too",
+        "description": "Install it as an app on your home screen (PWA), get reminder notifications, and work in full Hebrew or English."
       }
     },
     "highlights": {
@@ -1592,7 +1605,28 @@
             "note": "Export to Hebrew PDF"
           }
         }
+      },
+      "getPaid": {
+        "eyebrow": "From bill to payment",
+        "title": "Close the collection, not just print a report",
+        "body": "Email the statement to your client — they open it with a personal, no-login link. Log each payment that comes in, apply a discount if needed, and the app tracks the open balance until it's 'Paid'. Plus an automatic reminder on each client's settlement day.",
+        "mock": {
+          "docLabel": "Statement #1042",
+          "sent": "Sent to client",
+          "subtotal": "Subtotal",
+          "discount": "Discount",
+          "paid": "Paid",
+          "balance": "Balance due",
+          "settled": "Paid in full"
+        }
       }
+    },
+    "themes": {
+      "heading": "Make it your color",
+      "subheading": "12 themes, light and dark. Click one and watch the whole page change.",
+      "darkLabel": "Dark",
+      "lightLabel": "Light",
+      "previewNote": "This is just a preview. Your choice saves to your account once you sign up."
     },
     "faq": {
       "heading": "Frequently asked questions",
@@ -1631,6 +1665,18 @@
       "q9": {
         "question": "How do I set up pricing models?",
         "answer": "Each client gets their own rate: hourly, monthly retainer, fixed monthly billing, or item-based billing. You can also set time rounding per client or project."
+      },
+      "q10": {
+        "question": "How does my client receive the bill and pay?",
+        "answer": "You email the statement, and your client opens it with a personal link — no login needed. You log each payment that comes in — cash, transfer, card, or any other method — including partial payments, and the app updates the open balance automatically."
+      },
+      "q11": {
+        "question": "Can I change how the app looks?",
+        "answer": "Absolutely. There are 12 themes to choose from — six dark and six light — and each one recolors the entire app. Your choice saves to your account and follows you to every device."
+      },
+      "q12": {
+        "question": "Can I use it on my phone?",
+        "answer": "Yes. ClockBill works great in the mobile browser, and you can install it as an app on your home screen (PWA), with reminder notifications and offline support."
       }
     },
     "cta": {

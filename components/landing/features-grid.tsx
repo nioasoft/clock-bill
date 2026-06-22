@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, MouseEvent } from "react";
 import { useTranslations } from "next-intl";
-import { Timer, Boxes, LayoutGrid, Layers, Users, FileText, Calculator, CircleDollarSign, TrendingUp } from "lucide-react";
+import { Timer, Boxes, LayoutGrid, Layers, Users, FileText, Calculator, CircleDollarSign, TrendingUp, Wallet, LayoutDashboard, Smartphone } from "lucide-react";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 
 interface Feature {
@@ -113,6 +113,21 @@ export function FeaturesGrid() {
       icon: TrendingUp,
       title: t("features.dashboard.title"),
       description: t("features.dashboard.description"),
+    },
+    {
+      icon: Wallet,
+      title: t("features.getPaid.title"),
+      description: t("features.getPaid.description"),
+    },
+    {
+      icon: LayoutDashboard,
+      title: t("features.customDashboard.title"),
+      description: t("features.customDashboard.description"),
+    },
+    {
+      icon: Smartphone,
+      title: t("features.mobile.title"),
+      description: t("features.mobile.description"),
     },
   ];
   const [, setIsVisible] = useState(false);
