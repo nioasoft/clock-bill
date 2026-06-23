@@ -495,7 +495,14 @@ export function TimerProvider({ children }: TimerProviderProps) {
       const timer = runningTimers.find((t) => t.id === entryId);
       if (!timer) return;
 
-      const totalMinutes = timer.elapsedMinutes;
+      // Pre-fill from the LIVE elapsed (same source the modal's readout shows),
+      // not the frozen `timer.elapsedMinutes` snapshot from the last server sync.
+      // The snapshot only refreshes on mount/focus/visibility/5-min interval, so
+      // a timer started and stopped within one focused session would otherwise
+      // pre-fill its stale start value (often 0) and save a zero-duration entry.
+      const { minutes: liveMinutes, seconds: liveSeconds } = liveElapsed(timer, lastApiUpdate);
+      // Round to the nearest minute so 47:45 pre-fills 48 (user can still edit).
+      const totalMinutes = liveMinutes + (liveSeconds >= 30 ? 1 : 0);
       const hours = Math.floor(totalMinutes / 60);
       const minutes = totalMinutes % 60;
 
@@ -513,7 +520,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
       setStopTimerMarkDone(true);
       setShowStopTimerModal(true);
     },
-    [runningTimers]
+    [runningTimers, lastApiUpdate]
   );
 
   const confirmStopTimer = useCallback(async () => {
