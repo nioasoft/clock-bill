@@ -1079,7 +1079,8 @@
       "privacyPolicy": "Privacy Policy",
       "termsOfService": "Terms of Service",
       "loading": "Loading...",
-      "redirectingToGoogle": "Redirecting to Google..."
+      "redirectingToGoogle": "Redirecting to Google...",
+      "googleSignInFailed": "Google sign-in failed. Please try again or use email and password."
     },
     "verifyNotice": {
       "heading": "Please verify your email address",
@@ -1432,6 +1433,7 @@
     "INVALID_EMAIL": "Invalid email address",
     "INVALID_PHONE": "Invalid phone number",
     "PASSWORD_TOO_SHORT": "Password must contain at least 8 characters",
+    "PASSWORD_TOO_WEAK": "Password must include an uppercase letter, a lowercase letter and a digit",
     "PASSWORD_MISMATCH": "Passwords do not match",
     "NOT_A_NUMBER": "Must be a number",
     "MIN_VALUE": "Must be greater than or equal to {min}",
@@ -1469,6 +1471,7 @@
       "features": "Features",
       "themes": "Themes",
       "faq": "FAQ",
+      "pricing": "Pricing",
       "login": "Log in",
       "ctaStart": "Start free"
     },
@@ -1477,7 +1480,7 @@
       "headlineSuffix": "helps you collect it.",
       "subhead": "Time tracking, client management, professional reports, and getting paid — all in one place, in exactly the look you like.",
       "ctaPrimary": "Start tracking — free",
-      "ctaNote": "Free during the beta. No credit card, no commitment.",
+      "ctaNote": "14-day free trial, no credit card. Then stay free for one active client.",
       "mock": {
         "currentProject": "Current project",
         "start": "Start",
@@ -1636,7 +1639,7 @@
       },
       "q2": {
         "question": "Is it really free?",
-        "answer": "Yes, today it's free. ClockBill is in beta, and using it currently costs nothing, with no credit card. Going forward, managing up to three clients will stay free too. If we add paid plans for extended use, we'll let you know in advance and won't charge anyone without their choosing to."
+        "answer": "Yes. Every new account starts with a 14-day free trial of the Unlimited plan, no credit card required. When the trial ends you can stay on the free plan to manage one active client, with no time limit, or upgrade to a paid plan for more clients. Your data is kept either way."
       },
       "q3": {
         "question": "Can I run several timers at the same time?",
@@ -1681,8 +1684,8 @@
     },
     "cta": {
       "heading": "Ready to manage your time the smart way?",
-      "subheading": "Join 500+ freelancers already using ClockBill",
-      "socialProof": "Join 500+ freelancers",
+      "subheading": "Start tracking your time, managing clients, and getting paid — all in one place.",
+      "socialProof": "14-day free trial · No credit card · Data encrypted in the EU",
       "button": "Create a free account"
     },
     "footer": {
@@ -1691,6 +1694,7 @@
       "howItWorks": "How it works",
       "features": "Features",
       "faq": "FAQ",
+      "pricing": "Pricing",
       "login": "Log in",
       "privacy": "Privacy",
       "terms": "Terms of use",

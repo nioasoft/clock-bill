@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/src/i18n/navigation";
 import { Link } from "@/src/i18n/navigation";
 import { Gauge, UserPlus } from "lucide-react";
 import { validateEmail, validatePassword, validatePasswordConfirm } from "@/lib/validation";
+import { useValidationMessage } from "@/lib/validation-messages";
 import { authClient } from "@/lib/auth/client";
 import { useAuthErrorMessage } from "@/lib/auth/error-messages";
+import { trackEvent } from "@/lib/analytics";
 import { PasswordStrengthIndicator } from "@/components/password-strength-indicator";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
@@ -16,6 +18,7 @@ import { LocaleSwitcher } from "@/components/locale-switcher";
 export default function RegisterPage() {
   const t = useTranslations("Auth");
   const resolveAuthError = useAuthErrorMessage();
+  const resolveValidation = useValidationMessage();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,6 +36,11 @@ export default function RegisterPage() {
   const [passwordError, setPasswordError] = useState<string | undefined>(undefined);
   const [confirmPasswordError, setConfirmPasswordError] = useState<string | undefined>(undefined);
 
+  // Funnel: visitor reached the signup form.
+  useEffect(() => {
+    trackEvent("signup_page_view");
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -42,34 +50,40 @@ export default function RegisterPage() {
     setPasswordError(undefined);
     setConfirmPasswordError(undefined);
 
-    // Validate email
+    // Validate email — resolve the i18n code (not the legacy Hebrew string) so
+    // the message matches the active locale.
     const emailValidation = validateEmail(email);
     if (!emailValidation.isValid) {
-      setEmailError(emailValidation.error);
+      setEmailError(resolveValidation(emailValidation.code));
+      trackEvent("signup_failed", { reason: "invalid_email" });
       return;
     }
 
     // Validate password
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.isValid) {
-      setPasswordError(passwordValidation.error);
+      setPasswordError(resolveValidation(passwordValidation.code));
+      trackEvent("signup_failed", { reason: "weak_password" });
       return;
     }
 
     // Validate password confirmation
     const confirmValidation = validatePasswordConfirm(password, confirmPassword);
     if (!confirmValidation.isValid) {
-      setConfirmPasswordError(confirmValidation.error);
+      setConfirmPasswordError(resolveValidation(confirmValidation.code));
+      trackEvent("signup_failed", { reason: "password_mismatch" });
       return;
     }
 
     // Require explicit consent to terms + privacy
     if (!consent) {
       setError(t("register.consentRequired"));
+      trackEvent("signup_failed", { reason: "no_consent" });
       return;
     }
 
     setLoading(true);
+    trackEvent("signup_submitted");
 
     try {
       const { data, error: authError } = await authClient.signUp.email({
@@ -80,8 +94,10 @@ export default function RegisterPage() {
 
       if (authError) {
         setError(resolveAuthError(authError, t("register.errors.signUpFailed")));
+        trackEvent("signup_failed", { reason: authError.code ?? "auth_error" });
       } else if (data?.token) {
         // A session was created (email verification is disabled) — sign straight in.
+        trackEvent("signup_success");
         if (businessName.trim()) {
           try {
             await fetch("/api/profile", {
@@ -111,9 +127,11 @@ export default function RegisterPage() {
           );
         }
         setVerificationSent(true);
+        trackEvent("signup_verification_sent");
       }
     } catch {
       setError(t("common.networkError"));
+      trackEvent("signup_failed", { reason: "network" });
     } finally {
       setLoading(false);
     }
@@ -193,7 +211,12 @@ export default function RegisterPage() {
 
           <div className="rounded-[var(--radius-card)] border border-border bg-card p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <GoogleSignInButton label={t("register.googleSignUp")} disabled={!consent} />
+            <GoogleSignInButton
+              label={t("register.googleSignUp")}
+              consentGiven={consent}
+              onRequireConsent={() => setError(t("register.consentRequired"))}
+              onBeforeSignIn={() => trackEvent("signup_google_clicked")}
+            />
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center" aria-hidden="true">
@@ -329,7 +352,7 @@ export default function RegisterPage() {
             <div>
               <button
                 type="submit"
-                disabled={loading || !consent}
+                disabled={loading}
                 className="group relative flex w-full items-center justify-center gap-2 rounded-[var(--radius)] border border-transparent bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
               >
                 <UserPlus className="h-4 w-4" />

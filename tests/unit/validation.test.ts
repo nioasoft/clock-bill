@@ -251,8 +251,9 @@ runner.test('validatePhone: optional field empty', () => {
 });
 
 // validatePassword tests
-runner.test('validatePassword: valid password', () => {
-  const result = validatePassword('password123');
+runner.test('validatePassword: valid password (>=3 char classes)', () => {
+  // Upper + lower + digit = 3 classes, mirrors the server strength rule.
+  const result = validatePassword('Password123');
   assertTrue(result.isValid);
 });
 
@@ -260,6 +261,14 @@ runner.test('validatePassword: too short', () => {
   const result = validatePassword('pass');
   assertFalse(result.isValid);
   assertTrue(result.error!.includes('לפחות 8'));
+});
+
+runner.test('validatePassword: long but too few character classes', () => {
+  // 11 chars but only lowercase + digit (2 classes) — must be rejected so the
+  // client message matches the server's assertStrongPassword rule.
+  const result = validatePassword('password123');
+  assertFalse(result.isValid);
+  assertEqual(result.code!.code, 'PASSWORD_TOO_WEAK');
 });
 
 runner.test('validatePassword: empty', () => {

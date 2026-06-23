@@ -221,6 +221,8 @@ function legacyHebrew(err: ValidationError): string {
       return "כתובת אימייל לא תקינה";
     case "PASSWORD_TOO_SHORT":
       return "הסיסמה חייבת להכיל לפחות 8 תווים";
+    case "PASSWORD_TOO_WEAK":
+      return "הסיסמה חייבת לכלול אות גדולה, אות קטנה וספרה";
     default:
       return "פורמט לא תקין";
   }
@@ -263,10 +265,16 @@ export function validatePhone(value: string, required = false): ValidationResult
 }
 
 /**
- * Validate password
+ * Validate password.
+ *
+ * Mirrors the server-side strength rule (`assertStrongPassword` in
+ * `lib/auth/better-auth.ts`): at least 8 characters AND at least 3 of the 4
+ * character classes (lowercase / uppercase / digit / special). Keeping the
+ * client rule in sync means a user gets a clear, localized inline message
+ * before submit instead of a vague server rejection.
  */
 export function validatePassword(value: string): ValidationResult {
-  const result = validateField({
+  return validateField({
     value,
     required: true,
     minLength: 8,
@@ -274,10 +282,15 @@ export function validatePassword(value: string): ValidationResult {
       if (v.length < 8) {
         return { code: "PASSWORD_TOO_SHORT" };
       }
+      const classes = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^a-zA-Z0-9]/].filter((re) =>
+        re.test(v)
+      ).length;
+      if (classes < 3) {
+        return { code: "PASSWORD_TOO_WEAK" };
+      }
       return null;
     },
   });
-  return result;
 }
 
 /**

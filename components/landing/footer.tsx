@@ -47,6 +47,12 @@ export function LandingFooter() {
               {t("footer.faq")}
             </a>
             <Link
+              href="/pricing"
+              className="text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors"
+            >
+              {t("footer.pricing")}
+            </Link>
+            <Link
               href="/login"
               className="text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors"
             >
