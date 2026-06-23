@@ -80,6 +80,12 @@ export function LandingNavbar() {
             >
               {t("nav.faq")}
             </a>
+            <Link
+              href="/pricing"
+              className="rounded-full px-4 py-1.5 text-sm text-muted-foreground hover:bg-foreground/5 hover:text-foreground transition-colors"
+            >
+              {t("nav.pricing")}
+            </Link>
           </div>
 
           {/* Auth buttons */}

@@ -9,6 +9,7 @@ import { validateEmail, validateRequired } from "@/lib/validation";
 import { useValidationMessage } from "@/lib/validation-messages";
 import { authClient } from "@/lib/auth/client";
 import { useAuthErrorMessage } from "@/lib/auth/error-messages";
+import { trackEvent } from "@/lib/analytics";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { LocaleSwitcher } from "@/components/locale-switcher";
@@ -29,6 +30,11 @@ export default function LoginPage() {
   // Validation errors
   const [emailError, setEmailError] = useState<string | undefined>(undefined);
   const [passwordError, setPasswordError] = useState<string | undefined>(undefined);
+
+  // Funnel: visitor reached the login form.
+  useEffect(() => {
+    trackEvent("login_page_view");
+  }, []);
 
   // If already signed in (valid session, not just a stale cookie), skip the form.
   const { data: session } = authClient.useSession();

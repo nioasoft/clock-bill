@@ -81,16 +81,18 @@ export function OnboardingModal({ onDone }: OnboardingModalProps) {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch("/api/profile", {
+      await fetch("/api/profile", {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ onboarded: true }),
       });
-      if (!res.ok) throw new Error("save failed");
-      onDone();
     } catch {
-      setError(t("saveError"));
-      setSaving(false);
+      // Best-effort: never trap a brand-new user behind this modal because the
+      // "onboarded" flag failed to persist. Dismiss regardless — the worst case
+      // is the modal shows again next load, which is recoverable; a locked-out
+      // user is not.
+    } finally {
+      onDone();
     }
   }
 

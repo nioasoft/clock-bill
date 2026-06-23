@@ -22,20 +22,8 @@ export function CTASection() {
           {t("cta.subheading")}
         </p>
 
-        {/* Social proof avatars */}
-        <div className="mt-6 flex items-center justify-center gap-2">
-          <div className="flex -space-s-2" dir="ltr">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="w-10 h-10 rounded-full bg-primary-foreground/10 border-2 border-primary-foreground/25 flex items-center justify-center text-xs font-bold text-primary-foreground"
-              >
-                {String.fromCharCode(64 + i)}
-              </div>
-            ))}
-          </div>
-          <span className="text-sm text-primary-foreground/70 ms-3">{t("cta.socialProof")}</span>
-        </div>
+        {/* Honest trust line (replaces a fabricated user count). */}
+        <p className="mt-6 text-sm text-primary-foreground/80">{t("cta.socialProof")}</p>
 
         <div className="mt-10">
           <Link
