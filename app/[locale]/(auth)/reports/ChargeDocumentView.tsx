@@ -28,6 +28,7 @@ interface DocumentLine {
   source_type: string;
   time_entry_id: string | null;
   period_month: string | null;
+  date: string | null;
   label: string;
   description: string | null;
   notes: string | null;
@@ -59,6 +60,8 @@ interface ChargeDocument {
   vat_rate_snapshot: number | null;
   /** Optional summary grouping: 'project' | 'type' | null. */
   summary_mode: string | null;
+  /** Whether the header shows the items' date range (default true). */
+  show_date_range: boolean;
   /** When the document was last emailed to the client (ISO timestamp), or null. */
   last_sent_at: string | null;
   /** The email address the document was last sent to, or null. */
@@ -851,6 +854,19 @@ export default function ChargeDocumentView({
             })}
           </div>
         </div>
+      )}
+
+      {/* ── Header date-range toggle (pending only) ── */}
+      {isPending && (
+        <label className="flex items-center gap-2 cursor-pointer min-h-11 text-sm text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={doc.show_date_range}
+            onChange={(e) => void patchDocument({ showDateRange: e.target.checked })}
+            className="h-5 w-5 shrink-0 rounded border-border accent-primary"
+          />
+          {t("doc.showDateRangeLabel")}
+        </label>
       )}
 
       {/* ── Discount editor (pending or partial documents) ── */}

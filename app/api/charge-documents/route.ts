@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
       let entries: BillableEntry[] = [];
       if (timeEntryIds.length > 0) {
         const er = await client.query(
-          `SELECT te.id, te.description, te.notes, te.billing_kind AS "billingKind",
+          `SELECT te.id, te.date::text AS "date", te.description, te.notes, te.billing_kind AS "billingKind",
                   te.duration, te.quantity, te.rate, te.rate_label AS "rateLabel",
                   te.unit AS "unit",
                   te.item_ref AS "itemRef",
@@ -167,6 +167,7 @@ export async function POST(request: NextRequest) {
         sourceType: c.sourceType,
         timeEntryId: null,
         periodMonth: c.periodMonth,
+        date: null,
         label: c.label,
         description: null,
         notes: null,
@@ -205,14 +206,14 @@ export async function POST(request: NextRequest) {
         // id is generated per row in SQL; user_id/document_id are scalars repeated for every row.
         await client.query(
           `INSERT INTO charge_document_lines
-             (id, user_id, document_id, source_type, time_entry_id, period_month, label,
+             (id, user_id, document_id, source_type, time_entry_id, period_month, date, label,
               description, notes, item_ref, billing_kind, quantity, rate, amount, unit, project_name)
-           SELECT gen_random_uuid()::text, $1, $2, t.source_type, t.time_entry_id, t.period_month,
+           SELECT gen_random_uuid()::text, $1, $2, t.source_type, t.time_entry_id, t.period_month, t.date,
                   t.label, t.description, t.notes, t.item_ref, t.billing_kind, t.quantity, t.rate, t.amount, t.unit, t.project_name
              FROM unnest(
-               $3::text[], $4::text[], $5::text[], $6::text[], $7::text[],
-               $8::text[], $9::int[], $10::text[], $11::numeric[], $12::numeric[], $13::numeric[], $14::text[], $15::text[]
-             ) AS t(source_type, time_entry_id, period_month, label, description,
+               $3::text[], $4::text[], $5::text[], $6::date[], $7::text[], $8::text[],
+               $9::text[], $10::int[], $11::text[], $12::numeric[], $13::numeric[], $14::numeric[], $15::text[], $16::text[]
+             ) AS t(source_type, time_entry_id, period_month, date, label, description,
                     notes, item_ref, billing_kind, quantity, rate, amount, unit, project_name)`,
           [
             user.id,
@@ -220,6 +221,7 @@ export async function POST(request: NextRequest) {
             allLines.map((l) => l.sourceType),
             allLines.map((l) => l.timeEntryId),
             allLines.map((l) => l.periodMonth),
+            allLines.map((l) => l.date),
             allLines.map((l) => l.label),
             allLines.map((l) => l.description),
             allLines.map((l) => l.notes),

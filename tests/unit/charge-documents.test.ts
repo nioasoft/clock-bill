@@ -62,6 +62,18 @@ runner.test("buildLineFromEntry: hourly entry -> hourly line amount", () => {
   assertEqual(line.description, "פיתוח");
   assertEqual(line.notes, "מסך לוגין");
 });
+runner.test("buildLineFromEntry: snapshots the entry date (null when absent)", () => {
+  const dated: BillableEntry = {
+    id: "e4", date: "2026-06-25", description: "פיתוח", notes: null, billingKind: "hourly",
+    duration: 60, quantity: null, rate: 100, rateLabel: "תכנות", itemRef: null,
+  };
+  assertEqual(buildLineFromEntry(dated).date, "2026-06-25");
+  const undated: BillableEntry = {
+    id: "e5", description: "פיתוח", notes: null, billingKind: "hourly",
+    duration: 60, quantity: null, rate: 100, rateLabel: "תכנות", itemRef: null,
+  };
+  assertEqual(buildLineFromEntry(undated).date, null);
+});
 runner.test("buildLineFromEntry: item entry -> item line amount + item_ref", () => {
   const entry: BillableEntry = {
     id: "e2", description: "מכתב", notes: "בנושא שכירות", billingKind: "item",

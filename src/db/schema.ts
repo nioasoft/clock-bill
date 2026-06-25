@@ -552,6 +552,8 @@ export const chargeDocuments = pgTable(
     // Optional summary block at the top of the document: NULL = none,
     // 'project' = group by project, 'type' = group by work type (line label).
     summaryMode: text("summary_mode"),
+    // Show the items' date range in the document header (default ON).
+    showDateRange: boolean("show_date_range").default(true).notNull(),
     // Document-level discount, applied to the net subtotal before VAT.
     // discountType: 'percent' | 'amount' | NULL (no discount).
     discountType: text("discount_type"),
@@ -618,6 +620,10 @@ export const chargeDocumentLines = pgTable(
       onDelete: "set null",
     }),
     periodMonth: text("period_month"),
+    // Source entry's date, snapshotted at issue time (NULL for fixed/retainer
+    // lines and legacy docs created before this column → backfilled from the
+    // locked source entry where possible).
+    date: date("date"),
     label: text("label").notNull(),
     description: text("description"),
     notes: text("notes"),

@@ -18,6 +18,8 @@ export interface PdfDocumentLine {
   source_type: string;
   time_entry_id: string | null;
   period_month: string | null;
+  /** Source entry date snapshot (YYYY-MM-DD); null for fixed/retainer + legacy lines. */
+  date: string | null;
   label: string;
   description: string | null;
   notes: string | null;
@@ -46,6 +48,8 @@ export interface PdfChargeDocument {
   discount_value: number | null;
   /** Optional summary grouping: 'project' | 'type' | null. */
   summary_mode: string | null;
+  /** Whether to show the items' date range in the header. */
+  show_date_range: boolean;
 }
 
 /** Business-profile fields rendered in the PDF header/footer. */
@@ -119,6 +123,16 @@ export function PdfChargeDocument({ doc, lines, profile }: PdfChargeDocumentProp
     ? summarizeLines(lines as unknown as SummaryLine[], summaryMode)
     : [];
 
+  // Items' date range for the header (lexical sort works on YYYY-MM-DD). Shown
+  // only when enabled and at least one line carries a date.
+  const lineDates = lines
+    .map((l) => l.date)
+    .filter((d): d is string => !!d)
+    .sort();
+  const dateRange = lineDates.length
+    ? { from: lineDates[0], to: lineDates[lineDates.length - 1] }
+    : null;
+
   return (
     <div id="pdf-content" className="print-only" dir={locale === "he" ? "rtl" : "ltr"}>
       {/* ── Header banner (colored, mirrors the settings template preview) ── */}
@@ -150,6 +164,16 @@ export function PdfChargeDocument({ doc, lines, profile }: PdfChargeDocumentProp
             <div>{t("doc.pdfNumber", { number: doc.doc_number })}</div>
             <div>{t("doc.pdfStatus", { status: t(status.labelKey) })}</div>
             <div>{t("doc.pdfIssueDate", { date: formatDate(doc.issued_at) })}</div>
+            {doc.show_date_range && dateRange && (
+              <div>
+                {dateRange.from === dateRange.to
+                  ? t("doc.pdfDateSingle", { date: formatDate(dateRange.from) })
+                  : t("doc.pdfDateRange", {
+                      from: formatDate(dateRange.from),
+                      to: formatDate(dateRange.to),
+                    })}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -211,6 +235,7 @@ export function PdfChargeDocument({ doc, lines, profile }: PdfChargeDocumentProp
       <table className="pdf-table" style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           <tr>
+            <th style={{ whiteSpace: "nowrap" }}>{t("doc.colDate")}</th>
             <th>{t("doc.colItem")}</th>
             <th>{t("doc.colDetails")}</th>
             <th>{t("doc.colQtyRate")}</th>
@@ -222,6 +247,15 @@ export function PdfChargeDocument({ doc, lines, profile }: PdfChargeDocumentProp
             const qr = lineQtyRate(line);
             return (
               <tr key={line.id}>
+                <td style={{ fontSize: "12px", whiteSpace: "nowrap", color: "#475569" }}>
+                  {/* Time-entry lines show their date; fixed/retainer lines show
+                      their period month (MM/YYYY); legacy lines may be blank. */}
+                  {line.date
+                    ? formatDate(line.date)
+                    : line.period_month
+                      ? line.period_month.split("-").reverse().join("/")
+                      : ""}
+                </td>
                 <td style={{ fontSize: "12px" }}>
                   <bdi>{line.label}</bdi>
                   {isItemLine(line) && line.item_ref != null && (

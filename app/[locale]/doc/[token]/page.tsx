@@ -30,7 +30,7 @@ interface LoadResult {
 async function loadByToken(token: string): Promise<LoadResult | null> {
   const docRes = await adminQuery(
     `SELECT d.doc_number, d.status, d.currency, d.total, d.notes, d.issued_at,
-            d.vat_rate_snapshot, d.summary_mode, d.pdf_template, d.document_language,
+            d.vat_rate_snapshot, d.summary_mode, d.show_date_range, d.pdf_template, d.document_language,
             d.discount_type, d.discount_value,
             c.name AS client_name, c.document_language AS client_doc_language,
             d.user_id
@@ -45,7 +45,7 @@ async function loadByToken(token: string): Promise<LoadResult | null> {
 
   const userId = d.user_id as string;
   const linesRes = await adminQuery(
-    `SELECT id, source_type, time_entry_id, period_month, label, description, notes,
+    `SELECT id, source_type, time_entry_id, period_month, date::text AS date, label, description, notes,
             item_ref, billing_kind, quantity, unit, rate, amount, project_name
        FROM charge_document_lines WHERE document_id =
        (SELECT id FROM charge_documents WHERE public_token = $1)
@@ -73,6 +73,7 @@ async function loadByToken(token: string): Promise<LoadResult | null> {
     discount_type: (d.discount_type as "percent" | "amount" | null) ?? null,
     discount_value: (d.discount_value as number | null) ?? null,
     summary_mode: (d.summary_mode as string | null) ?? null,
+    show_date_range: (d.show_date_range as boolean | null) ?? true,
   };
 
   const profile: PdfBusinessProfile = {
