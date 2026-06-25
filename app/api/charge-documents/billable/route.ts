@@ -21,12 +21,31 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const clientId = searchParams.get("clientId");
     const periodMonth = searchParams.get("periodMonth"); // YYYY-MM
+    const fromParam = searchParams.get("from"); // YYYY-MM-DD (explicit range)
+    const toParam = searchParams.get("to");     // YYYY-MM-DD
 
     if (!clientId) {
       return NextResponse.json({ success: false, error_code: "CLIENT_REQUIRED", message: "נא לבחור לקוח" }, { status: 400 });
     }
 
     const monthValid = !!periodMonth && /^\d{4}-\d{2}$/.test(periodMonth);
+    const isYmd = (v: string | null): v is string => !!v && /^\d{4}-\d{2}-\d{2}$/.test(v);
+    const rangeValid = isYmd(fromParam) && isYmd(toParam) && fromParam <= toParam;
+
+    // Date window for the unbilled time-entries query. An explicit from/to range
+    // wins; otherwise fall back to the selected month's bounds. te.date is a plain
+    // DATE column, so YYYY-MM-DD string comparison is timezone-free and exact.
+    let dateStart: string | null = null;
+    let dateEnd: string | null = null;
+    if (rangeValid) {
+      dateStart = fromParam;
+      dateEnd = toParam;
+    } else if (monthValid) {
+      const [my, mm] = periodMonth!.split("-").map(Number);
+      const lastDay = new Date(my, mm, 0).getDate(); // day 0 of month mm = last day of target month
+      dateStart = `${periodMonth}-01`;
+      dateEnd = `${periodMonth}-${String(lastDay).padStart(2, "0")}`;
+    }
 
     // Bundle every read into ONE transaction → a single RLS context bind + one
     // round-trip pair (BEGIN/COMMIT) instead of 4 separate query() calls each
@@ -57,8 +76,10 @@ export async function GET(request: NextRequest) {
             AND c.id = $2
             AND te.charge_document_id IS NULL
             AND te.is_billable = true
+            AND ($3::date IS NULL OR te.date >= $3::date)
+            AND ($4::date IS NULL OR te.date <= $4::date)
           ORDER BY te.date DESC, te.created_at DESC`,
-        [user.id, clientId]
+        [user.id, clientId, dateStart, dateEnd]
       );
 
       // Fixed-monthly projects + already-billed months only matter when a valid
