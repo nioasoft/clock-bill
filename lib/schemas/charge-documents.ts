@@ -82,6 +82,8 @@ export const patchChargeDocumentSchema = z
     addTimeEntryId: z.string().min(1).optional(),
     // Summary grouping: 'project' | 'type' | null (null = no summary block).
     summaryMode: z.enum(["project", "type"]).nullable().optional(),
+    // Whether the document header shows the items' date range.
+    showDateRange: z.boolean().optional(),
     discount: discountSchema.optional(),
   })
   .refine(
@@ -91,6 +93,7 @@ export const patchChargeDocumentSchema = z
       d.removeLineId !== undefined ||
       d.addTimeEntryId !== undefined ||
       d.summaryMode !== undefined ||
+      d.showDateRange !== undefined ||
       d.discount !== undefined,
     { message: "נא לספק לפחות שדה אחד לעדכון" }
   );

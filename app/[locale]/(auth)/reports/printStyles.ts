@@ -88,6 +88,11 @@ export function templateRules(
     ${S} .pdf-table { width: 100%; border-collapse: collapse; }
     ${S} .pdf-table th { padding: 9px 12px; text-align: start; font-size: 10.5px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.3px; background: #f5f6f8; border-bottom: 2px solid ${accent}; }
     ${S} .pdf-table td { padding: 8px 12px; text-align: start; font-size: 12px; border-bottom: 1px solid #eef1f4; }
+    /* Vertical column separators (RTL-safe; drop on the last cell so no line sits
+       on the table's outer edge). Templates re-tint the color to match their row
+       lines so each stays visually distinct. */
+    ${S} .pdf-table th, ${S} .pdf-table td { border-inline-end: 1px solid #eef1f4; }
+    ${S} .pdf-table th:last-child, ${S} .pdf-table td:last-child { border-inline-end: none; }
 
     ${S} .pdf-totals-row td { padding: 4px 12px; }
     ${S} .pdf-totals-label { color: #64748b; text-align: end; }
@@ -120,6 +125,7 @@ export function templateRules(
       ${S} .pdf-banner-sub { color: #64748b; }
       ${S} .pdf-table th { background: transparent; border-bottom: 1px solid ${accent}; color: #333; font-family: Georgia, serif; letter-spacing: 0; text-transform: none; font-size: 11.5px; }
       ${S} .pdf-table td { border-bottom: 1px solid #ddd; }
+      ${S} .pdf-table th, ${S} .pdf-table td { border-inline-end-color: #ddd; }
       ${S} .pdf-summary-title { background: transparent; border-bottom: 1px solid #333; }
       ${S} .pdf-totals-grand td { background: transparent; }
       ${S} .pdf-totals-grand .pdf-totals-label, ${S} .pdf-totals-grand .pdf-totals-value { border-top: 1px double #333; }
@@ -130,7 +136,7 @@ export function templateRules(
       ${S} .pdf-banner .pdf-business-name { color: ${pText}; font-weight: 900; font-size: 24px; }
       ${S} .pdf-banner .pdf-doc-title { color: ${pText}; text-transform: uppercase; letter-spacing: 1px; }
       ${S} .pdf-banner-sub { color: ${pSub}; }
-      ${S} .pdf-table th { background: ${primary}; color: ${pText}; border-bottom: none; text-transform: uppercase; letter-spacing: 0.5px; }
+      ${S} .pdf-table th { background: ${primary}; color: ${pText}; border-bottom: none; border-inline-end: none; text-transform: uppercase; letter-spacing: 0.5px; }
       ${S} .pdf-totals-grand td { background: ${primary}; }
       ${S} .pdf-totals-grand .pdf-totals-label, ${S} .pdf-totals-grand .pdf-totals-value { color: ${pText}; border-top: none; font-size: 16px; padding: 8px 12px; }
     `,
@@ -142,6 +148,7 @@ export function templateRules(
       ${S} .pdf-banner-sub { color: #94a3b8; }
       ${S} .pdf-table th { background: transparent; border-bottom: 1px solid ${accent}; color: #8a8a8a; font-weight: 400; letter-spacing: 0.8px; font-size: 10px; }
       ${S} .pdf-table td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; }
+      ${S} .pdf-table th, ${S} .pdf-table td { border-inline-end-color: #f0f0f0; }
       ${S} .pdf-summary-title { background: transparent; }
       ${S} .pdf-totals-grand td { background: transparent; }
       ${S} .pdf-totals-grand .pdf-totals-label, ${S} .pdf-totals-grand .pdf-totals-value { font-weight: 400; border-top: 1px solid ${primary}; }

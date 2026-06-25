@@ -57,10 +57,12 @@ export function PdfPreview({
   const addr = [addressStreet.trim(), addressCity.trim()].filter(Boolean).join(", ");
   const tx = isHebrew
     ? { for: "עבור", client: "לקוח לדוגמה", number: "מספר 1", date: "01/01/2026",
+        dateCol: "תאריך", d1: "03/01", d2: "05/01",
         item: "פריט", details: "פירוט", qty: "כמות / תעריף", amount: "סכום",
         line1: "תכנות", line1d: "פיתוח עמוד", line2: "עיצוב",
         subtotal: "סכום ביניים", vat: "מע״מ 18%", total: "סה״כ לתשלום", hours: "8ש׳" }
     : { for: "For", client: "Sample client", number: "No. 1", date: "01/01/2026",
+        dateCol: "Date", d1: "Jan 3", d2: "Jan 5",
         item: "Item", details: "Details", qty: "Qty / Rate", amount: "Amount",
         line1: "Development", line1d: "Landing page", line2: "Design",
         subtotal: "Subtotal", vat: "VAT 18%", total: "Total due", hours: "8h" };
@@ -129,6 +131,7 @@ export function PdfPreview({
           <table className="pdf-table">
             <thead>
               <tr>
+                <th style={{ whiteSpace: "nowrap" }}>{tx.dateCol}</th>
                 <th>{tx.item}</th>
                 <th>{tx.details}</th>
                 <th>{tx.qty}</th>
@@ -137,12 +140,14 @@ export function PdfPreview({
             </thead>
             <tbody>
               <tr>
+                <td style={{ whiteSpace: "nowrap", color: "#475569" }}>{tx.d1}</td>
                 <td>{tx.line1}</td>
                 <td>{tx.line1d}</td>
                 <td style={{ whiteSpace: "nowrap" }}>{tx.hours} × ₪150</td>
                 <td style={{ whiteSpace: "nowrap" }}>₪1,200</td>
               </tr>
               <tr>
+                <td style={{ whiteSpace: "nowrap", color: "#475569" }}>{tx.d2}</td>
                 <td>{tx.line2}</td>
                 <td>—</td>
                 <td style={{ whiteSpace: "nowrap" }}>1 × ₪300</td>
