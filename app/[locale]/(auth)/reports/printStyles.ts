@@ -86,6 +86,12 @@ export function templateRules(
     ${S} .pdf-summary-table tr:last-child td { border-bottom: none; }
 
     ${S} .pdf-table { width: 100%; border-collapse: collapse; }
+    /* Print pagination: repeat the header on every page and never slice a row
+       across the page break (a long description gets pushed whole to the next
+       page instead of being cut at the paper edge). */
+    ${S} .pdf-table thead { display: table-header-group; }
+    ${S} .pdf-table tr { break-inside: avoid; page-break-inside: avoid; }
+    ${S} .pdf-banner, ${S} .pdf-summary { break-inside: avoid; page-break-inside: avoid; }
     ${S} .pdf-table th { padding: 9px 12px; text-align: start; font-size: 10.5px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.3px; background: #f5f6f8; border-bottom: 2px solid ${accent}; }
     ${S} .pdf-table td { padding: 8px 12px; text-align: start; font-size: 12px; border-bottom: 1px solid #eef1f4; }
     /* Vertical column separators (RTL-safe; drop on the last cell so no line sits
@@ -198,12 +204,15 @@ export function buildPrintStyles(
       #pdf-content {
         display: block !important;
         direction: ${direction} !important;
-        /* Internal inset so the banner color + text are never flush to the paper
-           edge — keeps content inside the printer's safe area even if the print
-           dialog margins are set to "None" (@page alone isn't enough then). */
-        padding: 10mm 12mm;
+        /* Page margins come from @page so they repeat on EVERY page (top + bottom
+           inset at each break, not just the first/last page). No container padding
+           here — that only insets the first page top + last page bottom. */
+        padding: 0;
       }
-      @page { size: A4; margin: 6mm; }
+      /* Real per-page A4 margins: top/bottom 14mm, sides 12mm — applied on every
+         printed page so content never runs to the paper edge at a page break.
+         (Keep the print dialog's "Margins" on Default so these take effect.) */
+      @page { size: A4; margin: 14mm 12mm; }
       body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
       ${templateRules(template, primaryColor, accentColor, "#pdf-content", primaryText)}
     }
