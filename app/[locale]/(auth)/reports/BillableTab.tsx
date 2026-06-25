@@ -79,10 +79,14 @@ export default function BillableTab({
   const [clients, setClients] = useState<Client[]>([]);
   const [clientsLoading, setClientsLoading] = useState(true);
   const [clientId, setClientId] = useState<string>("");
+  // Filter by a single month (default) or an explicit from–to date range.
+  const [filterMode, setFilterMode] = useState<"month" | "range">("month");
   // Current month (YYYY-MM); computing once on mount is fine in a client component.
   const [periodMonth, setPeriodMonth] = useState<string>(() =>
     new Date().toISOString().slice(0, 7)
   );
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
 
   const [state, setState] = useState<LoadState>("idle");
   const [data, setData] = useState<BillableData | null>(null);
@@ -120,13 +124,24 @@ export default function BillableTab({
       setData(null);
       return;
     }
+    // Range mode needs both ends before it can fetch; until then, stay idle so we
+    // don't load the whole unfiltered list.
+    const rangeReady = filterMode === "range" && !!fromDate && !!toDate && fromDate <= toDate;
+    if (filterMode === "range" && !rangeReady) {
+      setState("idle");
+      setData(null);
+      return;
+    }
     let ignore = false;
     setState("loading");
     setSelectedEntryIds(new Set());
     setSelectedComputed(new Set());
     (async () => {
       try {
-        const params = new URLSearchParams({ clientId, periodMonth });
+        const params =
+          filterMode === "range"
+            ? new URLSearchParams({ clientId, from: fromDate, to: toDate })
+            : new URLSearchParams({ clientId, periodMonth });
         const res = await fetch(
           `/api/charge-documents/billable?${params.toString()}`
         );
@@ -145,7 +160,7 @@ export default function BillableTab({
     return () => {
       ignore = true;
     };
-  }, [clientId, periodMonth, reloadKey]);
+  }, [clientId, filterMode, periodMonth, fromDate, toDate, reloadKey]);
 
   const toggleEntry = (id: string) => {
     setSelectedEntryIds((prev) => {
@@ -163,6 +178,15 @@ export default function BillableTab({
       else next.add(key);
       return next;
     });
+  };
+
+  // Select-all over the currently shown entries: select every row when not all
+  // are selected, otherwise clear. Operates only on what's loaded/visible.
+  const allEntriesSelected =
+    !!data && data.entries.length > 0 && data.entries.every((e) => selectedEntryIds.has(e.id));
+  const toggleAllEntries = () => {
+    if (!data) return;
+    setSelectedEntryIds(allEntriesSelected ? new Set() : new Set(data.entries.map((e) => e.id)));
   };
 
   // Computed lines have no stable id; key by sourceType+periodMonth+label.
@@ -259,20 +283,76 @@ export default function BillableTab({
             />
           </div>
 
-          <div className="flex items-center gap-2">
-            <label htmlFor="billMonth" className="text-sm font-medium text-foreground whitespace-nowrap">
-              {t("billable.monthLabel")}
-            </label>
-            <MonthField
-              id="billMonth"
-              className="w-44"
-              locale={locale}
-              ariaLabel={t("billable.monthLabel")}
-              value={periodMonth}
-              onChange={setPeriodMonth}
-            />
+          {/* Month vs. date-range mode */}
+          <div className="inline-flex rounded-[var(--radius)] border border-border p-0.5">
+            <button
+              type="button"
+              onClick={() => setFilterMode("month")}
+              className={`min-h-[36px] px-3 py-1 text-sm rounded-[calc(var(--radius)-2px)] transition-colors ${
+                filterMode === "month" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+              }`}
+            >
+              {t("billable.filterModeMonth")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterMode("range")}
+              className={`min-h-[36px] px-3 py-1 text-sm rounded-[calc(var(--radius)-2px)] transition-colors ${
+                filterMode === "range" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+              }`}
+            >
+              {t("billable.filterModeRange")}
+            </button>
           </div>
+
+          {filterMode === "month" ? (
+            <div className="flex items-center gap-2">
+              <label htmlFor="billMonth" className="text-sm font-medium text-foreground whitespace-nowrap">
+                {t("billable.monthLabel")}
+              </label>
+              <MonthField
+                id="billMonth"
+                className="w-44"
+                locale={locale}
+                ariaLabel={t("billable.monthLabel")}
+                value={periodMonth}
+                onChange={setPeriodMonth}
+              />
+            </div>
+          ) : (
+            <div className="flex items-center gap-x-4 gap-y-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <label htmlFor="billFrom" className="text-sm font-medium text-foreground whitespace-nowrap">
+                  {t("billable.fromLabel")}
+                </label>
+                <input
+                  id="billFrom"
+                  type="date"
+                  value={fromDate}
+                  max={toDate || undefined}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  className="w-40 rounded-[var(--radius)] border border-border px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label htmlFor="billTo" className="text-sm font-medium text-foreground whitespace-nowrap">
+                  {t("billable.toLabel")}
+                </label>
+                <input
+                  id="billTo"
+                  type="date"
+                  value={toDate}
+                  min={fromDate || undefined}
+                  onChange={(e) => setToDate(e.target.value)}
+                  className="w-40 rounded-[var(--radius)] border border-border px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+            </div>
+          )}
         </div>
+        {filterMode === "range" && (
+          <p className="mt-3 text-xs text-muted-foreground">{t("billable.rangeNote")}</p>
+        )}
       </div>
 
       {/* States */}
@@ -304,8 +384,23 @@ export default function BillableTab({
           {/* Unbilled entries */}
           {data.entries.length > 0 && (
             <div className="rounded-[var(--radius-card)] border border-border bg-card overflow-hidden">
-              <div className="px-4 py-3 border-b border-border">
+              <div className="px-4 py-3 border-b border-border flex items-center justify-between gap-3">
                 <h3 className="font-semibold">{t("billable.entriesHeading")}</h3>
+                <label className="flex items-center gap-2 cursor-pointer text-sm text-muted-foreground min-h-[44px]">
+                  <input
+                    type="checkbox"
+                    checked={allEntriesSelected}
+                    ref={(el) => {
+                      if (el) {
+                        el.indeterminate =
+                          data.entries.some((e) => selectedEntryIds.has(e.id)) && !allEntriesSelected;
+                      }
+                    }}
+                    onChange={toggleAllEntries}
+                    className="h-5 w-5 shrink-0 rounded border-border accent-primary"
+                  />
+                  {t("billable.selectAll")}
+                </label>
               </div>
               <ul className="divide-y divide-border">
                 {data.entries.map((entry) => {

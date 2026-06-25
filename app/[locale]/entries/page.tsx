@@ -105,6 +105,14 @@ function entryAmount(entry: TimeEntry): number {
 /** Sentinel rateId for "+ פריט חד-פעמי…" (an ad-hoc, typed item not in the catalog). */
 const ADHOC = "__adhoc__";
 
+/**
+ * Sentinel rateId for an edited hourly entry whose rate snapshot has no matching
+ * catalog rate (it came from the profile/project default cascade, or the catalog
+ * rate was deleted/renamed). Lets the picker show the entry's own rate as a
+ * selected option so the price stays visible — never silently blank on edit.
+ */
+const SNAPSHOT_RATE = "__entry_snapshot__";
+
 interface GroupedProjects {
   [clientId: string]: {
     clientName: string;
@@ -314,6 +322,13 @@ export default function EntriesPage() {
           const match = pool.find((r) => r.name === editingEntry.rateLabel);
           if (match) return { ...p, rateId: match.id };
         }
+        // Editing without a catalog match: select the snapshot sentinel so the
+        // picker shows the entry's own rate (visible + preserved on submit),
+        // never silently swapping it for a different default.
+        if (editingEntry) {
+          return { ...p, rateId: editingEntry.rate != null ? SNAPSHOT_RATE : "" };
+        }
+        // New entry: default to the cascade's hourly rate.
         return { ...p, rateId: pickDefaultHourlyRate(formRates)?.id ?? "" };
       }
       // item mode: keep a still-valid selection (including the ad-hoc sentinel)
@@ -402,17 +417,21 @@ export default function EntriesPage() {
       const isItem = formData.billingKind === "item";
       const isAdhoc = isItem && formData.rateId === ADHOC;
       const chosen = formRates.find((r) => r.id === formData.rateId);
-      // Ad-hoc lines carry typed name+price; catalog lines snapshot the chosen rate.
-      const itemRate = isAdhoc ? parseFloat(formData.adhocPrice) || 0 : chosen?.rate ?? null;
-      const itemLabel = isAdhoc ? formData.adhocName.trim() : chosen?.name ?? null;
+      // Ad-hoc lines carry typed name+price; catalog lines snapshot the chosen
+      // rate. When editing and no catalog rate is chosen (rate deleted/renamed,
+      // or it came from the profile default and never had a catalog entry), fall
+      // back to the entry's own snapshot so editing other fields never zeroes it.
+      const itemRate = isAdhoc ? parseFloat(formData.adhocPrice) || 0 : chosen?.rate ?? editingEntry?.rate ?? null;
+      const itemLabel = isAdhoc ? formData.adhocName.trim() : chosen?.name ?? editingEntry?.rateLabel ?? null;
       // Ad-hoc items have no unit field — preserve the edited entry's snapshot
       // (covers editing an item whose catalog rate was deleted); new ad-hoc
       // lines have no unit. Catalog items snapshot the chosen rate's unit.
       const itemUnit = isAdhoc ? (editingEntry?.unit ?? null) : chosen?.unit ?? null;
       // Hourly lines snapshot the chosen hourly rate/label so the amount survives
-      // create AND edit. Sending null here zeroes the entry's price (regression).
-      const hourlyRate = chosen?.rate ?? null;
-      const hourlyLabel = chosen?.name ?? null;
+      // create AND edit. Sending null here zeroes the entry's price (regression),
+      // so fall back to the entry's own snapshot when nothing is chosen on edit.
+      const hourlyRate = chosen?.rate ?? editingEntry?.rate ?? null;
+      const hourlyLabel = chosen?.name ?? editingEntry?.rateLabel ?? null;
 
       const response = await fetch(url, {
         method,
@@ -1002,7 +1021,8 @@ export default function EntriesPage() {
                       <p className="mt-1 text-xs text-muted-foreground">{t("form.durationHelp")}</p>
                     </div>
 
-                    {formRates.some((r) => r.kind === "hourly") && (
+                    {(formRates.some((r) => r.kind === "hourly") ||
+                      (formData.rateId === SNAPSHOT_RATE && editingEntry)) && (
                       <div className="col-span-2">
                         <label htmlFor="entryRate" className="block text-sm font-medium text-foreground">
                           {t("form.rateLabel")}
@@ -1013,12 +1033,26 @@ export default function EntriesPage() {
                           onChange={(v) => setFormData({ ...formData, rateId: v })}
                           className="mt-1"
                           disabled={submitting}
-                          options={formRates
-                            .filter((r) => r.kind === "hourly")
-                            .map((r) => ({
-                              value: r.id,
-                              label: t("form.hourlyRateOption", { name: r.name, rate: r.rate }),
-                            }))}
+                          options={[
+                            // The edited entry's own rate snapshot, shown when it
+                            // has no catalog match (default-cascade or deleted rate)
+                            // so the price stays visible and selectable.
+                            ...(formData.rateId === SNAPSHOT_RATE && editingEntry
+                              ? [{
+                                  value: SNAPSHOT_RATE,
+                                  label: t("form.hourlyRateOption", {
+                                    name: editingEntry.rateLabel ?? "—",
+                                    rate: editingEntry.rate ?? 0,
+                                  }),
+                                }]
+                              : []),
+                            ...formRates
+                              .filter((r) => r.kind === "hourly")
+                              .map((r) => ({
+                                value: r.id,
+                                label: t("form.hourlyRateOption", { name: r.name, rate: r.rate }),
+                              })),
+                          ]}
                         />
                       </div>
                     )}
