@@ -6,6 +6,15 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    ignore:
+      # @polar-sh/better-auth peer-locks @polar-sh/sdk to ^0.47. Bumping the SDK
+      # to 0.48+ breaks `npm install` (ERESOLVE) until better-auth widens its
+      # peer range — so hold the SDK on 0.47.x (patches still allowed) and bump
+      # both together by hand when better-auth supports the newer SDK.
+      - dependency-name: "@polar-sh/sdk"
+        update-types:
+          - "version-update:semver-minor"
+          - "version-update:semver-major"
     groups:
       # Batch low-risk dev/minor bumps into one PR to cut noise.
       minor-and-patch:
