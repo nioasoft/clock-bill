@@ -15,6 +15,12 @@ updates:
         update-types:
           - "version-update:semver-minor"
           - "version-update:semver-major"
+      # ESLint 10 drops the context.getFilename() API that eslint-config-next's
+      # bundled eslint-plugin-react still calls → lint crashes. Hold on 9.x until
+      # eslint-config-next ships an ESLint-10-compatible release.
+      - dependency-name: "eslint"
+        update-types:
+          - "version-update:semver-major"
     groups:
       # Batch low-risk dev/minor bumps into one PR to cut noise.
       minor-and-patch:
