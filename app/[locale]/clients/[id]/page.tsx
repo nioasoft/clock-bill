@@ -15,6 +15,7 @@ import { ROUNDING_MODES, type RoundingMode } from "@/lib/rounding";
 import { messageForError } from "@/lib/api-error";
 import { useTranslations, useLocale } from "next-intl";
 import { SimpleSelect } from "@/components/ui/simple-select";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { resolveDocumentLocale } from "@/lib/document-language";
 
 const CURRENCIES = [
@@ -640,7 +641,8 @@ export default function ClientDetailsPage() {
             {t("clientNotFound")}
           </div>
         ) : (
-          <div className="rounded-[var(--radius-card)] bg-card p-5 border border-border">
+          <>
+          <div className="rounded-[var(--radius-card)] bg-card p-5 sm:p-6 border border-border">
             <div className="flex items-start justify-between gap-3 border-b border-border pb-4 mb-4">
               <div className="min-w-0">
                 <h2 className="font-display text-2xl font-bold tracking-tight text-foreground truncate">{client.name}</h2>
@@ -648,8 +650,8 @@ export default function ClientDetailsPage() {
                   <p className="text-sm text-muted-foreground mt-0.5">{t("contactNameInline", { name: client.contactName })}</p>
                 )}
               </div>
-              <span className={`inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                client.isActive ? "bg-success/10 text-success" : "bg-muted text-foreground"
+              <span className={`inline-flex shrink-0 items-center rounded-[var(--radius)] border px-2.5 py-0.5 text-xs font-medium ${
+                client.isActive ? "border-success/30 bg-success/10 text-success" : "border-border bg-muted text-muted-foreground"
               }`}>
                 {client.isActive ? t("statusActive") : t("statusInactive")}
               </span>
@@ -690,6 +692,16 @@ export default function ClientDetailsPage() {
               </div>
             </div>
 
+            {client.notes && (
+              <div className="mt-6 border-t border-border pt-6">
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">{t("notesSection")}</h3>
+                <div className="rounded-[var(--radius)] border border-border bg-card-elevated p-3">
+                  <p className="text-foreground whitespace-pre-wrap">{client.notes}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
             {/* Rates & items */}
             {(() => {
               const symbol = CURRENCY_SYMBOLS[client.currency] || "₪";
@@ -697,8 +709,8 @@ export default function ClientDetailsPage() {
               const items = (client.rates ?? []).filter((r) => r.kind === "item");
               const hasAny = hourly.length > 0 || items.length > 0 || client.isRetainer;
               return (
-                <div className="mt-6 border-t border-border pt-6">
-                  <div className="flex items-center justify-between mb-3">
+                <div className="mt-6 rounded-[var(--radius-card)] bg-card p-5 sm:p-6 border border-border">
+                  <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-display text-base font-semibold text-foreground">{t("ratesAndItems")}</h3>
                       {client.billingRounding != null && (
@@ -708,12 +720,9 @@ export default function ClientDetailsPage() {
                       )}
                     </div>
                     {client.isActive && (
-                      <button
-                        onClick={() => openEditForm(true)}
-                        className="text-sm font-medium text-primary hover:text-primary/90"
-                      >
+                      <Button variant="outline" size="sm" onClick={() => openEditForm(true)}>
                         {t("editRates")}
-                      </button>
+                      </Button>
                     )}
                   </div>
                   {!hasAny ? (
@@ -727,7 +736,7 @@ export default function ClientDetailsPage() {
                           <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("hourlyRatesHeader")}</h4>
                           <ul className="space-y-1">
                             {hourly.map((r) => (
-                              <li key={r.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-[var(--radius)] bg-background/40 px-3 py-2">
+                              <li key={r.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-[var(--radius)] border border-border bg-card-elevated px-3 py-2">
                                 <span className="text-sm font-medium text-foreground">{r.name}</span>
                                 <span className="font-mono text-sm tabular-nums text-foreground">
                                   {symbol}{r.rate}<span className="text-muted-foreground">{t("perHourSuffix")}</span>
@@ -752,7 +761,7 @@ export default function ClientDetailsPage() {
                           <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("itemsHeader")}</h4>
                           <ul className="space-y-1">
                             {items.map((r) => (
-                              <li key={r.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-[var(--radius)] bg-background/40 px-3 py-2">
+                              <li key={r.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-[var(--radius)] border border-border bg-card-elevated px-3 py-2">
                                 <span className="text-sm font-medium text-foreground">{r.name}</span>
                                 <span className="font-mono text-sm tabular-nums text-foreground">
                                   {symbol}{r.rate}<span className="text-muted-foreground">{t("perUnitSuffix")}</span>
@@ -787,25 +796,16 @@ export default function ClientDetailsPage() {
                 </div>
               );
             })()}
-
-            {client.notes && (
-              <div className="mt-6">
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">{t("notesSection")}</h3>
-                <div className="rounded-md bg-muted p-3">
-                  <p className="text-foreground whitespace-pre-wrap">{client.notes}</p>
-                </div>
-              </div>
-            )}
-          </div>
+          </>
         )}
 
         {client && (
-          <div className="mt-6 rounded-[var(--radius-card)] bg-card p-5 border border-border">
+          <div className="mt-6 rounded-[var(--radius-card)] bg-card p-5 sm:p-6 border border-border">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display text-base font-semibold text-foreground">{t("projectsHeader")}</h3>
               <a
                 href={`/projects?create=true&clientId=${clientId}`}
-                className="text-sm text-primary hover:text-primary/90 font-medium"
+                className={buttonVariants({ variant: "outline", size: "sm" })}
               >
                 {t("addProject")}
               </a>
@@ -820,14 +820,13 @@ export default function ClientDetailsPage() {
                   <a
                     key={project.id}
                     href={`/projects/${project.id}`}
-                    className="flex items-center justify-between rounded-[var(--radius)] px-3 py-2.5 hover:bg-muted transition-colors"
+                    className="flex items-center justify-between rounded-[var(--radius)] border border-border bg-card-elevated px-3 py-2.5 hover:bg-muted transition-colors"
                   >
                     <span className="text-sm font-medium text-foreground">{project.name}</span>
-                    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
-                      project.status === "active" ? "bg-success/10 text-success" :
-                      project.status === "completed" ? "bg-secondary-light text-secondary" :
-                      project.status === "paused" ? "bg-accent text-accent-foreground" :
-                      "bg-muted text-foreground"
+                    <span className={`inline-flex items-center rounded-[var(--radius)] border px-2.5 py-0.5 text-xs font-medium ${
+                      project.status === "active" ? "border-success/30 bg-success/10 text-success" :
+                      project.status === "paused" ? "border-warning/30 bg-warning/10 text-warning" :
+                      "border-border bg-muted text-muted-foreground"
                     }`}>
                       {project.status === "active" ? t("projectStatusActive") :
                        project.status === "completed" ? t("projectStatusCompleted") :
@@ -843,19 +842,18 @@ export default function ClientDetailsPage() {
 
         {/* Actions — kept at the bottom */}
         {client && client.isActive && (
-          <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-border pt-5">
-            <button
-              onClick={() => openEditForm()}
-              className="rounded-[var(--radius)] border border-border px-3.5 py-2 text-sm text-foreground hover:bg-muted"
-            >
+          <div className="mt-6 flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => openEditForm()}>
               {t("editClientButton")}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setShowDeleteConfirm(true)}
-              className="rounded-[var(--radius)] px-3.5 py-2 text-sm text-destructive hover:bg-destructive/10"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
             >
               {t("deleteClient")}
-            </button>
+            </Button>
           </div>
         )}
       </PageContainer>
