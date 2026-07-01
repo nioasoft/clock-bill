@@ -32,15 +32,22 @@ export function useTasksBoard(): UseTasksBoardReturn {
   // Pending unsubscribe for an in-flight "drag/move out of in_progress → stop
   // timer" subscription, so a new move can replace a lingering (cancelled) one.
   const pendingStopUnsubRef = useRef<(() => void) | null>(null);
+  // Monotonic load id — the last-INITIATED load wins. Without this, a stale
+  // refetch (e.g. the global onTimerStopped→load fired before persistMove) can
+  // resolve last and clobber the fresh post-move state, stranding the card.
+  const loadSeqRef = useRef(0);
 
   const load = useCallback(async () => {
+    const seq = ++loadSeqRef.current;
     setState((s) => ({ ...s, loading: true, error: false }));
     try {
       const res = await fetch("/api/tasks");
       const data = await res.json();
+      if (seq !== loadSeqRef.current) return; // a newer load started — ignore this one
       if (data.success) setState({ loading: false, error: false, tasks: data.tasks });
       else setState((s) => ({ ...s, loading: false, error: true }));
     } catch {
+      if (seq !== loadSeqRef.current) return;
       setState((s) => ({ ...s, loading: false, error: true }));
     }
   }, []);
@@ -91,14 +98,20 @@ export function useTasksBoard(): UseTasksBoardReturn {
           pendingStopUnsubRef.current();
           pendingStopUnsubRef.current = null;
         }
-        const unsub = onTimerStopped(async () => {
-          // onTimerStopped fires for ANY stopped timer. If OUR entry is still
-          // running, some other timer stopped — keep waiting (don't unsub).
-          if (runningTimerForTask(task.id) === entryId) return;
+        const unsub = onTimerStopped(async (stoppedId) => {
+          // onTimerStopped is a global broadcast — only act when OUR entry is
+          // the one that stopped (ignores unrelated/lingering stops).
+          if (stoppedId !== entryId) return;
           unsub();
           pendingStopUnsubRef.current = null;
+          // Move the card the instant the timer stops (same optimistic shape as
+          // the non-modal path below); persist + reload then reconcile.
+          setState((s) => ({
+            ...s,
+            tasks: s.tasks.map((t) => (t.id === task.id ? { ...t, status: targetStatus, position } : t)),
+          }));
           try { await persistMove(task.id, targetStatus, position); await load(); }
-          catch { showErrorToast(tToasts("moveError")); }
+          catch { showErrorToast(tToasts("moveError")); await load(); }
         });
         pendingStopUnsubRef.current = unsub;
         handleStopTimer(entryId, { managed: true });

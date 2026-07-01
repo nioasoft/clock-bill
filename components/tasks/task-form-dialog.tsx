@@ -130,10 +130,24 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
     }
   };
 
-  const canSubmit = Boolean(clientId && projectId && rateId && title.trim()) && !submitting;
+  // Show *which* required field is missing (instead of a silently-disabled
+  // button). Errors surface only after a save attempt, then clear per-field as
+  // the user fills them in.
+  const [attempted, setAttempted] = useState(false);
+  const missing = {
+    client: !clientId,
+    project: !projectId,
+    rate: !rateId,
+    title: !title.trim(),
+  };
+  const hasMissing = missing.client || missing.project || missing.rate || missing.title;
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    if (submitting) return;
+    if (hasMissing) {
+      setAttempted(true);
+      return;
+    }
     setSubmitting(true);
     try {
       const body = {
@@ -194,8 +208,12 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
                 onChange={handleClientChange}
                 placeholder={t("selectClient")}
                 disabled={submitting}
+                className={attempted && missing.client ? "border-destructive/60" : undefined}
                 options={clients.map((c) => ({ value: c.id, label: c.name }))}
               />
+              {attempted && missing.client && (
+                <p className="mt-1 text-xs text-destructive">{t("requiredClient")}</p>
+              )}
             </div>
 
             <div>
@@ -208,8 +226,12 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
                 onChange={setProjectId}
                 placeholder={clientId ? t("selectProject") : t("selectClientFirst")}
                 disabled={submitting || !clientId}
+                className={attempted && missing.project ? "border-destructive/60" : undefined}
                 options={projectsForClient.map((p) => ({ value: p.id, label: p.name }))}
               />
+              {attempted && missing.project && (
+                <p className="mt-1 text-xs text-destructive">{t("requiredProject")}</p>
+              )}
             </div>
 
             <div>
@@ -222,8 +244,12 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
                 onChange={setRateId}
                 placeholder={clientId ? t("selectRate") : t("selectClientFirst")}
                 disabled={submitting || !clientId}
+                className={attempted && missing.rate ? "border-destructive/60" : undefined}
                 options={rates.map((r) => ({ value: r.id, label: r.name }))}
               />
+              {attempted && missing.rate && (
+                <p className="mt-1 text-xs text-destructive">{t("requiredRate")}</p>
+              )}
             </div>
           </div>
 
@@ -236,10 +262,13 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className={fieldClass(false)}
+              className={fieldClass(attempted && missing.title)}
               disabled={submitting}
               placeholder={t("titlePlaceholder")}
             />
+            {attempted && missing.title && (
+              <p className="mt-1 text-xs text-destructive">{t("requiredTitle")}</p>
+            )}
           </div>
 
           <button
@@ -327,7 +356,7 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
             </div>
           </div>
 
-          <div className="sticky bottom-0 z-10 -mx-5 -mb-5 flex justify-end gap-3 border-t border-border bg-card px-5 py-4 sm:-mx-6 sm:-mb-6 sm:px-6">
+          <div className="mt-2 flex justify-end gap-3 border-t border-border pt-4">
             <button
               type="button"
               onClick={props.onClose}
@@ -338,7 +367,7 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
             </button>
             <button
               type="submit"
-              disabled={!canSubmit}
+              disabled={submitting}
               className="rounded-[var(--radius)] bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
               {submitting ? t("saving") : isEdit ? t("updateTask") : t("saveTask")}

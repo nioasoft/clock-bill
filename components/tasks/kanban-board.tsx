@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors, closestCorners, type DragEndEvent } from "@dnd-kit/core";
+import { DndContext, DragOverlay, PointerSensor, KeyboardSensor, useSensor, useSensors, closestCorners, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useTranslations } from "next-intl";
@@ -31,13 +31,20 @@ export function KanbanBoard({ board }: { board: UseTasksBoardReturn }) {
   const { runningTimerForTask } = useTimer();
   const { state, load, byStatus, moveTask } = board;
   const [selected, setSelected] = useState<TaskRecord | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const activeTask = activeId ? state.tasks.find((t) => t.id === activeId) ?? null : null;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor)
   );
 
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveId(String(event.active.id));
+  }, []);
+
   const handleDragEnd = useCallback((event: DragEndEvent) => {
+    setActiveId(null);
     const { active, over } = event;
     if (!over) return;
     const task = state.tasks.find((t) => t.id === active.id);
@@ -51,7 +58,9 @@ export function KanbanBoard({ board }: { board: UseTasksBoardReturn }) {
     void moveTask(task.id, targetStatus);
   }, [state.tasks, moveTask]);
 
-  if (state.loading) {
+  // Only the very first load shows the skeleton; background refetches (moves,
+  // creates, timer stops) keep the current cards visible and swap in place.
+  if (state.loading && state.tasks.length === 0) {
     return <div className="flex gap-4">{TASK_STATUSES.map((s) => (
       <div key={s} className="min-w-72 flex-1 animate-pulse rounded-[var(--radius-card)] border border-border bg-surface h-64" />
     ))}</div>;
@@ -75,7 +84,13 @@ export function KanbanBoard({ board }: { board: UseTasksBoardReturn }) {
 
   return (
     <>
-      <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={() => setActiveId(null)}
+      >
         <div className="flex gap-4 overflow-x-auto pb-4">
           {TASK_STATUSES.map((status) => (
             <KanbanColumn
@@ -87,6 +102,16 @@ export function KanbanBoard({ board }: { board: UseTasksBoardReturn }) {
             />
           ))}
         </div>
+        {/* Ghost that follows the pointer while dragging (smooth feel). */}
+        <DragOverlay>
+          {activeTask ? (
+            <TaskCard
+              task={activeTask}
+              isTimerRunning={Boolean(runningTimerForTask(activeTask.id))}
+              onClick={() => {}}
+            />
+          ) : null}
+        </DragOverlay>
       </DndContext>
       {selected && (
         <TaskDetailSheet

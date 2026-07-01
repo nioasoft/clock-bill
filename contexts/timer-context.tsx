@@ -100,8 +100,9 @@ interface TimerContextValue {
   /** Save notes on a still-running timer (latest overwrites previous). */
   handleUpdateTimerNotes: (entryId: string, notes: string) => Promise<boolean>;
   refreshTimer: () => Promise<void>;
-  /** Subscribe to "a timer was stopped" events; returns an unsubscribe fn. */
-  onTimerStopped: (cb: () => void) => () => void;
+  /** Subscribe to "a timer was stopped" events; the callback receives the id of
+   *  the stopped entry. Returns an unsubscribe fn. */
+  onTimerStopped: (cb: (entryId?: string) => void) => () => void;
   /** Subscribe to "a timer was started" events; returns an unsubscribe fn. */
   onTimerStarted: (cb: () => void) => () => void;
 }
@@ -230,7 +231,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
   const [stopTimerMarkDone, setStopTimerMarkDone] = useState(true);
 
   // Callback listeners for when a timer stops (e.g. dashboard refreshes stats)
-  const onTimerStoppedRef = useRef<Array<() => void>>([]);
+  const onTimerStoppedRef = useRef<Array<(entryId?: string) => void>>([]);
   const onTimerStartedRef = useRef<Array<() => void>>([]);
 
   const { checkLongTimer, resetLongTimerNotification } = useNotifications();
@@ -570,8 +571,9 @@ export function TimerProvider({ children }: TimerProviderProps) {
             "צפה ברשומות"
           ) as unknown as ToastActionElement
         );
-        // Notify listeners (e.g. dashboard stats refresh)
-        onTimerStoppedRef.current.forEach((cb) => cb());
+        // Notify listeners (e.g. dashboard stats refresh). Pass the stopped
+        // entry id so listeners can tell whether it's the one they care about.
+        onTimerStoppedRef.current.forEach((cb) => cb(entryId));
       } else {
         showErrorToast(data.message || "שגיאה בעצירת הטיימר");
       }
@@ -701,7 +703,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
 
   // Let other screens (e.g. the entries list) react when a timer is stopped,
   // so the freshly-saved record shows up without a manual page refresh.
-  const onTimerStopped = useCallback((cb: () => void) => {
+  const onTimerStopped = useCallback((cb: (entryId?: string) => void) => {
     onTimerStoppedRef.current.push(cb);
     return () => {
       onTimerStoppedRef.current = onTimerStoppedRef.current.filter((c) => c !== cb);
