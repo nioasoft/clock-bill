@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPool } from "@/lib/db";
+import { query } from "@/lib/db";
 import { createLogger } from "@/lib/logger";
 import { isAuthorizedCron } from "@/lib/cron-auth";
 
@@ -25,7 +25,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    await getPool().query("SELECT 1");
+    // Route through query() (no tenant context → withConnRetry on the pool) so a
+    // transient Neon/PgBouncer connection drop retries instead of paging. (CLOCK-BILL-5)
+    await query("SELECT 1");
     return NextResponse.json({ ok: true });
   } catch (error) {
     logger.error("keep-alive ping failed", error);
