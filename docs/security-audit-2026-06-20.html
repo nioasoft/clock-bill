@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClockBill Security Audit Report — 2026-06-20</title>
+<style>
+  :root {
+    --bg: #0b1020;
+    --bg-soft: #121a30;
+    --card: #16203b;
+    --card-2: #1c2845;
+    --line: #283456;
+    --line-soft: #1f2a47;
+    --text: #e8edf7;
+    --text-mut: #93a0bd;
+    --text-dim: #647194;
+    --accent: #5b8cff;
+    --crit: #ff5c5c;
+    --high: #ff8a3d;
+    --med:  #ffd24a;
+    --low:  #4aa8ff;
+    --pass: #34d399;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: var(--sans); font-size: 15px; line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(900px 500px at 85% -5%, rgba(91,140,255,0.10), transparent 60%),
+      radial-gradient(700px 400px at -5% 0%, rgba(74,168,255,0.06), transparent 55%);
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px 120px; }
+
+  /* ---- Header ---- */
+  header.hero {
+    padding: 52px 24px 40px; border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(91,140,255,0.05), transparent);
+  }
+  .hero .eyebrow {
+    color: var(--accent); font-weight: 600; letter-spacing: .14em;
+    text-transform: uppercase; font-size: 12px;
+  }
+  .hero h1 { font-size: 34px; margin: 10px 0 6px; letter-spacing: -0.02em; }
+  .hero .sub { color: var(--text-mut); font-size: 16px; margin: 0; }
+  .hero .meta {
+    display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 22px;
+    font-family: var(--mono); font-size: 12.5px; color: var(--text-dim);
+  }
+  .hero .meta b { color: var(--text); font-weight: 600; }
+  .grade-badge {
+    display: inline-flex; align-items: center; gap: 10px; margin-top: 22px;
+    padding: 10px 16px; border-radius: 12px; border: 1px solid var(--line);
+    background: var(--card); font-weight: 700;
+  }
+  .grade-badge .letter {
+    font-size: 26px; color: var(--pass); width: 30px; text-align: center;
+  }
+  .grade-badge .label { font-size: 12px; color: var(--text-mut); font-weight: 500; letter-spacing: .05em; }
+
+  /* ---- Sections ---- */
+  section { padding: 44px 0 8px; }
+  h2 {
+    font-size: 22px; margin: 0 0 6px; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 12px;
+  }
+  h2 .num {
+    font-family: var(--mono); font-size: 13px; color: var(--accent);
+    background: rgba(91,140,255,0.12); padding: 3px 9px; border-radius: 7px;
+    border: 1px solid rgba(91,140,255,0.25);
+  }
+  .sec-lead { color: var(--text-mut); margin: 0 0 22px; max-width: 80ch; }
+  hr.sep { border: 0; border-top: 1px solid var(--line-soft); margin: 0; }
+
+  /* ---- Dashboard ---- */
+  .dash {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px;
+  }
+  .stat {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 20px; position: relative; overflow: hidden;
+  }
+  .stat::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--c);
+  }
+  .stat .n { font-size: 38px; font-weight: 800; line-height: 1; color: var(--c); font-family: var(--mono); }
+  .stat .t { margin-top: 8px; font-size: 13px; font-weight: 600; letter-spacing: .03em; }
+  .stat .d { color: var(--text-dim); font-size: 12px; margin-top: 2px; }
+  .stat.crit { --c: var(--crit); } .stat.high { --c: var(--high); }
+  .stat.med { --c: var(--med); } .stat.low { --c: var(--low); }
+
+  .bars { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 22px; }
+  .bar-row { display: grid; grid-template-columns: 90px 1fr 36px; align-items: center; gap: 12px; margin: 9px 0; }
+  .bar-row .lbl { font-size: 13px; color: var(--text-mut); }
+  .bar-track { background: var(--bg-soft); border-radius: 7px; height: 14px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 7px; background: var(--c); }
+  .bar-row .v { font-family: var(--mono); font-size: 13px; text-align: right; color: var(--text); }
+
+  /* ---- Methodology ---- */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .panel {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px;
+  }
+  .panel h3 { margin: 0 0 10px; font-size: 15px; }
+  .panel ul { margin: 0; padding-left: 18px; }
+  .panel li { margin: 5px 0; color: var(--text-mut); }
+  .pill {
+    display: inline-block; font-family: var(--mono); font-size: 11px; padding: 2px 8px;
+    border-radius: 6px; background: rgba(91,140,255,0.12); color: var(--accent);
+    border: 1px solid rgba(91,140,255,0.22); margin-right: 4px;
+  }
+
+  /* ---- Findings ---- */
+  .finding {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    margin: 12px 0; overflow: hidden; border-left: 4px solid var(--c);
+  }
+  .finding.crit { --c: var(--crit); } .finding.high { --c: var(--high); }
+  .finding.med { --c: var(--med); } .finding.low { --c: var(--low); }
+  .finding summary {
+    cursor: pointer; list-style: none; padding: 16px 20px; display: flex;
+    align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+  .finding summary::-webkit-details-marker { display: none; }
+  .finding summary:hover { background: var(--card-2); }
+  .chip {
+    font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 6px; color: #0b1020; background: var(--c);
+    white-space: nowrap;
+  }
+  .f-id { font-family: var(--mono); color: var(--text-dim); font-size: 12px; }
+  .f-title { font-weight: 600; font-size: 15px; flex: 1; min-width: 200px; }
+  .f-owasp { font-family: var(--mono); font-size: 11px; color: var(--accent); }
+  .f-body { padding: 0 20px 20px; border-top: 1px solid var(--line-soft); padding-top: 16px; }
+  .f-body dl { margin: 0; display: grid; grid-template-columns: 130px 1fr; gap: 6px 14px; }
+  .f-body dt { color: var(--text-dim); font-size: 12.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  .f-body dd { margin: 0; color: var(--text); font-size: 14px; }
+  .f-body p { margin: 10px 0; color: var(--text); }
+  .f-body code.loc {
+    font-family: var(--mono); font-size: 12.5px; background: var(--bg-soft);
+    padding: 2px 7px; border-radius: 5px; color: var(--med);
+  }
+  pre.code {
+    background: #0a0f1f; border: 1px solid var(--line-soft); border-radius: 9px;
+    padding: 14px 16px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px;
+    line-height: 1.6; color: #cdd8ee; margin: 12px 0;
+  }
+  pre.code .k { color: #ff9cc8; } pre.code .s { color: #9ce8a8; }
+  pre.code .c { color: #5d6b8c; font-style: italic; }
+
+  /* ---- Passed tests ---- */
+  .pass-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .pass-item {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 14px 12px 16px; border-left: 3px solid var(--pass);
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .pass-item .ok { color: var(--pass); font-weight: 800; margin-top: -2px; }
+  .pass-item .txt { font-size: 13.5px; color: var(--text); }
+  .pass-item .txt small { color: var(--text-dim); display: block; font-family: var(--mono); font-size: 11.5px; }
+
+  /* ---- Tables ---- */
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  th { color: var(--text-mut); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  td code { font-family: var(--mono); font-size: 12px; color: var(--accent); }
+  .tbl-wrap { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+
+  .callout {
+    border-radius: 12px; padding: 16px 18px; margin: 14px 0; font-size: 14px;
+    border: 1px solid var(--line); background: var(--card);
+  }
+  .callout.warn { border-left: 4px solid var(--med); background: rgba(255,210,74,0.06); }
+  .callout.ok { border-left: 4px solid var(--pass); background: rgba(52,211,153,0.06); }
+  .callout b { color: var(--text); }
+
+  footer { text-align: center; color: var(--text-dim); font-size: 12px; padding: 40px 0 0; }
+
+  @media (max-width: 760px) {
+    .dash { grid-template-columns: repeat(2, 1fr); }
+    .grid2, .pass-grid { grid-template-columns: 1fr; }
+    .f-body dl { grid-template-columns: 110px 1fr; }
+    .hero h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap" style="padding:0">
+    <div class="eyebrow">Application Security Audit · OWASP Top 10 + Extended</div>
+    <h1>ClockBill — Comprehensive Security Audit Report</h1>
+    <p class="sub">Multi-agent swarm audit with adversarial verification of the ClockBill (מוניט) multi-tenant SaaS platform — Next.js 16, Better Auth, Polar billing, PostgreSQL/RLS.</p>
+    <div class="grade-badge">
+      <span class="letter">B+</span>
+      <span><span style="display:block;font-size:15px;">Posture Score 72 / 100 · Risk: Low–Medium</span>
+      <span class="label">0 CRITICAL · 0 HIGH · 8 MEDIUM · 12 LOW</span></span>
+    </div>
+    <div class="meta">
+      <span><b>Target:</b> ClockBill web app</span>
+      <span><b>Commit:</b> c9de338</span>
+      <span><b>Branch:</b> feat/charge-doc-vat-pdf</span>
+      <span><b>Date:</b> 2026-06-20</span>
+      <span><b>Runtime:</b> Node v22.22.3 · npm 10.9.8</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ===================== 1. EXECUTIVE SUMMARY ===================== -->
+<section id="summary">
+  <h2><span class="num">01</span> Executive Summary</h2>
+  <hr class="sep">
+  <p class="sec-lead">A 13-agent OWASP swarm plus an independent verification pass examined ClockBill's authentication, multi-tenant isolation, billing integrity, payment webhook, client/server state, dependency tree, and CI pipeline. The headline result: <b style="color:var(--pass)">no Critical and no High-severity vulnerabilities</b>. The platform's security foundation is genuinely strong — RLS-enforced tenant isolation with no IDOR, parameterized SQL throughout, server-authoritative entitlements that cannot be bypassed, and a signature-verified Polar webhook.</p>
+
+  <div class="callout ok">
+    <b>What's working well.</b> Tenant isolation is airtight: every API route checks <code style="font-family:var(--mono)">getUser()</code> and scopes every query by <code style="font-family:var(--mono)">user_id</code>; RLS is FORCE-enabled and bound per request; admin routes require an admin role. No SQL injection (all <code style="font-family:var(--mono)">$1,$2</code> placeholders; only allow-list/regex-gated interpolation). No hardcoded secrets, no leaked secret values in git history, no <code style="font-family:var(--mono)">NEXT_PUBLIC_</code> secret exposure. Auth is rate-limited (DB-backed, 3–5/min on credential paths), session cookies are HttpOnly+Secure+SameSite, and logout truly revokes the server-side session. Trial/paywall entitlements are server-resolved and not client-writable — they cannot be extended or reset.
+  </div>
+
+  <div class="callout warn">
+    <b>Where to harden.</b> The eight Medium findings are defense-in-depth and integrity gaps, not holes: missing security headers/CSP, a blind SSRF surface in the Web-Push subscription path, a password-reset token reaching server logs on a transient email failure, no rate-limiting on data-export/report endpoints, two charge-document billing-integrity defects, a trivially-fixable transitive dependency HIGH (undici), and no automated dependency/secret scanning in CI. None are exploitable to breach another tenant's data. Recommended sequence: (1) gate the token-log fallback to non-prod, (2) validate the push endpoint, (3) add the security headers, (4) add <code style="font-family:var(--mono)">npm audit</code> + Dependabot to CI and run <code style="font-family:var(--mono)">npm audit fix</code>, (5) fix the two charge-doc billing paths.
+  </div>
+
+  <p style="color:var(--text-mut);font-size:14px;"><b style="color:var(--text)">Methodology note on rigor:</b> several headline findings from the first-pass agents were <b>downgraded or removed after code-level verification</b> — e.g. "Critical: reset token logged" (actually a dev-only fallback, downgraded to Medium), "fail-open RLS" (actually fail-closed by policy), and "committed secrets" (verified to be <code style="font-family:var(--mono)">.env.template</code> placeholders only). Every Medium+ finding in this report was confirmed by reading the actual code at the cited line — no finding rests on an agent claim alone.
+  </p>
+</section>
+
+<!-- ===================== 2. METHODOLOGY ===================== -->
+<section id="method">
+  <h2><span class="num">02</span> Test Methodology</h2>
+  <hr class="sep">
+  <p class="sec-lead">Two-layer approach: a fan-out of specialized sub-agents (one per OWASP category) for breadth, followed by a manual verification pass that read the actual source at every cited line and ran the playbook greps for ground-truth evidence.</p>
+
+  <div class="grid2">
+    <div class="panel">
+      <h3>Sub-Agent Swarm</h3>
+      <ul>
+        <li><span class="pill">A01</span> Broken Access Control / IDOR / BOLA</li>
+        <li><span class="pill">A02</span> Cryptographic Failures &amp; Secrets</li>
+        <li><span class="pill">A03</span> Injection (SQLi / XSS / template)</li>
+        <li><span class="pill">A04</span> Insecure Design &amp; Business Logic</li>
+        <li><span class="pill">A05</span> Security Misconfiguration</li>
+        <li><span class="pill">A06</span> Vulnerable &amp; Outdated Components</li>
+        <li><span class="pill">A07</span> Auth &amp; Session Failures</li>
+        <li><span class="pill">A08</span> CI/CD Integrity Failures</li>
+        <li><span class="pill">A09</span> Logging &amp; Monitoring Gaps</li>
+        <li><span class="pill">A10</span> Server-Side Request Forgery</li>
+        <li><span class="pill">A11</span> Modern Framework / SSR risks</li>
+        <li><span class="pill">A12</span> API Rate-Limiting &amp; Mass Assignment</li>
+        <li><span class="pill">A13</span> Client-Side &amp; Cookie State</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>Verification Pass</h3>
+      <ul>
+        <li>Read the real source for every Medium+ finding (not an agent summary)</li>
+        <li>Ran <code style="font-family:var(--mono)">npm audit --omit=dev</code> live</li>
+        <li>Greps for hardcoded secrets (<code style="font-family:var(--mono)">sk_live_/AKIA/ghp_/polar_</code>)</li>
+        <li><code style="font-family:var(--mono)">NEXT_PUBLIC_</code> secret-leak scan</li>
+        <li>Secret-logging sweep (<code style="font-family:var(--mono)">console.*</code> near tokens)</li>
+        <li><code style="font-family:var(--mono)">git ls-files</code> for tracked <code style="font-family:var(--mono)">.env</code></li>
+        <li><code style="font-family:var(--mono)">git log -S</code> for ever-committed secret values</li>
+        <li>Dashboard totals reconciled with finding cards</li>
+      </ul>
+    </div>
+  </div>
+  <p style="color:var(--text-dim);font-size:13px;margin-top:14px;"><b style="color:var(--text)">Scope:</b> the ClockBill repository at commit <code style="font-family:var(--mono)">c9de338</code> — Next.js App Router, API routes, lib layer, Drizzle/RLS schema, Better Auth config, Polar integration, CI workflow, dependency manifest &amp; lockfile. <b style="color:var(--text)">Out of scope:</b> runtime infrastructure penetration (Vercel/Neon platform), live Polar checkout with a real card, and the marketing/landing pages.</p>
+</section>
+
+<!-- ===================== 3. DASHBOARD ===================== -->
+<section id="dash">
+  <h2><span class="num">03</span> Vulnerability Dashboard</h2>
+  <hr class="sep">
+  <div class="dash">
+    <div class="stat crit"><div class="n">0</div><div class="t">Critical</div><div class="d">Immediate breach risk</div></div>
+    <div class="stat high"><div class="n">0</div><div class="t">High</div><div class="d">Serious, fix promptly</div></div>
+    <div class="stat med"><div class="n">8</div><div class="t">Medium</div><div class="d">Defense-in-depth / integrity</div></div>
+    <div class="stat low"><div class="n">12</div><div class="t">Low</div><div class="d">Hardening &amp; hygiene</div></div>
+  </div>
+  <div class="bars">
+    <div class="bar-row"><span class="lbl">Critical</span><div class="bar-track"><div class="bar-fill" style="--c:var(--crit);width:0%"></div></div><span class="v">0</span></div>
+    <div class="bar-row"><span class="lbl">High</span><div class="bar-track"><div class="bar-fill" style="--c:var(--high);width:0%"></div></div><span class="v">0</span></div>
+    <div class="bar-row"><span class="lbl">Medium</span><div class="bar-track"><div class="bar-fill" style="--c:var(--med);width:40%"></div></div><span class="v">8</span></div>
+    <div class="bar-row"><span class="lbl">Low</span><div class="bar-track"><div class="bar-fill" style="--c:var(--low);width:60%"></div></div><span class="v">12</span></div>
+    <div class="bar-row"><span class="lbl" style="color:var(--pass)">Passed</span><div class="bar-track"><div class="bar-fill" style="--c:var(--pass);width:88%"></div></div><span class="v">22</span></div>
+  </div>
+  <p style="color:var(--text-dim);font-size:13px;margin-top:12px;"><b style="color:var(--text)">Posture Score 72/100 (B+).</b> Scored by deducting weighted finding impact from a strong baseline: −10 per Medium, −2 per Low, offset by the breadth of confirmed passing controls. No Critical/High means no blocking issue for continued operation; the gap to an "A" is the eight Mediums, most of which are quick wins.</p>
+</section>
+
+<!-- ===================== 4. DETAILED FINDINGS ===================== -->
+<section id="findings">
+  <h2><span class="num">04</span> Detailed Findings</h2>
+  <hr class="sep">
+  <p class="sec-lead">Click any finding to expand the full context, trigger, and remediation. Locations are real and verified at the cited line.</p>
+
+  <!-- ===== MEDIUM 1 ===== -->
+  <details class="finding med" open>
+    <summary><span class="chip">Medium</span><span class="f-id">M-1</span><span class="f-title">Missing HTTP security headers (no CSP, frame-ancestors, X-Content-Type-Options)</span><span class="f-owasp">OWASP A05</span></summary>
+    <div class="f-body">
+      <dl>
+        <dt>Location</dt><dd><code class="loc">next.config.mjs:7-21</code></dd>
+        <dt>Agent</dt><dd>A05 — Security Misconfiguration</dd>
+      </dl>
+      <p>The Next config defines <code style="font-family:var(--mono)">images</code>, <code style="font-family:var(--mono)">compress</code>, and <code style="font-family:var(--mono)">poweredByHeader:false</code> (good), but has <b>no <code style="font-family:var(--mono)">headers()</code> block</b>. As a result the app ships with no Content-Security-Policy, no <code style="font-family:var(--mono)">X-Frame-Options</code> / <code style="font-family:var(--mono)">frame-ancestors</code> (clickjacking exposure), no <code style="font-family:var(--mono)">X-Content-Type-Options: nosniff</code>, no <code style="font-family:var(--mono)">Referrer-Policy</code>, and no <code style="font-family:var(--mono)">Permissions-Policy</code>. The no-flash theme script at <code class="loc">app/[locale]/layout.tsx:135</code> uses <code style="font-family:var(--mono)">dangerouslySetInnerHTML</code>, which a CSP would otherwise constrain.</p>
+      <p><b>Trigger:</b> Any browser visiting the app lacks these protections by default; a CSP-less app is more exploitable if any reflected/stored XSS is ever introduced, and the UI is framable.</p>
+      <p><b>Remediation:</b> Add a <code style="font-family:var(--mono)">headers()</code> export in <code style="font-family:var(--mono)">next.config.mjs</code> with at minimum <code style="font-family:var(--mono)">X-Content-Type-Options: nosniff</code>, <code style="font-family:var(--mono)">Referrer-Policy: strict-origin-when-cross-origin</code>, <code style="font-family:var(--mono)">frame-ancestors 'none'</code> (via CSP), and a scoped <code style="font-family:var(--mono)">Permissions-Policy</code>. For CSP, start permissive with report-only, allow the inline theme script via a hash/nonce, then enforce. (Vercel already injects HSTS at its edge for HTTPS domains.)</p>
+    </div>
+  </details>
+
+  <!-- ===== MEDIUM 2 ===== -->
+  <details class="finding med">
+    <summary><span class="chip">Medium</span><span class="f-id">M-2</span><span class="f-title">Blind SSRF via user-controlled Web-Push subscription endpoint</span><span class="f-owasp">OWASP A10</span></summary>
+    <div class="f-body">
+      <dl>
+        <dt>Location</dt><dd><code class="loc">app/api/push/subscribe/route.ts:39-55</code> · <code class="loc">lib/push.ts</code> (sendNotification)</dd>
+        <dt>Agent</dt><dd>A10 — SSRF</dd>
+      </dl>
+      <p>The subscribe handler only checks that <code style="font-family:var(--mono)">endpoint</code>, <code style="font-family:var(--mono)">p256dh</code>, and <code style="font-family:var(--mono)">auth</code> are non-empty, then stores the endpoint verbatim with no scheme/host/private-IP validation. When the daily-reminder or long-timer cron fires, <code style="font-family:var(--mono)">web-push</code> opens a raw <code style="font-family:var(--mono)">https.request()</code> to that stored URL server-side.</p>
+      <p><b>Trigger:</b> An authenticated user POSTs an internal/metadata URL as their push endpoint:</p>
+<pre class="code"><span class="c">// POST /api/push/subscribe</span>
+{ <span class="s">"endpoint"</span>: <span class="s">"http://169.254.169.254/latest/meta-data/"</span>,
+  <span class="s">"keys"</span>: { <span class="s">"p256dh"</span>: <span class="s">"x"</span>, <span class="s">"auth"</span>: <span class="s">"y"</span> } }
+<span class="c">// → server fetches it on the next scheduled push</span></pre>
+      <p>The response body is discarded (blind SSRF), but the request itself enables internal port-knocking and cloud-metadata probing via timing/status side-channels. <b>Why Medium not High:</b> requires an authenticated account, only fires when a real push is due, and the response isn't returned. Vercel filters the EC2 metadata IP at the platform level, but internal/resolvable hosts may still be reachable.</p>
+      <p><b>Remediation:</b> Before storing, validate <code style="font-family:var(--mono)">endpoint</code>: require <code style="font-family:var(--mono)">https:</code>, resolve the host, reject private/reserved ranges (127/8, 10/8, 172.16/12, 192.168/16, 169.254/16, ::1, fc00::/7), and prefer allowlisting the legitimate push providers (<code style="font-family:var(--mono)">fcm.googleapis.com</code>, <code style="font-family:var(--mono)">*.push.apple.com</code>, <code style="font-family:var(--mono)">push.services.mozilla.com</code>, <code style="font-family:var(--mono)">*.notify.windows.com</code>).</p>
+    </div>
+  </details>
+
+  <!-- ===== MEDIUM 3 ===== -->
+  <details class="finding med">
+    <summary><span class="chip">Medium</span><span class="f-id">M-3</span><span class="f-title">Password-reset / verification token URL written to server logs on email send failure</span><span class="f-owasp">OWASP A09</span></summary>
+    <div class="f-body">
+      <dl>
+        <dt>Location</dt><dd><code class="loc">lib/auth/better-auth.ts:278-280</code> &amp; <code class="loc">:303-305</code></dd>
+        <dt>Agent</dt><dd>A09 — Logging &amp; Monitoring</dd>
+      </dl>
+      <p>Both <code style="font-family:var(--mono)">sendResetPassword</code> and <code style="font-family:var(--mono)">sendVerificationEmail</code> log the full magic URL when <code style="font-family:var(--mono)">sendEmail()</code> returns <code style="font-family:var(--mono)">false</code> — gated only by <code style="font-family:var(--mono)">if (!sent)</code>, <b>not</b> by <code style="font-family:var(--mono)">NODE_ENV</code>. <code style="font-family:var(--mono)">sendEmail</code> returns false both when <code style="font-family:var(--mono)">RESEND_API_KEY</code> is absent (the intended dev fallback) <i>and</i> when Resend is configured but the send fails (transient outage, rate limit, rejected recipient). In that second case — which happens in <b>production</b> — the live single-use token URL is written to Vercel function logs (and reaches Sentry on errors). The URL <i>is</i> the credential until it expires.</p>
+      <p><b>Downgrade note:</b> the first-pass agent rated this <i>Critical</i>; verification showed it is a dev fallback that mis-fires on prod email outage, so the realistic severity is Medium. Residual risk is real: anyone with log access during a Resend blip can take over the account.</p>
+      <p><b>Remediation:</b> Gate the fallback to non-prod and never log the URL itself:</p>
+<pre class="code"><span class="k">if</span> (!sent &amp;&amp; process.env.NODE_ENV !== <span class="s">"production"</span>) {
+  logger.info(<span class="s">`Password reset link for ${user.email}: ${url}`</span>);
+} <span class="k">else if</span> (!sent) {
+  <span class="c">// prod send failure: log only identity, surface a user-facing "try again"</span>
+  logger.warn(<span class="s">"Reset email send failed"</span>, { userId: user.id });
+}</pre>
+    </div>
+  </details>
+
+  <!-- ===== MEDIUM 4 ===== -->
+  <details class="finding med">
+    <summary><span class="chip">Medium</span><span class="f-id">M-4</span><span class="f-title">No app-level rate limiting on data-export, report-generation, and feedback endpoints</span><span class="f-owasp">OWASP A04 / A12</span></summary>
+    <div class="f-body">
+      <dl>
+        <dt>Location</dt><dd><code class="loc">app/api/account/export/route.ts</code> · <code class="loc">app/api/reports/route.ts</code> · <code class="loc">app/api/feedback/route.ts</code></dd>
+        <dt>Agent</dt><dd>A04 / A12 — API &amp; Business Logic</dd>
+      </dl>
+      <p>Auth credential paths are rate-limited via Better Auth's DB-backed limiter (<code style="font-family:var(--mono)">sign-in/sign-up 5/min, forget-password 3/min</code> at <code class="loc">lib/auth/better-auth.ts:325-336</code> — good). However the heavy server endpoints — full account GDPR export, multi-template report/PDF generation, and feedback submission — have <b>no application-level rate limiting</b>. A single authenticated user (or a scripted free-tier account) can hammer these to burn server CPU / drive up function invocations and egress.</p>
+      <p><b>Trigger:</b> Loop <code style="font-family:var(--mono)">GET /api/reports</code> or <code style="font-family:var(--mono)">/api/account/export</code> as fast as possible; each runs multi-query aggregation + PDF/Excel rendering. No backpressure applied.</p>
+      <p><b>Remediation:</b> Add <code style="font-family:var(--mono)">@upstash/ratelimit</code> (or an equivalent DB-backed limiter matching the BA approach) keyed by <code style="font-family:var(--mono)">user.id</code> on these endpoints — e.g. 10/min for reports, 5/min for export. This is cost/DoS hygiene, not credential protection.</p>
+    </div>
+  </details>
+
+  <!-- ===== MEDIUM 5 ===== -->
+  <details class="finding med">
+    <summary><span class="chip">Medium</span><span class="f-id">M-5</span><span class="f-title">Charge-document <code>computedLines.amount</code> trusted from the client (not recomputed server-side)</span><span class="f-owasp">OWASP A04</span></summary>
+    <div class="f-body">
+      <dl>
+        <dt>Location</dt><dd><code class="loc">app/api/charge-documents/route.ts:117-131</code> · schema <code class="loc">lib/schemas/charge-documents.ts:11</code></dd>
+        <dt>Agent</dt><dd>A04 — Insecure Design</dd>
+      </dl>
+      <p>For <code style="font-family:var(--mono)">fixed_monthly</code>/<code style="font-family:var(--mono)">retainer</code> computed lines, the handler takes <code style="font-family:var(--mono)">amount: c.amount</code> directly from the parsed request body and stores it verbatim into <code style="font-family:var(--mono)">charge_document_lines.amount</code>, summed into <code style="font-family:var(--mono)">charge_documents.total</code>. The Zod schema enforces only <code style="font-family:var(--mono)">min(0)</code> — no upper bound, and crucially no server reconciliation against the authoritative <code style="font-family:var(--mono)">projects.fixed_monthly_fee</code>. This is the classic A04 "trust the client for a computed value".</p>
+      <p><b>Impact (honestly bounded):</b> charge documents are the freelancer's <i>own</i> internal settlement record and the basis for the PDF they issue — there is no third party being defrauded, and nothing is auto-filed. The blast radius is the integrity of the user's own document: a client could send <code style="font-family:var(--mono)">amount: 0</code> to zero a real monthly fee on a printed receipt, or a fabricated large amount. Rated Medium for the principle (server should be authoritative) rather than for external harm.</p>
+      <p><b>Remediation:</b> For <code style="font-family:var(--mono)">fixed_monthly</code>/<code style="font-family:var(--mono)">retainer</code> lines, ignore the client amount and re-derive it server-side inside the transaction from <code style="font-family:var(--mono)">projects.fixed_monthly_fee</code> (joined by <code style="font-family:var(--mono)">projectId</code>, scoped by <code style="font-family:var(--mono)">user_id</code>); add a sane <code style="font-family:var(--mono)">max(10_000_000)</code> to the schema and a DB <code style="font-family:var(--mono)">CHECK (amount &gt;= 0)</code>.</p>
+    </div>
+  </details>
+
+  <!-- ===== MEDIUM 6 ===== -->
+  <details class="finding med">
+    <summary><span class="chip">Medium</span><span class="f-id">M-6</span><span class="f-title">Charge-document PATCH (add-time-entry) skips billing rounding → inconsistent amounts</span><span class="f-owasp">OWASP A04</span></summary>
+    <div class="f-body">
+      <dl>
+        <dt>Location</dt><dd><code class="loc">app/api/charge-documents/[id]/route.ts:88-99</code> (compare POST at <code class="loc">route.ts:96-111</code>)</dd>
+        <dt>Agent</dt><dd>A04 — Insecure Design</dd>
+      </dl>
+      <p>When a line is added to a <i>pending</i> document via <code style="font-family:var(--mono)">addTimeEntryId</code>, the SELECT does <b>not</b> fetch <code style="font-family:var(--mono)">p.billing_rounding</code> / <code style="font-family:var(--mono)">c.billing_rounding</code>, and <code style="font-family:var(--mono)">buildLineFromEntry</code> is called with <code style="font-family:var(--mono)">billingRounding</code> unset → falls back to <code style="font-family:var(--mono)">"none"</code>. The POST create path, by contrast, selects both columns and runs <code style="font-family:var(--mono)">resolveRounding(...)</code>. So the same entry billed via the two paths produces different amounts.</p>
+      <p><b>Trigger:</b> Create a charge doc on a <code style="font-family:var(--mono)">quarter_hour_up</code> client, remove a 5-minute line, then re-add it via PATCH — the re-added line bills 5 raw minutes instead of the rounded 15. Silent under-billing / inconsistent receipts.</p>
+      <p><b>Remediation:</b> In the PATCH <code style="font-family:var(--mono)">addTimeEntryId</code> branch, select <code style="font-family:var(--mono)">p.billing_rounding AS "projectRounding"</code> and <code style="font-family:var(--mono)">c.billing_rounding AS "clientRounding"</code>, read the profile base rounding, and pass <code style="font-family:var(--mono)">billingRounding: resolveRounding(...)</code> into <code style="font-family:var(--mono)">buildLineFromEntry</code> — mirroring the POST path exactly.</p>
+    </div>
+  </details>
+
+  <!-- ===== MEDIUM 7 ===== -->
+  <details class="finding med">
+    <summary><span class="chip">Medium</span><span class="f-id">M-7</span><span class="f-title">High-severity transitive dependency (undici via @vercel/blob) + drifted lockfile</span><span class="f-owasp">OWASP A06</span></summary>
+    <div class="f-body">
+      <dl>
+        <dt>Location</dt><dd><code class="loc">package-lock.json</code> · <code class="loc">@vercel/blob → undici@6.26.0</code></dd>
+        <dt>Agent</dt><dd>A06 — Vulnerable Components (live <code style="font-family:var(--mono)">npm audit</code>)</dd>
+      </dl>
+      <p>Live <code style="font-family:var(--mono)">npm audit --omit=dev</code> returns <b>19 advisories: 0 Critical, 1 High, 17 Moderate, 1 Low</b>. The one HIGH is <code style="font-family:var(--mono)">undici &lt;6.27.0</code> (GHSA-vxpw-j846-p89q WebSocket DoS + 3 lower), pulled transitively via <code style="font-family:var(--mono)">@vercel/blob@2.4.0</code>. Direct exploitability in this app is low (it doesn't use undici's WebSocket client directly), but it trips the "known-vulnerable component" check. Notable moderates: <code style="font-family:var(--mono)">uuid@8.3.2</code> (via exceljs), nested <code style="font-family:var(--mono)">postcss@8.4.31</code> (via next), and dev-only <code style="font-family:var(--mono)">esbuild</code> (via drizzle-kit — not in prod bundle).</p>
+      <p><b>Second issue:</b> <code style="font-family:var(--mono)">package-lock.json</code> is out of sync with <code style="font-family:var(--mono)">package.json</code> (<code style="font-family:var(--mono)">npm install --package-lock-only</code> produces a 60-line diff) — so <code style="font-family:var(--mono)">npm ci</code> in CI is no longer fully deterministic.</p>
+      <p><b>Remediation:</b> (1) Run <code style="font-family:var(--mono)">npm audit fix</code> (non-force — clears undici + babel/otel with zero breaking changes; do <b>not</b> use <code style="font-family:var(--mono)">--force</code>, which would sabotage next/better-auth/exceljs). (2) Add an <code style="font-family:var(--mono)">overrides</code> block forcing <code style="font-family:var(--mono)">{ "undici": "^6.27.0", "uuid": "^11.1.1" }</code>. (3) Commit a regenerated, in-sync lockfile.</p>
+    </div>
+  </details>
+
+  <!-- ===== MEDIUM 8 ===== -->
+  <details class="finding med">
+    <summary><span class="chip">Medium</span><span class="f-id">M-8</span><span class="f-title">No dependency / secret scanning in CI (no <code>npm audit</code>, no Dependabot, no gitleaks)</span><span class="f-owasp">OWASP A06 / A08</span></summary>
+    <div class="f-body">
+      <dl>
+        <dt>Location</dt><dd><code class="loc">.github/workflows/ci.yml</code></dd>
+        <dt>Agent</dt><dd>A06 / A08 — CI Integrity</dd>
+      </dl>
+      <p>The CI pipeline runs <code style="font-family:var(--mono)">npm ci → lint → tsc → test → build</code> (solid basics, official actions only), but has <b>no dependency-vulnerability gate, no Dependabot config, and no secret-scanning step</code> (gitleaks/trufflehog). Vulnerabilities and leaked secrets are only caught by manual audits like this one — there is no continuous control between audits.</p>
+      <p><b>Remediation:</b> Add a CI step after install: <code style="font-family:var(--mono)">npm audit --omit=dev --audit-level=high</code>. Enable Dependabot security updates (free, opens PRs for GHSA fixes). Add a gitleaks pre-commit hook + a <code style="font-family:var(--mono)">gitleaks detect</code> CI step to prevent future secret commits.</p>
+    </div>
+  </details>
+
+  <h3 style="margin-top:30px;color:var(--text-mut);font-size:13px;letter-spacing:.08em;text-transform:uppercase;">Low-severity findings (12)</h3>
+
+  <!-- ===== LOW 1 ===== -->
+  <details class="finding low">
+    <summary><span class="chip">Low</span><span class="f-id">L-1</span><span class="f-title">Bulk time-entry PATCH bypasses the plan-lock guard</span><span class="f-owasp">OWASP A04</span></summary>
+    <div class="f-body">
+      <dl><dt>Location</dt><dd><code class="loc">app/api/entries/bulk/route.ts:94-106</code></dd><dt>Agent</dt><dd>A04</dd></dl>
+      <p>The bulk PATCH checks destination project ownership but <b>never calls <code style="font-family:var(--mono)">getLockedClientIds</code></b>, which the single-entry POST/PUT enforce. A free-tier (locked) user can reassign entries onto a locked client's project via bulk. This is a <b>monetization / paywall bypass, not a security boundary</b> — the lock is advisory-on-reads by design — so it's Low. Remediation: inside the bulk transaction, reject if the destination client (of the new <code style="font-family:var(--mono)">projectId</code> or the entries' current client) is in <code style="font-family:var(--mono)">getLockedClientIds(user.id)</code>.</p>
+    </div>
+  </details>
+
+  <!-- ===== LOW 2 ===== -->
+  <details class="finding low">
+    <summary><span class="chip">Low</span><span class="f-id">L-2</span><span class="f-title">No 2FA / passkey; thin password policy (length 8 only)</span><span class="f-owasp">OWASP A07</span></summary>
+    <div class="f-body">
+      <dl><dt>Location</dt><dd><code class="loc">lib/auth/better-auth.ts:260</code></dd><dt>Agent</dt><dd>A07</dd></dl>
+      <p>Only <code style="font-family:var(--mono)">minPasswordLength: 8</code> is set — no complexity, no breached-password check (HIBP k-anon), no max age / reuse prevention, and no 2FA or passkey plugin. Brute-force is impractical (5/min limit), but credential-stuffing from other breaches is the real risk for a billing/invoicing SaaS. Remediation: enable Better Auth's breach-password check and offer TOTP/passkey 2FA, at minimum for accounts with billing data.</p>
+    </div>
+  </details>
+
+  <!-- ===== LOW 3 ===== -->
+  <details class="finding low">
+    <summary><span class="chip">Low</span><span class="f-id">L-3</span><span class="f-title">No audit trail for admin actions or Polar entitlement changes</span><span class="f-owasp">OWASP A09</span></summary>
+    <div class="f-body">
+      <dl><dt>Location</dt><dd><code class="loc">app/api/admin/users/[id]/actions/route.ts</code> · <code class="loc">lib/auth/better-auth.ts</code> (syncSubscription)</dd><dt>Agent</dt><dd>A09</dd></dl>
+      <p>Admin actions (delete user, toggle role, wipe sessions, verify email) and Polar entitlement apply/revoke log nothing on success — only the failure catch logs. There is no record of who performed which admin op or which webhook granted which tier. Remediation: add a <code style="font-family:var(--mono)">logSecurityEvent(type, meta)</code> helper and call it for every admin action and every entitlement change.</p>
+    </div>
+  </details>
+
+  <!-- ===== LOW 4 ===== -->
+  <details class="finding low">
+    <summary><span class="chip">Low</span><span class="f-id">L-4</span><span class="f-title">Cron endpoints fail open when CRON_SECRET is unset</span><span class="f-owasp">OWASP A05</span></summary>
+    <div class="f-body">
+      <dl><dt>Location</dt><dd><code class="loc">app/api/cron/trial-lifecycle/route.ts:26-30</code> (and sibling crons)</dd><dt>Agent</dt><dd>A05</dd></dl>
+      <p>The pattern <code style="font-family:var(--mono)">if (secret) { verify }</code> means that in any environment where <code style="font-family:var(--mono)">CRON_SECRET</code> is absent, the endpoint is fully unauthenticated. Prod sets it, so blast radius is small (sends trial emails / reads), but the pattern is fail-open. Remediation: <code style="font-family:var(--mono)">if (!secret || auth !== \`Bearer ${secret}\`) return 401</code>.</p>
+    </div>
+  </details>
+
+  <!-- ===== LOW 5 ===== -->
+  <details class="finding low">
+    <summary><span class="chip">Low</span><span class="f-id">L-5</span><span class="f-title">PII (email) in logs; ~40 routes use raw <code>console.error(error)</code> (stack traces in server logs)</span><span class="f-owasp">OWASP A09</span></summary>
+    <div class="f-body">
+      <dl><dt>Location</dt><dd><code class="loc">lib/email.ts:51,66,71</code> · many <code class="loc">app/api/**</code> routes</dd><dt>Agent</dt><dd>A09</dd></dl>
+      <p>Recipient email is logged on every no-key / failed send. Separately, ~40 API routes bypass the structured <code style="font-family:var(--mono)">logger</code> with raw <code style="font-family:var(--mono)">console.error("…", error)</code>, serializing full Error stacks (file paths, driver internals, occasional SQL fragments) into Vercel logs. <b>Client responses are clean</b> — every catch returns a generic Hebrew message, so A05/API8 (stack traces reaching the client) <b>passes</b>; the risk is server-log exposure + inconsistency. Remediation: replace with <code style="font-family:var(--mono)">logger.error(...)</code>; log <code style="font-family:var(--mono)">{ userId }</code> instead of raw email (or mask it).</p>
+    </div>
+  </details>
+
+  <!-- ===== LOW 6 ===== -->
+  <details class="finding low">
+    <summary><span class="chip">Low</span><span class="f-id">L-6</span><span class="f-title">No date bounds on time entries (arbitrary back/future-dating)</span><span class="f-owasp">OWASP A04</span></summary>
+    <div class="f-body">
+      <dl><dt>Location</dt><dd><code class="loc">lib/schemas/entries.ts:16</code> · <code class="loc">app/api/entries/bulk/route.ts:67</code></dd><dt>Agent</dt><dd>A04</dd></dl>
+      <p><code style="font-family:var(--mono)">date</code> is validated only as a non-empty string — a user can log <code style="font-family:var(--mono)">"2099-12-31"</code> or <code style="font-family:var(--mono)">"1990-01-01"</code>, shifting revenue across reporting/VAT periods. Remediation: <code style="font-family:var(--mono)">z.coerce.date()</code> with a sane window (≥ today − 2y, ≤ today + 1d), applied to single and bulk paths.</p>
+    </div>
+  </details>
+
+  <!-- ===== LOW 7 ===== -->
+  <details class="finding low">
+    <summary><span class="chip">Low</span><span class="f-id">L-7</span><span class="f-title">Monetary columns lack DB <code>CHECK (≥0)</code> backstop (Zod-only)</span><span class="f-owasp">OWASP A04</span></summary>
+    <div class="f-body">
+      <dl><dt>Location</dt><dd><code class="loc">src/db/schema.ts</code> (default_rate, retainer_*, fixed_monthly_fee, time_entries.rate, charge_documents.total, charge_document_lines.amount)</dd><dt>Agent</dt><dd>A04</dd></dl>
+      <p>All monetary <code style="font-family:var(--mono)">real</code> columns enforce non-negativity only at the Zod boundary, with no DB <code style="font-family:var(--mono)">CHECK</code>. Any future route/admin path/migration that bypasses Zod could write a negative rate → poison billing. The DB is the last boundary (Iron Law 5). Remediation: add <code style="font-family:var(--mono)">CHECK (col IS NULL OR col &gt;= 0)</code> on these columns. Note the VAT snapshot column <i>is</i> CHECK'd to 0–100 — good model to follow.</p>
+    </div>
+  </details>
+
+  <!-- ===== LOW 8 ===== -->
+  <details class="finding low">
+    <summary><span class="chip">Low</span><span class="f-id">L-8</span><span class="f-title"><code>emailButton()</code> interpolates URL &amp; label raw (latent XSS)</span><span class="f-owasp">OWASP A03</span></summary>
+    <div class="f-body">
+      <dl><dt>Location</dt><dd><code class="loc">lib/email.ts:144-152</code></dd><dt>Agent</dt><dd>A03</dd></dl>
+      <p><code style="font-family:var(--mono)">emailButton(url, label)</code> builds <code style="font-family:var(--mono)">&lt;a href="${url}"&gt;${label}&lt;/a&gt;</code> with no escaping of either argument. All current callers pass server-controlled values (Better Auth token URLs, fixed localized labels), so there is <b>no live exploit</b> — but the contract is fragile: any future caller passing user-derived input produces an attribute breakout or <code style="font-family:var(--mono)">javascript:</code> link in an HTML email. Remediation: HTML-attribute-encode <code style="font-family:var(--mono)">url</code> and text-escape <code style="font-family:var(--mono)">label</code> inside <code style="font-family:var(--mono)">emailButton</code>, mirroring the <code style="font-family:var(--mono)">escapeHtml</code> already used in contact/feedback.</p>
+    </div>
+  </details>
+
+  <!-- ===== LOW 9 ===== -->
+  <details class="finding low">
+    <summary><span class="chip">Low</span><span class="f-id">L-9</span><span class="f-title">Long-lived (non-expiring) Blob download URLs for uploaded logos/signatures</span><span class="f-owasp">OWASP A05</span></summary>
+    <div class="f-body">
+      <dl><dt>Location</dt><dd><code class="loc">lib/storage.ts</code></dd><dt>Agent</dt><dd>A05</dd></dl>
+      <p>Uploads are well-validated (MIME allowlist, 5MB/2MB cap, server-generated user-namespaced filenames) — but Blob download URLs are public and non-expiring, so a leaked logo/signature URL is valid forever. Remediation: regenerate short-lived signed URLs on demand for private assets (or accept the current model since logos are low-sensitivity). Type/size validation and no-path-traversal already pass.</p>
+    </div>
+  </details>
+
+  <!-- ===== LOW 10 ===== -->
+  <details class="finding low">
+    <summary><span class="chip">Low</span><span class="f-id">L-10</span><span class="f-title">Email enumeration surfaces (sign-up &amp; reset)</span><span class="f-owasp">OWASP A07</span></summary>
+    <div class="f-body">
+      <dl><dt>Location</dt><dd><code class="loc">lib/auth/error-messages.ts:22-36</code> · <code class="loc">app/[locale]/register/page.tsx</code> · <code class="loc">forgot-password/page.tsx</code></dd><dt>Agent</dt><dd>A07</dd></dl>
+      <p>Sign-up returns <code style="font-family:var(--mono)">USER_ALREADY_EXISTS*</code> codes (mapped to distinct messages) and reset maps <code style="font-family:var(--mono)">USER_NOT_FOUND</code> — an attacker can probe whether an email is registered. Common acceptable UX trade-off, but for a privacy-sensitive billing tool worth tightening. Remediation: return a generic "if an account exists, a reset link was sent" for both existing/non-existing emails.</p>
+    </div>
+  </details>
+
+  <!-- ===== LOW 11 ===== -->
+  <details class="finding low">
+    <summary><span class="chip">Low</span><span class="f-id">L-11</span><span class="f-title">Sensitive self-profile PII (tax_id, bank account) shipped to client bundle</span><span class="f-owasp">OWASP A11</span></summary>
+    <div class="f-body">
+      <dl><dt>Location</dt><dd><code class="loc">app/api/profile/route.ts:152</code></dd><dt>Agent</dt><dd>A11</dd></dl>
+      <p><code style="font-family:var(--mono)">/api/profile</code> returns <code style="font-family:var(--mono)">phone, email, address, tax_id, website, bankName, bankAccountNumber, bankSwift</code> to client components (settings page, PDF print components). This is the <b>user's own</b> data (no cross-user leak), so it's by-design — but <code style="font-family:var(--mono)">tax_id</code> and bank account number are sensitive PII sitting in the browser bundle/cache. Remediation (optional, least-privilege): serve bank/tax fields only via a narrower endpoint consumed at print time.</p>
+    </div>
+  </details>
+
+  <!-- ===== LOW 12 ===== -->
+  <details class="finding low">
+    <summary><span class="chip">Low</span><span class="f-id">L-12</span><span class="f-title">Stale legacy-cookie cleanup code (dead, pre-Better-Auth)</span><span class="f-owasp">OWASP A13</span></summary>
+    <div class="f-body">
+      <dl><dt>Location</dt><dd><code class="loc">components/app-layout.tsx:70,75</code></dd><dt>Agent</dt><dd>A13</dd></dl>
+      <p>Client code clears a legacy <code style="font-family:var(--mono)">session=</code> cookie (the pre-Better-Auth custom-auth cookie). The actual session cookie is <code style="font-family:var(--mono)">better-auth.session_token</code> / <code style="font-family:var(--mono)">__Secure-...</code>, never <code style="font-family:var(--mono)">session</code>. Harmless dead code; remove in a cleanup pass.</p>
+    </div>
+  </details>
+</section>
+
+<!-- ===================== 5. PASSED TESTS ===================== -->
+<section id="passed">
+  <h2><span class="num">05</span> Passed Security Tests</h2>
+  <hr class="sep">
+  <p class="sec-lead">Controls confirmed working during the audit — this section proves the audit's breadth and the platform's genuine strengths. These are the reasons there are zero Critical/High findings.</p>
+  <div class="pass-grid">
+    <div class="pass-item"><span class="ok">✓</span><span class="txt">No IDOR / BOLA — every route scopes reads &amp; writes by <code style="font-family:var(--mono)">user_id</code><small>A01 · app/api/**</small></span></div>
+    <div class="pass-item"><span class="ok">✓</span><span class="txt">Admin routes enforce <code style="font-family:var(--mono)">getAdminUser()</code> → 403 for non-admins<small>A01 · lib/admin.ts</small></span></div>
+    <div class="pass-item"><span class="ok">✓</span><span class="txt">No SQL injection — 100% parameterized; only allow-list / SAFE_USER_ID interpolation<small>A03 · lib/db.ts:133</small></span></div>
+    <div class="pass-item"><span class="ok">✓</span><span class="txt">No hardcoded secrets; no leaked secret values in git history (placeholders only)<small>A02 · grep + git log -S verified</small></span></div>
+    <div class="pass-item"><span class="ok">✓</span><span class="txt">No <code style="font-family:var(--mono)">NEXT_PUBLIC_</code> secret exposure; no service-role key in client<small>A02/A11 · grep verified</small></span></div>
+    <div class="pass-item"><span class="ok">✓</span><span class="txt">No <code style="font-family:var(--mono)">.env</code> tracked by git<small>A02 · git ls-files verified</small></span></div>
+    <div class="pass-item"><span class="ok">✓</span><span class="txt">RLS FORCE-enabled; <code style="font-family:var(--mono)">app.current_user_id</code> bound per authed query; fail-closed when unset<small>A01/A07 · lib/db.ts:141-147</small></span></div>
+    <div class="pass-item"><span class="ok">✓</span><span class="txt">Auth rate-limited (DB-backed): sign-in/sign-up 5/min, reset 3/min<small>A07 · better-auth.ts:325-336</small></span></div>
+    <div class="pass-item"><span class="ok">✓</span><span class="txt">Session cookie HttpOnly + Secure (<code style="font-family:var(--mono)">__Secure-</code> prefix) + SameSite=Lax<small>A07/A13 · BA defaults</small></span></div>
+    <div class="pass-item"><span class="ok">✓</span><span class="txt">Logout truly revokes server-side session row (not just cookie clearing)<small>A07 · logout/route.ts</small></span></div>
+    <div class="pass-item"><span class="ok">✓</span><span class="txt">Google OAuth trusted-origin + CSRF checks enforced (BA defaults, not overridden)<small>A07</small></span></div>
+    <div class="pass-item"><span class="ok">✓</span><span class="txt">Trial / paywall NOT bypassable — entitlements server-resolved, webhook-only writes<small>A04 · lib/entitlements.ts</small></span></div>
+    <div class="pass-item"><span class="ok">✓</span><span class="txt">Client-count cap is TOCTOU-safe (<code style="font-family:var(--mono)">pg_advisory_xact_lock</code>)<small>A04 · app/api/clients/route.ts</small></span></div>
+    <div class="pass-item"><span class="ok">✓</span><span class="txt">Polar webhook signature-verified; no client-writable tier columns<small>A04/A07 · better-auth.ts:212</small></span></div>
+    <div class="pass-item"><span class="ok">✓</span><span class="txt">No <code style="font-family:var(--mono)">dangerouslySetInnerHTML</code> with user input (only static theme script)<small>A03/A11 · layout.tsx:135</small></span></div>
+    <div class="pass-item"><span class="ok">✓</span><span class="txt">User content in emails / PDF / Excel escaped (<code style="font-family:var(--mono)">escapeHtml</code> / JSX)<small>A03 · contact, feedback, Pdf*</small></span></div>
+    <div class="pass-item"><span class="ok">✓</span><span class="txt">No SSRF on Resend / Polar / uploads — destinations are server-controlled<small>A10</small></span></div>
+    <div class="pass-item"><span class="ok">✓</span><span class="txt">No open redirect — only hardcoded redirect target used<small>A11</small></span></div>
+    <div class="pass-item"><span class="ok">✓</span><span class="txt">Client state clean — no tokens/PII in localStorage; session in httpOnly cookie<small>A13</small></span></div>
+    <div class="pass-item"><span class="ok">✓</span><span class="txt">GDPR account export/delete complete &amp; user-scoped (no <code style="font-family:var(--mono)">adminQuery</code> leak)<small>A04</small></span></div>
+    <div class="pass-item"><span class="ok">✓</span><span class="txt">Charge-doc pay/unpay/cancel state-machine guarded; amounts not re-accepted on pay<small>A04</small></span></div>
+    <div class="pass-item"><span class="ok">✓</span><span class="txt">Stack traces never reach client responses (generic Hebrew errors everywhere)<small>A05/API8</small></span></div>
+  </div>
+</section>
+
+<!-- ===================== 6. VERIFIED LOW-RISK / FALSE POSITIVES ===================== -->
+<section id="fp">
+  <h2><span class="num">06</span> Verified Low-Risk &amp; False Positives</h2>
+  <hr class="sep">
+  <p class="sec-lead">Plausible issues raised by the first-pass agents that were <b>checked against the actual code and cleared</b> — recorded for transparency so the absence of a finding is itself auditable.</p>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Claimed issue</th><th>Original severity</th><th>Verification result</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td>Reset/verify token logged to console</td><td>Critical</td><td><b>Downgraded → Medium (M-3)</b>: gated by <code style="font-family:var(--mono)">if(!sent)</code>; only mis-fires on prod email outage, not on every request</td><td><code>better-auth.ts:278</code></td></tr>
+      <tr><td>Fail-open RLS when no tenant context</td><td>High</td><td><b>Cleared</b>: RLS policies read <code style="font-family:var(--mono)">current_setting('app.current_user_id', true)</code> → unset yields NULL → <code style="font-family:var(--mono)">NULL = user_id</code> = false → DB returns no rows (fail-closed)</td><td><code>lib/db.ts:160-162</code></td></tr>
+      <tr><td>Secrets committed to git history</td><td>High</td><td><b>Cleared</b>: <code style="font-family:var(--mono)">git log -S</code> hits are <code style="font-family:var(--mono)">.env.template</code> placeholders (<code style="font-family:var(--mono)">re_xxxxxxxxxxxxx</code>, <code style="font-family:var(--mono)">your-secret-here</code>) + docs prose — <b>no real secret values</b>; no rotation needed</td><td>git history verified</td></tr>
+      <tr><td>Rate limiting absent on auth</td><td>High</td><td><b>Cleared</b>: Better Auth DB-backed rate limiting is configured (3–5/min on credential paths)</td><td><code>better-auth.ts:325</code></td></tr>
+      <tr><td>VAT rate client-controllable</td><td>Medium</td><td><b>Cleared</b>: VAT resolved server-side at issue time from <code style="font-family:var(--mono)">clients.vat_mode</code> + profile settings, snapshotted, CHECK'd 0–100</td><td><code>route.ts:82-86</code></td></tr>
+      <tr><td>Hourly line amounts tamperable on POST</td><td>Medium</td><td><b>Cleared</b>: rate/duration read from server-authoritative snapshot, not the body (exception: computed lines → M-5)</td><td><code>charge-documents/route.ts:90-104</code></td></tr>
+      <tr><td>Pay endpoint can tamper the amount</td><td>Medium</td><td><b>Cleared</b>: pay/unpay/cancel take no body — only status flips; amounts never re-accepted</td><td><code>charge-documents/[id]/*</code></td></tr>
+      <tr><td>Account export leaks cross-tenant data</td><td>Medium</td><td><b>Cleared</b>: uses scoped <code style="font-family:var(--mono)">query</code> (not <code style="font-family:var(--mono)">adminQuery</code>); fixed allow-list of tables; parameterized <code style="font-family:var(--mono)">user_id</code></td><td><code>account/export/route.ts</code></td></tr>
+      <tr><td>Tokens / PII in localStorage</td><td>Medium</td><td><b>Cleared</b>: only UI prefs (<code style="font-family:var(--mono)">pendingBusinessName</code>, sidebar, PWA-dismiss); session is httpOnly-cookie only</td><td>register, app-layout</td></tr>
+      <tr><td>Open redirect via OAuth callback</td><td>Low</td><td><b>Cleared</b>: Better Auth <code style="font-family:var(--mono)">originCheckMiddleware</code> validates <code style="font-family:var(--mono)">callbackURL</code> against trusted origins; not overridden</td><td>BA origin-check.mjs</td></tr>
+      <tr><td><code style="font-family:var(--mono)">dangerouslySetInnerHTML</code> XSS</td><td>Medium</td><td><b>Cleared</b>: the single usage is a static no-flash theme script; only interpolated value is a regex match of a <code style="font-family:var(--mono)">[a-z-]+</code> cookie</td><td><code>layout.tsx:135</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ===================== 7. APPENDIX ===================== -->
+<section id="appendix">
+  <h2><span class="num">07</span> Evidence Appendix</h2>
+  <hr class="sep">
+  <p class="sec-lead">Raw output from the ground-truth checks run during the audit.</p>
+
+  <h3 style="font-size:15px;margin-top:24px;">A. <code style="font-family:var(--mono)">npm audit --omit=dev</code> (live)</h3>
+<pre class="code">19 vulnerabilities (1 low, 17 moderate, 1 high)
+  Critical: 0   High: 1   Moderate: 17   Low: 1
+
+undici  &lt;=6.26.0   <span class="k">Severity: high</span>
+  - HTTP header injection via Set-Cookie percent-decoding (GHSA-p88m-4jfj-68fv)
+  - WebSocket client DoS via fragment count bypass (GHSA-vxpw-j846-p89q)
+  - response queue poisoning via keep-alive reuse (GHSA-35p6-xmwp-9g52)
+  - SameSite downgrade (GHSA-g8m3-5g58-fq7m)
+  path: @vercel/blob@2.4.0 → undici@6.26.0   | fix: npm audit fix
+
+uuid  &lt;11.1.1   <span class="k">Severity: moderate</span>  (GHSA-w5hq-g745-h8pq, via exceljs)
+  fix: npm audit fix --force (breaking → use overrides instead)</pre>
+
+  <h3 style="font-size:15px;margin-top:24px;">B. Hardcoded-secret &amp; NEXT_PUBLIC-leak greps</h3>
+<pre class="code"><span class="c"># sk_live_ / AKIA / ghp_ / polar_ across *.ts *.tsx *.js *.json *.mjs</span>
+<span class="k">(none)</span>
+
+<span class="c"># NEXT_PUBLIC_* carrying SECRET/API_KEY/TOKEN/PASSWORD/PRIVATE</span>
+<span class="k">(none)</span>
+
+<span class="c"># console.* near password/token/secret/key/jwt/session/webhook</span>
+app/api/auth/session/route.ts:46  console.error("Session check error:", error)   <span class="c"># benign</span>
+app/api/sessions/route.ts:69,119  console.error("Get sessions / Logout error")   <span class="c"># benign</span></pre>
+
+  <h3 style="font-size:15px;margin-top:24px;">C. Git / env hygiene</h3>
+<pre class="code"><span class="c"># .env files tracked by git</span>
+<span class="k">(none tracked — GOOD)</span>
+
+<span class="c"># .env files on disk (all gitignored)</span>
+.env, .env.local, .env.local.bak.prod-shared, .env.template, .env.vercel-prod.local
+
+<span class="c"># git log -S for secret names → all resolve to .env.template placeholders / docs prose</span>
++DATABASE_URL=postgresql://user:password@ep-cool-name...   <span class="c"># template</span>
++BETTER_AUTH_SECRET=your-secret-here                       <span class="c"># template</span>
++RESEND_API_KEY=re_xxxxxxxxxxxxx                           <span class="c"># template</span>
++BLOB_READ_WRITE_TOKEN=vercel_blob_rw_xxxxxxxxxxxxx        <span class="c"># template</span>
+<span class="k">→ NO real secret values in history. No rotation required.</span></pre>
+</section>
+
+<footer>
+  <p>Generated 2026-06-20 · ClockBill Security Audit · OWASP Top 10 + Extended · Commit <code style="font-family:var(--mono)">c9de338</code><br>
+  Report-only deliverable — no code was modified during this audit.</p>
+</footer>
+
+</div>
+</body>
+</html>

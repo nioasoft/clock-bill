@@ -166,6 +166,11 @@ runner.test("lineQtyRate: item → qty + unit + rate", () => {
   assertEqual(qr?.qty, 3);
   assertEqual(qr?.unit, "פגישה");
 });
+runner.test("lineQtyRate: numeric unit is dropped, quantity kept", () => {
+  const qr = lineQtyRate({ billing_kind: "item", quantity: 2, unit: "1", rate: 25, amount: 50 });
+  assertEqual(qr?.qty, 2);
+  assertEqual(qr?.unit, null);
+});
 runner.test("lineQtyRate: fixed line → null", () => {
   assertEqual(lineQtyRate({ billing_kind: "fixed", quantity: null, unit: null, rate: null, amount: 500 }), null);
 });
