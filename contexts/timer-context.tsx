@@ -185,7 +185,12 @@ function liveElapsed(
 }
 
 function formatElapsed(minutes: number, seconds: number): string {
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  const ss = seconds.toString().padStart(2, "0");
+  if (minutes < 60) return `${minutes}:${ss}`;
+  // Past an hour, show H:MM:SS so long timers read as hours, not 372 minutes.
+  const hours = Math.floor(minutes / 60);
+  const mm = (minutes % 60).toString().padStart(2, "0");
+  return `${hours}:${mm}:${ss}`;
 }
 
 export function TimerProvider({ children }: TimerProviderProps) {
