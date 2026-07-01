@@ -284,7 +284,7 @@ export function PdfChargeDocument({ doc, lines, profile }: PdfChargeDocumentProp
       </table>
 
       {/* Totals block (subtotal / VAT / grand total) — aligned to the amount side. */}
-      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "0.75rem" }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "0.75rem", breakInside: "avoid" }}>
         <table style={{ minWidth: "240px", borderCollapse: "collapse" }}>
           <tbody>
             {hasVat && (
