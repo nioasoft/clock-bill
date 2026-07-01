@@ -49,7 +49,7 @@ async function loadByToken(token: string): Promise<LoadResult | null> {
             item_ref, billing_kind, quantity, unit, rate, amount, project_name
        FROM charge_document_lines WHERE document_id =
        (SELECT id FROM charge_documents WHERE public_token = $1)
-      ORDER BY created_at`,
+      ORDER BY COALESCE(date, to_date(period_month, 'YYYY-MM')) ASC NULLS LAST, created_at`,
     [token]
   );
   const profRes = await adminQuery(

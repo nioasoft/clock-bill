@@ -570,6 +570,7 @@ export default function ChargeDocumentView({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-card-elevated text-muted-foreground">
+              <th className="px-3 py-2 text-start font-medium">{t("doc.colDate")}</th>
               <th className="px-3 py-2 text-start font-medium">{t("doc.colItem")}</th>
               <th className="px-3 py-2 text-start font-medium">{t("doc.colDetails")}</th>
               <th className="px-3 py-2 text-start font-medium">{t("doc.colQtyRate")}</th>
@@ -580,7 +581,7 @@ export default function ChargeDocumentView({
           <tbody>
             {lines.length === 0 && (
               <tr>
-                <td colSpan={isPending ? 5 : 4} className="px-3 py-6 text-center text-muted-foreground">
+                <td colSpan={isPending ? 6 : 5} className="px-3 py-6 text-center text-muted-foreground">
                   {t("doc.noLines")}
                 </td>
               </tr>
@@ -589,6 +590,13 @@ export default function ChargeDocumentView({
               const editing = editingLineId === line.id;
               return (
                 <tr key={line.id} className="border-b border-border last:border-b-0 align-top">
+                  <td className="px-3 py-3 text-muted-foreground whitespace-nowrap">
+                    {line.date
+                      ? formatDate(line.date)
+                      : line.period_month
+                        ? line.period_month.split("-").reverse().join("/")
+                        : "—"}
+                  </td>
                   <td className="px-3 py-3 text-foreground">
                     <bdi>{line.label}</bdi>
                     {isItemLine(line) && line.item_ref != null && (

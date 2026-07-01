@@ -30,7 +30,8 @@ export async function GET(_request: NextRequest, ctx: Ctx) {
     if (doc.rowCount === 0) return NextResponse.json({ success: false, error_code: "DOCUMENT_NOT_FOUND", message: "תעודה לא נמצאה" }, { status: 404 });
 
     const lines = await query(
-      `SELECT * FROM charge_document_lines WHERE document_id = $1 AND user_id = $2 ORDER BY created_at`,
+      `SELECT * FROM charge_document_lines WHERE document_id = $1 AND user_id = $2
+        ORDER BY COALESCE(date, to_date(period_month, 'YYYY-MM')) ASC NULLS LAST, created_at`,
       [id, user.id]
     );
     return NextResponse.json({ success: true, data: { document: doc.rows[0], lines: lines.rows } });
