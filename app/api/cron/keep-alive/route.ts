@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { isTransientConnectionError } from "@/lib/db-retry";
 import { createLogger } from "@/lib/logger";
 import { isAuthorizedCron } from "@/lib/cron-auth";
 
@@ -30,7 +31,18 @@ export async function GET(request: NextRequest) {
     await query("SELECT 1");
     return NextResponse.json({ ok: true });
   } catch (error) {
-    logger.error("keep-alive ping failed", error);
+    // A transient connection failure here is benign and user-invisible: this
+    // endpoint exists to warm a scaled-to-zero Neon, so it's the one most likely
+    // to catch a cold DB, and even the failed attempt warms it for the next ping.
+    // The retry window (~150ms) can't outlast Neon's ~300-500ms cold start, so
+    // don't page Sentry for it — warn only. Real errors (auth/SQL) still page. (CLOCK-BILL-5)
+    if (isTransientConnectionError(error)) {
+      logger.warn("keep-alive ping hit a cold/dropped DB connection (benign)", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    } else {
+      logger.error("keep-alive ping failed", error);
+    }
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 }
