@@ -6,9 +6,11 @@ import { Play } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { brandName } from "@/lib/brand";
 import { useTimer } from "@/contexts/timer-context";
+import { MobileAccountMenu } from "@/components/mobile-account-menu";
 
 interface MobileNavProps {
   userEmail?: string;
+  userName?: string | null;
   /** Kept for API compatibility; navigation lives in MobileBottomNav. */
   userRole?: string;
 }
@@ -18,16 +20,14 @@ interface MobileNavProps {
  *
  * The bar is sticky, so the timer button here is ALWAYS reachable while never
  * floating over page content (it replaced the old floating FAB, which kept
- * covering form fields). The avatar links to Settings, where logout now lives —
- * logout was removed from the top bar (it doesn't belong as a top-level action).
- * Section navigation is handled entirely by MobileBottomNav.
+ * covering form fields). The avatar opens an account sheet (MobileAccountMenu)
+ * with clients, settlement, settings and logout — the two sections pulled off
+ * the bottom nav to keep it minimal. Primary section nav is MobileBottomNav.
  */
-export function MobileNav({ userEmail }: MobileNavProps) {
+export function MobileNav({ userEmail, userName }: MobileNavProps) {
   const t = useTranslations("Timer");
-  const tNav = useTranslations("Nav");
   const locale = useLocale();
   const { setShowTimerModal } = useTimer();
-  const firstLetter = userEmail ? userEmail.charAt(0).toUpperCase() : "?";
 
   return (
     <header className="lg:hidden bg-sidebar sticky top-0 z-40">
@@ -52,13 +52,7 @@ export function MobileNav({ userEmail }: MobileNavProps) {
             {t("bar.startTimer")}
           </button>
           {userEmail && (
-            <Link
-              href="/settings"
-              aria-label={tNav("settings")}
-              className="w-9 h-9 bg-sidebar-foreground/10 text-sidebar-foreground rounded-full flex items-center justify-center font-bold text-sm shrink-0 hover:bg-sidebar-foreground/15 transition-colors"
-            >
-              {firstLetter}
-            </Link>
+            <MobileAccountMenu userEmail={userEmail} userName={userName} />
           )}
         </div>
       </div>

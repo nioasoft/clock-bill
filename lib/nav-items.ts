@@ -33,10 +33,13 @@ export const navItemDefs: NavItemDef[] = [
   { labelKey: "dashboard", href: "/", iconName: "Home" },
   { labelKey: "entries", href: "/entries", iconName: "Clock", mobileLabelKey: "entriesMobile" },
   { labelKey: "tasks", href: "/tasks", iconName: "FolderKanban" },
-  { labelKey: "clients", href: "/clients", iconName: "Users" },
-  { labelKey: "reports", href: "/reports", iconName: "FileText" },
-  // The bottom nav has no room for 7 items — feedback is reachable from the
-  // settings page on mobile instead.
+  // Clients + reports are pulled off the mobile bottom bar to keep it to 4 tabs
+  // (dashboard/entries/tasks/settings). On mobile they live in the avatar
+  // account sheet (see mobile-account-menu.tsx); the desktop sidebar ignores
+  // mobileHidden and still shows them.
+  { labelKey: "clients", href: "/clients", iconName: "Users", mobileHidden: true },
+  { labelKey: "reports", href: "/reports", iconName: "FileText", mobileHidden: true },
+  // Feedback is also off the mobile bar — reachable from the settings page.
   { labelKey: "feedback", href: "/feedback", iconName: "MessageSquare", mobileHidden: true },
   { labelKey: "settings", href: "/settings", iconName: "Settings" },
   { labelKey: "admin", href: "/admin", iconName: "Shield", adminOnly: true },

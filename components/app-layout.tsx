@@ -152,7 +152,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       className="min-h-screen bg-background"
       style={{ "--app-sidebar-w": sidebarCollapsed ? "4rem" : "16rem" } as React.CSSProperties}
     >
-      <MobileNav userEmail={user.email} userRole={user.role} />
+      <MobileNav userEmail={user.email} userName={user.name} userRole={user.role} />
 
       {/* Desktop sidebar — fixed; hidden on mobile (mobile uses MobileNav +
           the bottom nav below). */}
