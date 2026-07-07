@@ -1090,7 +1090,7 @@ export default function EntriesPage() {
                     {formData.rateId === ADHOC && (
                       <>
                         <datalist id="unit-suggestions">
-                          {(tRoot.raw("Units.suggestions") as string[]).map((u) => (
+                          {tRoot("Units.suggestions").split(",").map((u) => (
                             <option key={u} value={u} />
                           ))}
                         </datalist>

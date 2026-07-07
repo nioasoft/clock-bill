@@ -497,7 +497,7 @@
     "checkoutError": "Could not open checkout. Please try again."
   },
   "Units": {
-    "suggestions": ["unit", "day", "session", "word", "document", "month"]
+    "suggestions": "unit,day,session,word,document,month"
   },
   "Clients": {
     "preVatHint": "Prices are pre-VAT",

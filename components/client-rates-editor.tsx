@@ -197,7 +197,7 @@ export function ClientRatesEditor({ rates, currency, onChange, projects = [], di
   return (
     <div className="divide-y divide-border rounded-[var(--radius)] border border-border bg-background/50">
       <datalist id="unit-suggestions">
-        {(tUnits.raw("suggestions") as string[]).map((u) => (
+        {tUnits("suggestions").split(",").map((u) => (
           <option key={u} value={u} />
         ))}
       </datalist>
