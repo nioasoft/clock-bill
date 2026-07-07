@@ -387,6 +387,8 @@
       "itemRateOption": "{name} — {rate}/unit",
       "adhocNameLabel": "Item Name *",
       "adhocNamePlaceholder": "Letter",
+      "adhocUnitLabel": "Unit",
+      "adhocUnitPlaceholder": "day / session / word",
       "adhocPriceLabel": "Unit Price (₪) *",
       "adhocPricePlaceholder": "250",
       "saveItemToClient": "Save this item to the client for reuse",
@@ -493,6 +495,9 @@
     "renews": "Renews automatically · cancel anytime",
     "agree": "By paying you agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
     "checkoutError": "Could not open checkout. Please try again."
+  },
+  "Units": {
+    "suggestions": ["unit", "day", "session", "word", "document", "month"]
   },
   "Clients": {
     "preVatHint": "Prices are pre-VAT",

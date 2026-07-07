@@ -35,6 +35,7 @@ interface ClientRatesEditorProps {
  */
 export function ClientRatesEditor({ rates, currency, onChange, projects = [], disabled }: ClientRatesEditorProps) {
   const t = useTranslations("Clients");
+  const tUnits = useTranslations("Units");
   const symbol = CURRENCY_SYMBOLS[currency] || "₪";
 
   const addRate = (kind: RateKind) =>
@@ -124,6 +125,7 @@ export function ClientRatesEditor({ rates, currency, onChange, projects = [], di
       {!showDefault && (
         <input
           type="text"
+          list="unit-suggestions"
           value={r.unit ?? ""}
           onChange={(e) => updateRate(idx, { unit: e.target.value || null })}
           placeholder={t("unitPlaceholder")}
@@ -194,6 +196,11 @@ export function ClientRatesEditor({ rates, currency, onChange, projects = [], di
 
   return (
     <div className="divide-y divide-border rounded-[var(--radius)] border border-border bg-background/50">
+      <datalist id="unit-suggestions">
+        {(tUnits.raw("suggestions") as string[]).map((u) => (
+          <option key={u} value={u} />
+        ))}
+      </datalist>
       {/* Hourly rates */}
       <div className="space-y-2 p-3">
         {sectionHeader(t("hourlyRatesHeader"), t("addRate"), "hourly")}

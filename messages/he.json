@@ -387,6 +387,8 @@
       "itemRateOption": "{name} — {rate}/יח׳",
       "adhocNameLabel": "שם הפריט *",
       "adhocNamePlaceholder": "מכתב",
+      "adhocUnitLabel": "יחידה",
+      "adhocUnitPlaceholder": "יום / פגישה / מילה",
       "adhocPriceLabel": "מחיר ליחידה (₪) *",
       "adhocPricePlaceholder": "250",
       "saveItemToClient": "שמור פריט זה ללקוח לשימוש חוזר",
@@ -493,6 +495,9 @@
     "renews": "מתחדש אוטומטית · ביטול בכל עת",
     "agree": "בתשלום אתם מסכימים ל<terms>תנאי השימוש</terms> ול<privacy>מדיניות הפרטיות</privacy>.",
     "checkoutError": "שגיאה בפתיחת התשלום. נסו שוב."
+  },
+  "Units": {
+    "suggestions": ["יחידה", "יום", "פגישה", "מילה", "מסמך", "חודש"]
   },
   "Clients": {
     "preVatHint": "המחירים לפני מע\"מ",

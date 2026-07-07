@@ -151,6 +151,7 @@ export default function EntriesPage() {
     rateId: "",
     quantity: "",
     adhocName: "",
+    adhocUnit: "",
     adhocPrice: "",
     saveItemToClient: false,
   });
@@ -342,6 +343,7 @@ export default function EntriesPage() {
           ...p,
           rateId: ADHOC,
           adhocName: editingEntry.rateLabel ?? "",
+          adhocUnit: editingEntry.unit ?? "",
           adhocPrice: editingEntry.rate != null ? String(editingEntry.rate) : "",
         };
       }
@@ -423,10 +425,9 @@ export default function EntriesPage() {
       // back to the entry's own snapshot so editing other fields never zeroes it.
       const itemRate = isAdhoc ? parseFloat(formData.adhocPrice) || 0 : chosen?.rate ?? editingEntry?.rate ?? null;
       const itemLabel = isAdhoc ? formData.adhocName.trim() : chosen?.name ?? editingEntry?.rateLabel ?? null;
-      // Ad-hoc items have no unit field — preserve the edited entry's snapshot
-      // (covers editing an item whose catalog rate was deleted); new ad-hoc
-      // lines have no unit. Catalog items snapshot the chosen rate's unit.
-      const itemUnit = isAdhoc ? (editingEntry?.unit ?? null) : chosen?.unit ?? null;
+      // Ad-hoc items carry a typed unit noun ("יום"/"פגישה"); empty → null.
+      // Catalog items snapshot the chosen rate's unit.
+      const itemUnit = isAdhoc ? (formData.adhocUnit.trim() || null) : chosen?.unit ?? null;
       // Hourly lines snapshot the chosen hourly rate/label so the amount survives
       // create AND edit. Sending null here zeroes the entry's price (regression),
       // so fall back to the entry's own snapshot when nothing is chosen on edit.
@@ -476,7 +477,7 @@ export default function EntriesPage() {
               const r = await fetch(`/api/clients/${clientId}/rates`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: itemLabel, rate: itemRate }),
+                body: JSON.stringify({ name: itemLabel, rate: itemRate, unit: itemUnit }),
               });
               const rd = await r.json();
               if (rd.success) {
@@ -504,6 +505,7 @@ export default function EntriesPage() {
           rateId: "",
           quantity: "",
           adhocName: "",
+          adhocUnit: "",
           adhocPrice: "",
           saveItemToClient: false,
         });
@@ -548,6 +550,7 @@ export default function EntriesPage() {
       rateId: "", // resolved by the preselect effect (matches rateLabel, else ad-hoc)
       quantity: entry.quantity?.toString() ?? "",
       adhocName: "", // filled by the preselect effect when the item isn't in the catalog
+      adhocUnit: "", // ditto
       adhocPrice: "",
       saveItemToClient: false,
     });
@@ -569,6 +572,7 @@ export default function EntriesPage() {
       rateId: "",
       quantity: "",
       adhocName: "",
+      adhocUnit: "",
       adhocPrice: "",
       saveItemToClient: false,
     });
@@ -593,6 +597,7 @@ export default function EntriesPage() {
       rateId: "",
       quantity: "",
       adhocName: "",
+      adhocUnit: "",
       adhocPrice: "",
       saveItemToClient: false,
     });
@@ -1084,6 +1089,11 @@ export default function EntriesPage() {
                     {/* Ad-hoc item: typed name + unit price, optionally saved to the client */}
                     {formData.rateId === ADHOC && (
                       <>
+                        <datalist id="unit-suggestions">
+                          {(tRoot.raw("Units.suggestions") as string[]).map((u) => (
+                            <option key={u} value={u} />
+                          ))}
+                        </datalist>
                         <div className="col-span-2">
                           <label htmlFor="adhocName" className="block text-sm font-medium text-foreground">
                             {t("form.adhocNameLabel")}
@@ -1100,6 +1110,23 @@ export default function EntriesPage() {
                           {fieldErrors.adhocName && (
                             <p className="mt-1 text-xs text-destructive">{fieldErrors.adhocName}</p>
                           )}
+                        </div>
+
+                        <div>
+                          <label htmlFor="adhocUnit" className="block text-sm font-medium text-foreground">
+                            {t("form.adhocUnitLabel")}
+                          </label>
+                          <input
+                            type="text"
+                            id="adhocUnit"
+                            list="unit-suggestions"
+                            value={formData.adhocUnit}
+                            onChange={(e) => setFormData({ ...formData, adhocUnit: e.target.value })}
+                            className="mt-1 block w-full rounded-[var(--radius)] border border-border px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            disabled={submitting}
+                            maxLength={30}
+                            placeholder={t("form.adhocUnitPlaceholder")}
+                          />
                         </div>
 
                         <div>
