@@ -8,7 +8,7 @@
  * optimistically (rollback on failure), mirroring the theme save pattern.
  */
 import { useCallback, useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   DndContext,
   PointerSensor,
@@ -36,23 +36,24 @@ import {
   type DashboardWidgetState,
 } from "@/lib/dashboard-widgets";
 import { useProfile, usePatchProfile } from "@/hooks/use-profile";
+import { formatCurrency } from "@/lib/currency";
 
 type Zone = "cards" | "sections";
 
 // Illustrative values for the live preview (settings has no real stats loaded).
-const SAMPLE_VALUES: Record<string, string> = {
+const SAMPLE_VALUES: Record<string, string | number> = {
   hoursToday: "3:45",
-  revenueToday: "₪620",
-  revenueTodayByHours: "₪480",
-  revenueTodayByItems: "₪140",
+  revenueToday: 620,
+  revenueTodayByHours: 480,
+  revenueTodayByItems: 140,
   hoursWeek: "18:30",
-  revenueWeek: "₪3,100",
-  revenueWeekByHours: "₪2,400",
-  revenueWeekByItems: "₪700",
+  revenueWeek: 3100,
+  revenueWeekByHours: 2400,
+  revenueWeekByItems: 700,
   hoursMonth: "82:15",
-  revenueByHours: "₪12,400",
-  revenueByItems: "₪2,800",
-  revenueMonth: "₪15,200",
+  revenueByHours: 12400,
+  revenueByItems: 2800,
+  revenueMonth: 15200,
   clientsCount: "6",
   projectsCount: "11",
 };
@@ -68,6 +69,7 @@ const PREVIEW_GRID_BY_COUNT: Record<number, string> = {
 export function DashboardCustomizer() {
   const t = useTranslations("Settings.dashboard");
   const tDash = useTranslations("Dashboard");
+  const locale = useLocale();
 
   const [config, setConfig] = useState<DashboardConfig | null>(null);
   const [saveError, setSaveError] = useState("");
@@ -226,6 +228,11 @@ export function DashboardCustomizer() {
           {visibleCards.map((card) => {
             const meta = getWidgetMeta(card.id);
             const accent = Boolean(meta?.accent);
+            const sampleValue = SAMPLE_VALUES[card.id];
+            const previewValue =
+              typeof sampleValue === "number"
+                ? formatCurrency(sampleValue, profile?.defaultCurrency ?? "ILS", locale)
+                : sampleValue ?? "—";
             return (
               <div
                 key={card.id}
@@ -239,7 +246,7 @@ export function DashboardCustomizer() {
                   {meta ? tDash(meta.labelKey) : card.id}
                 </p>
                 <p className={`mt-1 font-mono font-bold tabular-nums text-base ${accent ? "text-primary" : "text-foreground"}`}>
-                  {SAMPLE_VALUES[card.id] ?? "—"}
+                  {previewValue}
                 </p>
               </div>
             );

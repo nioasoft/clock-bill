@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Clock, Boxes, LayoutGrid, ArrowLeft, Wallet } from "lucide-react";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 
@@ -16,6 +16,19 @@ interface Highlight {
   title: string;
   body: string;
   visual: ReactNode;
+}
+
+type CurrencyFormatter = (amount: number) => string;
+
+function createMarketingCurrencyFormatter(locale: string): CurrencyFormatter {
+  const isHebrew = locale === "he";
+  const formatter = new Intl.NumberFormat(isHebrew ? "he-IL" : "en-US", {
+    style: "currency",
+    currency: isHebrew ? "ILS" : "USD",
+    maximumFractionDigits: 0,
+  });
+
+  return (amount) => formatter.format(amount);
 }
 
 /** Parallel timers running for several clients at once. */
@@ -56,11 +69,17 @@ function TimersMock({ t }: { t: ReturnType<typeof useTranslations> }) {
 }
 
 /** Item-based billing: quantity × unit price → line total. */
-function ItemsMock({ t }: { t: ReturnType<typeof useTranslations> }) {
+function ItemsMock({
+  t,
+  formatCurrency,
+}: {
+  t: ReturnType<typeof useTranslations>;
+  formatCurrency: CurrencyFormatter;
+}) {
   const items = [
-    { name: t("highlights.items.mock.item1"), qty: "2", unit: "450 ₪", total: "900 ₪" },
-    { name: t("highlights.items.mock.item2"), qty: "1", unit: "320 ₪", total: "320 ₪" },
-    { name: t("highlights.items.mock.item3"), qty: "3", unit: "200 ₪", total: "600 ₪" },
+    { name: t("highlights.items.mock.item1"), qty: "2", unit: formatCurrency(450), total: formatCurrency(900) },
+    { name: t("highlights.items.mock.item2"), qty: "1", unit: formatCurrency(320), total: formatCurrency(320) },
+    { name: t("highlights.items.mock.item3"), qty: "3", unit: formatCurrency(200), total: formatCurrency(600) },
   ];
   return (
     <div className="w-full rounded-[var(--radius-card)] border border-border bg-card p-5">
@@ -86,7 +105,7 @@ function ItemsMock({ t }: { t: ReturnType<typeof useTranslations> }) {
       <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
         <span className="text-sm font-medium text-foreground">{t("highlights.items.mock.total")}</span>
         <bdi className="font-mono text-base font-bold tabular-nums text-primary">
-          1,820 ₪
+          {formatCurrency(1820)}
         </bdi>
       </div>
     </div>
@@ -127,7 +146,13 @@ function FlowMock({ t }: { t: ReturnType<typeof useTranslations> }) {
 }
 
 /** Get-paid flow: a settlement document sent to the client, paid down to zero. */
-function GetPaidMock({ t }: { t: ReturnType<typeof useTranslations> }) {
+function GetPaidMock({
+  t,
+  formatCurrency,
+}: {
+  t: ReturnType<typeof useTranslations>;
+  formatCurrency: CurrencyFormatter;
+}) {
   return (
     <div className="w-full rounded-[var(--radius-card)] border border-border bg-card p-5">
       <div className="mb-4 flex items-center justify-between">
@@ -139,21 +164,21 @@ function GetPaidMock({ t }: { t: ReturnType<typeof useTranslations> }) {
       <div className="space-y-2.5">
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">{t("highlights.getPaid.mock.subtotal")}</span>
-          <bdi className="font-mono text-sm tabular-nums text-foreground">1,820 ₪</bdi>
+          <bdi className="font-mono text-sm tabular-nums text-foreground">{formatCurrency(1820)}</bdi>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">{t("highlights.getPaid.mock.discount")}</span>
-          <bdi className="font-mono text-sm tabular-nums text-muted-foreground">−180 ₪</bdi>
+          <bdi className="font-mono text-sm tabular-nums text-muted-foreground">{formatCurrency(-180)}</bdi>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">{t("highlights.getPaid.mock.paid")}</span>
-          <bdi className="font-mono text-sm tabular-nums text-foreground">1,640 ₪</bdi>
+          <bdi className="font-mono text-sm tabular-nums text-foreground">{formatCurrency(1640)}</bdi>
         </div>
       </div>
       <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
         <span className="text-sm font-medium text-foreground">{t("highlights.getPaid.mock.balance")}</span>
         <span className="flex items-center gap-2">
-          <bdi className="font-mono text-base font-bold tabular-nums text-foreground">0 ₪</bdi>
+          <bdi className="font-mono text-base font-bold tabular-nums text-foreground">{formatCurrency(0)}</bdi>
           <span className="rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success">
             {t("highlights.getPaid.mock.settled")}
           </span>
@@ -167,6 +192,7 @@ const icons = [Clock, Boxes, LayoutGrid, Wallet];
 
 export function Highlights() {
   const t = useTranslations("Landing");
+  const formatCurrency = createMarketingCurrencyFormatter(useLocale());
   const highlights: Highlight[] = [
     {
       eyebrow: t("highlights.timers.eyebrow"),
@@ -178,7 +204,7 @@ export function Highlights() {
       eyebrow: t("highlights.items.eyebrow"),
       title: t("highlights.items.title"),
       body: t("highlights.items.body"),
-      visual: <ItemsMock t={t} />,
+      visual: <ItemsMock t={t} formatCurrency={formatCurrency} />,
     },
     {
       eyebrow: t("highlights.flow.eyebrow"),
@@ -190,7 +216,7 @@ export function Highlights() {
       eyebrow: t("highlights.getPaid.eyebrow"),
       title: t("highlights.getPaid.title"),
       body: t("highlights.getPaid.body"),
-      visual: <GetPaidMock t={t} />,
+      visual: <GetPaidMock t={t} formatCurrency={formatCurrency} />,
     },
   ];
   return (

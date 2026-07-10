@@ -392,7 +392,7 @@
       "adhocNamePlaceholder": "מכתב",
       "adhocUnitLabel": "יחידה",
       "adhocUnitPlaceholder": "יום / פגישה / מילה",
-      "adhocPriceLabel": "מחיר ליחידה (₪) *",
+      "adhocPriceLabel": "מחיר ליחידה ({currency}) *",
       "adhocPricePlaceholder": "250",
       "saveItemToClient": "שמור פריט זה ללקוח לשימוש חוזר",
       "quantityLabel": "כמות *",

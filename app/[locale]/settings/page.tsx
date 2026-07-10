@@ -1687,6 +1687,7 @@ export default function SettingsPage() {
                     label={t("pdf.previewLabel")}
                     docTitle={t("pdf.previewDocTitle")}
                     isHebrew={isHebrew}
+                    currency={defaultCurrency}
                   />
                 </div>
             </div>

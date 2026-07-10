@@ -56,6 +56,9 @@ test.describe("landing page locale", () => {
   test("/en shows the English marketing headline (Landing.hero.headlinePrefix)", async ({ page }) => {
     await page.goto("/en");
     await expect(page.getByRole("heading", { level: 1 })).toContainText(STR.en.landingHeadline);
+    const marketingMain = page.getByRole("main");
+    await expect(marketingMain).toContainText("$1,820");
+    await expect(marketingMain).not.toContainText("₪");
   });
 });
 

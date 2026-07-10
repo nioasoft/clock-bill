@@ -12,6 +12,7 @@
 
 import { useEffect, useId, useRef } from "react";
 import { templateRules, type PdfTemplate, type OnColorText } from "@/app/[locale]/(auth)/reports/printStyles";
+import { formatCurrency } from "@/lib/currency";
 
 interface PdfPreviewProps {
   template: string;
@@ -26,6 +27,7 @@ interface PdfPreviewProps {
   docTitle: string;
   /** Follows the UI locale so the sample content matches the language. */
   isHebrew: boolean;
+  currency: string;
 }
 
 const HEX = /^#[0-9A-Fa-f]{6}$/;
@@ -43,6 +45,7 @@ export function PdfPreview({
   label,
   docTitle,
   isHebrew,
+  currency,
 }: PdfPreviewProps) {
   const primary = HEX.test(primaryColor) ? primaryColor : "#A8622D";
   const accent = HEX.test(accentColor) ? accentColor : "#347B52";
@@ -66,6 +69,7 @@ export function PdfPreview({
         item: "Item", details: "Details", qty: "Qty / Rate", amount: "Amount",
         line1: "Development", line1d: "Landing page", line2: "Design",
         subtotal: "Subtotal", vat: "VAT 18%", total: "Total due", hours: "8h" };
+  const formatAmount = (amount: number) => formatCurrency(amount, currency, isHebrew ? "he" : "en");
 
   const pText: OnColorText = primaryText === "dark" ? "dark" : "light";
   // The same rules that style the printed document, scoped to this preview only.
@@ -143,15 +147,15 @@ export function PdfPreview({
                 <td style={{ whiteSpace: "nowrap", color: "#475569" }}>{tx.d1}</td>
                 <td>{tx.line1}</td>
                 <td>{tx.line1d}</td>
-                <td style={{ whiteSpace: "nowrap" }}>{tx.hours} × ₪150</td>
-                <td style={{ whiteSpace: "nowrap" }}>₪1,200</td>
+                <td style={{ whiteSpace: "nowrap" }}>{tx.hours} × {formatAmount(150)}</td>
+                <td style={{ whiteSpace: "nowrap" }}>{formatAmount(1200)}</td>
               </tr>
               <tr>
                 <td style={{ whiteSpace: "nowrap", color: "#475569" }}>{tx.d2}</td>
                 <td>{tx.line2}</td>
                 <td>—</td>
-                <td style={{ whiteSpace: "nowrap" }}>1 × ₪300</td>
-                <td style={{ whiteSpace: "nowrap" }}>₪300</td>
+                <td style={{ whiteSpace: "nowrap" }}>1 × {formatAmount(300)}</td>
+                <td style={{ whiteSpace: "nowrap" }}>{formatAmount(300)}</td>
               </tr>
             </tbody>
           </table>
@@ -162,15 +166,15 @@ export function PdfPreview({
               <tbody>
                 <tr className="pdf-totals-row">
                   <td className="pdf-totals-label" style={{ fontSize: 12 }}>{tx.subtotal}</td>
-                  <td className="pdf-totals-value" style={{ fontSize: 12 }}>₪1,500</td>
+                  <td className="pdf-totals-value" style={{ fontSize: 12 }}>{formatAmount(1500)}</td>
                 </tr>
                 <tr className="pdf-totals-row">
                   <td className="pdf-totals-label" style={{ fontSize: 12 }}>{tx.vat}</td>
-                  <td className="pdf-totals-value" style={{ fontSize: 12 }}>₪270</td>
+                  <td className="pdf-totals-value" style={{ fontSize: 12 }}>{formatAmount(270)}</td>
                 </tr>
                 <tr className="pdf-totals-row pdf-totals-grand">
                   <td className="pdf-totals-label">{tx.total}</td>
-                  <td className="pdf-totals-value">₪1,770</td>
+                  <td className="pdf-totals-value">{formatAmount(1770)}</td>
                 </tr>
               </tbody>
             </table>

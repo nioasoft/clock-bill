@@ -39,6 +39,7 @@ interface Project {
 interface Client {
   id: string;
   name: string;
+  currency?: string;
 }
 
 // Stable empty defaults — a fresh `[]` per render would change identity and
@@ -155,6 +156,10 @@ export default function EntriesPage() {
     adhocPrice: "",
     saveItemToClient: false,
   });
+  const formCurrency =
+    clients.find((client) => client.id === formClientId)?.currency ??
+    editingEntry?.currency ??
+    "ILS";
   const [formTasks, setFormTasks] = useState<TaskOption[]>([]);
   const [formRates, setFormRates] = useState<ClientRate[]>([]);
   const [ratesLoaded, setRatesLoaded] = useState(false);
@@ -1131,7 +1136,7 @@ export default function EntriesPage() {
 
                         <div>
                           <label htmlFor="adhocPrice" className="block text-sm font-medium text-foreground">
-                            {t("form.adhocPriceLabel")}
+                            {t("form.adhocPriceLabel", { currency: formCurrency })}
                           </label>
                           <input
                             type="number"

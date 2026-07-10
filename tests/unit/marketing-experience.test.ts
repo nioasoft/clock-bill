@@ -66,6 +66,10 @@ function localeLayoutSource(): string {
   return readFileSync(join(process.cwd(), "app", "[locale]", "layout.tsx"), "utf8");
 }
 
+function readProjectSource(...segments: string[]): string {
+  return readFileSync(join(process.cwd(), ...segments), "utf8");
+}
+
 function run(): void {
   const heLanding = he.Landing as LandingCatalog;
   const enLanding = en.Landing as LandingCatalog;
@@ -101,7 +105,15 @@ function run(): void {
   }
 
   const hebrewLandingText = JSON.stringify(he.Landing);
+  const englishLandingText = JSON.stringify(en.Landing);
   assert(!/[—–]/u.test(hebrewLandingText), "Hebrew landing copy must not contain em/en dashes");
+  assert(!englishLandingText.includes("₪"), "English landing copy must not contain shekel symbols");
+  for (const catalog of [he, en]) {
+    assert(
+      catalog.Entries.form.adhocPriceLabel.includes("{currency}"),
+      "The ad-hoc item price label must use the selected client's currency"
+    );
+  }
   for (const word of BANNED_HEBREW_MARKETING_WORDS) {
     const pattern = new RegExp(`(^|[\\s,.:;!?()״\"])+${word}(?=$|[\\s,.:;!?()״\"])`, "u");
     assert(!pattern.test(hebrewLandingText), `Hebrew landing copy contains AI-style word: ${word}`);
@@ -115,10 +127,22 @@ function run(): void {
   }
 
   const sources = landingSources();
+  assert(!sources.includes("₪"), "Landing components must not hardcode a currency symbol");
   assert(!sources.includes("transition-all"), "Landing components must transition explicit properties only");
   assert(!sources.includes("bg-clip-text"), "Landing components must not use gradient text");
   assert(!sources.includes("getBoundingClientRect"), "Landing cards must not measure layout on pointer movement");
   assert(!sources.includes("IntersectionObserver"), "Landing components must not ship unused observers");
+
+  const dashboardPreviewSource = readProjectSource("components", "dashboard-customizer.tsx");
+  const pdfPreviewSource = readProjectSource("components", "pdf-preview.tsx");
+  const clientsPageSource = readProjectSource("app", "[locale]", "clients", "page.tsx");
+  assert(!dashboardPreviewSource.includes("₪"), "Dashboard preview values must use the profile currency");
+  assert(!pdfPreviewSource.includes("₪"), "PDF preview values must use the selected currency");
+  assert(
+    !clientsPageSource.includes('`₪${Number(client.totalBilled)') &&
+      !clientsPageSource.includes('"₪0"'),
+    "Client totals must use each client's currency"
+  );
 
   const layoutSource = localeLayoutSource();
   assert(

@@ -12,7 +12,7 @@ import { Lock, Users } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { messageForError } from "@/lib/api-error";
 import { fieldClass } from "@/lib/form-styles";
-import { CURRENCY_SYMBOLS } from "@/lib/currency";
+import { CURRENCY_SYMBOLS, formatCurrency } from "@/lib/currency";
 import { ClientRatesEditor } from "@/components/client-rates-editor";
 import { ROUNDING_MODES, type RoundingMode } from "@/lib/rounding";
 import { getProfession } from "@/lib/professions";
@@ -1044,7 +1044,7 @@ function ClientsPageContent() {
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <div className="text-sm font-medium text-foreground">
-                          {Number(client.totalBilled) > 0 ? `₪${Number(client.totalBilled).toFixed(2)}` : "₪0"}
+                          {formatCurrency(Number(client.totalBilled), client.currency || "ILS", locale)}
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
@@ -1141,7 +1141,7 @@ function ClientsPageContent() {
                     <span className="text-muted-foreground">
                       {t("billedInline")}{" "}
                       <span className="font-medium text-foreground">
-                        {Number(client.totalBilled) > 0 ? `₪${Number(client.totalBilled).toFixed(2)}` : "₪0"}
+                        {formatCurrency(Number(client.totalBilled), client.currency || "ILS", locale)}
                       </span>
                     </span>
                     <span className="text-muted-foreground">

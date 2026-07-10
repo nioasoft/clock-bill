@@ -392,7 +392,7 @@
       "adhocNamePlaceholder": "Letter",
       "adhocUnitLabel": "Unit",
       "adhocUnitPlaceholder": "day / session / word",
-      "adhocPriceLabel": "Unit Price (₪) *",
+      "adhocPriceLabel": "Unit Price ({currency}) *",
       "adhocPricePlaceholder": "250",
       "saveItemToClient": "Save this item to the client for reuse",
       "quantityLabel": "Quantity *",
@@ -1515,12 +1515,12 @@
         "ready": {
           "label": "Ready to bill",
           "note": "The rate and amount are already calculated.",
-          "value": "₪1,820"
+          "value": "$1,820"
         },
         "paid": {
           "label": "Payment closed",
           "note": "Each payment updates the outstanding balance.",
-          "value": "₪0 due"
+          "value": "$0 due"
         },
         "summary": "The trail stays open until the money arrives."
       }
