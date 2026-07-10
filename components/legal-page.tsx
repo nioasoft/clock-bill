@@ -21,7 +21,7 @@ export async function LegalPage({ title, updated, children }: LegalPageProps) {
   const locale = await getLocale();
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <main id="main-content" tabIndex={-1} className="min-h-screen bg-background text-foreground">
       <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
         <Link
           href="/"
@@ -53,6 +53,7 @@ export async function LegalPage({ title, updated, children }: LegalPageProps) {
             <Link href="/privacy" className="hover:text-foreground">{t("privacyLink")}</Link>
             <Link href="/terms" className="hover:text-foreground">{t("termsLink")}</Link>
             <Link href="/contact" className="hover:text-foreground">{t("contactLink")}</Link>
+            <Link href="/accessibility" className="hover:text-foreground">{t("accessibilityLink")}</Link>
           </div>
         </footer>
       </div>

@@ -77,6 +77,18 @@ test.describe("legal pages locale (Legal.terms.title / Legal.privacy.title)", ()
     await expect(page.locator("html")).toHaveAttribute("lang", "he");
     await expect(page.getByRole("heading", { name: STR.he.termsTitle })).toBeVisible();
   });
+
+  test("/accessibility is public and renders Hebrew", async ({ page }) => {
+    await page.goto("/accessibility");
+    await expect(page).toHaveURL(/\/accessibility$/);
+    await expect(page.getByRole("heading", { name: STR.he.accessibilityTitle })).toBeVisible();
+  });
+
+  test("/en/accessibility renders English", async ({ page }) => {
+    await page.goto("/en/accessibility");
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+    await expect(page.getByRole("heading", { name: STR.en.accessibilityTitle })).toBeVisible();
+  });
 });
 
 test.describe("locale switching via NEXT_LOCALE cookie preserves the path", () => {
@@ -95,7 +107,8 @@ test.describe("locale switching via NEXT_LOCALE cookie preserves the path", () =
     ]);
     await page.goto("/login");
 
-    // next-intl moves the prefix-less Hebrew path to its /en equivalent.
+    // The proxy restores the saved preference that localeDetection:false
+    // intentionally leaves to our custom geo/cookie policy.
     await expect(page).toHaveURL(/\/en\/login$/);
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
     await expect(page.locator("html")).toHaveAttribute("dir", "ltr");

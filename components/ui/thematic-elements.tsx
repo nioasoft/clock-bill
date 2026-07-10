@@ -55,8 +55,7 @@ export function ClockFaceMarks({
 export function HourglassSVG({
   size = 48,
   className = "",
-  animated = false,
-}: ThematicProps & { animated?: boolean }) {
+}: ThematicProps) {
   return (
     <svg
       width={size}
@@ -87,23 +86,6 @@ export function HourglassSVG({
         strokeLinejoin="round"
         opacity={0.4}
       />
-      {/* Sand particles */}
-      {animated && (
-        <>
-          <circle cx="24" cy="24" r="0.8" fill="currentColor" opacity={0.3}>
-            <animate attributeName="cy" values="20;28" dur="2s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.4;0" dur="2s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="22.5" cy="22" r="0.6" fill="currentColor" opacity={0.2}>
-            <animate attributeName="cy" values="19;27" dur="2.3s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.3;0" dur="2.3s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="25.5" cy="21" r="0.7" fill="currentColor" opacity={0.25}>
-            <animate attributeName="cy" values="18;26" dur="1.8s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="0.35;0" dur="1.8s" repeatCount="indefinite" />
-          </circle>
-        </>
-      )}
     </svg>
   );
 }

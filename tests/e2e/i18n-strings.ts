@@ -13,11 +13,13 @@ export const STR = {
     // Auth.login.title
     loginTitle: "התחבר לחשבון שלך",
     // Landing.hero.headlinePrefix
-    landingHeadline: "הזמן שלך שווה כסף",
+    landingHeadline: "כל העבודה נרשמת.",
     // Legal.terms.title
     termsTitle: "תנאי שימוש",
     // Legal.privacy.title
     privacyTitle: "מדיניות פרטיות",
+    // Legal.accessibility.title
+    accessibilityTitle: "הצהרת נגישות",
     // LocaleSwitcher.he
     switcherHe: "עברית",
     // LocaleSwitcher.en
@@ -30,9 +32,10 @@ export const STR = {
   },
   en: {
     loginTitle: "Sign in to your account",
-    landingHeadline: "Your time is worth money",
+    landingHeadline: "Every job gets logged.",
     termsTitle: "Terms of Service",
     privacyTitle: "Privacy Policy",
+    accessibilityTitle: "Accessibility Statement",
     switcherHe: "עברית",
     switcherEn: "English",
     navDashboard: "Dashboard",

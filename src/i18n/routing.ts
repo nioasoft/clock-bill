@@ -7,10 +7,9 @@ export const routing = defineRouting({
   localePrefix: "as-needed",
   // Persist the chosen locale so a returning visitor keeps it.
   localeCookie: { name: "NEXT_LOCALE" },
-  // Disable next-intl's Accept-Language auto-detection. Our geo logic in
-  // `proxy.ts` is the authoritative source for a first-time visitor's default
-  // locale (Israel -> Hebrew, elsewhere -> English); explicit prefix and the
-  // NEXT_LOCALE cookie still win over geo.
+  // Disable next-intl's Accept-Language and cookie detection. Our proxy applies
+  // a valid NEXT_LOCALE preference first, then uses geo for first-time visits;
+  // an explicit URL prefix stays authoritative in both cases.
   localeDetection: false,
 });
 

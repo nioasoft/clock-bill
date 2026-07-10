@@ -1,110 +1,81 @@
-"use client";
-
+import { getLocale, getTranslations } from "next-intl/server";
+import { LogIn } from "lucide-react";
 import { Link } from "@/src/i18n/navigation";
-import { useLocale, useTranslations } from "next-intl";
-import { useState, useEffect } from "react";
-import { Clock } from "lucide-react";
 import { brandName } from "@/lib/brand";
 import { BrandMark } from "@/components/brand-mark";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 
-export function LandingNavbar() {
-  const t = useTranslations("Landing");
-  const locale = useLocale();
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-
-      if (currentScrollY < 100) {
-        setIsVisible(true);
-      } else if (currentScrollY > lastScrollY) {
-        setIsVisible(false);
-      } else {
-        setIsVisible(true);
-      }
-
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
+export async function LandingNavbar() {
+  const t = await getTranslations("Landing");
+  const locale = await getLocale();
+  const brand = brandName(locale);
 
   return (
     <nav
       aria-label={t("nav.ariaLabel")}
-      className={`fixed top-4 left-1/2 -translate-x-1/2 max-w-5xl w-[calc(100%-2rem)] rounded-full bg-background/70 backdrop-blur-xl border border-border/50 shadow-sm z-50 transition-transform duration-300 ${
-        isVisible ? "translate-y-0" : "translate-y-[-120%]"
-      }`}
+      className="fixed inset-x-0 top-[max(0.75rem,env(safe-area-inset-top))] z-50 mx-auto w-[calc(100%-1.5rem)] max-w-5xl rounded-full border border-border bg-background shadow-sm"
     >
-      <div className="px-6 py-3">
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="relative w-9 h-9 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center">
-              <ClockFaceMarks size={24} className="absolute inset-0 m-auto text-primary-foreground/20" />
-              <BrandMark className="relative h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-display font-bold text-foreground">
-              {brandName(locale)}
-            </span>
+      <div className="flex min-h-14 items-center justify-between gap-2 px-2.5 sm:px-4">
+        <Link
+          href="/"
+          aria-label={brand}
+          className="flex min-h-11 min-w-11 items-center gap-2 rounded-full px-1.5 text-foreground transition-colors duration-150 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius)] bg-primary text-primary-foreground">
+            <ClockFaceMarks
+              size={24}
+              className="absolute inset-0 m-auto text-primary-foreground/20"
+              aria-hidden="true"
+            />
+            <BrandMark className="relative h-5 w-5" />
+          </span>
+          <span className="hidden text-lg font-bold sm:inline">{brand}</span>
+        </Link>
+
+        <div className="hidden items-center gap-1 md:flex">
+          <a
+            href="#how-it-works"
+            className="inline-flex min-h-11 items-center rounded-full px-3 text-sm text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {t("nav.howItWorks")}
+          </a>
+          <a
+            href="#features"
+            className="inline-flex min-h-11 items-center rounded-full px-3 text-sm text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {t("nav.features")}
+          </a>
+          <a
+            href="#themes"
+            className="inline-flex min-h-11 items-center rounded-full px-3 text-sm text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {t("nav.themes")}
+          </a>
+          <Link
+            href="/pricing"
+            className="inline-flex min-h-11 items-center rounded-full px-3 text-sm text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {t("nav.pricing")}
           </Link>
+        </div>
 
-          {/* Center links - hidden on mobile */}
-          <div className="hidden md:flex items-center gap-2">
-            <a
-              href="#how-it-works"
-              className="rounded-full px-4 py-1.5 text-sm text-muted-foreground hover:bg-foreground/5 hover:text-foreground transition-colors"
-            >
-              {t("nav.howItWorks")}
-            </a>
-            <a
-              href="#features"
-              className="rounded-full px-4 py-1.5 text-sm text-muted-foreground hover:bg-foreground/5 hover:text-foreground transition-colors"
-            >
-              {t("nav.features")}
-            </a>
-            <a
-              href="#themes"
-              className="rounded-full px-4 py-1.5 text-sm text-muted-foreground hover:bg-foreground/5 hover:text-foreground transition-colors"
-            >
-              {t("nav.themes")}
-            </a>
-            <a
-              href="#faq"
-              className="rounded-full px-4 py-1.5 text-sm text-muted-foreground hover:bg-foreground/5 hover:text-foreground transition-colors"
-            >
-              {t("nav.faq")}
-            </a>
-            <Link
-              href="/pricing"
-              className="rounded-full px-4 py-1.5 text-sm text-muted-foreground hover:bg-foreground/5 hover:text-foreground transition-colors"
-            >
-              {t("nav.pricing")}
-            </Link>
-          </div>
-
-          {/* Auth buttons */}
-          <div className="flex items-center gap-3">
-            <LocaleSwitcher isCollapsed />
-            <Link
-              href="/login"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {t("nav.login")}
-            </Link>
-            <Link
-              href="/register"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-            >
-              <Clock className="h-4 w-4" aria-hidden="true" />
-              <span>{t("nav.ctaStart")}</span>
-            </Link>
-          </div>
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <LocaleSwitcher isCollapsed />
+          <Link
+            href="/login"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full px-2 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:px-3"
+          >
+            <LogIn className="h-4 w-4 sm:hidden" aria-hidden="true" />
+            <span className="sr-only sm:not-sr-only">{t("nav.login")}</span>
+          </Link>
+          <Link
+            href="/register"
+            className="inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-3 text-sm font-semibold text-primary-foreground transition-colors duration-150 hover:bg-primary-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:px-4"
+          >
+            <span className="sm:hidden">{t("nav.ctaShort")}</span>
+            <span className="hidden sm:inline">{t("nav.ctaStart")}</span>
+          </Link>
         </div>
       </div>
     </nav>

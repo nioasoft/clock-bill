@@ -9,7 +9,7 @@ export function LandingFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-sidebar text-sidebar-foreground py-12">
+    <footer className="bg-sidebar py-12 text-sidebar-foreground">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main footer content */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 mb-8">
@@ -76,6 +76,12 @@ export function LandingFooter() {
             >
               {t("footer.contact")}
             </Link>
+            <Link
+              href="/accessibility"
+              className="text-sidebar-foreground/80 transition-colors hover:text-sidebar-foreground"
+            >
+              {t("footer.accessibility")}
+            </Link>
           </nav>
         </div>
 
@@ -85,7 +91,7 @@ export function LandingFooter() {
         </div>
 
         {/* Copyright */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-sidebar-foreground/60">
+        <div className="flex flex-col items-center justify-between gap-4 text-sm text-muted-foreground sm:flex-row">
           <p>
             {year} &copy; {brandName(locale)} &middot; {t("footer.builtWith")}
           </p>

@@ -9,7 +9,7 @@ import Link from "next/link";
  */
 export default function RootNotFound() {
   return (
-    <div
+    <main
       dir="rtl"
       lang="he"
       style={{
@@ -48,6 +48,6 @@ export default function RootNotFound() {
           חזרה לדשבורד
         </Link>
       </div>
-    </div>
+    </main>
   );
 }

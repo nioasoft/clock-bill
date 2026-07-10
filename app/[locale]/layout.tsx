@@ -145,7 +145,7 @@ export default async function LocaleLayout({ children, params }: Props) {
         </a>
         <NextIntlClientProvider>
           <Providers initialTheme={DEFAULT_THEME} dir={dir}>
-            <main id="main-content">{children}</main>
+            {children}
           </Providers>
           <PwaProvider />
         </NextIntlClientProvider>

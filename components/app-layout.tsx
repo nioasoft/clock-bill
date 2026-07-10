@@ -123,10 +123,14 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="flex min-h-screen items-center justify-center bg-background"
+      >
         <div role="status" aria-live="polite" className="flex flex-col items-center gap-4">
           <div className="relative">
-            <div className="w-16 h-16 bg-gradient-to-br from-accent to-accent/80 rounded-2xl flex items-center justify-center animate-pulse">
+            <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-2xl bg-accent">
               <BrandMark className="h-9 w-9 text-primary-foreground" />
             </div>
             <div className="absolute -inset-2 border-2 border-accent/20 rounded-2xl animate-ping" />
@@ -136,7 +140,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <p className="text-sm text-muted-foreground">{tCommon("loading")}</p>
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -176,7 +180,11 @@ export function AppLayout({ children }: AppLayoutProps) {
         }`}
       >
         <PersistentTimerBar />
-        <main className="flex-1 overflow-x-hidden pb-16 lg:pb-0 motion-safe:animate-fade-in">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="flex-1 overflow-x-hidden pb-16 motion-safe:animate-fade-in lg:pb-0"
+        >
           <ErrorBoundary>{children}</ErrorBoundary>
         </main>
       </div>

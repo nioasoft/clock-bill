@@ -21,7 +21,7 @@ export default function NotFound() {
   ] as const;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-background p-4">
+    <main id="main-content" tabIndex={-1} className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="max-w-md w-full">
         <div className="text-center">
           {/* 404 Number */}
@@ -72,6 +72,6 @@ export default function NotFound() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

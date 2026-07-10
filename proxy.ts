@@ -18,7 +18,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 import createMiddleware from "next-intl/middleware";
-import { routing } from "./src/i18n/routing";
+import { routing, type Locale } from "./src/i18n/routing";
 
 const handleI18nRouting = createMiddleware(routing);
 
@@ -31,11 +31,37 @@ const publicRoutes = [
   "/offline",
   "/privacy",
   "/terms",
+  "/accessibility",
   "/contact",
   "/pricing",
   "/monitoring",
   "/doc", // public charge-document share links (/doc/[token]) — no login required
 ];
+
+function localeFromCookie(request: NextRequest): Locale | null {
+  const value = request.cookies.get("NEXT_LOCALE")?.value;
+  return (routing.locales as readonly string[]).includes(value ?? "")
+    ? (value as Locale)
+    : null;
+}
+
+/**
+ * `localeDetection: false` deliberately disables next-intl's cookie lookup so
+ * geo routing stays under our control. Restore only the explicit preference:
+ * an unprefixed URL follows a valid NEXT_LOCALE cookie, while an explicit URL
+ * prefix remains authoritative.
+ */
+function cookieLocaleRedirect(request: NextRequest): NextResponse | null {
+  const preferredLocale = localeFromCookie(request);
+  if (!preferredLocale || preferredLocale === routing.defaultLocale) return null;
+
+  const firstSegment = request.nextUrl.pathname.split("/")[1];
+  if ((routing.locales as readonly string[]).includes(firstSegment)) return null;
+
+  const url = request.nextUrl.clone();
+  url.pathname = `/${preferredLocale}${request.nextUrl.pathname === "/" ? "" : request.nextUrl.pathname}`;
+  return NextResponse.redirect(url);
+}
 
 /**
  * Strip a leading locale prefix (`/en`) so route checks reason about the
@@ -95,7 +121,7 @@ function isBotRequest(request: NextRequest): boolean {
 
 function geoDefaultLocale(request: NextRequest): NextResponse | null {
   // Explicit cookie always wins over geo.
-  if (request.cookies.has("NEXT_LOCALE")) {
+  if (localeFromCookie(request)) {
     return null;
   }
 
@@ -131,10 +157,16 @@ function geoDefaultLocale(request: NextRequest): NextResponse | null {
 }
 
 export function proxy(request: NextRequest) {
-  // Step 0: geo-based default locale for first-time unauthenticated visitors.
+  // Step 0: honor a previously chosen locale, then apply geo for first visits.
+  const cookieRedirect = cookieLocaleRedirect(request);
+  if (cookieRedirect) {
+    return cookieRedirect;
+  }
+
+  // Geo-based default locale for first-time unauthenticated visitors.
   // Returns a redirect (English) to short-circuit; otherwise we continue and
   // (when geo applies and resolves to Hebrew) stamp NEXT_LOCALE=he below.
-  const noCookie = !request.cookies.has("NEXT_LOCALE");
+  const noCookie = !localeFromCookie(request);
   const segs = request.nextUrl.pathname.split("/");
   const hasLocalePrefix = (routing.locales as readonly string[]).includes(segs[1]);
   const geoRedirect = geoDefaultLocale(request);

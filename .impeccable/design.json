@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-10T05:30:09Z",
+  "title": "Design System: ClockBill",
+  "extensions": {
+    "colorMeta": {
+      "midnight-canvas": {
+        "role": "neutral",
+        "displayName": "Midnight Canvas",
+        "canonical": "#0a0a0a",
+        "tonalRamp": ["#0a0a0a", "#171717", "#292929", "#444444", "#666666", "#929292", "#c6c6c6", "#f4f4f4"]
+      },
+      "billable-lime": {
+        "role": "primary",
+        "displayName": "Billable Lime",
+        "canonical": "#faff69",
+        "tonalRamp": ["#252700", "#3d4100", "#5d6200", "#838a0a", "#adb52b", "#d8df4a", "#faff69", "#fdffcb"]
+      },
+      "raised-surface": {
+        "role": "neutral",
+        "displayName": "Raised Surface",
+        "canonical": "#1a1a1a",
+        "tonalRamp": ["#111111", "#1a1a1a", "#2b2b2b", "#454545", "#696969", "#949494", "#c8c8c8", "#f5f5f5"]
+      },
+      "positive": {
+        "role": "secondary",
+        "displayName": "Positive Green",
+        "canonical": "#22c55e",
+        "tonalRamp": ["#062b14", "#0a4721", "#0f6931", "#168e43", "#1db554", "#22c55e", "#75df98", "#d4f6df"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "One landing-page promise or major product moment." },
+      "body": { "displayName": "Body", "purpose": "Explanatory content capped near 70 characters per line." },
+      "numeric": { "displayName": "Numeric", "purpose": "Timers, amounts, quantities, and comparative metrics." }
+    },
+    "shadows": [
+      {
+        "name": "floating-low",
+        "value": "0 1px 3px rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1)",
+        "purpose": "Floating navigation and compact menus."
+      },
+      {
+        "name": "overlay",
+        "value": "0 16px 48px rgba(0,0,0,0.28)",
+        "purpose": "Dialogs and sheets when tonal separation is insufficient."
+      }
+    ],
+    "motion": [
+      { "name": "fast", "value": "150ms cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Hover, focus, and pressed feedback." },
+      { "name": "normal", "value": "200ms cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Overlays and compact state changes." },
+      { "name": "entrance", "value": "400ms cubic-bezier(0.25, 1, 0.5, 1)", "purpose": "Optional transform-and-opacity entrances with a reduced-motion fallback." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The main action on a product screen or marketing section.",
+      "html": "<button class=\"ds-btn-primary\">התחל לעקוב</button>",
+      "css": ".ds-btn-primary { min-height: 40px; padding: 10px 16px; border: 0; border-radius: var(--radius, 8px); background: var(--primary, #faff69); color: var(--primary-foreground, #0a0a0a); font: 500 14px/1.4 Heebo, system-ui, sans-serif; transition: background-color 150ms cubic-bezier(.4,0,.2,1), transform 150ms cubic-bezier(.4,0,.2,1); } .ds-btn-primary:hover { background: var(--primary-active, #e6eb52); } .ds-btn-primary:focus-visible { outline: 2px solid var(--ring, #faff69); outline-offset: 2px; } .ds-btn-primary:active { transform: scale(.98); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "A lower-emphasis action that remains easy to discover.",
+      "html": "<button class=\"ds-btn-secondary\">למד עוד</button>",
+      "css": ".ds-btn-secondary { min-height: 40px; padding: 10px 16px; border: 1px solid var(--border, #2a2a2a); border-radius: var(--radius, 8px); background: var(--card, #1a1a1a); color: var(--foreground, #f7f6ef); font: 500 14px/1.4 Heebo, system-ui, sans-serif; transition: background-color 150ms cubic-bezier(.4,0,.2,1), border-color 150ms cubic-bezier(.4,0,.2,1); } .ds-btn-secondary:hover { background: var(--card-elevated, #242424); border-color: var(--border-strong, #3a3a3a); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--ring, #faff69); outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "A clearly labeled field for forms and filters.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">שם הפרויקט</span><input class=\"ds-input\" value=\"אתר חדש\" /></label>",
+      "css": ".ds-field { display: grid; gap: 6px; color: var(--foreground, #f7f6ef); font-family: Heebo, system-ui, sans-serif; } .ds-field-label { font-size: 14px; font-weight: 500; } .ds-input { min-height: 40px; padding: 10px 12px; border: 1px solid var(--border, #2a2a2a); border-radius: var(--radius, 8px); background: var(--card, #1a1a1a); color: inherit; font: 400 16px/1.5 Heebo, system-ui, sans-serif; } .ds-input:hover { border-color: var(--border-strong, #3a3a3a); } .ds-input:focus-visible { outline: 2px solid var(--ring, #faff69); outline-offset: 1px; border-color: var(--primary, #faff69); }"
+    },
+    {
+      "name": "Ledger Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A flat grouped surface for a financial or workflow unit.",
+      "html": "<article class=\"ds-ledger-card\"><span class=\"ds-ledger-label\">יתרה פתוחה</span><strong class=\"ds-ledger-value\"><bdi>1,820 ₪</bdi></strong></article>",
+      "css": ".ds-ledger-card { display: grid; gap: 8px; padding: 24px; border: 1px solid var(--border, #2a2a2a); border-radius: var(--radius-card, 12px); background: var(--card, #1a1a1a); color: var(--foreground, #f7f6ef); } .ds-ledger-label { color: var(--muted-foreground, #888888); font: 500 14px/1.4 Heebo, system-ui, sans-serif; } .ds-ledger-value { font: 600 24px/1.2 JetBrains Mono, ui-monospace, monospace; font-variant-numeric: tabular-nums; } .ds-ledger-card:hover { border-color: var(--border-strong, #3a3a3a); }"
+    },
+    {
+      "name": "Status Chip",
+      "kind": "chip",
+      "description": "A text-plus-color state marker for paid, active, or incomplete records.",
+      "html": "<span class=\"ds-status\"><svg viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M13.3 4.3 6.5 11 2.7 7.2l1.1-1.1 2.7 2.7 5.7-5.6z\" /></svg>שולם</span>",
+      "css": ".ds-status { display: inline-flex; align-items: center; gap: 6px; width: max-content; padding: 5px 10px; border-radius: 9999px; background: color-mix(in srgb, var(--success, #22c55e) 14%, transparent); color: var(--success, #22c55e); font: 500 13px/1.3 Heebo, system-ui, sans-serif; } .ds-status svg { width: 14px; height: 14px; fill: currentColor; }"
+    },
+    {
+      "name": "Marketing Navigation",
+      "kind": "nav",
+      "description": "A compact floating rail for the public site.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"ניווט ראשי\"><strong>ClockBill</strong><a href=\"#how\">איך זה עובד</a><a class=\"ds-nav-cta\" href=\"#start\">התחל בחינם</a></nav>",
+      "css": ".ds-nav { display: flex; align-items: center; gap: 18px; padding: 10px 12px 10px 18px; border: 1px solid var(--border, #2a2a2a); border-radius: 9999px; background: var(--background, #0a0a0a); color: var(--foreground, #f7f6ef); font: 500 14px/1.4 Heebo, system-ui, sans-serif; box-shadow: 0 1px 3px rgba(0,0,0,.1), 0 1px 2px -1px rgba(0,0,0,.1); } .ds-nav a { color: inherit; text-decoration: none; } .ds-nav a:hover { color: var(--primary, #faff69); } .ds-nav a:focus-visible { outline: 2px solid var(--ring, #faff69); outline-offset: 2px; } .ds-nav-cta { padding: 8px 12px; border-radius: 9999px; background: var(--primary, #faff69); color: var(--primary-foreground, #0a0a0a) !important; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Living Work Ledger",
+    "overview": "ClockBill should feel like a ledger that fills itself while the freelancer works. Every timer, item, task, document, and payment belongs to one continuous money trail. The experience is fast and exact, but the interface welcomes the user before asking them to make financial decisions.",
+    "keyCharacteristics": [
+      "Work flows visibly toward a financial outcome.",
+      "Dense data stays legible; explanatory content gets more breathing room.",
+      "Hebrew RTL and English LTR are equal first-class layouts.",
+      "Color is semantic and restrained; numeric typography signals precision.",
+      "Interaction is immediate, predictable, and recoverable."
+    ],
+    "rules": [
+      { "name": "The Money Signal Rule", "body": "Accent color marks an action, focus target, or financial state. It never decorates a sentence or fills an entire section without meaning.", "section": "colors" },
+      { "name": "The Hebrew Rhythm Rule", "body": "Hebrew uses normal letter spacing, generous line height, and visual hierarchy from size and weight. Never add tracking to Hebrew display or body copy.", "section": "typography" },
+      { "name": "The Flat-by-Default Rule", "body": "A shadow must explain layer ownership or temporary elevation. It is never a decorative glow around a static card.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do connect each feature explanation to a user outcome and a financial consequence.",
+      "Do use semantic tokens so every component works across all 12 themes.",
+      "Do keep body copy near 70 characters per line and use 1.6 line height for explanations.",
+      "Do provide loading, success, error, and empty states for every product screen.",
+      "Do honor RTL behavior, reduced motion, keyboard navigation, 200% zoom, and 44px touch targets.",
+      "Do isolate amounts, times, identifiers, and mixed-direction strings with <bdi> or an equivalent bidi-safe treatment."
+    ],
+    "donts": [
+      "Don't recreate the coldness of a developer infrastructure dashboard.",
+      "Don't import the density and anxiety of enterprise finance software.",
+      "Don't build generic SaaS marketing from vague claims, decorative gradients, or interchangeable feature-card grids.",
+      "Don't use gradient text, glassmorphism as decoration, nested cards, or colored side-stripe borders.",
+      "Don't turn every metric into a hero card or use accent color without semantic meaning.",
+      "Don't animate layout properties, use transition: all, or require motion to understand state.",
+      "Don't hardcode physical left/right layout properties where logical RTL/LTR properties work."
+    ]
+  }
+}

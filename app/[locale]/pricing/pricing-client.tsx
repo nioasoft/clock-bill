@@ -6,6 +6,7 @@ import { Link } from "@/src/i18n/navigation";
 import { Check, ArrowRight, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
+import { PublicAccessibilityLink } from "@/components/public-accessibility-link";
 
 type Interval = "monthly" | "annual";
 type Tier = "free" | "starter" | "unlimited";
@@ -93,7 +94,7 @@ export function PricingClient() {
   const priceSuffix = interval === "annual" ? t("perYear") : t("perMonth");
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <main id="main-content" tabIndex={-1} className="min-h-screen bg-background text-foreground">
       <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
         <Link
           href="/"
@@ -260,6 +261,9 @@ export function PricingClient() {
                 </Link>
               ),
             })}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            <PublicAccessibilityLink className="underline underline-offset-2 hover:text-foreground" />
           </p>
         </div>
       </div>

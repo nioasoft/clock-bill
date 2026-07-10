@@ -14,6 +14,7 @@ import { PasswordStrengthIndicator } from "@/components/password-strength-indica
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import { PublicAccessibilityLink } from "@/components/public-accessibility-link";
 
 export default function RegisterPage() {
   const t = useTranslations("Auth");
@@ -151,7 +152,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+    <main id="main-content" tabIndex={-1} className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
       <LocaleSwitcher isCollapsed className="fixed top-4 end-4 z-50" />
       <div className="w-full max-w-md space-y-8">
         {/* Logo — centered, always visible */}
@@ -370,12 +371,15 @@ export default function RegisterPage() {
                   {t("register.signInHere")}
                 </Link>
               </p>
+              <p className="mt-3 text-xs text-muted-foreground">
+                <PublicAccessibilityLink className="hover:text-foreground" />
+              </p>
             </div>
           </form>
           </div>
           </>
           )}
         </div>
-    </div>
+    </main>
   );
 }

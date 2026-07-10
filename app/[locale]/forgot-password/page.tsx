@@ -8,6 +8,7 @@ import { authClient } from "@/lib/auth/client";
 import { useAuthErrorMessage } from "@/lib/auth/error-messages";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import { PublicAccessibilityLink } from "@/components/public-accessibility-link";
 
 export default function ForgotPasswordPage() {
   const t = useTranslations("Auth");
@@ -42,7 +43,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface px-4">
+    <main id="main-content" tabIndex={-1} className="flex min-h-screen items-center justify-center bg-surface px-4">
       <LocaleSwitcher isCollapsed className="fixed top-4 end-4 z-50" />
       <div className="w-full max-w-md">
         <div className="bg-card rounded-[var(--radius-card)] border border-border p-8">
@@ -126,8 +127,11 @@ export default function ForgotPasswordPage() {
               </div>
             </form>
           )}
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            <PublicAccessibilityLink className="hover:text-foreground" />
+          </p>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

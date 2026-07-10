@@ -15,7 +15,15 @@ import type { MetadataRoute } from "next";
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.clock-bill.com";
 
 /** Public, indexable routes (paths relative to the locale root). */
-const PUBLIC_ROUTES = ["", "login", "register", "privacy", "terms", "contact"] as const;
+const PUBLIC_ROUTES = [
+  "",
+  "login",
+  "register",
+  "privacy",
+  "terms",
+  "accessibility",
+  "contact",
+] as const;
 
 /** Build an absolute URL for a route + optional locale prefix. */
 function url(path: string, prefix = ""): string {

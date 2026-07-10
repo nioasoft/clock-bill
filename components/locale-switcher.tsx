@@ -43,14 +43,15 @@ export function LocaleSwitcher({ isCollapsed = false, className = "" }: LocaleSw
   // Collapsed: a single tap target toggling between the two locales.
   if (isCollapsed) {
     const next: Locale = locale === "he" ? "en" : "he";
+    const targetLabel = next === "he" ? t("switchToHe") : t("switchToEn");
     return (
       <button
         type="button"
         onClick={() => switchTo(next)}
         disabled={isPending}
-        title={t("label")}
-        aria-label={t("label")}
-        className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-[var(--radius)] border border-border bg-card px-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50 ${className}`}
+        title={targetLabel}
+        aria-label={targetLabel}
+        className={`inline-flex min-h-11 items-center justify-center gap-1.5 rounded-[var(--radius)] border border-border bg-card px-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50 ${className}`}
       >
         <Globe className="h-4 w-4" />
         {locale === "he" ? "EN" : "עב"}

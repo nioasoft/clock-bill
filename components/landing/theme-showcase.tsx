@@ -34,8 +34,8 @@ function ThemeButton({
       aria-label={label}
       className={`flex min-h-[44px] items-center gap-3 rounded-[var(--radius-card)] border p-3 text-start transition-colors ${
         selected
-          ? "border-border-strong ring-2 ring-ring"
-          : "border-border hover:border-border-strong"
+          ? "border-foreground/50 ring-2 ring-ring"
+          : "border-foreground/50 hover:bg-card-elevated"
       }`}
     >
       <span className="relative flex shrink-0 gap-1">
@@ -43,7 +43,7 @@ function ThemeButton({
           <span
             key={i}
             style={{ background: c }}
-            className="size-5 rounded-full border border-border"
+            className="size-5 rounded-full border border-foreground/50"
           />
         ))}
       </span>
@@ -79,14 +79,14 @@ export function ThemeShowcase() {
   const light = THEMES.filter((th) => th.base === "light");
 
   return (
-    <section id="themes" className="py-20 sm:py-28 bg-surface">
+    <section id="themes" aria-labelledby="themes-heading" className="scroll-mt-28 bg-surface py-20 sm:py-28">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <div className="relative mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg">
             <ClockFaceMarks size={48} className="absolute text-primary/10" />
             <Palette className="relative h-6 w-6 text-primary" aria-hidden="true" />
           </div>
-          <h2 className="text-3xl sm:text-4xl font-display font-bold text-foreground">
+          <h2 id="themes-heading" className="font-display text-3xl font-bold text-foreground sm:text-4xl">
             {t("themes.heading")}
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">

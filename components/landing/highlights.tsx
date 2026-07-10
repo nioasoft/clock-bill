@@ -45,9 +45,9 @@ function TimersMock({ t }: { t: ReturnType<typeof useTranslations> }) {
               />
               <span className="text-sm text-foreground">{row.client}</span>
             </div>
-            <span className="font-mono text-sm tabular-nums text-foreground">
+            <bdi className="font-mono text-sm tabular-nums text-foreground">
               {row.time}
-            </span>
+            </bdi>
           </div>
         ))}
       </div>
@@ -58,9 +58,9 @@ function TimersMock({ t }: { t: ReturnType<typeof useTranslations> }) {
 /** Item-based billing: quantity × unit price → line total. */
 function ItemsMock({ t }: { t: ReturnType<typeof useTranslations> }) {
   const items = [
-    { name: t("highlights.items.mock.item1"), qty: "2", unit: "₪450", total: "₪900" },
-    { name: t("highlights.items.mock.item2"), qty: "1", unit: "₪320", total: "₪320" },
-    { name: t("highlights.items.mock.item3"), qty: "3", unit: "₪200", total: "₪600" },
+    { name: t("highlights.items.mock.item1"), qty: "2", unit: "450 ₪", total: "900 ₪" },
+    { name: t("highlights.items.mock.item2"), qty: "1", unit: "320 ₪", total: "320 ₪" },
+    { name: t("highlights.items.mock.item3"), qty: "3", unit: "200 ₪", total: "600 ₪" },
   ];
   return (
     <div className="w-full rounded-[var(--radius-card)] border border-border bg-card p-5">
@@ -73,21 +73,21 @@ function ItemsMock({ t }: { t: ReturnType<typeof useTranslations> }) {
           <div key={item.name} className="flex items-center justify-between">
             <span className="text-sm text-foreground">{item.name}</span>
             <div className="flex items-center gap-3">
-              <span className="font-mono text-xs tabular-nums text-muted-foreground">
+              <bdi className="font-mono text-xs tabular-nums text-muted-foreground">
                 {item.qty} × {item.unit}
-              </span>
-              <span className="font-mono text-sm tabular-nums text-foreground">
+              </bdi>
+              <bdi className="font-mono text-sm tabular-nums text-foreground">
                 {item.total}
-              </span>
+              </bdi>
             </div>
           </div>
         ))}
       </div>
       <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
         <span className="text-sm font-medium text-foreground">{t("highlights.items.mock.total")}</span>
-        <span className="font-mono text-base font-bold tabular-nums text-primary">
-          ₪1,820
-        </span>
+        <bdi className="font-mono text-base font-bold tabular-nums text-primary">
+          1,820 ₪
+        </bdi>
       </div>
     </div>
   );
@@ -131,7 +131,7 @@ function GetPaidMock({ t }: { t: ReturnType<typeof useTranslations> }) {
   return (
     <div className="w-full rounded-[var(--radius-card)] border border-border bg-card p-5">
       <div className="mb-4 flex items-center justify-between">
-        <span className="text-sm font-medium text-foreground">{t("highlights.getPaid.mock.docLabel")}</span>
+        <bdi className="text-sm font-medium text-foreground">{t("highlights.getPaid.mock.docLabel")}</bdi>
         <span className="rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success">
           {t("highlights.getPaid.mock.sent")}
         </span>
@@ -139,21 +139,21 @@ function GetPaidMock({ t }: { t: ReturnType<typeof useTranslations> }) {
       <div className="space-y-2.5">
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">{t("highlights.getPaid.mock.subtotal")}</span>
-          <span className="font-mono text-sm tabular-nums text-foreground">₪1,820</span>
+          <bdi className="font-mono text-sm tabular-nums text-foreground">1,820 ₪</bdi>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">{t("highlights.getPaid.mock.discount")}</span>
-          <span className="font-mono text-sm tabular-nums text-muted-foreground">−₪180</span>
+          <bdi className="font-mono text-sm tabular-nums text-muted-foreground">−180 ₪</bdi>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">{t("highlights.getPaid.mock.paid")}</span>
-          <span className="font-mono text-sm tabular-nums text-foreground">₪1,640</span>
+          <bdi className="font-mono text-sm tabular-nums text-foreground">1,640 ₪</bdi>
         </div>
       </div>
       <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
         <span className="text-sm font-medium text-foreground">{t("highlights.getPaid.mock.balance")}</span>
         <span className="flex items-center gap-2">
-          <span className="font-mono text-base font-bold tabular-nums text-foreground">₪0</span>
+          <bdi className="font-mono text-base font-bold tabular-nums text-foreground">0 ₪</bdi>
           <span className="rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success">
             {t("highlights.getPaid.mock.settled")}
           </span>
@@ -194,10 +194,10 @@ export function Highlights() {
     },
   ];
   return (
-    <section className="py-20 sm:py-28 bg-background">
+    <section aria-labelledby="highlights-heading" className="bg-background py-20 sm:py-28">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-display font-bold text-foreground">
+          <h2 id="highlights-heading" className="font-display text-3xl font-bold text-foreground sm:text-4xl">
             {t("highlights.heading")}
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -232,7 +232,7 @@ export function Highlights() {
                 </div>
 
                 {/* Visual side */}
-                <div className={reversed ? "lg:order-1" : "lg:order-2"}>
+                <div aria-hidden="true" className={reversed ? "lg:order-1" : "lg:order-2"}>
                   {item.visual}
                 </div>
               </div>

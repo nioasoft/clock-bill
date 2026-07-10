@@ -1,38 +1,42 @@
-import { Link } from "@/src/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { GrainOverlay, RadialLines, HourglassSVG } from "@/components/ui/thematic-elements";
+import { CheckCircle2 } from "lucide-react";
+import { Link } from "@/src/i18n/navigation";
+import { ClockFaceMarks, GrainOverlay } from "@/components/ui/thematic-elements";
 
 export function CTASection() {
   const t = useTranslations("Landing");
+
   return (
-    <section className="relative py-20 sm:py-28 overflow-hidden bg-gradient-to-br from-primary to-primary/85">
+    <section aria-labelledby="landing-cta-heading" className="relative overflow-hidden bg-primary py-20 sm:py-24">
       <GrainOverlay />
-      <RadialLines className="absolute inset-0 text-primary-foreground opacity-[0.05]" />
+      <ClockFaceMarks
+        size={280}
+        className="pointer-events-none absolute -bottom-24 end-[5%] text-primary-foreground opacity-[0.06]"
+      />
 
-      {/* Decorative hourglass watermark */}
-      <div className="absolute bottom-0 end-0 hidden sm:block">
-        <HourglassSVG size={200} className="text-primary-foreground opacity-[0.06]" />
-      </div>
-
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-        <h2 className="text-3xl sm:text-4xl font-display font-bold text-primary-foreground">
-          {t("cta.heading")}
-        </h2>
-        <p className="mt-4 text-lg text-primary-foreground/80 max-w-xl mx-auto">
-          {t("cta.subheading")}
-        </p>
-
-        {/* Honest trust line (replaces a fabricated user count). */}
-        <p className="mt-6 text-sm text-primary-foreground/80">{t("cta.socialProof")}</p>
-
-        <div className="mt-10">
-          <Link
-            href="/register"
-            className="inline-flex items-center justify-center rounded-full bg-background text-foreground px-10 py-4 text-base font-bold hover:bg-background/90 hover:scale-105 transition-all"
+      <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-9 px-4 sm:px-6 md:grid-cols-[minmax(0,1fr)_auto] lg:px-8">
+        <div className="max-w-3xl text-start">
+          <h2
+            id="landing-cta-heading"
+            className="text-balance font-display text-3xl font-bold text-primary-foreground sm:text-4xl"
           >
-            {t("cta.button")}
-          </Link>
+            {t("cta.heading")}
+          </h2>
+          <p className="mt-4 max-w-2xl text-pretty text-lg leading-relaxed text-primary-foreground/80">
+            {t("cta.subheading")}
+          </p>
+          <p className="mt-5 flex items-start gap-2 text-sm font-medium text-primary-foreground/80">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>{t("cta.socialProof")}</span>
+          </p>
         </div>
+
+        <Link
+          href="/register"
+          className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius)] bg-background px-7 py-3 text-base font-semibold text-foreground transition-colors duration-150 hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
+        >
+          {t("cta.button")}
+        </Link>
       </div>
     </section>
   );

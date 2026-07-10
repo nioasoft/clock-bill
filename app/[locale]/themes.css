@@ -56,16 +56,16 @@
   --popover-foreground: #1a1a18;
   --sidebar: #ffffff;
   --sidebar-foreground: #1a1a18;
-  --primary: #d4a900;
-  --primary-foreground: #1a1a18;
+  --primary: #806600;
+  --primary-foreground: #ffffff;
   --primary-light: #fbf3cc;
-  --primary-active: #b89200;
-  --accent: #d4a900;
-  --accent-foreground: #1a1a18;
-  --ring: #d4a900;
+  --primary-active: #684f00;
+  --accent: #806600;
+  --accent-foreground: #ffffff;
+  --ring: #806600;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --success: #15803d;
+  --success: #116b32;
   --success-foreground: #ffffff;
   --secondary-light: #ededeb;
 }
@@ -119,16 +119,16 @@
   --popover-foreground: #2a2620;
   --sidebar: #efe8d9;
   --sidebar-foreground: #2a2620;
-  --primary: #b45309;
+  --primary: #a14605;
   --primary-foreground: #fffaf2;
   --primary-light: #f6e6cf;
-  --primary-active: #93420a;
-  --accent: #b45309;
+  --primary-active: #853800;
+  --accent: #a14605;
   --accent-foreground: #fffaf2;
-  --ring: #b45309;
+  --ring: #a14605;
   --destructive: #c0362b;
   --destructive-foreground: #fffaf2;
-  --success: #4a7c2c;
+  --success: #3d6922;
   --success-foreground: #fffaf2;
   --secondary-light: #ece5d6;
 }
@@ -253,7 +253,7 @@
   --ring: #5b3df5;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --success: #15803d;
+  --success: #116b32;
   --success-foreground: #ffffff;
   --secondary-light: #ecebf6;
 }
@@ -276,16 +276,16 @@
   --popover-foreground: #16201f;
   --sidebar: #ffffff;
   --sidebar-foreground: #16201f;
-  --primary: #0d7d8c;
+  --primary: #0a6875;
   --primary-foreground: #ffffff;
   --primary-light: #d3ebef;
-  --primary-active: #0a6675;
-  --accent: #0d7d8c;
+  --primary-active: #075460;
+  --accent: #0a6875;
   --accent-foreground: #ffffff;
-  --ring: #0d7d8c;
+  --ring: #0a6875;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --success: #15803d;
+  --success: #116b32;
   --success-foreground: #ffffff;
   --secondary-light: #e3eaeb;
 }
@@ -317,7 +317,7 @@
   --ring: #be185d;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --success: #15803d;
+  --success: #116b32;
   --success-foreground: #ffffff;
   --secondary-light: #f3e3e7;
 }
@@ -349,7 +349,7 @@
   --ring: #1d4ed8;
   --destructive: #c81e1e;
   --destructive-foreground: #ffffff;
-  --success: #15803d;
+  --success: #116b32;
   --success-foreground: #ffffff;
   --secondary-light: #eef0f3;
 }

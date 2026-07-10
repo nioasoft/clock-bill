@@ -29,13 +29,15 @@ export default async function Home({
   return (
     <>
       <LandingNavbar />
-      <Hero />
-      <HowItWorks />
-      <FeaturesGrid />
-      <Highlights />
-      <ThemeShowcase />
-      <FAQ />
-      <CTASection />
+      <main id="main-content" tabIndex={-1}>
+        <Hero />
+        <HowItWorks />
+        <Highlights />
+        <FeaturesGrid />
+        <ThemeShowcase />
+        <FAQ />
+        <CTASection />
+      </main>
       <LandingFooter />
     </>
   );

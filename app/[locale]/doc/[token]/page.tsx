@@ -121,5 +121,9 @@ export default async function PublicDocPage({ params }: Params) {
   const data = await loadByToken(token);
   if (!data) notFound();
 
-  return <PublicChargeDocument {...data} />;
+  return (
+    <main id="main-content" tabIndex={-1}>
+      <PublicChargeDocument {...data} />
+    </main>
+  );
 }

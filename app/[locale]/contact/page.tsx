@@ -4,6 +4,7 @@ import { Link } from "@/src/i18n/navigation";
 import { ArrowRight } from "lucide-react";
 import { brandName } from "@/lib/brand";
 import { ContactForm } from "@/components/contact-form";
+import { PublicAccessibilityLink } from "@/components/public-accessibility-link";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Contact");
@@ -22,7 +23,7 @@ export default async function ContactPage() {
   const t = await getTranslations("Contact");
   const brand = brandName(await getLocale());
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <main id="main-content" tabIndex={-1} className="min-h-screen bg-background text-foreground">
       <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 sm:py-16">
         <Link
           href="/"
@@ -42,6 +43,9 @@ export default async function ContactPage() {
         </header>
 
         <ContactForm />
+        <p className="mt-8 border-t border-border pt-6 text-sm text-muted-foreground">
+          <PublicAccessibilityLink className="hover:text-foreground" />
+        </p>
       </div>
     </main>
   );

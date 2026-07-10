@@ -1,6 +1,6 @@
 /**
  * Accessibility Improvements
- * WCAG 2.1 AA Compliance
+ * WCAG 2.2 AA target
  * Only genuine a11y rules — Tailwind handles all utility classes
  */
 
@@ -83,18 +83,18 @@ a:focus-visible {
 /* Skip to main content link for keyboard users */
 .skip-to-main {
   position: absolute;
-  top: -100%;
-  left: 0;
+  inset-block-start: -100%;
+  inset-inline-start: 0;
   z-index: 999;
   padding: 1rem 2rem;
   background-color: var(--color-primary);
-  color: white;
+  color: var(--color-primary-foreground);
   text-decoration: none;
-  border-radius: 0 0 0.5rem 0;
+  border-radius: 0.5rem;
 }
 
 .skip-to-main:focus {
-  top: 0;
+  inset-block-start: 0;
   outline: 3px solid var(--color-primary);
   outline-offset: 2px;
 }
@@ -282,7 +282,7 @@ td {
 /* Tooltip accessibility */
 [role="tooltip"] {
   background-color: var(--color-foreground);
-  color: white;
+  color: var(--color-background);
   padding: 0.5rem 0.75rem;
   border-radius: 0.375rem;
   font-size: 0.875rem;

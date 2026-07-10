@@ -6,11 +6,12 @@
     "edit": "Edit",
     "loading": "Loading...",
     "skipToMain": "Skip to main content",
-    "close": "Close"
+    "close": "Close",
+    "accessibilityStatement": "Accessibility statement"
   },
   "Meta": {
-    "title": "ClockBill - Time Tracking for Freelancers",
-    "description": "Time tracking, client management, and professional reports. All in one place, for free.",
+    "title": "ClockBill | Log every job, follow every payment",
+    "description": "Capture time and billable items as you work, keep the detail, and follow a clear trail from work through payment.",
     "keywords": "time tracking,freelancer,work hours,project management,itemized billing,settlement statement,client management,reports,ClockBill"
   },
   "NotFound": {
@@ -42,7 +43,9 @@
   "LocaleSwitcher": {
     "label": "Language",
     "he": "עברית",
-    "en": "English"
+    "en": "English",
+    "switchToHe": "Switch to Hebrew",
+    "switchToEn": "Switch to English"
   },
   "Tasks": {
     "status": {
@@ -1482,53 +1485,96 @@
       "faq": "FAQ",
       "pricing": "Pricing",
       "login": "Log in",
-      "ctaStart": "Start free"
+      "ctaStart": "Start free",
+      "ctaShort": "Start"
     },
     "hero": {
-      "headlinePrefix": "Your time is worth money",
-      "headlineSuffix": "helps you collect it.",
-      "subhead": "Time tracking, client management, professional reports, and getting paid — all in one place, in exactly the look you like.",
-      "ctaPrimary": "Start tracking — free",
+      "eyebrow": "{brand}, your work and money in one place",
+      "headlinePrefix": "Every job gets logged.",
+      "headlineSuffix": "Every payment stays visible.",
+      "subhead": "{brand} keeps time, billable items, and payments on one trail, from starting the work to closing the balance.",
+      "benefitCapture": "Log with a timer, by hand, or directly from the task board.",
+      "benefitBalance": "See what is ready to bill, paid, or still outstanding.",
+      "ctaPrimary": "Start logging work",
+      "ctaSecondary": "See how it works",
       "ctaNote": "14-day free trial, no credit card. Then stay free for one active client.",
-      "mock": {
-        "currentProject": "Current project",
-        "start": "Start",
-        "hoursThisMonth": "Hours this month",
-        "revenueThisMonth": "Revenue this month",
-        "activeProjects": "Active projects",
-        "revenueByProject": "Revenue by project",
-        "status": "Status",
-        "statusActive": "{count} projects",
-        "statusPending": "{count} pending",
-        "statusDone": "{count} completed"
+      "trail": {
+        "heading": "Your money trail",
+        "description": "Every stage stays connected to the original work.",
+        "live": "Updating now",
+        "work": {
+          "label": "Work in progress",
+          "note": "The timer is attached to the right client and project.",
+          "value": "02:14:36"
+        },
+        "recorded": {
+          "label": "Everything recorded",
+          "note": "Hours and items are waiting with their details.",
+          "value": "4 entries"
+        },
+        "ready": {
+          "label": "Ready to bill",
+          "note": "The rate and amount are already calculated.",
+          "value": "₪1,820"
+        },
+        "paid": {
+          "label": "Payment closed",
+          "note": "Each payment updates the outstanding balance.",
+          "value": "₪0 due"
+        },
+        "summary": "The trail stays open until the money arrives."
       }
     },
     "howItWorks": {
-      "heading": "How does it work?",
-      "subheading": "Three simple steps to get started",
+      "eyebrow": "Four stages. One trail.",
+      "heading": "From work to payment, with nothing missing",
+      "subheading": "Log work as it happens. ClockBill keeps the details connected to billing, so month-end never becomes a memory exercise.",
       "step1": {
-        "title": "Sign up free",
-        "description": "Create an account in 30 seconds. Just email and password."
+        "title": "Start the work",
+        "description": "Run a timer, move a task, or add an entry by hand."
       },
       "step2": {
-        "title": "Add a client and project",
-        "description": "Set up your clients and pricing."
+        "title": "Keep every detail",
+        "description": "The client, project, rate, and notes stay together."
       },
       "step3": {
-        "title": "Track and bill",
-        "description": "Start a timer, log hours, and generate a report in one click."
+        "title": "Prepare the charge",
+        "description": "Select hours and items, then create a clear settlement statement."
+      },
+      "step4": {
+        "title": "Close the balance",
+        "description": "Send it, record payments, and see what is still outstanding."
       }
     },
     "features": {
-      "heading": "Everything you need to manage time and billing",
-      "subheading": "Professional tools for freelancers and the self-employed, fully in Hebrew",
+      "eyebrow": "Tools that work together",
+      "heading": "Everything you need, without assembling a patchwork system",
+      "subheading": "Every action joins the same trail. Less copying, fewer side spreadsheets, and more certainty before you bill.",
+      "groups": {
+        "capture": {
+          "title": "Log work as it happens",
+          "description": "Even while switching clients and tasks, every detail lands in the right place."
+        },
+        "price": {
+          "title": "Charge by your rules",
+          "description": "Hours, retainers, fixed monthly work, or items. Each client's math stays consistent."
+        },
+        "collect": {
+          "title": "Prepare charges and follow them",
+          "description": "From the statement you sent to the last payment, the balance stays clear."
+        },
+        "workflow": {
+          "title": "Work the way that suits you",
+          "description": "Phone, computer, Hebrew, or English. Your information and preferences follow you."
+        }
+      },
       "parallelTimers": {
         "title": "Multiple timers at once",
         "description": "Working for several clients at the same time? Open a timer for each. Each runs and stops independently."
       },
       "itemBilling": {
         "title": "Item-based billing",
-        "description": "Not just hours. Quantity times unit price, from the client's catalog or a one-off item."
+        "description": "Work measured by quantity uses a unit price instead of a timer."
       },
       "kanban": {
         "title": "Task board (Kanban)",
@@ -1556,7 +1602,7 @@
       },
       "dashboard": {
         "title": "Dashboard and insights",
-        "description": "How much came in this month — by hours, by items, and by project."
+        "description": "How much came in this month, by hours, by items, and by project."
       },
       "getPaid": {
         "title": "Send the bill, get paid",
@@ -1564,7 +1610,7 @@
       },
       "customDashboard": {
         "title": "A dashboard that fits you",
-        "description": "Choose which stats and sections show, and in what order. Drag, reorder, and save — or pick a ready-made preset."
+        "description": "Choose which numbers appear and in what order, or start from a ready-made preset."
       },
       "mobile": {
         "title": "Works on your phone too",
@@ -1572,12 +1618,12 @@
       }
     },
     "highlights": {
-      "heading": "More than a timer. A complete billing tool.",
-      "subheading": "From the moment you start working to the moment the bill is ready",
+      "heading": "What gets logged reaches payment",
+      "subheading": "Four moments where freelancers lose details, kept connected by ClockBill.",
       "timers": {
         "eyebrow": "Parallel timers",
-        "title": "Several timers, all at once",
-        "body": "Working for three clients in the same morning? Start a timer for each. Each one runs separately, stops separately, and lands in the right entries. No tallying it all up in your head at the end of the day.",
+        "title": "Three clients, without mixing them up",
+        "body": "One morning, three clients. Each gets its own timer, and every stop creates the right entry. There is nothing to reconstruct at the end of the day.",
         "mock": {
           "activeTimers": "Active timers",
           "running": "{count} running",
@@ -1588,7 +1634,7 @@
       },
       "items": {
         "eyebrow": "Item-based billing",
-        "title": "Not everything is measured in hours",
+        "title": "Items belong in the same charge",
         "body": "Some work is billed per item: a license, a fix, a one-off consultation. Add a quantity and unit price, save it to the client's catalog, and bill it just like an hour.",
         "mock": {
           "itemLabel": "Item",
@@ -1601,7 +1647,7 @@
       },
       "flow": {
         "eyebrow": "From task to bill",
-        "title": "Nothing copied by hand",
+        "title": "The task already knows where to log",
         "body": "Drag a task on the Kanban board to 'In progress', and the timer starts on its own. Done? The entry is already waiting. At the end of the month, roll it all into a settlement statement and export a Hebrew PDF.",
         "mock": {
           "step1": {
@@ -1620,8 +1666,8 @@
       },
       "getPaid": {
         "eyebrow": "From bill to payment",
-        "title": "Close the collection, not just print a report",
-        "body": "Email the statement to your client — they open it with a personal, no-login link. Log each payment that comes in, apply a discount if needed, and the app tracks the open balance until it's 'Paid'. Plus an automatic reminder on each client's settlement day.",
+        "title": "See the balance until it closes",
+        "body": "Email the statement. Your client opens a personal link without logging in, and each recorded payment reduces the balance. A reminder is waiting on the client's settlement day too.",
         "mock": {
           "docLabel": "Statement #1042",
           "sent": "Sent to client",
@@ -1641,7 +1687,8 @@
       "previewNote": "This is just a preview. Your choice saves to your account once you sign up."
     },
     "faq": {
-      "heading": "Frequently asked questions",
+      "eyebrow": "Before you start",
+      "heading": "Questions worth settling upfront",
       "q1": {
         "question": "Who can use ClockBill?",
         "answer": "ClockBill is built for freelancers, independent consultants, and small business owners who need to track work hours, manage clients, and bill in an organized way."
@@ -1680,11 +1727,11 @@
       },
       "q10": {
         "question": "How does my client receive the bill and pay?",
-        "answer": "You email the statement, and your client opens it with a personal link — no login needed. You log each payment that comes in — cash, transfer, card, or any other method — including partial payments, and the app updates the open balance automatically."
+        "answer": "You email the statement, and your client opens it with a personal link without logging in. Record each payment, including partial payments, and the app updates the open balance automatically."
       },
       "q11": {
         "question": "Can I change how the app looks?",
-        "answer": "Absolutely. There are 12 themes to choose from — six dark and six light — and each one recolors the entire app. Your choice saves to your account and follows you to every device."
+        "answer": "Yes. There are 12 themes, six dark and six light. Your choice is saved to your account and follows you to every device."
       },
       "q12": {
         "question": "Can I use it on my phone?",
@@ -1692,13 +1739,13 @@
       }
     },
     "cta": {
-      "heading": "Ready to manage your time the smart way?",
-      "subheading": "Start tracking your time, managing clients, and getting paid — all in one place.",
+      "heading": "Work done today is worth logging today",
+      "subheading": "Open an account, start your first timer, and let ClockBill keep the trail connected through payment.",
       "socialProof": "14-day free trial · No credit card · Data encrypted in the EU",
-      "button": "Create a free account"
+      "button": "Start logging work"
     },
     "footer": {
-      "tagline": "Your time is worth money",
+      "tagline": "All the work. All the money.",
       "navAriaLabel": "Footer navigation",
       "howItWorks": "How it works",
       "features": "Features",
@@ -1708,6 +1755,7 @@
       "privacy": "Privacy",
       "terms": "Terms of use",
       "contact": "Contact",
+      "accessibility": "Accessibility statement",
       "builtWith": "Built with ♥ in Israel",
       "rightsReserved": "All rights reserved"
     }
@@ -1720,7 +1768,42 @@
       "contactCta": "Contact us",
       "privacyLink": "Privacy Policy",
       "termsLink": "Terms of Service",
-      "contactLink": "Contact"
+      "contactLink": "Contact",
+      "accessibilityLink": "Accessibility statement"
+    },
+    "accessibility": {
+      "metaTitle": "Accessibility Statement",
+      "metaDescription": "Information about {brand} accessibility, available support, and how to report an accessibility issue.",
+      "title": "Accessibility Statement",
+      "updated": "July 10, 2026",
+      "intro": "At {brand}, we work to ensure freelancers and independent professionals can log work, follow charges, and understand where their money stands when using a keyboard or assistive technology.",
+      "scope": {
+        "heading": "Scope and target",
+        "body": "Our target is WCAG 2.2 Level AA across the marketing site, application, and public documents. We use it as a practical shared baseline intended to support relevant accessibility requirements in Israel, the European Union, and the United States. Exact legal duties depend on how and where the service is operated, so this statement describes the product and is not a legal certification of compliance in every jurisdiction."
+      },
+      "features": {
+        "heading": "What is supported",
+        "item1": "Semantic page structure, descriptive headings, and a skip link to the main content.",
+        "item2": "Keyboard navigation, visible focus indicators, and comfortably sized interaction targets.",
+        "item3": "Right-to-left Hebrew and left-to-right English, with document language and direction identified.",
+        "item4": "Color contrast, text zoom, narrow-screen reflow, and support for reduced-motion preferences.",
+        "item5": "Control labels, status messages that do not rely on color alone, and text alternatives for useful visual content."
+      },
+      "limitations": {
+        "heading": "Known limitations",
+        "body": "A complete external audit across every browser and screen-reader combination has not yet been completed. The drag-based task board and system-generated PDF files remain under ongoing review. If either area creates a barrier, contact us for assistance or the same information in an alternative format."
+      },
+      "compatibility": {
+        "heading": "Technical compatibility",
+        "body": "The service is designed for current versions of Chrome, Firefox, Safari, and Edge, together with built-in operating-system accessibility tools and common assistive technologies. A very old browser may reduce some capabilities."
+      },
+      "contact": {
+        "heading": "Found an accessibility problem?",
+        "body": "Tell us what you were trying to do, the page involved, and the browser or assistive tool you used. The ClockBill team handles accessibility requests and will work to provide an accessible solution or an alternative path.",
+        "email": "support@clock-bill.com",
+        "emailLabel": "Email us about accessibility",
+        "formLabel": "Open the contact form"
+      }
     },
     "terms": {
       "metaTitle": "Terms of Service",

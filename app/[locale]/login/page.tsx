@@ -13,6 +13,7 @@ import { trackEvent } from "@/lib/analytics";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import { PublicAccessibilityLink } from "@/components/public-accessibility-link";
 
 export default function LoginPage() {
   const t = useTranslations("Auth");
@@ -109,7 +110,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+    <main id="main-content" tabIndex={-1} className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
       <LocaleSwitcher isCollapsed className="fixed top-4 end-4 z-50" />
       <div className="w-full max-w-md space-y-8">
         {/* Logo + heading — centered, always visible */}
@@ -242,11 +243,13 @@ export default function LoginPage() {
                 <Link href="/privacy" className="hover:text-foreground">{t("common.privacyPolicy")}</Link>
                 <span className="mx-2">·</span>
                 <Link href="/terms" className="hover:text-foreground">{t("common.termsOfService")}</Link>
+                <span className="mx-2">·</span>
+                <PublicAccessibilityLink className="hover:text-foreground" />
               </p>
             </div>
           </form>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
