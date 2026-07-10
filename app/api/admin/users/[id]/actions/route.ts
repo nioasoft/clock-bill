@@ -15,7 +15,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { adminQuery, query, withAdminTransaction } from "@/lib/db";
+import { adminQuery, query, withAdminTransaction, withTransaction } from "@/lib/db";
 import { getAdminUser } from "@/lib/admin";
 import { parseBody } from "@/lib/api-validation";
 import { createLogger } from "@/lib/logger";
@@ -120,7 +120,16 @@ export async function POST(
 
       case "toggle_role": {
         const newRole = targetUser.role === "admin" ? "user" : "admin";
-        await query('UPDATE "user" SET role = $1, updated_at = NOW() WHERE id = $2', [newRole, userId]);
+        await withTransaction(async (client) => {
+          await client.query('UPDATE "user" SET role = $1, updated_at = NOW() WHERE id = $2', [
+            newRole,
+            userId,
+          ]);
+          // A signed cookie cache can otherwise keep the old role alive for up
+          // to five minutes. The fresh Admin guard rejects it immediately, and
+          // deleting DB sessions forces a clean login for the changed account.
+          await client.query('DELETE FROM "session" WHERE user_id = $1', [userId]);
+        });
         await audit("admin.toggle_role", { from: targetUser.role, to: newRole });
         return NextResponse.json({
           success: true,

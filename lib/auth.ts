@@ -31,12 +31,15 @@ export interface User {
  * This is the single source of identity for every API route's tenant-isolation
  * filter (`WHERE user_id = $`). Keep the returned shape stable.
  */
-export const getUser = cache(async (): Promise<User | null> => {
+async function resolveUser(disableCookieCache: boolean): Promise<User | null> {
   try {
     const { headers } = await import("next/headers");
     const { auth } = await import("./auth/better-auth");
 
-    const session = await auth.api.getSession({ headers: await headers() });
+    const session = await auth.api.getSession({
+      headers: await headers(),
+      query: disableCookieCache ? { disableCookieCache: true } : undefined,
+    });
 
     if (!session?.user) {
       return null;
@@ -60,7 +63,16 @@ export const getUser = cache(async (): Promise<User | null> => {
   } catch {
     return null;
   }
-});
+}
+
+export const getUser = cache(async (): Promise<User | null> => resolveUser(false));
+
+/**
+ * Resolve the session from the database instead of the signed cookie cache.
+ * Sensitive authorization checks use this so revoked sessions and role changes
+ * take effect immediately rather than after the five-minute cache window.
+ */
+export const getFreshUser = cache(async (): Promise<User | null> => resolveUser(true));
 
 // Short-lived per-token cache so the many query() calls in one request don't
 // each re-resolve the session. Better Auth's cookieCache makes getSession cheap,
