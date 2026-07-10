@@ -72,6 +72,16 @@ test.describe("landing page locale", () => {
     await page.goto("/");
     // The headline string also appears in the footer, so scope to the hero h1.
     await expect(page.getByRole("heading", { level: 1 })).toContainText(STR.he.landingHeadline);
+    const amounts = page.locator("[data-marketing-amount]");
+    await expect(amounts).toHaveCount(13);
+    expect(
+      await amounts.evaluateAll((nodes) =>
+        nodes.every((node) => node.getAttribute("dir") === "ltr")
+      )
+    ).toBe(true);
+    expect(
+      (await amounts.allTextContents()).every((value) => /^-?[\d,]+\u00a0₪$/u.test(value))
+    ).toBe(true);
   });
 
   test("/en shows the English marketing headline (Landing.hero.headlinePrefix)", async ({ page }) => {
@@ -80,6 +90,16 @@ test.describe("landing page locale", () => {
     const marketingMain = page.getByRole("main");
     await expect(marketingMain).toContainText("$1,820");
     await expect(marketingMain).not.toContainText("₪");
+    const amounts = page.locator("[data-marketing-amount]");
+    await expect(amounts).toHaveCount(13);
+    expect(
+      await amounts.evaluateAll((nodes) =>
+        nodes.every((node) => node.getAttribute("dir") === "ltr")
+      )
+    ).toBe(true);
+    expect(
+      (await amounts.allTextContents()).every((value) => /^-?\$[\d,]+$/u.test(value))
+    ).toBe(true);
   });
 });
 

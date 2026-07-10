@@ -11,8 +11,8 @@ interface LandingCatalog {
     trail: {
       work: { label: string; value: string };
       recorded: { label: string; value: string };
-      ready: { label: string; value: string };
-      paid: { label: string; value: string };
+      ready: { label: string };
+      paid: { label: string };
     };
   };
   howItWorks: {
@@ -99,8 +99,9 @@ function run(): void {
   for (const locale of [heLanding, enLanding]) {
     for (const stage of trailStages) {
       assert(locale.hero.trail[stage].label.length > 0, `Hero money trail needs a ${stage} label`);
-      assert(locale.hero.trail[stage].value.length > 0, `Hero money trail needs a ${stage} value`);
     }
+    assert(locale.hero.trail.work.value.length > 0, "Hero money trail needs a work value");
+    assert(locale.hero.trail.recorded.value.length > 0, "Hero money trail needs a recorded value");
     assert(locale.howItWorks.step4.title.length > 0, "How-it-works must finish with payment collection");
   }
 

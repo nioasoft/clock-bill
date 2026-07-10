@@ -13,12 +13,13 @@ import {
   HourglassSVG,
   RadialLines,
 } from "@/components/ui/thematic-elements";
+import { MarketingAmount } from "@/components/landing/marketing-amount";
 
 const TRAIL_STEPS = [
   { key: "work", icon: Timer },
   { key: "recorded", icon: ClipboardCheck },
-  { key: "ready", icon: ReceiptText },
-  { key: "paid", icon: CheckCircle2 },
+  { key: "ready", icon: ReceiptText, amount: 1820 },
+  { key: "paid", icon: CheckCircle2, amount: 0 },
 ] as const;
 
 export function Hero() {
@@ -97,35 +98,46 @@ export function Hero() {
           </figcaption>
 
           <ol className="mt-2">
-            {TRAIL_STEPS.map(({ key, icon: Icon }, index) => (
-              <li
-                key={key}
-                className="relative grid grid-cols-[2.75rem_minmax(0,1fr)] gap-3 py-4"
-              >
-                {index < TRAIL_STEPS.length - 1 && (
-                  <span
-                    aria-hidden="true"
-                    className="absolute start-[1.35rem] top-11 h-[calc(100%-1.5rem)] w-px bg-border"
-                  />
-                )}
-                <span className="relative z-10 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface text-primary">
-                  <Icon className="h-5 w-5" aria-hidden="true" />
-                </span>
-                <span className="flex min-w-0 items-center justify-between gap-4 border-b border-border pb-4 last:border-b-0">
-                  <span className="min-w-0">
-                    <span className="block text-sm font-medium text-foreground">
-                      {t(`hero.trail.${key}.label`)}
-                    </span>
-                    <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
-                      {t(`hero.trail.${key}.note`)}
-                    </span>
+            {TRAIL_STEPS.map((step, index) => {
+              const { key, icon: Icon } = step;
+              return (
+                <li
+                  key={key}
+                  className="relative grid grid-cols-[2.75rem_minmax(0,1fr)] gap-3 py-4"
+                >
+                  {index < TRAIL_STEPS.length - 1 && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute start-[1.35rem] top-11 h-[calc(100%-1.5rem)] w-px bg-border"
+                    />
+                  )}
+                  <span className="relative z-10 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface text-primary">
+                    <Icon className="h-5 w-5" aria-hidden="true" />
                   </span>
-                  <bdi className="shrink-0 font-mono text-sm font-semibold tabular-nums text-foreground">
-                    {t(`hero.trail.${key}.value`)}
-                  </bdi>
-                </span>
-              </li>
-            ))}
+                  <span className="flex min-w-0 items-center justify-between gap-4 border-b border-border pb-4 last:border-b-0">
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium text-foreground">
+                        {t(`hero.trail.${key}.label`)}
+                      </span>
+                      <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
+                        {t(`hero.trail.${key}.note`)}
+                      </span>
+                    </span>
+                    {"amount" in step ? (
+                      <MarketingAmount
+                        amount={step.amount}
+                        locale={locale}
+                        className="shrink-0 text-sm font-semibold text-foreground"
+                      />
+                    ) : (
+                      <bdi className="shrink-0 font-mono text-sm font-semibold tabular-nums text-foreground">
+                        {t(`hero.trail.${key}.value`)}
+                      </bdi>
+                    )}
+                  </span>
+                </li>
+              );
+            })}
           </ol>
 
           <p className="mt-2 rounded-[var(--radius)] bg-primary-light px-4 py-3 text-sm font-medium text-primary">

@@ -1514,13 +1514,11 @@
         },
         "ready": {
           "label": "Ready to bill",
-          "note": "The rate and amount are already calculated.",
-          "value": "$1,820"
+          "note": "The rate and amount are already calculated."
         },
         "paid": {
           "label": "Payment closed",
-          "note": "Each payment updates the outstanding balance.",
-          "value": "$0 due"
+          "note": "Each payment updates the outstanding balance."
         },
         "summary": "The trail stays open until the money arrives."
       }
