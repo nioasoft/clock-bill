@@ -40,7 +40,9 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
         [id, user.id]
       );
       await client.query(
-        `UPDATE charge_documents SET status = 'canceled', canceled_at = NOW(), updated_at = NOW()
+        `UPDATE charge_documents
+            SET status = 'canceled', canceled_at = NOW(),
+                public_token = NULL, public_token_expires_at = NULL, updated_at = NOW()
           WHERE id = $1 AND user_id = $2`,
         [id, user.id]
       );

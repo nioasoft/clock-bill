@@ -66,6 +66,8 @@ interface ChargeDocument {
   last_sent_at: string | null;
   /** The email address the document was last sent to, or null. */
   sent_to_email: string | null;
+  /** Expiry of the current public bearer link, or null when revoked/not sent. */
+  public_token_expires_at: string | null;
   /** The client's current email address (used as the send recipient suggestion). */
   client_email: string | null;
   /** Document-level discount type ('percent' | 'amount'), or null when none. */
@@ -403,6 +405,23 @@ export default function ChargeDocumentView({
     }
   }, [documentId, t, refetch]);
 
+  const handleRevokePublicLink = useCallback(async (): Promise<void> => {
+    try {
+      const res = await fetch(`/api/charge-documents/${documentId}/send`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        showErrorToast(json.message || t("doc.revokeLinkError"));
+        return;
+      }
+      showSuccessToast(t("doc.revokeLinkSuccess"));
+      refetch();
+    } catch {
+      showErrorToast(t("doc.revokeLinkError"));
+    }
+  }, [documentId, refetch, t]);
+
   const runConfirm = useCallback(async (): Promise<void> => {
     if (!confirm) return;
     setConfirmBusy(true);
@@ -466,6 +485,14 @@ export default function ChargeDocumentView({
   }
 
   const status = STATUS_META[doc.status as ChargeDocStatus] ?? STATUS_META.pending;
+  const publicLinkExpiresAt = doc.public_token_expires_at
+    ? new Date(doc.public_token_expires_at)
+    : null;
+  const publicLinkIsActive = Boolean(
+    publicLinkExpiresAt &&
+      Number.isFinite(publicLinkExpiresAt.getTime()) &&
+      publicLinkExpiresAt.getTime() > Date.now()
+  );
 
   // Full money breakdown: net subtotal → discount → discounted net → VAT → gross.
   const money = documentMoney({
@@ -786,12 +813,40 @@ export default function ChargeDocumentView({
 
       {/* ── Sent status ── */}
       {doc.last_sent_at && (
-        <p className="text-xs text-muted-foreground">
-          {t("doc.sentStatus", {
-            date: new Date(doc.last_sent_at).toLocaleDateString(locale === "he" ? "he-IL" : "en-US"),
-            email: doc.sent_to_email ?? "",
-          })}
-        </p>
+        <div className="space-y-2 rounded-[var(--radius)] border border-border bg-muted/30 px-3 py-2">
+          <p className="text-xs text-muted-foreground">
+            {t("doc.sentStatus", {
+              date: new Date(doc.last_sent_at).toLocaleDateString(locale === "he" ? "he-IL" : "en-US"),
+              email: doc.sent_to_email ?? "",
+            })}
+          </p>
+          {publicLinkIsActive && publicLinkExpiresAt ? (
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground">
+                {t("doc.publicLinkActive", {
+                  date: publicLinkExpiresAt.toLocaleDateString(locale === "he" ? "he-IL" : "en-US"),
+                })}
+              </p>
+              <Button
+                variant="ghost"
+                className="min-h-[44px] text-destructive hover:text-destructive"
+                onClick={() =>
+                  setConfirm({
+                    title: t("doc.revokeLinkTitle"),
+                    description: t("doc.revokeLinkBody"),
+                    actionLabel: t("doc.revokeLinkAction"),
+                    destructive: true,
+                    run: handleRevokePublicLink,
+                  })
+                }
+              >
+                {t("doc.revokeLinkAction")}
+              </Button>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">{t("doc.publicLinkInactive")}</p>
+          )}
+        </div>
       )}
 
       {/* ── Document-language toggle ── */}
@@ -1046,6 +1101,7 @@ export default function ChargeDocumentView({
           <p className="text-sm text-foreground">
             {t("doc.sendConfirmBody", { email: doc.client_email ?? doc.sent_to_email ?? "" })}
           </p>
+          <p className="text-sm text-muted-foreground">{t("doc.sendConfirmSecurity")}</p>
           <DialogFooter className="gap-2">
             <Button
               variant="ghost"

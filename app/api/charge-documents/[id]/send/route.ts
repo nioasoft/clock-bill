@@ -4,9 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { sendEmail } from "@/lib/email";
 import { chargeDocumentEmail, resolveReplyTo } from "@/lib/emails/charge-document";
-import { generatePublicToken } from "@/lib/public-token";
+import { generatePublicToken, publicLinkExpiry } from "@/lib/public-token";
 import { formatCurrency } from "@/lib/currency";
 import { resolveDocumentLocale } from "@/lib/document-language";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -17,13 +18,21 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
     if (!user) {
       return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
     }
+    const limited = await enforceRateLimit({
+      name: "charge-document-send",
+      identifier: user.id,
+      limit: 20,
+      windowSec: 60 * 60,
+    });
+    if (limited) return limited;
+
     const { id } = await ctx.params;
     const { query } = await import("@/lib/db");
 
     // Load the document + client email + the document/client language settings.
     const docRes = await query(
       `SELECT d.id, d.doc_number, d.status, d.currency, d.total, d.vat_rate_snapshot,
-              d.public_token, d.document_language,
+              d.document_language,
               c.name AS client_name, c.email AS client_email, c.document_language AS client_doc_language
          FROM charge_documents d
          JOIN clients c ON d.client_id = c.id
@@ -35,7 +44,7 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
     }
     const doc = docRes.rows[0] as {
       id: string; doc_number: number; status: string; currency: string; total: number | null;
-      vat_rate_snapshot: number | null; public_token: string | null; document_language: string | null;
+      vat_rate_snapshot: number | null; document_language: string | null;
       client_name: string; client_email: string | null; client_doc_language: string | null;
     };
 
@@ -67,11 +76,16 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
     const gross = doc.vat_rate_snapshot ? net * (1 + doc.vat_rate_snapshot / 100) : net;
     const amountLabel = formatCurrency(gross, doc.currency, docLocale);
 
-    // Lazily mint the public token.
-    const token = doc.public_token ?? generatePublicToken();
-    if (!doc.public_token) {
-      await query(`UPDATE charge_documents SET public_token = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3`, [token, id, user.id]);
-    }
+    // Every send rotates the bearer capability. A forwarded or leaked older
+    // email therefore stops working, and the replacement expires after 30 days.
+    const token = generatePublicToken();
+    const expiresAt = publicLinkExpiry();
+    await query(
+      `UPDATE charge_documents
+          SET public_token = $1, public_token_expires_at = $2, updated_at = NOW()
+        WHERE id = $3 AND user_id = $4`,
+      [token, expiresAt, id, user.id]
+    );
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.clock-bill.com";
     const localePrefix = docLocale === "en" ? "/en" : "";
@@ -85,9 +99,27 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
       url,
     });
 
-    const ok = await sendEmail({ to, subject, html, replyTo });
-    if (!ok) {
-      return NextResponse.json({ success: false, error_code: "EMAIL_SEND_FAILED", message: "שליחת המייל נכשלה — נסה שוב" }, { status: 502 });
+    try {
+      const ok = await sendEmail({ to, subject, html, replyTo });
+      if (!ok) {
+        await query(
+          `UPDATE charge_documents
+              SET public_token = NULL, public_token_expires_at = NULL, updated_at = NOW()
+            WHERE id = $1 AND user_id = $2 AND public_token = $3`,
+          [id, user.id, token]
+        );
+        return NextResponse.json({ success: false, error_code: "EMAIL_SEND_FAILED", message: "שליחת המייל נכשלה — נסה שוב" }, { status: 502 });
+      }
+    } catch (error) {
+      // Revoke only the token minted by this request. A newer concurrent send
+      // must remain valid.
+      await query(
+        `UPDATE charge_documents
+            SET public_token = NULL, public_token_expires_at = NULL, updated_at = NOW()
+          WHERE id = $1 AND user_id = $2 AND public_token = $3`,
+        [id, user.id, token]
+      );
+      throw error;
     }
 
     const sentAt = new Date().toISOString();
@@ -98,12 +130,50 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
     await adminQuery(
       `INSERT INTO audit_events (id, actor_id, action, target_type, target_id, metadata)
        VALUES (gen_random_uuid()::text, $1, 'charge_document.sent', 'charge_document', $2, $3)`,
-      [user.id, id, JSON.stringify({ to, docNumber: doc.doc_number })]
+      [user.id, id, JSON.stringify({ to, docNumber: doc.doc_number, expiresAt: expiresAt.toISOString() })]
     );
 
-    return NextResponse.json({ success: true, sentTo: to, sentAt, token });
+    return NextResponse.json({
+      success: true,
+      sentTo: to,
+      sentAt,
+      expiresAt: expiresAt.toISOString(),
+    });
   } catch (error) {
     logger.error("POST send failed:", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בשליחת המסמך" }, { status: 500 });
+  }
+}
+
+/** DELETE — revoke this document's current public link (idempotent). */
+export async function DELETE(_request: NextRequest, ctx: Ctx) {
+  try {
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" }, { status: 401 });
+    }
+    const { id } = await ctx.params;
+    const { query, adminQuery } = await import("@/lib/db");
+    const revoked = await query(
+      `UPDATE charge_documents
+          SET public_token = NULL, public_token_expires_at = NULL, updated_at = NOW()
+        WHERE id = $1 AND user_id = $2
+        RETURNING doc_number`,
+      [id, user.id]
+    );
+    if (revoked.rowCount === 0) {
+      return NextResponse.json({ success: false, error_code: "DOCUMENT_NOT_FOUND", message: "תעודה לא נמצאה" }, { status: 404 });
+    }
+
+    await adminQuery(
+      `INSERT INTO audit_events (id, actor_id, action, target_type, target_id, metadata)
+       VALUES (gen_random_uuid()::text, $1, 'charge_document.link_revoked', 'charge_document', $2, $3)`,
+      [user.id, id, JSON.stringify({ docNumber: revoked.rows[0].doc_number })]
+    );
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    logger.error("DELETE send link failed:", error);
+    return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בביטול הקישור" }, { status: 500 });
   }
 }

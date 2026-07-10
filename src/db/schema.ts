@@ -562,6 +562,7 @@ export const chargeDocuments = pgTable(
     // /[locale]/doc/[token]. NULL until the document is first sent; regenerated
     // to revoke an old link. See spec 2026-06-21-charge-document-email.
     publicToken: text("public_token"),
+    publicTokenExpiresAt: timestamp("public_token_expires_at"),
     // Last time this document was emailed to the client + the address used.
     lastSentAt: timestamp("last_sent_at"),
     sentToEmail: text("sent_to_email"),
@@ -596,6 +597,10 @@ export const chargeDocuments = pgTable(
     check(
       "charge_documents_vat_rate_snapshot_check",
       sql`${table.vatRateSnapshot} IS NULL OR (${table.vatRateSnapshot} >= 0 AND ${table.vatRateSnapshot} <= 100)`
+    ),
+    check(
+      "charge_documents_public_link_pair_check",
+      sql`(${table.publicToken} IS NULL) = (${table.publicTokenExpiresAt} IS NULL)`
     ),
     check(
       "charge_documents_summary_mode_check",
