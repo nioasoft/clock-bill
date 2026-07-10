@@ -62,6 +62,10 @@ function landingSources(): string {
     .join("\n");
 }
 
+function localeLayoutSource(): string {
+  return readFileSync(join(process.cwd(), "app", "[locale]", "layout.tsx"), "utf8");
+}
+
 function run(): void {
   const heLanding = he.Landing as LandingCatalog;
   const enLanding = en.Landing as LandingCatalog;
@@ -115,6 +119,16 @@ function run(): void {
   assert(!sources.includes("bg-clip-text"), "Landing components must not use gradient text");
   assert(!sources.includes("getBoundingClientRect"), "Landing cards must not measure layout on pointer movement");
   assert(!sources.includes("IntersectionObserver"), "Landing components must not ship unused observers");
+
+  const layoutSource = localeLayoutSource();
+  assert(
+    !/^\s*<script\b/mu.test(layoutSource),
+    "The root layout must not render a raw script tag during client navigation"
+  );
+  assert(
+    layoutSource.includes('strategy="beforeInteractive"'),
+    "The no-flash theme script must execute before hydration"
+  );
 
   console.log("✅ marketing-experience: copy, structure, and implementation guardrails pass");
 }

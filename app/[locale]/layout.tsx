@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Heebo, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { setRequestLocale, getTranslations } from "next-intl/server";
@@ -17,6 +18,8 @@ import { DEFAULT_THEME } from "@/lib/themes";
 const OG_LOCALE: Record<Locale, string> = { he: "he_IL", en: "en_US" };
 /** Exhaustive map of app locales → text direction. */
 const DIR: Record<Locale, "rtl" | "ltr"> = { he: "rtl", en: "ltr" };
+const THEME_BOOTSTRAP_SCRIPT =
+  "(function(){try{var m=document.cookie.match(/(?:^|; )theme=([a-z-]+)/);if(m&&m[1]){document.documentElement.dataset.theme=m[1];}}catch(e){}})();";
 
 // Validate environment variables on server startup
 import "@/lib/env";
@@ -122,21 +125,11 @@ export default async function LocaleLayout({ children, params }: Props) {
       <head>
         {/* No-flash theme: runs before paint, reads the `theme` cookie and sets
             data-theme. Value is sanitized to [a-z-]; an unknown id harmlessly
-            falls back to the default :root variables. Tiny inline script (not
-            cookies()) so the route tree stays SSG. */}
-        {/* type is text/javascript on the server (so the browser executes it during
-            HTML parse, before paint) and text/plain on the client render, which stops
-            React 19 from warning about a <script> in the tree; suppressHydrationWarning
-            covers the type attribute mismatch. Per Next.js "preventing flash before
-            hydration" guidance. */}
-        <script
-          suppressHydrationWarning
-          type={typeof window === "undefined" ? "text/javascript" : "text/plain"}
-          dangerouslySetInnerHTML={{
-            __html:
-              "(function(){try{var m=document.cookie.match(/(?:^|; )theme=([a-z-]+)/);if(m&&m[1]){document.documentElement.dataset.theme=m[1];}}catch(e){}})();",
-          }}
-        />
+            falls back to the default :root variables. next/script keeps the
+            route tree static while safely injecting it before hydration. */}
+        <Script id="theme-bootstrap" strategy="beforeInteractive">
+          {THEME_BOOTSTRAP_SCRIPT}
+        </Script>
       </head>
       <body className={`${heebo.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
         {/* Skip to main content link for keyboard users */}
