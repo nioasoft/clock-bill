@@ -129,7 +129,7 @@ export default function LoginPage() {
 
         {/* Form card */}
         <div className="rounded-[var(--radius-card)] border border-border bg-card p-6 sm:p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form method="post" onSubmit={handleSubmit} className="space-y-6">
             <GoogleSignInButton label={t("login.googleSignIn")} />
 
             <div className="relative">

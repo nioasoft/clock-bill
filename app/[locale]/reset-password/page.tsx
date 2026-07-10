@@ -89,7 +89,7 @@ function ResetPasswordForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form method="post" onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
