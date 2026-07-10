@@ -12,6 +12,7 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "test": "node --import tsx tests/run-tests.ts",
+    "test:integration:account-deletion": "node --import tsx tests/integration/account-deletion.test.ts",
     "test:format": "node --import tsx tests/unit/format.test.ts",
     "test:validation": "node --import tsx tests/unit/validation.test.ts",
     "test:e2e": "playwright test",

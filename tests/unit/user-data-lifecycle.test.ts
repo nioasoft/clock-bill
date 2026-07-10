@@ -130,8 +130,8 @@ runner.test("all deletion and export routes consume the shared lifecycle source"
     "utf8"
   );
 
-  assert(selfDelete.includes("buildUserDataDeleteStatements()"), "self-delete bypasses shared order");
-  assert(adminDelete.includes("buildUserDataDeleteStatements()"), "admin delete bypasses shared order");
+  assert(selfDelete.includes("deleteUserDatabaseRows"), "self-delete bypasses shared executor");
+  assert(adminDelete.includes("deleteUserDatabaseRows"), "admin delete bypasses shared executor");
   assert(accountExport.includes("USER_DATA_EXPORT_TABLES"), "account export bypasses shared tables");
   assert(selfDelete.includes("deleteFile(url)"), "self-delete does not remove stored files");
   assert(adminDelete.includes("deleteFile(url)"), "admin delete does not remove stored files");

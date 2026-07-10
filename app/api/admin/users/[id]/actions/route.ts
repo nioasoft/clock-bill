@@ -20,7 +20,7 @@ import { getAdminUser } from "@/lib/admin";
 import { parseBody } from "@/lib/api-validation";
 import { createLogger } from "@/lib/logger";
 import { logAuditEvent, requestIp } from "@/lib/audit";
-import { buildUserDataDeleteStatements } from "@/lib/user-data-lifecycle";
+import { deleteUserDatabaseRows } from "@/lib/user-data-lifecycle";
 import { deleteFile } from "@/lib/storage";
 
 const logger = createLogger("api:admin:actions");
@@ -153,12 +153,7 @@ export async function POST(
         // transaction: delete every user-scoped table child→parent, then the
         // Better Auth identity rows, then the audit row — all or nothing.
         await withAdminTransaction(async (client) => {
-          for (const statement of buildUserDataDeleteStatements()) {
-            await client.query(statement, [userId]);
-          }
-          await client.query('DELETE FROM "session" WHERE user_id = $1', [userId]);
-          await client.query('DELETE FROM "account" WHERE user_id = $1', [userId]);
-          await client.query('DELETE FROM "user" WHERE id = $1', [userId]);
+          await deleteUserDatabaseRows(client, userId);
           await client.query(
             `INSERT INTO audit_events (id, actor_id, action, target_type, target_id, ip, user_agent, metadata)
              VALUES (gen_random_uuid()::text, $1, 'admin.delete_user', 'user', $2, $3, $4, $5)`,

@@ -3,7 +3,7 @@ import { query, withTransaction } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { createLogger } from "@/lib/logger";
 import { deleteFile } from "@/lib/storage";
-import { buildUserDataDeleteStatements } from "@/lib/user-data-lifecycle";
+import { deleteUserDatabaseRows } from "@/lib/user-data-lifecycle";
 
 const logger = createLogger("account:delete");
 
@@ -38,14 +38,7 @@ export async function DELETE() {
     await Promise.all(files.map((url) => deleteFile(url)));
 
     await withTransaction(async (client) => {
-      for (const statement of buildUserDataDeleteStatements()) {
-        await client.query(statement, [uid]);
-      }
-
-      // Better Auth identity — revokes all sessions and removes the login.
-      await client.query(`DELETE FROM account WHERE user_id = $1`, [uid]);
-      await client.query(`DELETE FROM session WHERE user_id = $1`, [uid]);
-      await client.query(`DELETE FROM "user" WHERE id = $1`, [uid]);
+      await deleteUserDatabaseRows(client, uid);
     });
 
     // Best-effort: remove the Polar customer (keyed by our user id) so no billing

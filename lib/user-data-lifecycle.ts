@@ -1,3 +1,5 @@
+import type { PoolClient } from "pg";
+
 /**
  * Source of truth for application tables owned by a user.
  *
@@ -51,4 +53,22 @@ export const USER_DATA_DELETE_ORDER: readonly UserDataTable[] = [
  */
 export function buildUserDataDeleteStatements(): readonly string[] {
   return USER_DATA_DELETE_ORDER.map((table) => `DELETE FROM ${table} WHERE user_id = $1`);
+}
+
+/**
+ * Delete every database row owned by one user, including Better Auth secrets
+ * and sessions. Call only inside a transaction so a late FK/error rolls the
+ * entire deletion back instead of leaving a half-deleted account.
+ */
+export async function deleteUserDatabaseRows(
+  client: PoolClient,
+  userId: string
+): Promise<void> {
+  for (const statement of buildUserDataDeleteStatements()) {
+    await client.query(statement, [userId]);
+  }
+
+  await client.query('DELETE FROM "session" WHERE user_id = $1', [userId]);
+  await client.query('DELETE FROM "account" WHERE user_id = $1', [userId]);
+  await client.query('DELETE FROM "user" WHERE id = $1', [userId]);
 }

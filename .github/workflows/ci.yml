@@ -17,6 +17,21 @@ jobs:
   lint-and-test:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16-alpine@sha256:e013e867e712fec275706a6c51c966f0bb0c93cfa8f51000f85a15f9865a28cb
+        env:
+          POSTGRES_USER: clockbill_test
+          POSTGRES_PASSWORD: clockbill_test
+          POSTGRES_DB: clockbill_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U clockbill_test -d clockbill_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       # Actions pinned to full commit SHAs (supply-chain integrity); the trailing
       # comment records the human-readable version. Dependabot keeps them current.
@@ -56,6 +71,11 @@ jobs:
 
       - name: Run unit tests
         run: npm test
+
+      - name: Verify account deletion on PostgreSQL
+        run: npm run test:integration:account-deletion
+        env:
+          TEST_DATABASE_URL: postgresql://clockbill_test:clockbill_test@localhost:5432/clockbill_test
 
       - name: Build project
         run: npm run build
