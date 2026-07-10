@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Heebo, JetBrains_Mono } from "next/font/google";
-import Script from "next/script";
+import { cookies } from "next/headers";
 import "./globals.css";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { setRequestLocale, getTranslations } from "next-intl/server";
@@ -12,14 +12,12 @@ import { PwaProvider } from "@/components/pwa-provider";
 import { routing } from "@/src/i18n/routing";
 import type { Locale } from "@/src/i18n/routing";
 import { THEME_COLOR, brandName } from "@/lib/brand";
-import { DEFAULT_THEME } from "@/lib/themes";
+import { DEFAULT_THEME, isThemeId } from "@/lib/themes";
 
 /** Exhaustive map of app locales → Open Graph locale codes. */
 const OG_LOCALE: Record<Locale, string> = { he: "he_IL", en: "en_US" };
 /** Exhaustive map of app locales → text direction. */
 const DIR: Record<Locale, "rtl" | "ltr"> = { he: "rtl", en: "ltr" };
-const THEME_BOOTSTRAP_SCRIPT =
-  "(function(){try{var m=document.cookie.match(/(?:^|; )theme=([a-z-]+)/);if(m&&m[1]){document.documentElement.dataset.theme=m[1];}}catch(e){}})();";
 
 // Validate environment variables on server startup
 import "@/lib/env";
@@ -49,7 +47,7 @@ type Props = {
   params: Promise<{ locale: string }>;
 };
 
-/** Pre-render both locales at build time. */
+/** Declare both supported locale parameters. */
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
@@ -109,35 +107,24 @@ export default async function LocaleLayout({ children, params }: Props) {
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
-  // Enable static rendering for this locale.
   setRequestLocale(locale);
 
-  const t = await getTranslations("common");
+  const [t, cookieStore] = await Promise.all([getTranslations("common"), cookies()]);
   const dir = DIR[locale as Locale];
+  const themeCookie = cookieStore.get("theme")?.value;
+  const initialTheme = isThemeId(themeCookie) ? themeCookie : DEFAULT_THEME;
 
   return (
-    // The page renders a static default theme on the server; the inline no-flash
-    // script below corrects `data-theme` from the cookie BEFORE paint, and the
-    // ThemeProvider syncs its state post-hydration. Keeping the theme out of the
-    // server render is what lets pricing/login stay statically prerendered.
-    // `suppressHydrationWarning` silences the expected data-theme mismatch.
-    <html lang={locale} dir={dir} data-theme={DEFAULT_THEME} suppressHydrationWarning>
-      <head>
-        {/* No-flash theme: runs before paint, reads the `theme` cookie and sets
-            data-theme. Value is sanitized to [a-z-]; an unknown id harmlessly
-            falls back to the default :root variables. next/script keeps the
-            route tree static while safely injecting it before hydration. */}
-        <Script id="theme-bootstrap" strategy="beforeInteractive">
-          {THEME_BOOTSTRAP_SCRIPT}
-        </Script>
-      </head>
+    // Resolve the validated cookie on the server so the first paint and the
+    // hydrated provider start from the same theme without an inline script.
+    <html lang={locale} dir={dir} data-theme={initialTheme}>
       <body className={`${heebo.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
         {/* Skip to main content link for keyboard users */}
         <a href="#main-content" className="skip-to-main">
           {t("skipToMain")}
         </a>
         <NextIntlClientProvider>
-          <Providers initialTheme={DEFAULT_THEME} dir={dir}>
+          <Providers initialTheme={initialTheme} dir={dir}>
             {children}
           </Providers>
           <PwaProvider />

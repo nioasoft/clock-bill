@@ -57,13 +57,13 @@ export function ThemeShowcase() {
   const t = useTranslations("Landing");
   const locale = useLocale();
   const isHebrew = locale === "he";
-  // Seed from whatever the no-flash script / ThemeProvider already applied.
+  // Seed from whatever the server-rendered theme / ThemeProvider applied.
   const [selected, setSelected] = useState(DEFAULT_THEME);
 
   useEffect(() => {
     // Sync the highlighted swatch with whatever theme is already on <html>
-    // (set by the no-flash script). Deferred to a microtask to keep setState
-    // out of the synchronous effect body (react-hooks/set-state-in-effect).
+    // (set from the validated cookie or default). Deferred to a microtask to
+    // keep setState out of the synchronous effect body (react-hooks/set-state-in-effect).
     const current = document.documentElement.dataset.theme;
     if (isThemeId(current)) queueMicrotask(() => setSelected(current));
   }, []);

@@ -146,12 +146,17 @@ function run(): void {
 
   const layoutSource = localeLayoutSource();
   assert(
-    !/^\s*<script\b/mu.test(layoutSource),
-    "The root layout must not render a raw script tag during client navigation"
+    !layoutSource.includes('from "next/script"') &&
+      !layoutSource.includes("THEME_BOOTSTRAP_SCRIPT") &&
+      !/<(?:Script|script)\b/u.test(layoutSource),
+    "The root layout must not render scripts into React's hydration tree"
   );
   assert(
-    layoutSource.includes('strategy="beforeInteractive"'),
-    "The no-flash theme script must execute before hydration"
+    layoutSource.includes("cookies()") &&
+      layoutSource.includes("isThemeId(themeCookie)") &&
+      layoutSource.includes("data-theme={initialTheme}") &&
+      layoutSource.includes("initialTheme={initialTheme}"),
+    "The server-rendered HTML and ThemeProvider must share the validated cookie theme"
   );
 
   console.log("✅ marketing-experience: copy, structure, and implementation guardrails pass");

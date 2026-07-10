@@ -33,6 +33,6 @@ r.test("ids include dark, daylight, obsidian", () =>
   assertEqual(["dark", "daylight", "obsidian"].every((id) => THEMES.some((t) => t.id === id)), true));
 r.test("isThemeId accepts daylight", () => assertEqual(isThemeId("daylight"), true));
 r.test("isThemeId rejects midnight (we use id 'dark')", () => assertEqual(isThemeId("midnight"), false));
-r.test("every id is lowercase a-z (inline cookie script safe)", () =>
+r.test("every id is lowercase a-z (safe cookie identifiers)", () =>
   assertEqual(THEMES.every((t) => /^[a-z]+$/.test(t.id)), true));
 r.run();

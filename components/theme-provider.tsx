@@ -39,24 +39,22 @@ export function ThemeProvider({
   initialTheme: string;
   children: ReactNode;
 }) {
-  // SSR-known value is the static default; the real theme is applied client-side
-  // (the inline no-flash script already set data-theme before paint).
+  // The server resolves the validated theme cookie before rendering, so React
+  // state and <html data-theme> begin with the same value.
   const [theme, setThemeState] = useState(isThemeId(initialTheme) ? initialTheme : DEFAULT_THEME);
   // Shared profile query (one fetch per page, deduped across all consumers).
   const { data: profile } = useProfile();
   const patchProfile = usePatchProfile();
 
   // Keep the DOM `data-theme` and the React state aligned with the source of
-  // truth across mounts and navigations. This is critical: the root layout
-  // renders `<html data-theme={DEFAULT_THEME}>`, so a locale switch (which
-  // re-renders the layout tree) RESETS the attribute back to the default and
-  // clobbers the runtime theme. The inline no-flash script only runs on a full
-  // document load, not on client navigations — so we must re-assert here.
+  // truth across mounts, profile loading, and client navigations. The server
+  // already applies the cookie on full document requests; this effect also
+  // handles an account theme arriving after hydration on a new device.
   //
   // Resolution order: the `theme` cookie (the user's most recent local choice)
   // wins; otherwise the account's saved theme (new device / cleared cookie);
-  // otherwise whatever is already on <html>. We re-write the DOM attribute (to
-  // undo a layout reset) and persist the cookie when only the account had it.
+  // otherwise whatever is already on <html>. We re-write the DOM attribute and
+  // persist the cookie when only the account had it.
   // Runs on mount and whenever the saved profile theme loads. The state update
   // is wrapped in queueMicrotask to keep it out of the synchronous effect body
   // (react-hooks/set-state-in-effect); DOM + cookie are external systems.

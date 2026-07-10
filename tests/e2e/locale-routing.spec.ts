@@ -28,6 +28,27 @@ test.describe("html lang/dir per locale", () => {
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
     await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
   });
+
+  test("the server applies a valid theme cookie without a React script warning", async ({
+    page,
+    context,
+  }) => {
+    const scriptWarnings: string[] = [];
+    page.on("console", (message) => {
+      if (message.text().includes("Encountered a script tag while rendering React component")) {
+        scriptWarnings.push(message.text());
+      }
+    });
+    await context.addCookies([
+      { name: "theme", value: "daylight", url: "http://localhost:3000" },
+    ]);
+
+    await page.goto("/");
+
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "daylight");
+    await expect(page.locator("#theme-bootstrap")).toHaveCount(0);
+    expect(scriptWarnings).toEqual([]);
+  });
 });
 
 test.describe("login page locale", () => {
