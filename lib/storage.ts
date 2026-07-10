@@ -114,13 +114,8 @@ class LocalStorageAdapter implements StorageAdapter {
   async delete(url: string): Promise<void> {
     const filepath = path.join(process.cwd(), "public", url);
 
-    try {
-      if (existsSync(filepath)) {
-        await unlink(filepath);
-      }
-    } catch (error) {
-      console.error("Failed to delete file:", error);
-      // Continue even if file deletion fails
+    if (existsSync(filepath)) {
+      await unlink(filepath);
     }
   }
 
@@ -151,21 +146,13 @@ class BlobStorageAdapter implements StorageAdapter {
 
   async delete(url: string): Promise<void> {
     if (!blobDel) {
-      console.warn("Vercel Blob del not available, skipping delete");
-      return;
+      throw new Error("Vercel Blob del is not available");
     }
 
-    try {
-      // Extract the blob path from the URL
-      const urlObj = new URL(url);
-      const pathname = urlObj.pathname;
-
-      // Delete from Vercel Blob
-      await blobDel(pathname);
-    } catch (error) {
-      console.error("Failed to delete blob:", error);
-      // Continue even if blob deletion fails
-    }
+    // Extract the blob path from the URL and let errors propagate. Callers that
+    // prefer best-effort cleanup already catch errors; account deletion does not.
+    const urlObj = new URL(url);
+    await blobDel(urlObj.pathname);
   }
 
   getUrl(_filename: string, _prefix: string): string {

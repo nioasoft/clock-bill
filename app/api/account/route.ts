@@ -1,18 +1,19 @@
 import { NextResponse } from "next/server";
-import { withTransaction } from "@/lib/db";
+import { query, withTransaction } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { createLogger } from "@/lib/logger";
+import { deleteFile } from "@/lib/storage";
+import { buildUserDataDeleteStatements } from "@/lib/user-data-lifecycle";
 
 const logger = createLogger("account:delete");
 
 /**
  * DELETE /api/account
  *
- * Permanently and irreversibly deletes the authenticated user's account and ALL
- * their data (the "delete my data" right — חוק הגנת הפרטיות / GDPR). Runs in a
- * single transaction: app data first (children → parents to satisfy FKs), then
- * the Better Auth identity (account → session → user). The app role has DELETE
- * on every table involved.
+ * Permanently and irreversibly deletes the authenticated user's tenant-owned
+ * application data and Better Auth identity (the "delete my data" right — חוק
+ * הגנת הפרטיות / GDPR). Database deletion is transactional: app data first
+ * (children → parents to satisfy FKs), then account → session → user.
  */
 export async function DELETE() {
   let userId: string | undefined;
@@ -24,15 +25,22 @@ export async function DELETE() {
     userId = user.id;
     const uid = user.id;
 
+    // Storage is outside the database transaction. Delete the public objects
+    // first and fail closed: a successful response must not leave a logo or
+    // signature behind after the profile row (and its URLs) is gone.
+    const profile = await query<{ logo_url: string | null; signature_url: string | null }>(
+      `SELECT logo_url, signature_url FROM user_profiles WHERE user_id = $1`,
+      [uid]
+    );
+    const files = [profile.rows[0]?.logo_url, profile.rows[0]?.signature_url].filter(
+      (url): url is string => Boolean(url)
+    );
+    await Promise.all(files.map((url) => deleteFile(url)));
+
     await withTransaction(async (client) => {
-      // App data — order respects foreign keys (children before parents).
-      await client.query(`DELETE FROM time_entries WHERE user_id = $1`, [uid]);
-      await client.query(`DELETE FROM tasks WHERE user_id = $1`, [uid]);
-      await client.query(`DELETE FROM projects WHERE user_id = $1`, [uid]);
-      await client.query(`DELETE FROM clients WHERE user_id = $1`, [uid]);
-      await client.query(`DELETE FROM report_presets WHERE user_id = $1`, [uid]);
-      await client.query(`DELETE FROM custom_tags WHERE user_id = $1`, [uid]);
-      await client.query(`DELETE FROM user_profiles WHERE user_id = $1`, [uid]);
+      for (const statement of buildUserDataDeleteStatements()) {
+        await client.query(statement, [uid]);
+      }
 
       // Better Auth identity — revokes all sessions and removes the login.
       await client.query(`DELETE FROM account WHERE user_id = $1`, [uid]);

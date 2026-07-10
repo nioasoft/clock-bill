@@ -15,11 +15,13 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { query, withAdminTransaction } from "@/lib/db";
+import { adminQuery, query, withAdminTransaction } from "@/lib/db";
 import { getAdminUser } from "@/lib/admin";
 import { parseBody } from "@/lib/api-validation";
 import { createLogger } from "@/lib/logger";
 import { logAuditEvent, requestIp } from "@/lib/audit";
+import { buildUserDataDeleteStatements } from "@/lib/user-data-lifecycle";
+import { deleteFile } from "@/lib/storage";
 
 const logger = createLogger("api:admin:actions");
 
@@ -30,22 +32,6 @@ const actionSchema = z.object({
     { message: "פעולה לא מוכרת" }
   ),
 });
-
-/** Every user-scoped table, child→parent (FK-safe) for a full account wipe. */
-const USER_TABLES_DELETE_ORDER = [
-  "charge_document_lines",
-  "charge_documents",
-  "time_entries",
-  "tasks",
-  "client_rates",
-  "projects",
-  "clients",
-  "custom_tags",
-  "report_presets",
-  "push_subscriptions",
-  "trial_emails_sent",
-  "user_profiles",
-] as const;
 
 export async function POST(
   request: NextRequest,
@@ -144,13 +130,22 @@ export async function POST(
       }
 
       case "delete_user": {
+        const profile = await adminQuery<{
+          logo_url: string | null;
+          signature_url: string | null;
+        }>(`SELECT logo_url, signature_url FROM user_profiles WHERE user_id = $1`, [userId]);
+        const files = [profile.rows[0]?.logo_url, profile.rows[0]?.signature_url].filter(
+          (url): url is string => Boolean(url)
+        );
+        await Promise.all(files.map((url) => deleteFile(url)));
+
         // Cross-tenant wipe MUST bypass RLS (tenant-scoped query() would bind the
         // admin's id and delete none of the target's rows). One privileged
         // transaction: delete every user-scoped table child→parent, then the
         // Better Auth identity rows, then the audit row — all or nothing.
         await withAdminTransaction(async (client) => {
-          for (const table of USER_TABLES_DELETE_ORDER) {
-            await client.query(`DELETE FROM ${table} WHERE user_id = $1`, [userId]);
+          for (const statement of buildUserDataDeleteStatements()) {
+            await client.query(statement, [userId]);
           }
           await client.query('DELETE FROM "session" WHERE user_id = $1', [userId]);
           await client.query('DELETE FROM "account" WHERE user_id = $1', [userId]);
@@ -158,7 +153,7 @@ export async function POST(
           await client.query(
             `INSERT INTO audit_events (id, actor_id, action, target_type, target_id, ip, user_agent, metadata)
              VALUES (gen_random_uuid()::text, $1, 'admin.delete_user', 'user', $2, $3, $4, $5)`,
-            [admin.id, userId, ip, userAgent, JSON.stringify({ email: targetUser.email })]
+            [admin.id, userId, ip, userAgent, JSON.stringify({ deletion: "completed" })]
           );
         });
         return NextResponse.json({ success: true, message: "המשתמש נמחק בהצלחה" });

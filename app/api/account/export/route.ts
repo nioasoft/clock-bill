@@ -3,6 +3,7 @@ import { query } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { createLogger } from "@/lib/logger";
+import { USER_DATA_EXPORT_TABLES } from "@/lib/user-data-lifecycle";
 
 const logger = createLogger("account:export");
 
@@ -10,27 +11,12 @@ const logger = createLogger("account:export");
  * GET /api/account/export
  *
  * GDPR right of access / data portability (חוק הגנת הפרטיות / GDPR Art. 15 + 20):
- * returns a single JSON file containing ALL of the authenticated user's data,
- * one array per table, scoped strictly by `user_id`. The id comes ONLY from the
- * session (getUser) — never from a request body/param — so a user can only ever
- * export their own rows (BOLA-safe). RLS also scopes every query as defense in
- * depth. The response is delivered as an attachment download.
+ * returns a single JSON file containing the authenticated user's portable
+ * application data, one array per table, scoped strictly by `user_id`. Raw auth
+ * rows are intentionally excluded because they contain password hashes/session
+ * tokens. The id comes ONLY from the session (getUser), and RLS provides defense
+ * in depth. The response is delivered as an attachment download.
  */
-
-// Every application table carrying a `user_id` column. Order is informational
-// only (this is a read-only export). Kept in sync with src/db/schema.ts.
-const USER_SCOPED_TABLES = [
-  "user_profiles",
-  "clients",
-  "client_rates",
-  "projects",
-  "tasks",
-  "time_entries",
-  "charge_documents",
-  "charge_document_lines",
-  "report_presets",
-  "custom_tags",
-] as const;
 
 export async function GET(): Promise<NextResponse> {
   let userId: string | undefined;
@@ -45,7 +31,7 @@ export async function GET(): Promise<NextResponse> {
     const uid = user.id;
 
     const tables: Record<string, unknown[]> = {};
-    for (const table of USER_SCOPED_TABLES) {
+    for (const table of USER_DATA_EXPORT_TABLES) {
       // Table names come from a fixed allow-list (never user input), so the
       // identifier interpolation is safe; the user_id value stays parameterized.
       const result = await query(

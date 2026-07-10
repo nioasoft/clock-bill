@@ -22,6 +22,7 @@ const EXPECTED = [
   "currency_rates",
   "charge_documents",
   "charge_document_lines",
+  "charge_document_payments",
   "push_subscriptions",
   "trial_emails_sent",
   "custom_tags",
