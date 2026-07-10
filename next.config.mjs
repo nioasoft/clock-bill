@@ -3,19 +3,21 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
-// Content-Security-Policy shipped in REPORT-ONLY mode first: it only reports
-// violations, never blocks, so it cannot break the app. 'unsafe-inline' is the
-// pragmatic baseline (the no-flash theme script + framework inline scripts);
-// tightening to a hash/nonce is a deliberate follow-up once report-only is clean.
+// Enforced Content-Security-Policy for production. 'unsafe-inline' remains the
+// pragmatic Turbopack-compatible baseline for the no-flash theme bootstrap and
+// framework styles/scripts. A nonce would force dynamic rendering across the
+// App Router, while hash/SRI support is currently webpack-only in Next.js 16.
 // External origins allowed: Vercel Analytics/Speed-Insights (va.vercel-scripts.com,
 // vitals.vercel-insights.com). The Sentry tunnel is same-origin (/monitoring → 'self').
-const cspReportOnly = [
+const contentSecurityPolicy = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   "connect-src 'self' https://va.vercel-scripts.com https://vitals.vercel-insights.com wss:",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -32,11 +34,10 @@ const securityHeaders = [
     key: "Strict-Transport-Security",
     value: "max-age=63072000; includeSubDomains; preload",
   },
-  // Report-only CSP in PRODUCTION only: dev (Turbopack HMR) legitimately uses
-  // eval(), which would flood the console with false-positive reports. Prod is
-  // where the observation actually matters before we move CSP to enforcing.
+  // CSP is PRODUCTION only: dev (Turbopack HMR) legitimately uses eval() and
+  // inline tooling that an enforced production policy must reject.
   ...(process.env.NODE_ENV === "production"
-    ? [{ key: "Content-Security-Policy-Report-Only", value: cspReportOnly }]
+    ? [{ key: "Content-Security-Policy", value: contentSecurityPolicy }]
     : []),
 ];
 
