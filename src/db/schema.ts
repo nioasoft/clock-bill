@@ -483,6 +483,43 @@ export const timeEntries = pgTable(
   ]
 );
 
+// ─── Reusable Work Templates ───────────────────────────────────────
+
+export const workTemplates = pgTable(
+  "work_templates",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "cascade" }),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    rateId: text("rate_id").references(() => clientRates.id, { onDelete: "set null" }),
+    title: text("title").notNull(),
+    description: text("description").notNull(),
+    notes: text("notes"),
+    billingKind: text("billing_kind").notNull().default("hourly"),
+    duration: integer("duration"),
+    quantity: real("quantity"),
+    rate: real("rate"),
+    rateLabel: text("rate_label"),
+    unit: text("unit"),
+    isBillable: boolean("is_billable").notNull().default(true),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_work_templates_user_id").on(table.userId),
+    index("idx_work_templates_user_project").on(table.userId, table.projectId),
+    check("work_templates_kind_check", sql`${table.billingKind} IN ('hourly', 'item')`),
+    check("work_templates_duration_check", sql`${table.duration} IS NULL OR ${table.duration} >= 0`),
+    check("work_templates_quantity_check", sql`${table.quantity} IS NULL OR ${table.quantity} >= 0`),
+    check("work_templates_rate_check", sql`${table.rate} IS NULL OR ${table.rate} >= 0`),
+  ]
+);
+
 // ─── Custom Tags ────────────────────────────────────────────────────
 
 export const customTags = pgTable(

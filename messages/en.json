@@ -359,6 +359,15 @@
       "error": "Today's review could not be loaded.",
       "retry": "Try again"
     },
+    "templates": {
+      "title": "Recent templates",
+      "saveToggle": "Save this setup as a reusable template",
+      "nameLabel": "Template name",
+      "namePlaceholder": "Weekly client review",
+      "saved": "Work template saved",
+      "saveError": "The entry was saved, but the template was not.",
+      "delete": "Delete template {title}"
+    },
     "filters": {
       "month": "Month",
       "advanced": "Advanced Filters",

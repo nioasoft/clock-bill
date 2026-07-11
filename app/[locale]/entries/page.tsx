@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dialog";
 import { HourglassSVG } from "@/components/ui/thematic-elements";
 import { DailyReconciliation } from "@/components/daily-reconciliation";
+import { WorkTemplatePicker, type WorkTemplate } from "@/components/work-template-picker";
 
 interface Project {
   id: string;
@@ -185,6 +186,8 @@ export default function EntriesPage() {
     return { clientId: "", projectId: "", startDate: start, endDate: end };
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [saveAsTemplate, setSaveAsTemplate] = useState(false);
+  const [templateTitle, setTemplateTitle] = useState("");
 
   /** Set the date range to a chosen month (YYYY-MM from <input type="month">). */
   const handleMonthChange = (key: string) => {
@@ -508,6 +511,34 @@ export default function EntriesPage() {
           }
         }
 
+        if (!isEditing && saveAsTemplate && selectedProjectRecord) {
+          try {
+            const templateResponse = await fetch("/api/work-templates", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                clientId: selectedProjectRecord.clientId,
+                projectId: formData.projectId,
+                rateId: formData.rateId || null,
+                title: templateTitle.trim() || formData.description.trim(),
+                description: formData.description.trim(),
+                notes: formData.notes || null,
+                billingKind: formData.billingKind,
+                duration: isItem ? null : parseInt(formData.duration, 10),
+                quantity: isItem ? parseFloat(formData.quantity) || 0 : null,
+                rate: isItem ? itemRate : hourlyRate,
+                rateLabel: isItem ? itemLabel : hourlyLabel,
+                unit: isItem ? itemUnit : null,
+                isBillable: formData.isBillable,
+              }),
+            });
+            if (templateResponse.ok) showSuccessToast(t("templates.saved"));
+            else showErrorToast(t("templates.saveError"));
+          } catch {
+            showErrorToast(t("templates.saveError"));
+          }
+        }
+
         // Reset form and close
         setFormData({
           projectId: "",
@@ -528,6 +559,8 @@ export default function EntriesPage() {
         setShowForm(false);
         setEditingEntry(null);
         setFieldErrors({});
+        setSaveAsTemplate(false);
+        setTemplateTitle("");
       } else {
         setFormError(
           data.error_code
@@ -620,7 +653,32 @@ export default function EntriesPage() {
       saveItemToClient: false,
     });
     setFieldErrors({});
+    setSaveAsTemplate(false);
+    setTemplateTitle("");
     setShowForm(true);
+  }, [projects]);
+
+  const applyWorkTemplate = useCallback((template: WorkTemplate) => {
+    const project = projects.find((item) => item.id === template.projectId);
+    if (!project) return;
+    setEditingEntry(null);
+    setFormClientId(project.clientId);
+    setFormData((current) => ({
+      ...current,
+      projectId: template.projectId,
+      taskId: "",
+      billingKind: template.billingKind,
+      rateId: template.rateId ?? "",
+      duration: template.duration == null ? "" : String(template.duration),
+      quantity: template.quantity == null ? "" : String(template.quantity),
+      description: template.description,
+      notes: template.notes ?? "",
+      isBillable: template.isBillable,
+      adhocName: template.billingKind === "item" ? template.rateLabel ?? "" : "",
+      adhocUnit: template.billingKind === "item" ? template.unit ?? "" : "",
+      adhocPrice: template.billingKind === "item" && template.rate != null ? String(template.rate) : "",
+    }));
+    setFieldErrors({});
   }, [projects]);
 
   // Deep link: /entries?new=item or ?new=manual opens the form in that mode
@@ -901,6 +959,8 @@ export default function EntriesPage() {
                   {formError}
                 </div>
               )}
+
+              {!editingEntry && <WorkTemplatePicker onApply={applyWorkTemplate} />}
 
               <div className="grid grid-cols-2 gap-x-3 gap-y-4">
                 {formMultiClient && (
@@ -1257,6 +1317,21 @@ export default function EntriesPage() {
                     placeholder={t("form.notesPlaceholder")}
                   />
                 </div>
+
+                {!editingEntry && (
+                  <div className="col-span-2 rounded-[var(--radius)] border border-border bg-surface/50 p-3">
+                    <label htmlFor="saveAsTemplate" className="flex min-h-11 cursor-pointer items-center gap-2">
+                      <input id="saveAsTemplate" type="checkbox" checked={saveAsTemplate} onChange={(event) => setSaveAsTemplate(event.target.checked)} className="h-5 w-5 rounded border-border accent-primary" />
+                      <span className="text-sm text-foreground">{t("templates.saveToggle")}</span>
+                    </label>
+                    {saveAsTemplate && (
+                      <div className="mt-2">
+                        <label htmlFor="templateTitle" className="block text-sm font-medium text-foreground">{t("templates.nameLabel")}</label>
+                        <input id="templateTitle" value={templateTitle} onChange={(event) => setTemplateTitle(event.target.value)} maxLength={120} placeholder={t("templates.namePlaceholder")} className="mt-1 block min-h-11 w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-between gap-2">
