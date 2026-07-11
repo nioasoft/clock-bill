@@ -628,12 +628,12 @@ export default function ClientDetailsPage() {
         )}
 
         {clientLoading ? (
-          <div className="rounded-[var(--radius-card)] bg-card p-8 border border-border text-center text-muted-foreground">
+          <div className="rounded-[var(--radius-card)] bg-card p-8 border border-border text-center text-muted-foreground" role="status" aria-live="polite">
             {t("loadingClientData")}
           </div>
         ) : error ? (
           <div className="rounded-[var(--radius-card)] bg-card p-8 border border-border">
-            <div className="rounded-md bg-destructive/10 p-4 text-destructive">{error}</div>
+            <div className="rounded-md bg-destructive/10 p-4 text-destructive" role="alert">{error}</div>
           </div>
         ) : !client ? (
           <div className="rounded-[var(--radius-card)] bg-card p-8 border border-border text-center text-muted-foreground">
@@ -819,7 +819,7 @@ export default function ClientDetailsPage() {
                   <a
                     key={project.id}
                     href={`/projects/${project.id}`}
-                    className="flex items-center justify-between rounded-[var(--radius)] border border-border bg-card-elevated px-3 py-2.5 hover:bg-muted transition-colors"
+                    className="flex min-h-11 items-center justify-between rounded-[var(--radius)] border border-border bg-card-elevated px-3 py-2.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <span className="text-sm font-medium text-foreground">{project.name}</span>
                     <span className={`inline-flex items-center rounded-[var(--radius)] border px-2.5 py-0.5 text-xs font-medium ${

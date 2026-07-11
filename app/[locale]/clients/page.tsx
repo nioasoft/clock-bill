@@ -98,6 +98,7 @@ function ClientsPageContent() {
   const [plan, setPlan] = useState<{ activeCount: number; clientLimit: number | null } | null>(null);
   const [lockedIds, setLockedIds] = useState<Set<string>>(new Set());
   const [clientsLoading, setClientsLoading] = useState(true);
+  const [clientsLoadError, setClientsLoadError] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   // The user's profession (from their profile) suggests a default billing model.
@@ -208,6 +209,7 @@ function ClientsPageContent() {
     const fetchClients = async () => {
       try {
         setClientsLoading(true);
+        setClientsLoadError(false);
         const response = await fetch("/api/clients");
         const data = await response.json();
 
@@ -217,9 +219,12 @@ function ClientsPageContent() {
             setPlan({ activeCount: data.plan.activeCount, clientLimit: data.plan.clientLimit });
           }
           setLockedIds(new Set<string>(Array.isArray(data.lockedClientIds) ? (data.lockedClientIds as string[]) : []));
+        } else {
+          setClientsLoadError(true);
         }
       } catch (error) {
         console.error("Error fetching clients:", error);
+        setClientsLoadError(true);
       } finally {
         setClientsLoading(false);
       }
@@ -968,7 +973,11 @@ function ClientsPageContent() {
             distinct cards (the old shared divide-y container read as one card). */}
         <div className="md:rounded-[var(--radius-card)] md:bg-card md:shadow">
           {clientsLoading ? (
-            <div className="p-8 text-center text-muted-foreground">{t("loadingClients")}</div>
+            <div className="p-8 text-center text-muted-foreground" role="status" aria-live="polite">{t("loadingClients")}</div>
+          ) : clientsLoadError ? (
+            <div className="rounded-[var(--radius-card)] border border-destructive/20 bg-destructive/10 p-6 text-center text-sm text-destructive" role="alert">
+              {t("errorLoadClient")}
+            </div>
           ) : clients.length === 0 ? (
             <EmptyState
               icon={Users}
@@ -1030,10 +1039,10 @@ function ClientsPageContent() {
                         <div className="text-sm text-foreground">{client.contactName || "-"}</div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm text-foreground">{client.email || "-"}</div>
+                        <div className="text-sm text-foreground"><bdi>{client.email || "-"}</bdi></div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm text-foreground">{client.phone || "-"}</div>
+                        <div className="text-sm text-foreground"><bdi>{client.phone || "-"}</bdi></div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-foreground max-w-xs truncate">{client.address || "-"}</div>
@@ -1045,7 +1054,7 @@ function ClientsPageContent() {
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <div className="text-sm font-medium text-foreground">
-                          {formatCurrency(Number(client.totalBilled), client.currency || "ILS", locale)}
+                          <bdi>{formatCurrency(Number(client.totalBilled), client.currency || "ILS", locale)}</bdi>
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
@@ -1129,8 +1138,8 @@ function ClientsPageContent() {
                   {(client.contactName || client.email || client.phone) && (
                     <div className="mt-1 space-y-0.5 text-sm text-muted-foreground">
                       {client.contactName && <div>{client.contactName}</div>}
-                      {client.email && <div className="truncate">{client.email}</div>}
-                      {client.phone && <div className="tabular-nums">{client.phone}</div>}
+                      {client.email && <div className="truncate"><bdi>{client.email}</bdi></div>}
+                      {client.phone && <div className="tabular-nums"><bdi>{client.phone}</bdi></div>}
                     </div>
                   )}
 
@@ -1144,7 +1153,7 @@ function ClientsPageContent() {
                     <span className="text-muted-foreground">
                       {t("billedInline")}{" "}
                       <span className="font-medium text-foreground">
-                        {formatCurrency(Number(client.totalBilled), client.currency || "ILS", locale)}
+                        <bdi>{formatCurrency(Number(client.totalBilled), client.currency || "ILS", locale)}</bdi>
                       </span>
                     </span>
                     <span className="text-muted-foreground">

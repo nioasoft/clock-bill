@@ -602,7 +602,7 @@ function ProjectsPageContent() {
         {/* Projects List */}
         <div className="rounded-[var(--radius-card)] bg-card shadow">
           {projectsLoading ? (
-            <div className="p-8 text-center text-muted-foreground">{t("loading")}</div>
+          <div className="p-8 text-center text-muted-foreground" role="status" aria-live="polite">{t("loading")}</div>
           ) : projects.length === 0 ? (
             <EmptyState
               icon={FolderOpen}
@@ -698,11 +698,11 @@ function ProjectsPageContent() {
                         tabIndex={0}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push(`/projects/${project.id}`); }}
                       >
-                        <div className="text-sm text-muted-foreground">
+                        <bdi className="text-sm text-muted-foreground">
                           {project.startDate ? new Date(project.startDate).toLocaleDateString(intlLocale) : "-"}
                           {" - "}
                           {project.endDate ? new Date(project.endDate).toLocaleDateString(intlLocale) : t("noEndDate")}
-                        </div>
+                        </bdi>
                       </td>
                       {statusFilter === "archived" && (
                         <td className="whitespace-nowrap px-6 py-4">
@@ -747,11 +747,11 @@ function ProjectsPageContent() {
 
                   <div className="mt-1 text-sm text-muted-foreground">{project.clientName}</div>
 
-                  <div className="mt-1 text-xs text-muted-foreground">
+                  <bdi className="mt-1 block text-xs text-muted-foreground">
                     {project.startDate ? new Date(project.startDate).toLocaleDateString(intlLocale) : "-"}
                     {" - "}
                     {project.endDate ? new Date(project.endDate).toLocaleDateString(intlLocale) : t("noEndDate")}
-                  </div>
+                  </bdi>
 
                   {statusFilter === "archived" && (
                     <div className="mt-3">

@@ -7,7 +7,7 @@
  * card row. Self-contained: loads its config from /api/profile and saves
  * optimistically (rollback on failure), mirroring the theme save pattern.
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
   DndContext,
@@ -74,6 +74,7 @@ export function DashboardCustomizer() {
   const [config, setConfig] = useState<DashboardConfig | null>(null);
   const [saveError, setSaveError] = useState("");
   const [saved, setSaved] = useState(false);
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Read the dashboard config from the shared profile query (one fetch per page).
   const { data: profile, isPending, isError } = useProfile();
@@ -95,6 +96,13 @@ export function DashboardCustomizer() {
     }
   }, [profile]);
 
+  useEffect(
+    () => () => {
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+    },
+    []
+  );
+
   // Optimistic save with rollback (fire-and-forget, like setTheme).
   const persist = useCallback(
     (next: DashboardConfig, prev: DashboardConfig) => {
@@ -104,7 +112,11 @@ export function DashboardCustomizer() {
       patchProfile.mutate(
         { dashboardConfig: next },
         {
-          onSuccess: () => setSaved(true),
+          onSuccess: () => {
+            setSaved(true);
+            if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+            savedTimerRef.current = setTimeout(() => setSaved(false), 3000);
+          },
           onError: () => {
             setConfig(prev);
             setSaveError(t("saveError"));
@@ -186,14 +198,14 @@ export function DashboardCustomizer() {
           </div>
           {saved && (
             <span className="inline-flex items-center gap-1 text-xs text-success whitespace-nowrap">
-              <Check className="h-3.5 w-3.5" />
+              <Check className="h-3.5 w-3.5" aria-hidden="true" />
               {t("saved")}
             </span>
           )}
         </div>
 
         {saveError && (
-          <div className="mt-4 rounded-[var(--radius)] bg-destructive/10 border border-destructive/20 p-3">
+          <div role="alert" className="mt-4 rounded-[var(--radius)] bg-destructive/10 border border-destructive/20 p-3">
             <p className="text-sm text-destructive">{saveError}</p>
           </div>
         )}
@@ -205,7 +217,7 @@ export function DashboardCustomizer() {
               key={preset.id}
               type="button"
               onClick={() => applyPreset(preset.config)}
-              className="rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:border-border-strong transition-colors min-h-[44px]"
+              className="min-h-11 touch-manipulation rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-border-strong"
             >
               {t(`presets.${preset.labelKey}`)}
             </button>
@@ -213,9 +225,9 @@ export function DashboardCustomizer() {
           <button
             type="button"
             onClick={reset}
-            className="inline-flex items-center gap-2 rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-border-strong transition-colors min-h-[44px]"
+            className="inline-flex min-h-11 touch-manipulation items-center gap-2 rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground"
           >
-            <RotateCcw className="h-4 w-4" />
+            <RotateCcw className="h-4 w-4" aria-hidden="true" />
             {t("reset")}
           </button>
         </div>
@@ -242,7 +254,7 @@ export function DashboardCustomizer() {
                     : "bg-background border-border"
                 }`}
               >
-                <p className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground truncate">
+                <p className="truncate text-[11px] font-semibold uppercase tracking-widest text-muted-foreground sm:text-xs">
                   {meta ? tDash(meta.labelKey) : card.id}
                 </p>
                 <p className={`mt-1 font-mono font-bold tabular-nums text-base ${accent ? "text-primary" : "text-foreground"}`}>
@@ -297,6 +309,23 @@ export function DashboardCustomizer() {
           onToggle={(id) => toggle("sections", id)}
         />
       </div>
+
+      {(patchProfile.isPending || saved || saveError) && (
+        <div
+          role={saveError ? "alert" : "status"}
+          aria-live="polite"
+          aria-atomic="true"
+          className={`fixed bottom-20 end-4 z-40 max-w-[calc(100%-2rem)] rounded-[var(--radius)] border bg-card-elevated px-4 py-3 text-sm font-medium shadow-lg backdrop-blur lg:bottom-4 ${
+            saveError
+              ? "border-destructive/30 text-destructive"
+              : saved
+                ? "border-success/30 text-success"
+                : "border-border text-foreground"
+          }`}
+        >
+          {saveError || (saved ? t("saved") : t("loading"))}
+        </div>
+      )}
     </div>
   );
 }
@@ -378,12 +407,12 @@ function WidgetRow({ state, label, uiText, isFirst, isLast, onMove, onToggle }: 
     >
       <button
         type="button"
-        className="flex h-9 w-9 shrink-0 cursor-grab touch-none items-center justify-center rounded-[var(--radius)] text-muted-foreground hover:text-foreground"
+        className="flex h-11 w-11 shrink-0 cursor-grab touch-none items-center justify-center rounded-[var(--radius)] text-muted-foreground hover:text-foreground"
         aria-label={uiText.dragHandle}
         {...attributes}
         {...listeners}
       >
-        <GripVertical className="h-4 w-4" />
+        <GripVertical className="h-4 w-4" aria-hidden="true" />
       </button>
 
       <span className="flex-1 text-sm font-medium text-foreground truncate">{label}</span>
@@ -393,18 +422,18 @@ function WidgetRow({ state, label, uiText, isFirst, isLast, onMove, onToggle }: 
         onClick={() => onMove(-1)}
         disabled={isFirst}
         aria-label={uiText.moveUp}
-        className="flex h-9 w-9 items-center justify-center rounded-[var(--radius)] text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
+        className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-[var(--radius)] text-muted-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
       >
-        <ChevronUp className="h-4 w-4" />
+        <ChevronUp className="h-4 w-4" aria-hidden="true" />
       </button>
       <button
         type="button"
         onClick={() => onMove(1)}
         disabled={isLast}
         aria-label={uiText.moveDown}
-        className="flex h-9 w-9 items-center justify-center rounded-[var(--radius)] text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
+        className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-[var(--radius)] text-muted-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
       >
-        <ChevronDown className="h-4 w-4" />
+        <ChevronDown className="h-4 w-4" aria-hidden="true" />
       </button>
 
       <button
@@ -412,11 +441,15 @@ function WidgetRow({ state, label, uiText, isFirst, isLast, onMove, onToggle }: 
         onClick={onToggle}
         aria-pressed={state.visible}
         aria-label={state.visible ? uiText.hide : uiText.show}
-        className={`flex h-9 w-9 items-center justify-center rounded-[var(--radius)] transition-colors ${
+        className={`flex h-11 w-11 touch-manipulation items-center justify-center rounded-[var(--radius)] transition-colors ${
           state.visible ? "text-primary" : "text-muted-foreground hover:text-foreground"
         }`}
       >
-        {state.visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+        {state.visible ? (
+          <Eye className="h-4 w-4" aria-hidden="true" />
+        ) : (
+          <EyeOff className="h-4 w-4" aria-hidden="true" />
+        )}
       </button>
     </li>
   );

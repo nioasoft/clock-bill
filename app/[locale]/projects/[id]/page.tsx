@@ -437,7 +437,7 @@ export default function ProjectDetailsPage() {
     return (
       <AppLayout>
         <div className="min-h-[50vh] flex items-center justify-center">
-          <div className="text-muted-foreground">{t("detail.loading")}</div>
+          <div className="text-muted-foreground" role="status" aria-live="polite">{t("detail.loading")}</div>
         </div>
       </AppLayout>
     );
@@ -814,7 +814,7 @@ export default function ProjectDetailsPage() {
         )}
 
         {/* Summary stat tiles */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-[var(--radius-card)] border border-border bg-card p-4">
             <dt className="text-xs font-medium text-muted-foreground">{t("stats.totalHours")}</dt>
             <dd className="mt-1.5 font-mono text-2xl font-bold tabular-nums text-foreground">
@@ -841,7 +841,7 @@ export default function ProjectDetailsPage() {
               {tRounding(resolveRounding(project.billingRounding, project.clientBillingRounding, profileRounding))}
             </dd>
           </div>
-        </div>
+        </dl>
 
         {/* Project Details Card */}
         <div className="mt-6 rounded-[var(--radius-card)] bg-card border border-border">
