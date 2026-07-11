@@ -9,11 +9,9 @@ import {
   ToastViewport,
 } from "@/components/ui/toast"
 import { useToast } from "@/hooks/use-toast"
-import { useTranslations } from "next-intl"
 
 export function Toaster() {
   const { toasts } = useToast()
-  const t = useTranslations("common")
 
   return (
     <ToastProvider swipeDirection="left">
@@ -27,7 +25,11 @@ export function Toaster() {
               )}
             </div>
             {action}
-            <ToastClose aria-label={t("close")} />
+            {/* The toaster also renders inside the global error boundary, where
+                next-intl context may not exist. Keep this accessible name
+                bilingual and provider-independent so error recovery cannot
+                fail while trying to translate its own close control. */}
+            <ToastClose aria-label="Close / סגור" />
           </Toast>
         )
       })}
