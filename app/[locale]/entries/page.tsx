@@ -10,7 +10,7 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SimpleSelect } from "@/components/ui/simple-select";
 import { MonthField } from "@/components/ui/month-field";
-import { Clock, Lock, Pencil, Trash2 } from "lucide-react";
+import { Clock, FileUp, Lock, Pencil, Trash2 } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { messageForError } from "@/lib/api-error";
 import { readRecentWorkContext, writeRecentWorkContext } from "@/lib/recent-work-context";
@@ -781,6 +781,13 @@ export default function EntriesPage() {
       <PageContainer>
         <PageHeader title={t("pageTitle")}>
           <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">N</kbd>
+          <Link
+            href="/entries/import"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-card)] border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-border-strong hover:bg-card-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <FileUp aria-hidden="true" className="h-4 w-4" />
+            {t("importCsv")}
+          </Link>
           <button
             onClick={() => openManualEntry("hourly")}
             className="min-h-11 rounded-[var(--radius)] bg-primary px-4 py-2 text-primary-foreground transition-colors hover:bg-primary/90"

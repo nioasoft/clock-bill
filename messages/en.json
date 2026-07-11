@@ -349,6 +349,7 @@
     "cancel": "Cancel",
     "addTimeEntry": "+ Add Time Entry",
     "addBillingItem": "+ Add Billing Item",
+    "importCsv": "Import CSV",
     "reconciliation": {
       "attentionTitle": "Before you finish today",
       "completeTitle": "Today's work is recorded",
@@ -477,6 +478,79 @@
       "body": "Delete the time entry \"{description}\"? This action cannot be undone.",
       "deleting": "Deleting...",
       "confirm": "Delete"
+    }
+  },
+  "CsvImport": {
+    "title": "Import entries from CSV",
+    "subtitle": "Upload a file, review every row, and choose what to add. Nothing is saved until you approve it.",
+    "back": "Back to entries",
+    "retry": "Try again",
+    "loadingProjects": "Loading your projects",
+    "emptyProjects": "Create a client and project before importing entries.",
+    "createProject": "Create project",
+    "upload": {
+      "title": "Choose a file",
+      "description": "The file stays in your browser during review. Only selected rows are sent for saving.",
+      "choose": "Choose CSV file",
+      "limit": "Up to 1 MB and 200 rows. You can import up to 100 rows per action."
+    },
+    "headers": {
+      "date": "Date",
+      "client": "Client",
+      "project": "Project",
+      "description": "Description",
+      "duration": "Duration in minutes"
+    },
+    "review": {
+      "title": "Review entries",
+      "summary": "{valid} rows ready · {invalid} rows need attention",
+      "select": "Select",
+      "selectValid": "Select all valid rows",
+      "selectRow": "Select row {row}",
+      "status": "Status",
+      "ready": "Ready",
+      "approval": "I reviewed and approve the {count, plural, one {selected entry} other {{count} selected entries}} for import.",
+      "selected": "{count, plural, one {1 entry selected} other {{count} entries selected}}",
+      "import": "Import {count, plural, one {1 entry} other {{count} entries}}",
+      "importing": "Importing entries..."
+    },
+    "guide": {
+      "title": "Prepare your file",
+      "step1": "1. Download the template or use the column headers shown here.",
+      "step2": "2. Project names must match ClockBill. If the same name exists for multiple clients, include the client column.",
+      "step3": "3. Enter duration in minutes. Dates can use YYYY-MM-DD or DD/MM/YYYY.",
+      "downloadTemplate": "Download CSV template"
+    },
+    "privacy": "Your file is not stored on the server. After review, only the entries you select and approve are sent.",
+    "success": {
+      "title": "Import complete",
+      "description": "{count, plural, one {1 entry was added to your billing records.} other {{count} entries were added to your billing records.}}",
+      "viewEntries": "View entries",
+      "importMore": "Import another file"
+    },
+    "errors": {
+      "emptyFile": "No data rows were found in the file.",
+      "fileTooLarge": "The file is larger than 1 MB.",
+      "tooManyRows": "The file contains more than 200 rows.",
+      "missingHeaders": "The file is missing required columns",
+      "malformedCsv": "The CSV structure is invalid. Check for unclosed quotes or incomplete rows.",
+      "readFailed": "We could not read the file. Save it as CSV again and retry.",
+      "rateLimited": "Too many import attempts were made. Wait a minute and try again.",
+      "projectsFailed": "We could not load your projects. The file has not been sent.",
+      "missingDate": "Date is missing",
+      "invalidDate": "Date is invalid or outside the allowed range",
+      "missingProject": "Project name is missing",
+      "projectNotFound": "Project was not found in your account",
+      "projectAmbiguous": "This project name belongs to multiple clients. Include the client column",
+      "missingDescription": "Description is missing",
+      "descriptionTooLong": "Description is too long",
+      "invalidDuration": "Duration must be a whole number between 1 and 1,440 minutes",
+      "notesTooLong": "Notes are too long",
+      "invalidBillable": "Billable must be yes or no",
+      "invalidRate": "Rate is invalid",
+      "duplicateRow": "This row is duplicated in the file",
+      "batchLimit": "You can import up to {count} entries per action.",
+      "importFailed": "We could not import the entries. No entries from this action were saved."
     }
   },
   "Pricing": {
@@ -2081,6 +2155,7 @@
     "tabs": {
       "billable": "To bill",
       "documents": "Documents",
+      "payments": "Match payments",
       "report": "Ad-hoc report"
     },
     "workflow": {
@@ -2388,6 +2463,98 @@
         "credit": "Credit card",
         "other": "Other"
       }
+    }
+  },
+  "Portal": {
+    "eyebrow": "Payment document",
+    "title": "Settlement document #{number}",
+    "privateLink": "Private link · No sign-in required",
+    "status": {
+      "paid": "Paid",
+      "partial": "Partially paid",
+      "pending": "Awaiting payment"
+    },
+    "summaryTitle": "Payment status",
+    "total": "Document total",
+    "paid": "Paid so far",
+    "outstanding": "Outstanding",
+    "savePdf": "Save as PDF",
+    "print": "Print",
+    "printHint": "This opens your browser's print dialog. From there, you can print or choose Save as PDF.",
+    "documentTitle": "Document details",
+    "historyTitle": "Document history",
+    "historyDescription": "These events come from the sender's document records.",
+    "history": {
+      "issued": "Document issued",
+      "sent": "Document sent",
+      "payment": "Payment recorded"
+    },
+    "paymentMethod": {
+      "bank_transfer": "Bank transfer",
+      "bit": "Bit",
+      "cash": "Cash",
+      "check": "Check",
+      "credit": "Credit card",
+      "other": "Other"
+    },
+    "helpTitle": "Have a question about this document?",
+    "helpDescription": "Contact {business} directly and include the document number.",
+    "contact": "Contact sender",
+    "generatedWith": "Generated with ClockBill",
+    "loading": "Loading document"
+  },
+  "PaymentReconciliation": {
+    "title": "Match incoming payments",
+    "description": "Import a bank CSV or enter one payment manually. ClockBill only suggests matches. Nothing is recorded until you review every row and confirm.",
+    "stepsLabel": "Payment matching steps",
+    "steps": {
+      "import": "Import payments",
+      "review": "Review matches",
+      "confirm": "Confirm and record"
+    },
+    "privacyTitle": "Your file stays in this browser",
+    "privacyBody": "The CSV is parsed locally and is not uploaded. Only the rows you approve are sent when you confirm.",
+    "loading": "Loading open documents",
+    "loadError": "We couldn't load open documents",
+    "loadErrorHint": "Check your connection and try again. No payments were changed.",
+    "retry": "Try again",
+    "noDocumentsTitle": "Everything is paid",
+    "noDocumentsBody": "There are no open documents to match right now.",
+    "uploadTitle": "Import a CSV",
+    "uploadBody": "Use a file with date and amount columns. Reference, description, and currency are optional.",
+    "uploadLimits": "CSV only · up to 1 MB or 500 rows",
+    "manualTitle": "Enter one payment",
+    "manualBody": "Use the same review flow for a transfer that is not in a file.",
+    "manualFormTitle": "Payment details",
+    "amount": "Amount",
+    "date": "Payment date",
+    "currency": "Currency",
+    "reference": "Reference or note",
+    "cancel": "Cancel",
+    "continueToReview": "Continue to review",
+    "reviewTitle": "Review before recording",
+    "reviewBody": "{count, plural, one {One payment is waiting for review} other {# payments are waiting for review}}",
+    "clear": "Start over",
+    "noReference": "No reference",
+    "documentLabel": "Match to an open document",
+    "chooseDocument": "Choose a document",
+    "noCompatibleDocument": "No compatible document",
+    "documentOption": "#{number} · {client} · {amount} open",
+    "removeRow": "Remove payment",
+    "confirmTitle": "I reviewed every match",
+    "confirmBody": "{count, plural, one {Recording will add one payment to the selected document.} other {Recording will add # payments to the selected documents.}}",
+    "unmatchedWarning": "Choose a compatible document for every payment before confirming.",
+    "saving": "Recording…",
+    "apply": "{count, plural, one {Record payment} other {Record # payments}}",
+    "success": "{count, plural, one {One payment was recorded} other {# payments were recorded}}",
+    "saveError": "The payments were not recorded. Review the matches and try again.",
+    "errors": {
+      "FILE_TOO_LARGE": "The CSV is larger than 1 MB.",
+      "EMPTY_FILE": "The CSV has no payment rows.",
+      "TOO_MANY_ROWS": "The CSV has more than 500 rows.",
+      "MISSING_COLUMNS": "The CSV needs date and amount columns.",
+      "INVALID_ROW": "A row has an invalid date or amount.",
+      "INVALID_FILE": "We couldn't read this CSV."
     }
   },
   "Trial": {

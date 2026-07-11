@@ -1,6 +1,17 @@
 "use client";
 
-import { NextIntlClientProvider } from "next-intl";
+import { NextIntlClientProvider, useTranslations } from "next-intl";
+import {
+  CheckCircle2,
+  CircleDollarSign,
+  Clock3,
+  Download,
+  FileCheck2,
+  LockKeyhole,
+  Mail,
+  Printer,
+  Send,
+} from "lucide-react";
 import { useDocumentMessages } from "@/lib/document-messages";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,14 +28,19 @@ import {
 } from "@/app/[locale]/(auth)/reports/printStyles";
 import { documentMoney, outstanding } from "@/lib/charge-documents";
 import { formatCurrency as formatCurrencyLib } from "@/lib/currency";
+import { formatDate } from "@/lib/format";
+import type {
+  PublicDocumentHistoryEvent,
+  PublicPaymentMethod,
+} from "@/lib/public-charge-document";
 import "@/app/[locale]/(auth)/reports/pdf-styles.css";
 import "@/app/[locale]/(auth)/reports/pdf-templates.css";
 
-// Template IDs must match PDF_TEMPLATES in printStyles.ts exactly.
 const VALID_TEMPLATES = ["modern", "classic", "bold", "elegant", "nature", "ocean"] as const;
-function asTemplate(v: string | null): PdfTemplate {
-  return (VALID_TEMPLATES as readonly string[]).includes(v ?? "")
-    ? (v as PdfTemplate)
+
+function asTemplate(value: string | null): PdfTemplate {
+  return (VALID_TEMPLATES as readonly string[]).includes(value ?? "")
+    ? (value as PdfTemplate)
     : "classic";
 }
 
@@ -38,15 +54,22 @@ interface Props {
   primaryText: "light" | "dark";
   locale: "he" | "en";
   paidSum: number;
+  history: PublicDocumentHistoryEvent[];
 }
 
-export default function PublicChargeDocument(props: Props) {
-  const { doc, lines, profile, primaryColor, accentColor, locale, paidSum } = props;
-  const messages = useDocumentMessages(locale);
+function HistoryIcon({ type }: { type: PublicDocumentHistoryEvent["type"] }) {
+  const className = "h-4 w-4";
+  if (type === "payment") return <CircleDollarSign className={className} aria-hidden="true" />;
+  if (type === "sent") return <Send className={className} aria-hidden="true" />;
+  return <FileCheck2 className={className} aria-hidden="true" />;
+}
+
+function PortalView(props: Props) {
+  const { doc, lines, profile, primaryColor, accentColor, locale, paidSum, history } = props;
+  const t = useTranslations("Portal");
   const template = asTemplate(props.template);
   const primaryText: OnColorText = props.primaryText;
   const dir = locale === "he" ? "rtl" : "ltr";
-  // Locale-bound formatter re-created against the document locale (closure-safe pattern).
   const formatCurrency = (amount: number, currency: string) =>
     formatCurrencyLib(amount, currency, locale);
   const money = documentMoney({
@@ -56,16 +79,23 @@ export default function PublicChargeDocument(props: Props) {
     vatRate: doc.vat_rate_snapshot,
   });
   const outstandingAmount = outstanding(money.gross, paidSum);
-  const statusLabel =
-    doc.status === "paid"
-      ? locale === "he" ? "שולם" : "Paid"
-      : doc.status === "partial"
-        ? locale === "he" ? "שולם חלקית" : "Partially paid"
-        : locale === "he" ? "ממתין לתשלום" : "Awaiting payment";
+  const paidPercent = money.gross > 0
+    ? Math.min(100, Math.max(0, (paidSum / money.gross) * 100))
+    : 100;
+  const status = doc.status === "paid" ? "paid" : doc.status === "partial" ? "partial" : "pending";
+  const StatusIcon = status === "paid" ? CheckCircle2 : Clock3;
+  const statusClass = status === "paid"
+    ? "border-success/30 bg-success/10 text-success"
+    : status === "partial"
+      ? "border-warning/30 bg-warning/10 text-warning"
+      : "border-primary/30 bg-primary/10 text-primary";
+  const businessName = profile.businessName || "ClockBill";
+  const contactSubject = encodeURIComponent(
+    locale === "he"
+      ? `שאלה לגבי תעודת התחשבנות #${doc.doc_number}`
+      : `Question about settlement document #${doc.doc_number}`
+  );
 
-  // On-screen styling: un-hide #pdf-content, restore table display, apply the
-  // SAME template color rules the print routine uses. Print itself reuses
-  // printPdfContent (identical to ChargeDocumentView.handleExportPdf).
   const screenCss = `
     #pdf-content.print-only { display: block !important; }
     #pdf-content table { display: table !important; }
@@ -77,100 +107,200 @@ export default function PublicChargeDocument(props: Props) {
   `;
 
   function handlePrint() {
-    const filename = `statement_${doc.doc_number}_${doc.client_name}`.replace(/[/\s]+/g, "_").trim();
+    const filename = `statement_${doc.doc_number}_${doc.client_name}`
+      .replace(/[/\s]+/g, "_")
+      .trim();
     printPdfContent(template, primaryColor, accentColor, filename, dir, primaryText);
   }
 
+  function historyLabel(event: PublicDocumentHistoryEvent): string {
+    if (event.type !== "payment") return t(`history.${event.type}`);
+    const amount = formatCurrency(event.amount ?? 0, doc.currency);
+    const method = event.method
+      ? t(`paymentMethod.${event.method as PublicPaymentMethod}`)
+      : null;
+    return method
+      ? `${t("history.payment")} · ${amount} · ${method}`
+      : `${t("history.payment")} · ${amount}`;
+  }
+
   return (
-    <div dir={dir} style={{ minHeight: "100vh", background: "#f4f4f5", padding: "24px 12px" }}>
+    <div dir={dir} className="min-h-screen bg-background px-3 py-5 text-foreground sm:px-6 sm:py-8">
       <style dangerouslySetInnerHTML={{ __html: screenCss }} />
-      <div style={{ maxWidth: 800, margin: "0 auto" }}>
-        <header
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 16,
-            marginBottom: 12,
-            padding: "16px 18px",
-            background: "#fafafa",
-            border: "1px solid #e4e4e7",
-            borderRadius: 12,
-            color: "#18181b",
-          }}
-        >
-          <div>
-            <h1 id="public-document-title" style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>
-              {locale === "he" ? "תעודת התחשבנות" : "Settlement document"}{" "}
-              <bdi>#{doc.doc_number}</bdi>
-            </h1>
-            <p style={{ margin: "4px 0 0", color: "#52525b", fontSize: 14 }}>
-              <bdi>{doc.client_name}</bdi>
-            </p>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
+      <div className="mx-auto max-w-5xl">
+        <header className="mb-4 rounded-[var(--radius-card)] border border-border bg-card p-4 sm:p-6">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-muted-foreground">
+                <span className="uppercase tracking-[0.14em]">{t("eyebrow")}</span>
+                <span aria-hidden="true">·</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" />
+                  {t("privateLink")}
+                </span>
+              </div>
+              <h1 id="public-document-title" className="text-2xl font-bold tracking-tight sm:text-3xl">
+                {t("title", { number: doc.doc_number })}
+              </h1>
+              <p className="mt-2 text-sm text-muted-foreground sm:text-base">
+                <bdi>{doc.client_name}</bdi>
+                <span aria-hidden="true"> · </span>
+                <bdi>{formatDate(doc.issued_at, undefined, locale)}</bdi>
+              </p>
+            </div>
             <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                minHeight: 32,
-                padding: "4px 10px",
-                border: "1px solid #d4d4d8",
-                borderRadius: 999,
-                background: doc.status === "paid" ? "#dcfce7" : doc.status === "partial" ? "#fef3c7" : "#f4f4f5",
-                color: "#27272a",
-                fontSize: 13,
-                fontWeight: 600,
-              }}
+              className={`inline-flex min-h-11 shrink-0 items-center gap-2 self-start rounded-full border px-4 py-2 text-sm font-semibold ${statusClass}`}
               role="status"
             >
-              {statusLabel}
+              <StatusIcon className="h-4 w-4" aria-hidden="true" />
+              {t(`status.${status}`)}
             </span>
-            <div style={{ textAlign: "end" }}>
-              <div style={{ color: "#52525b", fontSize: 12 }}>
-                {locale === "he" ? "יתרה לתשלום" : "Outstanding"}
-              </div>
-              <bdi style={{ fontSize: 18, fontWeight: 700 }}>
+          </div>
+        </header>
+
+        <section
+          aria-labelledby="payment-summary-title"
+          className="mb-4 rounded-[var(--radius-card)] border border-border bg-card p-4 sm:p-6"
+        >
+          <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 id="payment-summary-title" className="text-lg font-bold">{t("summaryTitle")}</h2>
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{t("printHint")}</p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button type="button" variant="outline" onClick={handlePrint}>
+                <Printer className="h-4 w-4" aria-hidden="true" />
+                {t("print")}
+              </Button>
+              <Button type="button" onClick={handlePrint}>
+                <Download className="h-4 w-4" aria-hidden="true" />
+                {t("savePdf")}
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-[var(--radius)] border border-border bg-surface p-4">
+              <p className="text-sm text-muted-foreground">{t("total")}</p>
+              <bdi className="mt-1 block font-mono text-xl font-bold tabular-nums">
+                {formatCurrency(money.gross, doc.currency)}
+              </bdi>
+            </div>
+            <div className="rounded-[var(--radius)] border border-border bg-surface p-4">
+              <p className="text-sm text-muted-foreground">{t("paid")}</p>
+              <bdi className="mt-1 block font-mono text-xl font-bold tabular-nums text-success">
+                {formatCurrency(paidSum, doc.currency)}
+              </bdi>
+            </div>
+            <div className="rounded-[var(--radius)] border border-primary/30 bg-primary/5 p-4">
+              <p className="text-sm text-muted-foreground">{t("outstanding")}</p>
+              <bdi className="mt-1 block font-mono text-xl font-bold tabular-nums text-primary">
                 {formatCurrency(outstandingAmount, doc.currency)}
               </bdi>
             </div>
-            <Button onClick={handlePrint}>
-              {locale === "he" ? "הדפס / שמור כ-PDF" : "Print / Save as PDF"}
-            </Button>
           </div>
-        </header>
-        <article aria-labelledby="public-document-title" style={{ background: "#fafafa", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,.08)" }}>
-          {messages && (
-            <NextIntlClientProvider locale={locale} messages={messages}>
-              <PdfChargeDocument doc={doc} lines={lines} profile={profile} />
-            </NextIntlClientProvider>
-          )}
-        </article>
-        {paidSum > 0 && (
-            <div style={{
-              marginTop: 12,
-              padding: "12px 16px",
-              background: "white",
-              borderRadius: 8,
-              boxShadow: "0 1px 3px rgba(0,0,0,.08)",
-              textAlign: "center",
-              fontSize: 14,
-              color: "#3f3f46",
-            }}>
-              <span>{locale === "he" ? "שולם" : "Paid"} </span>
-              <bdi>{formatCurrency(paidSum, doc.currency)}</bdi>
-              <span> {locale === "he" ? "מתוך" : "of"} </span>
-              <bdi>{formatCurrency(money.gross, doc.currency)}</bdi>
-              <span> · {locale === "he" ? "נותר לתשלום" : "remaining"} </span>
-              <bdi>{formatCurrency(outstandingAmount, doc.currency)}</bdi>
-            </div>
-        )}
-        <p style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "#71717a" }}>
-          {locale === "he" ? "הופק ב-" : "Generated with "}
-          <a href="https://www.clock-bill.com" style={{ color: "#0a0a0a", fontWeight: 600 }}>ClockBill</a>
-        </p>
+          <div
+            className="mt-4 h-2 overflow-hidden rounded-full bg-muted"
+            role="progressbar"
+            aria-label={t("paid")}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(paidPercent)}
+          >
+            <div className="h-full rounded-full bg-success" style={{ width: `${paidPercent}%` }} />
+          </div>
+        </section>
+
+        <section aria-labelledby="document-details-title" className="mb-4">
+          <h2 id="document-details-title" className="sr-only">{t("documentTitle")}</h2>
+          <article aria-labelledby="public-document-title"
+            className="overflow-hidden rounded-[var(--radius-card)] border border-border bg-white shadow-sm"
+          >
+            <PdfChargeDocument doc={doc} lines={lines} profile={profile} />
+          </article>
+        </section>
+
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.55fr)]">
+          <section
+            aria-labelledby="document-history-title"
+            className="rounded-[var(--radius-card)] border border-border bg-card p-4 sm:p-6"
+          >
+            <h2 id="document-history-title" className="text-lg font-bold">{t("historyTitle")}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t("historyDescription")}</p>
+            <ol className="mt-5 space-y-0">
+              {history.map((event, index) => (
+                <li key={event.key} className="relative flex gap-3 pb-5 last:pb-0">
+                  {index < history.length - 1 && (
+                    <span className="absolute start-[17px] top-9 h-[calc(100%-1.5rem)] w-px bg-border" aria-hidden="true" />
+                  )}
+                  <span className="relative z-10 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-primary">
+                    <HistoryIcon type={event.type} />
+                  </span>
+                  <div className="min-w-0 pt-0.5">
+                    <p className="text-sm font-semibold text-foreground"><bdi>{historyLabel(event)}</bdi></p>
+                    <time dateTime={event.occurredAt} className="mt-0.5 block text-sm text-muted-foreground">
+                      <bdi>{formatDate(event.occurredAt, undefined, locale)}</bdi>
+                    </time>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          <aside className="rounded-[var(--radius-card)] border border-border bg-card p-4 sm:p-6">
+            <h2 className="text-lg font-bold">{t("helpTitle")}</h2>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              {t("helpDescription", { business: businessName })}
+            </p>
+            {profile.email && (
+              <Button asChild variant="outline" className="mt-5 w-full">
+                <a href={`mailto:${profile.email}?subject=${contactSubject}`}>
+                  <Mail className="h-4 w-4" aria-hidden="true" />
+                  {t("contact")}
+                </a>
+              </Button>
+            )}
+          </aside>
+        </div>
+
+        <footer className="py-6 text-center text-sm text-muted-foreground">
+          <a
+            href="https://www.clock-bill.com"
+            rel="noreferrer"
+            className="inline-flex min-h-11 items-center font-semibold text-foreground underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {t("generatedWith")}
+          </a>
+        </footer>
       </div>
     </div>
+  );
+}
+
+export default function PublicChargeDocument(props: Props) {
+  const messages = useDocumentMessages(props.locale);
+  const dir = props.locale === "he" ? "rtl" : "ltr";
+
+  if (!messages) {
+    return (
+      <div
+        dir={dir}
+        className="flex min-h-screen items-center justify-center bg-background p-6 text-foreground"
+        aria-busy="true"
+      >
+        <div className="w-full max-w-3xl animate-pulse rounded-[var(--radius-card)] border border-border bg-card p-6 motion-reduce:animate-none">
+          <span className="sr-only">{props.locale === "he" ? "טוען את המסמך" : "Loading document"}</span>
+          <div className="h-7 w-2/3 rounded bg-muted" />
+          <div className="mt-4 h-4 w-1/3 rounded bg-muted" />
+          <div className="mt-8 h-64 rounded bg-muted" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <NextIntlClientProvider locale={props.locale} messages={messages}>
+      <PortalView {...props} />
+    </NextIntlClientProvider>
   );
 }

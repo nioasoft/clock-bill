@@ -715,16 +715,24 @@ export const chargeDocumentPayments = pgTable(
     paidAt: date("paid_at").notNull(),
     method: text("method"),
     note: text("note"),
+    reconciliationKey: text("reconciliation_key"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
   (table) => [
     index("idx_charge_document_payments_user_id").on(table.userId),
     index("idx_charge_document_payments_document_id").on(table.documentId),
+    uniqueIndex("uq_charge_document_payments_reconciliation_key")
+      .on(table.userId, table.reconciliationKey)
+      .where(sql`${table.reconciliationKey} IS NOT NULL`),
     check("charge_document_payments_amount_check", sql`${table.amount} > 0`),
     check(
       "charge_document_payments_method_check",
       sql`${table.method} IS NULL OR ${table.method} IN ('bank_transfer', 'bit', 'cash', 'check', 'credit', 'other')`
+    ),
+    check(
+      "charge_document_payments_reconciliation_key_check",
+      sql`${table.reconciliationKey} IS NULL OR length(${table.reconciliationKey}) BETWEEN 8 AND 200`
     ),
   ]
 );

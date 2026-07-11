@@ -9,13 +9,15 @@ import { Tabs } from "@/components/ui/tabs";
 import AdHocReportTab from "./AdHocReportTab";
 import BillableTab from "./BillableTab";
 import DocumentsTab from "./DocumentsTab";
+import PaymentReconciliationTab from "./PaymentReconciliationTab";
 
-type Tab = "billable" | "documents" | "report";
+type Tab = "billable" | "documents" | "payments" | "report";
 type BillingStage = "client" | "work" | "document" | "payment";
 
 const TAB_KEYS: [Tab, string][] = [
   ["billable", "tabs.billable"],
   ["documents", "tabs.documents"],
+  ["payments", "tabs.payments"],
   ["report", "tabs.report"],
 ];
 
@@ -31,7 +33,7 @@ export default function SettlementPage() {
     if (typeof window === "undefined") return;
     const p = new URLSearchParams(window.location.search);
     const requestedTab = p.get("tab");
-    if (requestedTab === "billable" || requestedTab === "documents" || requestedTab === "report") {
+    if (requestedTab === "billable" || requestedTab === "documents" || requestedTab === "payments" || requestedTab === "report") {
       queueMicrotask(() => setTab(requestedTab));
     } else if (p.has("clientId") || p.has("projectId") || p.has("startDate") || p.has("endDate")) {
       // Intentional one-time, URL-driven tab selection on mount. Using an effect
@@ -47,7 +49,7 @@ export default function SettlementPage() {
     window.history.replaceState({}, "", `${url.pathname}${url.search}`);
   }, []);
 
-  const activeStage: BillingStage = tab === "documents" ? "document" : billingStage;
+  const activeStage: BillingStage = tab === "payments" ? "payment" : tab === "documents" ? "document" : billingStage;
   const stageOrder: BillingStage[] = ["client", "work", "document", "payment"];
   const activeStageIndex = stageOrder.indexOf(activeStage);
 
@@ -111,6 +113,7 @@ export default function SettlementPage() {
           />
         )}
         {tab === "report" && <AdHocReportTab />}
+        {tab === "payments" && <PaymentReconciliationTab />}
       </PageContainer>
     </AppLayout>
   );

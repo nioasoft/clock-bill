@@ -2,6 +2,11 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { adminQuery } from "@/lib/db";
 import { isValidPublicToken } from "@/lib/public-token";
+import {
+  buildPublicDocumentHistory,
+  type PublicDocumentHistoryEvent,
+  type PublicPaymentEvent,
+} from "@/lib/public-charge-document";
 import PublicChargeDocument from "./PublicChargeDocument";
 import type {
   PdfChargeDocument as PdfDoc,
@@ -11,7 +16,10 @@ import type {
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
+  referrer: "no-referrer",
 };
+
+export const dynamic = "force-dynamic";
 
 type Params = { params: Promise<{ locale: string; token: string }> };
 
@@ -25,6 +33,7 @@ interface LoadResult {
   primaryText: "light" | "dark";
   locale: "he" | "en";
   paidSum: number;
+  history: PublicDocumentHistoryEvent[];
 }
 
 /** Token-scoped public read via the privileged connection (RLS bypass). */
@@ -34,7 +43,7 @@ async function loadByToken(token: string): Promise<LoadResult | null> {
   const docRes = await adminQuery(
     `SELECT d.id, d.doc_number, d.status, d.currency, d.total, d.notes, d.issued_at,
             d.vat_rate_snapshot, d.summary_mode, d.show_date_range, d.pdf_template, d.document_language,
-            d.discount_type, d.discount_value,
+            d.discount_type, d.discount_value, d.last_sent_at,
             c.name AS client_name, c.document_language AS client_doc_language,
             d.user_id
        FROM charge_documents d
@@ -101,12 +110,23 @@ async function loadByToken(token: string): Promise<LoadResult | null> {
   const locale: "he" | "en" = setting ?? (doc.currency === "ILS" ? "he" : "en");
 
   const payRes = await adminQuery(
-    `SELECT COALESCE(SUM(amount), 0) AS paid_sum
+    `SELECT amount, paid_at::text AS paid_at, method
        FROM charge_document_payments
-      WHERE document_id = $1 AND user_id = $2`,
+      WHERE document_id = $1 AND user_id = $2
+      ORDER BY paid_at DESC, created_at DESC`,
     [documentId, userId]
   );
-  const paidSum = Number(payRes.rows[0]?.paid_sum ?? 0);
+  const payments: PublicPaymentEvent[] = payRes.rows.map((row) => ({
+    amount: Number(row.amount),
+    paidAt: String(row.paid_at),
+    method: (row.method as PublicPaymentEvent["method"]) ?? null,
+  }));
+  const paidSum = payments.reduce((sum, payment) => sum + payment.amount, 0);
+  const history = buildPublicDocumentHistory({
+    issuedAt: doc.issued_at,
+    lastSentAt: d.last_sent_at ? new Date(d.last_sent_at as string).toISOString() : null,
+    payments,
+  });
 
   return {
     doc,
@@ -118,6 +138,7 @@ async function loadByToken(token: string): Promise<LoadResult | null> {
     primaryText: p.pdf_primary_text === "dark" ? "dark" : "light",
     locale,
     paidSum,
+    history,
   };
 }
 
