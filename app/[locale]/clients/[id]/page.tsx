@@ -282,23 +282,23 @@ export default function ClientDetailsPage() {
               </div>
             )}
             <div className="flex justify-end gap-2">
-              <button
+              <Button
                 onClick={() => {
                   setShowDeleteConfirm(false);
                   setFormError("");
                 }}
-                className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted bg-card"
+                variant="outline"
                 disabled={submitting}
               >
                 {t("cancel")}
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleDelete}
                 disabled={submitting}
-                className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
+                variant="destructive"
               >
                 {submitting ? t("deleting") : t("deleteClient")}
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -602,7 +602,7 @@ export default function ClientDetailsPage() {
               </div>
 
               <div className="flex justify-end gap-2">
-                <button
+                <Button
                   type="button"
                   onClick={() => {
                     setShowEditForm(false);
@@ -611,18 +611,17 @@ export default function ClientDetailsPage() {
                       setFormData(clientToFormData(client));
                     }
                   }}
-                  className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted"
+                  variant="outline"
                   disabled={submitting}
                 >
                   {t("cancel")}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                 >
                   {submitting ? t("saving") : t("saveChanges")}
-                </button>
+                </Button>
               </div>
             </form>
           </div>

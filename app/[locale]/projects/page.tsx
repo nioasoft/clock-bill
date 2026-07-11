@@ -18,6 +18,7 @@ import { ROUNDING_MODES, type RoundingMode } from "@/lib/rounding";
 import { useTranslations, useLocale } from "next-intl";
 import { SimpleSelect } from "@/components/ui/simple-select";
 import { useClients, projectsQueryKey } from "@/hooks/use-clients";
+import { Button } from "@/components/ui/button";
 
 interface Client {
   id: string;
@@ -285,37 +286,40 @@ function ProjectsPageContent() {
       <PageContainer>
         <PageHeader title={t("pageTitle")}>
           {statusFilter === "active" && (
-            <button
+            <Button
               onClick={() => setShowForm(!showForm)}
-              className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
             >
               {showForm ? t("cancel") : t("newProject")}
-            </button>
+            </Button>
           )}
         </PageHeader>
 
         {/* Status Filter Tabs */}
         <div className="flex gap-2 mb-6">
-          <button
+          <Button
             onClick={() => setStatusFilter("active")}
-            className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
+            variant="ghost"
+            aria-pressed={statusFilter === "active"}
+            className={`rounded-full px-5 ${
               statusFilter === "active"
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-muted"
             }`}
           >
             {t("filter.active")}
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setStatusFilter("archived")}
-            className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
+            variant="ghost"
+            aria-pressed={statusFilter === "archived"}
+            className={`rounded-full px-5 ${
               statusFilter === "archived"
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-muted"
             }`}
           >
             {t("filter.archived")}
-          </button>
+          </Button>
         </div>
         {/* Add Project Form */}
         {showForm && (
@@ -561,7 +565,7 @@ function ProjectsPageContent() {
               </fieldset>
 
               <div className="flex justify-end gap-3 border-t border-border pt-5">
-                <button
+                <Button
                   type="button"
                   onClick={() => {
                     setShowForm(false);
@@ -579,18 +583,17 @@ function ProjectsPageContent() {
                       notes: "",
                     });
                   }}
-                  className="rounded-[var(--radius)] border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+                  variant="outline"
                   disabled={submitting}
                 >
                   {t("cancel")}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-[var(--radius)] bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
                 >
                   {submitting ? t("form.saving") : t("form.saveProject")}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -703,12 +706,14 @@ function ProjectsPageContent() {
                       </td>
                       {statusFilter === "archived" && (
                         <td className="whitespace-nowrap px-6 py-4">
-                          <button
+                          <Button
                             onClick={(e) => handleRestore(project.id, e)}
-                            className="text-sm font-medium text-success hover:text-success/90"
+                            variant="ghost"
+                            size="sm"
+                            className="text-success hover:text-success"
                           >
                             {t("restore")}
-                          </button>
+                          </Button>
                         </td>
                       )}
                     </tr>
@@ -750,12 +755,13 @@ function ProjectsPageContent() {
 
                   {statusFilter === "archived" && (
                     <div className="mt-3">
-                      <button
+                      <Button
                         onClick={(e) => handleRestore(project.id, e)}
-                        className="min-h-[44px] rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-success transition-colors hover:bg-surface"
+                        variant="outline"
+                        className="text-success"
                       >
                         {t("restore")}
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>

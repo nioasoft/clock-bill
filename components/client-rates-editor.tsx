@@ -1,9 +1,10 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { fieldClass } from "@/lib/form-styles";
 import { CURRENCY_SYMBOLS } from "@/lib/currency";
 import { SimpleSelect } from "@/components/ui/simple-select";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { ClientRateInput, RateKind } from "@/lib/schemas/rates";
 
 interface ClientRatesEditorProps {
@@ -99,50 +100,52 @@ export function ClientRatesEditor({ rates, currency, onChange, projects = [], di
   /** One compact rate row. `showDefault` renders the default-radio cell (hourly only). */
   const row = (r: ClientRateInput, idx: number, unit: string, showDefault: boolean) => (
     <div key={idx} className="space-y-1">
-      <div className="flex items-center gap-2">
+      <div className="grid grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center gap-2 sm:flex">
       {showDefault ? (
-        <input
-          type="radio"
-          name="defaultHourly"
-          checked={r.isDefault}
-          onChange={() => setDefault(idx)}
-          className="h-4 w-4 shrink-0 accent-primary"
-          disabled={disabled}
-          aria-label={t("defaultRateAria")}
-          title={t("defaultBadge")}
-        />
+        <label className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-[var(--radius)] hover:bg-muted">
+          <input
+            type="radio"
+            name="defaultHourly"
+            checked={r.isDefault}
+            onChange={() => setDefault(idx)}
+            className="h-5 w-5 accent-primary"
+            disabled={disabled}
+            aria-label={t("defaultRateAria")}
+            title={t("defaultBadge")}
+          />
+        </label>
       ) : (
-        <span className="w-4 shrink-0" aria-hidden />
+        <span className="h-11 w-11 shrink-0" aria-hidden />
       )}
-      <input
+      <Input
         type="text"
         value={r.name}
         onChange={(e) => updateRate(idx, { name: e.target.value })}
         placeholder={showDefault ? t("rateNameHourlyPlaceholder") : t("rateNameItemPlaceholder")}
-        className={`${fieldClass(false)} min-w-0 flex-1`}
+        className="min-w-0 flex-1"
         disabled={disabled}
       />
       {!showDefault && (
-        <input
+        <Input
           type="text"
           list="unit-suggestions"
           value={r.unit ?? ""}
           onChange={(e) => updateRate(idx, { unit: e.target.value || null })}
           placeholder={t("unitPlaceholder")}
-          className={`${fieldClass(false)} w-28 shrink-0 sm:w-32`}
+          className="col-start-2 col-span-2 min-w-0 sm:w-32 sm:shrink-0"
           disabled={disabled}
           aria-label={t("unitAria")}
           maxLength={30}
         />
       )}
-      <div className="relative w-32 shrink-0 sm:w-36">
-        <input
+      <div className="relative col-start-2 col-span-2 min-w-0 sm:w-36 sm:shrink-0">
+        <Input
           type="number"
           min="0"
           step="0.01"
           value={r.rate || ""}
           onChange={(e) => updateRate(idx, { rate: parseFloat(e.target.value) || 0 })}
-          className={`${fieldClass(false)} font-mono pe-12`}
+          className="font-mono pe-12"
           disabled={disabled}
           placeholder="0.00"
         />
@@ -150,26 +153,28 @@ export function ClientRatesEditor({ rates, currency, onChange, projects = [], di
           {symbol}/{r.unit?.trim() || unit}
         </span>
       </div>
-      <button
+      <Button
         type="button"
         onClick={() => removeRate(idx)}
-        className="shrink-0 rounded-[var(--radius)] px-2 py-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+        variant="ghost"
+        size="icon"
+        className="col-start-3 row-start-1 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive sm:col-auto sm:row-auto"
         disabled={disabled}
         aria-label={t("remove")}
         title={t("remove")}
       >
-        ✕
-      </button>
+        <span aria-hidden="true">✕</span>
+      </Button>
       </div>
       {projects.length > 0 && (
-        <div className="flex items-center gap-2 ps-6">
+        <div className="flex flex-col gap-1.5 ps-[3.25rem] sm:flex-row sm:items-center">
           <span className="shrink-0 text-xs text-muted-foreground">{t("rateScopeLabel")}</span>
           <SimpleSelect
             value={r.projectId ?? ""}
             onChange={(v) => setScope(idx, v || null)}
             disabled={disabled}
             aria-label={t("rateScopeAria")}
-            className="h-8 w-auto min-w-44 px-2 text-xs"
+            className="min-h-11 w-full px-2 text-sm sm:w-auto sm:min-w-44"
             options={[
               { value: "", label: t("rateScopeAll") },
               ...projects.map((p) => ({ value: p.id, label: p.name })),
@@ -183,14 +188,16 @@ export function ClientRatesEditor({ rates, currency, onChange, projects = [], di
   const sectionHeader = (title: string, addLabel: string, kind: RateKind) => (
     <div className="flex items-center justify-between">
       <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</span>
-      <button
+      <Button
         type="button"
         onClick={() => addRate(kind)}
-        className="rounded-[var(--radius)] px-2 py-1 text-sm font-medium text-primary hover:bg-primary/10"
+        variant="ghost"
+        size="sm"
+        className="text-primary hover:bg-primary/10 hover:text-primary"
         disabled={disabled}
       >
         {addLabel}
-      </button>
+      </Button>
     </div>
   );
 

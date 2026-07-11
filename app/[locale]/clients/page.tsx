@@ -37,6 +37,7 @@ import { resolveDocumentLocale } from "@/lib/document-language";
 import { useProfile } from "@/hooks/use-profile";
 import { useQueryClient } from "@tanstack/react-query";
 import { clientsQueryKey } from "@/hooks/use-clients";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 interface Client {
   id: string;
@@ -549,7 +550,7 @@ function ClientsPageContent() {
     <AppLayout>
       <PageContainer>
         <PageHeader title={t("pageTitle")}>
-          <button
+          <Button
             onClick={() => {
               if (!showForm) {
                 setEditingClient(null);
@@ -564,10 +565,9 @@ function ClientsPageContent() {
               setShowForm(!showForm);
             }}
             disabled={!showForm && atClientLimit}
-            className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {showForm ? t("cancel") : t("newClientButton")}
-          </button>
+          </Button>
         </PageHeader>
         {plan && <PlanUsageBanner active={plan.activeCount} limit={plan.clientLimit} />}
         {/* Add/Edit Client Form */}
@@ -923,41 +923,42 @@ function ClientsPageContent() {
                     </p>
                   </div>
                   {editingClient.isActive ? (
-                    <button
+                    <Button
                       type="button"
                       onClick={() => handleDelete(editingClient)}
-                      className="shrink-0 rounded-[var(--radius)] border border-destructive/30 px-3 py-1.5 text-sm text-destructive transition-colors hover:bg-destructive/10"
+                      variant="outline"
+                      className="shrink-0 border-destructive/30 text-destructive hover:bg-destructive/10"
                     >
                       {t("archiveClientButton")}
-                    </button>
+                    </Button>
                   ) : (
-                    <button
+                    <Button
                       type="button"
                       onClick={() => handleRestore(editingClient)}
-                      className="shrink-0 rounded-[var(--radius)] border border-success/30 px-3 py-1.5 text-sm text-success transition-colors hover:bg-success/10"
+                      variant="outline"
+                      className="shrink-0 border-success/30 text-success hover:bg-success/10"
                     >
                       {t("restoreClientButton")}
-                    </button>
+                    </Button>
                   )}
                 </div>
               )}
 
               <div className="flex justify-end gap-3 border-t border-border pt-5">
-                <button
+                <Button
                   type="button"
                   onClick={handleCancelEdit}
-                  className="rounded-[var(--radius)] border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+                  variant="outline"
                   disabled={submitting}
                 >
                   {t("cancel")}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-[var(--radius)] bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
                 >
                   {submitting ? t("saving") : editingClient ? t("updateClientButton") : t("saveClientButton")}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -1072,28 +1073,30 @@ function ClientsPageContent() {
                             </span>
                             <p className="text-xs text-muted-foreground">{t("usage.dataSafe")}</p>
                             <div className="flex flex-wrap items-center gap-2">
-                              <button
+                              <Button
                                 onClick={() => handleMakeActive(client.id)}
                                 disabled={makingActiveId === client.id}
-                                className="rounded-[var(--radius)] bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                                size="sm"
                               >
                                 {makingActiveId === client.id ? t("saving") : t("usage.makeActive")}
-                              </button>
+                              </Button>
                               <Link
                                 href="/pricing"
-                                className="rounded-[var(--radius)] border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted"
+                                className={buttonVariants({ variant: "outline", size: "sm" })}
                               >
                                 {t("usage.upgradeToUnlock")}
                               </Link>
                             </div>
                           </div>
                         ) : (
-                          <button
+                          <Button
                             onClick={() => handleEdit(client)}
-                            className="whitespace-nowrap text-primary hover:text-primary/90 font-medium ms-2"
+                            variant="ghost"
+                            size="sm"
+                            className="ms-2 whitespace-nowrap text-primary hover:text-primary"
                           >
                             {t("edit")}
-                          </button>
+                          </Button>
                         )}
                       </td>
                     </tr>
@@ -1162,16 +1165,15 @@ function ClientsPageContent() {
                         <span className="text-xs text-muted-foreground">{t("usage.dataSafe")}</span>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        <button
+                        <Button
                           onClick={() => handleMakeActive(client.id)}
                           disabled={makingActiveId === client.id}
-                          className="min-h-[44px] rounded-[var(--radius)] bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {makingActiveId === client.id ? t("saving") : t("usage.makeActive")}
-                        </button>
+                        </Button>
                         <Link
                           href="/pricing"
-                          className="inline-flex min-h-[44px] items-center rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
+                          className={buttonVariants({ variant: "outline" })}
                         >
                           {t("usage.upgradeToUnlock")}
                         </Link>
@@ -1179,12 +1181,12 @@ function ClientsPageContent() {
                     </div>
                   ) : (
                     <div className="mt-3">
-                      <button
+                      <Button
                         onClick={() => handleEdit(client)}
-                        className="min-h-[44px] rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface"
+                        variant="outline"
                       >
                         {t("edit")}
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -1204,20 +1206,20 @@ function ClientsPageContent() {
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-2">
-            <button
+            <Button
               onClick={cancelDelete}
               disabled={deleting}
-              className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted disabled:opacity-50"
+              variant="outline"
             >
               {t("cancel")}
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={confirmDelete}
               disabled={deleting}
-              className="rounded-[var(--radius-card)] bg-destructive px-4 py-2 text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
+              variant="destructive"
             >
               {deleting ? t("archiving") : t("archiveAction")}
-            </button>
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
