@@ -98,7 +98,7 @@ export function PricingClient() {
       <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius)] px-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ArrowRight className="h-4 w-4 rtl:-scale-x-100" />
           {t("title")}
@@ -126,13 +126,14 @@ export function PricingClient() {
         <div className="mb-10 flex justify-center">
           <div
             role="group"
+            aria-label={t("title")}
             className="inline-flex items-center gap-1 rounded-[var(--radius)] border border-border bg-card p-1"
           >
             <button
               type="button"
               onClick={() => setInterval("monthly")}
               aria-pressed={interval === "monthly"}
-              className={`rounded-[calc(var(--radius)-2px)] px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+              className={`min-h-11 rounded-[calc(var(--radius)-2px)] px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 interval === "monthly"
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground"
@@ -144,7 +145,7 @@ export function PricingClient() {
               type="button"
               onClick={() => setInterval("annual")}
               aria-pressed={interval === "annual"}
-              className={`inline-flex items-center gap-2 rounded-[calc(var(--radius)-2px)] px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+              className={`inline-flex min-h-11 items-center gap-2 rounded-[calc(var(--radius)-2px)] px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 interval === "annual"
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground"
@@ -177,9 +178,18 @@ export function PricingClient() {
             isCurrent={subscribedTier === "free"}
             highlight={false}
           >
-            <Button variant="outline" className="w-full" disabled>
-              {subscribedTier === "free" ? t("currentPlan") : t("free.cta")}
-            </Button>
+            {subscribedTier === "free" ? (
+              <Button variant="outline" className="w-full" disabled>
+                {t("currentPlan")}
+              </Button>
+            ) : (
+              <Link
+                href="/register"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-[var(--radius)] border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                {t("free.cta")}
+              </Link>
+            )}
           </PlanCard>
 
           {/* Paid tiers */}
@@ -296,8 +306,8 @@ function PlanCard({
 }: PlanCardProps) {
   return (
     <div
-      className={`flex flex-col rounded-[var(--radius-card)] border bg-card p-6 ${
-        highlight ? "border-primary" : "border-border"
+      className={`flex flex-col rounded-[var(--radius-card)] border p-6 ${
+        highlight ? "border-primary bg-primary/5" : "border-border bg-card"
       } ${isCurrent ? "ring-1 ring-primary" : ""}`}
     >
       <div className="mb-4">

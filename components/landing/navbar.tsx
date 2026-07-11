@@ -46,12 +46,6 @@ export async function LandingNavbar() {
           >
             {t("nav.features")}
           </a>
-          <a
-            href="#themes"
-            className="inline-flex min-h-11 items-center rounded-full px-3 text-sm text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {t("nav.themes")}
-          </a>
           <Link
             href="/pricing"
             className="inline-flex min-h-11 items-center rounded-full px-3 text-sm text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

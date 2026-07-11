@@ -27,58 +27,61 @@ export function LandingFooter() {
           </div>
 
           {/* Navigation links */}
-          <nav aria-label={t("footer.navAriaLabel")} className="flex flex-wrap gap-6 text-sm">
+          <nav
+            aria-label={t("footer.navAriaLabel")}
+            className="flex flex-wrap gap-x-5 gap-y-1 text-sm"
+          >
             <a
               href="#how-it-works"
-              className="text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors"
+              className="inline-flex min-h-11 items-center text-sidebar-foreground/80 transition-colors hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {t("footer.howItWorks")}
             </a>
             <a
               href="#features"
-              className="text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors"
+              className="inline-flex min-h-11 items-center text-sidebar-foreground/80 transition-colors hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {t("footer.features")}
             </a>
             <a
               href="#faq"
-              className="text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors"
+              className="inline-flex min-h-11 items-center text-sidebar-foreground/80 transition-colors hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {t("footer.faq")}
             </a>
             <Link
               href="/pricing"
-              className="text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors"
+              className="inline-flex min-h-11 items-center text-sidebar-foreground/80 transition-colors hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {t("footer.pricing")}
             </Link>
             <Link
               href="/login"
-              className="text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors"
+              className="inline-flex min-h-11 items-center text-sidebar-foreground/80 transition-colors hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {t("footer.login")}
             </Link>
             <Link
               href="/privacy"
-              className="text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors"
+              className="inline-flex min-h-11 items-center text-sidebar-foreground/80 transition-colors hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {t("footer.privacy")}
             </Link>
             <Link
               href="/terms"
-              className="text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors"
+              className="inline-flex min-h-11 items-center text-sidebar-foreground/80 transition-colors hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {t("footer.terms")}
             </Link>
             <Link
               href="/contact"
-              className="text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors"
+              className="inline-flex min-h-11 items-center text-sidebar-foreground/80 transition-colors hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {t("footer.contact")}
             </Link>
             <Link
               href="/accessibility"
-              className="text-sidebar-foreground/80 transition-colors hover:text-sidebar-foreground"
+              className="inline-flex min-h-11 items-center text-sidebar-foreground/80 transition-colors hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {t("footer.accessibility")}
             </Link>

@@ -134,6 +134,27 @@ function run(): void {
   assert(!sources.includes("getBoundingClientRect"), "Landing cards must not measure layout on pointer movement");
   assert(!sources.includes("IntersectionObserver"), "Landing components must not ship unused observers");
 
+  const homeSource = readProjectSource("app", "[locale]", "page.tsx");
+  const landingNavSource = readProjectSource("components", "landing", "navbar.tsx");
+  const landingFooterSource = readProjectSource("components", "landing", "footer.tsx");
+  const pricingSource = readProjectSource("app", "[locale]", "pricing", "pricing-client.tsx");
+  assert(
+    !homeSource.includes("<Highlights") && !homeSource.includes("<ThemeShowcase"),
+    "The landing narrative must not repeat the product tour with secondary showcases"
+  );
+  assert(
+    !landingNavSource.includes('href="#themes"'),
+    "The primary landing navigation must prioritize the workflow, product, and pricing"
+  );
+  assert(
+    landingFooterSource.includes("min-h-11"),
+    "Landing footer links must provide touch-friendly targets"
+  );
+  assert(
+    pricingSource.includes('href="/register"') && pricingSource.includes("min-h-11"),
+    "Pricing must offer a usable free-plan path and touch-friendly controls"
+  );
+
   const dashboardPreviewSource = readProjectSource("components", "dashboard-customizer.tsx");
   const pdfPreviewSource = readProjectSource("components", "pdf-preview.tsx");
   const clientsPageSource = readProjectSource("app", "[locale]", "clients", "page.tsx");
