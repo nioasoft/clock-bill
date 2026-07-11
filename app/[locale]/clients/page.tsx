@@ -710,6 +710,9 @@ function ClientsPageContent() {
                       disabled={submitting}
                       options={CURRENCIES.map((c) => ({ value: c.value, label: c.label }))}
                     />
+                    <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
+                      {t("currencyPolicyHint")}
+                    </p>
                   </div>
 
                   <div>
