@@ -4,13 +4,21 @@ import { getUser } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { createLogger } from "@/lib/logger";
 import { createWorkTemplateSchema } from "@/lib/schemas/work-templates";
+import { parseBody } from "@/lib/api-validation";
 
 const logger = createLogger("api:work-templates");
+
+async function enforceTemplateRateLimit(userId: string, name: string, limit: number) {
+  const { enforceRateLimit } = await import("@/lib/rate-limit");
+  return enforceRateLimit({ name, identifier: userId, limit, windowSec: 60 });
+}
 
 export async function GET() {
   try {
     const user = await getUser();
     if (!user) return NextResponse.json({ success: false, error_code: "UNAUTHORIZED" }, { status: 401 });
+    const limited = await enforceTemplateRateLimit(user.id, "work-templates-read", 60);
+    if (limited) return limited;
     const result = await query(
       `SELECT wt.id, wt.client_id AS "clientId", wt.project_id AS "projectId",
               wt.rate_id AS "rateId", wt.title, wt.description, wt.notes,
@@ -36,10 +44,10 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getUser();
     if (!user) return NextResponse.json({ success: false, error_code: "UNAUTHORIZED" }, { status: 401 });
-    const parsed = createWorkTemplateSchema.safeParse(await request.json());
-    if (!parsed.success) {
-      return NextResponse.json({ success: false, error_code: "VALIDATION_ERROR" }, { status: 400 });
-    }
+    const limited = await enforceTemplateRateLimit(user.id, "work-templates-write", 20);
+    if (limited) return limited;
+    const parsed = await parseBody(request, createWorkTemplateSchema);
+    if (!parsed.ok) return parsed.response;
     const input = parsed.data;
     const ownership = await query<{ valid: boolean }>(
       `SELECT EXISTS(

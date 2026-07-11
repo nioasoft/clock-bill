@@ -15,4 +15,7 @@ if (!listSource.includes("getUser()") || !deleteSource.includes("getUser()")) th
 if ((listSource.match(/user_id = \$1/g) ?? []).length < 3) throw new Error("tenant scoping missing");
 if (!deleteSource.includes("user_id = $2")) throw new Error("delete ownership missing");
 if (!listSource.includes("LIMIT 50")) throw new Error("list limit missing");
+if (!listSource.includes("parseBody(request, createWorkTemplateSchema)")) throw new Error("shared body validation missing");
+if (!listSource.includes("work-templates-write") || !deleteSource.includes("work-templates-write")) throw new Error("write rate limit missing");
+if (!deleteSource.includes("z.string().uuid()")) throw new Error("template id validation missing");
 console.log("✅ work-templates: schema and tenant contracts pass");
