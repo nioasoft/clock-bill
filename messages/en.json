@@ -611,6 +611,91 @@
       "refreshFailed": "Done — refresh the page to see the update"
     },
     "pageTitle": "Clients",
+    "workspace": {
+      "missingContact": "No contact details yet",
+      "logWork": "Log work",
+      "newProject": "New project",
+      "editDetails": "Edit details",
+      "tabsLabel": "Client workspace sections",
+      "tabs": {
+        "overview": "Overview",
+        "projects": "Projects & work",
+        "billing": "Pricing & billing",
+        "details": "Details & notes"
+      },
+      "loading": "Loading client workspace…",
+      "error": "We couldn’t load the workspace data. Client details remain available; refresh to try again.",
+      "hours": "{hours} hours",
+      "dayOfMonth": "Day {day} of each month",
+      "moneyTrail": {
+        "title": "Money trail",
+        "description": "Each amount stays connected to the work and document that created it.",
+        "tracked": "Tracked work",
+        "unbilled": "Unbilled",
+        "outstanding": "Open documents",
+        "paid": "Payments recorded",
+        "otherCurrency": "Older documents in another currency are excluded"
+      },
+      "nextAction": {
+        "title": "Next action",
+        "followPayment": {
+          "title": "Follow up on payment",
+          "description": "At least one issued document still has an open balance.",
+          "action": "Review documents"
+        },
+        "createDocument": {
+          "title": "Turn work into a document",
+          "description": "Billable work is ready for review and settlement.",
+          "action": "Create document"
+        },
+        "createProject": {
+          "title": "Create the first project",
+          "description": "Projects connect the client, tracked work and pricing.",
+          "action": "New project"
+        },
+        "logWork": {
+          "title": "Log the next piece of work",
+          "description": "The account is clear and ready for the next entry.",
+          "action": "Log work"
+        }
+      },
+      "contact": { "title": "Client context" },
+      "projects": {
+        "title": "Active projects",
+        "description": "The work currently moving for this client.",
+        "viewAll": "View all",
+        "allTitle": "Projects & work",
+        "allDescription": "Hours, unbilled value and the last activity for every project.",
+        "empty": "No projects yet",
+        "emptyHint": "Create a project to connect work and pricing to this client.",
+        "lastWork": "Last work: {date}",
+        "noWork": "No work logged yet",
+        "open": "Open {name}"
+      },
+      "billing": {
+        "title": "Pricing & billing",
+        "description": "Define the default once, then override only where the work truly differs.",
+        "edit": "Edit pricing",
+        "hierarchyTitle": "Effective rate hierarchy",
+        "accountDefault": "Account default",
+        "clientDefault": "Client default",
+        "projectOverride": "Project override",
+        "fallback": "Fallback",
+        "notSet": "Not set",
+        "overrideCount": "{count} scoped rates",
+        "hierarchyHint": "A project-specific rate wins. Otherwise ClockBill uses the client default, then the account fallback.",
+        "rateName": "Rate or item",
+        "price": "Price",
+        "appliesTo": "Applies to",
+        "rulesTitle": "Document & billing rules"
+      },
+      "details": {
+        "title": "Client details",
+        "noNotes": "No notes have been added.",
+        "archiveTitle": "Archive client",
+        "archiveDescription": "Archive hides this client from active work without deleting history."
+      }
+    },
     "workspaceListTitle": "Client workspace",
     "workspaceListDescription": "See who needs attention and move from tracked work to payment.",
     "searchLabel": "Search clients",

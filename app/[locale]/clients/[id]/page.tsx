@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useRouter } from "@/src/i18n/navigation";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
@@ -13,10 +13,15 @@ import { cleanClientRates } from "@/lib/schemas/rates";
 import type { ClientRate, ClientRateInput } from "@/lib/schemas/rates";
 import { ROUNDING_MODES, type RoundingMode } from "@/lib/rounding";
 import { messageForError } from "@/lib/api-error";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { SimpleSelect } from "@/components/ui/simple-select";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { resolveDocumentLocale } from "@/lib/document-language";
+import {
+  ClientWorkspace,
+  type ClientWorkspaceData,
+  type ClientWorkspaceTab,
+} from "@/components/clients/client-workspace";
 
 const CURRENCIES = [
   { value: "ILS", label: "₪ ILS" },
@@ -83,10 +88,15 @@ export default function ClientDetailsPage() {
   const t = useTranslations("Clients");
   const tRoot = useTranslations();
   const tRounding = useTranslations("Rounding");
-  const intlLocale = useLocale() === "en" ? "en-US" : "he-IL";
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const clientId = params.id as string;
+  const requestedTab = searchParams.get("tab");
+  const activeTab: ClientWorkspaceTab =
+    requestedTab === "projects" || requestedTab === "billing" || requestedTab === "details"
+      ? requestedTab
+      : "overview";
 
   const [client, setClient] = useState<Client | null>(null);
   const [clientLoading, setClientLoading] = useState(true);
@@ -115,7 +125,9 @@ export default function ClientDetailsPage() {
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [clientProjects, setClientProjects] = useState<{id: string; name: string; status: string}[]>([]);
-  const [projectsLoading, setProjectsLoading] = useState(true);
+  const [workspaceData, setWorkspaceData] = useState<ClientWorkspaceData | null>(null);
+  const [workspaceLoading, setWorkspaceLoading] = useState(true);
+  const [workspaceError, setWorkspaceError] = useState(false);
   const editFormRef = useRef<HTMLDivElement>(null);
   const ratesEditorRef = useRef<HTMLDivElement>(null);
   // When the edit form is opened via "ערוך תעריפים", land on the rates editor
@@ -160,22 +172,33 @@ export default function ClientDetailsPage() {
   }, [clientId, t, tRoot]);
 
   useEffect(() => {
-    const fetchClientProjects = async () => {
+    const fetchWorkspace = async () => {
       if (!clientId) return;
       try {
-        setProjectsLoading(true);
-        const response = await fetch(`/api/projects?clientId=${clientId}`);
+        setWorkspaceLoading(true);
+        setWorkspaceError(false);
+        const response = await fetch(`/api/clients/${clientId}/workspace`);
         const data = await response.json();
         if (data.success) {
-          setClientProjects(data.projects || []);
+          setWorkspaceData(data.workspace);
+          setClientProjects(
+            (data.workspace.projects ?? []).map((project: { id: string; name: string; status: string }) => ({
+              id: project.id,
+              name: project.name,
+              status: project.status,
+            }))
+          );
+        } else {
+          setWorkspaceError(true);
         }
       } catch (error) {
-        console.error("Error fetching client projects:", error);
+        console.error("Error fetching client workspace:", error);
+        setWorkspaceError(true);
       } finally {
-        setProjectsLoading(false);
+        setWorkspaceLoading(false);
       }
     };
-    fetchClientProjects();
+    fetchWorkspace();
   }, [clientId]);
 
   const handleEdit = async (e: React.FormEvent) => {
@@ -632,233 +655,29 @@ export default function ClientDetailsPage() {
         )}
 
         {clientLoading ? (
-          <div className="rounded-[var(--radius-card)] bg-card p-8 border border-border text-center text-muted-foreground" role="status" aria-live="polite">
-            {t("loadingClientData")}
+          <div className="space-y-4" role="status" aria-live="polite">
+            <span className="sr-only">{t("loadingClientData")}</span>
+            <div className="h-28 animate-pulse rounded-[var(--radius-card)] bg-surface" />
+            <div className="h-14 animate-pulse rounded-[var(--radius)] bg-surface" />
+            <div className="h-64 animate-pulse rounded-[var(--radius-card)] bg-surface" />
           </div>
         ) : error ? (
-          <div className="rounded-[var(--radius-card)] bg-card p-8 border border-border">
-            <div className="rounded-md bg-destructive/10 p-4 text-destructive" role="alert">{error}</div>
-          </div>
-        ) : !client ? (
-          <div className="rounded-[var(--radius-card)] bg-card p-8 border border-border text-center text-muted-foreground">
-            {t("clientNotFound")}
-          </div>
+          <div className="rounded-[var(--radius)] border border-destructive/25 bg-destructive/10 p-5 text-destructive" role="alert">{error}</div>
+        ) : client ? (
+          <ClientWorkspace
+            client={client}
+            data={workspaceData}
+            dataLoading={workspaceLoading}
+            dataError={workspaceError}
+            activeTab={activeTab}
+            onEditDetails={() => openEditForm(false)}
+            onEditBilling={() => openEditForm(true)}
+            onArchive={() => setShowDeleteConfirm(true)}
+          />
         ) : (
-          <>
-          <div className="rounded-[var(--radius-card)] bg-card p-5 sm:p-6 border border-border">
-            <div className="flex items-start justify-between gap-3 border-b border-border pb-4 mb-4">
-              <div className="min-w-0">
-                <h2 className="font-display text-2xl font-bold tracking-tight text-foreground truncate">{client.name}</h2>
-                {client.contactName && (
-                  <p className="text-sm text-muted-foreground mt-0.5">{t("contactNameInline", { name: client.contactName })}</p>
-                )}
-              </div>
-              <span className={`inline-flex shrink-0 items-center rounded-[var(--radius)] border px-2.5 py-0.5 text-xs font-medium ${
-                client.isActive ? "border-success/30 bg-success/10 text-success" : "border-border bg-muted text-muted-foreground"
-              }`}>
-                {client.isActive ? t("statusActive") : t("statusInactive")}
-              </span>
-            </div>
-
-            <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 text-sm">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-muted-foreground">{t("emailLabel")}</span>
-                {client.email ? (
-                  <a href={`mailto:${client.email}`} dir="ltr" className="text-primary hover:text-primary/90">{client.email}</a>
-                ) : <span className="text-muted-foreground">—</span>}
-              </div>
-              <span className="text-border">|</span>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-muted-foreground">{t("phoneLabel")}</span>
-                {client.phone ? (
-                  <a href={`tel:${client.phone}`} dir="ltr" className="text-primary hover:text-primary/90">{client.phone}</a>
-                ) : <span className="text-muted-foreground">—</span>}
-              </div>
-              {client.address && (
-                <>
-                  <span className="text-border">|</span>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-muted-foreground">{t("addressLabel")}</span>
-                    <span className="text-foreground">{client.address}</span>
-                  </div>
-                </>
-              )}
-              <span className="text-border">|</span>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-muted-foreground">{t("currencyLabel")}</span>
-                <span className="text-foreground">{CURRENCIES.find((c) => c.value === client.currency)?.label || client.currency}</span>
-              </div>
-              <span className="text-border">|</span>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-muted-foreground">{t("createdLabel")}</span>
-                <span className="text-foreground tabular-nums">{new Date(client.createdAt).toLocaleDateString(intlLocale)}</span>
-              </div>
-            </div>
-
-            {client.notes && (
-              <div className="mt-6 border-t border-border pt-6">
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">{t("notesSection")}</h3>
-                <div className="rounded-[var(--radius)] border border-border bg-card-elevated p-3">
-                  <p className="text-foreground whitespace-pre-wrap">{client.notes}</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-            {/* Rates & items */}
-            {(() => {
-              const symbol = CURRENCY_SYMBOLS[client.currency] || "₪";
-              const hourly = (client.rates ?? []).filter((r) => r.kind === "hourly");
-              const items = (client.rates ?? []).filter((r) => r.kind === "item");
-              const hasAny = hourly.length > 0 || items.length > 0 || client.isRetainer;
-              return (
-                <div className="mt-6 rounded-[var(--radius-card)] bg-card p-5 sm:p-6 border border-border">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-display text-base font-semibold text-foreground">{t("ratesAndItems")}</h3>
-                      {client.billingRounding != null && (
-                        <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-                          {tRounding(client.billingRounding as RoundingMode)}
-                        </span>
-                      )}
-                    </div>
-                    {client.isActive && (
-                      <Button variant="outline" size="sm" onClick={() => openEditForm(true)}>
-                        {t("editRates")}
-                      </Button>
-                    )}
-                  </div>
-                  {!hasAny ? (
-                    <p className="text-sm text-muted-foreground">
-                      {t("noRatesDefined", { action: t("editRates") })}
-                    </p>
-                  ) : (
-                    <div className="space-y-4">
-                      {hourly.length > 0 && (
-                        <div>
-                          <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("hourlyRatesHeader")}</h4>
-                          <ul className="space-y-1">
-                            {hourly.map((r) => (
-                              <li key={r.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-[var(--radius)] border border-border bg-card-elevated px-3 py-2">
-                                <span className="text-sm font-medium text-foreground">{r.name}</span>
-                                <span className="font-mono text-sm tabular-nums text-foreground">
-                                  {symbol}{r.rate}<span className="text-muted-foreground">{t("perHourSuffix")}</span>
-                                </span>
-                                {r.isDefault && (
-                                  <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                                    {t("defaultBadge")}
-                                  </span>
-                                )}
-                                {r.projectId && (
-                                  <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-                                    {clientProjects.find((p) => p.id === r.projectId)?.name ?? t("rateScopeAria")}
-                                  </span>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      {items.length > 0 && (
-                        <div>
-                          <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("itemsHeader")}</h4>
-                          <ul className="space-y-1">
-                            {items.map((r) => (
-                              <li key={r.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-[var(--radius)] border border-border bg-card-elevated px-3 py-2">
-                                <span className="text-sm font-medium text-foreground">{r.name}</span>
-                                <span className="font-mono text-sm tabular-nums text-foreground">
-                                  {symbol}{r.rate}<span className="text-muted-foreground">{t("perUnitSuffix")}</span>
-                                </span>
-                                {r.projectId && (
-                                  <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-                                    {clientProjects.find((p) => p.id === r.projectId)?.name ?? t("rateScopeAria")}
-                                  </span>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      {client.isRetainer && (
-                        <div>
-                          <h4 className="text-sm font-medium text-muted-foreground mb-2">{t("retainerHeader")}</h4>
-                          <div className="rounded-[var(--radius)] border border-border bg-background/50 px-3 py-2 text-sm text-foreground">
-                            <span className="tabular-nums">
-                              {t("retainerSummary", { hours: client.retainerHours ?? 0, symbol, fee: client.retainerMonthlyFee ?? 0 })}
-                            </span>
-                            {client.overageRate != null && (
-                              <span className="block text-muted-foreground">
-                                {t("overageRateSummary", { symbol, rate: client.overageRate })}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
-          </>
+          <div className="rounded-[var(--radius)] border border-border p-8 text-center text-muted-foreground">{t("clientNotFound")}</div>
         )}
 
-        {client && (
-          <div className="mt-6 rounded-[var(--radius-card)] bg-card p-5 sm:p-6 border border-border">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display text-base font-semibold text-foreground">{t("projectsHeader")}</h3>
-              <a
-                href={`/projects?create=true&clientId=${clientId}`}
-                className={buttonVariants({ variant: "outline", size: "sm" })}
-              >
-                {t("addProject")}
-              </a>
-            </div>
-            {projectsLoading ? (
-              <p className="text-sm text-muted-foreground">{t("loadingProjects")}</p>
-            ) : clientProjects.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("noProjectsYet")}</p>
-            ) : (
-              <div className="space-y-2">
-                {clientProjects.map((project) => (
-                  <a
-                    key={project.id}
-                    href={`/projects/${project.id}`}
-                    className="flex min-h-11 items-center justify-between rounded-[var(--radius)] border border-border bg-card-elevated px-3 py-2.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <span className="text-sm font-medium text-foreground">{project.name}</span>
-                    <span className={`inline-flex items-center rounded-[var(--radius)] border px-2.5 py-0.5 text-xs font-medium ${
-                      project.status === "active" ? "border-success/30 bg-success/10 text-success" :
-                      project.status === "paused" ? "border-warning/30 bg-warning/10 text-warning" :
-                      "border-border bg-muted text-muted-foreground"
-                    }`}>
-                      {project.status === "active" ? t("projectStatusActive") :
-                       project.status === "completed" ? t("projectStatusCompleted") :
-                       project.status === "paused" ? t("projectStatusPaused") :
-                       project.status === "archived" ? t("projectStatusArchived") : project.status}
-                    </span>
-                  </a>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Actions — kept at the bottom */}
-        {client && client.isActive && (
-          <div className="mt-6 flex flex-wrap items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => openEditForm()}>
-              {t("editClientButton")}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowDeleteConfirm(true)}
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-            >
-              {t("deleteClient")}
-            </Button>
-          </div>
-        )}
       </PageContainer>
     </AppLayout>
   );
