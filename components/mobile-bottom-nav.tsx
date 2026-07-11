@@ -21,7 +21,7 @@ export function MobileBottomNav() {
     return {
       name: t(item.mobileLabelKey ?? item.labelKey),
       href: item.href,
-      icon: <Icon className="h-5 w-5" />,
+      icon: <Icon className="h-5 w-5" aria-hidden="true" />,
     };
   });
 
@@ -38,28 +38,16 @@ export function MobileBottomNav() {
               key={item.href}
               href={item.href}
               className={`
-                flex flex-col items-center justify-center
-                min-w-[48px] min-h-[48px] flex-1 px-1 py-2
-                transition-all duration-200
-                active:scale-95
-                ${isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"}
+                flex min-h-[48px] min-w-[48px] flex-1 touch-manipulation flex-col items-center justify-center rounded-[var(--radius)] px-1 py-1.5
+                transition-[background-color,color,transform] duration-200
+                active:scale-[0.98] motion-reduce:active:scale-100
+                ${isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"}
               `}
               aria-label={item.name}
               aria-current={isActive ? "page" : undefined}
             >
-              <div className={`
-                flex flex-col items-center gap-0.5
-                transition-all duration-200
-                ${isActive ? "bg-primary/10 rounded-full px-3 py-1" : ""}
-              `}>
-                <div className="relative">
-                  {item.icon}
-                  {isActive && (
-                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" aria-hidden="true" />
-                  )}
-                </div>
-              </div>
-              <span className="text-[11px] mt-1 font-medium truncate w-full text-center">
+              {item.icon}
+              <span className="mt-1 w-full truncate text-center text-xs font-semibold">
                 {item.name}
               </span>
             </Link>

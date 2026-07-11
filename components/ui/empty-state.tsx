@@ -67,7 +67,7 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
       >
         {Icon && (
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-light">
-            <Icon className="h-8 w-8 text-primary" />
+            <Icon className="h-8 w-8 text-primary" aria-hidden="true" />
           </div>
         )}
         <p className="text-lg font-medium text-foreground mb-2">{message}</p>
@@ -79,7 +79,7 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
             {actionHref ? (
               <a
                 href={actionHref}
-                className="rounded-lg bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 inline-block"
+                className="inline-flex min-h-11 touch-manipulation items-center justify-center rounded-[var(--radius)] border border-primary/80 bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-[background-color,border-color] hover:border-primary-active hover:bg-primary-active"
               >
                 {actionLabel}
               </a>
@@ -95,7 +95,7 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
             {secondaryActionHref ? (
               <a
                 href={secondaryActionHref}
-                className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-muted inline-block"
+                className="inline-flex min-h-11 touch-manipulation items-center justify-center rounded-[var(--radius)] border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-[background-color,border-color] hover:border-border-strong hover:bg-card-elevated"
               >
                 {secondaryActionLabel}
               </a>

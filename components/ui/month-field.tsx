@@ -50,7 +50,7 @@ export function MonthField({ value, onChange, locale = "he", id, className = "",
         id={id}
         onClick={open}
         aria-label={ariaLabel}
-        className="inline-flex h-10 min-h-[44px] w-full items-center justify-between gap-2 rounded-[var(--radius)] border border-border bg-card px-3 text-sm text-foreground tabular-nums transition-colors hover:bg-muted/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
+        className="inline-flex h-11 w-full touch-manipulation items-center justify-between gap-2 rounded-[var(--radius)] border border-border bg-background px-3 text-sm text-foreground tabular-nums transition-[background-color,border-color,box-shadow] hover:border-border-strong hover:bg-muted/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
       >
         <Calendar className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         <span className="truncate">{label}</span>

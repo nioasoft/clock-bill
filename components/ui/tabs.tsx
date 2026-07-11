@@ -9,6 +9,9 @@ export interface TabItem {
   label: ReactNode;
   /** Optional count rendered as a muted figure after the label. */
   count?: number;
+  /** Optional tab id and controlled panel id for complete ARIA linkage. */
+  id?: string;
+  panelId?: string;
 }
 
 interface TabsProps {
@@ -90,6 +93,8 @@ export function Tabs({ tabs, active, onChange, ariaLabel, className = "" }: Tabs
             }}
             type="button"
             role="tab"
+            id={tab.id}
+            aria-controls={tab.panelId}
             aria-selected={isActive}
             tabIndex={isActive ? 0 : -1}
             onClick={() => onChange(tab.key)}
@@ -101,12 +106,18 @@ export function Tabs({ tabs, active, onChange, ariaLabel, className = "" }: Tabs
               } else if (e.key === "ArrowLeft") {
                 e.preventDefault();
                 focusTab(i - 1);
+              } else if (e.key === "Home") {
+                e.preventDefault();
+                focusTab(0);
+              } else if (e.key === "End") {
+                e.preventDefault();
+                focusTab(tabs.length - 1);
               }
             }}
-            className={`min-h-[40px] whitespace-nowrap rounded-[calc(var(--radius)-2px)] px-4 py-2 text-sm font-medium transition-colors ${
+            className={`min-h-11 touch-manipulation whitespace-nowrap rounded-[calc(var(--radius)-2px)] px-4 py-2 text-sm font-semibold transition-[background-color,color,box-shadow] ${
               isActive
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
             }`}
           >
             {tab.label}

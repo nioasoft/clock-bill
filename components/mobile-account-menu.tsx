@@ -63,7 +63,7 @@ export function MobileAccountMenu({ userEmail, userName }: MobileAccountMenuProp
     <Dialog>
       <DialogTrigger
         aria-label={displayName}
-        className="w-9 h-9 bg-sidebar-foreground/10 text-sidebar-foreground rounded-full flex items-center justify-center font-bold text-sm shrink-0 hover:bg-sidebar-foreground/15 transition-colors"
+        className="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-full border border-sidebar-foreground/10 bg-sidebar-foreground/10 text-sm font-bold text-sidebar-foreground transition-[background-color,border-color] hover:border-sidebar-foreground/20 hover:bg-sidebar-foreground/15"
       >
         {avatarInitial}
       </DialogTrigger>
@@ -87,7 +87,7 @@ export function MobileAccountMenu({ userEmail, userName }: MobileAccountMenuProp
                 href={href}
                 className="flex items-center gap-3 rounded-[var(--radius)] px-3 py-3 text-sm font-medium text-foreground hover:bg-muted transition-colors min-h-[44px]"
               >
-                <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />
+                <Icon className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
                 <span>{t(labelKey)}</span>
               </Link>
             </DialogClose>
@@ -100,9 +100,9 @@ export function MobileAccountMenu({ userEmail, userName }: MobileAccountMenuProp
             className="flex items-center gap-3 rounded-[var(--radius)] px-3 py-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors w-full min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {logoutLoading ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-2 border-current border-t-transparent shrink-0" />
+              <div className="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />
             ) : (
-              <LogOut className="h-5 w-5 shrink-0" />
+              <LogOut className="h-5 w-5 shrink-0" aria-hidden="true" />
             )}
             <span>{logoutLoading ? t("loggingOut") : t("logout")}</span>
           </button>

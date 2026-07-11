@@ -88,7 +88,7 @@ export function Sidebar({
   return (
     <aside
       aria-label={t("sidebarLabel")}
-      className={`flex flex-col bg-sidebar text-sidebar-foreground h-full transition-all duration-200 ${
+      className={`flex h-full flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-200 ${
         isCollapsed ? "w-16" : "w-64"
       } ${className}`}
     >
@@ -130,8 +130,9 @@ export function Sidebar({
               href={item.href}
               title={isCollapsed ? label : undefined}
               aria-label={isCollapsed ? label : undefined}
+              aria-current={isActive ? "page" : undefined}
               className={`
-                flex items-center gap-3 rounded-lg text-sm font-medium transition-colors relative
+                relative flex min-h-11 touch-manipulation items-center gap-3 rounded-[var(--radius)] text-sm font-medium transition-colors
                 ${isCollapsed ? "justify-center px-2 py-2.5" : "px-4 py-2.5"}
                 ${
                   isActive
@@ -143,7 +144,7 @@ export function Sidebar({
               {isActive && (
                 <span className="absolute start-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-accent" aria-hidden="true" />
               )}
-              <Icon className="h-5 w-5 shrink-0" />
+              <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
               {!isCollapsed && <span>{label}</span>}
             </Link>
           );
@@ -154,17 +155,18 @@ export function Sidebar({
       {onToggle && (
         <div className={`px-3 pb-2 ${isCollapsed ? "px-1.5" : ""}`}>
           <button
+            type="button"
             onClick={onToggle}
-            className={`flex items-center gap-3 rounded-lg text-sm font-medium text-sidebar-foreground/40 hover:bg-sidebar-foreground/6 hover:text-sidebar-foreground transition-colors w-full ${
+            className={`flex min-h-11 w-full touch-manipulation items-center gap-3 rounded-[var(--radius)] text-sm font-medium text-sidebar-foreground/60 transition-colors hover:bg-sidebar-foreground/6 hover:text-sidebar-foreground ${
               isCollapsed ? "justify-center px-2 py-2.5" : "px-4 py-2.5"
             }`}
             title={isCollapsed ? t("expandSidebar") : t("collapseSidebar")}
           >
             {isCollapsed ? (
-              <ExpandIcon className="h-5 w-5 shrink-0" />
+              <ExpandIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
             ) : (
               <>
-                <CollapseIcon className="h-5 w-5 shrink-0" />
+                <CollapseIcon className="h-5 w-5 shrink-0" aria-hidden="true" />
                 <span>{t("collapse")}</span>
               </>
             )}
@@ -178,7 +180,7 @@ export function Sidebar({
           href="/settings"
           title={isCollapsed ? displayName : undefined}
           aria-label={isCollapsed ? displayName : undefined}
-          className={`flex items-center gap-3 rounded-lg text-sm font-medium text-sidebar-foreground/60 hover:bg-sidebar-foreground/6 hover:text-sidebar-foreground transition-colors ${
+          className={`flex min-h-11 touch-manipulation items-center gap-3 rounded-[var(--radius)] text-sm font-medium text-sidebar-foreground/60 transition-colors hover:bg-sidebar-foreground/6 hover:text-sidebar-foreground ${
             isCollapsed ? "justify-center px-2 py-2.5" : "px-4 py-2.5"
           }`}
         >
@@ -200,18 +202,19 @@ export function Sidebar({
           </div>
         )}
         <button
+          type="button"
           onClick={handleLogout}
           disabled={logoutLoading}
           title={isCollapsed ? t("logout") : undefined}
           aria-label={isCollapsed ? (logoutLoading ? t("loggingOut") : t("logout")) : undefined}
-          className={`flex items-center gap-3 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors w-full disabled:opacity-50 disabled:cursor-not-allowed ${
+          className={`flex min-h-11 w-full touch-manipulation items-center gap-3 rounded-[var(--radius)] text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 ${
             isCollapsed ? "justify-center px-2 py-2.5" : "px-4 py-2.5"
           }`}
         >
           {logoutLoading ? (
-            <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />
           ) : (
-            <LogOut className="h-4 w-4 shrink-0" />
+            <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
           )}
           {!isCollapsed && (
             <span>{logoutLoading ? t("loggingOut") : t("logout")}</span>
