@@ -9,6 +9,9 @@ import {
   type PaymentMethod,
 } from "@/lib/charge-documents";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { SimpleSelect } from "@/components/ui/simple-select";
 
 interface PaymentRow {
   id: string;
@@ -210,7 +213,7 @@ export function ChargePaymentsPanel({
   // Loading state
   if (state === "loading") {
     return (
-      <div className="rounded-[var(--radius-card)] border border-border bg-card p-4">
+      <div className="rounded-[var(--radius-card)] border border-border bg-card p-4" role="status" aria-live="polite">
         <div className="h-5 w-32 animate-pulse rounded bg-muted" />
       </div>
     );
@@ -219,7 +222,7 @@ export function ChargePaymentsPanel({
   // Error state
   if (state === "error" || !data) {
     return (
-      <div className="rounded-[var(--radius-card)] border border-border bg-card p-4">
+      <div className="rounded-[var(--radius-card)] border border-border bg-card p-4" role="alert">
         <p className="text-sm text-destructive">{t("payments.loadError")}</p>
         <Button
           variant="outline"
@@ -244,7 +247,7 @@ export function ChargePaymentsPanel({
             {t("payments.outstanding")}
           </div>
           <div className="font-mono text-lg font-bold tabular-nums text-foreground">
-            {formatCurrency(data.outstanding, currency, locale)}
+            <bdi>{formatCurrency(data.outstanding, currency, locale)}</bdi>
           </div>
         </div>
       </div>
@@ -254,49 +257,44 @@ export function ChargePaymentsPanel({
         <Button
           onClick={() => void addPayment(data.outstanding)}
           disabled={busy}
-          className="min-h-[44px]"
+          aria-busy={busy}
         >
           {t("payments.markFullyPaid")}
         </Button>
       )}
 
       {/* Add / edit payment form */}
-      <div className="grid grid-cols-2 gap-2">
-        <input
-          inputMode="decimal"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          placeholder={t("payments.amount")}
-          aria-label={t("payments.amount")}
-          className="min-h-[44px] rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-        <input
-          type="date"
-          value={paidAt}
-          onChange={(e) => setPaidAt(e.target.value)}
-          aria-label={t("payments.date")}
-          className="min-h-[44px] rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-        <select
-          value={method}
-          onChange={(e) => setMethod(e.target.value as PaymentMethod | "")}
-          aria-label={t("payments.methodLabel")}
-          className="min-h-[44px] rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          <option value="">{t("payments.methodNone")}</option>
-          {PAYMENT_METHODS.map((m) => (
-            <option key={m} value={m}>
-              {t(`payments.method.${m}`)}
-            </option>
-          ))}
-        </select>
-        <input
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder={t("payments.note")}
-          aria-label={t("payments.note")}
-          className="min-h-[44px] rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-        />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <Label htmlFor="payment-amount">{t("payments.amount")}</Label>
+          <Input
+            id="payment-amount"
+            inputMode="decimal"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder={t("payments.amount")}
+          />
+        </div>
+        <div>
+          <Label htmlFor="payment-date">{t("payments.date")}</Label>
+          <Input id="payment-date" type="date" value={paidAt} onChange={(e) => setPaidAt(e.target.value)} />
+        </div>
+        <div>
+          <Label htmlFor="payment-method">{t("payments.methodLabel")}</Label>
+          <SimpleSelect
+            id="payment-method"
+            value={method}
+            onChange={(value) => setMethod(value as PaymentMethod | "")}
+            options={[
+              { value: "", label: t("payments.methodNone") },
+              ...PAYMENT_METHODS.map((value) => ({ value, label: t(`payments.method.${value}`) })),
+            ]}
+          />
+        </div>
+        <div>
+          <Label htmlFor="payment-note">{t("payments.note")}</Label>
+          <Input id="payment-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("payments.note")} />
+        </div>
       </div>
 
       {/* Primary form action */}
@@ -334,17 +332,17 @@ export function ChargePaymentsPanel({
 
       {/* Payment list */}
       {data.payments.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t("payments.empty")}</p>
+        <p className="rounded-[var(--radius)] bg-muted/30 p-3 text-sm text-muted-foreground">{t("payments.empty")}</p>
       ) : (
         <ul className="divide-y divide-border">
           {data.payments.map((p) => (
             <li
               key={p.id}
-              className="flex items-center justify-between gap-3 py-2"
+              className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="min-w-0">
                 <span className="font-mono tabular-nums text-foreground">
-                  {formatCurrency(p.amount, currency, locale)}
+                  <bdi>{formatCurrency(p.amount, currency, locale)}</bdi>
                 </span>
                 <span className="ms-2 text-xs text-muted-foreground">
                   {new Date(p.paid_at).toLocaleDateString(

@@ -49,6 +49,19 @@ export default function PublicChargeDocument(props: Props) {
   // Locale-bound formatter re-created against the document locale (closure-safe pattern).
   const formatCurrency = (amount: number, currency: string) =>
     formatCurrencyLib(amount, currency, locale);
+  const money = documentMoney({
+    total: doc.total,
+    discountType: doc.discount_type,
+    discountValue: doc.discount_value,
+    vatRate: doc.vat_rate_snapshot,
+  });
+  const outstandingAmount = outstanding(money.gross, paidSum);
+  const statusLabel =
+    doc.status === "paid"
+      ? locale === "he" ? "שולם" : "Paid"
+      : doc.status === "partial"
+        ? locale === "he" ? "שולם חלקית" : "Partially paid"
+        : locale === "he" ? "ממתין לתשלום" : "Awaiting payment";
 
   // On-screen styling: un-hide #pdf-content, restore table display, apply the
   // SAME template color rules the print routine uses. Print itself reuses
@@ -72,27 +85,67 @@ export default function PublicChargeDocument(props: Props) {
     <div dir={dir} style={{ minHeight: "100vh", background: "#f4f4f5", padding: "24px 12px" }}>
       <style dangerouslySetInnerHTML={{ __html: screenCss }} />
       <div style={{ maxWidth: 800, margin: "0 auto" }}>
-        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
-          <Button onClick={handlePrint} className="min-h-[44px]">
-            {locale === "he" ? "הדפס / שמור כ-PDF" : "Print / Save as PDF"}
-          </Button>
-        </div>
-        <div style={{ background: "white", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,.08)" }}>
+        <header
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 16,
+            marginBottom: 12,
+            padding: "16px 18px",
+            background: "#fafafa",
+            border: "1px solid #e4e4e7",
+            borderRadius: 12,
+            color: "#18181b",
+          }}
+        >
+          <div>
+            <h1 id="public-document-title" style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>
+              {locale === "he" ? `תעודת התחשבנות #${doc.doc_number}` : `Settlement document #${doc.doc_number}`}
+            </h1>
+            <p style={{ margin: "4px 0 0", color: "#52525b", fontSize: 14 }}>
+              <bdi>{doc.client_name}</bdi>
+            </p>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                minHeight: 32,
+                padding: "4px 10px",
+                border: "1px solid #d4d4d8",
+                borderRadius: 999,
+                background: doc.status === "paid" ? "#dcfce7" : doc.status === "partial" ? "#fef3c7" : "#f4f4f5",
+                color: "#27272a",
+                fontSize: 13,
+                fontWeight: 600,
+              }}
+            >
+              {statusLabel}
+            </span>
+            <div style={{ textAlign: "end" }}>
+              <div style={{ color: "#52525b", fontSize: 12 }}>
+                {locale === "he" ? "יתרה לתשלום" : "Outstanding"}
+              </div>
+              <bdi style={{ fontSize: 18, fontWeight: 700 }}>
+                {formatCurrency(outstandingAmount, doc.currency)}
+              </bdi>
+            </div>
+            <Button onClick={handlePrint}>
+              {locale === "he" ? "הדפס / שמור כ-PDF" : "Print / Save as PDF"}
+            </Button>
+          </div>
+        </header>
+        <article aria-labelledby="public-document-title" style={{ background: "#fafafa", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,.08)" }}>
           {messages && (
             <NextIntlClientProvider locale={locale} messages={messages}>
               <PdfChargeDocument doc={doc} lines={lines} profile={profile} />
             </NextIntlClientProvider>
           )}
-        </div>
-        {paidSum > 0 && (() => {
-          const money = documentMoney({
-            total: doc.total,
-            discountType: doc.discount_type,
-            discountValue: doc.discount_value,
-            vatRate: doc.vat_rate_snapshot,
-          });
-          const outstandingAmount = outstanding(money.gross, paidSum);
-          return (
+        </article>
+        {paidSum > 0 && (
             <div style={{
               marginTop: 12,
               padding: "12px 16px",
@@ -103,17 +156,14 @@ export default function PublicChargeDocument(props: Props) {
               fontSize: 14,
               color: "#3f3f46",
             }}>
-              {(() => {
-                const paid = formatCurrency(paidSum, doc.currency);
-                const total = formatCurrency(money.gross, doc.currency);
-                const outstandingStr = formatCurrency(outstandingAmount, doc.currency);
-                return locale === "he"
-                  ? `שולם ${paid} מתוך ${total} · נותר לתשלום ${outstandingStr}`
-                  : `Paid ${paid} of ${total} · ${outstandingStr} remaining`;
-              })()}
+              <span>{locale === "he" ? "שולם" : "Paid"} </span>
+              <bdi>{formatCurrency(paidSum, doc.currency)}</bdi>
+              <span> {locale === "he" ? "מתוך" : "of"} </span>
+              <bdi>{formatCurrency(money.gross, doc.currency)}</bdi>
+              <span> · {locale === "he" ? "נותר לתשלום" : "remaining"} </span>
+              <bdi>{formatCurrency(outstandingAmount, doc.currency)}</bdi>
             </div>
-          );
-        })()}
+        )}
         <p style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "#71717a" }}>
           {locale === "he" ? "הופק ב-" : "Generated with "}
           <a href="https://www.clock-bill.com" style={{ color: "#0a0a0a", fontWeight: 600 }}>ClockBill</a>

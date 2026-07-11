@@ -22,6 +22,9 @@ import {
 } from "@/components/ui/dialog";
 import { printPdfContent, type PdfTemplate, type OnColorText } from "./printStyles";
 import { PdfChargeDocument } from "./PdfChargeDocument";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { SimpleSelect } from "@/components/ui/simple-select";
 
 interface DocumentLine {
   id: string;
@@ -503,6 +506,8 @@ export default function ChargeDocumentView({
   });
   const hasVat = doc.vat_rate_snapshot != null && doc.vat_rate_snapshot > 0;
   const hasDiscount = money.discountAmount > 0;
+  const lifecycleStatuses: ChargeDocStatus[] = ["pending", "partial", "paid"];
+  const currentLifecycleIndex = lifecycleStatuses.indexOf(doc.status as ChargeDocStatus);
 
   // Optional summary groups (mirrors the printed PDF).
   const summaryMode =
@@ -546,6 +551,37 @@ export default function ChargeDocumentView({
           </div>
         </div>
       </div>
+
+      {/* Payment lifecycle. Text labels keep the state understandable without color. */}
+      {!isCanceled && (
+        <ol
+          aria-label={t("payments.title")}
+          className="grid grid-cols-3 overflow-hidden rounded-[var(--radius-card)] border border-border bg-card"
+        >
+          {lifecycleStatuses.map((lifecycleStatus, index) => {
+            const meta = STATUS_META[lifecycleStatus];
+            const reached = index <= currentLifecycleIndex;
+            const current = index === currentLifecycleIndex;
+            return (
+              <li
+                key={lifecycleStatus}
+                aria-current={current ? "step" : undefined}
+                className={`flex min-h-14 items-center justify-center gap-2 border-e border-border px-2 py-3 text-center text-sm last:border-e-0 ${
+                  current ? meta.surface : reached ? "bg-muted/30 text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                <span
+                  aria-hidden="true"
+                  className={`h-2.5 w-2.5 shrink-0 rounded-full ${reached ? meta.dot : "bg-muted"}`}
+                />
+                <span className={current ? "font-semibold text-foreground" : undefined}>
+                  {t(meta.labelKey)}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+      )}
 
       {onClose && (
         <Button variant="ghost" onClick={onClose} className="min-h-[44px] -ms-2">
@@ -633,7 +669,7 @@ export default function ChargeDocumentView({
                   <td className="px-3 py-3">
                     {editing ? (
                       <div className="space-y-2">
-                        <input
+                        <Input
                           type="text"
                           aria-label={t("doc.lineDescriptionAria")}
                           value={lineDraft.description}
@@ -641,9 +677,8 @@ export default function ChargeDocumentView({
                             setLineDraft((d) => ({ ...d, description: e.target.value }))
                           }
                           placeholder={t("doc.descriptionPlaceholder")}
-                          className="w-full rounded-[var(--radius)] border border-border bg-background px-2 py-1.5 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                         />
-                        <input
+                        <Input
                           type="text"
                           aria-label={t("doc.lineNoteAria")}
                           value={lineDraft.notes}
@@ -651,7 +686,6 @@ export default function ChargeDocumentView({
                             setLineDraft((d) => ({ ...d, notes: e.target.value }))
                           }
                           placeholder={t("doc.notePlaceholder")}
-                          className="w-full rounded-[var(--radius)] border border-border bg-background px-2 py-1.5 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                         />
                       </div>
                     ) : (
@@ -789,12 +823,11 @@ export default function ChargeDocumentView({
         </label>
         {isPending ? (
           <div className="space-y-2">
-            <textarea
+            <Textarea
               id="doc-notes"
               value={notesDraft}
               onChange={(e) => setNotesDraft(e.target.value)}
               rows={3}
-              className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder={t("doc.notesPlaceholder")}
             />
             <Button
@@ -860,30 +893,34 @@ export default function ChargeDocumentView({
       >
         <span className="text-sm text-muted-foreground">{t("documentLanguageToggle")}</span>
         <div className="flex items-center gap-1 rounded-[var(--radius)] border border-border p-1">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => setDocLangOverride("he")}
             aria-pressed={docLocale === "he"}
-            className={`min-h-11 rounded-[var(--radius)] px-3 py-2 text-sm font-medium transition-colors ${
+            className={`rounded-[var(--radius)] px-3 ${
               docLocale === "he"
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {t("documentLanguageHe")}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => setDocLangOverride("en")}
             aria-pressed={docLocale === "en"}
-            className={`min-h-11 rounded-[var(--radius)] px-3 py-2 text-sm font-medium transition-colors ${
+            className={`rounded-[var(--radius)] px-3 ${
               docLocale === "en"
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {t("documentLanguageEn")}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -901,18 +938,20 @@ export default function ChargeDocumentView({
             ]).map((opt) => {
               const active = (doc.summary_mode ?? null) === opt.value;
               return (
-                <button
+                <Button
                   key={opt.value ?? "none"}
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => void handleSetSummary(opt.value)}
                   disabled={savingSummary}
                   aria-pressed={active}
-                  className={`min-h-11 rounded-[var(--radius)] px-3 py-2 text-sm font-medium transition-colors ${
+                  className={`rounded-[var(--radius)] px-3 ${
                     active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {opt.label}
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -936,22 +975,22 @@ export default function ChargeDocumentView({
       {(isPending || doc.status === "partial") && (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-muted-foreground">{t("doc.discountLabel")}</span>
-          <select
-            aria-label={t("doc.discountType")}
+          <SimpleSelect
             value={doc.discount_type ?? ""}
-            onChange={(e) => {
-              const type = e.target.value as "percent" | "amount" | "";
+            onChange={(value) => {
+              const type = value as "percent" | "amount" | "";
               if (!type) void patchDocument({ discount: null });
               else void patchDocument({ discount: { type, value: doc.discount_value ?? 0 } });
             }}
-            className="min-h-[44px] rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="">{t("doc.discountNone")}</option>
-            <option value="percent">{t("doc.discountPercent")}</option>
-            <option value="amount">{t("doc.discountAmount")}</option>
-          </select>
+            aria-label={t("doc.discountType")}
+            options={[
+              { value: "", label: t("doc.discountNone") },
+              { value: "percent", label: t("doc.discountPercent") },
+              { value: "amount", label: t("doc.discountAmount") },
+            ]}
+          />
           {doc.discount_type && (
-            <input
+            <Input
               inputMode="decimal"
               defaultValue={doc.discount_value ?? 0}
               aria-label={t("doc.discountValue")}
@@ -963,7 +1002,7 @@ export default function ChargeDocumentView({
                   },
                 })
               }
-              className="w-24 min-h-[44px] rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-24"
             />
           )}
         </div>

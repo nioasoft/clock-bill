@@ -129,7 +129,7 @@ export default function DocumentsTab({
   // ── Loading ───────────────────────────────────────────────────────────────
   if (state === "loading") {
     return (
-      <div className="space-y-3">
+      <div className="space-y-3" role="status" aria-label={t("tabs.documents")} aria-busy="true">
         {[0, 1, 2].map((i) => (
           <Skeleton key={i} className="h-20 w-full rounded-[var(--radius-card)]" />
         ))}
@@ -140,7 +140,7 @@ export default function DocumentsTab({
   // ── Error ─────────────────────────────────────────────────────────────────
   if (state === "error") {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
+      <div className="flex flex-col items-center justify-center gap-3 p-8 text-center" role="alert">
         <p className="text-foreground font-medium">{t("documents.loadErrorTitle")}</p>
         <p className="text-sm text-muted-foreground">{t("documents.loadErrorBody")}</p>
         <Button variant="outline" onClick={retry} className="min-h-[44px]">
@@ -174,7 +174,7 @@ export default function DocumentsTab({
           key={d.id}
           type="button"
           onClick={() => setOpenId(d.id)}
-          className={`flex w-full min-h-[44px] flex-wrap items-center justify-between gap-3 rounded-[var(--radius-card)] border border-border border-s-2 ${meta.accent} bg-card p-4 text-start transition-colors hover:bg-card-elevated focus:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+          className={`flex min-h-14 w-full flex-wrap items-center justify-between gap-3 rounded-[var(--radius-card)] border border-border p-4 text-start transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${meta.surface}`}
         >
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -186,10 +186,10 @@ export default function DocumentsTab({
             </div>
           </div>
           <div className="text-end">
-            <div className="font-mono text-lg font-semibold tabular-nums text-foreground">{formatCurrency(d.gross, d.currency, locale)}</div>
+            <div className="font-mono text-lg font-semibold tabular-nums text-foreground"><bdi>{formatCurrency(d.gross, d.currency, locale)}</bdi></div>
             {d.status === "partial" && (
               <div className="text-xs text-muted-foreground">
-                {t("doc.outstandingShort", { amount: formatCurrency(d.outstanding, d.currency, locale) })}
+                <bdi>{t("doc.outstandingShort", { amount: formatCurrency(d.outstanding, d.currency, locale) })}</bdi>
               </div>
             )}
           </div>
