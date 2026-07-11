@@ -349,6 +349,16 @@
     "cancel": "ביטול",
     "addTimeEntry": "+ הזנת רשומת זמן",
     "addBillingItem": "+ הזנת פריט חיוב",
+    "reconciliation": {
+      "attentionTitle": "לפני שסוגרים את היום",
+      "completeTitle": "העבודה של היום רשומה",
+      "summary": "{count} רשומות · {duration}",
+      "runningTimers": "{count} טיימרים עדיין פועלים",
+      "missingEntry": "לא קושר רישום עבודה",
+      "logWork": "רשום עבודה שחסרה",
+      "error": "לא הצלחנו לטעון את בדיקת היום.",
+      "retry": "נסה שוב"
+    },
     "filters": {
       "month": "חודש",
       "advanced": "סינון מתקדם",

@@ -349,6 +349,16 @@
     "cancel": "Cancel",
     "addTimeEntry": "+ Add Time Entry",
     "addBillingItem": "+ Add Billing Item",
+    "reconciliation": {
+      "attentionTitle": "Before you finish today",
+      "completeTitle": "Today's work is recorded",
+      "summary": "{count} entries · {duration}",
+      "runningTimers": "{count} timers are still running",
+      "missingEntry": "No work entry linked",
+      "logWork": "Log missing work",
+      "error": "Today's review could not be loaded.",
+      "retry": "Try again"
+    },
     "filters": {
       "month": "Month",
       "advanced": "Advanced Filters",

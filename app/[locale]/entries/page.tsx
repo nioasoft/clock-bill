@@ -29,6 +29,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { HourglassSVG } from "@/components/ui/thematic-elements";
+import { DailyReconciliation } from "@/components/daily-reconciliation";
 
 interface Project {
   id: string;
@@ -735,6 +736,8 @@ export default function EntriesPage() {
             {t("addBillingItem")}
           </button>
         </PageHeader>
+
+        <DailyReconciliation onLogWork={() => openManualEntry("hourly")} />
 
         {/* Filters Section */}
         <div className="mb-6 rounded-[var(--radius-card)] border border-border bg-card p-4">
