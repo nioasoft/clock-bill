@@ -20,6 +20,7 @@ import { ToastAction, type ToastActionElement } from "@/components/ui/toast";
 import { haptic } from "@/lib/haptics";
 import { pickDefaultHourlyRate, type ClientRate } from "@/lib/schemas/rates";
 import { messageForError } from "@/lib/api-error";
+import { writeRecentWorkContext } from "@/lib/recent-work-context";
 
 interface RunningTimer {
   id: string;
@@ -472,6 +473,13 @@ export function TimerProvider({ children }: TimerProviderProps) {
       const data = await response.json();
 
       if (data.success) {
+        const selectedProjectRecord = projects.find((project) => project.id === selectedProject);
+        writeRecentWorkContext({
+          projectId: selectedProject,
+          clientId: selectedProjectRecord?.clientId ?? "",
+          rateId: selectedRateId || undefined,
+          billingKind: "hourly",
+        });
         setShowTimerModal(false);
         setSelectedProject("");
         setSelectedTask("");
@@ -494,7 +502,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
     } finally {
       setStartingTimer(false);
     }
-  }, [selectedProject, selectedTask, timerDescription, timerTasks, timerRates, selectedRateId, fetchRunningTimer, tRoot]);
+  }, [selectedProject, selectedTask, timerDescription, timerTasks, timerRates, selectedRateId, fetchRunningTimer, tRoot, projects]);
 
   const handleStopTimer = useCallback(
     (entryId: string, opts?: { managed?: boolean }) => {

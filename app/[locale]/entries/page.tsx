@@ -13,6 +13,7 @@ import { MonthField } from "@/components/ui/month-field";
 import { Clock, Lock, Pencil, Trash2 } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { messageForError } from "@/lib/api-error";
+import { readRecentWorkContext, writeRecentWorkContext } from "@/lib/recent-work-context";
 import { validateRequired, validateDate, validateNumber } from "@/lib/validation";
 import { useValidationMessage } from "@/lib/validation-messages";
 import { pickDefaultHourlyRate, type ClientRate } from "@/lib/schemas/rates";
@@ -464,6 +465,15 @@ export default function EntriesPage() {
       const data = await response.json();
 
       if (data.success) {
+        const selectedProjectRecord = projects.find((project) => project.id === formData.projectId);
+        if (!isEditing && selectedProjectRecord) {
+          writeRecentWorkContext({
+            projectId: formData.projectId,
+            clientId: selectedProjectRecord.clientId,
+            rateId: formData.rateId || undefined,
+            billingKind: formData.billingKind,
+          });
+        }
         if (isEditing) {
           // Update existing entry in the list
           setEntries(entries.map((e) => (e.id === data.entry.id ? data.entry : e)));
@@ -588,10 +598,12 @@ export default function EntriesPage() {
   // header (and dashboard deep-links) jump straight to "hours" or "item" without
   // making the user open the form and then flip the toggle.
   const openManualEntry = useCallback((kind: "hourly" | "item") => {
+    const recent = readRecentWorkContext();
+    const recentProject = recent && projects.find((project) => project.id === recent.projectId);
     setEditingEntry(null);
-    setFormClientId("");
+    setFormClientId(recentProject?.clientId ?? "");
     setFormData({
-      projectId: "",
+      projectId: recentProject?.id ?? "",
       taskId: "",
       date: new Date().toISOString().split("T")[0],
       duration: "",
@@ -599,7 +611,7 @@ export default function EntriesPage() {
       notes: "",
       isBillable: true,
       billingKind: kind,
-      rateId: "",
+      rateId: recent?.billingKind === kind ? recent.rateId ?? "" : "",
       quantity: "",
       adhocName: "",
       adhocUnit: "",
@@ -608,7 +620,7 @@ export default function EntriesPage() {
     });
     setFieldErrors({});
     setShowForm(true);
-  }, []);
+  }, [projects]);
 
   // Deep link: /entries?new=item or ?new=manual opens the form in that mode
   // (used by the dashboard quick actions). Cleans the URL afterwards.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@/src/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useTimer } from "@/contexts/timer-context";
@@ -12,6 +12,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { SimpleSelect } from "@/components/ui/simple-select";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { readRecentWorkContext } from "@/lib/recent-work-context";
 
 export function TimerStartModal() {
   const t = useTranslations("Timer");
@@ -51,6 +54,18 @@ export function TimerStartModal() {
   const visibleProjects = multiClient
     ? projects.filter((p) => p.clientId === selectedClientId)
     : projects;
+
+  useEffect(() => {
+    if (!showTimerModal || selectedProject || projects.length === 0) return;
+    const recent = readRecentWorkContext();
+    const project = recent && projects.find((item) => item.id === recent.projectId);
+    if (!project) return;
+    queueMicrotask(() => {
+      setSelectedClientId(project.clientId);
+      setSelectedProject(project.id);
+      if (recent.rateId) setSelectedRateId(recent.rateId);
+    });
+  }, [projects, selectedProject, setSelectedProject, setSelectedRateId, showTimerModal]);
 
   const handleClientChange = (clientId: string) => {
     setSelectedClientId(clientId);
@@ -183,33 +198,31 @@ export function TimerStartModal() {
                   >
                     {t("start.descriptionLabel")}
                   </label>
-                  <input
+                  <Input
                     type="text"
                     id="timer-description"
                     value={timerDescription}
                     onChange={(e) => setTimerDescription(e.target.value)}
                     placeholder={t("start.descriptionPlaceholder")}
-                    className="w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
                     disabled={startingTimer}
                   />
                 </div>
               )}
 
               <div className="flex gap-3 justify-end">
-                <button
+                <Button
+                  variant="secondary"
                   onClick={handleClose}
                   disabled={startingTimer}
-                  className="px-4 py-2.5 text-sm font-medium text-muted-foreground bg-muted rounded-[var(--radius)] hover:bg-muted/80 disabled:opacity-50 min-h-[44px]"
                 >
                   {t("start.cancel")}
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={handleStartTimer}
                   disabled={startingTimer || !selectedProject}
-                  className="px-4 py-2.5 text-sm font-medium text-primary-foreground bg-primary rounded-[var(--radius)] hover:bg-primary/90 disabled:opacity-50 min-h-[44px]"
                 >
                   {startingTimer ? t("start.starting") : t("start.startButton")}
-                </button>
+                </Button>
               </div>
             </>
           ) : (
