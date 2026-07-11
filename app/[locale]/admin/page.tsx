@@ -74,7 +74,7 @@ export default function AdminDashboardPage() {
 
         {/* Stat Cards */}
         {loading ? (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div role="status" aria-busy="true" aria-label={t("dashboard.title")} className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4">
                 <Skeleton className="h-4 w-1/2 mb-2" />
@@ -83,7 +83,7 @@ export default function AdminDashboardPage() {
             ))}
           </div>
         ) : error ? (
-          <div className="rounded-[var(--radius-card)] bg-destructive/10 p-6 text-center">
+          <div role="alert" className="rounded-[var(--radius-card)] border border-destructive/20 bg-destructive/10 p-6 text-center">
             <p className="text-destructive">{t("dashboard.loadError")}</p>
           </div>
         ) : stats ? (
@@ -177,7 +177,7 @@ export default function AdminDashboardPage() {
                       >
                         <span className="text-[10px] text-muted-foreground">{d.count}</span>
                         <div
-                          className="w-full bg-primary/80 rounded-t-sm min-h-[2px] transition-all"
+                          className="min-h-[2px] w-full rounded-t-sm bg-primary/80 transition-[height]"
                           style={{ height: `${Math.max(height, 2)}%` }}
                         />
                         <span className="text-[9px] text-muted-foreground rotate-[-45deg] origin-top-right whitespace-nowrap">
@@ -194,7 +194,7 @@ export default function AdminDashboardPage() {
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-2">
               <Link
                 href="/admin/users"
-                className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4 hover:-translate-y-0.5 transition-all"
+                className="min-h-11 rounded-[var(--radius-card)] border border-border/50 bg-card p-4 transition-[background-color,border-color,transform] hover:-translate-y-0.5 hover:border-border-strong hover:bg-card-elevated"
               >
                 <div className="flex items-center gap-3">
                   <Users className="h-5 w-5 text-primary" />
@@ -206,7 +206,7 @@ export default function AdminDashboardPage() {
               </Link>
               <Link
                 href="/admin/stats"
-                className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4 hover:-translate-y-0.5 transition-all"
+                className="min-h-11 rounded-[var(--radius-card)] border border-border/50 bg-card p-4 transition-[background-color,border-color,transform] hover:-translate-y-0.5 hover:border-border-strong hover:bg-card-elevated"
               >
                 <div className="flex items-center gap-3">
                   <BarChart3 className="h-5 w-5 text-accent" />

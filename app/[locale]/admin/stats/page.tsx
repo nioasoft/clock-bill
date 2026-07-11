@@ -63,13 +63,13 @@ export default function AdminStatsPage() {
         <PageHeader title={t("stats.title")} subtitle={t("stats.subtitle")} />
 
         {loading ? (
-          <div className="space-y-6">
+          <div role="status" aria-busy="true" aria-label={t("stats.title")} className="space-y-6">
             {[1, 2, 3].map((i) => (
               <Skeleton key={i} className="h-48 w-full rounded-[var(--radius-card)]" />
             ))}
           </div>
         ) : error ? (
-          <div className="rounded-[var(--radius-card)] bg-destructive/10 p-6 text-center">
+          <div role="alert" className="rounded-[var(--radius-card)] border border-destructive/20 bg-destructive/10 p-6 text-center">
             <p className="text-destructive">{t("stats.loadError")}</p>
           </div>
         ) : stats ? (
@@ -129,7 +129,7 @@ export default function AdminStatsPage() {
                         </div>
                         <div className="h-2 bg-muted rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-primary/70 rounded-full transition-all"
+                            className="h-full rounded-full bg-primary/70 transition-[width]"
                             style={{ width: `${width}%` }}
                           />
                         </div>
@@ -148,7 +148,7 @@ export default function AdminStatsPage() {
               {/* Project Statuses */}
               <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <BarChart3 className="h-5 w-5 text-secondary" />
+                  <BarChart3 className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
                   <h3 className="font-display text-lg font-semibold text-foreground">
                     {t("stats.projectStatusTitle")}
                   </h3>
@@ -172,7 +172,7 @@ export default function AdminStatsPage() {
                     );
                   })}
                   {stats.projectStatuses.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-4">{t("stats.noData")}</p>
+                    <p role="status" className="py-4 text-center text-sm text-muted-foreground">{t("stats.noData")}</p>
                   )}
                 </div>
               </div>
@@ -202,7 +202,7 @@ export default function AdminStatsPage() {
                     );
                   })}
                   {stats.currencies.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-4">{t("stats.noData")}</p>
+                    <p role="status" className="py-4 text-center text-sm text-muted-foreground">{t("stats.noData")}</p>
                   )}
                 </div>
               </div>

@@ -26,15 +26,15 @@ export default function NotFound() {
         <div className="text-center">
           {/* 404 Number */}
           <div className="mb-6 relative">
-            <h1 className="text-9xl font-bold text-primary opacity-20">404</h1>
+            <div className="text-9xl font-bold text-primary opacity-20" aria-hidden="true">404</div>
             <div className="absolute inset-0 flex items-center justify-center">
-              <Search className="w-20 h-20 text-primary" />
+              <Search className="h-20 w-20 text-primary" aria-hidden="true" />
             </div>
           </div>
 
           {/* Error Message */}
-          <h2 className="text-2xl font-bold text-foreground mb-2">{t("title")}</h2>
-          <p className="text-muted-foreground mb-8">{t("description")}</p>
+          <h1 className="mb-2 text-balance text-2xl font-bold text-foreground">{t("title")}</h1>
+          <p className="mb-8 text-pretty text-muted-foreground">{t("description")}</p>
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -42,12 +42,12 @@ export default function NotFound() {
               href="/"
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-[var(--radius)] hover:bg-primary/90 transition-colors font-medium"
             >
-              <Home className="w-5 h-5" />
+              <Home className="h-5 w-5" aria-hidden="true" />
               {t("backToDashboard")}
             </Link>
             <button
               onClick={() => window.history.back()}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-card text-foreground rounded-[var(--radius)] hover:bg-muted transition-colors font-medium border border-border"
+              className="inline-flex min-h-11 touch-manipulation items-center justify-center gap-2 rounded-[var(--radius)] border border-border bg-card px-6 py-3 font-medium text-foreground transition-colors hover:bg-muted"
             >
               {t("goBack")}
             </button>
@@ -59,10 +59,10 @@ export default function NotFound() {
             <div className="flex flex-wrap gap-2 justify-center">
               {suggestions.map((s, i) => (
                 <span key={s.href} className="inline-flex items-center gap-2">
-                  {i > 0 && <span className="text-border">•</span>}
+                  {i > 0 && <span className="text-border" aria-hidden="true">•</span>}
                   <Link
                     href={s.href}
-                    className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md transition-colors"
+                    className="inline-flex min-h-11 touch-manipulation items-center rounded-[var(--radius)] px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
                   >
                     {s.label}
                   </Link>

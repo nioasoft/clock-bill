@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { MessageSquare, Check, Send } from "lucide-react";
 import { messageForError } from "@/lib/api-error";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
-import { fieldClass } from "@/lib/form-styles";
 import { SimpleSelect } from "@/components/ui/simple-select";
+import { Button } from "@/components/ui/button";
+import { FieldMessage } from "@/components/ui/field-message";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   FEEDBACK_CATEGORIES,
   type FeedbackCategory,
@@ -25,6 +28,7 @@ export default function FeedbackPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
+  const messageRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +36,7 @@ export default function FeedbackPage() {
 
     if (message.trim().length < 5) {
       setError(t("errors.tooShort"));
+      messageRef.current?.focus();
       return;
     }
 
@@ -85,20 +90,21 @@ export default function FeedbackPage() {
                 <Check className="h-4 w-4 text-success" aria-hidden="true" />
               </div>
               <div>
-                <h3 className="font-display text-base font-semibold text-foreground">{t("success.title")}</h3>
+                <h2 className="font-display text-base font-semibold text-foreground">{t("success.title")}</h2>
                 <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
                   {t("success.description")}
                 </p>
               </div>
             </div>
-            <button
+            <Button
               type="button"
               onClick={() => setSent(false)}
-              className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+              variant="ghost"
+              className="mt-4"
             >
-              <MessageSquare className="h-4 w-4" />
+              <MessageSquare className="h-4 w-4" aria-hidden="true" />
               {t("success.writeAnother")}
-            </button>
+            </Button>
           </div>
         ) : (
           <form
@@ -106,9 +112,9 @@ export default function FeedbackPage() {
             className="mt-6 space-y-5 rounded-[var(--radius-card)] border border-border bg-card p-6"
           >
             <div>
-              <label htmlFor="category" className="mb-1.5 block text-sm font-medium text-foreground">
+              <Label htmlFor="category">
                 {t("fields.category")}
-              </label>
+              </Label>
               <SimpleSelect
                 id="category"
                 value={category}
@@ -122,10 +128,11 @@ export default function FeedbackPage() {
             </div>
 
             <div>
-              <label htmlFor="message" className="mb-1.5 block text-sm font-medium text-foreground">
+              <Label htmlFor="message">
                 {t("fields.message")}
-              </label>
-              <textarea
+              </Label>
+              <Textarea
+                ref={messageRef}
                 id="message"
                 value={message}
                 onChange={(e) => {
@@ -135,7 +142,7 @@ export default function FeedbackPage() {
                 rows={6}
                 required
                 placeholder={t("fields.messagePlaceholder")}
-                className={`${fieldClass(Boolean(error))} resize-y`}
+                hasError={Boolean(error)}
                 disabled={submitting}
                 aria-describedby="message-count"
               />
@@ -144,20 +151,17 @@ export default function FeedbackPage() {
               </div>
             </div>
 
-            {error && (
-              <div className="rounded-[var(--radius)] bg-destructive/10 p-3" role="alert">
-                <p className="text-sm text-destructive">{error}</p>
-              </div>
-            )}
+            {error && <FieldMessage variant="error">{error}</FieldMessage>}
 
-            <button
+            <Button
               type="submit"
-              disabled={submitting || message.trim().length < 5}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-[var(--radius)] bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              disabled={submitting}
+              className="w-full"
+              aria-busy={submitting}
             >
-              <Send className="h-4 w-4" />
+              <Send className="h-4 w-4" aria-hidden="true" />
               {submitting ? t("submitting") : t("submit")}
-            </button>
+            </Button>
           </form>
         )}
       </PageContainer>

@@ -184,8 +184,10 @@ export default function AdminUserDetailPage({
     return (
       <AppLayout>
         <PageContainer>
-          <Skeleton className="h-8 w-48 mb-4" />
-          <Skeleton className="h-64 w-full rounded-[var(--radius-card)]" />
+          <div role="status" aria-busy="true" aria-label={t("users.title")}>
+            <Skeleton className="h-8 w-48 mb-4" />
+            <Skeleton className="h-64 w-full rounded-[var(--radius-card)]" />
+          </div>
         </PageContainer>
       </AppLayout>
     );
@@ -195,9 +197,9 @@ export default function AdminUserDetailPage({
     return (
       <AppLayout>
         <PageContainer>
-          <div className="text-center py-12">
+          <div role="status" className="text-center py-12">
             <p className="text-muted-foreground">{t("detail.notFound")}</p>
-            <Link href="/admin/users" className="text-primary text-sm mt-2 inline-block">
+            <Link href="/admin/users" className="mt-2 inline-flex min-h-11 items-center rounded-[var(--radius)] px-3 text-sm text-primary hover:bg-primary/10">
               {t("detail.backToUsers")}
             </Link>
           </div>
@@ -212,9 +214,9 @@ export default function AdminUserDetailPage({
         {/* Back link */}
         <Link
           href="/admin/users"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
+          className="mb-4 inline-flex min-h-11 touch-manipulation items-center gap-1 rounded-[var(--radius)] px-2 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
         >
-          <ArrowRight className="h-4 w-4" />
+          <ArrowRight className="h-4 w-4 rtl:-scale-x-100" aria-hidden="true" />
           {t("detail.backToUsers")}
         </Link>
 
@@ -234,7 +236,7 @@ export default function AdminUserDetailPage({
               <button
                 key={tabId}
                 onClick={() => setActiveTab(tabId)}
-                className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                className={`min-h-11 touch-manipulation whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
                   activeTab === tabId
                     ? "border-primary text-primary"
                     : "border-transparent text-muted-foreground hover:text-foreground"
@@ -466,7 +468,7 @@ export default function AdminUserDetailPage({
           <div className="space-y-4">
             {/* Action result */}
             {actionResult && (
-              <div className={`rounded-lg p-4 text-sm ${
+              <div role={actionResult.type === "success" ? "status" : "alert"} className={`rounded-lg p-4 text-sm ${
                 actionResult.type === "success"
                   ? "bg-success/10 text-success"
                   : "bg-destructive/10 text-destructive"
@@ -485,8 +487,8 @@ export default function AdminUserDetailPage({
                   </code>
                   <button
                     onClick={() => copyToClipboard(tempPassword)}
-                    className="p-2 rounded-lg border border-border hover:bg-muted transition-colors"
-                    title={t("detail.actions.copy")}
+                    className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-[var(--radius)] border border-border transition-colors hover:bg-muted"
+                    aria-label={t("detail.actions.copy")}
                   >
                     {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
                   </button>
@@ -497,7 +499,7 @@ export default function AdminUserDetailPage({
 
             <div className="rounded-[var(--radius-card)] bg-card border border-border/50 p-6 space-y-4">
               {/* Reset password */}
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-medium text-foreground">{t("detail.actions.resetPassword.title")}</p>
                   <p className="text-xs text-muted-foreground">{t("detail.actions.resetPassword.description")}</p>
@@ -505,7 +507,7 @@ export default function AdminUserDetailPage({
                 <button
                   onClick={() => performAction("reset_password")}
                   disabled={actionLoading !== null}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted disabled:opacity-50 transition-colors"
+                  className="inline-flex min-h-11 touch-manipulation items-center gap-2 rounded-[var(--radius)] border border-border px-4 py-2 text-sm transition-colors hover:bg-muted disabled:opacity-50"
                 >
                   <KeyRound className="h-4 w-4" />
                   {actionLoading === "reset_password" ? t("detail.actions.resetPassword.loading") : t("detail.actions.resetPassword.button")}
@@ -514,7 +516,7 @@ export default function AdminUserDetailPage({
 
               {/* Verify email */}
               {!user.emailVerified && (
-                <div className="flex items-center justify-between border-t border-border pt-4">
+                <div className="flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-sm font-medium text-foreground">{t("detail.actions.verifyEmail.title")}</p>
                     <p className="text-xs text-muted-foreground">{t("detail.actions.verifyEmail.description")}</p>
@@ -522,7 +524,7 @@ export default function AdminUserDetailPage({
                   <button
                     onClick={() => performAction("verify_email")}
                     disabled={actionLoading !== null}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted disabled:opacity-50 transition-colors"
+                    className="inline-flex min-h-11 touch-manipulation items-center gap-2 rounded-[var(--radius)] border border-border px-4 py-2 text-sm transition-colors hover:bg-muted disabled:opacity-50"
                   >
                     <MailCheck className="h-4 w-4" />
                     {actionLoading === "verify_email" ? t("detail.actions.verifyEmail.loading") : t("detail.actions.verifyEmail.button")}
@@ -531,7 +533,7 @@ export default function AdminUserDetailPage({
               )}
 
               {/* Delete sessions */}
-              <div className="flex items-center justify-between border-t border-border pt-4">
+              <div className="flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-medium text-foreground">{t("detail.actions.deleteSessions.title")}</p>
                   <p className="text-xs text-muted-foreground">{t("detail.actions.deleteSessions.description")}</p>
@@ -539,7 +541,7 @@ export default function AdminUserDetailPage({
                 <button
                   onClick={() => performAction("delete_sessions")}
                   disabled={actionLoading !== null}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted disabled:opacity-50 transition-colors"
+                  className="inline-flex min-h-11 touch-manipulation items-center gap-2 rounded-[var(--radius)] border border-border px-4 py-2 text-sm transition-colors hover:bg-muted disabled:opacity-50"
                 >
                   <LogOut className="h-4 w-4" />
                   {actionLoading === "delete_sessions" ? t("detail.actions.deleteSessions.loading") : t("detail.actions.deleteSessions.button")}
@@ -547,7 +549,7 @@ export default function AdminUserDetailPage({
               </div>
 
               {/* Toggle role */}
-              <div className="flex items-center justify-between border-t border-border pt-4">
+              <div className="flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-medium text-foreground">{t("detail.actions.toggleRole.title")}</p>
                   <p className="text-xs text-muted-foreground">
@@ -557,7 +559,7 @@ export default function AdminUserDetailPage({
                 <button
                   onClick={() => performAction("toggle_role")}
                   disabled={actionLoading !== null}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted disabled:opacity-50 transition-colors"
+                  className="inline-flex min-h-11 touch-manipulation items-center gap-2 rounded-[var(--radius)] border border-border px-4 py-2 text-sm transition-colors hover:bg-muted disabled:opacity-50"
                 >
                   <Shield className="h-4 w-4" />
                   {actionLoading === "toggle_role" ? t("detail.actions.toggleRole.loading") : user.role === "admin" ? t("detail.actions.toggleRole.demoteButton") : t("detail.actions.toggleRole.promoteButton")}
@@ -565,7 +567,7 @@ export default function AdminUserDetailPage({
               </div>
 
               {/* Delete user */}
-              <div className="flex items-center justify-between border-t border-destructive/30 pt-4">
+              <div className="flex flex-col gap-3 border-t border-destructive/30 pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-medium text-destructive">{t("detail.actions.deleteUser.title")}</p>
                   <p className="text-xs text-muted-foreground">{t("detail.actions.deleteUser.description")}</p>
@@ -578,13 +580,13 @@ export default function AdminUserDetailPage({
                         setDeleteConfirm(false);
                       }}
                       disabled={actionLoading !== null}
-                      className="px-4 py-2 text-sm rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 transition-colors"
+                      className="min-h-11 rounded-[var(--radius)] bg-destructive px-4 py-2 text-sm text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-50"
                     >
                       {actionLoading === "delete_user" ? t("detail.actions.deleteUser.loading") : t("detail.actions.deleteUser.confirmButton")}
                     </button>
                     <button
                       onClick={() => setDeleteConfirm(false)}
-                      className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted transition-colors"
+                      className="min-h-11 rounded-[var(--radius)] border border-border px-4 py-2 text-sm transition-colors hover:bg-muted"
                     >
                       {t("detail.actions.deleteUser.cancel")}
                     </button>
@@ -593,7 +595,7 @@ export default function AdminUserDetailPage({
                   <button
                     onClick={() => setDeleteConfirm(true)}
                     disabled={actionLoading !== null}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 disabled:opacity-50 transition-colors"
+                    className="inline-flex min-h-11 touch-manipulation items-center gap-2 rounded-[var(--radius)] border border-destructive/30 px-4 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
                   >
                     <Trash2 className="h-4 w-4" />
                     {t("detail.actions.deleteUser.button")}

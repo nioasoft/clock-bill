@@ -27,24 +27,24 @@ export default async function ContactPage() {
       <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 sm:py-16">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex min-h-11 touch-manipulation items-center gap-2 rounded-[var(--radius)] px-2 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
         >
-          <ArrowRight className="h-4 w-4" />
+          <ArrowRight className="h-4 w-4 rtl:-scale-x-100" aria-hidden="true" />
           {t("back", { brand })}
         </Link>
 
         <header className="mt-8 mb-8">
-          <h1 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          <h1 className="text-balance font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             {t("title")}
           </h1>
-          <p className="mt-2 text-muted-foreground leading-relaxed">
+          <p className="mt-2 text-pretty leading-relaxed text-muted-foreground">
             {t("description")}
           </p>
         </header>
 
         <ContactForm />
         <p className="mt-8 border-t border-border pt-6 text-sm text-muted-foreground">
-          <PublicAccessibilityLink className="hover:text-foreground" />
+          <PublicAccessibilityLink className="inline-flex min-h-11 items-center hover:text-foreground" />
         </p>
       </div>
     </main>

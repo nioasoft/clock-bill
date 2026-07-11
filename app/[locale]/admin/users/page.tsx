@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import { Search, ChevronLeft, ChevronRight, Shield } from "lucide-react";
 
 interface UserRow {
@@ -35,12 +36,14 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
   const fetchUsers = useCallback(async (searchQuery: string, pageNum: number) => {
     try {
       setLoading(true);
+      setLoadError(false);
       const params = new URLSearchParams();
       if (searchQuery) params.set("search", searchQuery);
       params.set("page", String(pageNum));
@@ -56,9 +59,12 @@ export default function AdminUsersPage() {
       if (data.success) {
         setUsers(data.users);
         setPagination(data.pagination);
+      } else {
+        setLoadError(true);
       }
     } catch (err) {
       console.error("Error fetching users:", err);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -83,12 +89,12 @@ export default function AdminUsersPage() {
         <form onSubmit={handleSearch} className="mb-6">
           <div className="relative">
             <Search className="absolute end-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
+            <Input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("users.searchPlaceholder")}
-              className="w-full rounded-lg border border-border bg-card pe-10 ps-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="pe-10 ps-4"
               aria-label={t("users.searchAriaLabel")}
             />
           </div>
@@ -96,10 +102,14 @@ export default function AdminUsersPage() {
 
         {/* Users Table */}
         {loading ? (
-          <div className="space-y-3">
+          <div role="status" aria-busy="true" aria-label={t("users.title")} className="space-y-3">
             {[1, 2, 3, 4, 5].map((i) => (
               <Skeleton key={i} className="h-16 w-full rounded-lg" />
             ))}
+          </div>
+        ) : loadError ? (
+          <div role="alert" className="rounded-[var(--radius-card)] border border-destructive/20 bg-destructive/10 p-6 text-center text-destructive">
+            {t("dashboard.loadError")}
           </div>
         ) : (
           <div className="rounded-[var(--radius-card)] bg-card border border-border/50 overflow-hidden">
@@ -153,7 +163,7 @@ export default function AdminUsersPage() {
                   ))}
                   {users.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                      <td colSpan={7} role="status" className="px-4 py-8 text-center text-muted-foreground">
                         {t("users.empty")}
                       </td>
                     </tr>
@@ -168,7 +178,7 @@ export default function AdminUsersPage() {
                 <Link
                   key={user.id}
                   href={`/admin/users/${user.id}`}
-                  className="block p-4 hover:bg-muted/30 transition-colors"
+                  className="block min-h-11 p-4 transition-colors hover:bg-muted/30"
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-medium text-foreground text-sm">{user.email}</span>
@@ -190,7 +200,7 @@ export default function AdminUsersPage() {
                 </Link>
               ))}
               {users.length === 0 && (
-                <div className="p-8 text-center text-muted-foreground">{t("users.empty")}</div>
+                <div role="status" className="p-8 text-center text-muted-foreground">{t("users.empty")}</div>
               )}
             </div>
           </div>
@@ -202,9 +212,9 @@ export default function AdminUsersPage() {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="flex items-center gap-1 px-3 py-2 text-sm rounded-lg border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex min-h-11 touch-manipulation items-center gap-1 rounded-[var(--radius)] border border-border px-3 py-2 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
               {t("users.prev")}
             </button>
             <span className="text-sm text-muted-foreground">
@@ -213,10 +223,10 @@ export default function AdminUsersPage() {
             <button
               onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
               disabled={page >= pagination.totalPages}
-              className="flex items-center gap-1 px-3 py-2 text-sm rounded-lg border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex min-h-11 touch-manipulation items-center gap-1 rounded-[var(--radius)] border border-border px-3 py-2 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
             >
               {t("users.next")}
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
         )}

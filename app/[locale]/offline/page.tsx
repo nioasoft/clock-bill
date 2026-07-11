@@ -18,12 +18,12 @@ export default async function OfflinePage() {
 
   return (
     <main id="main-content" tabIndex={-1} className="flex min-h-screen flex-col items-center justify-center bg-background px-6 text-center">
-      <div className="w-12 h-1 bg-primary rounded-full mb-6" />
-      <h1 className="font-display text-3xl font-bold text-foreground">{t("title")}</h1>
-      <p className="mt-3 max-w-sm text-sm text-muted-foreground">{t("body")}</p>
+      <div className="mb-6 h-1 w-12 rounded-full bg-primary" aria-hidden="true" />
+      <h1 className="text-balance font-display text-3xl font-bold text-foreground">{t("title")}</h1>
+      <p className="mt-3 max-w-sm text-pretty text-sm leading-relaxed text-muted-foreground">{t("body")}</p>
       <Link
         href="/dashboard"
-        className="mt-8 inline-flex items-center justify-center rounded-[var(--radius)] bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+        className="mt-8 inline-flex min-h-11 touch-manipulation items-center justify-center rounded-[var(--radius)] border border-primary/80 bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary-active"
       >
         {t("retry")}
       </Link>

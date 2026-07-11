@@ -3,8 +3,12 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Check, Send, MessageSquare } from "lucide-react";
-import { fieldClass } from "@/lib/form-styles";
 import { contactSchema } from "@/lib/schemas/contact";
+import { Button } from "@/components/ui/button";
+import { FieldMessage } from "@/components/ui/field-message";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 const MAX_MESSAGE = 5000;
 
@@ -76,14 +80,15 @@ export function ContactForm() {
             </p>
           </div>
         </div>
-        <button
+        <Button
           type="button"
           onClick={() => setSent(false)}
-          className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+          variant="ghost"
+          className="mt-4"
         >
-          <MessageSquare className="h-4 w-4" />
+          <MessageSquare className="h-4 w-4" aria-hidden="true" />
           {t("sendAnother")}
-        </button>
+        </Button>
       </div>
     );
   }
@@ -94,25 +99,24 @@ export function ContactForm() {
       className="space-y-5 rounded-[var(--radius-card)] border border-border bg-card p-6"
     >
       <div>
-        <label htmlFor="contact-name" className="mb-1.5 block text-sm font-medium text-foreground">
+        <Label htmlFor="contact-name">
           {t("nameLabel")} <span className="text-muted-foreground font-normal">{t("nameOptional")}</span>
-        </label>
-        <input
+        </Label>
+        <Input
           id="contact-name"
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className={fieldClass(false)}
           disabled={submitting}
           autoComplete="name"
         />
       </div>
 
       <div>
-        <label htmlFor="contact-email" className="mb-1.5 block text-sm font-medium text-foreground">
+        <Label htmlFor="contact-email">
           {t("emailLabel")}
-        </label>
-        <input
+        </Label>
+        <Input
           id="contact-email"
           type="email"
           value={email}
@@ -122,7 +126,7 @@ export function ContactForm() {
           }}
           required
           dir="ltr"
-          className={`${fieldClass(false)} text-start`}
+          className="text-start"
           disabled={submitting}
           autoComplete="email"
           placeholder="you@example.com"
@@ -130,10 +134,10 @@ export function ContactForm() {
       </div>
 
       <div>
-        <label htmlFor="contact-message" className="mb-1.5 block text-sm font-medium text-foreground">
+        <Label htmlFor="contact-message">
           {t("messageLabel")}
-        </label>
-        <textarea
+        </Label>
+        <Textarea
           id="contact-message"
           value={message}
           onChange={(e) => {
@@ -143,7 +147,7 @@ export function ContactForm() {
           rows={6}
           required
           placeholder={t("messagePlaceholder")}
-          className={`${fieldClass(Boolean(error))} resize-y`}
+          hasError={Boolean(error)}
           disabled={submitting}
           aria-describedby="contact-count"
         />
@@ -155,7 +159,7 @@ export function ContactForm() {
       {/* Honeypot: visually hidden, off-screen, not announced to screen readers. */}
       <div aria-hidden="true" className="absolute -left-[9999px] top-auto h-0 w-0 overflow-hidden">
         <label htmlFor="contact-website">{t("honeypotLabel")}</label>
-        <input
+        <Input
           id="contact-website"
           type="text"
           tabIndex={-1}
@@ -165,20 +169,17 @@ export function ContactForm() {
         />
       </div>
 
-      {error && (
-        <div className="rounded-[var(--radius)] bg-destructive/10 p-3" role="alert">
-          <p className="text-sm text-destructive">{error}</p>
-        </div>
-      )}
+      {error && <FieldMessage variant="error">{error}</FieldMessage>}
 
-      <button
+      <Button
         type="submit"
         disabled={submitting}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-[var(--radius)] bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="w-full"
+        aria-busy={submitting}
       >
-        <Send className="h-4 w-4" />
+        <Send className="h-4 w-4" aria-hidden="true" />
         {submitting ? t("submitting") : t("submit")}
-      </button>
+      </Button>
     </form>
   );
 }
