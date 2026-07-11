@@ -681,14 +681,24 @@ export default function EntriesPage() {
     setFieldErrors({});
   }, [projects]);
 
-  // Deep link: /entries?new=item or ?new=manual opens the form in that mode
-  // (used by the dashboard quick actions). Cleans the URL afterwards.
+  // Deep link: /entries?new=item|manual&clientId=… opens the form in that mode
+  // and, when possible, preselects the client's first active project.
   useEffect(() => {
-    const mode = new URLSearchParams(window.location.search).get("new");
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get("new");
+    const requestedClientId = params.get("clientId");
+    if (mode && requestedClientId && projectsLoading) return;
     if (mode === "item") openManualEntry("item");
     else if (mode === "manual") openManualEntry("hourly");
-    if (mode) window.history.replaceState({}, "", "/entries");
-  }, [openManualEntry]);
+    if (mode && requestedClientId) {
+      const preferredProject = projects.find((project) => project.clientId === requestedClientId);
+      setFormClientId(requestedClientId);
+      if (preferredProject) {
+        setFormData((current) => ({ ...current, projectId: preferredProject.id, taskId: "", rateId: "" }));
+      }
+    }
+    if (mode) window.history.replaceState({}, "", window.location.pathname);
+  }, [openManualEntry, projects, projectsLoading]);
 
   const handleDeleteClick = (entry: TimeEntry) => {
     setEntryToDelete(entry);

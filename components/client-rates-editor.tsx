@@ -1,6 +1,8 @@
 "use client";
 
+import { useId } from "react";
 import { useTranslations } from "next-intl";
+import { Trash2 } from "lucide-react";
 import { CURRENCY_SYMBOLS } from "@/lib/currency";
 import { SimpleSelect } from "@/components/ui/simple-select";
 import { Button } from "@/components/ui/button";
@@ -38,6 +40,7 @@ export function ClientRatesEditor({ rates, currency, onChange, projects = [], di
   const t = useTranslations("Clients");
   const tUnits = useTranslations("Units");
   const symbol = CURRENCY_SYMBOLS[currency] || "₪";
+  const editorId = useId();
 
   const addRate = (kind: RateKind) =>
     onChange([
@@ -97,91 +100,113 @@ export function ClientRatesEditor({ rates, currency, onChange, projects = [], di
   const hourly = rates.some((r) => r.kind === "hourly");
   const items = rates.some((r) => r.kind === "item");
 
-  /** One compact rate row. `showDefault` renders the default-radio cell (hourly only). */
+  /** One labeled rate row. `showDefault` renders the client-default control. */
   const row = (r: ClientRateInput, idx: number, unit: string, showDefault: boolean) => (
-    <div key={idx} className="space-y-1">
-      <div className="grid grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center gap-2 sm:flex">
-      {showDefault ? (
-        <label className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-[var(--radius)] hover:bg-muted">
-          <input
-            type="radio"
-            name="defaultHourly"
-            checked={r.isDefault}
-            onChange={() => setDefault(idx)}
-            className="h-5 w-5 accent-primary"
-            disabled={disabled}
-            aria-label={t("defaultRateAria")}
-            title={t("defaultBadge")}
-          />
-        </label>
-      ) : (
-        <span className="h-11 w-11 shrink-0" aria-hidden />
-      )}
-      <Input
-        type="text"
-        value={r.name}
-        onChange={(e) => updateRate(idx, { name: e.target.value })}
-        placeholder={showDefault ? t("rateNameHourlyPlaceholder") : t("rateNameItemPlaceholder")}
-        className="min-w-0 flex-1"
-        disabled={disabled}
-      />
-      {!showDefault && (
+    <div key={`${r.kind}-${idx}`} className="grid gap-3 border-t border-border py-4 first:border-t-0 lg:grid-cols-[6.5rem_minmax(10rem,1fr)_9rem_10rem_minmax(10rem,0.8fr)_3rem] lg:items-end">
+      <div>
+        <span className="mb-1.5 block text-xs font-medium text-muted-foreground lg:sr-only">{t("rateEditor.defaultColumn")}</span>
+        {showDefault ? (
+          <label className="flex min-h-11 cursor-pointer items-center gap-2 rounded-[var(--radius)] border border-border px-3 text-sm font-medium text-foreground hover:bg-muted">
+            <input
+              type="radio"
+              name={`${editorId}-default-hourly`}
+              checked={r.isDefault}
+              onChange={() => setDefault(idx)}
+              className="h-4 w-4 accent-primary"
+              disabled={disabled || Boolean(r.projectId)}
+            />
+            {t("defaultBadge")}
+          </label>
+        ) : (
+          <span className="flex min-h-11 items-center text-sm text-muted-foreground">{t("rateEditor.itemType")}</span>
+        )}
+      </div>
+
+      <div>
+        <label htmlFor={`${editorId}-${idx}-name`} className="mb-1.5 block text-xs font-medium text-muted-foreground lg:sr-only">{t("rateEditor.nameColumn")}</label>
         <Input
+          id={`${editorId}-${idx}-name`}
+          name={`rates.${idx}.name`}
           type="text"
-          list="unit-suggestions"
-          value={r.unit ?? ""}
-          onChange={(e) => updateRate(idx, { unit: e.target.value || null })}
-          placeholder={t("unitPlaceholder")}
-          className="col-start-2 col-span-2 min-w-0 sm:w-32 sm:shrink-0"
+          value={r.name}
+          onChange={(e) => updateRate(idx, { name: e.target.value })}
+          placeholder={showDefault ? t("rateNameHourlyPlaceholder") : t("rateNameItemPlaceholder")}
           disabled={disabled}
-          aria-label={t("unitAria")}
-          maxLength={30}
+          maxLength={100}
         />
-      )}
-      <div className="relative col-start-2 col-span-2 min-w-0 sm:w-36 sm:shrink-0">
-        <Input
-          type="number"
-          min="0"
-          step="0.01"
-          value={r.rate || ""}
-          onChange={(e) => updateRate(idx, { rate: parseFloat(e.target.value) || 0 })}
-          className="font-mono pe-12"
-          disabled={disabled}
-          placeholder="0.00"
-        />
-        <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-muted-foreground">
-          {symbol}/{r.unit?.trim() || unit}
-        </span>
       </div>
-      <Button
-        type="button"
-        onClick={() => removeRate(idx)}
-        variant="ghost"
-        size="icon"
-        className="col-start-3 row-start-1 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive sm:col-auto sm:row-auto"
-        disabled={disabled}
-        aria-label={t("remove")}
-        title={t("remove")}
-      >
-        <span aria-hidden="true">✕</span>
-      </Button>
+
+      <div>
+        <label htmlFor={`${editorId}-${idx}-unit`} className="mb-1.5 block text-xs font-medium text-muted-foreground lg:sr-only">{t("rateEditor.unitColumn")}</label>
+        {showDefault ? (
+          <span className="flex min-h-11 items-center rounded-[var(--radius)] border border-transparent px-3 text-sm text-muted-foreground">{t("unitHour")}</span>
+        ) : (
+          <Input
+            id={`${editorId}-${idx}-unit`}
+            name={`rates.${idx}.unit`}
+            type="text"
+            list={`${editorId}-unit-suggestions`}
+            value={r.unit ?? ""}
+            onChange={(e) => updateRate(idx, { unit: e.target.value || null })}
+            placeholder={t("unitPlaceholder")}
+            disabled={disabled}
+            maxLength={30}
+          />
+        )}
       </div>
-      {projects.length > 0 && (
-        <div className="flex flex-col gap-1.5 ps-[3.25rem] sm:flex-row sm:items-center">
-          <span className="shrink-0 text-xs text-muted-foreground">{t("rateScopeLabel")}</span>
+
+      <div>
+        <label htmlFor={`${editorId}-${idx}-price`} className="mb-1.5 block text-xs font-medium text-muted-foreground lg:sr-only">{t("rateEditor.priceColumn")}</label>
+        <div className="relative min-w-0">
+          <Input
+            id={`${editorId}-${idx}-price`}
+            name={`rates.${idx}.rate`}
+            type="number"
+            min="0"
+            step="0.01"
+            inputMode="decimal"
+            value={r.rate || ""}
+            onChange={(e) => updateRate(idx, { rate: parseFloat(e.target.value) || 0 })}
+            className="font-mono pe-12"
+            disabled={disabled}
+            placeholder="0.00"
+          />
+          <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-muted-foreground"><bdi>{symbol}/{r.unit?.trim() || unit}</bdi></span>
+        </div>
+      </div>
+
+      <div>
+        <span className="mb-1.5 block text-xs font-medium text-muted-foreground lg:sr-only">{t("rateEditor.scopeColumn")}</span>
+        {projects.length > 0 ? (
           <SimpleSelect
+            name={`rates.${idx}.projectId`}
             value={r.projectId ?? ""}
             onChange={(v) => setScope(idx, v || null)}
             disabled={disabled}
             aria-label={t("rateScopeAria")}
-            className="min-h-11 w-full px-2 text-sm sm:w-auto sm:min-w-44"
+            className="min-h-11 w-full px-2 text-sm"
             options={[
               { value: "", label: t("rateScopeAll") },
               ...projects.map((p) => ({ value: p.id, label: p.name })),
             ]}
           />
-        </div>
-      )}
+        ) : (
+          <span className="flex min-h-11 items-center text-sm text-muted-foreground">{t("rateScopeAll")}</span>
+        )}
+      </div>
+
+      <Button
+        type="button"
+        onClick={() => removeRate(idx)}
+        variant="ghost"
+        size="icon"
+        className="justify-self-end text-muted-foreground hover:bg-destructive/10 hover:text-destructive lg:justify-self-auto"
+        disabled={disabled}
+        aria-label={t("rateEditor.removeNamed", { name: r.name || t("rateEditor.unnamed") })}
+        title={t("remove")}
+      >
+        <Trash2 className="h-4 w-4" aria-hidden="true" />
+      </Button>
     </div>
   );
 
@@ -202,15 +227,18 @@ export function ClientRatesEditor({ rates, currency, onChange, projects = [], di
   );
 
   return (
-    <div className="divide-y divide-border rounded-[var(--radius)] border border-border bg-background/50">
-      <datalist id="unit-suggestions">
+    <div className="divide-y divide-border rounded-[var(--radius-card)] border border-border bg-background/30">
+      <datalist id={`${editorId}-unit-suggestions`}>
         {tUnits("suggestions").split(",").map((u) => (
           <option key={u} value={u} />
         ))}
       </datalist>
       {/* Hourly rates */}
-      <div className="space-y-2 p-3">
+      <div className="space-y-3 p-4">
         {sectionHeader(t("hourlyRatesHeader"), t("addRate"), "hourly")}
+        <div className="hidden grid-cols-[6.5rem_minmax(10rem,1fr)_9rem_10rem_minmax(10rem,0.8fr)_3rem] gap-3 border-t border-border pt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground lg:grid">
+          <span>{t("rateEditor.defaultColumn")}</span><span>{t("rateEditor.nameColumn")}</span><span>{t("rateEditor.unitColumn")}</span><span>{t("rateEditor.priceColumn")}</span><span>{t("rateEditor.scopeColumn")}</span><span className="sr-only">{t("colActions")}</span>
+        </div>
         {hourly ? (
           <div className="space-y-1.5">
             {rates.map((r, idx) => (r.kind === "hourly" ? row(r, idx, t("unitHour"), true) : null))}
@@ -221,8 +249,13 @@ export function ClientRatesEditor({ rates, currency, onChange, projects = [], di
       </div>
 
       {/* Items (price per unit) */}
-      <div className="space-y-2 p-3">
+      <div className="space-y-3 p-4">
         {sectionHeader(t("itemsHeader"), t("addItem"), "item")}
+        {items && (
+          <div className="hidden grid-cols-[6.5rem_minmax(10rem,1fr)_9rem_10rem_minmax(10rem,0.8fr)_3rem] gap-3 border-t border-border pt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground lg:grid">
+            <span>{t("rateEditor.typeColumn")}</span><span>{t("rateEditor.nameColumn")}</span><span>{t("rateEditor.unitColumn")}</span><span>{t("rateEditor.priceColumn")}</span><span>{t("rateEditor.scopeColumn")}</span><span className="sr-only">{t("colActions")}</span>
+          </div>
+        )}
         {items && (
           <div className="space-y-1.5">
             {rates.map((r, idx) => (r.kind === "item" ? row(r, idx, t("unitItem"), false) : null))}

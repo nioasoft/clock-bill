@@ -23,6 +23,7 @@ export interface SimpleSelectOption {
 
 export interface SimpleSelectProps {
   id?: string;
+  name?: string;
   value: string;
   onChange: (value: string) => void;
   options: SimpleSelectOption[];
@@ -31,6 +32,8 @@ export interface SimpleSelectProps {
   disabled?: boolean;
   className?: string;
   "aria-label"?: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: boolean;
 }
 
 /**
@@ -40,6 +43,7 @@ export interface SimpleSelectProps {
  */
 export function SimpleSelect({
   id,
+  name,
   value,
   onChange,
   options,
@@ -47,6 +51,8 @@ export function SimpleSelect({
   disabled,
   className,
   "aria-label": ariaLabel,
+  "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
 }: SimpleSelectProps) {
   const hasEmptyOption = options.some((o) => o.value === "");
   // Pass "" through (Radix shows the placeholder for it) rather than
@@ -56,11 +62,12 @@ export function SimpleSelect({
 
   return (
     <Select
+      name={name}
       value={radixValue}
       onValueChange={(v) => onChange(v === EMPTY_SENTINEL ? "" : v)}
       disabled={disabled}
     >
-      <SelectTrigger id={id} className={className} aria-label={ariaLabel}>
+      <SelectTrigger id={id} className={className} aria-label={ariaLabel} aria-describedby={ariaDescribedBy} aria-invalid={ariaInvalid}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

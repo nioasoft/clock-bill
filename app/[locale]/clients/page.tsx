@@ -107,6 +107,7 @@ function ClientsPageContent() {
   const [clientSearch, setClientSearch] = useState("");
   const [clientFilter, setClientFilter] = useState<"active" | "attention" | "archived">("active");
   const [showForm, setShowForm] = useState(false);
+  const [createStep, setCreateStep] = useState<1 | 2 | 3>(1);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   // The user's profession (from their profile) suggests a default billing model.
   // When it's "retainer" we prefill the NEW-client retainer toggle ON (one-time
@@ -184,6 +185,7 @@ function ClientsPageContent() {
   // Auto-open create form via URL params (seed one default hourly rate row)
   useEffect(() => {
     if (searchParams.get("create") === "true") {
+      setCreateStep(1);
       setFormData((prev) => ({ ...prev, rates: prev.rates.length ? prev.rates : seedRates(t("seedRateName")) }));
       setShowForm(true);
     }
@@ -380,6 +382,7 @@ function ClientsPageContent() {
         });
         setRetainerTouched(false);
         setShowForm(false);
+        setCreateStep(1);
         setEditingClient(null);
       } else {
         setFormError(
@@ -396,6 +399,32 @@ function ClientsPageContent() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const validateIdentityStep = (): boolean => {
+    const errors: typeof fieldErrors = {};
+    const nameValidation = validateRequired(formData.name, "clientName");
+    if (!nameValidation.isValid) errors.name = resolveValidation(nameValidation.code);
+    if (formData.email.trim()) {
+      const result = validateEmail(formData.email, false);
+      if (!result.isValid) errors.email = resolveValidation(result.code);
+    }
+    if (formData.phone.trim()) {
+      const result = validatePhone(formData.phone, false);
+      if (!result.isValid) errors.phone = resolveValidation(result.code);
+    }
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleWizardSubmit = (event: React.FormEvent) => {
+    if (editingClient || createStep === 3) {
+      void handleSubmit(event);
+      return;
+    }
+    event.preventDefault();
+    if (createStep === 1 && !validateIdentityStep()) return;
+    setCreateStep((current) => (current === 1 ? 2 : 3));
   };
 
   // Kept as the safe edit loader while the create form is progressively split
@@ -456,6 +485,7 @@ function ClientsPageContent() {
     setEditingClient(null);
     setRatesLoading(false);
     setRatesLoadError(false);
+    setCreateStep(1);
     setRetainerTouched(false);
     setFormData({
       name: "",
@@ -602,7 +632,12 @@ function ClientsPageContent() {
         <PageHeader title={t("pageTitle")}>
           <Button
             onClick={() => {
+              if (showForm) {
+                handleCancelEdit();
+                return;
+              }
               if (!showForm) {
+                setCreateStep(1);
                 setEditingClient(null);
                 setRetainerTouched(false);
                 setStarterSeeded(false);
@@ -612,7 +647,7 @@ function ClientsPageContent() {
                   rates: seedRates(t("seedRateName")),
                 }));
               }
-              setShowForm(!showForm);
+              setShowForm(true);
             }}
             disabled={!showForm && atClientLimit}
           >
@@ -630,9 +665,19 @@ function ClientsPageContent() {
               <p className="mt-1 text-sm text-muted-foreground">
                 {editingClient ? t("editClientSubtitle") : t("newClientSubtitle")}
               </p>
+              {!editingClient && (
+                <ol className="mt-5 grid grid-cols-3 gap-2" aria-label={t("createFlow.label")}>
+                  {([1, 2, 3] as const).map((step) => (
+                    <li key={step} className="flex items-center gap-2">
+                      <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${createStep >= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{step}</span>
+                      <span className={`hidden text-xs font-semibold sm:inline ${createStep === step ? "text-foreground" : "text-muted-foreground"}`}>{t(`createFlow.step${step}`)}</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleWizardSubmit} className="space-y-8" noValidate>
               {formError && (
                 <div className="rounded-[var(--radius)] border border-destructive/30 bg-destructive/10 p-3.5 text-sm text-destructive">
                   {formError}
@@ -650,11 +695,12 @@ function ClientsPageContent() {
               )}
 
               {/* Section — contact details */}
+              {(editingClient || createStep === 1) && (
               <fieldset className="space-y-4">
                 <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                   {t("contactSection")}
                 </legend>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+                <div className="grid grid-cols-1 gap-x-3 gap-y-4 sm:grid-cols-2">
                   <div>
                     <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-foreground">
                       {t("clientNameLabel")} <span className="text-primary">*</span>
@@ -662,6 +708,8 @@ function ClientsPageContent() {
                     <input
                       type="text"
                       id="name"
+                      name="organization"
+                      autoComplete="organization"
                       required
                       value={formData.name}
                       onChange={(e) => {
@@ -669,10 +717,12 @@ function ClientsPageContent() {
                         setFieldErrors({ ...fieldErrors, name: undefined });
                       }}
                       className={fieldClass(!!fieldErrors.name)}
+                      aria-invalid={Boolean(fieldErrors.name) || undefined}
+                      aria-describedby={fieldErrors.name ? "name-error" : undefined}
                       disabled={submitting}
                       placeholder={t("clientNamePlaceholder")}
                     />
-                    {fieldErrors.name && <p className="mt-1.5 text-xs text-destructive">{fieldErrors.name}</p>}
+                    {fieldErrors.name && <p id="name-error" className="mt-1.5 text-xs text-destructive">{fieldErrors.name}</p>}
                   </div>
 
                   <div>
@@ -682,6 +732,8 @@ function ClientsPageContent() {
                     <input
                       type="text"
                       id="contactName"
+                      name="contactName"
+                      autoComplete="name"
                       value={formData.contactName}
                       onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
                       className={fieldClass(false)}
@@ -697,6 +749,8 @@ function ClientsPageContent() {
                     <input
                       type="email"
                       id="email"
+                      name="email"
+                      autoComplete="email"
                       dir="ltr"
                       value={formData.email}
                       onChange={(e) => {
@@ -704,10 +758,12 @@ function ClientsPageContent() {
                         setFieldErrors({ ...fieldErrors, email: undefined });
                       }}
                       className={`${fieldClass(!!fieldErrors.email)} text-end`}
+                      aria-invalid={Boolean(fieldErrors.email) || undefined}
+                      aria-describedby={fieldErrors.email ? "email-error" : undefined}
                       disabled={submitting}
                       placeholder="name@example.com"
                     />
-                    {fieldErrors.email && <p className="mt-1.5 text-xs text-destructive">{fieldErrors.email}</p>}
+                    {fieldErrors.email && <p id="email-error" className="mt-1.5 text-xs text-destructive">{fieldErrors.email}</p>}
                   </div>
 
                   <div>
@@ -717,6 +773,8 @@ function ClientsPageContent() {
                     <input
                       type="tel"
                       id="phone"
+                      name="phone"
+                      autoComplete="tel"
                       dir="ltr"
                       value={formData.phone}
                       onChange={(e) => {
@@ -724,19 +782,23 @@ function ClientsPageContent() {
                         setFieldErrors({ ...fieldErrors, phone: undefined });
                       }}
                       className={`${fieldClass(!!fieldErrors.phone)} text-end`}
+                      aria-invalid={Boolean(fieldErrors.phone) || undefined}
+                      aria-describedby={fieldErrors.phone ? "phone-error" : undefined}
                       disabled={submitting}
                       placeholder="050-0000000"
                     />
-                    {fieldErrors.phone && <p className="mt-1.5 text-xs text-destructive">{fieldErrors.phone}</p>}
+                    {fieldErrors.phone && <p id="phone-error" className="mt-1.5 text-xs text-destructive">{fieldErrors.phone}</p>}
                   </div>
 
-                  <div className="col-span-2">
+                  <div className="sm:col-span-2">
                     <label htmlFor="address" className="mb-1.5 block text-sm font-medium text-foreground">
                       {t("addressLabel")}
                     </label>
                     <input
                       type="text"
                       id="address"
+                      name="address"
+                      autoComplete="street-address"
                       value={formData.address}
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                       className={fieldClass(false)}
@@ -746,20 +808,24 @@ function ClientsPageContent() {
                   </div>
                 </div>
               </fieldset>
+              )}
 
               {/* Section — billing */}
+              {(editingClient || createStep > 1) && (
               <fieldset className="space-y-4">
                 <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                  {t("billingSection")}
+                  {createStep === 3 && !editingClient ? t("createFlow.advanced") : t("billingSection")}
                 </legend>
 
-                <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+                <div className="grid grid-cols-1 gap-x-3 gap-y-4 sm:grid-cols-2">
+                  {(editingClient || createStep === 2) && (<>
                   <div>
                     <label htmlFor="currency" className="mb-1.5 block text-sm font-medium text-foreground">
                       {t("currencyLabel")}
                     </label>
                     <SimpleSelect
                       id="currency"
+                      name="currency"
                       value={formData.currency}
                       onChange={(v) => setFormData({ ...formData, currency: v })}
                       disabled={submitting}
@@ -769,13 +835,16 @@ function ClientsPageContent() {
                       {t("currencyPolicyHint")}
                     </p>
                   </div>
+                  </>)}
 
+                  {(editingClient || createStep === 3) && (<>
                   <div>
                     <label htmlFor="billingRounding" className="mb-1.5 block text-sm font-medium text-foreground">
                       {t("billingRoundingLabel")}
                     </label>
                     <SimpleSelect
                       id="billingRounding"
+                      name="billingRounding"
                       value={formData.billingRounding}
                       onChange={(v) => setFormData({ ...formData, billingRounding: v as "" | RoundingMode })}
                       disabled={submitting}
@@ -792,6 +861,7 @@ function ClientsPageContent() {
                     </label>
                     <SimpleSelect
                       id="documentLanguage"
+                      name="documentLanguage"
                       value={formData.documentLanguage}
                       onChange={(v) =>
                         setFormData({ ...formData, documentLanguage: v as "" | "he" | "en" })
@@ -820,6 +890,7 @@ function ClientsPageContent() {
                     </label>
                     <SimpleSelect
                       id="vatMode"
+                      name="vatMode"
                       value={formData.vatMode}
                       onChange={(v) =>
                         setFormData({ ...formData, vatMode: v as "" | "add" | "exempt" })
@@ -840,6 +911,7 @@ function ClientsPageContent() {
                     </label>
                     <SimpleSelect
                       id="settlementBillingDay"
+                      name="settlementBillingDay"
                       value={formData.settlementBillingDay === null ? "" : String(formData.settlementBillingDay)}
                       onChange={(v) =>
                         setFormData({ ...formData, settlementBillingDay: v === "" ? null : Number(v) })
@@ -853,9 +925,10 @@ function ClientsPageContent() {
                     />
                     <p className="mt-1 text-xs text-muted-foreground">{t("settlementDayHint")}</p>
                   </div>
-
+                </>)}
                 </div>
 
+                {(editingClient || createStep === 2) && (<>
                 {/* Rates & items editor */}
                 <div className="space-y-2">
                   <span className="text-sm font-medium text-foreground">{t("ratesAndItems")}</span>
@@ -872,6 +945,7 @@ function ClientsPageContent() {
                   <span className="text-sm font-medium text-foreground">{t("retainerClient")}</span>
                   <input
                     type="checkbox"
+                    name="isRetainer"
                     checked={formData.isRetainer}
                     onChange={(e) => {
                       setRetainerTouched(true);
@@ -889,7 +963,7 @@ function ClientsPageContent() {
                 {/* Retainer fields */}
                 {formData.isRetainer && (
                   <div className="space-y-4 rounded-[var(--radius)] border border-border bg-background/50 p-4">
-                    <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+                    <div className="grid grid-cols-1 gap-x-3 gap-y-4 sm:grid-cols-2">
                       <div>
                         <label htmlFor="retainerHours" className="mb-1.5 block text-sm font-medium text-foreground">
                           {t("retainerHoursLabel")}
@@ -897,6 +971,7 @@ function ClientsPageContent() {
                         <input
                           type="number"
                           id="retainerHours"
+                          name="retainerHours"
                           min="0"
                           step="0.5"
                           value={formData.retainerHours}
@@ -913,6 +988,7 @@ function ClientsPageContent() {
                         <input
                           type="number"
                           id="retainerMonthlyFee"
+                          name="retainerMonthlyFee"
                           min="0"
                           step="0.01"
                           value={formData.retainerMonthlyFee}
@@ -928,6 +1004,7 @@ function ClientsPageContent() {
                       <span className="text-sm font-medium text-foreground">{t("separateOverageRate")}</span>
                       <input
                         type="checkbox"
+                        name="hasOverageRate"
                         checked={formData.hasOverageRate}
                         onChange={(e) => setFormData({ ...formData, hasOverageRate: e.target.checked })}
                         className="h-4 w-4 rounded border-border accent-primary"
@@ -943,6 +1020,7 @@ function ClientsPageContent() {
                         <input
                           type="number"
                           id="overageRate"
+                          name="overageRate"
                           min="0"
                           step="0.01"
                           value={formData.overageRate}
@@ -955,15 +1033,19 @@ function ClientsPageContent() {
                     )}
                   </div>
                 )}
+                </>)}
               </fieldset>
+              )}
 
               {/* Section — notes */}
+              {(editingClient || createStep === 3) && (
               <fieldset className="space-y-4">
                 <legend className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                   {t("notesSection")}
                 </legend>
                 <textarea
                   id="notes"
+                  name="notes"
                   rows={3}
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
@@ -972,6 +1054,7 @@ function ClientsPageContent() {
                   placeholder={t("notesPlaceholder")}
                 />
               </fieldset>
+              )}
 
               {editingClient && (
                 <div className="flex items-center justify-between rounded-[var(--radius)] border border-border bg-background/50 p-4">
@@ -1010,17 +1093,23 @@ function ClientsPageContent() {
               <div className="flex justify-end gap-3 border-t border-border pt-5">
                 <Button
                   type="button"
-                  onClick={handleCancelEdit}
+                  onClick={() => createStep > 1 && !editingClient ? setCreateStep((current) => current === 3 ? 2 : 1) : handleCancelEdit()}
                   variant="outline"
                   disabled={submitting || ratesLoading}
                 >
-                  {t("cancel")}
+                  {createStep > 1 && !editingClient ? t("createFlow.back") : t("cancel")}
                 </Button>
                 <Button
                   type="submit"
                   disabled={submitting || ratesLoading || ratesLoadError}
                 >
-                  {submitting ? t("saving") : editingClient ? t("updateClientButton") : t("saveClientButton")}
+                  {submitting
+                    ? t("saving")
+                    : editingClient
+                      ? t("updateClientButton")
+                      : createStep < 3
+                        ? t("createFlow.continue")
+                        : t("saveClientButton")}
                 </Button>
               </div>
             </form>

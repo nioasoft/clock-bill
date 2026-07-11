@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useRouter } from "@/src/i18n/navigation";
 import { AppLayout } from "@/components/app-layout";
@@ -17,6 +17,7 @@ import { useTranslations } from "next-intl";
 import { SimpleSelect } from "@/components/ui/simple-select";
 import { Button } from "@/components/ui/button";
 import { resolveDocumentLocale } from "@/lib/document-language";
+import { showSuccessToast } from "@/lib/toast";
 import {
   ClientWorkspace,
   type ClientWorkspaceData,
@@ -124,6 +125,7 @@ export default function ClientDetailsPage() {
   });
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const [clientProjects, setClientProjects] = useState<{id: string; name: string; status: string}[]>([]);
   const [workspaceData, setWorkspaceData] = useState<ClientWorkspaceData | null>(null);
   const [workspaceLoading, setWorkspaceLoading] = useState(true);
@@ -133,10 +135,22 @@ export default function ClientDetailsPage() {
   // When the edit form is opened via "ערוך תעריפים", land on the rates editor
   // rather than the top of the form.
   const [focusRatesOnOpen, setFocusRatesOnOpen] = useState(false);
+  const isDirty = useMemo(
+    () => Boolean(client) && JSON.stringify(formData) !== JSON.stringify(clientToFormData(client!)),
+    [client, formData]
+  );
 
   const openEditForm = (focusRates = false) => {
     setFocusRatesOnOpen(focusRates);
+    setShowDiscardConfirm(false);
     setShowEditForm(true);
+  };
+
+  const closeEditForm = () => {
+    setShowEditForm(false);
+    setShowDiscardConfirm(false);
+    setFormError("");
+    if (client) setFormData(clientToFormData(client));
   };
 
   // The edit form renders inline near the top of the page. The "ערוך תעריפים"
@@ -147,6 +161,15 @@ export default function ClientDetailsPage() {
     const target = focusRatesOnOpen ? ratesEditorRef.current : editFormRef.current;
     target?.scrollIntoView({ behavior: "smooth", block: focusRatesOnOpen ? "center" : "start" });
   }, [showEditForm, focusRatesOnOpen]);
+
+  useEffect(() => {
+    if (!showEditForm || !isDirty) return;
+    const guard = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+    window.addEventListener("beforeunload", guard);
+    return () => window.removeEventListener("beforeunload", guard);
+  }, [isDirty, showEditForm]);
 
   useEffect(() => {
     const fetchClient = async () => {
@@ -246,6 +269,7 @@ export default function ClientDetailsPage() {
         setClient(data.client);
         setFormData(clientToFormData(data.client));
         setShowEditForm(false);
+        showSuccessToast(t("workspace.saved"));
       } else {
         setFormError(data.error_code ? messageForError(data, tRoot) : t("errorUpdateClient"));
       }
@@ -328,8 +352,15 @@ export default function ClientDetailsPage() {
         )}
 
         {showEditForm && (
-          <div ref={editFormRef} className="mb-6 mx-auto max-w-2xl rounded-[var(--radius-card)] bg-card p-5 border border-border scroll-mt-20">
-            <h2 className="font-display text-lg font-semibold text-foreground mb-4">{t("editClientButton")}</h2>
+          <div ref={editFormRef} className="mb-6 rounded-[var(--radius-card)] border border-border bg-card p-5 scroll-mt-20 sm:p-6">
+            <div className="mb-6 border-b border-border pb-4">
+              <h2 className="font-display text-xl font-semibold text-foreground">
+                {focusRatesOnOpen ? t("workspace.billing.edit") : t("workspace.editDetails")}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {focusRatesOnOpen ? t("workspace.editBillingHint") : t("workspace.editDetailsHint")}
+              </p>
+            </div>
             <form onSubmit={handleEdit} className="space-y-4">
               {formError && (
                 <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
@@ -337,6 +368,7 @@ export default function ClientDetailsPage() {
                 </div>
               )}
 
+              {!focusRatesOnOpen && (
               <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
                 <div>
                   <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-foreground">
@@ -345,6 +377,8 @@ export default function ClientDetailsPage() {
                   <input
                     type="text"
                     id="name"
+                    name="organization"
+                    autoComplete="organization"
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -360,6 +394,8 @@ export default function ClientDetailsPage() {
                   <input
                     type="text"
                     id="contactName"
+                    name="contactName"
+                    autoComplete="name"
                     value={formData.contactName}
                     onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
                     className={fieldClass(false)}
@@ -374,6 +410,8 @@ export default function ClientDetailsPage() {
                   <input
                     type="email"
                     id="email"
+                    name="email"
+                    autoComplete="email"
                     dir="ltr"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -389,6 +427,8 @@ export default function ClientDetailsPage() {
                   <input
                     type="tel"
                     id="phone"
+                    name="phone"
+                    autoComplete="tel"
                     dir="ltr"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -404,6 +444,8 @@ export default function ClientDetailsPage() {
                   <input
                     type="text"
                     id="address"
+                    name="address"
+                    autoComplete="street-address"
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     className={fieldClass(false)}
@@ -412,9 +454,11 @@ export default function ClientDetailsPage() {
                   />
                 </div>
               </div>
+              )}
 
               {/* Billing — currency, rounding, rates/items, retainer */}
-              <div className="space-y-4 border-t border-border pt-4">
+              {focusRatesOnOpen && (
+              <div className="space-y-6">
                 <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
                   <div>
                     <label htmlFor="currency" className="mb-1.5 block text-sm font-medium text-foreground">
@@ -422,6 +466,7 @@ export default function ClientDetailsPage() {
                     </label>
                     <SimpleSelect
                       id="currency"
+                      name="currency"
                       value={formData.currency}
                       onChange={(v) => setFormData({ ...formData, currency: v })}
                       disabled={submitting}
@@ -438,6 +483,7 @@ export default function ClientDetailsPage() {
                     </label>
                     <SimpleSelect
                       id="billingRounding"
+                      name="billingRounding"
                       value={formData.billingRounding}
                       onChange={(v) => setFormData({ ...formData, billingRounding: v as "" | RoundingMode })}
                       disabled={submitting}
@@ -457,6 +503,7 @@ export default function ClientDetailsPage() {
                     </label>
                     <SimpleSelect
                       id="documentLanguage"
+                      name="documentLanguage"
                       value={formData.documentLanguage}
                       onChange={(v) =>
                         setFormData({ ...formData, documentLanguage: v as "" | "he" | "en" })
@@ -485,6 +532,7 @@ export default function ClientDetailsPage() {
                     </label>
                     <SimpleSelect
                       id="vatMode"
+                      name="vatMode"
                       value={formData.vatMode}
                       onChange={(v) =>
                         setFormData({ ...formData, vatMode: v as "" | "add" | "exempt" })
@@ -505,6 +553,7 @@ export default function ClientDetailsPage() {
                     </label>
                     <SimpleSelect
                       id="settlementBillingDay"
+                      name="settlementBillingDay"
                       value={formData.settlementBillingDay === null ? "" : String(formData.settlementBillingDay)}
                       onChange={(v) =>
                         setFormData({ ...formData, settlementBillingDay: v === "" ? null : Number(v) })
@@ -552,8 +601,9 @@ export default function ClientDetailsPage() {
                           {t("retainerHoursLabel")}
                         </label>
                         <input
-                          type="number"
-                          id="retainerHours"
+                            type="number"
+                            id="retainerHours"
+                            name="retainerHours"
                           min="0"
                           step="0.5"
                           value={formData.retainerHours}
@@ -568,8 +618,9 @@ export default function ClientDetailsPage() {
                           {t("monthlyAmountLabel", { symbol: CURRENCY_SYMBOLS[formData.currency] || "₪" })}
                         </label>
                         <input
-                          type="number"
-                          id="retainerMonthlyFee"
+                            type="number"
+                            id="retainerMonthlyFee"
+                            name="retainerMonthlyFee"
                           min="0"
                           step="0.01"
                           value={formData.retainerMonthlyFee}
@@ -600,6 +651,7 @@ export default function ClientDetailsPage() {
                         <input
                           type="number"
                           id="overageRate"
+                          name="overageRate"
                           min="0"
                           step="0.01"
                           value={formData.overageRate}
@@ -613,13 +665,16 @@ export default function ClientDetailsPage() {
                   </div>
                 )}
               </div>
+              )}
 
+              {!focusRatesOnOpen && (
               <div>
                 <label htmlFor="notes" className="mb-1.5 block text-sm font-medium text-foreground">
                   {t("notesSection")}
                 </label>
                 <textarea
                   id="notes"
+                  name="notes"
                   rows={3}
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
@@ -627,17 +682,28 @@ export default function ClientDetailsPage() {
                   disabled={submitting}
                 />
               </div>
+              )}
+
+              {isDirty && (
+                <p className="text-sm font-medium text-warning" role="status" aria-live="polite">
+                  {t("workspace.unsaved")}
+                </p>
+              )}
+
+              {showDiscardConfirm && (
+                <div className="flex flex-col gap-3 rounded-[var(--radius)] border border-warning/30 bg-warning/10 p-4 sm:flex-row sm:items-center sm:justify-between" role="alert">
+                  <p className="text-sm text-foreground">{t("workspace.discardPrompt")}</p>
+                  <div className="flex gap-2">
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setShowDiscardConfirm(false)}>{t("workspace.keepEditing")}</Button>
+                    <Button type="button" variant="outline" size="sm" onClick={closeEditForm}>{t("workspace.discard")}</Button>
+                  </div>
+                </div>
+              )}
 
               <div className="flex justify-end gap-2">
                 <Button
                   type="button"
-                  onClick={() => {
-                    setShowEditForm(false);
-                    setFormError("");
-                    if (client) {
-                      setFormData(clientToFormData(client));
-                    }
-                  }}
+                  onClick={() => isDirty ? setShowDiscardConfirm(true) : closeEditForm()}
                   variant="outline"
                   disabled={submitting}
                 >
@@ -645,7 +711,7 @@ export default function ClientDetailsPage() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || !isDirty}
                 >
                   {submitting ? t("saving") : t("saveChanges")}
                 </Button>

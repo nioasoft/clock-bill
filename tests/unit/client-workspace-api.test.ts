@@ -9,6 +9,10 @@ const workspace = readFileSync(
   join(process.cwd(), "components/clients/client-workspace.tsx"),
   "utf8"
 );
+const entriesPage = readFileSync(
+  join(process.cwd(), "app/[locale]/entries/page.tsx"),
+  "utf8"
+);
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -23,5 +27,7 @@ assert(workspace.includes("<h1") && workspace.includes('role="tablist"'), "works
 assert(workspace.includes("dataError") && workspace.includes("WorkspaceError"), "workspace must distinguish errors from empty data");
 assert(workspace.includes("formatCurrency") && workspace.includes("<bdi>"), "money must use locale formatting and bidi isolation");
 assert(!workspace.includes('<a href="/projects'), "localized navigation must use the i18n Link component");
+assert(entriesPage.includes('params.get("clientId")') && entriesPage.includes("preferredProject"), "log-work links must preselect the client project");
+assert(entriesPage.includes("window.location.pathname"), "deep-link cleanup must preserve the active locale");
 
 console.log("✅ client-workspace-api: ownership and money source guardrails pass");

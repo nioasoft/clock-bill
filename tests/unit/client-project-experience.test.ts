@@ -38,9 +38,11 @@ function run(): void {
   );
   assert(
     ratesEditor.includes('components/ui/input') &&
-      ratesEditor.includes("grid-cols-[2.75rem_minmax(0,1fr)_2.75rem]") &&
+      ratesEditor.includes('name={`rates.${idx}.name`}') &&
+      ratesEditor.includes('name={`rates.${idx}.rate`}') &&
+      ratesEditor.includes("rateEditor.nameColumn") &&
       ratesEditor.includes("min-h-11"),
-    "The rate editor must keep shared inputs and a touch-friendly mobile layout"
+    "The rate editor must keep shared inputs, real labels, field names, and touch targets"
   );
   assert(
     clientsPage.includes("clientsLoadError") && clientsPage.includes('role="alert"'),
