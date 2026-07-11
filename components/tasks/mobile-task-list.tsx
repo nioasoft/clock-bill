@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { Plus } from "lucide-react";
 import { useTimer } from "@/contexts/timer-context";
 import { TASK_STATUSES, type TaskRecord, type TaskStatus } from "@/lib/tasks-types";
 import { Tabs } from "@/components/ui/tabs";
@@ -9,7 +10,7 @@ import { TaskCard } from "./task-card";
 import { TaskDetailSheet } from "./task-detail-sheet";
 import type { UseTasksBoardReturn } from "./use-tasks-board";
 
-export function MobileTaskList({ board }: { board: UseTasksBoardReturn }) {
+export function MobileTaskList({ board, onCreate }: { board: UseTasksBoardReturn; onCreate: () => void }) {
   const tStatus = useTranslations("Tasks.status");
   const tEmpty = useTranslations("Tasks.empty");
   const t = useTranslations("Tasks.board");
@@ -49,6 +50,13 @@ export function MobileTaskList({ board }: { board: UseTasksBoardReturn }) {
       <div className="rounded-[var(--radius-card)] border border-border bg-card p-10 text-center">
         <p className="text-foreground">{t("emptyTitle")}</p>
         <p className="mt-1 text-sm text-muted-foreground">{t("emptyHint")}</p>
+        <button
+          type="button"
+          onClick={onCreate}
+          className="mt-5 min-h-[44px] rounded-[var(--radius)] bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          {t("newTask")}
+        </button>
       </div>
     );
   }
@@ -68,6 +76,15 @@ export function MobileTaskList({ board }: { board: UseTasksBoardReturn }) {
           count: byStatus(s).length,
         }))}
       />
+
+      <button
+        type="button"
+        onClick={onCreate}
+        className="mb-4 inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[var(--radius)] border border-dashed border-border-strong bg-surface px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:border-primary/60 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <Plus className="h-4 w-4" aria-hidden="true" />
+        {t("newTask")}
+      </button>
 
       <div role="tabpanel" className="flex flex-col gap-2">
         {tasks.length === 0 ? (

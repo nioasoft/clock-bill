@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
+import { ChevronDown } from "lucide-react";
 import { messageForError } from "@/lib/api-error";
 import {
   Dialog,
@@ -64,12 +65,12 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
 
   const [submitting, setSubmitting] = useState(false);
 
-  // Mobile progressive disclosure: advanced fields collapse on mobile create.
-  // On sm+ they're always shown via CSS; this state only gates the mobile view.
+  // Keep the first create decision short on every viewport. Existing advanced
+  // values open automatically in edit mode so no saved information is hidden.
   const hasAdvancedValues = Boolean(
     task?.dueDate || (task?.tags && task.tags.length > 0) || task?.notes || (task?.priority && task.priority !== "normal")
   );
-  const [showAdvanced, setShowAdvanced] = useState<boolean>(isEdit && hasAdvancedValues);
+  const [showAdvanced, setShowAdvanced] = useState<boolean>(hasAdvancedValues);
 
   // Surface a load error for the shared clients/projects queries.
   useEffect(() => {
@@ -274,14 +275,18 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
           <button
             type="button"
             onClick={() => setShowAdvanced((v) => !v)}
-            className="sm:hidden min-h-[44px] py-2 text-start text-sm font-medium text-primary"
+            className="flex min-h-[44px] w-full items-center justify-between rounded-[var(--radius)] border border-border bg-surface px-3 py-2 text-start text-sm font-medium text-foreground transition-colors hover:border-border-strong hover:bg-card-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-expanded={showAdvanced}
             aria-controls="task-advanced"
           >
-            {showAdvanced ? t("hideAdvanced") : t("showAdvanced")}
+            <span>{showAdvanced ? t("hideAdvanced") : t("showAdvanced")}</span>
+            <ChevronDown
+              className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${showAdvanced ? "rotate-180" : ""}`}
+              aria-hidden="true"
+            />
           </button>
 
-          <div id="task-advanced" className={`${showAdvanced ? "" : "hidden"} sm:block space-y-4`}>
+          <div id="task-advanced" className={showAdvanced ? "space-y-4" : "hidden"}>
             <div className="grid grid-cols-2 gap-3">
             <div>
               <label htmlFor="task-priority" className={labelClass}>{t("priority")}</label>
@@ -314,13 +319,13 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
                   {tags.map((tag) => (
                     <span
                       key={tag}
-                      className="inline-flex items-center gap-1 rounded-[var(--radius)] border border-border bg-background px-2 py-1 text-xs text-foreground"
+                      className="inline-flex min-h-[44px] items-center gap-1 rounded-[var(--radius)] border border-border bg-background ps-2 text-xs text-foreground"
                     >
                       {tag}
                       <button
                         type="button"
                         onClick={() => setTags((prev) => prev.filter((x) => x !== tag))}
-                        className="text-muted-foreground hover:text-foreground"
+                        className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         aria-label={t("removeTag", { tag })}
                       >
                         ×
@@ -361,14 +366,14 @@ export function TaskFormDialog(props: TaskFormDialogProps) {
               type="button"
               onClick={props.onClose}
               disabled={submitting}
-              className="rounded-[var(--radius)] border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+              className="min-h-[44px] rounded-[var(--radius)] border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
             >
               {t("cancel")}
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-[var(--radius)] bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+              className="min-h-[44px] rounded-[var(--radius)] bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
               {submitting ? t("saving") : isEdit ? t("updateTask") : t("saveTask")}
             </button>

@@ -26,7 +26,7 @@ export function SortableTaskCard(props: { task: TaskRecord; isTimerRunning: bool
   );
 }
 
-export function KanbanBoard({ board }: { board: UseTasksBoardReturn }) {
+export function KanbanBoard({ board, onCreate }: { board: UseTasksBoardReturn; onCreate: () => void }) {
   const t = useTranslations("Tasks.board");
   const { runningTimerForTask } = useTimer();
   const { state, load, byStatus, moveTask } = board;
@@ -78,6 +78,13 @@ export function KanbanBoard({ board }: { board: UseTasksBoardReturn }) {
       <div className="rounded-[var(--radius-card)] border border-border bg-card p-10 text-center">
         <p className="text-foreground">{t("emptyTitle")}</p>
         <p className="mt-1 text-sm text-muted-foreground">{t("emptyHint")}</p>
+        <button
+          type="button"
+          onClick={onCreate}
+          className="mt-5 min-h-[44px] rounded-[var(--radius)] bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          {t("newTask")}
+        </button>
       </div>
     );
   }
@@ -99,6 +106,7 @@ export function KanbanBoard({ board }: { board: UseTasksBoardReturn }) {
               tasks={byStatus(status)}
               runningTimerForTask={runningTimerForTask}
               onCardClick={setSelected}
+              onCreate={onCreate}
             />
           ))}
         </div>

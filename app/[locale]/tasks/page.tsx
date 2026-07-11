@@ -40,10 +40,10 @@ export default function TasksPage() {
         </PageHeader>
 
         <div className="hidden lg:block">
-          <KanbanBoard board={board} />
+          <KanbanBoard board={board} onCreate={() => setCreating(true)} />
         </div>
         <div className="lg:hidden">
-          <MobileTaskList board={board} />
+          <MobileTaskList board={board} onCreate={() => setCreating(true)} />
         </div>
 
         {creating && (
