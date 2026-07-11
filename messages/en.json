@@ -2055,6 +2055,13 @@
       "documents": "Documents",
       "report": "Ad-hoc report"
     },
+    "workflow": {
+      "ariaLabel": "Billing progress",
+      "client": "Client",
+      "work": "Work",
+      "document": "Document",
+      "payment": "Payment"
+    },
     "status": {
       "pending": "Pending",
       "partial": "Partially paid",

@@ -71,8 +71,10 @@ function entryAmount(entry: BillableEntryRow): number {
 
 export default function BillableTab({
   onIssued,
+  onProgress,
 }: {
   onIssued?: (documentId: string) => void;
+  onProgress?: (stage: "client" | "work" | "document") => void;
 }) {
   const t = useTranslations("Reports");
   const locale = useLocale();
@@ -216,6 +218,12 @@ export default function BillableTab({
   const selectionCount = selectedEntryIds.size + selectedComputed.size;
   const nothingSelected = selectionCount === 0;
 
+  useEffect(() => {
+    if (!clientId) onProgress?.("client");
+    else if (nothingSelected) onProgress?.("work");
+    else onProgress?.("document");
+  }, [clientId, nothingSelected, onProgress]);
+
   const handleIssue = async () => {
     if (!data || nothingSelected || issuing) return;
     setIssuing(true);
@@ -288,7 +296,7 @@ export default function BillableTab({
             <button
               type="button"
               onClick={() => setFilterMode("month")}
-              className={`min-h-[36px] px-3 py-1 text-sm rounded-[calc(var(--radius)-2px)] transition-colors ${
+              className={`min-h-11 px-3 py-2 text-sm rounded-[calc(var(--radius)-2px)] transition-colors ${
                 filterMode === "month" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
               }`}
             >
@@ -297,7 +305,7 @@ export default function BillableTab({
             <button
               type="button"
               onClick={() => setFilterMode("range")}
-              className={`min-h-[36px] px-3 py-1 text-sm rounded-[calc(var(--radius)-2px)] transition-colors ${
+              className={`min-h-11 px-3 py-2 text-sm rounded-[calc(var(--radius)-2px)] transition-colors ${
                 filterMode === "range" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
               }`}
             >

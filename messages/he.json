@@ -2055,6 +2055,13 @@
       "documents": "תעודות",
       "report": "דוח חד-פעמי"
     },
+    "workflow": {
+      "ariaLabel": "התקדמות החיוב",
+      "client": "לקוח",
+      "work": "עבודה",
+      "document": "מסמך",
+      "payment": "תשלום"
+    },
     "status": {
       "pending": "ממתין",
       "partial": "שולם חלקית",
