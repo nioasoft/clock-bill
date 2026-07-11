@@ -783,13 +783,13 @@ export default function EntriesPage() {
           <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border border-border rounded">N</kbd>
           <button
             onClick={() => openManualEntry("hourly")}
-            className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
+            className="min-h-11 rounded-[var(--radius)] bg-primary px-4 py-2 text-primary-foreground transition-colors hover:bg-primary/90"
           >
             {t("addTimeEntry")}
           </button>
           <button
             onClick={() => openManualEntry("item")}
-            className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-surface"
+            className="min-h-11 rounded-[var(--radius)] border border-border px-4 py-2 text-foreground transition-colors hover:bg-surface"
           >
             {t("addBillingItem")}
           </button>
@@ -895,7 +895,7 @@ export default function EntriesPage() {
               <div className="sm:col-span-2 lg:col-span-4 flex justify-end">
                 <button
                   onClick={clearFilters}
-                  className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-sm text-foreground hover:bg-muted"
+                  className="min-h-11 rounded-[var(--radius)] border border-border px-4 py-2 text-sm text-foreground transition-colors hover:bg-muted"
                 >
                   {t("filters.clear")}
                 </button>
@@ -911,7 +911,7 @@ export default function EntriesPage() {
                   {clients.find((c) => c.id === filters.clientId)?.name}
                   <button
                     onClick={() => handleFilterChange("clientId", "")}
-                    className="flex h-5 w-5 items-center justify-center rounded-full text-primary/70 hover:bg-primary/20 hover:text-primary"
+                    className="flex h-11 w-11 items-center justify-center rounded-full text-primary/70 transition-colors hover:bg-primary/20 hover:text-primary"
                     aria-label={t("filters.removeClientFilter")}
                   >
                     ×
@@ -923,7 +923,7 @@ export default function EntriesPage() {
                   {projects.find((p) => p.id === filters.projectId)?.name}
                   <button
                     onClick={() => handleFilterChange("projectId", "")}
-                    className="flex h-5 w-5 items-center justify-center rounded-full text-primary/70 hover:bg-primary/20 hover:text-primary"
+                    className="flex h-11 w-11 items-center justify-center rounded-full text-primary/70 transition-colors hover:bg-primary/20 hover:text-primary"
                     aria-label={t("filters.removeProjectFilter")}
                   >
                     ×
@@ -1067,7 +1067,7 @@ export default function EntriesPage() {
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, billingKind: "hourly", rateId: "" })}
-                      className={`flex-1 min-h-[40px] px-2 py-1.5 text-sm rounded ${formData.billingKind === "hourly" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                      className={`min-h-11 flex-1 rounded px-2 py-2 text-sm ${formData.billingKind === "hourly" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
                       disabled={submitting}
                     >
                       {t("form.kindHours")}
@@ -1075,7 +1075,7 @@ export default function EntriesPage() {
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, billingKind: "item", rateId: "" })}
-                      className={`flex-1 min-h-[40px] px-2 py-1.5 text-sm rounded ${formData.billingKind === "item" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                      className={`min-h-11 flex-1 rounded px-2 py-2 text-sm ${formData.billingKind === "item" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
                       disabled={submitting}
                     >
                       {t("form.kindItem")}
@@ -1340,7 +1340,7 @@ export default function EntriesPage() {
                   <button
                     type="button"
                     onClick={() => handleDeleteClick(editingEntry)}
-                    className="inline-flex items-center gap-1.5 text-sm text-destructive hover:text-destructive/80 transition-colors"
+                    className="inline-flex min-h-11 items-center gap-1.5 rounded-[var(--radius)] px-2 text-sm text-destructive transition-colors hover:bg-destructive/10 hover:text-destructive/80"
                     disabled={submitting}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -1353,7 +1353,7 @@ export default function EntriesPage() {
                   <button
                     type="button"
                     onClick={handleCancelEdit}
-                    className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-foreground hover:bg-muted"
+                    className="min-h-11 rounded-[var(--radius)] border border-border px-4 py-2 text-foreground transition-colors hover:bg-muted"
                     disabled={submitting}
                   >
                     {t("cancel")}
@@ -1361,7 +1361,7 @@ export default function EntriesPage() {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="rounded-[var(--radius-card)] bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                    className="min-h-11 rounded-[var(--radius)] bg-primary px-4 py-2 text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
                   >
                     {submitting ? t("form.saving") : editingEntry ? t("form.update") : t("form.save")}
                   </button>
