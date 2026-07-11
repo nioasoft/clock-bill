@@ -4,6 +4,7 @@ import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
 import { clientRatesSchema } from "@/lib/schemas/rates";
 import { createLogger } from "@/lib/logger";
+import { summarizeClientMoney, type ClientMoneyDocument, type ClientMoneyEntry } from "@/lib/client-money-summary";
 
 const logger = createLogger("clients:list");
 
@@ -52,7 +53,8 @@ export async function GET(_request: NextRequest) {
 
     const { query } = await import("@/lib/db");
 
-    // Get all clients for this user with billed amounts and total hours
+    // Keep the core client rows compact. Money is derived separately from rate
+    // snapshots and charge documents so the list never labels an estimate as billed.
     const result = await query<{
       id: string;
       name: string;
@@ -73,20 +75,16 @@ export async function GET(_request: NextRequest) {
       notes: string | null;
       is_active: boolean;
       created_at: string;
-      total_billed: string | null;
       total_hours: number | null;
+      project_count: number;
+      active_project_count: number;
     }>(
       `SELECT c.id, c.name, c.contact_name, c.email, c.phone, c.address, c.default_rate,
               c.currency, c.billing_rounding, c.document_language, c.vat_mode, c.settlement_billing_day, c.is_retainer, c.retainer_hours, c.retainer_monthly_fee, c.overage_rate,
               c.notes, c.is_active, c.created_at,
-              COALESCE(SUM(
-                CASE
-                  WHEN te.is_billable = TRUE THEN
-                    COALESCE(c.default_rate, 0) * (te.duration / 60.0)
-                  ELSE 0
-                END
-              ), 0) as total_billed,
-              COALESCE(SUM(te.duration), 0) / 60.0 as total_hours
+              COALESCE(SUM(te.duration), 0) / 60.0 as total_hours,
+              COUNT(DISTINCT p.id)::int AS project_count,
+              COUNT(DISTINCT p.id) FILTER (WHERE p.status = 'active')::int AS active_project_count
        FROM clients c
        LEFT JOIN projects p ON p.client_id = c.id
        LEFT JOIN time_entries te ON te.project_id = p.id
@@ -98,6 +96,51 @@ export async function GET(_request: NextRequest) {
        LIMIT 5000`,
       [user.id]
     );
+
+    const [profileResult, entryResult, documentResult] = await Promise.all([
+      query<{ default_billing_rounding: string | null }>(
+        "SELECT default_billing_rounding FROM user_profiles WHERE user_id = $1",
+        [user.id]
+      ),
+      query<ClientMoneyEntry & Record<string, unknown>>(
+        `SELECT c.id AS "clientId", te.id, te.description, te.notes,
+                te.billing_kind AS "billingKind", te.duration, te.quantity,
+                te.rate, te.rate_label AS "rateLabel", te.item_ref AS "itemRef", te.unit,
+                p.billing_rounding AS "projectRounding",
+                c.billing_rounding AS "clientRounding"
+           FROM time_entries te
+           JOIN projects p ON p.id = te.project_id AND p.user_id = $1
+           JOIN clients c ON c.id = p.client_id AND c.user_id = $1
+          WHERE te.user_id = $1
+            AND te.charge_document_id IS NULL
+            AND te.is_billable = TRUE`,
+        [user.id]
+      ),
+      query<ClientMoneyDocument & Record<string, unknown>>(
+        `SELECT d.client_id AS "clientId", d.currency, d.total,
+                d.discount_type AS "discountType", d.discount_value AS "discountValue",
+                d.vat_rate_snapshot AS "vatRate",
+                COALESCE(SUM(pay.amount), 0)::float8 AS "paidSum"
+           FROM charge_documents d
+           JOIN clients c ON c.id = d.client_id AND c.user_id = $1
+           LEFT JOIN charge_document_payments pay
+             ON pay.document_id = d.id AND pay.user_id = $1
+          WHERE d.user_id = $1 AND d.status <> 'canceled'
+          GROUP BY d.id, d.client_id, d.currency, d.total,
+                   d.discount_type, d.discount_value, d.vat_rate_snapshot`,
+        [user.id]
+      ),
+    ]);
+
+    const clientCurrencies = new Map(
+      result.rows.map((client) => [client.id, client.currency || "ILS"])
+    );
+    const moneyByClient = summarizeClientMoney({
+      clientCurrencies,
+      profileRounding: profileResult.rows[0]?.default_billing_rounding ?? null,
+      entries: entryResult.rows,
+      documents: documentResult.rows,
+    });
 
     const clients = result.rows.map((client) => ({
       id: client.id,
@@ -119,8 +162,13 @@ export async function GET(_request: NextRequest) {
       notes: client.notes,
       isActive: client.is_active,
       createdAt: client.created_at,
-      totalBilled: client.total_billed ? parseFloat(client.total_billed) : 0,
+      unbilledTotal: moneyByClient.get(client.id)?.unbilled ?? 0,
+      outstandingTotal: moneyByClient.get(client.id)?.outstanding ?? 0,
+      paidTotal: moneyByClient.get(client.id)?.paid ?? 0,
+      hasOtherCurrency: moneyByClient.get(client.id)?.hasOtherCurrency ?? false,
       totalHours: client.total_hours || 0,
+      projectCount: client.project_count,
+      activeProjectCount: client.active_project_count,
     }));
 
     const { getUserPlan } = await import("@/lib/entitlements");

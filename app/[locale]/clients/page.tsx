@@ -8,7 +8,7 @@ import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { PlanUsageBanner } from "@/components/plan-usage-banner";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Lock, Users } from "lucide-react";
+import { ArrowUpLeft, Lock, Mail, Phone, Search, Users } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { messageForError } from "@/lib/api-error";
 import { fieldClass } from "@/lib/form-styles";
@@ -37,7 +37,7 @@ import { resolveDocumentLocale } from "@/lib/document-language";
 import { useProfile } from "@/hooks/use-profile";
 import { useQueryClient } from "@tanstack/react-query";
 import { clientsQueryKey } from "@/hooks/use-clients";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 
 interface Client {
   id: string;
@@ -56,8 +56,13 @@ interface Client {
   notes: string | null;
   isActive: boolean;
   createdAt: string;
-  totalBilled: number;
+  unbilledTotal: number;
+  outstandingTotal: number;
+  paidTotal: number;
+  hasOtherCurrency: boolean;
   totalHours: number;
+  projectCount: number;
+  activeProjectCount: number;
   documentLanguage: string | null;
   vatMode: string | null;
   settlementBillingDay: number | null;
@@ -99,6 +104,8 @@ function ClientsPageContent() {
   const [lockedIds, setLockedIds] = useState<Set<string>>(new Set());
   const [clientsLoading, setClientsLoading] = useState(true);
   const [clientsLoadError, setClientsLoadError] = useState(false);
+  const [clientSearch, setClientSearch] = useState("");
+  const [clientFilter, setClientFilter] = useState<"active" | "attention" | "archived">("active");
   const [showForm, setShowForm] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   // The user's profession (from their profile) suggests a default billing model.
@@ -148,6 +155,23 @@ function ClientsPageContent() {
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [makingActiveId, setMakingActiveId] = useState<string | null>(null);
+
+  const filteredClients = useMemo(() => {
+    const normalizedSearch = clientSearch.trim().toLocaleLowerCase(locale);
+    return clients.filter((client) => {
+      const matchesFilter =
+        clientFilter === "archived"
+          ? !client.isActive
+          : clientFilter === "attention"
+            ? client.isActive && (client.unbilledTotal > 0 || client.outstandingTotal > 0)
+            : client.isActive;
+      if (!matchesFilter) return false;
+      if (!normalizedSearch) return true;
+      return [client.name, client.contactName, client.email, client.phone]
+        .filter(Boolean)
+        .some((value) => value!.toLocaleLowerCase(locale).includes(normalizedSearch));
+    });
+  }, [clientFilter, clientSearch, clients, locale]);
 
   // Field validation errors
   const [fieldErrors, setFieldErrors] = useState<{
@@ -374,7 +398,9 @@ function ClientsPageContent() {
     }
   };
 
-  const handleEdit = async (client: Client) => {
+  // Kept as the safe edit loader while the create form is progressively split
+  // from the detail workspace; list rows now navigate to the workspace.
+  const _handleEdit = async (client: Client) => {
     setRatesLoading(true);
     setRatesLoadError(false);
     setFormError("");
@@ -1001,13 +1027,59 @@ function ClientsPageContent() {
           </div>
         )}
 
-        {/* Clients List — desktop is a single framed table; mobile is a stack of
-            distinct cards (the old shared divide-y container read as one card). */}
-        <div className="md:rounded-[var(--radius-card)] md:bg-card md:shadow">
+        <section aria-labelledby="clients-list-title" className="space-y-4">
+          <div className="flex flex-col gap-3 border-b border-border pb-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h2 id="clients-list-title" className="font-display text-lg font-semibold text-foreground">
+                {t("workspaceListTitle")}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">{t("workspaceListDescription")}</p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="relative min-w-0 sm:w-72">
+                <label htmlFor="client-search" className="sr-only">{t("searchLabel")}</label>
+                <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                <input
+                  id="client-search"
+                  name="clientSearch"
+                  type="search"
+                  value={clientSearch}
+                  onChange={(event) => setClientSearch(event.target.value)}
+                  placeholder={t("searchPlaceholder")}
+                  autoComplete="off"
+                  className={`${fieldClass(false)} ps-10`}
+                />
+              </div>
+              <div className="inline-flex min-h-11 rounded-[var(--radius)] border border-border bg-card p-1" aria-label={t("filterLabel")}>
+                {(["active", "attention", "archived"] as const).map((filter) => (
+                  <button
+                    key={filter}
+                    type="button"
+                    aria-pressed={clientFilter === filter}
+                    onClick={() => setClientFilter(filter)}
+                    className={`rounded-[calc(var(--radius)-0.25rem)] px-3 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                      clientFilter === filter
+                        ? "bg-foreground text-background"
+                        : "text-muted-foreground hover:bg-surface hover:text-foreground"
+                    }`}
+                  >
+                    {t(`filter.${filter}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-[var(--radius-card)] border border-border bg-card">
           {clientsLoading ? (
-            <div className="p-8 text-center text-muted-foreground" role="status" aria-live="polite">{t("loadingClients")}</div>
+            <div className="space-y-3 p-5" role="status" aria-live="polite">
+              <span className="sr-only">{t("loadingClients")}</span>
+              {[0, 1, 2].map((row) => (
+                <div key={row} className="h-20 animate-pulse rounded-[var(--radius)] bg-surface" />
+              ))}
+            </div>
           ) : clientsLoadError ? (
-            <div className="rounded-[var(--radius-card)] border border-destructive/20 bg-destructive/10 p-6 text-center text-sm text-destructive" role="alert">
+            <div className="m-4 rounded-[var(--radius)] border border-destructive/20 bg-destructive/10 p-6 text-center text-sm text-destructive" role="alert">
               {t("errorLoadClient")}
             </div>
           ) : clients.length === 0 ? (
@@ -1018,224 +1090,97 @@ function ClientsPageContent() {
               actionLabel={t("emptyAction")}
               onAction={() => setShowForm(true)}
             />
+          ) : filteredClients.length === 0 ? (
+            <div className="p-10 text-center">
+              <p className="font-medium text-foreground">{t("noFilterResults")}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t("noFilterResultsHint")}</p>
+            </div>
           ) : (
             <>
-            <div className="hidden md:block overflow-x-auto">
-              <table className="min-w-full divide-y divide-border">
-                <thead className="bg-surface">
-                  <tr>
-                    <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      {t("colName")}
-                    </th>
-                    <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      {t("contactNameLabel")}
-                    </th>
-                    <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      {t("emailLabel")}
-                    </th>
-                    <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      {t("phoneLabel")}
-                    </th>
-                    <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      {t("addressLabel")}
-                    </th>
-                    <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      {t("colHourlyRate")}
-                    </th>
-                    <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      {t("colTotalBilled")}
-                    </th>
-                    <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      {t("colHours")}
-                    </th>
-                    <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      {t("colStatus")}
-                    </th>
-                    <th className="px-6 py-3 text-start text-xs uppercase tracking-wider font-semibold text-foreground">
-                      {t("colActions")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border bg-card">
-                  {clients.map((client) => (
-                    <tr key={client.id} className="even:bg-surface/50 hover:bg-surface">
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <Link
-                          href={`/clients/${client.id}`}
-                          className="text-sm font-medium text-primary hover:text-primary/90"
-                        >
-                          {client.name}
-                        </Link>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm text-foreground">{client.contactName || "-"}</div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm text-foreground"><bdi>{client.email || "-"}</bdi></div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm text-foreground"><bdi>{client.phone || "-"}</bdi></div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-foreground max-w-xs truncate">{client.address || "-"}</div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm text-foreground">
-                          {client.defaultRate ? t("ratePerHour", { symbol: CURRENCY_SYMBOLS[client.currency] || "₪", rate: client.defaultRate }) : "-"}
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm font-medium text-foreground">
-                          <bdi>{formatCurrency(Number(client.totalBilled), client.currency || "ILS", locale)}</bdi>
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm text-foreground">
-                          {Number(client.totalHours) > 0 ? t("hoursValue", { hours: Number(client.totalHours).toFixed(1) }) : t("hoursValue", { hours: "0" })}
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        {client.isActive ? (
-                          <span className="inline-flex rounded-full bg-success/10 text-success px-3 py-0.5 text-xs font-semibold">
-                            {t("statusActive")}
-                          </span>
-                        ) : (
-                          <span className="inline-flex rounded-full bg-muted text-muted-foreground px-3 py-0.5 text-xs font-semibold">
-                            {t("statusInactive")}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {lockedIds.has(client.id) ? (
-                          <div className="flex flex-col gap-1.5">
-                            <span className="inline-flex w-fit items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
-                              <Lock className="h-3 w-3" />
-                              {t("usage.locked")}
+              <div className="hidden grid-cols-[minmax(14rem,1.6fr)_minmax(9rem,1fr)_minmax(7rem,0.7fr)_minmax(13rem,1.2fr)_3rem] gap-5 border-b border-border bg-surface px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:grid">
+                <span>{t("colClient")}</span>
+                <span>{t("colBillingModel")}</span>
+                <span>{t("colProjects")}</span>
+                <span>{t("colMoneyStatus")}</span>
+                <span className="sr-only">{t("colActions")}</span>
+              </div>
+              <ul className="divide-y divide-border">
+                {filteredClients.map((client) => {
+                  const needsAttention = client.unbilledTotal > 0 || client.outstandingTotal > 0;
+                  return (
+                    <li key={client.id} className="group p-4 transition-colors hover:bg-surface/70 lg:grid lg:grid-cols-[minmax(14rem,1.6fr)_minmax(9rem,1fr)_minmax(7rem,0.7fr)_minmax(13rem,1.2fr)_3rem] lg:items-center lg:gap-5 lg:px-5 lg:py-4">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <Link href={`/clients/${client.id}`} className="truncate font-semibold text-foreground underline-offset-4 hover:underline">
+                            {client.name}
+                          </Link>
+                          {lockedIds.has(client.id) && (
+                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+                              <Lock className="h-3 w-3" aria-hidden="true" />{t("usage.locked")}
                             </span>
-                            <p className="text-xs text-muted-foreground">{t("usage.dataSafe")}</p>
-                            <div className="flex flex-wrap items-center gap-2">
-                              <Button
-                                onClick={() => handleMakeActive(client.id)}
-                                disabled={makingActiveId === client.id}
-                                size="sm"
-                              >
-                                {makingActiveId === client.id ? t("saving") : t("usage.makeActive")}
-                              </Button>
-                              <Link
-                                href="/pricing"
-                                className={buttonVariants({ variant: "outline", size: "sm" })}
-                              >
-                                {t("usage.upgradeToUnlock")}
-                              </Link>
-                            </div>
-                          </div>
-                        ) : (
-                          <Button
-                            onClick={() => handleEdit(client)}
-                            variant="ghost"
-                            size="sm"
-                            className="ms-2 whitespace-nowrap text-primary hover:text-primary"
-                          >
-                            {t("edit")}
-                          </Button>
+                          )}
+                        </div>
+                        <div className="mt-1 flex min-w-0 flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          {client.contactName && <span>{client.contactName}</span>}
+                          {client.email && <span className="inline-flex min-w-0 items-center gap-1"><Mail className="h-3 w-3 shrink-0" aria-hidden="true" /><bdi className="truncate">{client.email}</bdi></span>}
+                          {client.phone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" aria-hidden="true" /><bdi>{client.phone}</bdi></span>}
+                          {!client.contactName && !client.email && !client.phone && <span>{t("contactMissing")}</span>}
+                        </div>
+                      </div>
+
+                      <div className="mt-4 lg:mt-0">
+                        <span className="text-xs text-muted-foreground lg:sr-only">{t("colBillingModel")}</span>
+                        <p className="mt-1 text-sm font-medium text-foreground lg:mt-0">
+                          {client.isRetainer
+                            ? t("billingModelRetainer")
+                            : client.defaultRate
+                              ? t("billingModelHourly", { amount: formatCurrency(client.defaultRate, client.currency, locale) })
+                              : t("billingModelFlexible")}
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted-foreground"><bdi>{client.currency}</bdi></p>
+                      </div>
+
+                      <div className="mt-4 lg:mt-0">
+                        <span className="text-xs text-muted-foreground lg:sr-only">{t("colProjects")}</span>
+                        <p className="mt-1 text-sm font-medium text-foreground lg:mt-0">{t("activeProjectsCount", { active: client.activeProjectCount, total: client.projectCount })}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{t("hoursTracked", { hours: Number(client.totalHours).toFixed(1) })}</p>
+                      </div>
+
+                      <div className="mt-4 grid grid-cols-2 gap-3 border-t border-border pt-4 lg:mt-0 lg:border-0 lg:pt-0">
+                        <div>
+                          <p className="text-xs text-muted-foreground">{t("unbilledLabel")}</p>
+                          <p className="mt-0.5 font-mono text-sm font-semibold tabular-nums text-foreground"><bdi>{formatCurrency(client.unbilledTotal, client.currency, locale)}</bdi></p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">{t("outstandingLabel")}</p>
+                          <p className={`mt-0.5 font-mono text-sm font-semibold tabular-nums ${client.outstandingTotal > 0 ? "text-warning" : "text-foreground"}`}><bdi>{formatCurrency(client.outstandingTotal, client.currency, locale)}</bdi></p>
+                        </div>
+                        {(needsAttention || client.hasOtherCurrency) && (
+                          <p className="col-span-2 text-xs text-muted-foreground">
+                            {client.hasOtherCurrency ? t("otherCurrencyHint") : t("attentionHint")}
+                          </p>
                         )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="md:hidden space-y-3">
-              {clients.map((client) => (
-                <div key={client.id} className="rounded-[var(--radius-card)] border border-border bg-card p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <Link
-                      href={`/clients/${client.id}`}
-                      className={`text-sm font-semibold ${
-                        client.isActive
-                          ? "text-primary hover:text-primary/90"
-                          : "text-foreground hover:text-foreground/80"
-                      }`}
-                    >
-                      {client.name}
-                    </Link>
-                    {client.isActive ? (
-                      <span className="inline-flex shrink-0 rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-semibold text-success">{t("statusActive")}</span>
-                    ) : (
-                      <span className="inline-flex shrink-0 rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">{t("statusInactive")}</span>
-                    )}
-                  </div>
-
-                  {(client.contactName || client.email || client.phone) && (
-                    <div className="mt-1 space-y-0.5 text-sm text-muted-foreground">
-                      {client.contactName && <div>{client.contactName}</div>}
-                      {client.email && <div className="truncate"><bdi>{client.email}</bdi></div>}
-                      {client.phone && <div className="tabular-nums"><bdi>{client.phone}</bdi></div>}
-                    </div>
-                  )}
-
-                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-                    <span className="text-muted-foreground">
-                      {t("rateInline")}{" "}
-                      <span className="text-foreground">
-                        {client.defaultRate ? t("ratePerHour", { symbol: CURRENCY_SYMBOLS[client.currency] || "₪", rate: client.defaultRate }) : "-"}
-                      </span>
-                    </span>
-                    <span className="text-muted-foreground">
-                      {t("billedInline")}{" "}
-                      <span className="font-medium text-foreground">
-                        <bdi>{formatCurrency(Number(client.totalBilled), client.currency || "ILS", locale)}</bdi>
-                      </span>
-                    </span>
-                    <span className="text-muted-foreground">
-                      {t("hoursInline")}{" "}
-                      <span className="text-foreground tabular-nums">
-                        {Number(client.totalHours) > 0 ? `${Number(client.totalHours).toFixed(1)}` : "0"}
-                      </span>
-                    </span>
-                  </div>
-
-                  {lockedIds.has(client.id) ? (
-                    <div className="mt-3 flex flex-col gap-2">
-                      <div className="flex items-center gap-1.5">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
-                          <Lock className="h-3 w-3" />
-                          {t("usage.locked")}
-                        </span>
-                        <span className="text-xs text-muted-foreground">{t("usage.dataSafe")}</span>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          onClick={() => handleMakeActive(client.id)}
-                          disabled={makingActiveId === client.id}
-                        >
-                          {makingActiveId === client.id ? t("saving") : t("usage.makeActive")}
-                        </Button>
-                        <Link
-                          href="/pricing"
-                          className={buttonVariants({ variant: "outline" })}
-                        >
-                          {t("usage.upgradeToUnlock")}
-                        </Link>
+
+                      <div className="mt-4 flex items-center justify-end lg:mt-0">
+                        {lockedIds.has(client.id) ? (
+                          <Button onClick={() => handleMakeActive(client.id)} disabled={makingActiveId === client.id} size="sm">
+                            {makingActiveId === client.id ? t("saving") : t("usage.makeActive")}
+                          </Button>
+                        ) : (
+                          <Link href={`/clients/${client.id}`} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label={t("openClient", { name: client.name })}>
+                            <ArrowUpLeft className={`h-4 w-4 ${locale === "en" ? "scale-x-[-1]" : ""}`} aria-hidden="true" />
+                          </Link>
+                        )}
                       </div>
-                    </div>
-                  ) : (
-                    <div className="mt-3">
-                      <Button
-                        onClick={() => handleEdit(client)}
-                        variant="outline"
-                      >
-                        {t("edit")}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                    </li>
+                  );
+                })}
+              </ul>
             </>
           )}
-        </div>
+          </div>
+        </section>
       </PageContainer>
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!clientToDelete} onOpenChange={(open) => { if (!open) cancelDelete(); }}>
