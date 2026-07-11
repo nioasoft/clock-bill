@@ -11,6 +11,10 @@ import { DeleteAccountSection } from "@/components/delete-account-section";
 import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
+import {
+  SettingsSectionNav,
+  type SettingsSectionNavItem,
+} from "@/components/settings/settings-section-nav";
 import { fieldClass } from "@/lib/form-styles";
 import { SimpleSelect } from "@/components/ui/simple-select";
 import { Tabs } from "@/components/ui/tabs";
@@ -63,6 +67,8 @@ interface Profile {
   updatedAt: string;
 }
 
+type SettingsTab = "profile" | "appearance" | "account";
+
 
 export default function SettingsPage() {
   const t = useTranslations("Settings");
@@ -75,7 +81,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
-  const [activeTab, setActiveTab] = useState<"profile" | "appearance" | "account">("profile");
+  const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
   const [sessions, setSessions] = useState<Session[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -142,7 +148,7 @@ export default function SettingsPage() {
   useEffect(() => {
     const requested = new URLSearchParams(window.location.search).get("tab");
     // Map legacy/sub-section deep-links onto the consolidated tabs.
-    const remap: Record<string, typeof activeTab> = {
+    const remap: Record<string, SettingsTab> = {
       profile: "profile",
       appearance: "appearance",
       dashboard: "appearance",
@@ -156,6 +162,17 @@ export default function SettingsPage() {
       setActiveTab(remap[requested]);
     }
   }, []);
+
+  // Hash targets render conditionally with their parent tab. Re-run the native
+  // anchor jump once the requested tab is mounted so deep links remain useful.
+  useEffect(() => {
+    const targetId = window.location.hash.slice(1);
+    if (!targetId) return;
+    const frame = requestAnimationFrame(() => {
+      document.getElementById(targetId)?.scrollIntoView({ block: "start" });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [activeTab]);
 
   useEffect(() => {
     if (activeTab === "profile") {
@@ -384,14 +401,17 @@ export default function SettingsPage() {
   const sectionSaveRow = (section: string) => (
     <div className="flex items-center justify-end gap-3 pt-1">
       {sectionResult?.section === section && (
-        <span className={`text-sm ${sectionResult.ok ? "text-success" : "text-destructive"}`}>
+        <span
+          role={sectionResult.ok ? "status" : "alert"}
+          className={`text-sm ${sectionResult.ok ? "text-success" : "text-destructive"}`}
+        >
           {sectionResult.ok ? t("toasts.profileSaved") : t("toasts.saveProfileError")}
         </span>
       )}
       <button
         type="submit"
         disabled={savingSection === section}
-        className="px-5 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-[var(--radius)] hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="min-h-11 rounded-[var(--radius)] bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {savingSection === section ? t("business.saving") : t("business.saveButton")}
       </button>
@@ -673,6 +693,35 @@ export default function SettingsPage() {
     }
   };
 
+  const selectTab = (nextTab: SettingsTab) => {
+    setActiveTab(nextTab);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", nextTab);
+    url.hash = "";
+    window.history.replaceState(window.history.state, "", url);
+  };
+
+  const sectionNavItems: Record<SettingsTab, SettingsSectionNavItem[]> = {
+    profile: [
+      { id: "settings-business", label: t("business.title") },
+      { id: "settings-pdf", label: t("pdf.sectionTitle") },
+      { id: "settings-logo", label: t("profile.logoTitle") },
+      { id: "settings-signature", label: t("profile.signatureTitle") },
+      { id: "settings-bank", label: t("business.bankSectionTitle") },
+    ],
+    appearance: [
+      { id: "settings-theme", label: t("appearance.title") },
+      { id: "settings-dashboard", label: t("dashboard.title") },
+      { id: "settings-display", label: t("display.sectionTitle") },
+    ],
+    account: [
+      { id: "settings-plan", label: t("billing.heading") },
+      { id: "settings-notifications", label: t("notifications.alertsTitle") },
+      { id: "settings-security", label: t("security.sessionsTitle") },
+      { id: "settings-data", label: t("data.title") },
+    ],
+  };
+
   return (
     <AppLayout>
       <PageContainer maxWidth="max-w-3xl">
@@ -683,7 +732,7 @@ export default function SettingsPage() {
           <Tabs
             ariaLabel={t("pageTitle")}
             active={activeTab}
-            onChange={(k) => setActiveTab(k as typeof activeTab)}
+            onChange={(key) => selectTab(key as SettingsTab)}
             tabs={[
               { key: "profile", label: t("tabs.profile") },
               { key: "appearance", label: t("tabs.appearance") },
@@ -692,16 +741,42 @@ export default function SettingsPage() {
           />
         </div>
 
+        <SettingsSectionNav
+          ariaLabel={t(`tabs.${activeTab}`)}
+          items={sectionNavItems[activeTab]}
+        />
+
+        {(savingSection || sectionResult) && (
+          <div
+            role={sectionResult && !sectionResult.ok ? "alert" : "status"}
+            aria-live="polite"
+            aria-atomic="true"
+            className={`fixed bottom-20 end-4 z-40 max-w-[calc(100%-2rem)] rounded-[var(--radius)] border px-4 py-3 text-sm font-medium shadow-lg backdrop-blur lg:bottom-4 ${
+              savingSection
+                ? "border-border bg-card-elevated text-foreground"
+                : sectionResult && !sectionResult.ok
+                  ? "border-destructive/30 bg-card-elevated text-destructive"
+                  : "border-success/30 bg-card-elevated text-success"
+            }`}
+          >
+            {savingSection
+              ? t("business.saving")
+              : sectionResult?.ok
+                ? t("toasts.profileSaved")
+                : t("toasts.saveProfileError")}
+          </div>
+        )}
+
         {/* Tab panels — a flex column so consolidated tabs (which now hold
             several sections each) order their sections via order-* regardless
             of source position, avoiding large JSX moves. Only the active tab's
             panels render, so order values are per-tab. */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 [&_button]:min-h-11 [&_input[type=color]]:min-h-11">
 
 
         {/* Appearance Tab Content */}
         {activeTab === "appearance" && (
-          <div className="space-y-6 order-1" role="tabpanel">
+          <div id="settings-theme" className="order-1 scroll-mt-36 space-y-6 target:ring-2 target:ring-ring lg:scroll-mt-6" role="tabpanel">
             <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-2">
                 {t("appearance.title")}
@@ -744,7 +819,7 @@ export default function SettingsPage() {
 
         {/* Dashboard layout — moved under Appearance */}
         {activeTab === "appearance" && (
-          <div className="order-2" role="tabpanel">
+          <div id="settings-dashboard" className="order-2 scroll-mt-36 target:ring-2 target:ring-ring lg:scroll-mt-6" role="tabpanel">
             <DashboardCustomizer />
           </div>
         )}
@@ -752,7 +827,7 @@ export default function SettingsPage() {
         {/* Display preferences — date / time / language. Instant-save (no
             button), consistent with theme + dashboard above. */}
         {activeTab === "appearance" && (
-          <div className="space-y-6 order-3" role="tabpanel">
+          <div id="settings-display" className="order-3 scroll-mt-36 space-y-6 target:ring-2 target:ring-ring lg:scroll-mt-6" role="tabpanel">
             <div className="bg-card rounded-[var(--radius-card)] border border-border p-5 sm:p-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-1">
                 {t("display.sectionTitle")}
@@ -811,7 +886,7 @@ export default function SettingsPage() {
 
         {/* Notifications — moved under Account */}
         {activeTab === "account" && (
-          <div className="space-y-6 order-2" role="tabpanel">
+          <div id="settings-notifications" className="order-2 scroll-mt-36 space-y-6 target:ring-2 target:ring-ring lg:scroll-mt-6" role="tabpanel">
             {/* Notification Permission */}
             <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-2">
@@ -854,7 +929,7 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={requestNotificationPermission}
-                    className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-[var(--radius)] hover:bg-primary/90 active:scale-[0.99] transition-all cursor-pointer"
+                    className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-[var(--radius)] bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-[background-color,transform] hover:bg-primary/90 active:scale-[0.99]"
                   >
                     <Bell className="h-4 w-4" aria-hidden="true" />
                     {t("notifications.enablePermission")}
@@ -900,14 +975,14 @@ export default function SettingsPage() {
                       <label className="text-sm font-medium text-foreground">{t("notifications.longTimerTitle")}</label>
                       <p className="text-xs text-muted-foreground mt-1">{t("notifications.longTimerToggleHint")}</p>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                    <label className="relative inline-flex min-h-11 shrink-0 cursor-pointer items-center">
                       <input
                         type="checkbox"
                         checked={longTimerEnabled}
                         onChange={(e) => setLongTimerEnabled(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:rtl:after:-translate-x-full peer-checked:ltr:after:translate-x-full peer-checked:after:border-primary-foreground after:content-[''] after:absolute after:top-[2px] rtl:after:right-[2px] ltr:after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      <div className="peer h-6 w-11 rounded-full bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 peer-checked:bg-primary after:absolute after:top-[12px] after:h-5 after:w-5 after:-translate-y-1/2 after:rounded-full after:border after:border-border after:bg-card after:content-[''] after:transition-transform ltr:after:left-[2px] rtl:after:right-[2px] peer-checked:ltr:after:translate-x-full peer-checked:rtl:after:-translate-x-full peer-checked:after:border-primary-foreground"></div>
                     </label>
                   </div>
                   {longTimerEnabled && (
@@ -943,14 +1018,14 @@ export default function SettingsPage() {
                       <label className="text-sm font-medium text-foreground">{t("notifications.dailyReminderTitle")}</label>
                       <p className="text-xs text-muted-foreground mt-1">{t("notifications.dailyReminderToggleHint")}</p>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                    <label className="relative inline-flex min-h-11 shrink-0 cursor-pointer items-center">
                       <input
                         type="checkbox"
                         checked={dailyReminderEnabled}
                         onChange={(e) => setDailyReminderEnabled(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:rtl:after:-translate-x-full peer-checked:ltr:after:translate-x-full peer-checked:after:border-primary-foreground after:content-[''] after:absolute after:top-[2px] rtl:after:right-[2px] ltr:after:left-[2px] after:bg-card after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      <div className="peer h-6 w-11 rounded-full bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 peer-checked:bg-primary after:absolute after:top-[12px] after:h-5 after:w-5 after:-translate-y-1/2 after:rounded-full after:border after:border-border after:bg-card after:content-[''] after:transition-transform ltr:after:left-[2px] rtl:after:right-[2px] peer-checked:ltr:after:translate-x-full peer-checked:rtl:after:-translate-x-full peer-checked:after:border-primary-foreground"></div>
                     </label>
                   </div>
                   {dailyReminderEnabled && (
@@ -995,7 +1070,7 @@ export default function SettingsPage() {
 
         {/* Subscription / plan — moved under Account */}
         {activeTab === "account" && (
-          <div className="space-y-6 order-1" role="tabpanel">
+          <div id="settings-plan" className="order-1 scroll-mt-36 space-y-6 target:ring-2 target:ring-ring lg:scroll-mt-6" role="tabpanel">
             <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-6">
                 {t("billing.heading")}
@@ -1052,9 +1127,9 @@ export default function SettingsPage() {
         {/* Default billing base (rate + rounding) — moved under Profile & Business */}
         {/* Security & data — moved under Account */}
         {activeTab === "account" && (
-          <div className="space-y-6 order-3" role="tabpanel">
+          <div className="order-3 space-y-6" role="tabpanel">
             {/* Active Sessions Section */}
-            <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
+            <div id="settings-security" className="scroll-mt-36 rounded-[var(--radius-card)] border border-border bg-card p-6 target:ring-2 target:ring-ring lg:scroll-mt-6">
               <div className="flex items-center justify-between mb-2">
                 <h2 className="font-display text-lg font-bold text-foreground">
                   {t("security.sessionsTitle")}
@@ -1136,7 +1211,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Data & Privacy — GDPR data export (right of access / portability) */}
-            <div className="bg-card rounded-[var(--radius-card)] border border-border p-6">
+            <div id="settings-data" className="scroll-mt-36 rounded-[var(--radius-card)] border border-border bg-card p-6 target:ring-2 target:ring-ring lg:scroll-mt-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-2">
                 {t("data.title")}
               </h2>
@@ -1164,9 +1239,9 @@ export default function SettingsPage() {
         {/* Profile & Business — primary section of the Profile tab. Cards are a
             flex column so business details lead (order-1), then logo/signature. */}
         {activeTab === "profile" && (
-          <div className="flex flex-col gap-6 order-1" role="tabpanel">
+          <div className="order-1 flex flex-col gap-6" role="tabpanel">
             {/* Logo Upload Section */}
-            <div className="order-5 bg-card rounded-[var(--radius-card)] border border-border p-5 sm:p-6">
+            <div id="settings-logo" className="order-5 scroll-mt-36 rounded-[var(--radius-card)] border border-border bg-card p-5 target:ring-2 target:ring-ring sm:p-6 lg:scroll-mt-6">
               {logoError && (
                 <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 mb-4">
                   <p className="text-sm text-destructive">{logoError}</p>
@@ -1227,7 +1302,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Signature Upload Section */}
-            <div className="order-6 bg-card rounded-[var(--radius-card)] border border-border p-5 sm:p-6">
+            <div id="settings-signature" className="order-6 scroll-mt-36 rounded-[var(--radius-card)] border border-border bg-card p-5 target:ring-2 target:ring-ring sm:p-6 lg:scroll-mt-6">
               {signatureError && (
                 <div className="rounded-[var(--radius-card)] bg-destructive/10 p-4 mb-4">
                   <p className="text-sm text-destructive">{signatureError}</p>
@@ -1288,7 +1363,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Business identity card — saves independently */}
-            <div className="order-1 bg-card rounded-[var(--radius-card)] border border-border p-5 sm:p-6">
+            <div id="settings-business" className="order-1 scroll-mt-36 rounded-[var(--radius-card)] border border-border bg-card p-5 target:ring-2 target:ring-ring sm:p-6 lg:scroll-mt-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-2">
                 {t("business.title")}
               </h2>
@@ -1549,7 +1624,7 @@ export default function SettingsPage() {
             </div>
 
             {/* PDF appearance card — saves independently, with a live preview */}
-            <div className="order-2 bg-card rounded-[var(--radius-card)] border border-border p-5 sm:p-6">
+            <div id="settings-pdf" className="order-2 scroll-mt-36 rounded-[var(--radius-card)] border border-border bg-card p-5 target:ring-2 target:ring-ring sm:p-6 lg:scroll-mt-6">
               <h2 className="font-display text-lg font-bold text-foreground mb-1">{t("pdf.sectionTitle")}</h2>
               <p className="text-sm text-muted-foreground mb-5">{t("pdf.sectionDescription")}</p>
               <form
@@ -1614,7 +1689,7 @@ export default function SettingsPage() {
                         id="pdfPrimaryColor"
                         value={pdfPrimaryColor}
                         onChange={(e) => setPdfPrimaryColor(e.target.value)}
-                        className="h-9 w-full rounded-[var(--radius)] border border-border cursor-pointer bg-card"
+                        className="h-11 w-full cursor-pointer rounded-[var(--radius)] border border-border bg-card"
                       />
                       <input
                         type="text"
@@ -1659,7 +1734,7 @@ export default function SettingsPage() {
                         id="pdfAccentColor"
                         value={pdfAccentColor}
                         onChange={(e) => setPdfAccentColor(e.target.value)}
-                        className="h-9 w-full rounded-[var(--radius)] border border-border cursor-pointer bg-card"
+                        className="h-11 w-full cursor-pointer rounded-[var(--radius)] border border-border bg-card"
                       />
                       <input
                         type="text"
@@ -1696,7 +1771,7 @@ export default function SettingsPage() {
                 priority); appears on the settlement document when filled. */}
             {/* Bank details — optional, collapsed by default (only printed on
                 settlement docs when filled). Native <details> = no JS, accessible. */}
-            <details className="order-7 group bg-card rounded-[var(--radius-card)] border border-border">
+            <details id="settings-bank" className="group order-7 scroll-mt-36 rounded-[var(--radius-card)] border border-border bg-card target:ring-2 target:ring-ring lg:scroll-mt-6">
               <summary className="flex items-center justify-between gap-3 p-5 sm:p-6 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
                 <div className="min-w-0">
                   <h2 className="font-display text-lg font-bold text-foreground mb-1">{t("business.bankSectionTitle")}</h2>
@@ -1808,7 +1883,7 @@ export default function SettingsPage() {
           </div>
           <Link
             href="/feedback"
-            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius)] border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors shrink-0"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius)] border border-border px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
           >
             <MessageSquare className="h-4 w-4" />
             {t("support.cta")}
@@ -1822,7 +1897,7 @@ export default function SettingsPage() {
             type="button"
             onClick={handleLogout}
             disabled={logoutLoading}
-            className="inline-flex items-center justify-center gap-2 rounded-[var(--radius)] px-4 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50 transition-colors"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius)] px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
           >
             <LogOut className="h-4 w-4" />
             {logoutLoading ? tNav("loggingOut") : tNav("logout")}
@@ -1845,14 +1920,14 @@ export default function SettingsPage() {
               <button
                 onClick={() => setShowConfirmDialog(false)}
                 disabled={logoutAllLoading}
-                className="px-4 py-2 border border-border bg-card text-foreground rounded-[var(--radius)] hover:bg-muted disabled:opacity-50 transition-colors"
+                className="min-h-11 rounded-[var(--radius)] border border-border bg-card px-4 py-2 text-foreground transition-colors hover:bg-muted disabled:opacity-50"
               >
                 {t("security.cancel")}
               </button>
               <button
                 onClick={handleLogoutAll}
                 disabled={logoutAllLoading}
-                className="px-4 py-2 bg-destructive text-destructive-foreground rounded-[var(--radius)] hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="min-h-11 rounded-[var(--radius)] bg-destructive px-4 py-2 text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {logoutAllLoading ? t("security.loggingOut") : t("security.logoutAll")}
               </button>
