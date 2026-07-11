@@ -102,7 +102,7 @@ export function Sidebar({
             </div>
           </div>
           {!isCollapsed && (
-            <h1 className="text-2xl font-display font-bold text-sidebar-foreground">{brandName(locale)}</h1>
+            <span className="text-2xl font-display font-bold text-sidebar-foreground">{brandName(locale)}</span>
           )}
         </Link>
       </div>

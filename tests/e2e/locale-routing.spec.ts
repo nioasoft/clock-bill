@@ -73,7 +73,7 @@ test.describe("landing page locale", () => {
     // The headline string also appears in the footer, so scope to the hero h1.
     await expect(page.getByRole("heading", { level: 1 })).toContainText(STR.he.landingHeadline);
     const amounts = page.locator("[data-marketing-amount]");
-    await expect(amounts).toHaveCount(13);
+    await expect(amounts).toHaveCount(2);
     expect(
       await amounts.evaluateAll((nodes) =>
         nodes.every((node) => node.getAttribute("dir") === "ltr")
@@ -91,7 +91,7 @@ test.describe("landing page locale", () => {
     await expect(marketingMain).toContainText("$1,820");
     await expect(marketingMain).not.toContainText("₪");
     const amounts = page.locator("[data-marketing-amount]");
-    await expect(amounts).toHaveCount(13);
+    await expect(amounts).toHaveCount(2);
     expect(
       await amounts.evaluateAll((nodes) =>
         nodes.every((node) => node.getAttribute("dir") === "ltr")

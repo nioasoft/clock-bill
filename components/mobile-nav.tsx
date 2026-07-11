@@ -37,7 +37,7 @@ export function MobileNav({ userEmail, userName }: MobileNavProps) {
           <div className="w-8 h-8 bg-gradient-to-br from-accent to-accent/80 rounded-lg flex items-center justify-center shrink-0">
             <BrandMark className="h-5 w-5 text-sidebar" />
           </div>
-          <h1 className="text-xl font-bold text-sidebar-foreground truncate">{brandName(locale)}</h1>
+          <span className="text-xl font-bold text-sidebar-foreground truncate">{brandName(locale)}</span>
         </Link>
 
         {/* Primary action + account */}

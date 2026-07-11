@@ -842,7 +842,7 @@ export default function AdHocReportTab() {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-2 gap-3 md:grid-cols-5 md:gap-4">
-              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-6 border-s-4 border-s-accent">
+              <div className="rounded-[var(--radius-card)] border border-accent/25 bg-accent/5 p-6">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
                   {t("summary.totalHours")}
                 </h3>
@@ -850,7 +850,7 @@ export default function AdHocReportTab() {
                   {t("summary.hoursValue", { hours: reportData.summary.totalHours.toFixed(1) })}
                 </p>
               </div>
-              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-6 border-s-4 border-s-secondary">
+              <div className="rounded-[var(--radius-card)] border border-secondary/25 bg-secondary/5 p-6">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
                   {t("summary.totalEntries")}
                 </h3>
@@ -858,7 +858,7 @@ export default function AdHocReportTab() {
                   {reportData.summary.totalEntries}
                 </p>
               </div>
-              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-6 border-s-4 border-s-primary">
+              <div className="rounded-[var(--radius-card)] border border-primary/25 bg-primary/5 p-6">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
                   {t("summary.totalAmount")}
                 </h3>
@@ -879,7 +879,7 @@ export default function AdHocReportTab() {
                   <p className="text-lg text-muted-foreground">{t("summary.notAvailable")}</p>
                 )}
               </div>
-              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-6 border-s-4 border-s-accent">
+              <div className="rounded-[var(--radius-card)] border border-accent/25 bg-accent/5 p-6">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
                   {t("sections.fixedCharges")}
                 </h3>
@@ -900,7 +900,7 @@ export default function AdHocReportTab() {
                   <p className="text-lg text-muted-foreground">0.00</p>
                 )}
               </div>
-              <div className="col-span-2 bg-card border border-border/50 rounded-[var(--radius-card)] p-6 border-s-4 border-s-success md:col-span-1">
+              <div className="col-span-2 rounded-[var(--radius-card)] border border-success/25 bg-success/5 p-6 md:col-span-1">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
                   {t("summary.period")}
                 </h3>

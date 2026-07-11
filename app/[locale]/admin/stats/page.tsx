@@ -76,7 +76,7 @@ export default function AdminStatsPage() {
           <div className="space-y-6">
             {/* Summary cards */}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-2">
-              <div className="bg-card border border-border/50 border-t-2 border-t-primary rounded-[var(--radius-card)] p-4">
+              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -88,7 +88,7 @@ export default function AdminStatsPage() {
                 </p>
               </div>
 
-              <div className="bg-card border border-border/50 border-t-2 border-t-accent rounded-[var(--radius-card)] p-4">
+              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4">
                 <div className="flex items-center gap-2">
                   <ImageIcon className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">

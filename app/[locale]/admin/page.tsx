@@ -89,7 +89,7 @@ export default function AdminDashboardPage() {
         ) : stats ? (
           <>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="bg-card border border-border/50 border-t-2 border-t-primary rounded-[var(--radius-card)] p-4">
+              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4">
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -102,7 +102,7 @@ export default function AdminDashboardPage() {
                 )}
               </div>
 
-              <div className="bg-card border border-border/50 border-t-2 border-t-primary rounded-[var(--radius-card)] p-4">
+              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4">
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -115,7 +115,7 @@ export default function AdminDashboardPage() {
                 )}
               </div>
 
-              <div className="bg-card border border-border/50 border-t-2 border-t-accent rounded-[var(--radius-card)] p-4">
+              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4">
                 <div className="flex items-center gap-2">
                   <Activity className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -125,7 +125,7 @@ export default function AdminDashboardPage() {
                 <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">{stats.activeTimers}</p>
               </div>
 
-              <div className="bg-card border border-border/50 border-t-2 border-t-secondary rounded-[var(--radius-card)] p-4">
+              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4">
                 <div className="flex items-center gap-2">
                   <UserPlus className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -135,7 +135,7 @@ export default function AdminDashboardPage() {
                 <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">{stats.newThisWeek}</p>
               </div>
 
-              <div className="bg-card border border-border/50 border-t-2 border-t-secondary rounded-[var(--radius-card)] p-4">
+              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4">
                 <div className="flex items-center gap-2">
                   <UserPlus className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -145,7 +145,7 @@ export default function AdminDashboardPage() {
                 <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground">{stats.newThisMonth}</p>
               </div>
 
-              <div className="bg-card border border-border/50 border-t-2 border-t-accent rounded-[var(--radius-card)] p-4">
+              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-4">
                 <div className="flex items-center gap-2">
                   <FolderKanban className="h-4 w-4 text-muted-foreground" />
                   <p className="font-sans text-xs font-medium uppercase tracking-wider text-muted-foreground">
