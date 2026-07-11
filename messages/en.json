@@ -1426,7 +1426,16 @@
       "hintNavigate": "Navigate",
       "hintSelect": "Select",
       "hintClose": "Close",
-      "resultCount": "{count} results"
+      "resultCount": "{count} results",
+      "actions": {
+        "title": "Quick actions",
+        "startTimer": "Start a timer",
+        "logTime": "Log time manually",
+        "addItem": "Add a billable item",
+        "newTask": "Create a task",
+        "newClient": "Create a client",
+        "openBilling": "Open billing"
+      }
     }
   },
   "Contact": {

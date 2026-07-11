@@ -1426,7 +1426,16 @@
       "hintNavigate": "לנווט",
       "hintSelect": "לבחור",
       "hintClose": "לסגור",
-      "resultCount": "{count} תוצאות"
+      "resultCount": "{count} תוצאות",
+      "actions": {
+        "title": "פעולות מהירות",
+        "startTimer": "התחל טיימר",
+        "logTime": "רשום זמן ידנית",
+        "addItem": "הוסף פריט חיוב",
+        "newTask": "צור משימה",
+        "newClient": "צור לקוח",
+        "openBilling": "פתח התחשבנות"
+      }
     }
   },
   "Contact": {

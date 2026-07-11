@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Search, Users, FolderKanban, Clock, X } from "lucide-react";
+import { Search, Users, FolderKanban, Clock, X, Play, Plus, FileText } from "lucide-react";
 import { useRouter } from "@/src/i18n/navigation";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { HourglassSVG } from "@/components/ui/thematic-elements";
+import { useTimer } from "@/contexts/timer-context";
 
 interface SearchResult {
   id: string;
@@ -22,6 +23,7 @@ export function GlobalSearch() {
   const t = useTranslations("Timer");
   const intlLocale = useLocale() === "en" ? "en-US" : "he-IL";
   const router = useRouter();
+  const { setShowTimerModal } = useTimer();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -89,12 +91,31 @@ export function GlobalSearch() {
     setResults([]);
   };
 
+  const runAction = (action: "timer" | "manual" | "item" | "task" | "client" | "billing") => {
+    handleClose();
+    if (action === "timer") setShowTimerModal(true);
+    else if (action === "manual") router.push("/entries?new=manual");
+    else if (action === "item") router.push("/entries?new=item");
+    else if (action === "task") router.push("/tasks?create=true");
+    else if (action === "client") router.push("/clients?create=true");
+    else router.push("/reports");
+  };
+
+  const actions = [
+    { id: "timer" as const, label: t("search.actions.startTimer"), icon: Play },
+    { id: "manual" as const, label: t("search.actions.logTime"), icon: Clock },
+    { id: "item" as const, label: t("search.actions.addItem"), icon: Plus },
+    { id: "task" as const, label: t("search.actions.newTask"), icon: FolderKanban },
+    { id: "client" as const, label: t("search.actions.newClient"), icon: Users },
+    { id: "billing" as const, label: t("search.actions.openBilling"), icon: FileText },
+  ].filter((action) => query.trim().length < 2 || action.label.toLocaleLowerCase(intlLocale).includes(query.trim().toLocaleLowerCase(intlLocale)));
+
   return (
     <DialogPrimitive.Root open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); else setIsOpen(true); }}>
       {/* Search Trigger Button */}
       <DialogPrimitive.Trigger asChild>
         <button
-          className="flex items-center gap-2 w-full px-4 py-2 rounded-lg text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
+          className="flex min-h-11 w-full touch-manipulation items-center gap-2 rounded-[var(--radius)] px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Search className="h-4 w-4" />
           <span>{t("search.trigger")}</span>
@@ -129,13 +150,13 @@ export function GlobalSearch() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t("search.placeholder")}
-                className="flex-1 text-lg text-foreground placeholder-muted-foreground/50 focus:outline-none"
+                className="min-h-11 flex-1 bg-transparent text-lg text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
                 aria-label={t("search.inputAriaLabel")}
               />
               {query && (
                 <button
                   onClick={() => setQuery("")}
-                  className="flex-shrink-0 p-1 text-muted-foreground hover:text-muted-foreground"
+                  className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   aria-label={t("search.clear")}
                 >
                   <X className="h-5 w-5" />
@@ -148,8 +169,24 @@ export function GlobalSearch() {
 
             {/* Search Results */}
             <div className="max-h-[60vh] overflow-y-auto">
+              {actions.length > 0 && (
+                <div className="border-b border-border/60 px-4 py-3">
+                  <p className="mb-2 text-xs font-semibold text-muted-foreground">{t("search.actions.title")}</p>
+                  <div className="grid gap-1 sm:grid-cols-2">
+                    {actions.map((action) => {
+                      const Icon = action.icon;
+                      return (
+                        <button key={action.id} type="button" onClick={() => runAction(action.id)} className="flex min-h-11 items-center gap-3 rounded-[var(--radius)] px-3 py-2 text-start text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                          <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
+                          {action.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               {query.length < 2 ? (
-                <div className="px-4 py-12 text-center text-muted-foreground">
+                <div className="px-4 py-8 text-center text-muted-foreground">
                   <HourglassSVG size={48} className="mx-auto mb-3 text-muted-foreground/30" />
                   <p className="text-lg font-medium">{t("search.startTyping")}</p>
                   <p className="text-sm mt-1">{t("search.startTypingHint")}</p>
