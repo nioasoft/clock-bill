@@ -333,6 +333,9 @@ export default function AdHocReportTab() {
 
       if (data.success) {
         setReportData(data.report);
+        // Keep the generated report in focus while leaving the current filter
+        // summary one accessible disclosure away.
+        setShowFilters(false);
       } else {
         setError(data.message || t("report.generateError"));
       }
@@ -554,19 +557,33 @@ export default function AdHocReportTab() {
   return (
     <>
         {/* Filters Section */}
-        <div className="mb-8">
+        <div className="mb-8 rounded-[var(--radius-card)] border border-border bg-card p-4 sm:p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display font-bold text-lg">{t("filters.title")}</h2>
+            <div className="min-w-0">
+              <h2 className="font-display font-bold text-lg">{t("filters.title")}</h2>
+              {!showFilters && (
+                <p className="mt-1 truncate text-sm text-muted-foreground">
+                  {filters.clientId
+                    ? clients.find((client) => client.id === filters.clientId)?.name
+                    : t("filters.allClients")}
+                  {" · "}
+                  {t("summary.periodRange", { start: filters.startDate, end: filters.endDate })}
+                </p>
+              )}
+            </div>
             <button
+              type="button"
               onClick={() => setShowFilters(!showFilters)}
-              className="min-h-[44px] px-4 py-2 text-sm font-medium text-primary hover:bg-primary-light rounded-[var(--radius-card)] transition-colors"
+              aria-expanded={showFilters}
+              aria-controls="ad-hoc-report-filters"
+              className="min-h-[44px] shrink-0 rounded-[var(--radius)] px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {showFilters ? t("filters.hide") : t("filters.show")}
             </button>
           </div>
 
           {showFilters && (
-            <div className="rounded-[var(--radius-card)] border border-border bg-card p-4 space-y-4">
+            <div id="ad-hoc-report-filters" className="space-y-4 border-t border-border pt-4">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {/* Start date */}
                 <div>
@@ -576,7 +593,7 @@ export default function AdHocReportTab() {
                     id="reportStartDate"
                     value={filters.startDate}
                     onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-                    className="block w-full rounded-[var(--radius)] border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="block min-h-[44px] w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
 
@@ -588,7 +605,7 @@ export default function AdHocReportTab() {
                     id="reportEndDate"
                     value={filters.endDate}
                     onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-                    className="block w-full rounded-[var(--radius)] border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="block min-h-[44px] w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
 
@@ -625,24 +642,24 @@ export default function AdHocReportTab() {
 
               {/* Toggles */}
               <div className="flex flex-col gap-3 border-t border-border pt-4">
-                <label className="flex items-start gap-2 text-sm font-medium cursor-pointer">
+                <label className="flex min-h-[44px] cursor-pointer items-start gap-3 rounded-[var(--radius)] py-1 text-sm font-medium">
                   <input
                     type="checkbox"
                     checked={filters.includeFixedCharges}
                     onChange={(e) => setFilters({ ...filters, includeFixedCharges: e.target.checked })}
-                    className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+                    className="mt-0.5 h-5 w-5 shrink-0 rounded border-border accent-primary"
                   />
                   <span>
                     {t("filters.includeFixed")}
                     <span className="block text-xs font-normal text-muted-foreground">{t("filters.includeFixedHint")}</span>
                   </span>
                 </label>
-                <label className="flex items-start gap-2 text-sm font-medium cursor-pointer">
+                <label className="flex min-h-[44px] cursor-pointer items-start gap-3 rounded-[var(--radius)] py-1 text-sm font-medium">
                   <input
                     type="checkbox"
                     checked={showWorkTimes}
                     onChange={(e) => setShowWorkTimes(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+                    className="mt-0.5 h-5 w-5 shrink-0 rounded border-border accent-primary"
                   />
                   <span>
                     {t("filters.showWorkTimes")}
@@ -654,28 +671,32 @@ export default function AdHocReportTab() {
               {/* Actions */}
               <div className="flex flex-wrap gap-2 border-t border-border pt-4">
                 <button
+                  type="button"
                   onClick={generateReport}
                   disabled={reportLoading}
-                  className="rounded-[var(--radius-card)] bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="min-h-[44px] rounded-[var(--radius)] bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {reportLoading ? t("report.generating") : t("report.generate")}
                 </button>
                 <button
+                  type="button"
                   onClick={() => setShowLoadPresetDialog(true)}
                   disabled={presetsLoading || presets.length === 0}
-                  className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="min-h-[44px] rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50"
                   title={presets.length === 0 ? t("preset.noneSaved") : t("preset.load")}
                 >
                   {t("preset.load")}
                 </button>
                 <button
+                  type="button"
                   onClick={() => setShowSavePresetDialog(true)}
-                  className="rounded-[var(--radius-card)] border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition-colors"
+                  className="min-h-[44px] rounded-[var(--radius)] border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface"
                   title={t("preset.save")}
                 >
                   {t("preset.save")}
                 </button>
                 <button
+                  type="button"
                   onClick={() =>
                     setFilters({
                       clientId: "",
@@ -691,7 +712,7 @@ export default function AdHocReportTab() {
                       includeFixedCharges: true,
                     })
                   }
-                  className="rounded-[var(--radius-card)] px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-surface hover:text-foreground transition-colors"
+                  className="min-h-[44px] rounded-[var(--radius)] px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
                 >
                   {t("filters.clear")}
                 </button>
@@ -702,8 +723,28 @@ export default function AdHocReportTab() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-destructive/10 border border-destructive rounded-[var(--radius-card)]">
+          <div role="alert" className="mb-6 flex flex-col gap-3 rounded-[var(--radius-card)] border border-destructive/40 bg-destructive/10 p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-destructive">{error}</p>
+            <button
+              type="button"
+              onClick={generateReport}
+              disabled={reportLoading}
+              className="min-h-[44px] shrink-0 rounded-[var(--radius)] border border-destructive/40 px-4 py-2 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
+            >
+              {t("report.generate")}
+            </button>
+          </div>
+        )}
+
+        {reportLoading && (
+          <div role="status" aria-live="polite" aria-atomic="true" className="space-y-4">
+            <span className="sr-only">{t("report.generating")}</span>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-5" aria-hidden="true">
+              {[0, 1, 2, 3, 4].map((item) => (
+                <div key={item} className="h-28 animate-pulse rounded-[var(--radius-card)] border border-border bg-surface" />
+              ))}
+            </div>
+            <div className="h-48 animate-pulse rounded-[var(--radius-card)] border border-border bg-surface" aria-hidden="true" />
           </div>
         )}
 
@@ -748,10 +789,11 @@ export default function AdHocReportTab() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:gap-3">
               <button
+                type="button"
                 onClick={handleShareReport}
-                className="flex items-center gap-2 px-6 py-3 bg-accent text-accent-foreground rounded-full hover:bg-accent/90 transition-colors shadow-md"
+                className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-[var(--radius)] bg-accent px-4 py-2.5 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/90 sm:flex-none"
                 title={t("share.copyTooltip")}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -760,8 +802,9 @@ export default function AdHocReportTab() {
                 {t("share.button")}
               </button>
               <button
+                type="button"
                 onClick={handleExportExcel}
-                className="flex items-center gap-2 px-6 py-3 bg-secondary text-secondary-foreground rounded-full hover:bg-secondary/80 transition-colors shadow-md"
+                className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-[var(--radius)] bg-secondary px-4 py-2.5 text-sm font-semibold text-secondary-foreground transition-colors hover:bg-secondary/80 sm:flex-none"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -769,9 +812,10 @@ export default function AdHocReportTab() {
                 {t("excel.button")}
               </button>
               <button
+                type="button"
                 onClick={handleExportPdf}
                 disabled={!docMessages}
-                className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-[var(--radius)] bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -797,7 +841,7 @@ export default function AdHocReportTab() {
             )}
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-5 md:gap-4">
               <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-6 border-s-4 border-s-accent">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
                   {t("summary.totalHours")}
@@ -856,7 +900,7 @@ export default function AdHocReportTab() {
                   <p className="text-lg text-muted-foreground">0.00</p>
                 )}
               </div>
-              <div className="bg-card border border-border/50 rounded-[var(--radius-card)] p-6 border-s-4 border-s-success">
+              <div className="col-span-2 bg-card border border-border/50 rounded-[var(--radius-card)] p-6 border-s-4 border-s-success md:col-span-1">
                 <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
                   {t("summary.period")}
                 </h3>
@@ -874,7 +918,7 @@ export default function AdHocReportTab() {
                   {reportData.byClient.map((client) => (
                     <div
                       key={client.clientId}
-                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[var(--radius)] border border-border/30 transition-colors"
+                      className="flex flex-col gap-2 rounded-[var(--radius)] border border-border/30 bg-surface/50 p-3 transition-colors hover:bg-surface sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div className="flex-1">
                         <p className="font-medium"><bdi>{client.clientName}</bdi></p>
@@ -882,7 +926,7 @@ export default function AdHocReportTab() {
                           {t("summary.recordCount", { count: client.entries.length })}
                         </p>
                       </div>
-                      <div className="text-end">
+                      <div className="text-start sm:text-end">
                         <p className="font-mono text-lg font-semibold">
                           {formatDuration(client.totalMinutes)}
                         </p>
@@ -910,7 +954,7 @@ export default function AdHocReportTab() {
                   {reportData.byProject.map((project) => (
                     <div
                       key={project.projectId}
-                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[var(--radius)] border border-border/30 transition-colors"
+                      className="flex flex-col gap-2 rounded-[var(--radius)] border border-border/30 bg-surface/50 p-3 transition-colors hover:bg-surface sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div className="flex-1">
                         <p className="font-medium"><bdi>{project.projectName}</bdi></p>
@@ -923,7 +967,7 @@ export default function AdHocReportTab() {
                           </p>
                         )}
                       </div>
-                      <div className="text-end">
+                      <div className="text-start sm:text-end">
                         <p className="font-mono text-lg font-semibold">
                           {formatDuration(project.totalMinutes)}
                         </p>
@@ -950,7 +994,7 @@ export default function AdHocReportTab() {
                   {reportData.byRateLabel.map((row, index) => (
                     <div
                       key={`${row.label}-${row.currency}-${index}`}
-                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[var(--radius)] border border-border/30 transition-colors"
+                      className="flex flex-col gap-2 rounded-[var(--radius)] border border-border/30 bg-surface/50 p-3 transition-colors hover:bg-surface sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div className="flex-1">
                         <p className="font-medium">
@@ -961,7 +1005,7 @@ export default function AdHocReportTab() {
                         </p>
                         <p className="text-sm text-muted-foreground">{t("summary.recordCount", { count: row.entryCount })}</p>
                       </div>
-                      <div className="text-end">
+                      <div className="text-start sm:text-end">
                         <p className="font-mono text-lg font-semibold">{formatMeasure(row)}</p>
                         <p className="text-sm text-muted-foreground">
                           {formatCurrency(row.totalAmount, row.currency)}
@@ -980,7 +1024,7 @@ export default function AdHocReportTab() {
                   {reportData.fixedCharges.map((line, index) => (
                     <div
                       key={`${line.projectId}-${line.month}-${index}`}
-                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[var(--radius)] border border-border/30 transition-colors"
+                      className="flex flex-col gap-2 rounded-[var(--radius)] border border-border/30 bg-surface/50 p-3 transition-colors hover:bg-surface sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div className="flex-1">
                         <p className="font-medium"><bdi>{line.projectName}</bdi></p>
@@ -988,7 +1032,7 @@ export default function AdHocReportTab() {
                           <bdi>{line.clientName}</bdi> • {line.month}
                         </p>
                       </div>
-                      <div className="text-end">
+                      <div className="text-start sm:text-end">
                         <p className="font-mono text-lg font-semibold">
                           {formatCurrency(line.amount, line.currency)}
                         </p>
@@ -1008,7 +1052,7 @@ export default function AdHocReportTab() {
                   {reportData.byDate.map((dateSummary) => (
                     <div
                       key={dateSummary.date}
-                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[var(--radius)] border border-border/30 transition-colors"
+                      className="flex flex-col gap-2 rounded-[var(--radius)] border border-border/30 bg-surface/50 p-3 transition-colors hover:bg-surface sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div className="flex-1">
                         <p className="font-medium">{formatDate(dateSummary.date)}</p>
@@ -1016,7 +1060,7 @@ export default function AdHocReportTab() {
                           {t("summary.recordCount", { count: dateSummary.entryCount })}
                         </p>
                       </div>
-                      <div className="text-end">
+                      <div className="text-start sm:text-end">
                         <p className="font-mono text-lg font-semibold">
                           {formatDuration(dateSummary.totalMinutes)}
                         </p>
@@ -1044,7 +1088,7 @@ export default function AdHocReportTab() {
                   {reportData.byWeek.map((weekSummary) => (
                     <div
                       key={weekSummary.weekStart}
-                      className="flex items-center justify-between p-3 bg-surface/50 hover:bg-surface rounded-[var(--radius)] border border-border/30 transition-colors"
+                      className="flex flex-col gap-2 rounded-[var(--radius)] border border-border/30 bg-surface/50 p-3 transition-colors hover:bg-surface sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div className="flex-1">
                         <p className="font-medium">
@@ -1054,7 +1098,7 @@ export default function AdHocReportTab() {
                           {t("summary.recordCount", { count: weekSummary.entryCount })}
                         </p>
                       </div>
-                      <div className="text-end">
+                      <div className="text-start sm:text-end">
                         <p className="font-mono text-lg font-semibold">
                           {formatDuration(weekSummary.totalMinutes)}
                         </p>
@@ -1080,7 +1124,38 @@ export default function AdHocReportTab() {
                 <div className="p-6 border-b border-border">
                   <h3 className="font-display text-lg font-bold">{t("sections.detailedEntries")}</h3>
                 </div>
-                <div className="overflow-x-auto">
+                <div className="space-y-3 sm:hidden">
+                  {reportData.entries.map((entry) => (
+                    <article key={entry.id} className="rounded-[var(--radius)] border border-border/40 bg-surface/50 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground"><bdi>{entry.description}</bdi></p>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            <bdi>{entry.clientName}</bdi> · <bdi>{entry.projectName}</bdi>
+                          </p>
+                        </div>
+                        <p className="shrink-0 font-mono text-sm font-semibold tabular-nums">
+                          <bdi>
+                            {entry.billingKind === "item"
+                              ? (entry.unit
+                                  ? t("units.itemsWithUnit", { count: entry.quantity ?? 0, unit: entry.unit })
+                                  : t("units.items", { count: entry.quantity ?? 0 }))
+                              : formatDuration(entry.duration)}
+                          </bdi>
+                        </p>
+                      </div>
+                      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        <bdi>{formatDate(entry.date)}</bdi>
+                        {entry.rateLabel && <bdi>{entry.rateLabel}</bdi>}
+                        {entry.billingKind === "item" && entry.itemRef != null && (
+                          <span className="font-mono tabular-nums">{t("units.ref", { ref: entry.itemRef })}</span>
+                        )}
+                      </div>
+                      {entry.notes && <p className="mt-3 text-sm text-muted-foreground"><bdi>{entry.notes}</bdi></p>}
+                    </article>
+                  ))}
+                </div>
+                <div className="hidden overflow-x-auto sm:block">
                   <table className="w-full">
                     <thead className="bg-surface">
                       <tr>
@@ -1147,7 +1222,7 @@ export default function AdHocReportTab() {
                 <div className="flex gap-3 justify-center">
                   <Link
                     href="/entries"
-                    className="rounded-full bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90"
+                    className="inline-flex min-h-[44px] items-center rounded-[var(--radius)] bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
                   >
                     {t("report.logTimeNow")}
                   </Link>
@@ -1163,6 +1238,13 @@ export default function AdHocReportTab() {
             <p className="text-muted-foreground text-lg mb-4">
               {t("report.noReportYet")}
             </p>
+            <button
+              type="button"
+              onClick={generateReport}
+              className="min-h-[44px] rounded-[var(--radius)] bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              {t("report.generate")}
+            </button>
           </div>
         )}
       {/* Save Preset Dialog */}
@@ -1179,13 +1261,14 @@ export default function AdHocReportTab() {
 
           <div className="p-6 space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">{t("preset.nameLabel")}</label>
+              <label htmlFor="report-preset-name" className="block text-sm font-medium mb-2">{t("preset.nameLabel")}</label>
               <input
+                id="report-preset-name"
                 type="text"
                 value={presetName}
                 onChange={(e) => setPresetName(e.target.value)}
                 placeholder={t("preset.namePlaceholder")}
-                className="w-full px-3 py-2 border rounded-[var(--radius)] bg-background"
+                className="min-h-[44px] w-full rounded-[var(--radius)] border bg-background px-3 py-2"
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && presetName.trim()) {
@@ -1220,15 +1303,17 @@ export default function AdHocReportTab() {
 
           <div className="border-t p-6 flex gap-3">
             <button
+              type="button"
               onClick={handleSavePreset}
               disabled={!presetName.trim()}
-              className="flex-1 px-6 py-2 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="min-h-[44px] flex-1 rounded-[var(--radius)] bg-primary px-6 py-2 text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {t("actions.save")}
             </button>
             <DialogClose asChild>
               <button
-                className="px-6 py-2 border border-border rounded-full hover:bg-accent transition-colors"
+                type="button"
+                className="min-h-[44px] rounded-[var(--radius)] border border-border px-6 py-2 transition-colors hover:bg-accent"
               >
                 {t("actions.cancel")}
               </button>
@@ -1260,9 +1345,9 @@ export default function AdHocReportTab() {
                 {presets.map((preset) => (
                   <div
                     key={preset.id}
-                    className="border rounded-[var(--radius-card)] p-4 hover:border-primary/50 hover:transition-all"
+                    className="rounded-[var(--radius-card)] border p-4 transition-colors hover:border-primary/50"
                   >
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex-1">
                         <h3 className="font-semibold text-lg mb-2"><bdi>{preset.name}</bdi></h3>
                         <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
@@ -1284,16 +1369,18 @@ export default function AdHocReportTab() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex gap-2 me-4">
+                      <div className="flex gap-2 sm:ms-4">
                         <button
+                          type="button"
                           onClick={() => handleLoadPreset(preset)}
-                          className="px-4 py-2 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors text-sm"
+                          className="min-h-[44px] flex-1 rounded-[var(--radius)] bg-primary px-4 py-2 text-sm text-primary-foreground transition-colors hover:bg-primary/90"
                         >
                           {t("preset.loadAction")}
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleDeletePreset(preset.id)}
-                          className="px-4 py-2 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90 transition-colors text-sm"
+                          className="min-h-[44px] flex-1 rounded-[var(--radius)] bg-destructive px-4 py-2 text-sm text-destructive-foreground transition-colors hover:bg-destructive/90"
                         >
                           {t("preset.deleteAction")}
                         </button>
@@ -1308,7 +1395,8 @@ export default function AdHocReportTab() {
           <div className="sticky bottom-0 bg-card border-t p-6">
             <DialogClose asChild>
               <button
-                className="w-full px-6 py-2 border border-border rounded-full hover:bg-accent transition-colors"
+                type="button"
+                className="min-h-[44px] w-full rounded-[var(--radius)] border border-border px-6 py-2 transition-colors hover:bg-accent"
               >
                 {t("actions.close")}
               </button>
