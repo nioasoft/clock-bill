@@ -17,6 +17,7 @@ const EXPECTED = [
   "projects",
   "tasks",
   "time_entries",
+  "work_templates",
   "report_presets",
   "client_rates",
   "currency_rates",

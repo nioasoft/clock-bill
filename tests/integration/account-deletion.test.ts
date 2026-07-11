@@ -75,6 +75,13 @@ async function createFixtureSchema(client: PoolClient): Promise<void> {
       project_id text NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
       task_id text REFERENCES tasks(id) ON DELETE SET NULL
     );
+    CREATE TABLE work_templates (
+      id text PRIMARY KEY,
+      user_id text NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
+      client_id text NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+      project_id text NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      rate_id text REFERENCES client_rates(id) ON DELETE SET NULL
+    );
     CREATE TABLE charge_documents (
       id text PRIMARY KEY,
       user_id text NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
@@ -157,6 +164,10 @@ async function seedUser(client: PoolClient, userId: string): Promise<void> {
   await client.query(
     "INSERT INTO time_entries (id, user_id, project_id, task_id) VALUES ($1, $2, $3, $4)",
     [entryId, userId, projectId, taskId]
+  );
+  await client.query(
+    "INSERT INTO work_templates (id, user_id, client_id, project_id, rate_id) VALUES ($1, $2, $3, $4, $5)",
+    [`${prefix}_template`, userId, clientId, projectId, rateId]
   );
   await client.query(
     "INSERT INTO charge_documents (id, user_id, client_id) VALUES ($1, $2, $3)",

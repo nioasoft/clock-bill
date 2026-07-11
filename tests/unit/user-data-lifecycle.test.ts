@@ -50,6 +50,7 @@ const EXPECTED_APP_TABLES = [
   "projects",
   "tasks",
   "time_entries",
+  "work_templates",
   "charge_documents",
   "charge_document_lines",
   "charge_document_payments",
