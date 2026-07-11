@@ -143,6 +143,8 @@ function ClientsPageContent() {
   });
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [ratesLoading, setRatesLoading] = useState(false);
+  const [ratesLoadError, setRatesLoadError] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [makingActiveId, setMakingActiveId] = useState<string | null>(null);
@@ -238,6 +240,13 @@ function ClientsPageContent() {
     setFormError("");
     setFieldErrors({});
 
+    const isEditing = editingClient !== null;
+    if (isEditing && ratesLoading) return;
+    if (isEditing && ratesLoadError) {
+      setFormError(t("errorLoadRates"));
+      return;
+    }
+
     // Validate form fields
     const errors: typeof fieldErrors = {};
 
@@ -281,7 +290,6 @@ function ClientsPageContent() {
     setSubmitting(true);
 
     try {
-      const isEditing = editingClient !== null;
       const url = isEditing ? `/api/clients/${editingClient.id}` : "/api/clients";
       const method = isEditing ? "PUT" : "POST";
 
@@ -367,6 +375,9 @@ function ClientsPageContent() {
   };
 
   const handleEdit = async (client: Client) => {
+    setRatesLoading(true);
+    setRatesLoadError(false);
+    setFormError("");
     setEditingClient(client);
     setFormData({
       name: client.name,
@@ -401,16 +412,24 @@ function ClientsPageContent() {
           rate: r.rate,
           isDefault: r.isDefault,
           unit: r.unit ?? null,
+          projectId: r.projectId ?? null,
         }));
         setFormData((prev) => ({ ...prev, rates: loaded }));
+      } else {
+        setRatesLoadError(true);
       }
     } catch (error) {
       console.error("Error loading client rates:", error);
+      setRatesLoadError(true);
+    } finally {
+      setRatesLoading(false);
     }
   };
 
   const handleCancelEdit = () => {
     setEditingClient(null);
+    setRatesLoading(false);
+    setRatesLoadError(false);
     setRetainerTouched(false);
     setFormData({
       name: "",
@@ -591,6 +610,16 @@ function ClientsPageContent() {
               {formError && (
                 <div className="rounded-[var(--radius)] border border-destructive/30 bg-destructive/10 p-3.5 text-sm text-destructive">
                   {formError}
+                </div>
+              )}
+              {ratesLoading && (
+                <div className="rounded-[var(--radius)] border border-border bg-background/50 p-3.5 text-sm text-muted-foreground" role="status" aria-live="polite">
+                  {t("loadingRates")}
+                </div>
+              )}
+              {ratesLoadError && (
+                <div className="rounded-[var(--radius)] border border-destructive/30 bg-destructive/10 p-3.5 text-sm text-destructive" role="alert">
+                  {t("errorLoadRates")}
                 </div>
               )}
 
@@ -913,7 +942,7 @@ function ClientsPageContent() {
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   className={`${fieldClass(false)} resize-y`}
-                  disabled={submitting}
+                  disabled={submitting || ratesLoading || ratesLoadError}
                   placeholder={t("notesPlaceholder")}
                 />
               </fieldset>
@@ -957,13 +986,13 @@ function ClientsPageContent() {
                   type="button"
                   onClick={handleCancelEdit}
                   variant="outline"
-                  disabled={submitting}
+                  disabled={submitting || ratesLoading}
                 >
                   {t("cancel")}
                 </Button>
                 <Button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || ratesLoading || ratesLoadError}
                 >
                   {submitting ? t("saving") : editingClient ? t("updateClientButton") : t("saveClientButton")}
                 </Button>

@@ -26,6 +26,7 @@ const createClientSchema = z.object({
   billingRounding: z.enum(["none", "tenth_hour_up", "quarter_hour_up", "half_hour_up", "hour_up"]).nullish(),
   documentLanguage: z.enum(["he", "en"]).nullish(),
   vatMode: z.enum(["add", "exempt"]).nullish(),
+  settlementBillingDay: z.number().int().min(1).max(31).nullish(),
   isRetainer: z.boolean().nullish(),
   retainerHours: z.number().nullish(),
   retainerMonthlyFee: z.number().nullish(),
@@ -64,6 +65,7 @@ export async function GET(_request: NextRequest) {
       billing_rounding: string | null;
       document_language: string | null;
       vat_mode: string | null;
+      settlement_billing_day: number | null;
       is_retainer: boolean | null;
       retainer_hours: number | null;
       retainer_monthly_fee: number | null;
@@ -75,7 +77,7 @@ export async function GET(_request: NextRequest) {
       total_hours: number | null;
     }>(
       `SELECT c.id, c.name, c.contact_name, c.email, c.phone, c.address, c.default_rate,
-              c.currency, c.billing_rounding, c.document_language, c.vat_mode, c.is_retainer, c.retainer_hours, c.retainer_monthly_fee, c.overage_rate,
+              c.currency, c.billing_rounding, c.document_language, c.vat_mode, c.settlement_billing_day, c.is_retainer, c.retainer_hours, c.retainer_monthly_fee, c.overage_rate,
               c.notes, c.is_active, c.created_at,
               COALESCE(SUM(
                 CASE
@@ -90,7 +92,7 @@ export async function GET(_request: NextRequest) {
        LEFT JOIN time_entries te ON te.project_id = p.id
        WHERE c.user_id = $1
        GROUP BY c.id, c.name, c.contact_name, c.email, c.phone, c.address, c.default_rate,
-              c.currency, c.billing_rounding, c.document_language, c.vat_mode, c.is_retainer, c.retainer_hours, c.retainer_monthly_fee, c.overage_rate,
+              c.currency, c.billing_rounding, c.document_language, c.vat_mode, c.settlement_billing_day, c.is_retainer, c.retainer_hours, c.retainer_monthly_fee, c.overage_rate,
               c.notes, c.is_active, c.created_at
        ORDER BY c.created_at DESC
        LIMIT 5000`,
@@ -109,6 +111,7 @@ export async function GET(_request: NextRequest) {
       billingRounding: client.billing_rounding,
       documentLanguage: client.document_language ?? null,
       vatMode: client.vat_mode ?? null,
+      settlementBillingDay: client.settlement_billing_day ?? null,
       isRetainer: client.is_retainer ?? false,
       retainerHours: client.retainer_hours,
       retainerMonthlyFee: client.retainer_monthly_fee,
@@ -178,7 +181,7 @@ export async function POST(request: NextRequest) {
 
     const parsed = await parseBody(request, createClientSchema);
     if (!parsed.ok) return parsed.response;
-    const { name, contactName, email, phone, address, defaultRate, currency, billingRounding, documentLanguage, vatMode, isRetainer, retainerHours, retainerMonthlyFee, overageRate, notes, rates } = parsed.data;
+    const { name, contactName, email, phone, address, defaultRate, currency, billingRounding, documentLanguage, vatMode, settlementBillingDay, isRetainer, retainerHours, retainerMonthlyFee, overageRate, notes, rates } = parsed.data;
 
     const { query, withTransaction } = await import("@/lib/db");
 
@@ -224,6 +227,7 @@ export async function POST(request: NextRequest) {
         billing_rounding: string | null;
         document_language: string | null;
         vat_mode: string | null;
+        settlement_billing_day: number | null;
         is_retainer: boolean | null;
         retainer_hours: number | null;
         retainer_monthly_fee: number | null;
@@ -232,9 +236,9 @@ export async function POST(request: NextRequest) {
         is_active: boolean;
         created_at: string;
       }>(
-        `INSERT INTO clients (id, user_id, name, contact_name, email, phone, address, default_rate, currency, billing_rounding, document_language, vat_mode, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate, notes, is_active)
-         VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, TRUE)
-         RETURNING id, name, contact_name, email, phone, address, default_rate, currency, billing_rounding, document_language, vat_mode, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate, notes, is_active, created_at`,
+        `INSERT INTO clients (id, user_id, name, contact_name, email, phone, address, default_rate, currency, billing_rounding, document_language, vat_mode, settlement_billing_day, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate, notes, is_active)
+         VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, TRUE)
+         RETURNING id, name, contact_name, email, phone, address, default_rate, currency, billing_rounding, document_language, vat_mode, settlement_billing_day, is_retainer, retainer_hours, retainer_monthly_fee, overage_rate, notes, is_active, created_at`,
         [
           user.id,
           name.trim(),
@@ -247,6 +251,7 @@ export async function POST(request: NextRequest) {
           billingRounding ?? null,
           documentLanguage ?? null,
           vatMode ?? null,
+          settlementBillingDay ?? null,
           isRetainer ?? false,
           retainerHours || null,
           retainerMonthlyFee || null,
@@ -259,10 +264,10 @@ export async function POST(request: NextRequest) {
       if (ratesList.length > 0) {
         // Single multi-row INSERT (one round-trip) instead of N per-rate inserts.
         await db.query(
-          `INSERT INTO client_rates (id, user_id, client_id, kind, name, rate, is_default, unit)
-           SELECT gen_random_uuid()::text, $1, $2, kind, name, rate, is_default, unit
-           FROM unnest($3::text[], $4::text[], $5::numeric[], $6::boolean[], $7::text[])
-             AS r(kind, name, rate, is_default, unit)`,
+          `INSERT INTO client_rates (id, user_id, client_id, kind, name, rate, is_default, unit, project_id)
+           SELECT gen_random_uuid()::text, $1, $2, kind, name, rate, is_default, unit, project_id
+           FROM unnest($3::text[], $4::text[], $5::numeric[], $6::boolean[], $7::text[], $8::text[])
+             AS r(kind, name, rate, is_default, unit, project_id)`,
           [
             user.id,
             row.id,
@@ -271,6 +276,7 @@ export async function POST(request: NextRequest) {
             ratesList.map((r) => r.rate),
             ratesList.map((r) => (r.kind === "hourly" ? r.isDefault : false)),
             ratesList.map((r) => (r.kind === "item" ? r.unit ?? null : null)),
+            ratesList.map((r) => r.projectId ?? null),
           ]
         );
       }
@@ -304,6 +310,7 @@ export async function POST(request: NextRequest) {
         billingRounding: client.billing_rounding,
         documentLanguage: client.document_language ?? null,
         vatMode: client.vat_mode ?? null,
+        settlementBillingDay: client.settlement_billing_day ?? null,
         isRetainer: client.is_retainer ?? false,
         retainerHours: client.retainer_hours,
         retainerMonthlyFee: client.retainer_monthly_fee,

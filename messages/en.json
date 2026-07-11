@@ -679,6 +679,8 @@
     "archiveConfirmBody": "Archive the client \"{name}\"? The client will be hidden from the list but kept in the system.",
     "deleteConfirmBody": "Are you sure you want to delete the client \"{name}\"? Deleted clients are set to \"inactive\" and won't appear in the list.",
     "errorRateNameRequired": "Each rate with a price must have a name",
+    "loadingRates": "Loading this client’s rates…",
+    "errorLoadRates": "We couldn’t load the rates. Saving is blocked to prevent data loss. Reopen the client and try again.",
     "errorCreateClient": "Error creating client",
     "errorUpdateClient": "Error updating client",
     "errorDeleteClient": "Error deleting client",

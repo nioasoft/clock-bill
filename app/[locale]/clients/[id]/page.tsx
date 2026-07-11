@@ -71,6 +71,7 @@ function clientToFormData(client: Client) {
       rate: r.rate,
       isDefault: r.isDefault,
       unit: r.unit ?? null,
+      projectId: r.projectId ?? null,
     })) as ClientRateInput[],
     documentLanguage: (client.documentLanguage ?? "") as "" | "he" | "en",
     vatMode: (client.vatMode ?? "") as "" | "add" | "exempt",
