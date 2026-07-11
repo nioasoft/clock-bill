@@ -305,6 +305,7 @@ export function ChargePaymentsPanel({
               variant="outline"
               onClick={() => void saveEdit()}
               disabled={busy}
+              aria-busy={busy}
               className="min-h-[44px]"
             >
               {t("payments.saveEdit")}
@@ -323,6 +324,7 @@ export function ChargePaymentsPanel({
             variant="outline"
             onClick={() => void addPayment()}
             disabled={busy}
+            aria-busy={busy}
             className="min-h-[44px]"
           >
             {t("payments.add")}

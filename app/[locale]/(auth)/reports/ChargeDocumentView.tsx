@@ -456,7 +456,7 @@ export default function ChargeDocumentView({
   // ── States ──────────────────────────────────────────────────────────────
   if (state === "loading") {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4" role="status" aria-busy="true" aria-label={t("tabs.documents")}>
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-5 w-32" />
         <div className="space-y-2 pt-4">
@@ -470,7 +470,7 @@ export default function ChargeDocumentView({
 
   if (state === "error" || !doc) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
+      <div className="flex flex-col items-center justify-center gap-3 p-8 text-center" role="alert">
         <p className="text-foreground font-medium">{t("doc.loadErrorTitle")}</p>
         <p className="text-sm text-muted-foreground">{t("doc.loadErrorBody")}</p>
         <div className="flex gap-2">
@@ -846,7 +846,7 @@ export default function ChargeDocumentView({
 
       {/* ── Sent status ── */}
       {doc.last_sent_at && (
-        <div className="space-y-2 rounded-[var(--radius)] border border-border bg-muted/30 px-3 py-2">
+        <div className="space-y-2 rounded-[var(--radius)] border border-border bg-muted/30 px-3 py-2" role="status">
           <p className="text-xs text-muted-foreground">
             {t("doc.sentStatus", {
               date: new Date(doc.last_sent_at).toLocaleDateString(locale === "he" ? "he-IL" : "en-US"),
@@ -1024,6 +1024,7 @@ export default function ChargeDocumentView({
             variant="outline"
             className="min-h-[44px]"
             disabled={sending}
+            aria-busy={sending}
             onClick={() => setSendConfirmOpen(true)}
           >
             {sending ? "…" : doc.last_sent_at ? t("doc.resend") : t("doc.sendToClient")}
@@ -1031,7 +1032,7 @@ export default function ChargeDocumentView({
         )}
 
         {noEmailNotice && (
-          <p className="w-full text-sm text-destructive">
+          <p className="w-full text-sm text-destructive" role="alert">
             {t("doc.sendNoEmail")}
           </p>
         )}
@@ -1049,6 +1050,7 @@ export default function ChargeDocumentView({
               })
             }
             disabled={actionBusy}
+            aria-busy={actionBusy}
             className="min-h-[44px]"
           >
             {t("doc.cancelDocAction")}
@@ -1068,6 +1070,7 @@ export default function ChargeDocumentView({
               })
             }
             disabled={actionBusy}
+            aria-busy={actionBusy}
             className="min-h-[44px] text-destructive hover:text-destructive"
           >
             {t("doc.deleteDocAction")}

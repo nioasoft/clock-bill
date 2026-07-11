@@ -102,7 +102,8 @@ export default function PublicChargeDocument(props: Props) {
         >
           <div>
             <h1 id="public-document-title" style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>
-              {locale === "he" ? `תעודת התחשבנות #${doc.doc_number}` : `Settlement document #${doc.doc_number}`}
+              {locale === "he" ? "תעודת התחשבנות" : "Settlement document"}{" "}
+              <bdi>#{doc.doc_number}</bdi>
             </h1>
             <p style={{ margin: "4px 0 0", color: "#52525b", fontSize: 14 }}>
               <bdi>{doc.client_name}</bdi>
@@ -122,6 +123,7 @@ export default function PublicChargeDocument(props: Props) {
                 fontSize: 13,
                 fontWeight: 600,
               }}
+              role="status"
             >
               {statusLabel}
             </span>
