@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useRouter } from "@/src/i18n/navigation";
 import { AppLayout } from "@/components/app-layout";
@@ -135,10 +135,9 @@ export default function ClientDetailsPage() {
   // When the edit form is opened via "ערוך תעריפים", land on the rates editor
   // rather than the top of the form.
   const [focusRatesOnOpen, setFocusRatesOnOpen] = useState(false);
-  const isDirty = useMemo(
-    () => Boolean(client) && JSON.stringify(formData) !== JSON.stringify(clientToFormData(client!)),
-    [client, formData]
-  );
+  const isDirty = client
+    ? JSON.stringify(formData) !== JSON.stringify(clientToFormData(client))
+    : false;
 
   const openEditForm = (focusRates = false) => {
     setFocusRatesOnOpen(focusRates);

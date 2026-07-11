@@ -122,13 +122,15 @@ export function ClientWorkspace({
         </div>
       </header>
 
-      <nav className="-mx-1 overflow-x-auto border-b border-border" aria-label={t("tabsLabel")}>
+      <nav className="-mx-1 overflow-x-auto border-b border-border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label={t("tabsLabel")}>
         <div className="flex min-w-max gap-1 px-1" role="tablist">
           {tabs.map((tab) => (
             <Link
               key={tab}
+              id={`client-tab-${tab}`}
               href={`/clients/${client.id}?tab=${tab}`}
               role="tab"
+              aria-controls={`client-panel-${tab}`}
               aria-selected={activeTab === tab}
               className={`border-b-2 px-4 py-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${
                 activeTab === tab
@@ -142,26 +144,18 @@ export function ClientWorkspace({
         </div>
       </nav>
 
-      <div className="py-6">
-        {activeTab === "overview" && (
-          <Overview client={client} data={data} loading={dataLoading} error={dataError} />
-        )}
-        {activeTab === "projects" && (
-          <Projects client={client} data={data} loading={dataLoading} error={dataError} />
-        )}
-        {activeTab === "billing" && (
-          <Billing client={client} projects={data?.projects ?? []} onEdit={onEditBilling} />
-        )}
-        {activeTab === "details" && (
-          <Details client={client} dateLocale={dateLocale} onEdit={onEditDetails} onArchive={onArchive} />
-        )}
+      <div id={`client-panel-${activeTab}`} role="tabpanel" aria-labelledby={`client-tab-${activeTab}`} className="py-6">
+        {activeTab === "overview" && renderOverview({ client, data, loading: dataLoading, error: dataError })}
+        {activeTab === "projects" && renderProjects({ client, data, loading: dataLoading, error: dataError })}
+        {activeTab === "billing" && renderBilling({ client, projects: data?.projects ?? [], onEdit: onEditBilling })}
+        {activeTab === "details" && renderDetails({ client, dateLocale, onEdit: onEditDetails, onArchive })}
       </div>
     </div>
   );
 
-  function Overview({ client: overviewClient, data: overviewData, loading, error }: { client: WorkspaceClient; data: ClientWorkspaceData | null; loading: boolean; error: boolean }) {
-    if (loading) return <WorkspaceSkeleton />;
-    if (error || !overviewData) return <WorkspaceError />;
+  function renderOverview({ client: overviewClient, data: overviewData, loading, error }: { client: WorkspaceClient; data: ClientWorkspaceData | null; loading: boolean; error: boolean }) {
+    if (loading) return renderWorkspaceSkeleton();
+    if (error || !overviewData) return renderWorkspaceError();
     const nextAction = overviewData.money.outstanding > 0
       ? "followPayment"
       : overviewData.money.unbilled > 0
@@ -204,7 +198,7 @@ export function ClientWorkspace({
               </div>
               <Link href={`/clients/${overviewClient.id}?tab=projects`} className="text-sm font-semibold text-primary hover:underline">{t("projects.viewAll")}</Link>
             </div>
-            <ProjectList projects={overviewData.projects.filter((project) => project.status === "active").slice(0, 4)} currency={overviewData.currency} clientId={overviewClient.id} />
+            {renderProjectList({ projects: overviewData.projects.filter((project) => project.status === "active").slice(0, 4), currency: overviewData.currency, clientId: overviewClient.id })}
           </section>
         </div>
 
@@ -231,9 +225,9 @@ export function ClientWorkspace({
     );
   }
 
-  function Projects({ client: projectsClient, data: projectsData, loading, error }: { client: WorkspaceClient; data: ClientWorkspaceData | null; loading: boolean; error: boolean }) {
-    if (loading) return <WorkspaceSkeleton />;
-    if (error || !projectsData) return <WorkspaceError />;
+  function renderProjects({ client: projectsClient, data: projectsData, loading, error }: { client: WorkspaceClient; data: ClientWorkspaceData | null; loading: boolean; error: boolean }) {
+    if (loading) return renderWorkspaceSkeleton();
+    if (error || !projectsData) return renderWorkspaceError();
     return (
       <section aria-labelledby="projects-tab-title">
         <div className="flex flex-col gap-4 border-b border-border pb-4 sm:flex-row sm:items-end sm:justify-between">
@@ -243,12 +237,12 @@ export function ClientWorkspace({
           </div>
           {projectsClient.isActive && <Link href={`/projects?create=true&clientId=${projectsClient.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}><Plus className="h-4 w-4" aria-hidden="true" />{t("newProject")}</Link>}
         </div>
-        <ProjectList projects={projectsData.projects} currency={projectsData.currency} clientId={projectsClient.id} />
+        {renderProjectList({ projects: projectsData.projects, currency: projectsData.currency, clientId: projectsClient.id })}
       </section>
     );
   }
 
-  function Billing({ client: billingClient, projects, onEdit }: { client: WorkspaceClient; projects: ClientWorkspaceData["projects"]; onEdit: () => void }) {
+  function renderBilling({ client: billingClient, projects, onEdit }: { client: WorkspaceClient; projects: ClientWorkspaceData["projects"]; onEdit: () => void }) {
     const hourly = (billingClient.rates ?? []).filter((rate) => rate.kind === "hourly");
     const items = (billingClient.rates ?? []).filter((rate) => rate.kind === "item");
     const generalDefault = hourly.find((rate) => rate.isDefault && !rate.projectId) ?? hourly.find((rate) => !rate.projectId);
@@ -309,7 +303,7 @@ export function ClientWorkspace({
     );
   }
 
-  function Details({ client: detailsClient, dateLocale: detailsDateLocale, onEdit, onArchive }: { client: WorkspaceClient; dateLocale: string; onEdit: () => void; onArchive: () => void }) {
+  function renderDetails({ client: detailsClient, dateLocale: detailsDateLocale, onEdit, onArchive }: { client: WorkspaceClient; dateLocale: string; onEdit: () => void; onArchive: () => void }) {
     return (
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_16rem]">
         <section aria-labelledby="client-details-title">
@@ -341,7 +335,7 @@ export function ClientWorkspace({
     );
   }
 
-  function ProjectList({ projects, currency, clientId }: { projects: ClientWorkspaceData["projects"]; currency: string; clientId: string }) {
+  function renderProjectList({ projects, currency, clientId }: { projects: ClientWorkspaceData["projects"]; currency: string; clientId: string }) {
     if (projects.length === 0) {
       return (
         <div className="py-10 text-center">
@@ -372,10 +366,10 @@ export function ClientWorkspace({
     );
   }
 
-  function WorkspaceSkeleton() {
+  function renderWorkspaceSkeleton() {
     return <div className="space-y-4" role="status"><span className="sr-only">{t("loading")}</span>{[0, 1, 2].map((item) => <div key={item} className="h-24 animate-pulse rounded-[var(--radius-card)] bg-surface" />)}</div>;
   }
-  function WorkspaceError() {
+  function renderWorkspaceError() {
     return <div className="rounded-[var(--radius)] border border-destructive/25 bg-destructive/10 p-5 text-sm text-destructive" role="alert">{t("error")}</div>;
   }
 }
