@@ -5,10 +5,13 @@
 import {
   normalizeDashboardConfig,
   DEFAULT_DASHBOARD_CONFIG,
+  DASHBOARD_PRESETS,
   DASHBOARD_WIDGETS,
+  cloneConfig,
   isWidgetId,
   type DashboardConfig,
 } from "../../lib/dashboard-widgets";
+import { formatCurrency } from "../../lib/currency";
 
 class TestRunner {
   private tests: Array<{ name: string; fn: () => void }> = [];
@@ -37,7 +40,7 @@ class TestRunner {
   }
 }
 
-function assert(cond: boolean, message: string) {
+function assert(cond: unknown, message: string): asserts cond {
   if (!cond) throw new Error(message);
 }
 function assertEqual<T>(actual: T, expected: T, message?: string) {
@@ -48,6 +51,10 @@ function assertEqual<T>(actual: T, expected: T, message?: string) {
 
 const ALL_CARD_IDS = DASHBOARD_WIDGETS.filter((w) => w.kind === "card").map((w) => w.id);
 const ALL_SECTION_IDS = DASHBOARD_WIDGETS.filter((w) => w.kind === "section").map((w) => w.id);
+
+function visibleIds(config: DashboardConfig, zone: "cards" | "sections"): string[] {
+  return config[zone].filter((widget) => widget.visible).map((widget) => widget.id);
+}
 
 const runner = new TestRunner();
 
@@ -123,6 +130,32 @@ runner.test("stored order is preserved for known ids", () => {
   assertEqual(c.sections[1].id, "earningsChart", "section order preserved");
 });
 
+runner.test("stored visibility is preserved independently from stored order", () => {
+  const input: DashboardConfig = {
+    version: 1,
+    cards: [
+      { id: "revenueMonth", visible: false },
+      { id: "hoursToday", visible: true },
+      { id: "projectsCount", visible: false },
+    ],
+    sections: [
+      { id: "openForCollection", visible: false },
+      { id: "recentEntries", visible: true },
+    ],
+  };
+
+  const normalized = normalizeDashboardConfig(input);
+
+  assertEqual(normalized.cards[0].id, "revenueMonth", "hidden card keeps its position");
+  assertEqual(normalized.cards[0].visible, false, "hidden card stays hidden");
+  assertEqual(normalized.cards[1].id, "hoursToday", "visible card keeps its position");
+  assertEqual(normalized.cards[1].visible, true, "visible card stays visible");
+  assertEqual(normalized.cards[2].id, "projectsCount", "later hidden card keeps its position");
+  assertEqual(normalized.cards[2].visible, false, "later hidden card stays hidden");
+  assertEqual(normalized.sections[0].visible, false, "hidden section stays hidden");
+  assertEqual(normalized.sections[1].visible, true, "visible section stays visible");
+});
+
 runner.test("duplicate ids are de-duped (first wins)", () => {
   const input: DashboardConfig = {
     version: 1,
@@ -174,6 +207,86 @@ runner.test("default config is internally complete & valid", () => {
     JSON.stringify(normalizeDashboardConfig(DEFAULT_DASHBOARD_CONFIG)),
     JSON.stringify(DEFAULT_DASHBOARD_CONFIG),
     "normalize is idempotent on default"
+  );
+});
+
+runner.test("dashboard presets keep their approved ids, order, and visible widgets", () => {
+  const expected = [
+    {
+      id: "default",
+      cards: ["hoursToday", "hoursWeek", "hoursMonth", "revenueToday", "revenueMonth"],
+      sections: [
+        "openForCollection",
+        "settlementsDue",
+        "earningsChart",
+        "projectHours",
+        "recentEntries",
+      ],
+    },
+    {
+      id: "todayFocus",
+      cards: ["hoursToday", "revenueToday", "hoursWeek", "revenueWeek"],
+      sections: ["recentEntries"],
+    },
+    {
+      id: "monthlyFocus",
+      cards: ["hoursWeek", "hoursMonth", "revenueWeek", "revenueMonth"],
+      sections: ["earningsChart", "recentEntries"],
+    },
+    {
+      id: "byProject",
+      cards: ["projectsCount", "clientsCount", "hoursMonth", "revenueMonth"],
+      sections: ["projectHours", "earningsChart"],
+    },
+  ];
+
+  assertEqual(
+    JSON.stringify(DASHBOARD_PRESETS.map((preset) => preset.id)),
+    JSON.stringify(expected.map((preset) => preset.id)),
+    "preset ids and display order are a product contract"
+  );
+
+  for (const preset of expected) {
+    const actual = DASHBOARD_PRESETS.find((candidate) => candidate.id === preset.id);
+    assert(actual, `missing dashboard preset: ${preset.id}`);
+    assertEqual(
+      JSON.stringify(visibleIds(actual.config, "cards")),
+      JSON.stringify(preset.cards),
+      `${preset.id} visible card order changed`
+    );
+    assertEqual(
+      JSON.stringify(visibleIds(actual.config, "sections")),
+      JSON.stringify(preset.sections),
+      `${preset.id} visible section order changed`
+    );
+  }
+});
+
+runner.test("cloned configs cannot mutate the shared default or preset contracts", () => {
+  const originalDefault = JSON.stringify(DEFAULT_DASHBOARD_CONFIG);
+  const originalPresets = JSON.stringify(DASHBOARD_PRESETS);
+  const editable = cloneConfig(DEFAULT_DASHBOARD_CONFIG);
+
+  editable.cards[0].visible = !editable.cards[0].visible;
+  editable.cards.reverse();
+  editable.sections[0].visible = !editable.sections[0].visible;
+
+  assertEqual(JSON.stringify(DEFAULT_DASHBOARD_CONFIG), originalDefault, "default must be immutable by clone");
+  assertEqual(JSON.stringify(DASHBOARD_PRESETS), originalPresets, "presets must be immutable by clone");
+});
+
+runner.test("locale changes formatting direction, not the selected dashboard currency or layout", () => {
+  const configBefore = JSON.stringify(DEFAULT_DASHBOARD_CONFIG);
+  const usdInHebrew = formatCurrency(1820, "USD", "he");
+  const ilsInEnglish = formatCurrency(1820, "ILS", "en");
+
+  assert(usdInHebrew.includes("$"), "Hebrew UI must still honor an explicitly selected USD currency");
+  assert(!usdInHebrew.includes("₪"), "Hebrew locale must not force ILS");
+  assert(ilsInEnglish.includes("₪"), "English UI must still honor an explicitly selected ILS currency");
+  assertEqual(
+    JSON.stringify(DEFAULT_DASHBOARD_CONFIG),
+    configBefore,
+    "locale and currency formatting must not alter dashboard selection"
   );
 });
 
