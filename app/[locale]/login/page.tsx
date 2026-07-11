@@ -14,6 +14,10 @@ import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { PublicAccessibilityLink } from "@/components/public-accessibility-link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { FieldMessage } from "@/components/ui/field-message";
 
 export default function LoginPage() {
   const t = useTranslations("Auth");
@@ -143,51 +147,48 @@ export default function LoginPage() {
 
             <div className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-foreground">
+                <Label htmlFor="email">
                   {t("common.emailLabel")}
-                </label>
-                <input
+                </Label>
+                <Input
                   id="email"
                   name="email"
                   type="email"
+                  autoComplete="email"
+                  inputMode="email"
                   required
+                  hasError={Boolean(emailError)}
+                  aria-describedby={emailError ? "login-email-error" : undefined}
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
                     setEmailError(undefined);
                   }}
-                  className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 focus:outline-none focus:ring-2 transition-colors ${
-                    emailError
-                      ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                      : "border-border focus:border-primary focus:ring-primary/50"
-                  }`}
-                  placeholder="your@email.com"
+                  placeholder={t("common.emailPlaceholder")}
                 />
-                {emailError && <p className="mt-1 text-sm text-destructive">{emailError}</p>}
+                {emailError && <FieldMessage id="login-email-error" variant="error">{emailError}</FieldMessage>}
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-foreground">
+                <Label htmlFor="password">
                   {t("common.passwordLabel")}
-                </label>
-                <input
+                </Label>
+                <Input
                   id="password"
                   name="password"
                   type="password"
+                  autoComplete="current-password"
                   required
+                  hasError={Boolean(passwordError)}
+                  aria-describedby={passwordError ? "login-password-error" : undefined}
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
                     setPasswordError(undefined);
                   }}
-                  className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 focus:outline-none focus:ring-2 transition-colors ${
-                    passwordError
-                      ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                      : "border-border focus:border-primary focus:ring-primary/50"
-                  }`}
                   placeholder={t("login.passwordPlaceholder")}
                 />
-                {passwordError && <p className="mt-1 text-sm text-destructive">{passwordError}</p>}
+                {passwordError && <FieldMessage id="login-password-error" variant="error">{passwordError}</FieldMessage>}
               </div>
             </div>
 
@@ -196,36 +197,38 @@ export default function LoginPage() {
                 <p className="text-sm text-destructive">{error}</p>
                 {needsVerification && (
                   <div className="mt-3">
-                    <button
+                    <Button
                       type="button"
                       onClick={handleResend}
                       disabled={resending}
-                      className="text-sm font-medium text-primary hover:text-primary/80 disabled:opacity-50"
+                      variant="outline"
+                      className="w-full sm:w-auto"
                     >
                       {resending ? t("common.sending") : t("login.resendVerification")}
-                    </button>
-                    {resendNote && <p className="mt-1 text-sm text-muted-foreground">{resendNote}</p>}
+                    </Button>
+                    {resendNote && <FieldMessage role="status">{resendNote}</FieldMessage>}
                   </div>
                 )}
               </div>
             )}
 
             <div>
-              <button
+              <Button
                 type="submit"
                 disabled={loading}
-                className="group relative flex w-full items-center justify-center gap-2 rounded-[var(--radius)] border border-transparent bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+                aria-busy={loading}
+                className="w-full"
               >
-                <LogIn className="h-4 w-4" />
+                <LogIn className="h-4 w-4" aria-hidden="true" />
                 {loading ? t("login.submitting") : t("login.submit")}
-              </button>
+              </Button>
             </div>
 
             <div className="text-center space-y-2">
               <p className="text-sm text-muted-foreground">
                 <Link
                   href="/forgot-password"
-                  className="font-medium text-primary hover:text-primary/80"
+                  className="inline-flex min-h-11 items-center font-medium text-primary hover:text-primary/80"
                 >
                   {t("login.forgotPassword")}
                 </Link>
@@ -234,7 +237,7 @@ export default function LoginPage() {
                 {t("login.noAccount")}{" "}
                 <Link
                   href="/register"
-                  className="font-medium text-primary hover:text-primary/80"
+                  className="inline-flex min-h-11 items-center font-medium text-primary hover:text-primary/80"
                 >
                   {t("login.registerHere")}
                 </Link>

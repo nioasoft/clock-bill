@@ -15,6 +15,10 @@ import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { PublicAccessibilityLink } from "@/components/public-accessibility-link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { FieldMessage } from "@/components/ui/field-message";
 
 export default function RegisterPage() {
   const t = useTranslations("Auth");
@@ -180,20 +184,21 @@ export default function RegisterPage() {
               <p className="mt-2 text-xs text-muted-foreground">
                 {t("register.verify.notReceived")}
               </p>
-              <button
+              <Button
                 type="button"
                 onClick={handleResend}
                 disabled={resending}
-                className="mt-5 w-full rounded-[var(--radius)] border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50 transition-colors"
+                variant="outline"
+                className="mt-5 w-full"
               >
                 {resending ? t("common.sending") : t("register.resendVerification")}
-              </button>
+              </Button>
               {resendNote && (
-                <p className="mt-2 text-sm text-muted-foreground">{resendNote}</p>
+                <FieldMessage role="status">{resendNote}</FieldMessage>
               )}
               <p className="mt-5 text-sm text-muted-foreground">
                 {t("register.alreadyVerified")}{" "}
-                <Link href="/login" className="font-medium text-primary hover:text-primary/80">
+                <Link href="/login" className="inline-flex min-h-11 items-center font-medium text-primary hover:text-primary/80">
                   {t("register.signInHere")}
                 </Link>
               </p>
@@ -230,97 +235,95 @@ export default function RegisterPage() {
 
             <div className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-foreground">
+                <Label htmlFor="email">
                   {t("common.emailLabel")}
-                </label>
-                <input
+                </Label>
+                <Input
                   id="email"
                   name="email"
                   type="email"
+                  autoComplete="email"
+                  inputMode="email"
                   required
+                  hasError={Boolean(emailError)}
+                  aria-describedby={emailError ? "register-email-error" : undefined}
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
                     setEmailError(undefined);
                   }}
-                  className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 focus:outline-none focus:ring-2 transition-colors ${
-                    emailError
-                      ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                      : "border-border focus:border-primary focus:ring-primary/50"
-                  }`}
                   placeholder={t("common.emailPlaceholder")}
                 />
-                {emailError && <p className="mt-1 text-sm text-destructive">{emailError}</p>}
+                {emailError && <FieldMessage id="register-email-error" variant="error">{emailError}</FieldMessage>}
               </div>
 
               <div>
-                <label htmlFor="businessName" className="block text-sm font-medium text-foreground">
+                <Label htmlFor="businessName">
                   {t("register.businessNameLabel")}
-                </label>
-                <input
+                </Label>
+                <Input
                   id="businessName"
                   name="businessName"
                   type="text"
+                  autoComplete="organization"
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
-                  className="mt-1 block w-full rounded-[var(--radius)] border border-border bg-card px-3 py-2.5 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
                   placeholder={t("register.businessNamePlaceholder")}
                 />
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-foreground">
+                <Label htmlFor="password">
                   {t("common.passwordLabel")}
-                </label>
-                <input
+                </Label>
+                <Input
                   id="password"
                   name="password"
                   type="password"
+                  autoComplete="new-password"
                   required
+                  hasError={Boolean(passwordError)}
+                  aria-describedby={[
+                    password ? "password-strength" : "",
+                    passwordError ? "register-password-error" : "",
+                  ].filter(Boolean).join(" ") || undefined}
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
                     setPasswordError(undefined);
                   }}
-                  className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 focus:outline-none focus:ring-2 transition-colors ${
-                    passwordError
-                      ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                      : "border-border focus:border-primary focus:ring-primary/50"
-                  }`}
                   placeholder={t("common.minCharsPlaceholder")}
                 />
-                <PasswordStrengthIndicator password={password} />
-                {passwordError && <p className="mt-1 text-sm text-destructive">{passwordError}</p>}
+                <PasswordStrengthIndicator id="password-strength" password={password} />
+                {passwordError && <FieldMessage id="register-password-error" variant="error">{passwordError}</FieldMessage>}
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground">
+                <Label htmlFor="confirmPassword">
                   {t("common.confirmPasswordLabel")}
-                </label>
-                <input
+                </Label>
+                <Input
                   id="confirmPassword"
                   name="confirmPassword"
                   type="password"
+                  autoComplete="new-password"
                   required
+                  hasError={Boolean(confirmPasswordError)}
+                  aria-describedby={confirmPasswordError ? "register-confirm-password-error" : undefined}
                   value={confirmPassword}
                   onChange={(e) => {
                     setConfirmPassword(e.target.value);
                     setConfirmPasswordError(undefined);
                   }}
-                  className={`mt-1 block w-full rounded-[var(--radius)] border bg-card px-3 py-2.5 focus:outline-none focus:ring-2 transition-colors ${
-                    confirmPasswordError
-                      ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                      : "border-border focus:border-primary focus:ring-primary/50"
-                  }`}
                   placeholder={t("register.confirmPasswordPlaceholder")}
                 />
                 {confirmPasswordError && (
-                  <p className="mt-1 text-sm text-destructive">{confirmPasswordError}</p>
+                  <FieldMessage id="register-confirm-password-error" variant="error">{confirmPasswordError}</FieldMessage>
                 )}
               </div>
             </div>
 
-            <div className="flex items-start gap-2.5">
+            <div className="flex min-h-11 items-start gap-3">
               <input
                 id="consent"
                 name="consent"
@@ -330,9 +333,9 @@ export default function RegisterPage() {
                   setConsent(e.target.checked);
                   if (e.target.checked) setError("");
                 }}
-                className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border-border bg-card accent-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded border-border bg-card accent-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               />
-              <label htmlFor="consent" className="cursor-pointer text-xs leading-relaxed text-muted-foreground">
+              <label htmlFor="consent" className="cursor-pointer text-sm leading-relaxed text-muted-foreground">
                 {t.rich("register.termsAgreement", {
                   terms: (chunks) => (
                     <Link href="/terms" className="text-primary hover:text-primary/80">{chunks}</Link>
@@ -351,14 +354,15 @@ export default function RegisterPage() {
             )}
 
             <div>
-              <button
+              <Button
                 type="submit"
                 disabled={loading}
-                className="group relative flex w-full items-center justify-center gap-2 rounded-[var(--radius)] border border-transparent bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+                aria-busy={loading}
+                className="w-full"
               >
-                <UserPlus className="h-4 w-4" />
+                <UserPlus className="h-4 w-4" aria-hidden="true" />
                 {loading ? t("register.submitting") : t("register.submit")}
-              </button>
+              </Button>
             </div>
 
             <div className="text-center">
@@ -366,7 +370,7 @@ export default function RegisterPage() {
                 {t("register.haveAccount")}{" "}
                 <Link
                   href="/login"
-                  className="font-medium text-primary hover:text-primary/80"
+                  className="inline-flex min-h-11 items-center font-medium text-primary hover:text-primary/80"
                 >
                   {t("register.signInHere")}
                 </Link>

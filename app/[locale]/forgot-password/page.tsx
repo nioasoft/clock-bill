@@ -9,6 +9,10 @@ import { useAuthErrorMessage } from "@/lib/auth/error-messages";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { PublicAccessibilityLink } from "@/components/public-accessibility-link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { FieldMessage } from "@/components/ui/field-message";
 
 export default function ForgotPasswordPage() {
   const t = useTranslations("Auth");
@@ -67,59 +71,54 @@ export default function ForgotPasswordPage() {
             <div className="space-y-6">
               <div className="rounded-[var(--radius)] bg-accent/5 border border-accent/20 p-6" role="status">
                 <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-accent" aria-hidden="true" />
                   <p className="text-sm text-foreground">
                     {t("forgot.successMessage")}
                   </p>
                 </div>
               </div>
               <div className="text-center">
-                <Link
-                  href="/login"
-                  className="font-medium text-primary hover:text-primary/80"
-                >
-                  {t("common.backToLogin")}
-                </Link>
+                <Button asChild variant="outline" className="w-full">
+                  <Link href="/login">{t("common.backToLogin")}</Link>
+                </Button>
               </div>
             </div>
           ) : (
             <form method="post" onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
+                <Label htmlFor="email">
                   {t("common.emailLabel")}
-                </label>
-                <input
+                </Label>
+                <Input
                   id="email"
                   name="email"
                   type="email"
+                  autoComplete="email"
+                  inputMode="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
                   placeholder={t("common.emailPlaceholder")}
                 />
               </div>
 
-              {error && (
-                <div className="rounded-[var(--radius)] bg-destructive/10 border border-destructive/20 p-4" role="alert">
-                  <p className="text-sm text-destructive">{error}</p>
-                </div>
-              )}
+              {error && <FieldMessage variant="error" className="rounded-[var(--radius)] border border-destructive/20 bg-destructive/10 p-4">{error}</FieldMessage>}
 
-              <button
+              <Button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-[var(--radius)] bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+                aria-busy={loading}
+                className="w-full"
               >
                 {loading ? t("common.sending") : t("forgot.submit")}
-              </button>
+              </Button>
 
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">
                   {t("forgot.rememberedPassword")}{" "}
                   <Link
                     href="/login"
-                    className="font-medium text-primary hover:text-primary/80"
+                    className="inline-flex min-h-11 items-center font-medium text-primary hover:text-primary/80"
                   >
                     {t("common.signInHere")}
                   </Link>

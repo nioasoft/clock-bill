@@ -10,6 +10,11 @@ import { useAuthErrorMessage } from "@/lib/auth/error-messages";
 import { ClockFaceMarks } from "@/components/ui/thematic-elements";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { PublicAccessibilityLink } from "@/components/public-accessibility-link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { FieldMessage } from "@/components/ui/field-message";
+import { PasswordStrengthIndicator } from "@/components/password-strength-indicator";
 
 function ResetPasswordForm() {
   const t = useTranslations("Auth");
@@ -70,19 +75,16 @@ function ResetPasswordForm() {
       <div className="space-y-6">
         <div className="rounded-[var(--radius)] bg-accent/5 border border-accent/20 p-6" role="status">
           <div className="flex items-start gap-3">
-            <CheckCircle2 className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
+            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-accent" aria-hidden="true" />
             <p className="text-sm text-foreground">
               {t("reset.successMessage")}
             </p>
           </div>
         </div>
         <div className="text-center">
-          <Link
-            href="/login"
-            className="font-medium text-primary hover:text-primary/80"
-          >
-            {t("reset.goToLogin")}
-          </Link>
+          <Button asChild variant="outline" className="w-full">
+            <Link href="/login">{t("reset.goToLogin")}</Link>
+          </Button>
         </div>
       </div>
     );
@@ -92,59 +94,58 @@ function ResetPasswordForm() {
     <form method="post" onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
+          <Label htmlFor="password">
             {t("reset.newPasswordLabel")}
-          </label>
-          <input
+          </Label>
+          <Input
             id="password"
             name="password"
             type="password"
+            autoComplete="new-password"
             required
+            aria-describedby={password ? "reset-password-strength" : undefined}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="block w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
             placeholder={t("common.minCharsPlaceholder")}
             disabled={!token}
           />
+          <PasswordStrengthIndicator id="reset-password-strength" password={password} />
         </div>
 
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground mb-2">
+          <Label htmlFor="confirmPassword">
             {t("common.confirmPasswordLabel")}
-          </label>
-          <input
+          </Label>
+          <Input
             id="confirmPassword"
             name="confirmPassword"
             type="password"
+            autoComplete="new-password"
             required
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="block w-full rounded-[var(--radius)] border border-border bg-background px-3 py-2.5 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
             placeholder={t("reset.confirmPasswordPlaceholder")}
             disabled={!token}
           />
         </div>
       </div>
 
-      {error && (
-        <div className="rounded-[var(--radius)] bg-destructive/10 border border-destructive/20 p-4" role="alert">
-          <p className="text-sm text-destructive">{error}</p>
-        </div>
-      )}
+      {error && <FieldMessage variant="error" className="rounded-[var(--radius)] border border-destructive/20 bg-destructive/10 p-4">{error}</FieldMessage>}
 
-      <button
+      <Button
         type="submit"
         disabled={loading || !token}
-        className="w-full rounded-[var(--radius)] bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+        aria-busy={loading}
+        className="w-full"
       >
         {loading ? t("reset.submitting") : t("reset.submit")}
-      </button>
+      </Button>
 
       <div className="text-center">
         <p className="text-sm text-muted-foreground">
           <Link
             href="/login"
-            className="font-medium text-primary hover:text-primary/80"
+            className="inline-flex min-h-11 items-center font-medium text-primary hover:text-primary/80"
           >
             {t("common.backToLogin")}
           </Link>

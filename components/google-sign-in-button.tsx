@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { authClient } from "@/lib/auth/client";
+import { Button } from "@/components/ui/button";
+import { FieldMessage } from "@/components/ui/field-message";
 
 interface GoogleSignInButtonProps {
   /** Button label (e.g. "התחבר עם Google" / "הירשם עם Google"). */
@@ -63,11 +65,13 @@ export function GoogleSignInButton({
 
   return (
     <div className="space-y-2">
-      <button
+      <Button
         type="button"
         onClick={handleClick}
         disabled={loading || disabled}
-        className="flex w-full items-center justify-center gap-3 rounded-[var(--radius)] border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+        aria-busy={loading}
+        variant="outline"
+        className="w-full gap-3"
       >
         <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
           <path
@@ -88,11 +92,11 @@ export function GoogleSignInButton({
           />
         </svg>
         {loading ? t("redirectingToGoogle") : label}
-      </button>
+      </Button>
       {error && (
-        <p className="text-sm text-destructive" role="alert">
+        <FieldMessage variant="error">
           {error}
-        </p>
+        </FieldMessage>
       )}
     </div>
   );
