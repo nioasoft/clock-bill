@@ -14,6 +14,7 @@ import { TimerStopModal } from "./timer-stop-modal";
 import { TimerDeepLink } from "./timer-deeplink";
 import { brandName } from "@/lib/brand";
 import { useProfile } from "@/hooks/use-profile";
+import { localePrefixFromPath } from "@/lib/locale-path";
 
 interface User {
   id: string;
@@ -104,6 +105,15 @@ export function AppLayout({ children }: AppLayoutProps) {
     localeSyncedRef.current = true;
 
     const stored = profile.locale;
+    const explicitLocale = localePrefixFromPath(window.location.pathname);
+    if (explicitLocale) {
+      // An explicit /en or /he deep link is authoritative. Persist the cookie
+      // for later prefix-less navigation, but never bounce the user back to a
+      // stale profile preference while the requested route is already active.
+      const secure = location.protocol === "https:" ? "; Secure" : "";
+      document.cookie = `NEXT_LOCALE=${explicitLocale}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax${secure}`;
+      return;
+    }
     if ((stored === "he" || stored === "en") && stored !== locale) {
       // Persist so a hard reload / new visit picks it up immediately.
       const secure = location.protocol === "https:" ? "; Secure" : "";
