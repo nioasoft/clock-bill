@@ -7,6 +7,8 @@ import { AppLayout } from "@/components/app-layout";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { EarningsChart } from "@/components/earnings-chart";
 import { ProjectHoursChart } from "@/components/project-hours-chart";
 import { useNotifications } from "@/hooks/use-notifications";
@@ -359,9 +361,9 @@ export default function DashboardPage() {
         >
           <Link
             href="/settings?tab=appearance"
-            className="inline-flex items-center gap-2 rounded-[var(--radius)] border border-border bg-card px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-border-strong transition-colors min-h-[44px]"
+            className="inline-flex min-h-11 touch-manipulation items-center gap-2 rounded-[var(--radius)] border border-border bg-card px-4 py-2 text-sm font-semibold text-muted-foreground transition-[background-color,border-color,color] hover:border-border-strong hover:bg-card-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            <SlidersHorizontal className="h-4 w-4" />
+            <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
             {t("customizeButton")}
           </Link>
         </PageHeader>
@@ -450,13 +452,13 @@ export default function DashboardPage() {
               return (
                 <div
                   key={card.id}
-                  className={`rounded-[var(--radius-card)] border p-2.5 sm:p-4 transition-colors motion-safe:animate-fade-up stagger-${Math.min(index + 1, 5)} ${
+                  className={`min-w-0 rounded-[var(--radius-card)] border p-3 transition-[background-color,border-color] sm:p-4 motion-safe:animate-fade-up stagger-${Math.min(index + 1, 5)} ${
                     accent
                       ? "col-span-2 order-first sm:order-none sm:col-span-1 bg-primary/[0.06] border-primary/25 hover:border-primary/40"
                       : "bg-card border-border hover:border-border-strong"
                   }`}
                 >
-                  <p className="text-[10px] sm:text-xs uppercase tracking-widest font-semibold text-muted-foreground">{label}</p>
+                  <p className="text-xs font-semibold leading-tight text-muted-foreground">{label}</p>
                   <p className={`font-mono font-bold tabular-nums ${
                     accent
                       ? "mt-1 sm:mt-2 text-2xl text-primary"
@@ -492,19 +494,15 @@ export default function DashboardPage() {
                 )}
               </h3>
               <div className="flex flex-wrap items-center gap-2">
-                <button
+                <Button
                   onClick={() => setShowTimerModal(true)}
-                  className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
-                  <Clock className="h-4 w-4" />
+                  <Clock className="h-4 w-4" aria-hidden="true" />
                   {t("activeTimers.newTimerButton")}
-                </button>
-                <Link
-                  href="/entries?new=item"
-                  className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface transition-colors"
-                >
-                  {t("activeTimers.newBillingItemButton")}
-                </Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/entries?new=item">{t("activeTimers.newBillingItemButton")}</Link>
+                </Button>
               </div>
             </div>
 
@@ -614,14 +612,14 @@ export default function DashboardPage() {
                         {tTimer("bar.notesLabel")}
                       </label>
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
-                        <textarea
+                        <Textarea
                           id={`band-timer-notes-${timer.id}`}
                           rows={2}
                           value={notesDraft}
                           onChange={(e) => setNotesDraft(e.target.value)}
                           placeholder={tTimer("bar.notesPlaceholder")}
                           autoFocus
-                          className="flex-1 resize-y rounded-[var(--radius)] border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/50 focus:border-primary focus:ring-1 focus:ring-primary"
+                          className="flex-1 bg-background"
                         />
                         <div className="flex shrink-0 gap-2 sm:flex-col">
                           <button
@@ -659,30 +657,14 @@ export default function DashboardPage() {
               </div>
               <p className="mt-1 text-sm text-muted-foreground">{t("quickActions.subtitle")}</p>
               <div className="mt-4 flex flex-wrap gap-2">
-                <button
+                <Button
                   onClick={() => setShowTimerModal(true)}
-                  className="inline-flex items-center rounded-[var(--radius)] bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
                   {t("quickTimer.startButton")}
-                </button>
-                <Link
-                  href="/entries?new=item"
-                  className="inline-flex items-center rounded-[var(--radius)] border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-surface transition-colors"
-                >
-                  {t("billingItem.addButton")}
-                </Link>
-                <Link
-                  href="/tasks?create=true"
-                  className="inline-flex items-center rounded-[var(--radius)] border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-surface transition-colors"
-                >
-                  {t("task.createButton")}
-                </Link>
-                <Link
-                  href="/entries?new=manual"
-                  className="inline-flex items-center rounded-[var(--radius)] px-4 py-2.5 text-sm font-medium text-muted-foreground hover:bg-surface hover:text-foreground transition-colors"
-                >
-                  {t("quickTimer.manualEntryButton")}
-                </Link>
+                </Button>
+                <Button asChild variant="outline"><Link href="/entries?new=item">{t("billingItem.addButton")}</Link></Button>
+                <Button asChild variant="outline"><Link href="/tasks?create=true">{t("task.createButton")}</Link></Button>
+                <Button asChild variant="ghost"><Link href="/entries?new=manual">{t("quickTimer.manualEntryButton")}</Link></Button>
               </div>
             </div>
           </div>
