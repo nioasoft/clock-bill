@@ -53,6 +53,7 @@ export async function GET(_request: NextRequest) {
           AND c.is_active = true
           AND te.charge_document_id IS NULL
           AND te.is_billable = true
+          AND te.written_off_at IS NULL
         GROUP BY c.id, c.name, c.currency, c.settlement_billing_day`,
       [user.id]
     );

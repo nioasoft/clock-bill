@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type { PoolClient } from "pg";
 import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
-import { entryBodySchema } from "@/lib/schemas/entries";
+import { entryBodySchema, entryWriteOffSchema } from "@/lib/schemas/entries";
 import { entrySelectColumns, mapEntryRow, type EntryRow } from "@/lib/transformers/entries";
 import { createLogger } from "@/lib/logger";
 
@@ -215,6 +215,76 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     });
   } catch (error) {
     logger.error("Error updating entry", error);
+    return NextResponse.json(
+      { success: false, error_code: "SERVER_ERROR", message: "שגיאה בעדכון הרשומה" },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * PATCH /api/entries/[id]
+ * Toggle the write-off marker ("agreed not to bill"). A billed entry can't be
+ * written off (DB check enforces it too); restoring is always allowed.
+ */
+export async function PATCH(request: NextRequest, context: RouteContext) {
+  try {
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error_code: "UNAUTHORIZED", message: "לא מחובר" },
+        { status: 401 }
+      );
+    }
+
+    const { id } = await context.params;
+    const parsed = await parseBody(request, entryWriteOffSchema);
+    if (!parsed.ok) return parsed.response;
+    const { writtenOff } = parsed.data;
+
+    const { query } = await import("@/lib/db");
+    const updated = await query<EntryRow>(
+      `WITH upd AS (
+         UPDATE time_entries
+         SET written_off_at = CASE WHEN $1 THEN COALESCE(written_off_at, NOW()) ELSE NULL END,
+             updated_at = NOW()
+         WHERE id = $2 AND user_id = $3 AND charge_document_id IS NULL
+         RETURNING *
+       )
+       SELECT
+         ${entrySelectColumns("upd")}
+       FROM upd
+       JOIN projects p ON upd.project_id = p.id
+       JOIN clients c ON p.client_id = c.id
+       LEFT JOIN tasks tk ON upd.task_id = tk.id
+       LEFT JOIN charge_documents cd ON upd.charge_document_id = cd.id`,
+      [writtenOff, id, user.id]
+    );
+
+    if (updated.rows.length === 0) {
+      const existing = await query<{ charge_document_id: string | null }>(
+        `SELECT charge_document_id FROM time_entries WHERE id = $1 AND user_id = $2`,
+        [id, user.id]
+      );
+      if (existing.rows.length === 0) {
+        return NextResponse.json(
+          { success: false, error_code: "ENTRY_NOT_FOUND", message: "הרשומה לא נמצאה" },
+          { status: 404 }
+        );
+      }
+      return NextResponse.json(
+        {
+          success: false,
+          error_code: "ENTRY_BILLED",
+          message: "הרשומה כלולה בתעודת התחשבנות. יש לבטל את התעודה כדי לערוך או למחוק אותה.",
+        },
+        { status: 409 }
+      );
+    }
+
+    return NextResponse.json({ success: true, entry: mapEntryRow(updated.rows[0]) });
+  } catch (error) {
+    logger.error("Error toggling entry write-off", error);
     return NextResponse.json(
       { success: false, error_code: "SERVER_ERROR", message: "שגיאה בעדכון הרשומה" },
       { status: 500 }

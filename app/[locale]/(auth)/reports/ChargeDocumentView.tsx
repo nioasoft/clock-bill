@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations, useLocale, NextIntlClientProvider } from "next-intl";
-import { STATUS_META, type ChargeDocStatus } from "./statusMeta";
+import { STATUS_META, displayStatus, type ChargeDocStatus } from "./statusMeta";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { formatDate } from "@/lib/format";
 import { formatCurrency } from "@/lib/currency";
@@ -77,6 +77,10 @@ interface ChargeDocument {
   discount_type: string | null;
   /** Document-level discount value (percentage or absolute), or null when none. */
   discount_value: number | null;
+  /** Approval lock: when set, the document is locked for editing until unapproved. */
+  approved_at: string | null;
+  /** Who approved: 'owner' (marked manually) | 'client' (via the public link). */
+  approved_by: "owner" | "client" | null;
 }
 
 /** Business-profile fields needed for the PDF header + template/colors. */
@@ -255,8 +259,13 @@ export default function ChargeDocumentView({
   }, []);
 
   const isPending = doc?.status === "pending";
+  const isPartial = doc?.status === "partial";
   const isPaid = doc?.status === "paid";
   const isCanceled = doc?.status === "canceled";
+  const isApproved = Boolean(doc?.approved_at);
+  // An approved document is locked for editing until the approval is removed.
+  const canEditDoc = isPending && !isApproved;
+  const canEditDiscount = (isPending || isPartial) && !isApproved;
 
   const patchDocument = useCallback(
     async (body: Record<string, unknown>): Promise<boolean> => {
@@ -278,12 +287,12 @@ export default function ChargeDocumentView({
   );
 
   const handleSaveNotes = useCallback(async (): Promise<void> => {
-    if (!isPending) return;
+    if (!canEditDoc) return;
     setSavingNotes(true);
     const ok = await patchDocument({ notes: notesDraft });
     if (ok) showSuccessToast(t("doc.notesSaved"));
     setSavingNotes(false);
-  }, [isPending, notesDraft, patchDocument, t]);
+  }, [canEditDoc, notesDraft, patchDocument, t]);
 
   const handleSetSummary = useCallback(
     async (mode: SummaryMode | null): Promise<void> => {
@@ -318,8 +327,33 @@ export default function ChargeDocumentView({
     [lineDraft, patchDocument, t]
   );
 
+  // Remove-line choice dialog (time-entry lines only): "return to the billable
+  // pool" vs "write off — agreed not to bill". Computed (fixed/retainer) lines
+  // have no source entry, so they keep the plain confirm.
+  const [removeLineTarget, setRemoveLineTarget] = useState<DocumentLine | null>(null);
+  const [removingLine, setRemovingLine] = useState(false);
+
+  const runRemoveLine = useCallback(
+    async (line: DocumentLine, mode: "return" | "write_off"): Promise<void> => {
+      setRemovingLine(true);
+      const ok = await patchDocument(
+        mode === "write_off" ? { removeLineId: line.id, removeMode: "write_off" } : { removeLineId: line.id }
+      );
+      if (ok) {
+        showSuccessToast(mode === "write_off" ? t("doc.lineWrittenOff") : t("doc.lineRemoved"));
+        setRemoveLineTarget(null);
+      }
+      setRemovingLine(false);
+    },
+    [patchDocument, t]
+  );
+
   const requestRemoveLine = useCallback(
     (line: DocumentLine): void => {
+      if (line.time_entry_id) {
+        setRemoveLineTarget(line);
+        return;
+      }
       setConfirm({
         title: t("doc.removeLineTitle"),
         description: t("doc.removeLineBody", { label: line.label }),
@@ -335,11 +369,11 @@ export default function ChargeDocumentView({
   );
 
   const postAction = useCallback(
-    async (path: string, successMessage: string, closeAfter: boolean): Promise<void> => {
+    async (path: string, successMessage: string, closeAfter: boolean, method: "POST" | "DELETE" = "POST"): Promise<void> => {
       setActionBusy(true);
       try {
         const res = await fetch(`/api/charge-documents/${documentId}/${path}`, {
-          method: "POST",
+          method,
         });
         const json = await res.json();
         if (!res.ok || !json.success) {
@@ -487,7 +521,7 @@ export default function ChargeDocumentView({
     );
   }
 
-  const status = STATUS_META[doc.status as ChargeDocStatus] ?? STATUS_META.pending;
+  const status = STATUS_META[displayStatus(doc.status, doc.approved_at)];
   const publicLinkExpiresAt = doc.public_token_expires_at
     ? new Date(doc.public_token_expires_at)
     : null;
@@ -536,6 +570,9 @@ export default function ChargeDocumentView({
           <p className="text-muted-foreground"><bdi>{doc.client_name}</bdi></p>
           <p className="text-sm text-muted-foreground">
             {t("doc.issuedOn", { date: formatDate(doc.issued_at, undefined, locale) })}
+            {doc.approved_at
+              ? ` · ${t(doc.approved_by === "client" ? "doc.approvedByClientOn" : "doc.approvedByOwnerOn", { date: formatDate(doc.approved_at, undefined, locale) })}`
+              : ""}
             {doc.paid_at ? ` · ${t("doc.paidOn", { date: formatDate(doc.paid_at, undefined, locale) })}` : ""}
           </p>
         </div>
@@ -595,6 +632,12 @@ export default function ChargeDocumentView({
         </p>
       )}
 
+      {isApproved && !isPaid && !isCanceled && (
+        <p className="rounded-[var(--radius)] border border-success/30 bg-success/[0.06] px-3 py-2 text-sm text-foreground" role="status">
+          {t("doc.approvedLockedNotice")}
+        </p>
+      )}
+
       {/* ── Summary (optional, grouped) ── */}
       {summaryMode && summary.length > 0 && (
         <div className="overflow-hidden rounded-[var(--radius-card)] border border-border">
@@ -638,13 +681,13 @@ export default function ChargeDocumentView({
               <th className="px-3 py-2 text-start font-medium">{t("doc.colDetails")}</th>
               <th className="px-3 py-2 text-start font-medium">{t("doc.colQtyRate")}</th>
               <th className="px-3 py-2 text-end font-medium">{t("doc.colAmount")}</th>
-              {isPending && <th className="px-3 py-2 text-end font-medium sr-only">{t("doc.colActions")}</th>}
+              {canEditDoc && <th className="px-3 py-2 text-end font-medium sr-only">{t("doc.colActions")}</th>}
             </tr>
           </thead>
           <tbody>
             {lines.length === 0 && (
               <tr>
-                <td colSpan={isPending ? 6 : 5} className="px-3 py-6 text-center text-muted-foreground">
+                <td colSpan={canEditDoc ? 6 : 5} className="px-3 py-6 text-center text-muted-foreground">
                   {t("doc.noLines")}
                 </td>
               </tr>
@@ -715,7 +758,7 @@ export default function ChargeDocumentView({
                   <td className="px-3 py-3 text-end font-mono tabular-nums text-foreground">
                     {formatCurrency(line.amount, doc.currency, locale)}
                   </td>
-                  {isPending && (
+                  {canEditDoc && (
                     <td className="px-3 py-3 text-end">
                       {editing ? (
                         <div className="flex justify-end gap-2">
@@ -821,7 +864,7 @@ export default function ChargeDocumentView({
         <label className="block text-sm font-medium text-foreground" htmlFor="doc-notes">
           {t("doc.notesLabel")}
         </label>
-        {isPending ? (
+        {canEditDoc ? (
           <div className="space-y-2">
             <Textarea
               id="doc-notes"
@@ -927,7 +970,7 @@ export default function ChargeDocumentView({
       {/* ── Summary-block control (pending only) ── */}
       {/* Whether the document opens with a grouped summary, and how it groups.
           Persisted on the document; the print PDF mirrors it. */}
-      {isPending && (
+      {canEditDoc && (
         <div role="group" aria-label={t("doc.summaryToggle")} className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-muted-foreground">{t("doc.summaryToggle")}</span>
           <div className="flex items-center gap-1 rounded-[var(--radius)] border border-border p-1">
@@ -959,7 +1002,7 @@ export default function ChargeDocumentView({
       )}
 
       {/* ── Header date-range toggle (pending only) ── */}
-      {isPending && (
+      {canEditDoc && (
         <label className="flex items-center gap-2 cursor-pointer min-h-11 text-sm text-muted-foreground">
           <input
             type="checkbox"
@@ -972,7 +1015,7 @@ export default function ChargeDocumentView({
       )}
 
       {/* ── Discount editor (pending or partial documents) ── */}
-      {(isPending || doc.status === "partial") && (
+      {canEditDiscount && (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-muted-foreground">{t("doc.discountLabel")}</span>
           <SimpleSelect
@@ -1037,7 +1080,47 @@ export default function ChargeDocumentView({
           </p>
         )}
 
-        {isPending && (
+        {(isPending || isPartial) && !isApproved && (
+          <Button
+            variant="outline"
+            onClick={() =>
+              setConfirm({
+                title: t("doc.approveConfirmTitle"),
+                description: t("doc.approveConfirmBody"),
+                actionLabel: t("doc.approveAction"),
+                destructive: false,
+                run: () => postAction("approve", t("doc.approvedToast"), false),
+              })
+            }
+            disabled={actionBusy}
+            aria-busy={actionBusy}
+            className="min-h-[44px] border-success/40 text-success hover:text-success"
+          >
+            {t("doc.approveAction")}
+          </Button>
+        )}
+
+        {isApproved && !isPaid && !isCanceled && (
+          <Button
+            variant="outline"
+            onClick={() =>
+              setConfirm({
+                title: t("doc.unapproveConfirmTitle"),
+                description: t("doc.unapproveConfirmBody"),
+                actionLabel: t("doc.unapproveAction"),
+                destructive: false,
+                run: () => postAction("approve", t("doc.unapprovedToast"), false, "DELETE"),
+              })
+            }
+            disabled={actionBusy}
+            aria-busy={actionBusy}
+            className="min-h-[44px]"
+          >
+            {t("doc.unapproveAction")}
+          </Button>
+        )}
+
+        {isPending && !isApproved && (
           <Button
             variant="destructive"
             onClick={() =>
@@ -1101,6 +1184,48 @@ export default function ChargeDocumentView({
               className="min-h-[44px]"
             >
               {confirmBusy ? t("actions.working") : confirm?.actionLabel}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Remove-line choice dialog (time-entry lines) ── */}
+      <Dialog open={removeLineTarget !== null} onOpenChange={(open) => !open && !removingLine && setRemoveLineTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("doc.removeLineChoiceTitle")}</DialogTitle>
+            <DialogDescription>
+              {removeLineTarget ? t("doc.removeLineBody", { label: removeLineTarget.label }) : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <button
+              type="button"
+              disabled={removingLine}
+              onClick={() => removeLineTarget && void runRemoveLine(removeLineTarget, "return")}
+              className="w-full rounded-[var(--radius)] border border-border bg-card px-4 py-3 text-start hover:bg-card-elevated disabled:opacity-50"
+            >
+              <div className="text-sm font-medium text-foreground">{t("doc.removeLineReturnOption")}</div>
+              <div className="text-xs text-muted-foreground">{t("doc.removeLineReturnHint")}</div>
+            </button>
+            <button
+              type="button"
+              disabled={removingLine}
+              onClick={() => removeLineTarget && void runRemoveLine(removeLineTarget, "write_off")}
+              className="w-full rounded-[var(--radius)] border border-border bg-card px-4 py-3 text-start hover:bg-card-elevated disabled:opacity-50"
+            >
+              <div className="text-sm font-medium text-destructive">{t("doc.removeLineWriteOffOption")}</div>
+              <div className="text-xs text-muted-foreground">{t("doc.removeLineWriteOffHint")}</div>
+            </button>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setRemoveLineTarget(null)}
+              disabled={removingLine}
+              className="min-h-[44px]"
+            >
+              {t("actions.cancel")}
             </Button>
           </DialogFooter>
         </DialogContent>

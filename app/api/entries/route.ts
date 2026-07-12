@@ -74,6 +74,18 @@ export async function GET(request: NextRequest) {
       filterIndex++;
     }
 
+    // Billing-state filter (whitelisted values only — no user input in SQL).
+    const billingStatus = searchParams.get("billingStatus");
+    if (billingStatus === "billed") {
+      whereClause += ` AND te.charge_document_id IS NOT NULL`;
+    } else if (billingStatus === "unbilled") {
+      whereClause += ` AND te.charge_document_id IS NULL AND te.is_billable = true AND te.written_off_at IS NULL`;
+    } else if (billingStatus === "written_off") {
+      whereClause += ` AND te.written_off_at IS NOT NULL`;
+    } else if (billingStatus === "not_billable") {
+      whereClause += ` AND te.is_billable = false`;
+    }
+
     // Build query with filters. The total (for pagination metadata) comes from a
     // COUNT(*) OVER() window on the same statement — no separate count round-trip.
     let queryText = `

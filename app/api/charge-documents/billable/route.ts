@@ -76,6 +76,7 @@ export async function GET(request: NextRequest) {
             AND c.id = $2
             AND te.charge_document_id IS NULL
             AND te.is_billable = true
+            AND te.written_off_at IS NULL
             AND ($3::date IS NULL OR te.date >= $3::date)
             AND ($4::date IS NULL OR te.date <= $4::date)
           ORDER BY te.date DESC, te.created_at DESC`,

@@ -7,7 +7,7 @@ import { formatCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import ChargeDocumentView from "./ChargeDocumentView";
-import { STATUS_META, type ChargeDocStatus } from "./statusMeta";
+import { STATUS_META, displayStatus } from "./statusMeta";
 
 interface DocumentRow {
   id: string;
@@ -20,14 +20,16 @@ interface DocumentRow {
   issued_at: string;
   paid_at: string | null;
   canceled_at: string | null;
+  approved_at: string | null;
+  approved_by: string | null;
   client_name: string;
 }
 
 type LoadState = "loading" | "error" | "ready";
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, approvedAt }: { status: string; approvedAt: string | null }) {
   const t = useTranslations("Reports");
-  const meta = STATUS_META[status as ChargeDocStatus] ?? STATUS_META.pending;
+  const meta = STATUS_META[displayStatus(status, approvedAt)];
   return (
     <span
       className={`inline-flex items-center rounded-[var(--radius)] border px-2.5 py-0.5 text-xs font-medium ${meta.badge}`}
@@ -168,7 +170,7 @@ export default function DocumentsTab({
   return (
     <div className="space-y-3">
       {docs.map((d) => {
-        const meta = STATUS_META[d.status as ChargeDocStatus] ?? STATUS_META.pending;
+        const meta = STATUS_META[displayStatus(d.status, d.approved_at)];
         return (
         <button
           key={d.id}
@@ -179,7 +181,7 @@ export default function DocumentsTab({
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="font-medium text-foreground">{t("documents.docNumber", { number: d.doc_number })}</span>
-              <StatusBadge status={d.status} />
+              <StatusBadge status={d.status} approvedAt={d.approved_at} />
             </div>
             <div className="text-sm text-muted-foreground">
               <bdi>{d.client_name}</bdi> · {formatDate(d.issued_at, undefined, locale)}
