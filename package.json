@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint --max-warnings 0",
     "db:generate": "drizzle-kit generate",
+    "db:apply": "node scripts/db-apply.mjs",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",

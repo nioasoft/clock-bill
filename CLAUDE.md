@@ -18,10 +18,16 @@ npm run test:validation  # Run validation tests only
 
 # Database (Drizzle Kit)
 npm run db:generate  # Generate migration from schema changes
-npm run db:migrate   # Apply migrations
+npm run db:apply     # Apply pending drizzle/*.sql migrations (tracked in schema_migrations)
 npm run db:push      # Push schema directly (dev)
 npm run db:studio    # Open Drizzle Studio
 ```
+
+**Migrations:** do NOT use `db:migrate` (drizzle-kit journal is out of sync). Apply via
+`DATABASE_URL_ADMIN="<admin url>" npm run db:apply` — run against the **dev** DB, then
+**prod** (`.env.local.bak.prod-shared`), BEFORE deploying code that depends on the new
+schema. The script applies pending `drizzle/NNNN_*.sql` files in order and records them
+in `schema_migrations`; re-running is a no-op ("0 pending").
 
 Tests use a custom runner (`tests/run-tests.ts`) with `tsx`, not a framework like Jest/Vitest. Run a single test: `npx tsx tests/unit/format.test.ts`
 
