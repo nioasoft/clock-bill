@@ -61,3 +61,14 @@ export const entryBodySchema = z
   );
 
 export type EntryBody = z.infer<typeof entryBodySchema>;
+
+/**
+ * PATCH /api/entries/[id] — write-off toggle only. `true` marks the entry
+ * "agreed not to bill" (excluded from the billable pool); `false` restores it.
+ * Deliberately separate from the full PUT body: the toggle must not require
+ * re-sending the whole entry.
+ */
+export const entryWriteOffSchema = z.object({
+  writtenOff: z.boolean({ message: "ערך לא תקין" }),
+});
+export type EntryWriteOffBody = z.infer<typeof entryWriteOffSchema>;

@@ -67,5 +67,17 @@ runner.test("patchDocument: single field passes", () => {
   const r = patchChargeDocumentSchema.safeParse({ notes: "עדכון" });
   assert(r.success, "expected single-field patch to parse");
 });
+runner.test("patchDocument: removeLineId with write_off removeMode parses", () => {
+  const r = patchChargeDocumentSchema.safeParse({ removeLineId: "l1", removeMode: "write_off" });
+  assert(r.success, "expected write_off remove to parse");
+});
+runner.test("patchDocument: removeLineId with return removeMode parses", () => {
+  const r = patchChargeDocumentSchema.safeParse({ removeLineId: "l1", removeMode: "return" });
+  assert(r.success, "expected return remove to parse");
+});
+runner.test("patchDocument: invalid removeMode is rejected", () => {
+  const r = patchChargeDocumentSchema.safeParse({ removeLineId: "l1", removeMode: "delete_forever" });
+  assert(!r.success, "expected unknown removeMode to fail");
+});
 
 runner.run().then((ok) => process.exit(ok ? 0 : 1));

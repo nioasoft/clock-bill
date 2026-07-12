@@ -34,6 +34,8 @@ interface LoadResult {
   locale: "he" | "en";
   paidSum: number;
   history: PublicDocumentHistoryEvent[];
+  approvedAt: string | null;
+  approvedBy: "owner" | "client" | null;
 }
 
 /** Token-scoped public read via the privileged connection (RLS bypass). */
@@ -43,7 +45,7 @@ async function loadByToken(token: string): Promise<LoadResult | null> {
   const docRes = await adminQuery(
     `SELECT d.id, d.doc_number, d.status, d.currency, d.total, d.notes, d.issued_at,
             d.vat_rate_snapshot, d.summary_mode, d.show_date_range, d.pdf_template, d.document_language,
-            d.discount_type, d.discount_value, d.last_sent_at,
+            d.discount_type, d.discount_value, d.last_sent_at, d.approved_at, d.approved_by,
             c.name AS client_name, c.document_language AS client_doc_language,
             d.user_id
        FROM charge_documents d
@@ -122,13 +124,19 @@ async function loadByToken(token: string): Promise<LoadResult | null> {
     method: (row.method as PublicPaymentEvent["method"]) ?? null,
   }));
   const paidSum = payments.reduce((sum, payment) => sum + payment.amount, 0);
+  const approvedAt = d.approved_at ? new Date(d.approved_at as string).toISOString() : null;
+  const approvedBy = (d.approved_by as "owner" | "client" | null) ?? null;
   const history = buildPublicDocumentHistory({
     issuedAt: doc.issued_at,
     lastSentAt: d.last_sent_at ? new Date(d.last_sent_at as string).toISOString() : null,
     payments,
+    approvedAt,
+    approvedBy,
   });
 
   return {
+    approvedAt,
+    approvedBy,
     doc,
     lines: linesRes.rows as unknown as PdfDocumentLine[],
     profile,

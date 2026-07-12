@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { NextIntlClientProvider, useTranslations } from "next-intl";
 import {
+  BadgeCheck,
   CheckCircle2,
   CircleDollarSign,
   Clock3,
@@ -55,21 +58,59 @@ interface Props {
   locale: "he" | "en";
   paidSum: number;
   history: PublicDocumentHistoryEvent[];
+  approvedAt: string | null;
+  approvedBy: "owner" | "client" | null;
 }
 
 function HistoryIcon({ type }: { type: PublicDocumentHistoryEvent["type"] }) {
   const className = "h-4 w-4";
   if (type === "payment") return <CircleDollarSign className={className} aria-hidden="true" />;
   if (type === "sent") return <Send className={className} aria-hidden="true" />;
+  if (type === "approved") return <BadgeCheck className={className} aria-hidden="true" />;
   return <FileCheck2 className={className} aria-hidden="true" />;
 }
 
 function PortalView(props: Props) {
   const { doc, lines, profile, primaryColor, accentColor, locale, paidSum, history } = props;
   const t = useTranslations("Portal");
+  const router = useRouter();
+  // The bearer token is read from the URL (this page IS /doc/[token]) — it is
+  // deliberately never passed through Server Component props.
+  const params = useParams<{ token: string }>();
+  const urlToken = params?.token ?? "";
   const template = asTemplate(props.template);
   const primaryText: OnColorText = props.primaryText;
   const dir = locale === "he" ? "rtl" : "ltr";
+
+  // Client approve action: optimistic local state + a server refresh so the
+  // timeline picks up the new event. Inline two-step confirm (no modal — Radix
+  // dialogs scroll-lock the page).
+  const [approvedAt, setApprovedAt] = useState<string | null>(props.approvedAt);
+  const [approveConfirming, setApproveConfirming] = useState(false);
+  const [approving, setApproving] = useState(false);
+  const [approveError, setApproveError] = useState(false);
+  const [justApproved, setJustApproved] = useState(false);
+
+  async function handleApprove() {
+    setApproving(true);
+    setApproveError(false);
+    try {
+      const res = await fetch(`/api/public/doc/${urlToken}/approve`, { method: "POST" });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        setApproveError(true);
+        return;
+      }
+      setApprovedAt((json.data?.approvedAt as string) ?? new Date().toISOString());
+      setJustApproved(true);
+      setApproveConfirming(false);
+      router.refresh();
+    } catch {
+      setApproveError(true);
+    } finally {
+      setApproving(false);
+    }
+  }
   const formatCurrency = (amount: number, currency: string) =>
     formatCurrencyLib(amount, currency, locale);
   const money = documentMoney({
@@ -82,13 +123,16 @@ function PortalView(props: Props) {
   const paidPercent = money.gross > 0
     ? Math.min(100, Math.max(0, (paidSum / money.gross) * 100))
     : 100;
-  const status = doc.status === "paid" ? "paid" : doc.status === "partial" ? "partial" : "pending";
-  const StatusIcon = status === "paid" ? CheckCircle2 : Clock3;
-  const statusClass = status === "paid"
+  const baseStatus = doc.status === "paid" ? "paid" : doc.status === "partial" ? "partial" : "pending";
+  // Approval overlays a still-pending document as "approved — awaiting payment".
+  const status = approvedAt && baseStatus === "pending" ? "approved" : baseStatus;
+  const StatusIcon = status === "paid" ? CheckCircle2 : status === "approved" ? BadgeCheck : Clock3;
+  const statusClass = status === "paid" || status === "approved"
     ? "border-success/30 bg-success/10 text-success"
     : status === "partial"
       ? "border-warning/30 bg-warning/10 text-warning"
       : "border-primary/30 bg-primary/10 text-primary";
+  const canApprove = !approvedAt && baseStatus !== "paid";
   const businessName = profile.businessName || "ClockBill";
   const contactSubject = encodeURIComponent(
     locale === "he"
@@ -114,6 +158,9 @@ function PortalView(props: Props) {
   }
 
   function historyLabel(event: PublicDocumentHistoryEvent): string {
+    if (event.type === "approved") {
+      return t(event.by === "owner" ? "history.approvedByOwner" : "history.approvedByClient");
+    }
     if (event.type !== "payment") return t(`history.${event.type}`);
     const amount = formatCurrency(event.amount ?? 0, doc.currency);
     const method = event.method
@@ -209,6 +256,59 @@ function PortalView(props: Props) {
           >
             <div className="h-full rounded-full bg-success" style={{ width: `${paidPercent}%` }} />
           </div>
+
+          {/* ── Client approval ── */}
+          {canApprove && (
+            <div className="mt-5 rounded-[var(--radius)] border border-success/30 bg-success/[0.06] p-4">
+              <p className="text-sm font-semibold text-foreground">{t("approveTitle")}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t("approveDescription")}</p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                {approveConfirming ? (
+                  <>
+                    <Button
+                      type="button"
+                      onClick={() => void handleApprove()}
+                      disabled={approving}
+                      aria-busy={approving}
+                    >
+                      <BadgeCheck className="h-4 w-4" aria-hidden="true" />
+                      {approving ? "…" : t("approveConfirmAction")}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setApproveConfirming(false)}
+                      disabled={approving}
+                    >
+                      {t("approveCancel")}
+                    </Button>
+                  </>
+                ) : (
+                  <Button type="button" onClick={() => setApproveConfirming(true)}>
+                    <BadgeCheck className="h-4 w-4" aria-hidden="true" />
+                    {t("approve")}
+                  </Button>
+                )}
+              </div>
+              {approveConfirming && (
+                <p className="mt-2 text-xs text-muted-foreground">{t("approveConfirmNote")}</p>
+              )}
+              {approveError && (
+                <p className="mt-2 text-sm text-destructive" role="alert">{t("approveError")}</p>
+              )}
+            </div>
+          )}
+          {approvedAt && baseStatus !== "paid" && (
+            <div
+              className="mt-5 flex items-center gap-2 rounded-[var(--radius)] border border-success/30 bg-success/[0.06] px-4 py-3 text-sm text-foreground"
+              role="status"
+            >
+              <BadgeCheck className="h-4 w-4 shrink-0 text-success" aria-hidden="true" />
+              {justApproved
+                ? t("approveSuccess")
+                : t("approvedOn", { date: formatDate(approvedAt, undefined, locale) })}
+            </div>
+          )}
         </section>
 
         <section aria-labelledby="document-details-title" className="mb-4">

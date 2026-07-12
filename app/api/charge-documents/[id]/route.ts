@@ -49,17 +49,18 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
     const { id } = await ctx.params;
     const parsed = await parseBody(request, patchChargeDocumentSchema);
     if (!parsed.ok) return parsed.response;
-    const { notes, editLine, removeLineId, addTimeEntryId, summaryMode, showDateRange, discount } = parsed.data;
+    const { notes, editLine, removeLineId, removeMode, addTimeEntryId, summaryMode, showDateRange, discount } = parsed.data;
     const { withTransaction } = await import("@/lib/db");
 
     const total = await withTransaction(async (client: PoolClient) => {
       const doc = await client.query(
-        `SELECT id, client_id, status FROM charge_documents WHERE id = $1 AND user_id = $2 FOR UPDATE`,
+        `SELECT id, client_id, status, approved_at FROM charge_documents WHERE id = $1 AND user_id = $2 FOR UPDATE`,
         [id, user.id]
       );
       if (doc.rowCount === 0) throw new Error("NOT_FOUND");
       const docStatus: string = doc.rows[0].status;
       if (docStatus !== "pending" && docStatus !== "partial") throw new Error("LOCKED");
+      if (doc.rows[0].approved_at) throw new Error("APPROVED");
       const clientId: string = doc.rows[0].client_id;
 
       if (typeof notes !== "undefined") {
@@ -99,7 +100,17 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
         const teId: string | null = line.rows[0].time_entry_id;
         await client.query(`DELETE FROM charge_document_lines WHERE id = $1 AND user_id = $2`, [removeLineId, user.id]);
         if (teId) {
-          await client.query(`UPDATE time_entries SET charge_document_id = NULL WHERE id = $1 AND user_id = $2`, [teId, user.id]);
+          // 'write_off' = agreed with the client not to bill this entry: free it
+          // from the document AND stamp written_off_at so it never returns to
+          // the billable pool. Default ('return') just frees it.
+          await client.query(
+            `UPDATE time_entries
+                SET charge_document_id = NULL,
+                    written_off_at = CASE WHEN $3 THEN NOW() ELSE written_off_at END,
+                    updated_at = NOW()
+              WHERE id = $1 AND user_id = $2`,
+            [teId, user.id, removeMode === "write_off"]
+          );
         }
       }
 
@@ -114,7 +125,7 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
              JOIN projects p ON te.project_id = p.id
              JOIN clients  c ON p.client_id = c.id
             WHERE te.id = $1 AND te.user_id = $2 AND p.client_id = $3
-              AND te.charge_document_id IS NULL AND te.is_billable = true`,
+              AND te.charge_document_id IS NULL AND te.is_billable = true AND te.written_off_at IS NULL`,
           [addTimeEntryId, user.id, clientId]
         );
         if (er.rowCount === 0) throw new Error("ENTRY_UNAVAILABLE");
@@ -144,7 +155,7 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
           [user.id, id, l.sourceType, l.timeEntryId, l.periodMonth, l.date, l.label, l.description,
            l.notes, l.itemRef, l.billingKind, l.quantity, l.rate, l.amount, l.unit, l.projectName]
         );
-        await client.query(`UPDATE time_entries SET charge_document_id = $1 WHERE id = $2 AND user_id = $3 AND charge_document_id IS NULL`, [id, addTimeEntryId, user.id]);
+        await client.query(`UPDATE time_entries SET charge_document_id = $1 WHERE id = $2 AND user_id = $3 AND charge_document_id IS NULL AND written_off_at IS NULL`, [id, addTimeEntryId, user.id]);
       }
 
       const sum = await client.query(`SELECT amount FROM charge_document_lines WHERE document_id = $1 AND user_id = $2`, [id, user.id]);
@@ -159,6 +170,7 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
     const msg = error instanceof Error ? error.message : "";
     if (msg === "NOT_FOUND") return NextResponse.json({ success: false, error_code: "DOCUMENT_NOT_FOUND", message: "תעודה לא נמצאה" }, { status: 404 });
     if (msg === "LOCKED") return NextResponse.json({ success: false, error_code: "DOCUMENT_LOCKED", message: "התעודה נעולה — בטל תשלום כדי לערוך" }, { status: 409 });
+    if (msg === "APPROVED") return NextResponse.json({ success: false, error_code: "DOCUMENT_APPROVED", message: "התעודה אושרה — בטל אישור כדי לערוך" }, { status: 409 });
     if (msg === "LINE_NOT_FOUND") return NextResponse.json({ success: false, error_code: "LINE_NOT_FOUND", message: "שורה לא נמצאה" }, { status: 404 });
     if (msg === "ENTRY_UNAVAILABLE") return NextResponse.json({ success: false, error_code: "ENTRY_UNAVAILABLE", message: "הפריט כבר חויב או אינו זמין" }, { status: 409 });
     logger.error("PATCH /api/charge-documents/[id] failed:", error);

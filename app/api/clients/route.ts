@@ -113,7 +113,8 @@ export async function GET(_request: NextRequest) {
            JOIN clients c ON c.id = p.client_id AND c.user_id = $1
           WHERE te.user_id = $1
             AND te.charge_document_id IS NULL
-            AND te.is_billable = TRUE`,
+            AND te.is_billable = TRUE
+            AND te.written_off_at IS NULL`,
         [user.id]
       ),
       query<ClientMoneyDocument & Record<string, unknown>>(

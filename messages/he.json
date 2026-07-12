@@ -381,7 +381,13 @@
       "endDate": "תאריך סיום",
       "clear": "נקה סינון",
       "removeClientFilter": "הסר סינון לקוח",
-      "removeProjectFilter": "הסר סינון פרויקט"
+      "removeProjectFilter": "הסר סינון פרויקט",
+      "billingStatus": "סטטוס חיוב",
+      "billingAll": "הכל",
+      "billingBilled": "חויב",
+      "billingUnbilled": "ממתין לחיוב",
+      "billingWrittenOff": "ויתור",
+      "billingNotBillable": "לא לחיוב"
     },
     "form": {
       "editTitle": "ערוך רישום זמן",
@@ -471,7 +477,12 @@
       "editAria": "ערוך רשומה",
       "editTitle": "ערוך",
       "billedBadge": "חויב בתעודה #{number}",
-      "billedLocked": "הרשומה כלולה בתעודת התחשבנות #{number}. בטל את התעודה כדי לערוך או למחוק."
+      "billedLocked": "הרשומה כלולה בתעודת התחשבנות #{number}. בטל את התעודה כדי לערוך או למחוק.",
+      "writtenOffBadge": "ויתור",
+      "pendingBillingBadge": "ממתין לחיוב",
+      "restoreWriteOff": "שחזר לחיוב",
+      "restoreWriteOffSuccess": "הרשומה הוחזרה לרשימת החיוב",
+      "restoreWriteOffError": "השחזור נכשל — נסה שוב"
     },
     "deleteDialog": {
       "title": "מחק רישום זמן",
@@ -666,7 +677,9 @@
           "action": "רישום עבודה"
         }
       },
-      "contact": { "title": "הקשר עם הלקוח" },
+      "contact": {
+        "title": "הקשר עם הלקוח"
+      },
       "projects": {
         "title": "פרויקטים פעילים",
         "description": "העבודה שמתקדמת כרגע עבור הלקוח.",
@@ -2277,7 +2290,11 @@
     "NO_FILE_TO_DELETE": "אין קובץ למחיקה",
     "SELF_ACTION_FORBIDDEN": "לא ניתן לבצע פעולה זו על עצמך",
     "PASSWORD_RESET_UNSUPPORTED": "איפוס סיסמה ידני אינו נתמך. יש להפנות את המשתמש לתהליך 'שכחתי סיסמה'.",
-    "UNKNOWN_ACTION": "פעולה לא מוכרת"
+    "UNKNOWN_ACTION": "פעולה לא מוכרת",
+    "DOCUMENT_APPROVED": "התעודה אושרה — בטל אישור כדי לערוך",
+    "APPROVE_REQUIRES_ACTIVE": "ניתן לאשר רק תעודה פעילה שטרם שולמה",
+    "UNAPPROVE_REQUIRES_UNPAID": "לא ניתן לבטל אישור בתעודה ששולמה או בוטלה",
+    "CANCEL_REQUIRES_UNAPPROVED": "התעודה אושרה — בטל אישור לפני ביטול התעודה"
   },
   "Pwa": {
     "dialogLabel": "התקנת האפליקציה",
@@ -2311,7 +2328,8 @@
       "pending": "ממתין",
       "partial": "שולם חלקית",
       "paid": "שולם",
-      "canceled": "בוטל"
+      "canceled": "בוטל",
+      "approved": "מאושר — ממתין לתשלום"
     },
     "actions": {
       "retry": "נסה שוב",
@@ -2576,7 +2594,24 @@
       "discountValue": "ערך הנחה",
       "discountNone": "ללא הנחה",
       "discountPercent": "אחוז",
-      "discountAmount": "סכום"
+      "discountAmount": "סכום",
+      "approveAction": "סמן כמאושר",
+      "approveConfirmTitle": "אישור תעודה",
+      "approveConfirmBody": "לסמן שהלקוח אישר את התעודה? התעודה תינעל לעריכה עד לתשלום (או עד ביטול האישור).",
+      "approvedToast": "התעודה סומנה כמאושרת",
+      "unapproveAction": "בטל אישור",
+      "unapproveConfirmTitle": "ביטול אישור",
+      "unapproveConfirmBody": "לבטל את אישור התעודה? היא תיפתח שוב לעריכה.",
+      "unapprovedToast": "האישור בוטל — התעודה פתוחה לעריכה",
+      "approvedLockedNotice": "התעודה אושרה וממתינה לתשלום — היא נעולה לעריכה. בטל את האישור כדי לערוך.",
+      "approvedByClientOn": "הלקוח אישר: {date}",
+      "approvedByOwnerOn": "אושר ידנית: {date}",
+      "removeLineChoiceTitle": "הסרת פריט מהתעודה",
+      "removeLineReturnOption": "להסיר מהתעודה בלבד",
+      "removeLineReturnHint": "הפריט יחזור לרשימת הפריטים לחיוב ויוכל להיכלל בתעודה עתידית.",
+      "removeLineWriteOffOption": "לבטל את הפריט (ויתור)",
+      "removeLineWriteOffHint": "הוסכם שלא לחייב על הפריט — הוא לא יחזור לרשימת החיוב. ניתן לשחזר ממסך הרשומות.",
+      "lineWrittenOff": "הפריט הוסר וסומן כוויתור"
     },
     "payments": {
       "title": "תשלומים",
@@ -2614,7 +2649,8 @@
     "status": {
       "paid": "שולם",
       "partial": "שולם חלקית",
-      "pending": "ממתין לתשלום"
+      "pending": "ממתין לתשלום",
+      "approved": "מאושר — ממתין לתשלום"
     },
     "summaryTitle": "מצב התשלום",
     "total": "סכום המסמך",
@@ -2629,7 +2665,9 @@
     "history": {
       "issued": "המסמך הופק",
       "sent": "המסמך נשלח",
-      "payment": "תשלום נרשם"
+      "payment": "תשלום נרשם",
+      "approvedByClient": "הלקוח אישר את המסמך",
+      "approvedByOwner": "המסמך אושר"
     },
     "paymentMethod": {
       "bank_transfer": "העברה בנקאית",
@@ -2643,7 +2681,16 @@
     "helpDescription": "אפשר לפנות ישירות אל {business} ולציין את מספר המסמך.",
     "contact": "יצירת קשר",
     "generatedWith": "הופק באמצעות ClockBill",
-    "loading": "טוען את המסמך"
+    "loading": "טוען את המסמך",
+    "approveTitle": "אישור המסמך",
+    "approveDescription": "בדקו את הפירוט ואשרו שהמסמך מקובל עליכם. לאחר האישור המסמך ננעל לשינויים.",
+    "approve": "אשר את המסמך",
+    "approveConfirmAction": "כן, אני מאשר",
+    "approveCancel": "חזרה",
+    "approveConfirmNote": "לאחר האישור לא ניתן יהיה לערוך את המסמך עד לתשלום.",
+    "approveSuccess": "האישור נשלח — תודה!",
+    "approvedOn": "המסמך אושר בתאריך {date}",
+    "approveError": "האישור נכשל — נסו שוב"
   },
   "PaymentReconciliation": {
     "title": "התאמת תשלומים שנכנסו",

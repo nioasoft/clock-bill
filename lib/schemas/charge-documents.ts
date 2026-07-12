@@ -79,6 +79,9 @@ export const patchChargeDocumentSchema = z
     notes: z.string().max(2000).optional(),
     editLine: patchChargeLineSchema.optional(),
     removeLineId: z.string().min(1).optional(),
+    // With removeLineId: 'return' (default) frees the entry back to the
+    // billable pool; 'write_off' marks it agreed-not-to-bill (written_off_at).
+    removeMode: z.enum(["return", "write_off"]).optional(),
     addTimeEntryId: z.string().min(1).optional(),
     // Summary grouping: 'project' | 'type' | null (null = no summary block).
     summaryMode: z.enum(["project", "type"]).nullable().optional(),

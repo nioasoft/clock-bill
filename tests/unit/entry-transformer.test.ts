@@ -56,6 +56,7 @@ const fullRow: EntryRow = {
   item_ref: null,
   unit: null,
   charge_document_id: null,
+  written_off_at: null,
   project_name: "אתר",
   client_name: "לקוח",
   client_id: "c1",
@@ -73,7 +74,7 @@ const REQUIRED_KEYS = [
   "description", "startTime", "endTime", "duration", "date", "tags", "notes",
   "isBillable", "createdAt", "pausedAt", "totalPausedTime", "taskId", "taskName",
   "billingKind", "rate", "rateLabel", "quantity", "itemRef", "unit",
-  "chargeDocumentId", "chargeDocNumber", "chargeDocStatus",
+  "chargeDocumentId", "chargeDocNumber", "chargeDocStatus", "writtenOffAt",
 ] as const;
 
 runner.test("mapEntryRow returns the full field set", () => {
@@ -136,6 +137,17 @@ runner.test("entrySelectColumns selects the billed-status columns", () => {
   assert(cols.includes("te.charge_document_id"), "charge_document_id column");
   assert(cols.includes("cd.doc_number as charge_doc_number"), "charge_doc_number column");
   assert(cols.includes("cd.status as charge_doc_status"), "charge_doc_status column");
+  assert(cols.includes("te.written_off_at"), "written_off_at column");
+});
+
+// ── write-off marker ─────────────────────────────────────────────────────────
+runner.test("written-off entry passes writtenOffAt through", () => {
+  const out = mapEntryRow({ ...fullRow, written_off_at: "2026-07-12T10:00:00.000Z" });
+  assert(out.writtenOffAt === "2026-07-12T10:00:00.000Z", "writtenOffAt value");
+});
+runner.test("normal entry maps writtenOffAt to null", () => {
+  const out = mapEntryRow(fullRow);
+  assert(out.writtenOffAt === null, "writtenOffAt null");
 });
 
 // ── column list ─────────────────────────────────────────────────────────────

@@ -205,6 +205,7 @@ export async function GET(request: NextRequest) {
           AND c.is_active = true
           AND te.charge_document_id IS NULL
           AND te.is_billable = true
+          AND te.written_off_at IS NULL
           AND (c.settlement_reminded_at IS NULL
                OR c.settlement_reminded_at < (now() AT TIME ZONE COALESCE(p.timezone,'Asia/Jerusalem'))::date)
         GROUP BY c.id, c.user_id, c.name, c.currency, c.settlement_billing_day, p.locale, u.email, p.timezone, p.daily_reminder_time`

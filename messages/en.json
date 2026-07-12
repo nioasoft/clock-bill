@@ -381,7 +381,13 @@
       "endDate": "End Date",
       "clear": "Clear Filters",
       "removeClientFilter": "Remove client filter",
-      "removeProjectFilter": "Remove project filter"
+      "removeProjectFilter": "Remove project filter",
+      "billingStatus": "Billing status",
+      "billingAll": "All",
+      "billingBilled": "Billed",
+      "billingUnbilled": "Awaiting billing",
+      "billingWrittenOff": "Written off",
+      "billingNotBillable": "Non-billable"
     },
     "form": {
       "editTitle": "Edit Time Entry",
@@ -471,7 +477,12 @@
       "editAria": "Edit entry",
       "editTitle": "Edit",
       "billedBadge": "Billed · doc #{number}",
-      "billedLocked": "This entry is on charge document #{number}. Cancel the document to edit or delete it."
+      "billedLocked": "This entry is on charge document #{number}. Cancel the document to edit or delete it.",
+      "writtenOffBadge": "Written off",
+      "pendingBillingBadge": "Awaiting billing",
+      "restoreWriteOff": "Restore to billable",
+      "restoreWriteOffSuccess": "Entry returned to the billable list",
+      "restoreWriteOffError": "Restore failed — try again"
     },
     "deleteDialog": {
       "title": "Delete Time Entry",
@@ -666,7 +677,9 @@
           "action": "Log work"
         }
       },
-      "contact": { "title": "Client context" },
+      "contact": {
+        "title": "Client context"
+      },
       "projects": {
         "title": "Active projects",
         "description": "The work currently moving for this client.",
@@ -2277,7 +2290,11 @@
     "NO_FILE_TO_DELETE": "No file to delete",
     "SELF_ACTION_FORBIDDEN": "You cannot perform this action on yourself",
     "PASSWORD_RESET_UNSUPPORTED": "Manual password reset is not supported. Direct the user to the 'forgot password' flow.",
-    "UNKNOWN_ACTION": "Unknown action"
+    "UNKNOWN_ACTION": "Unknown action",
+    "DOCUMENT_APPROVED": "Document is approved — remove the approval to edit",
+    "APPROVE_REQUIRES_ACTIVE": "Only an active, unpaid document can be approved",
+    "UNAPPROVE_REQUIRES_UNPAID": "Cannot remove approval from a paid or canceled document",
+    "CANCEL_REQUIRES_UNAPPROVED": "Document is approved — remove the approval before canceling"
   },
   "Pwa": {
     "dialogLabel": "Install the app",
@@ -2311,7 +2328,8 @@
       "pending": "Pending",
       "partial": "Partially paid",
       "paid": "Paid",
-      "canceled": "Canceled"
+      "canceled": "Canceled",
+      "approved": "Approved — awaiting payment"
     },
     "actions": {
       "retry": "Try again",
@@ -2576,7 +2594,24 @@
       "discountValue": "Discount value",
       "discountNone": "No discount",
       "discountPercent": "Percent",
-      "discountAmount": "Amount"
+      "discountAmount": "Amount",
+      "approveAction": "Mark as approved",
+      "approveConfirmTitle": "Approve document",
+      "approveConfirmBody": "Mark this document as approved by the client? It will be locked for editing until paid (or until the approval is removed).",
+      "approvedToast": "Document marked as approved",
+      "unapproveAction": "Remove approval",
+      "unapproveConfirmTitle": "Remove approval",
+      "unapproveConfirmBody": "Remove the approval? The document will reopen for editing.",
+      "unapprovedToast": "Approval removed — the document is editable again",
+      "approvedLockedNotice": "This document was approved and is awaiting payment — it is locked for editing. Remove the approval to edit.",
+      "approvedByClientOn": "Client approved: {date}",
+      "approvedByOwnerOn": "Approved manually: {date}",
+      "removeLineChoiceTitle": "Remove item from document",
+      "removeLineReturnOption": "Remove from this document only",
+      "removeLineReturnHint": "The item returns to the billable list and can be included in a future document.",
+      "removeLineWriteOffOption": "Cancel the item (write-off)",
+      "removeLineWriteOffHint": "Agreed not to bill this item — it will not return to the billable list. You can restore it from the entries page.",
+      "lineWrittenOff": "Item removed and marked as written off"
     },
     "payments": {
       "title": "Payments",
@@ -2614,7 +2649,8 @@
     "status": {
       "paid": "Paid",
       "partial": "Partially paid",
-      "pending": "Awaiting payment"
+      "pending": "Awaiting payment",
+      "approved": "Approved — awaiting payment"
     },
     "summaryTitle": "Payment status",
     "total": "Document total",
@@ -2629,7 +2665,9 @@
     "history": {
       "issued": "Document issued",
       "sent": "Document sent",
-      "payment": "Payment recorded"
+      "payment": "Payment recorded",
+      "approvedByClient": "Client approved the document",
+      "approvedByOwner": "Document approved"
     },
     "paymentMethod": {
       "bank_transfer": "Bank transfer",
@@ -2643,7 +2681,16 @@
     "helpDescription": "Contact {business} directly and include the document number.",
     "contact": "Contact sender",
     "generatedWith": "Generated with ClockBill",
-    "loading": "Loading document"
+    "loading": "Loading document",
+    "approveTitle": "Approve this document",
+    "approveDescription": "Review the details and confirm the document is acceptable. Once approved, it is locked for changes.",
+    "approve": "Approve document",
+    "approveConfirmAction": "Yes, I approve",
+    "approveCancel": "Back",
+    "approveConfirmNote": "After approving, the document cannot be edited until it is paid.",
+    "approveSuccess": "Approval sent — thank you!",
+    "approvedOn": "Approved on {date}",
+    "approveError": "Approval failed — please try again"
   },
   "PaymentReconciliation": {
     "title": "Match incoming payments",

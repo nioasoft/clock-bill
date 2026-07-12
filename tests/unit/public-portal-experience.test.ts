@@ -22,6 +22,27 @@ function run(): void {
 
   assert(history.length === 4, "History must include issue, send, and every payment event");
   assert(history[0]?.type === "payment" && history[0]?.amount === 250, "History must be newest first");
+
+  const approvedHistory = buildPublicDocumentHistory({
+    issuedAt: "2026-07-01T08:00:00.000Z",
+    lastSentAt: "2026-07-02T09:00:00.000Z",
+    payments: [],
+    approvedAt: "2026-07-03T10:00:00.000Z",
+    approvedBy: "client",
+  });
+  assert(approvedHistory.length === 3, "History must include the approval event");
+  assert(
+    approvedHistory[0]?.type === "approved" && approvedHistory[0]?.by === "client",
+    "Approval event must be newest first and carry who approved"
+  );
+  const ownerApproved = buildPublicDocumentHistory({
+    issuedAt: "2026-07-01T08:00:00.000Z",
+    lastSentAt: null,
+    payments: [],
+    approvedAt: "2026-07-03T10:00:00.000Z",
+    approvedBy: "owner",
+  });
+  assert(ownerApproved[0]?.by === "owner", "Owner approval must keep by='owner'");
   assert(
     Object.keys(history[0] ?? {}).every((key) => !["id", "token", "email", "note"].includes(key)),
     "Client history must not expose internal IDs, tokens, recipient addresses, or payment notes"
@@ -56,7 +77,14 @@ function run(): void {
     "Portal must expose localized status, payment progress, print/save, and history"
   );
   assert(he.Portal && en.Portal, "Both locales must provide the dedicated Portal namespace");
-  assert(!portal.includes("token:"), "The bearer token must never cross into the Client Component props");
+  // The bearer token must never cross the Server Component boundary as a prop —
+  // the client reads it from the URL (useParams) for the approve action.
+  assert(!page.includes("token={"), "page.tsx must not pass the bearer token as a component prop");
+  assert(portal.includes("useParams"), "The portal must read the token from the URL, not from props");
+  assert(
+    portal.includes("/approve") && portal.includes("approveConfirming"),
+    "The portal must expose a confirm-gated client approve action"
+  );
 
   console.log("✅ public-portal-experience: secure read-only portal UX passes");
 }

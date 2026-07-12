@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 
     const rows = await query(
       `SELECT d.id, d.doc_number, d.status, d.currency, d.total, d.issued_at, d.paid_at,
-              d.canceled_at, c.name AS client_name,
+              d.canceled_at, d.approved_at, d.approved_by, c.name AS client_name,
               d.vat_rate_snapshot, d.discount_type, d.discount_value,
               COALESCE((SELECT SUM(amount) FROM charge_document_payments p
                          WHERE p.document_id = d.id AND p.user_id = d.user_id), 0) AS paid_sum
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
              JOIN projects p ON te.project_id = p.id
              JOIN clients  c ON p.client_id = c.id
             WHERE te.id = ANY($1::text[]) AND te.user_id = $2 AND p.client_id = $3
-              AND te.charge_document_id IS NULL AND te.is_billable = true`,
+              AND te.charge_document_id IS NULL AND te.is_billable = true AND te.written_off_at IS NULL`,
           [timeEntryIds, user.id, clientId]
         );
         entries = er.rows.map((row) => ({
@@ -239,7 +239,7 @@ export async function POST(request: NextRequest) {
       if (entries.length > 0) {
         await client.query(
           `UPDATE time_entries SET charge_document_id = $1
-            WHERE id = ANY($2::text[]) AND user_id = $3 AND charge_document_id IS NULL`,
+            WHERE id = ANY($2::text[]) AND user_id = $3 AND charge_document_id IS NULL AND written_off_at IS NULL`,
           [documentId, entries.map((e) => e.id), user.id]
         );
       }

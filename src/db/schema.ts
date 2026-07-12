@@ -440,6 +440,10 @@ export const timeEntries = pgTable(
     // Per-user monotonic reference number ("אסמכתא"), set ONLY on item lines at
     // creation (NULL for hourly). Stable, never reused — see user_profiles.next_item_ref.
     itemRef: integer("item_ref"),
+    // Write-off: removed from a charge document with "agreed not to bill".
+    // Distinct from is_billable=false (logged as non-billable from the start).
+    // A written-off entry is never attached to a document (see check below).
+    writtenOffAt: timestamp("written_off_at"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
@@ -479,7 +483,13 @@ export const timeEntries = pgTable(
     index("idx_time_entries_charge_document_id").on(table.chargeDocumentId),
     index("idx_time_entries_user_unbilled")
       .on(table.userId, table.projectId)
-      .where(sql`${table.chargeDocumentId} IS NULL AND ${table.isBillable} = TRUE`),
+      .where(
+        sql`${table.chargeDocumentId} IS NULL AND ${table.isBillable} = TRUE AND ${table.writtenOffAt} IS NULL`
+      ),
+    check(
+      "time_entries_write_off_unbilled_check",
+      sql`${table.writtenOffAt} IS NULL OR ${table.chargeDocumentId} IS NULL`
+    ),
   ]
 );
 
@@ -606,6 +616,12 @@ export const chargeDocuments = pgTable(
     issuedAt: timestamp("issued_at"),
     paidAt: timestamp("paid_at"),
     canceledAt: timestamp("canceled_at"),
+    // Approval lock ("client approved — awaiting payment"). Orthogonal to
+    // `status` on purpose: status is recomputed from the payment journal and
+    // would clobber an enum value. approved_by: 'owner' (marked manually) |
+    // 'client' (via the public /doc/[token] page).
+    approvedAt: timestamp("approved_at"),
+    approvedBy: text("approved_by"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
@@ -638,6 +654,14 @@ export const chargeDocuments = pgTable(
     check(
       "charge_documents_public_link_pair_check",
       sql`(${table.publicToken} IS NULL) = (${table.publicTokenExpiresAt} IS NULL)`
+    ),
+    check(
+      "charge_documents_approved_by_check",
+      sql`${table.approvedBy} IS NULL OR ${table.approvedBy} IN ('owner', 'client')`
+    ),
+    check(
+      "charge_documents_approval_pair_check",
+      sql`(${table.approvedAt} IS NULL) = (${table.approvedBy} IS NULL)`
     ),
     check(
       "charge_documents_summary_mode_check",

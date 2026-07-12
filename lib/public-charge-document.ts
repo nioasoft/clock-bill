@@ -14,16 +14,20 @@ export interface PublicPaymentEvent {
 
 export interface PublicDocumentHistoryEvent {
   key: string;
-  type: "issued" | "sent" | "payment";
+  type: "issued" | "sent" | "payment" | "approved";
   occurredAt: string;
   amount?: number;
   method?: PublicPaymentMethod | null;
+  /** For `approved` events: who approved ('owner' | 'client'). */
+  by?: "owner" | "client";
 }
 
 interface PublicDocumentHistoryInput {
   issuedAt: string;
   lastSentAt: string | null;
   payments: PublicPaymentEvent[];
+  approvedAt?: string | null;
+  approvedBy?: "owner" | "client" | null;
 }
 
 /**
@@ -35,6 +39,8 @@ export function buildPublicDocumentHistory({
   issuedAt,
   lastSentAt,
   payments,
+  approvedAt,
+  approvedBy,
 }: PublicDocumentHistoryInput): PublicDocumentHistoryEvent[] {
   const history: PublicDocumentHistoryEvent[] = [];
 
@@ -43,6 +49,14 @@ export function buildPublicDocumentHistory({
   }
   if (lastSentAt) {
     history.push({ key: "sent", type: "sent", occurredAt: lastSentAt });
+  }
+  if (approvedAt) {
+    history.push({
+      key: "approved",
+      type: "approved",
+      occurredAt: approvedAt,
+      by: approvedBy ?? "client",
+    });
   }
   payments.forEach((payment, index) => {
     history.push({

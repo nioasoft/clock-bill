@@ -10,7 +10,7 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SimpleSelect } from "@/components/ui/simple-select";
 import { MonthField } from "@/components/ui/month-field";
-import { Clock, FileUp, Lock, Pencil, Trash2 } from "lucide-react";
+import { Clock, FileUp, Lock, Pencil, RotateCcw, Trash2 } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { messageForError } from "@/lib/api-error";
 import { readRecentWorkContext, writeRecentWorkContext } from "@/lib/recent-work-context";
@@ -83,7 +83,8 @@ interface TimeEntry {
   currency?: string;
   chargeDocumentId?: string | null;
   chargeDocNumber?: number | null;
-  chargeDocStatus?: "pending" | "paid" | "canceled" | null;
+  chargeDocStatus?: "pending" | "partial" | "paid" | "canceled" | null;
+  writtenOffAt?: string | null;
 }
 
 /** First/last day of a date's month + its YYYY-MM key, as local-date strings. */
@@ -183,7 +184,7 @@ export default function EntriesPage() {
   // Default to the current month — the user can widen/change the range.
   const [filters, setFilters] = useState(() => {
     const { start, end } = monthRange(new Date());
-    return { clientId: "", projectId: "", startDate: start, endDate: end };
+    return { clientId: "", projectId: "", startDate: start, endDate: end, billingStatus: "" };
   });
   const [showFilters, setShowFilters] = useState(false);
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
@@ -234,6 +235,7 @@ export default function EntriesPage() {
         if (filters.projectId) params.append("projectId", filters.projectId);
         if (filters.startDate) params.append("startDate", filters.startDate);
         if (filters.endDate) params.append("endDate", filters.endDate);
+        if (filters.billingStatus) params.append("billingStatus", filters.billingStatus);
 
         const response = await fetch(`/api/entries?${params.toString()}`);
         const data = await response.json();
@@ -742,9 +744,29 @@ export default function EntriesPage() {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
+  /** Restore a written-off entry back to the billable pool. */
+  const handleRestoreWriteOff = async (entry: TimeEntry) => {
+    try {
+      const res = await fetch(`/api/entries/${entry.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ writtenOff: false }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        showErrorToast(json.message || t("entry.restoreWriteOffError"));
+        return;
+      }
+      showSuccessToast(t("entry.restoreWriteOffSuccess"));
+      fetchEntries({ silent: true });
+    } catch {
+      showErrorToast(t("entry.restoreWriteOffError"));
+    }
+  };
+
   const clearFilters = () => {
     const { start, end } = monthRange(new Date());
-    setFilters({ clientId: "", projectId: "", startDate: start, endDate: end });
+    setFilters({ clientId: "", projectId: "", startDate: start, endDate: end, billingStatus: "" });
   };
 
   const getFilteredProjects = () => {
@@ -826,9 +848,9 @@ export default function EntriesPage() {
                 value={filters.startDate ? filters.startDate.slice(0, 7) : ""}
                 onChange={handleMonthChange}
               />
-              {(filters.clientId || filters.projectId) && (
+              {(filters.clientId || filters.projectId || filters.billingStatus) && (
                 <span className="bg-secondary text-secondary-foreground rounded-full text-xs px-2 py-0.5 font-semibold">
-                  {[filters.clientId, filters.projectId].filter(Boolean).length}
+                  {[filters.clientId, filters.projectId, filters.billingStatus].filter(Boolean).length}
                 </span>
               )}
             </div>
@@ -906,6 +928,24 @@ export default function EntriesPage() {
                   value={filters.endDate}
                   onChange={(e) => handleFilterChange("endDate", e.target.value)}
                   className="block w-full rounded-[var(--radius)] border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="filterBillingStatus" className="block text-sm font-medium text-foreground mb-1">
+                  {t("filters.billingStatus")}
+                </label>
+                <SimpleSelect
+                  id="filterBillingStatus"
+                  value={filters.billingStatus}
+                  onChange={(v) => handleFilterChange("billingStatus", v)}
+                  options={[
+                    { value: "", label: t("filters.billingAll") },
+                    { value: "billed", label: t("filters.billingBilled") },
+                    { value: "unbilled", label: t("filters.billingUnbilled") },
+                    { value: "written_off", label: t("filters.billingWrittenOff") },
+                    { value: "not_billable", label: t("filters.billingNotBillable") },
+                  ]}
                 />
               </div>
 
@@ -1466,6 +1506,16 @@ export default function EntriesPage() {
                               {t("entry.billedBadge", { number: entry.chargeDocNumber ?? 0 })}
                             </span>
                           )}
+                          {entry.writtenOffAt && (
+                            <span className="shrink-0 rounded-full bg-warning/10 px-2 py-0.5 text-[11px] font-semibold text-warning">
+                              {t("entry.writtenOffBadge")}
+                            </span>
+                          )}
+                          {entry.isBillable && !entry.chargeDocumentId && !entry.writtenOffAt && (
+                            <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
+                              {t("entry.pendingBillingBadge")}
+                            </span>
+                          )}
                         </div>
                         {(() => {
                           const sub: string[] = [];
@@ -1501,15 +1551,27 @@ export default function EntriesPage() {
                         </span>
                       </td>
                       <td className="w-px whitespace-nowrap px-4 py-4 text-start">
-                        <button
-                          onClick={() => handleEdit(entry)}
-                          disabled={!!entry.chargeDocumentId}
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-surface hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
-                          aria-label={t("entry.editAria")}
-                          title={entry.chargeDocumentId ? t("entry.billedLocked", { number: entry.chargeDocNumber ?? 0 }) : t("entry.editTitle")}
-                        >
-                          {entry.chargeDocumentId ? <Lock className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
-                        </button>
+                        <div className="flex items-center gap-1">
+                          {entry.writtenOffAt && (
+                            <button
+                              onClick={() => void handleRestoreWriteOff(entry)}
+                              className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
+                              aria-label={t("entry.restoreWriteOff")}
+                              title={t("entry.restoreWriteOff")}
+                            >
+                              <RotateCcw className="h-4 w-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleEdit(entry)}
+                            disabled={!!entry.chargeDocumentId}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius)] text-muted-foreground transition-colors hover:bg-surface hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
+                            aria-label={t("entry.editAria")}
+                            title={entry.chargeDocumentId ? t("entry.billedLocked", { number: entry.chargeDocNumber ?? 0 }) : t("entry.editTitle")}
+                          >
+                            {entry.chargeDocumentId ? <Lock className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -1550,11 +1612,26 @@ export default function EntriesPage() {
                           {t("entry.billedBadge", { number: entry.chargeDocNumber ?? 0 })}
                         </span>
                       )}
+                      {entry.writtenOffAt && (
+                        <span className="inline-flex shrink-0 rounded-full bg-warning/10 px-2 py-0.5 text-[11px] font-semibold text-warning">
+                          {t("entry.writtenOffBadge")}
+                        </span>
+                      )}
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
                       <span className="font-mono text-base font-bold tabular-nums text-foreground">
                         {formatCurrency(entryAmount(entry), entry.currency || "ILS", locale)}
                       </span>
+                      {entry.writtenOffAt && (
+                        <button
+                          onClick={() => void handleRestoreWriteOff(entry)}
+                          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius)] border border-border text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
+                          aria-label={t("entry.restoreWriteOff")}
+                          title={t("entry.restoreWriteOff")}
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                        </button>
+                      )}
                       <button
                         onClick={() => handleEdit(entry)}
                         disabled={!!entry.chargeDocumentId}

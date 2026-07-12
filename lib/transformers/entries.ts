@@ -40,6 +40,7 @@ export function entrySelectColumns(te: string): string {
     ${te}.item_ref,
     ${te}.unit,
     ${te}.charge_document_id,
+    ${te}.written_off_at,
     p.name as project_name,
     c.name as client_name,
     c.id as client_id,
@@ -76,6 +77,7 @@ export type EntryRow = {
   item_ref: number | null;
   unit: string | null;
   charge_document_id: string | null;
+  written_off_at: string | null;
   project_name: string;
   client_name: string;
   client_id: string;
@@ -116,8 +118,10 @@ export interface EntryResponse {
   chargeDocumentId: string | null;
   /** Per-user document number of the claiming charge document, for display. */
   chargeDocNumber: number | null;
-  /** Status of the claiming charge document (`pending` | `paid`); NULL when not billed. */
-  chargeDocStatus: "pending" | "paid" | "canceled" | null;
+  /** Status of the claiming charge document; NULL when not billed. */
+  chargeDocStatus: "pending" | "partial" | "paid" | "canceled" | null;
+  /** Set when the entry was written off ("agreed not to bill") — excluded from the billable pool. */
+  writtenOffAt: string | null;
 }
 
 /** Map a joined `time_entries` row to the canonical API entry object. */
@@ -151,5 +155,6 @@ export function mapEntryRow(row: EntryRow): EntryResponse {
     chargeDocumentId: row.charge_document_id,
     chargeDocNumber: row.charge_doc_number,
     chargeDocStatus: (row.charge_doc_status as EntryResponse["chargeDocStatus"]) ?? null,
+    writtenOffAt: row.written_off_at,
   };
 }
