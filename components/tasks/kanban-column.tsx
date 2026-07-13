@@ -22,7 +22,7 @@ export function KanbanColumn({ status, tasks, runningTimerForTask, onCardClick, 
   const { setNodeRef, isOver } = useDroppable({ id: status });
   return (
     <div className="flex min-w-72 flex-1 flex-col">
-      <div className="mb-2 flex items-center justify-between px-1">
+      <div className="mb-2 flex min-h-11 items-center justify-between px-1">
         <div className="flex items-center gap-2">
           <span className="font-sans font-medium text-foreground">{tStatus(status)}</span>
           <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-muted px-1.5 py-0.5 text-xs text-muted-foreground tabular-nums">
@@ -43,11 +43,11 @@ export function KanbanColumn({ status, tasks, runningTimerForTask, onCardClick, 
       </div>
       <div
         ref={setNodeRef}
-        className={`flex min-h-32 flex-col gap-2 rounded-[var(--radius-card)] border border-border p-2 transition-colors ${isOver ? "bg-card-elevated" : "bg-surface"}`}
+        className={`flex min-h-32 flex-1 flex-col gap-2 rounded-[var(--radius-card)] border border-border p-2 transition-colors ${isOver ? "bg-card-elevated" : "bg-surface"}`}
       >
         <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
           {tasks.length === 0 ? (
-            <p className="px-2 py-6 text-center text-sm text-muted-foreground">{tEmpty(status)}</p>
+            <p className="m-auto px-2 py-6 text-center text-sm text-muted-foreground">{tEmpty(status)}</p>
           ) : (
             tasks.map((task) => (
               <SortableTaskCard
