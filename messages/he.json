@@ -2314,15 +2314,13 @@
     "tabs": {
       "billable": "לחיוב",
       "documents": "תעודות",
-      "payments": "התאמת תשלומים",
       "report": "דוח חד-פעמי"
     },
     "workflow": {
       "ariaLabel": "התקדמות החיוב",
       "client": "לקוח",
       "work": "עבודה",
-      "document": "מסמך",
-      "payment": "תשלום"
+      "document": "מסמך"
     },
     "status": {
       "pending": "ממתין",
@@ -2498,7 +2496,14 @@
       "loadErrorBody": "אירעה תקלה בטעינת הנתונים.",
       "emptyTitle": "עדיין לא הפקת תעודות",
       "emptyBody": "הפק תעודת התחשבנות מתוך לשונית <tab>לחיוב</tab> והיא תופיע כאן.",
-      "docNumber": "תעודה #{number}"
+      "docNumber": "תעודה #{number}",
+      "filterLabel": "סטטוס",
+      "filterActive": "פעילות",
+      "filterAll": "הכל",
+      "showingCount": "מציג {shown} מתוך {total}",
+      "noMatchTitle": "אין תעודות בסטטוס הזה",
+      "noMatchBody": "שנה את הסינון כדי לראות תעודות אחרות.",
+      "showAll": "הצג הכל"
     },
     "doc": {
       "outstandingShort": "נותר {amount}",
@@ -2691,60 +2696,6 @@
     "approveSuccess": "האישור נשלח — תודה!",
     "approvedOn": "המסמך אושר בתאריך {date}",
     "approveError": "האישור נכשל — נסו שוב"
-  },
-  "PaymentReconciliation": {
-    "title": "התאמת תשלומים שנכנסו",
-    "description": "מייבאים קובץ CSV מהבנק או מזינים תשלום אחד ידנית. ClockBill רק מציע התאמות. שום תשלום לא נרשם לפני שעוברים על כל שורה ומאשרים.",
-    "stepsLabel": "שלבי התאמת התשלומים",
-    "steps": {
-      "import": "מייבאים תשלומים",
-      "review": "בודקים התאמות",
-      "confirm": "מאשרים ורושמים"
-    },
-    "privacyTitle": "הקובץ נשאר בדפדפן",
-    "privacyBody": "ה־CSV נקרא מקומית ולא נשלח לשרת. רק השורות שאישרת נשלחות בעת האישור.",
-    "loading": "טוען תעודות פתוחות",
-    "loadError": "לא הצלחנו לטעון את התעודות הפתוחות",
-    "loadErrorHint": "בדוק את החיבור ונסה שוב. לא בוצע שינוי בתשלומים.",
-    "retry": "נסה שוב",
-    "noDocumentsTitle": "הכול שולם",
-    "noDocumentsBody": "אין כרגע תעודות פתוחות שאפשר להתאים אליהן תשלום.",
-    "uploadTitle": "ייבוא קובץ CSV",
-    "uploadBody": "הקובץ צריך לכלול עמודות תאריך וסכום. אסמכתא, תיאור ומטבע הם שדות רשות.",
-    "uploadLimits": "CSV בלבד · עד 1MB או 500 שורות",
-    "manualTitle": "הזנת תשלום אחד",
-    "manualBody": "גם העברה שלא מופיעה בקובץ עוברת דרך אותו מסך בדיקה.",
-    "manualFormTitle": "פרטי התשלום",
-    "amount": "סכום",
-    "date": "תאריך התשלום",
-    "currency": "מטבע",
-    "reference": "אסמכתא או הערה",
-    "cancel": "ביטול",
-    "continueToReview": "המשך לבדיקה",
-    "reviewTitle": "בדיקה לפני הרישום",
-    "reviewBody": "{count, plural, one {תשלום אחד מחכה לבדיקה} two {שני תשלומים מחכים לבדיקה} other {# תשלומים מחכים לבדיקה}}",
-    "clear": "התחלה מחדש",
-    "noReference": "ללא אסמכתא",
-    "documentLabel": "התאמה לתעודה פתוחה",
-    "chooseDocument": "בחירת תעודה",
-    "noCompatibleDocument": "אין תעודה מתאימה",
-    "documentOption": "מס׳ {number} · {client} · יתרה {amount}",
-    "removeRow": "הסרת תשלום",
-    "confirmTitle": "עברתי על כל ההתאמות",
-    "confirmBody": "{count, plural, one {הרישום יוסיף תשלום אחד לתעודה שנבחרה.} two {הרישום יוסיף שני תשלומים לתעודות שנבחרו.} other {הרישום יוסיף # תשלומים לתעודות שנבחרו.}}",
-    "unmatchedWarning": "צריך לבחור תעודה מתאימה לכל תשלום לפני האישור.",
-    "saving": "רושם…",
-    "apply": "{count, plural, one {רישום התשלום} two {רישום שני תשלומים} other {רישום # תשלומים}}",
-    "success": "{count, plural, one {התשלום נרשם} two {שני תשלומים נרשמו} other {# תשלומים נרשמו}}",
-    "saveError": "התשלומים לא נרשמו. בדוק את ההתאמות ונסה שוב.",
-    "errors": {
-      "FILE_TOO_LARGE": "קובץ ה־CSV גדול מ־1MB.",
-      "EMPTY_FILE": "אין בקובץ שורות תשלום.",
-      "TOO_MANY_ROWS": "יש בקובץ יותר מ־500 שורות.",
-      "MISSING_COLUMNS": "קובץ ה־CSV צריך לכלול עמודות תאריך וסכום.",
-      "INVALID_ROW": "באחת השורות יש תאריך או סכום לא תקינים.",
-      "INVALID_FILE": "לא הצלחנו לקרוא את קובץ ה־CSV."
-    }
   },
   "Trial": {
     "pillActive": "ניסיון Unlimited · נותרו {days} ימים",

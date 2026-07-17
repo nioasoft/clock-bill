@@ -17,6 +17,23 @@ export function displayStatus(
 }
 
 /**
+ * Documents-list filter. Values are *display* statuses, so the filter and the
+ * badge can never disagree — filtering on the raw DB column would put an
+ * approved-but-unpaid document under "pending".
+ */
+export type ChargeDocFilter = "active" | "all" | ChargeDocDisplayStatus;
+
+/** "Active" = still needs something from you. Excludes paid and canceled. */
+export const ACTIVE_STATUSES: readonly ChargeDocDisplayStatus[] = ["pending", "approved", "partial"];
+
+/** Does a document's display status pass the selected filter? */
+export function matchesFilter(display: ChargeDocDisplayStatus, filter: ChargeDocFilter): boolean {
+  if (filter === "all") return true;
+  if (filter === "active") return ACTIVE_STATUSES.includes(display);
+  return display === filter;
+}
+
+/**
  * `labelKey` is a `Reports` namespace key resolved at the call site via
  * `useTranslations("Reports")` (this is a plain module, so it can't call hooks).
  * `badge` styles the pill; `surface` gives list rows a quiet semantic tint so

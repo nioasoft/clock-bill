@@ -1,13 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { formatDate } from "@/lib/format";
 import { formatCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { SimpleSelect } from "@/components/ui/simple-select";
 import { Skeleton } from "@/components/ui/skeleton";
 import ChargeDocumentView from "./ChargeDocumentView";
-import { STATUS_META, displayStatus } from "./statusMeta";
+import { STATUS_META, displayStatus, matchesFilter, type ChargeDocDisplayStatus, type ChargeDocFilter } from "./statusMeta";
 
 interface DocumentRow {
   id: string;
@@ -27,9 +29,9 @@ interface DocumentRow {
 
 type LoadState = "loading" | "error" | "ready";
 
-function StatusBadge({ status, approvedAt }: { status: string; approvedAt: string | null }) {
+function StatusBadge({ display }: { display: ChargeDocDisplayStatus }) {
   const t = useTranslations("Reports");
-  const meta = STATUS_META[displayStatus(status, approvedAt)];
+  const meta = STATUS_META[display];
   return (
     <span
       className={`inline-flex items-center rounded-[var(--radius)] border px-2.5 py-0.5 text-xs font-medium ${meta.badge}`}
@@ -41,6 +43,16 @@ function StatusBadge({ status, approvedAt }: { status: string; approvedAt: strin
 
 /** Status sort order: pending first, then partial, then paid, then canceled. */
 const STATUS_ORDER: Record<string, number> = { pending: 0, partial: 1, paid: 2, canceled: 3 };
+
+const FILTER_OPTIONS: { value: ChargeDocFilter; labelKey: string }[] = [
+  { value: "active", labelKey: "documents.filterActive" },
+  { value: "all", labelKey: "documents.filterAll" },
+  { value: "pending", labelKey: "status.pending" },
+  { value: "approved", labelKey: "status.approved" },
+  { value: "partial", labelKey: "status.partial" },
+  { value: "paid", labelKey: "status.paid" },
+  { value: "canceled", labelKey: "status.canceled" },
+];
 
 /** Pending → paid → canceled; within each group, newest doc_number first. */
 function sortDocs(rows: DocumentRow[]): DocumentRow[] {
@@ -74,6 +86,18 @@ export default function DocumentsTab({
   const [openId, setOpenId] = useState<string | null>(null);
   // True only for a doc opened via initialOpenId (freshly issued) — drives the PDF prompt.
   const [autoPrompt, setAutoPrompt] = useState(false);
+  const [filter, setFilter] = useState<ChargeDocFilter>("active");
+
+  // Client-side: the list is already fetched whole (API caps at 5000), so
+  // filtering here costs nothing and avoids a refetch per selection.
+  // ponytail: move to the API only if doc counts approach that cap.
+  const visible = useMemo(
+    () =>
+      docs
+        .map((doc) => ({ doc, display: displayStatus(doc.status, doc.approved_at) }))
+        .filter(({ display }) => matchesFilter(display, filter)),
+    [docs, filter]
+  );
 
   const load = useCallback(async (): Promise<void> => {
     try {
@@ -168,36 +192,63 @@ export default function DocumentsTab({
 
   // ── Success ───────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-3">
-      {docs.map((d) => {
-        const meta = STATUS_META[displayStatus(d.status, d.approved_at)];
-        return (
-        <button
-          key={d.id}
-          type="button"
-          onClick={() => setOpenId(d.id)}
-          className={`flex min-h-14 w-full flex-wrap items-center justify-between gap-3 rounded-[var(--radius-card)] border border-border p-4 text-start transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${meta.surface}`}
-        >
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-foreground">{t("documents.docNumber", { number: d.doc_number })}</span>
-              <StatusBadge status={d.status} approvedAt={d.approved_at} />
-            </div>
-            <div className="text-sm text-muted-foreground">
-              <bdi>{d.client_name}</bdi> · {formatDate(d.issued_at, undefined, locale)}
-            </div>
-          </div>
-          <div className="text-end">
-            <div className="font-mono text-lg font-semibold tabular-nums text-foreground"><bdi>{formatCurrency(d.gross, d.currency, locale)}</bdi></div>
-            {d.status === "partial" && (
-              <div className="text-xs text-muted-foreground">
-                <bdi>{t("doc.outstandingShort", { amount: formatCurrency(d.outstanding, d.currency, locale) })}</bdi>
+    <div className="space-y-4">
+      <div className="sm:max-w-xs">
+        <Label htmlFor="documents-status-filter">{t("documents.filterLabel")}</Label>
+        <SimpleSelect
+          id="documents-status-filter"
+          value={filter}
+          onChange={(value) => setFilter(value as ChargeDocFilter)}
+          options={FILTER_OPTIONS.map((option) => ({ value: option.value, label: t(option.labelKey) }))}
+        />
+        {visible.length !== docs.length && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            <bdi>{t("documents.showingCount", { shown: visible.length, total: docs.length })}</bdi>
+          </p>
+        )}
+      </div>
+
+      {visible.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-2 p-10 text-center">
+          <p className="text-lg font-medium text-foreground">{t("documents.noMatchTitle")}</p>
+          <p className="text-sm text-muted-foreground">{t("documents.noMatchBody")}</p>
+          <Button variant="outline" onClick={() => setFilter("all")} className="mt-2 min-h-[44px]">
+            {t("documents.showAll")}
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {visible.map(({ doc: d, display }) => {
+            const meta = STATUS_META[display];
+            return (
+            <button
+              key={d.id}
+              type="button"
+              onClick={() => setOpenId(d.id)}
+              className={`flex min-h-14 w-full flex-wrap items-center justify-between gap-3 rounded-[var(--radius-card)] border border-border p-4 text-start transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${meta.surface}`}
+            >
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-foreground">{t("documents.docNumber", { number: d.doc_number })}</span>
+                  <StatusBadge display={display} />
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  <bdi>{d.client_name}</bdi> · {formatDate(d.issued_at, undefined, locale)}
+                </div>
               </div>
-            )}
-          </div>
-        </button>
-        );
-      })}
+              <div className="text-end">
+                <div className="font-mono text-lg font-semibold tabular-nums text-foreground"><bdi>{formatCurrency(d.gross, d.currency, locale)}</bdi></div>
+                {d.status === "partial" && (
+                  <div className="text-xs text-muted-foreground">
+                    <bdi>{t("doc.outstandingShort", { amount: formatCurrency(d.outstanding, d.currency, locale) })}</bdi>
+                  </div>
+                )}
+              </div>
+            </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

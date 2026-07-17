@@ -9,15 +9,13 @@ import { Tabs } from "@/components/ui/tabs";
 import AdHocReportTab from "./AdHocReportTab";
 import BillableTab from "./BillableTab";
 import DocumentsTab from "./DocumentsTab";
-import PaymentReconciliationTab from "./PaymentReconciliationTab";
 
-type Tab = "billable" | "documents" | "payments" | "report";
-type BillingStage = "client" | "work" | "document" | "payment";
+type Tab = "billable" | "documents" | "report";
+type BillingStage = "client" | "work" | "document";
 
 const TAB_KEYS: [Tab, string][] = [
   ["billable", "tabs.billable"],
   ["documents", "tabs.documents"],
-  ["payments", "tabs.payments"],
   ["report", "tabs.report"],
 ];
 
@@ -33,7 +31,7 @@ export default function SettlementPage() {
     if (typeof window === "undefined") return;
     const p = new URLSearchParams(window.location.search);
     const requestedTab = p.get("tab");
-    if (requestedTab === "billable" || requestedTab === "documents" || requestedTab === "payments" || requestedTab === "report") {
+    if (requestedTab === "billable" || requestedTab === "documents" || requestedTab === "report") {
       queueMicrotask(() => setTab(requestedTab));
     } else if (p.has("clientId") || p.has("projectId") || p.has("startDate") || p.has("endDate")) {
       // Intentional one-time, URL-driven tab selection on mount. Using an effect
@@ -49,8 +47,8 @@ export default function SettlementPage() {
     window.history.replaceState({}, "", `${url.pathname}${url.search}`);
   }, []);
 
-  const activeStage: BillingStage = tab === "payments" ? "payment" : tab === "documents" ? "document" : billingStage;
-  const stageOrder: BillingStage[] = ["client", "work", "document", "payment"];
+  const activeStage: BillingStage = tab === "documents" ? "document" : billingStage;
+  const stageOrder: BillingStage[] = ["client", "work", "document"];
   const activeStageIndex = stageOrder.indexOf(activeStage);
 
   return (
@@ -61,7 +59,7 @@ export default function SettlementPage() {
         {tab !== "report" && (
           <ol
             aria-label={t("workflow.ariaLabel")}
-            className="mb-5 grid grid-cols-4 gap-1 rounded-[var(--radius-card)] border border-border bg-card p-1.5 sm:gap-2 sm:p-2"
+            className="mb-5 grid grid-cols-3 gap-1 rounded-[var(--radius-card)] border border-border bg-card p-1.5 sm:gap-2 sm:p-2"
           >
             {stageOrder.map((stage, index) => {
               const current = index === activeStageIndex;
@@ -113,7 +111,6 @@ export default function SettlementPage() {
           />
         )}
         {tab === "report" && <AdHocReportTab />}
-        {tab === "payments" && <PaymentReconciliationTab />}
       </PageContainer>
     </AppLayout>
   );

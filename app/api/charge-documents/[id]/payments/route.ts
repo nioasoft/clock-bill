@@ -64,11 +64,29 @@ export async function POST(request: NextRequest, ctx: Ctx) {
 
     await withTransaction(async (client: PoolClient) => {
       const doc = await client.query(
-        `SELECT status FROM charge_documents WHERE id = $1 AND user_id = $2 FOR UPDATE`,
+        `SELECT status, total, discount_type, discount_value, vat_rate_snapshot
+           FROM charge_documents WHERE id = $1 AND user_id = $2 FOR UPDATE`,
         [id, user.id]
       );
       if (doc.rowCount === 0) throw new Error("NOT_FOUND");
       if (doc.rows[0].status === "canceled") throw new Error("DOC_CANCELED");
+
+      // Row is locked above, so this sum can't race a concurrent payment.
+      const paid = await client.query<{ paid_sum: number }>(
+        `SELECT COALESCE(SUM(amount), 0)::float8 AS paid_sum
+           FROM charge_document_payments WHERE document_id = $1 AND user_id = $2`,
+        [id, user.id]
+      );
+      const row = doc.rows[0] as { total: number | null; discount_type: DiscountType | null; discount_value: number | null; vat_rate_snapshot: number | null };
+      const { gross } = documentMoney({
+        total: row.total ?? 0,
+        discountType: row.discount_type,
+        discountValue: row.discount_value,
+        vatRate: row.vat_rate_snapshot,
+      });
+      const open = outstanding(gross, Number(paid.rows[0]?.paid_sum ?? 0));
+      // 0.005 absorbs float rounding on the money math.
+      if (amount > open + 0.005) throw new Error("AMOUNT_EXCEEDS_OUTSTANDING");
 
       await client.query(
         `INSERT INTO charge_document_payments (id, user_id, document_id, amount, paid_at, method, note)
@@ -83,6 +101,7 @@ export async function POST(request: NextRequest, ctx: Ctx) {
     const msg = error instanceof Error ? error.message : "";
     if (msg === "NOT_FOUND") return NextResponse.json({ success: false, error_code: "DOCUMENT_NOT_FOUND", message: "תעודה לא נמצאה" }, { status: 404 });
     if (msg === "DOC_CANCELED") return NextResponse.json({ success: false, error_code: "PAYMENT_DOC_CANCELED", message: "לא ניתן לרשום תשלום על תעודה מבוטלת" }, { status: 409 });
+    if (msg === "AMOUNT_EXCEEDS_OUTSTANDING") return NextResponse.json({ success: false, error_code: "AMOUNT_EXCEEDS_OUTSTANDING", message: "הסכום חורג מהיתרה לתשלום" }, { status: 409 });
     logger.error("POST payment failed:", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה ברישום תשלום" }, { status: 500 });
   }

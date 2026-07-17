@@ -2314,15 +2314,13 @@
     "tabs": {
       "billable": "To bill",
       "documents": "Documents",
-      "payments": "Match payments",
       "report": "Ad-hoc report"
     },
     "workflow": {
       "ariaLabel": "Billing progress",
       "client": "Client",
       "work": "Work",
-      "document": "Document",
-      "payment": "Payment"
+      "document": "Document"
     },
     "status": {
       "pending": "Pending",
@@ -2498,7 +2496,14 @@
       "loadErrorBody": "A problem occurred while loading the data.",
       "emptyTitle": "You haven't issued any documents yet",
       "emptyBody": "Issue a settlement document from the <tab>To bill</tab> tab and it will appear here.",
-      "docNumber": "Document #{number}"
+      "docNumber": "Document #{number}",
+      "filterLabel": "Status",
+      "filterActive": "Active",
+      "filterAll": "All",
+      "showingCount": "Showing {shown} of {total}",
+      "noMatchTitle": "No documents with this status",
+      "noMatchBody": "Change the filter to see other documents.",
+      "showAll": "Show all"
     },
     "doc": {
       "outstandingShort": "{amount} left",
@@ -2691,60 +2696,6 @@
     "approveSuccess": "Approval sent — thank you!",
     "approvedOn": "Approved on {date}",
     "approveError": "Approval failed — please try again"
-  },
-  "PaymentReconciliation": {
-    "title": "Match incoming payments",
-    "description": "Import a bank CSV or enter one payment manually. ClockBill only suggests matches. Nothing is recorded until you review every row and confirm.",
-    "stepsLabel": "Payment matching steps",
-    "steps": {
-      "import": "Import payments",
-      "review": "Review matches",
-      "confirm": "Confirm and record"
-    },
-    "privacyTitle": "Your file stays in this browser",
-    "privacyBody": "The CSV is parsed locally and is not uploaded. Only the rows you approve are sent when you confirm.",
-    "loading": "Loading open documents",
-    "loadError": "We couldn't load open documents",
-    "loadErrorHint": "Check your connection and try again. No payments were changed.",
-    "retry": "Try again",
-    "noDocumentsTitle": "Everything is paid",
-    "noDocumentsBody": "There are no open documents to match right now.",
-    "uploadTitle": "Import a CSV",
-    "uploadBody": "Use a file with date and amount columns. Reference, description, and currency are optional.",
-    "uploadLimits": "CSV only · up to 1 MB or 500 rows",
-    "manualTitle": "Enter one payment",
-    "manualBody": "Use the same review flow for a transfer that is not in a file.",
-    "manualFormTitle": "Payment details",
-    "amount": "Amount",
-    "date": "Payment date",
-    "currency": "Currency",
-    "reference": "Reference or note",
-    "cancel": "Cancel",
-    "continueToReview": "Continue to review",
-    "reviewTitle": "Review before recording",
-    "reviewBody": "{count, plural, one {One payment is waiting for review} other {# payments are waiting for review}}",
-    "clear": "Start over",
-    "noReference": "No reference",
-    "documentLabel": "Match to an open document",
-    "chooseDocument": "Choose a document",
-    "noCompatibleDocument": "No compatible document",
-    "documentOption": "#{number} · {client} · {amount} open",
-    "removeRow": "Remove payment",
-    "confirmTitle": "I reviewed every match",
-    "confirmBody": "{count, plural, one {Recording will add one payment to the selected document.} other {Recording will add # payments to the selected documents.}}",
-    "unmatchedWarning": "Choose a compatible document for every payment before confirming.",
-    "saving": "Recording…",
-    "apply": "{count, plural, one {Record payment} other {Record # payments}}",
-    "success": "{count, plural, one {One payment was recorded} other {# payments were recorded}}",
-    "saveError": "The payments were not recorded. Review the matches and try again.",
-    "errors": {
-      "FILE_TOO_LARGE": "The CSV is larger than 1 MB.",
-      "EMPTY_FILE": "The CSV has no payment rows.",
-      "TOO_MANY_ROWS": "The CSV has more than 500 rows.",
-      "MISSING_COLUMNS": "The CSV needs date and amount columns.",
-      "INVALID_ROW": "A row has an invalid date or amount.",
-      "INVALID_FILE": "We couldn't read this CSV."
-    }
   },
   "Trial": {
     "pillActive": "Unlimited trial · {days} days left",
