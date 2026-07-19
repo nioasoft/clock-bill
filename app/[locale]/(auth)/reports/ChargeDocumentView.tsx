@@ -41,6 +41,8 @@ interface DocumentLine {
   unit: string | null;
   rate: number | null;
   amount: number;
+  /** Per-entry discount (%) snapshot; `amount` is already net of it. */
+  discount_percent: number | null;
   project_name: string | null;
 }
 
@@ -540,6 +542,8 @@ export default function ChargeDocumentView({
   });
   const hasVat = doc.vat_rate_snapshot != null && doc.vat_rate_snapshot > 0;
   const hasDiscount = money.discountAmount > 0;
+  // Per-line discount column shows only when at least one line carries one.
+  const hasLineDiscount = lines.some((l) => (l.discount_percent ?? 0) > 0);
   const lifecycleStatuses: ChargeDocStatus[] = ["pending", "partial", "paid"];
   const currentLifecycleIndex = lifecycleStatuses.indexOf(doc.status as ChargeDocStatus);
 
@@ -680,6 +684,9 @@ export default function ChargeDocumentView({
               <th className="px-3 py-2 text-start font-medium">{t("doc.colItem")}</th>
               <th className="px-3 py-2 text-start font-medium">{t("doc.colDetails")}</th>
               <th className="px-3 py-2 text-start font-medium">{t("doc.colQtyRate")}</th>
+              {hasLineDiscount && (
+                <th className="px-3 py-2 text-start font-medium whitespace-nowrap">{t("doc.discount")}</th>
+              )}
               <th className="px-3 py-2 text-end font-medium">{t("doc.colAmount")}</th>
               {canEditDoc && <th className="px-3 py-2 text-end font-medium sr-only">{t("doc.colActions")}</th>}
             </tr>
@@ -687,7 +694,7 @@ export default function ChargeDocumentView({
           <tbody>
             {lines.length === 0 && (
               <tr>
-                <td colSpan={canEditDoc ? 6 : 5} className="px-3 py-6 text-center text-muted-foreground">
+                <td colSpan={(canEditDoc ? 6 : 5) + (hasLineDiscount ? 1 : 0)} className="px-3 py-6 text-center text-muted-foreground">
                   {t("doc.noLines")}
                 </td>
               </tr>
@@ -755,6 +762,11 @@ export default function ChargeDocumentView({
                       );
                     })()}
                   </td>
+                  {hasLineDiscount && (
+                    <td className="px-3 py-3 font-mono tabular-nums text-success whitespace-nowrap">
+                      {line.discount_percent ? `−${Number(line.discount_percent.toFixed(2))}%` : ""}
+                    </td>
+                  )}
                   <td className="px-3 py-3 text-end font-mono tabular-nums text-foreground">
                     {formatCurrency(line.amount, doc.currency, locale)}
                   </td>

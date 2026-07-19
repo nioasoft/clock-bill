@@ -29,6 +29,8 @@ export interface PdfDocumentLine {
   unit: string | null;
   rate: number | null;
   amount: number;
+  /** Per-entry discount (%) snapshot; `amount` is already net of it. */
+  discount_percent: number | null;
   project_name: string | null;
 }
 
@@ -132,6 +134,10 @@ export function PdfChargeDocument({ doc, lines, profile }: PdfChargeDocumentProp
   const dateRange = lineDates.length
     ? { from: lineDates[0], to: lineDates[lineDates.length - 1] }
     : null;
+
+  // The per-line discount column renders only when at least one line carries a
+  // discount — documents without line discounts keep today's 5-column table.
+  const hasLineDiscount = lines.some((l) => (l.discount_percent ?? 0) > 0);
 
   return (
     <div id="pdf-content" className="print-only" dir={locale === "he" ? "rtl" : "ltr"}>
@@ -239,6 +245,7 @@ export function PdfChargeDocument({ doc, lines, profile }: PdfChargeDocumentProp
             <th>{t("doc.colItem")}</th>
             <th>{t("doc.colDetails")}</th>
             <th>{t("doc.colQtyRate")}</th>
+            {hasLineDiscount && <th style={{ whiteSpace: "nowrap" }}>{t("doc.discount")}</th>}
             <th>{t("doc.colAmount")}</th>
           </tr>
         </thead>
@@ -274,6 +281,11 @@ export function PdfChargeDocument({ doc, lines, profile }: PdfChargeDocumentProp
                       } × ${formatCurrency(qr.rate, doc.currency)}`
                     : ""}
                 </td>
+                {hasLineDiscount && (
+                  <td style={{ fontSize: "12px", whiteSpace: "nowrap" }}>
+                    {line.discount_percent ? `−${tidyNumber(line.discount_percent)}%` : ""}
+                  </td>
+                )}
                 <td style={{ fontSize: "12px", whiteSpace: "nowrap" }}>
                   {formatCurrency(line.amount, doc.currency)}
                 </td>

@@ -39,6 +39,7 @@ export function entrySelectColumns(te: string): string {
     ${te}.quantity,
     ${te}.item_ref,
     ${te}.unit,
+    ${te}.discount_percent,
     ${te}.charge_document_id,
     ${te}.written_off_at,
     p.name as project_name,
@@ -76,6 +77,7 @@ export type EntryRow = {
   quantity: number | null;
   item_ref: number | null;
   unit: string | null;
+  discount_percent: number | null;
   charge_document_id: string | null;
   written_off_at: string | null;
   project_name: string;
@@ -114,6 +116,8 @@ export interface EntryResponse {
   quantity: number | null;
   itemRef: number | null;
   unit: string | null;
+  /** Per-entry discount (%) applied to the billed amount. NULL = no discount. */
+  discountPercent: number | null;
   /** Set when this entry is claimed by a charge document (pending/paid). NULL once freed/canceled. */
   chargeDocumentId: string | null;
   /** Per-user document number of the claiming charge document, for display. */
@@ -152,6 +156,7 @@ export function mapEntryRow(row: EntryRow): EntryResponse {
     quantity: row.quantity,
     itemRef: row.item_ref,
     unit: row.unit,
+    discountPercent: row.discount_percent,
     chargeDocumentId: row.charge_document_id,
     chargeDocNumber: row.charge_doc_number,
     chargeDocStatus: (row.charge_doc_status as EntryResponse["chargeDocStatus"]) ?? null,

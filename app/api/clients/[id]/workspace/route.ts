@@ -80,6 +80,7 @@ export async function GET(_request: Request, { params }: Context) {
                 te.id, te.description, te.notes, te.billing_kind AS "billingKind",
                 te.duration, te.quantity, te.rate, te.rate_label AS "rateLabel",
                 te.item_ref AS "itemRef", te.unit,
+                te.discount_percent AS "discountPercent",
                 p.billing_rounding AS "projectRounding",
                 c.billing_rounding AS "clientRounding"
            FROM time_entries te

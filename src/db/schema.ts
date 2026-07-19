@@ -444,12 +444,19 @@ export const timeEntries = pgTable(
     // Distinct from is_billable=false (logged as non-billable from the start).
     // A written-off entry is never attached to a document (see check below).
     writtenOffAt: timestamp("written_off_at"),
+    // Per-entry discount (%), applied to the line amount at billing time.
+    // NULL = no discount. Editable until the entry is settled into a document.
+    discountPercent: real("discount_percent"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
   (table) => [
     check("time_entries_rate_check", sql`${table.rate} IS NULL OR ${table.rate} >= 0`),
     check("time_entries_duration_check", sql`${table.duration} >= 0`),
+    check(
+      "time_entries_discount_percent_check",
+      sql`${table.discountPercent} IS NULL OR (${table.discountPercent} >= 0 AND ${table.discountPercent} <= 100)`
+    ),
     index("idx_time_entries_user_id").on(table.userId),
     index("idx_time_entries_project_id").on(table.projectId),
     index("idx_time_entries_task_id").on(table.taskId),
@@ -517,6 +524,8 @@ export const workTemplates = pgTable(
     rateLabel: text("rate_label"),
     unit: text("unit"),
     isBillable: boolean("is_billable").notNull().default(true),
+    // Per-entry discount (%) applied when logging work from this template.
+    discountPercent: real("discount_percent"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
@@ -527,6 +536,10 @@ export const workTemplates = pgTable(
     check("work_templates_duration_check", sql`${table.duration} IS NULL OR ${table.duration} >= 0`),
     check("work_templates_quantity_check", sql`${table.quantity} IS NULL OR ${table.quantity} >= 0`),
     check("work_templates_rate_check", sql`${table.rate} IS NULL OR ${table.rate} >= 0`),
+    check(
+      "work_templates_discount_percent_check",
+      sql`${table.discountPercent} IS NULL OR (${table.discountPercent} >= 0 AND ${table.discountPercent} <= 100)`
+    ),
   ]
 );
 
@@ -699,6 +712,9 @@ export const chargeDocumentLines = pgTable(
     unit: text("unit"), // item unit-noun snapshot at issue time
     rate: real("rate"),
     amount: real("amount"),
+    // Per-entry discount (%) snapshot at issue time. `amount` is already NET of
+    // this discount; the % is kept so the document can itemize it per line.
+    discountPercent: real("discount_percent"),
     // Project-name snapshot at issue time, used by the by-project summary block.
     // NULL for fixed/retainer lines and legacy docs created before this column.
     projectName: text("project_name"),
@@ -716,6 +732,10 @@ export const chargeDocumentLines = pgTable(
     check("charge_document_lines_amount_check", sql`${table.amount} IS NULL OR ${table.amount} >= 0`),
     check("charge_document_lines_rate_check", sql`${table.rate} IS NULL OR ${table.rate} >= 0`),
     check("charge_document_lines_quantity_check", sql`${table.quantity} IS NULL OR ${table.quantity} >= 0`),
+    check(
+      "charge_document_lines_discount_percent_check",
+      sql`${table.discountPercent} IS NULL OR (${table.discountPercent} >= 0 AND ${table.discountPercent} <= 100)`
+    ),
     check(
       "charge_document_lines_source_type_check",
       sql`${table.sourceType} IN ('time_entry', 'fixed_monthly', 'retainer')`

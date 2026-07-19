@@ -61,12 +61,12 @@ export async function GET(request: NextRequest) {
         id: string; description: string; notes: string | null; date: string;
         billing_kind: string | null; duration: number; quantity: number | null;
         rate: number | null; rate_label: string | null; item_ref: number | null;
-        unit: string | null;
+        unit: string | null; discount_percent: number | null;
         project_name: string; currency: string;
         project_rounding: string | null; client_rounding: string | null;
       }>(
         `SELECT te.id, te.description, te.notes, te.date, te.billing_kind, te.duration,
-                te.quantity, te.rate, te.rate_label, te.item_ref, te.unit,
+                te.quantity, te.rate, te.rate_label, te.item_ref, te.unit, te.discount_percent,
                 p.name AS project_name, c.currency,
                 p.billing_rounding AS project_rounding, c.billing_rounding AS client_rounding
            FROM time_entries te

@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
 
     const parsed = await parseBody(request, entryBodySchema);
     if (!parsed.ok) return parsed.response;
-    const { projectId, taskId, date, duration, description, notes, isBillable, tags, billingKind, rate, rateLabel, quantity, unit } = parsed.data;
+    const { projectId, taskId, date, duration, description, notes, isBillable, tags, billingKind, rate, rateLabel, quantity, unit, discountPercent } = parsed.data;
     const kind = billingKind ?? "hourly";
     const isItem = kind === "item";
     const effectiveDuration = isItem ? 0 : duration;
@@ -208,9 +208,9 @@ export async function POST(request: NextRequest) {
       const inserted = await client.query<EntryRow>(
         `WITH ins AS (
            INSERT INTO time_entries
-             (id, user_id, project_id, task_id, description, start_time, end_time, duration, date, tags, notes, is_billable, billing_kind, rate, rate_label, quantity, item_ref, unit)
+             (id, user_id, project_id, task_id, description, start_time, end_time, duration, date, tags, notes, is_billable, billing_kind, rate, rate_label, quantity, item_ref, unit, discount_percent)
            VALUES
-             (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+             (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
            RETURNING *
          )
          SELECT
@@ -238,6 +238,7 @@ export async function POST(request: NextRequest) {
           isItem ? (quantity ?? null) : null,
           itemRef,
           isItem ? unit?.trim() || null : null,
+          discountPercent ?? null,
         ]
       );
       return { row: inserted.rows[0] };

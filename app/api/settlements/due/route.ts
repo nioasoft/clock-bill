@@ -40,10 +40,10 @@ export async function GET(_request: NextRequest) {
       `SELECT c.id AS client_id, c.name AS client_name, COALESCE(c.currency,'ILS') AS currency,
               c.settlement_billing_day,
               COALESCE(SUM(
-                CASE WHEN te.billing_kind = 'item'
+                (CASE WHEN te.billing_kind = 'item'
                      THEN COALESCE(te.quantity, 0) * COALESCE(te.rate, 0)
                      ELSE (te.duration / 60.0) * COALESCE(te.rate, 0)
-                END
+                END) * (1 - COALESCE(te.discount_percent, 0) / 100.0)
               ), 0) AS unbilled_total
          FROM clients c
          JOIN projects p ON p.client_id = c.id

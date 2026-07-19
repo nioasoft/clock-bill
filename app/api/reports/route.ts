@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { calculateFixedMonthlyCharges } from "@/lib/fixed-charges";
-import { addMoney, calcHourlyAmount, calcItemAmount } from "@/lib/money";
+import { addMoney, applyPercentDiscount, calcHourlyAmount, calcItemAmount } from "@/lib/money";
 import { resolveRounding, roundBillableMinutes } from "@/lib/rounding";
 
 /**
@@ -55,6 +55,7 @@ export async function GET(request: NextRequest) {
         te.quantity,
         te.item_ref,
         te.unit,
+        te.discount_percent,
         p.name as project_name,
         p.billing_rounding as project_rounding,
         c.default_rate as hourly_rate,
@@ -175,6 +176,7 @@ export async function GET(request: NextRequest) {
         quantity: number | null;
         item_ref: number | null;
         unit: string | null;
+        discount_percent: number | null;
         project_name: string;
         project_rounding: string | null;
         hourly_rate: number | null;
@@ -206,9 +208,12 @@ export async function GET(request: NextRequest) {
       const billedMinutes = isItem
         ? entry.duration
         : roundBillableMinutes(entry.duration, roundingMode);
-      const amount = isItem
-        ? calcItemAmount(entry.quantity, entry.rate)
-        : calcHourlyAmount(billedMinutes, effectiveRate);
+      const amount = applyPercentDiscount(
+        isItem
+          ? calcItemAmount(entry.quantity, entry.rate)
+          : calcHourlyAmount(billedMinutes, effectiveRate),
+        entry.discount_percent
+      );
 
       return {
         id: entry.id,

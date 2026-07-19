@@ -19,6 +19,7 @@ export interface WorkTemplate {
   rateLabel: string | null;
   unit: string | null;
   isBillable: boolean;
+  discountPercent: number | null;
   projectName: string;
   clientName: string;
 }

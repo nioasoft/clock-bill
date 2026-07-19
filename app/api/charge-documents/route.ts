@@ -113,6 +113,7 @@ export async function POST(request: NextRequest) {
                   te.duration, te.quantity, te.rate, te.rate_label AS "rateLabel",
                   te.unit AS "unit",
                   te.item_ref AS "itemRef",
+                  te.discount_percent AS "discountPercent",
                   p.name AS "projectName",
                   p.billing_rounding AS "projectRounding",
                   c.billing_rounding AS "clientRounding"
@@ -177,6 +178,7 @@ export async function POST(request: NextRequest) {
         unit: null,
         rate: null,
         amount: c.amount,
+        discountPercent: null,
         projectName: null,
       }));
       const allLines = [...entryLines, ...computedDrafts];
@@ -207,14 +209,14 @@ export async function POST(request: NextRequest) {
         await client.query(
           `INSERT INTO charge_document_lines
              (id, user_id, document_id, source_type, time_entry_id, period_month, date, label,
-              description, notes, item_ref, billing_kind, quantity, rate, amount, unit, project_name)
+              description, notes, item_ref, billing_kind, quantity, rate, amount, discount_percent, unit, project_name)
            SELECT gen_random_uuid()::text, $1, $2, t.source_type, t.time_entry_id, t.period_month, t.date,
-                  t.label, t.description, t.notes, t.item_ref, t.billing_kind, t.quantity, t.rate, t.amount, t.unit, t.project_name
+                  t.label, t.description, t.notes, t.item_ref, t.billing_kind, t.quantity, t.rate, t.amount, t.discount_percent, t.unit, t.project_name
              FROM unnest(
                $3::text[], $4::text[], $5::text[], $6::date[], $7::text[], $8::text[],
-               $9::text[], $10::int[], $11::text[], $12::numeric[], $13::numeric[], $14::numeric[], $15::text[], $16::text[]
+               $9::text[], $10::int[], $11::text[], $12::numeric[], $13::numeric[], $14::numeric[], $15::text[], $16::text[], $17::numeric[]
              ) AS t(source_type, time_entry_id, period_month, date, label, description,
-                    notes, item_ref, billing_kind, quantity, rate, amount, unit, project_name)`,
+                    notes, item_ref, billing_kind, quantity, rate, amount, unit, project_name, discount_percent)`,
           [
             user.id,
             documentId,
@@ -232,6 +234,7 @@ export async function POST(request: NextRequest) {
             allLines.map((l) => l.amount),
             allLines.map((l) => l.unit),
             allLines.map((l) => l.projectName),
+            allLines.map((l) => l.discountPercent),
           ]
         );
       }

@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { calculateFixedMonthlyCharges } from "@/lib/fixed-charges";
-import { addMoney, calcHourlyAmount, calcItemAmount } from "@/lib/money";
+import { addMoney, applyPercentDiscount, calcHourlyAmount, calcItemAmount } from "@/lib/money";
 import ExcelJS from "exceljs";
 
 /**
@@ -148,6 +148,7 @@ export async function GET(request: NextRequest) {
         te.rate,
         te.rate_label,
         te.quantity,
+        te.discount_percent,
         p.name as project_name,
         c.default_rate as hourly_rate,
         c.currency,
@@ -257,6 +258,7 @@ export async function GET(request: NextRequest) {
         rate: number | null;
         rate_label: string | null;
         quantity: number | null;
+        discount_percent: number | null;
         project_name: string;
         hourly_rate: number | null;
         currency: string;
@@ -316,9 +318,12 @@ export async function GET(request: NextRequest) {
       const durationMinutes = entry.duration;
       const durationHours = durationMinutes / 60;
       const effectiveRate = entry.rate ?? entry.hourly_rate;
-      const amount = isItem
-        ? calcItemAmount(entry.quantity, entry.rate)
-        : calcHourlyAmount(durationMinutes, effectiveRate);
+      const amount = applyPercentDiscount(
+        isItem
+          ? calcItemAmount(entry.quantity, entry.rate)
+          : calcHourlyAmount(durationMinutes, effectiveRate),
+        entry.discount_percent
+      );
       const currency = entry.currency || "ILS";
 
       totalMinutes += isItem ? 0 : durationMinutes;
@@ -525,9 +530,12 @@ export async function GET(request: NextRequest) {
       const currency = entry.currency || "ILS";
       const key = `${label}|${currency}`;
       const effectiveRate = entry.rate ?? entry.hourly_rate;
-      const amount = isItem
-        ? calcItemAmount(entry.quantity, entry.rate)
-        : calcHourlyAmount(entry.duration, effectiveRate);
+      const amount = applyPercentDiscount(
+        isItem
+          ? calcItemAmount(entry.quantity, entry.rate)
+          : calcHourlyAmount(entry.duration, effectiveRate),
+        entry.discount_percent
+      );
       if (!byLabel[key]) {
         byLabel[key] = { label, kind: isItem ? "item" : "hourly", currency, totalMinutes: 0, totalQuantity: 0, totalAmount: 0 };
       }

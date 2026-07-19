@@ -17,7 +17,7 @@ import { readRecentWorkContext, writeRecentWorkContext } from "@/lib/recent-work
 import { validateRequired, validateDate, validateNumber } from "@/lib/validation";
 import { useValidationMessage } from "@/lib/validation-messages";
 import { pickDefaultHourlyRate, type ClientRate } from "@/lib/schemas/rates";
-import { calcHourlyAmount, calcItemAmount } from "@/lib/money";
+import { applyPercentDiscount, calcHourlyAmount, calcItemAmount } from "@/lib/money";
 import { formatCurrency } from "@/lib/currency";
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
 import { useClients, useProjects } from "@/hooks/use-clients";
@@ -80,6 +80,7 @@ interface TimeEntry {
   unit?: string | null;
   quantity?: number | null;
   itemRef?: number | null;
+  discountPercent?: number | null;
   currency?: string;
   chargeDocumentId?: string | null;
   chargeDocNumber?: number | null;
@@ -102,9 +103,10 @@ function monthRange(d: Date): { start: string; end: string; key: string } {
 
 /** Un-rounded billed amount for an entry (records log shows actual worked value). */
 function entryAmount(entry: TimeEntry): number {
-  return entry.billingKind === "item"
+  const base = entry.billingKind === "item"
     ? calcItemAmount(entry.quantity, entry.rate)
     : calcHourlyAmount(entry.duration, entry.rate);
+  return applyPercentDiscount(base, entry.discountPercent);
 }
 
 /** Sentinel rateId for "+ פריט חד-פעמי…" (an ad-hoc, typed item not in the catalog). */
@@ -159,6 +161,7 @@ export default function EntriesPage() {
     adhocUnit: "",
     adhocPrice: "",
     saveItemToClient: false,
+    discountPercent: "",
   });
   const formCurrency =
     clients.find((client) => client.id === formClientId)?.currency ??
@@ -445,6 +448,10 @@ export default function EntriesPage() {
       // so fall back to the entry's own snapshot when nothing is chosen on edit.
       const hourlyRate = chosen?.rate ?? editingEntry?.rate ?? null;
       const hourlyLabel = chosen?.name ?? editingEntry?.rateLabel ?? null;
+      // Empty/invalid discount input → no discount (null); the API enforces 0–100.
+      const parsedDiscount = parseFloat(formData.discountPercent);
+      const discountPercent =
+        Number.isFinite(parsedDiscount) && parsedDiscount > 0 ? parsedDiscount : null;
 
       const response = await fetch(url, {
         method,
@@ -464,6 +471,7 @@ export default function EntriesPage() {
           description: formData.description,
           notes: formData.notes || undefined,
           isBillable: formData.isBillable,
+          discountPercent,
           tags: [],
         }),
       });
@@ -532,6 +540,7 @@ export default function EntriesPage() {
                 rateLabel: isItem ? itemLabel : hourlyLabel,
                 unit: isItem ? itemUnit : null,
                 isBillable: formData.isBillable,
+                discountPercent,
               }),
             });
             if (templateResponse.ok) showSuccessToast(t("templates.saved"));
@@ -557,6 +566,7 @@ export default function EntriesPage() {
           adhocUnit: "",
           adhocPrice: "",
           saveItemToClient: false,
+          discountPercent: "",
         });
         setShowForm(false);
         setEditingEntry(null);
@@ -604,6 +614,7 @@ export default function EntriesPage() {
       adhocUnit: "", // ditto
       adhocPrice: "",
       saveItemToClient: false,
+      discountPercent: entry.discountPercent != null ? String(entry.discountPercent) : "",
     });
     setShowForm(true);
   };
@@ -626,6 +637,7 @@ export default function EntriesPage() {
       adhocUnit: "",
       adhocPrice: "",
       saveItemToClient: false,
+      discountPercent: "",
     });
     setShowForm(false);
   };
@@ -653,6 +665,7 @@ export default function EntriesPage() {
       adhocUnit: "",
       adhocPrice: "",
       saveItemToClient: false,
+      discountPercent: "",
     });
     setFieldErrors({});
     setSaveAsTemplate(false);
@@ -679,6 +692,7 @@ export default function EntriesPage() {
       adhocName: template.billingKind === "item" ? template.rateLabel ?? "" : "",
       adhocUnit: template.billingKind === "item" ? template.unit ?? "" : "",
       adhocPrice: template.billingKind === "item" && template.rate != null ? String(template.rate) : "",
+      discountPercent: template.discountPercent != null ? String(template.discountPercent) : "",
     }));
     setFieldErrors({});
   }, [projects]);
@@ -1323,6 +1337,25 @@ export default function EntriesPage() {
                   </>
                 )}
 
+                <div>
+                  <label htmlFor="discountPercent" className="block text-sm font-medium text-foreground">
+                    {t("form.discountLabel")}
+                  </label>
+                  <input
+                    type="number"
+                    id="discountPercent"
+                    inputMode="decimal"
+                    min="0"
+                    max="100"
+                    step="0.5"
+                    value={formData.discountPercent}
+                    onChange={(e) => setFormData({ ...formData, discountPercent: e.target.value })}
+                    className="mt-1 block w-full rounded-[var(--radius)] border border-border px-3 py-2 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    disabled={submitting}
+                    placeholder={t("form.discountPlaceholder")}
+                  />
+                </div>
+
                 <div className="flex items-center self-end">
                   <label htmlFor="isBillable" className="flex items-center gap-2 cursor-pointer min-h-[44px]">
                     <input
@@ -1549,6 +1582,11 @@ export default function EntriesPage() {
                         <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
                           {formatCurrency(entryAmount(entry), entry.currency || "ILS", locale)}
                         </span>
+                        {entry.discountPercent ? (
+                          <span className="ms-1.5 inline-flex rounded-full bg-success/10 px-1.5 py-0.5 font-mono text-[11px] font-semibold tabular-nums text-success">
+                            {t("entry.discountBadge", { percent: entry.discountPercent })}
+                          </span>
+                        ) : null}
                       </td>
                       <td className="w-px whitespace-nowrap px-4 py-4 text-start">
                         <div className="flex items-center gap-1">
@@ -1619,6 +1657,11 @@ export default function EntriesPage() {
                       )}
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
+                      {entry.discountPercent ? (
+                        <span className="inline-flex shrink-0 rounded-full bg-success/10 px-1.5 py-0.5 font-mono text-[11px] font-semibold tabular-nums text-success">
+                          {t("entry.discountBadge", { percent: entry.discountPercent })}
+                        </span>
+                      ) : null}
                       <span className="font-mono text-base font-bold tabular-nums text-foreground">
                         {formatCurrency(entryAmount(entry), entry.currency || "ILS", locale)}
                       </span>

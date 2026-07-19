@@ -24,7 +24,8 @@ export async function GET() {
               wt.rate_id AS "rateId", wt.title, wt.description, wt.notes,
               wt.billing_kind AS "billingKind", wt.duration, wt.quantity,
               wt.rate, wt.rate_label AS "rateLabel", wt.unit,
-              wt.is_billable AS "isBillable", p.name AS "projectName", c.name AS "clientName"
+              wt.is_billable AS "isBillable", wt.discount_percent AS "discountPercent",
+              p.name AS "projectName", c.name AS "clientName"
          FROM work_templates wt
          JOIN projects p ON p.id = wt.project_id AND p.user_id = $1
          JOIN clients c ON c.id = wt.client_id AND c.user_id = $1
@@ -63,13 +64,13 @@ export async function POST(request: NextRequest) {
     const result = await query(
       `INSERT INTO work_templates
         (id, user_id, client_id, project_id, rate_id, title, description, notes,
-         billing_kind, duration, quantity, rate, rate_label, unit, is_billable)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+         billing_kind, duration, quantity, rate, rate_label, unit, is_billable, discount_percent)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
        RETURNING id, title`,
       [id, user.id, input.clientId, input.projectId, input.rateId ?? null, input.title,
        input.description, input.notes ?? null, input.billingKind, input.duration ?? null,
        input.quantity ?? null, input.rate ?? null, input.rateLabel ?? null, input.unit ?? null,
-       input.isBillable]
+       input.isBillable, input.discountPercent ?? null]
     );
     return NextResponse.json({ success: true, template: result.rows[0] }, { status: 201 });
   } catch (error) {

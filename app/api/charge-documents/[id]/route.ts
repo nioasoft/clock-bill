@@ -118,6 +118,7 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
         const er = await client.query(
           `SELECT te.id, te.date::text AS "date", te.description, te.notes, te.billing_kind AS "billingKind", te.duration,
                   te.quantity, te.rate, te.rate_label AS "rateLabel", te.item_ref AS "itemRef", te.unit AS "unit",
+                  te.discount_percent AS "discountPercent",
                   p.name AS "projectName",
                   p.billing_rounding AS "projectRounding",
                   c.billing_rounding AS "clientRounding"
@@ -150,10 +151,10 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
         await client.query(
           `INSERT INTO charge_document_lines
              (id, user_id, document_id, source_type, time_entry_id, period_month, date, label,
-              description, notes, item_ref, billing_kind, quantity, rate, amount, unit, project_name)
-           VALUES (gen_random_uuid()::text,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
+              description, notes, item_ref, billing_kind, quantity, rate, amount, discount_percent, unit, project_name)
+           VALUES (gen_random_uuid()::text,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
           [user.id, id, l.sourceType, l.timeEntryId, l.periodMonth, l.date, l.label, l.description,
-           l.notes, l.itemRef, l.billingKind, l.quantity, l.rate, l.amount, l.unit, l.projectName]
+           l.notes, l.itemRef, l.billingKind, l.quantity, l.rate, l.amount, l.discountPercent, l.unit, l.projectName]
         );
         await client.query(`UPDATE time_entries SET charge_document_id = $1 WHERE id = $2 AND user_id = $3 AND charge_document_id IS NULL AND written_off_at IS NULL`, [id, addTimeEntryId, user.id]);
       }

@@ -16,6 +16,7 @@ export const createWorkTemplateSchema = z.object({
   rateLabel: z.string().trim().max(120).nullable().optional(),
   unit: z.string().trim().max(60).nullable().optional(),
   isBillable: z.boolean().default(true),
+  discountPercent: z.number().min(0).max(100).nullable().optional(),
 });
 
 export type CreateWorkTemplateInput = z.infer<typeof createWorkTemplateSchema>;

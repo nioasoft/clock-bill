@@ -55,6 +55,7 @@ const fullRow: EntryRow = {
   quantity: null,
   item_ref: null,
   unit: null,
+  discount_percent: null,
   charge_document_id: null,
   written_off_at: null,
   project_name: "אתר",
@@ -74,7 +75,7 @@ const REQUIRED_KEYS = [
   "description", "startTime", "endTime", "duration", "date", "tags", "notes",
   "isBillable", "createdAt", "pausedAt", "totalPausedTime", "taskId", "taskName",
   "billingKind", "rate", "rateLabel", "quantity", "itemRef", "unit",
-  "chargeDocumentId", "chargeDocNumber", "chargeDocStatus", "writtenOffAt",
+  "discountPercent", "chargeDocumentId", "chargeDocNumber", "chargeDocStatus", "writtenOffAt",
 ] as const;
 
 runner.test("mapEntryRow returns the full field set", () => {

@@ -64,3 +64,19 @@ export function calcItemAmount(
   if (!quantity || !Number.isFinite(quantity)) return 0;
   return roundMoney(quantity * rate);
 }
+
+/**
+ * Apply a per-line percent discount to an amount, rounded to whole cents.
+ * Null/0/invalid percent is a no-op; percent is clamped to [0, 100].
+ *
+ * @param amount - Pre-discount line amount
+ * @param percent - Discount percentage (0–100), or null/undefined when unset
+ */
+export function applyPercentDiscount(
+  amount: number,
+  percent: number | null | undefined
+): number {
+  if (!percent || !Number.isFinite(percent) || percent <= 0) return roundMoney(amount);
+  const p = Math.min(percent, 100);
+  return roundMoney(amount * (1 - p / 100));
+}

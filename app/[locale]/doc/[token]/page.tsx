@@ -62,7 +62,7 @@ async function loadByToken(token: string): Promise<LoadResult | null> {
   const documentId = d.id as string;
   const linesRes = await adminQuery(
     `SELECT id, source_type, time_entry_id, period_month, date::text AS date, label, description, notes,
-            item_ref, billing_kind, quantity, unit, rate, amount, project_name
+            item_ref, billing_kind, quantity, unit, rate, amount, discount_percent, project_name
        FROM charge_document_lines
       WHERE document_id = $1 AND user_id = $2
       ORDER BY COALESCE(date, to_date(period_month, 'YYYY-MM')) ASC NULLS LAST, created_at`,

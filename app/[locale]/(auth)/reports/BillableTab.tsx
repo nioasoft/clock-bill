@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { formatDuration, formatDate } from "@/lib/format";
 import { formatCurrency } from "@/lib/currency";
-import { calcHourlyAmount, calcItemAmount, sumMoney } from "@/lib/money";
+import { applyPercentDiscount, calcHourlyAmount, calcItemAmount, sumMoney } from "@/lib/money";
 import { roundBillableMinutes, type RoundingMode } from "@/lib/rounding";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,6 +31,7 @@ interface BillableEntryRow {
   rate_label: string | null;
   unit: string | null;
   item_ref: number | null;
+  discount_percent: number | null;
   project_name: string;
   currency: string;
   // Resolved hourly rounding mode (project override ?? client default) from the API.
@@ -63,10 +64,11 @@ function billedMinutes(entry: BillableEntryRow): number {
  * stores: item = quantity × rate, hourly = (roundedMinutes/60) × rate.
  */
 function entryAmount(entry: BillableEntryRow): number {
-  if (entry.billing_kind === "item") {
-    return calcItemAmount(entry.quantity, entry.rate);
-  }
-  return calcHourlyAmount(billedMinutes(entry), entry.rate);
+  const base =
+    entry.billing_kind === "item"
+      ? calcItemAmount(entry.quantity, entry.rate)
+      : calcHourlyAmount(billedMinutes(entry), entry.rate);
+  return applyPercentDiscount(base, entry.discount_percent);
 }
 
 export default function BillableTab({
@@ -462,6 +464,11 @@ export default function BillableTab({
                           </div>
                         </div>
                         <span className="text-sm font-semibold text-foreground tabular-nums whitespace-nowrap">
+                          {entry.discount_percent ? (
+                            <span className="me-1.5 inline-flex rounded-full bg-success/10 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-success">
+                              {t("billable.discountBadge", { percent: entry.discount_percent })}
+                            </span>
+                          ) : null}
                           {formatCurrency(amount, entry.currency, locale)}
                         </span>
                       </label>

@@ -46,6 +46,11 @@ export const entryBodySchema = z
     rateLabel: z.string().max(100).nullish(),
     unit: z.string().trim().max(30).nullish(),
     quantity: z.number().min(0).max(MAX_QUANTITY).nullish(),
+    discountPercent: z
+      .number({ message: "אחוז הנחה לא תקין" })
+      .min(0, "אחוז הנחה לא תקין")
+      .max(100, "אחוז ההנחה לא יכול לעלות על 100")
+      .nullish(),
   })
   .refine(
     (d) => (d.billingKind === "item" ? (d.quantity ?? 0) > 0 : d.duration > 0),

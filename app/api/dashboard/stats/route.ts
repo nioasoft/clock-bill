@@ -87,17 +87,17 @@ export async function GET(_request: NextRequest) {
         // isn't "earned today"; only the month total folds them in (below).
         `SELECT
            COALESCE(SUM(CASE WHEN te.date >= $2 AND te.billing_kind IS DISTINCT FROM 'item'
-                THEN (te.duration / 60.0) * COALESCE(te.rate, crd.rate, 0) ELSE 0 END), 0) AS hours_total,
+                THEN (te.duration / 60.0) * COALESCE(te.rate, crd.rate, 0) * (1 - COALESCE(te.discount_percent, 0) / 100.0) ELSE 0 END), 0) AS hours_total,
            COALESCE(SUM(CASE WHEN te.date >= $2 AND te.billing_kind = 'item'
-                THEN COALESCE(te.quantity, 0) * COALESCE(te.rate, 0) ELSE 0 END), 0) AS items_total,
+                THEN COALESCE(te.quantity, 0) * COALESCE(te.rate, 0) * (1 - COALESCE(te.discount_percent, 0) / 100.0) ELSE 0 END), 0) AS items_total,
            COALESCE(SUM(CASE WHEN te.date = $3 AND te.billing_kind IS DISTINCT FROM 'item'
-                THEN (te.duration / 60.0) * COALESCE(te.rate, crd.rate, 0) ELSE 0 END), 0) AS revenue_today_hours,
+                THEN (te.duration / 60.0) * COALESCE(te.rate, crd.rate, 0) * (1 - COALESCE(te.discount_percent, 0) / 100.0) ELSE 0 END), 0) AS revenue_today_hours,
            COALESCE(SUM(CASE WHEN te.date = $3 AND te.billing_kind = 'item'
-                THEN COALESCE(te.quantity, 0) * COALESCE(te.rate, 0) ELSE 0 END), 0) AS revenue_today_items,
+                THEN COALESCE(te.quantity, 0) * COALESCE(te.rate, 0) * (1 - COALESCE(te.discount_percent, 0) / 100.0) ELSE 0 END), 0) AS revenue_today_items,
            COALESCE(SUM(CASE WHEN te.date >= $4 AND te.billing_kind IS DISTINCT FROM 'item'
-                THEN (te.duration / 60.0) * COALESCE(te.rate, crd.rate, 0) ELSE 0 END), 0) AS revenue_week_hours,
+                THEN (te.duration / 60.0) * COALESCE(te.rate, crd.rate, 0) * (1 - COALESCE(te.discount_percent, 0) / 100.0) ELSE 0 END), 0) AS revenue_week_hours,
            COALESCE(SUM(CASE WHEN te.date >= $4 AND te.billing_kind = 'item'
-                THEN COALESCE(te.quantity, 0) * COALESCE(te.rate, 0) ELSE 0 END), 0) AS revenue_week_items,
+                THEN COALESCE(te.quantity, 0) * COALESCE(te.rate, 0) * (1 - COALESCE(te.discount_percent, 0) / 100.0) ELSE 0 END), 0) AS revenue_week_items,
            (SELECT default_currency FROM user_profiles WHERE user_id = $1) AS default_currency,
            (SELECT dashboard_config FROM user_profiles WHERE user_id = $1) AS dashboard_config
          FROM time_entries te
@@ -130,8 +130,8 @@ export async function GET(_request: NextRequest) {
         // revenue cards above, so the figures agree.
         `SELECT te.id, te.description, te.date, te.duration, te.project_id, te.billing_kind,
                 CASE WHEN te.billing_kind = 'item'
-                     THEN COALESCE(te.quantity, 0) * COALESCE(te.rate, 0)
-                     ELSE (te.duration / 60.0) * COALESCE(te.rate, crd.rate, 0)
+                     THEN COALESCE(te.quantity, 0) * COALESCE(te.rate, 0) * (1 - COALESCE(te.discount_percent, 0) / 100.0)
+                     ELSE (te.duration / 60.0) * COALESCE(te.rate, crd.rate, 0) * (1 - COALESCE(te.discount_percent, 0) / 100.0)
                 END AS amount
          FROM time_entries te
          JOIN projects p ON te.project_id = p.id
@@ -202,8 +202,8 @@ export async function GET(_request: NextRequest) {
         `SELECT
            TO_CHAR(te.date, 'YYYY-MM') as month,
            COALESCE(SUM(CASE WHEN te.billing_kind = 'item'
-                THEN COALESCE(te.quantity, 0) * COALESCE(te.rate, 0)
-                ELSE (te.duration / 60.0) * COALESCE(te.rate, crd.rate, 0) END), 0) as total
+                THEN COALESCE(te.quantity, 0) * COALESCE(te.rate, 0) * (1 - COALESCE(te.discount_percent, 0) / 100.0)
+                ELSE (te.duration / 60.0) * COALESCE(te.rate, crd.rate, 0) * (1 - COALESCE(te.discount_percent, 0) / 100.0) END), 0) as total
          FROM time_entries te
          JOIN projects p ON te.project_id = p.id
          LEFT JOIN LATERAL (

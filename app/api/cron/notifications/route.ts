@@ -183,10 +183,10 @@ export async function GET(request: NextRequest) {
       `SELECT c.id AS client_id, c.user_id, c.name AS client_name,
               COALESCE(c.currency,'ILS') AS currency, c.settlement_billing_day,
               COALESCE(SUM(
-                CASE WHEN te.billing_kind = 'item'
+                (CASE WHEN te.billing_kind = 'item'
                      THEN COALESCE(te.quantity, 0) * COALESCE(te.rate, 0)
                      ELSE (te.duration / 60.0) * COALESCE(te.rate, 0)
-                END
+                END) * (1 - COALESCE(te.discount_percent, 0) / 100.0)
               ), 0) AS unbilled_total,
               p.locale, u.email AS user_email,
               EXTRACT(YEAR  FROM (now() AT TIME ZONE COALESCE(p.timezone,'Asia/Jerusalem')))::int AS local_year,
