@@ -87,3 +87,17 @@ data/
 
 # Claude Code local files
 .claude/
+
+# Other agent tooling (local caches/plans — .mimocode is ~56MB)
+.mimocode/
+
+# Security audit reports — THIS REPO IS PUBLIC. These enumerate findings with
+# file:line evidence and include local absolute paths; publishing them hands an
+# attacker a map. Keep them local; share out-of-band.
+docs/*security-audit*.html
+docs/*security-review*.html
+
+# Logo exploration artifacts from the rebrand. Unused by the app, and anything
+# under public/ is served publicly — logo_data.json alone is ~2MB of base64.
+public/logos/
+scripts/generate_html.py
