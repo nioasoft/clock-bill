@@ -9,6 +9,10 @@ import { formatCurrency as formatCurrencyLib } from "@/lib/currency";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { resolveDocumentLocale, type DocumentLanguage } from "@/lib/document-language";
 import { useDocumentMessages } from "@/lib/document-messages";
+// NOT `new Date(y, m, 1).toISOString()` — that builds LOCAL midnight of the 1st and
+// then serializes it as UTC, so in Israel (UTC+2/+3) the "first day of this month"
+// preset resolved to the LAST day of the previous month, every single time.
+import { appDateBoundaries, appToday } from "@/lib/dates";
 import { printPdfContent } from "./printStyles";
 import { PdfReportContent } from "./PdfReportContent";
 import {
@@ -207,10 +211,8 @@ export default function AdHocReportTab() {
   const [filters, setFilters] = useState({
     clientId: "",
     projectId: "",
-    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-      .toISOString()
-      .split("T")[0], // First day of current month
-    endDate: new Date().toISOString().split("T")[0], // Today
+    startDate: appDateBoundaries().startOfMonth, // First day of current month
+    endDate: appToday(), // Today
     includeFixedCharges: true,
   });
   const [error, setError] = useState("");
@@ -298,10 +300,8 @@ export default function AdHocReportTab() {
       setFilters({
         clientId: clientId || "",
         projectId: projectId || "",
-        startDate: startDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-          .toISOString()
-          .split("T")[0],
-        endDate: endDate || new Date().toISOString().split("T")[0],
+        startDate: startDate || appDateBoundaries().startOfMonth,
+        endDate: endDate || appToday(),
         includeFixedCharges: includeFixedCharges !== "0",
       });
 
@@ -392,10 +392,8 @@ export default function AdHocReportTab() {
     setFilters({
       clientId: preset.clientId || "",
       projectId: preset.projectId || "",
-      startDate: preset.startDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-        .toISOString()
-        .split("T")[0],
-      endDate: preset.endDate || new Date().toISOString().split("T")[0],
+      startDate: preset.startDate || appDateBoundaries().startOfMonth,
+      endDate: preset.endDate || appToday(),
       includeFixedCharges: true,
     });
     setShowLoadPresetDialog(false);
@@ -510,7 +508,7 @@ export default function AdHocReportTab() {
 
       // Extract filename from Content-Disposition header or use default
       const contentDisposition = response.headers.get("Content-Disposition");
-      let filename = `report_${new Date().toISOString().split("T")[0]}.xlsx`;
+      let filename = `report_${appToday()}.xlsx`;
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
         if (filenameMatch && filenameMatch[1]) {
@@ -701,14 +699,8 @@ export default function AdHocReportTab() {
                     setFilters({
                       clientId: "",
                       projectId: "",
-                      startDate: new Date(
-                        new Date().getFullYear(),
-                        new Date().getMonth(),
-                        1
-                      )
-                        .toISOString()
-                        .split("T")[0],
-                      endDate: new Date().toISOString().split("T")[0],
+                      startDate: appDateBoundaries().startOfMonth,
+                      endDate: appToday(),
                       includeFixedCharges: true,
                     })
                   }

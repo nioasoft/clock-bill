@@ -3,6 +3,7 @@ import type { PoolClient } from "pg";
 import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
 import { moveTaskSchema } from "@/lib/schemas/tasks";
+import { appToday } from "@/lib/dates";
 import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("tasks:move");
@@ -65,7 +66,8 @@ export async function PATCH(
       if (running.rows.length > 0) return running.rows[0].id;
 
       const now = new Date();
-      const today = now.toISOString().split("T")[0];
+      // App-timezone day, not the UTC runtime's — see the note in /api/timer/start.
+      const today = appToday(now);
       const inserted = await client.query<{ id: string }>(
         `INSERT INTO time_entries
            (id, user_id, project_id, task_id, description, start_time, date, duration,

@@ -214,10 +214,13 @@ export async function GET(_request: NextRequest) {
          ) crd ON TRUE
          WHERE te.user_id = $1
            AND te.is_billable = TRUE
-           AND te.date >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '11 months')
+           AND te.date >= ($2::date - INTERVAL '11 months')
          GROUP BY TO_CHAR(te.date, 'YYYY-MM')
          ORDER BY month ASC`,
-        [userId]
+        // Window anchored to the app-timezone month start, not CURRENT_DATE — that
+        // reads the DB session clock (Neon = UTC) and would disagree with every
+        // other boundary in this handler on the 1st of the month before 03:00.
+        [userId, startOfMonthStr]
       ),
       // Hours by project this month (folded in from /api/dashboard/project-hours).
       query<{ project_id: string; project_name: string; total_minutes: string }>(

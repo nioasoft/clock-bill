@@ -19,6 +19,7 @@ import {
   type CsvImportRow,
   type ImportProject,
 } from "@/lib/csv-entry-import";
+import { appToday } from "@/lib/dates";
 
 const EMPTY_PROJECTS: ImportProject[] = [];
 
@@ -49,7 +50,8 @@ export default function CsvEntryImportPage() {
     [rows, selectedRows]
   );
   const templateHref = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10);
+    // The sample row is often imported as-is, so this date can become real data.
+    const today = appToday();
     const csv = locale === "he"
       ? `\uFEFFתאריך,לקוח,פרויקט,תיאור,משך_בדקות,הערות,לחיוב,תעריף\n${today},שם לקוח,שם פרויקט,פגישת עבודה,60,,כן,250`
       : `date,client,project,description,duration_minutes,notes,billable,rate\n${today},Client name,Project name,Work session,60,,yes,250`;

@@ -15,6 +15,7 @@ import { showSuccessToast, showErrorToast } from "@/lib/toast";
 import { messageForError } from "@/lib/api-error";
 import { readRecentWorkContext, writeRecentWorkContext } from "@/lib/recent-work-context";
 import { validateRequired, validateDate, validateNumber } from "@/lib/validation";
+import { appToday } from "@/lib/dates";
 import { useValidationMessage } from "@/lib/validation-messages";
 import { pickDefaultHourlyRate, type ClientRate } from "@/lib/schemas/rates";
 import { applyPercentDiscount, calcHourlyAmount, calcItemAmount } from "@/lib/money";
@@ -146,10 +147,13 @@ export default function EntriesPage() {
   // Two-step form selection: with several clients, pick the client first and
   // see only its projects (mirrors the timer start modal).
   const [formClientId, setFormClientId] = useState("");
+  // `appToday()` — NOT toISOString(), which is the UTC day and pre-fills yesterday
+  // between local midnight and 03:00. Hardcoding the app timezone (rather than the
+  // browser's) keeps this default aligned with the server's month/week boundaries.
   const [formData, setFormData] = useState({
     projectId: "",
     taskId: "",
-    date: new Date().toISOString().split("T")[0],
+    date: appToday(),
     duration: "",
     description: "",
     notes: "",
@@ -554,7 +558,7 @@ export default function EntriesPage() {
         setFormData({
           projectId: "",
           taskId: "",
-          date: new Date().toISOString().split("T")[0],
+          date: appToday(),
           duration: "",
           description: "",
           notes: "",
@@ -625,7 +629,7 @@ export default function EntriesPage() {
     setFormData({
       projectId: "",
       taskId: "",
-      date: new Date().toISOString().split("T")[0],
+      date: appToday(),
       duration: "",
       description: "",
       notes: "",
@@ -653,7 +657,7 @@ export default function EntriesPage() {
     setFormData({
       projectId: recentProject?.id ?? "",
       taskId: "",
-      date: new Date().toISOString().split("T")[0],
+      date: appToday(),
       duration: "",
       description: "",
       notes: "",

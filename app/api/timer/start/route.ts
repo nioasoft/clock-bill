@@ -3,6 +3,7 @@ import { z } from "zod";
 import { withTransaction } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
+import { appToday } from "@/lib/dates";
 import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("timer:start");
@@ -38,7 +39,10 @@ export async function POST(request: NextRequest) {
     projectId = parsed.data.projectId;
 
     const now = new Date();
-    const today = now.toISOString().split("T")[0];
+    // The entry's calendar day must be the user's, not the runtime's. Vercel runs
+    // in UTC, so toISOString() would file a timer started at 01:00 in Israel under
+    // YESTERDAY — and /timer/stop never rewrites `date`, so it would stay wrong.
+    const today = appToday(now);
 
     const newEntry = await withTransaction(async (client) => {
       // Verify the project belongs to the user.

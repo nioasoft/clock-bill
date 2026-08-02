@@ -9,6 +9,7 @@ import {
   type PaymentMethod,
 } from "@/lib/charge-documents";
 import { showSuccessToast, showErrorToast } from "@/lib/toast";
+import { appToday } from "@/lib/dates";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SimpleSelect } from "@/components/ui/simple-select";
@@ -55,7 +56,9 @@ export function ChargePaymentsPanel({
   const [editingId, setEditingId] = useState<string | null>(null);
 
   // Form fields shared between add and edit modes
-  const today = new Date().toISOString().slice(0, 10);
+  // App-timezone day — this becomes the stored `paid_at`, so the UTC day would
+  // book a late-night payment on the day before.
+  const today = appToday();
   const [amount, setAmount] = useState("");
   const [paidAt, setPaidAt] = useState(today);
   const [method, setMethod] = useState<PaymentMethod | "">("");

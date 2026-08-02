@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { type TaskRecord } from "@/lib/tasks-types";
+import { appToday } from "@/lib/dates";
 
 interface TaskCardProps {
   task: TaskRecord;
@@ -32,8 +33,9 @@ const cardTone: Record<TaskRecord["priority"], string> = {
 
 function isOverdue(dueDate: string | null): boolean {
   if (!dueDate) return false;
-  const today = new Date().toISOString().slice(0, 10);
-  return dueDate < today;
+  // App-timezone day: the UTC day would flag a task due today as overdue
+  // between local midnight and 03:00.
+  return dueDate < appToday();
 }
 
 export function TaskCard({ task, isTimerRunning, onClick }: TaskCardProps) {
