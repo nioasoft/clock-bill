@@ -1,114 +1,37 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+**ClockBill** — multi-tenant time tracking + billing for Israeli freelancers.
+Bilingual he/en via next-intl under `app/[locale]` (he is prefix-less, en = `/en`);
+`<html lang/dir>` are locale-dynamic. Charge documents ("התחשבנות") + 6 PDF templates,
+Polar billing, PWA + web push.
 
-## Project Overview
+## Commands (only the non-obvious)
 
-**מוניט (Monit)** — Multi-tenant time tracking app for Israeli freelancers. Full Hebrew UI, RTL layout, real-time timer, client/project management, flexible billing models (hourly, retainer, fixed monthly), PDF report export with 6 templates, and multi-currency support (ILS, USD, USDT, BTC, ETH).
+- Tests: custom tsx runner, NOT Jest/Vitest — `npm test` (all), single file: `npx tsx tests/unit/format.test.ts`. E2E: `npm run test:e2e` (Playwright).
+- **Migrations: never `db:migrate`** (drizzle journal out of sync). Add `drizzle/NNNN_*.sql` → `DATABASE_URL_ADMIN="<admin url>" npm run db:apply` (tracked in `schema_migrations`, re-run is a no-op). Apply to dev, then prod (admin URL in `.env.local.bak.prod-shared`), BEFORE deploying code that needs the schema.
 
-## Commands
+## Database
 
-```bash
-npm run dev          # Start dev server (Next.js)
-npm run build        # Production build
-npm run lint         # ESLint
-npm test             # Run all unit tests (tests/unit/*.test.ts)
-npm run test:format  # Run format tests only
-npm run test:validation  # Run validation tests only
+- Dev `.env.local` → Neon **dev branch**; prod/Vercel → Neon main. No local Docker DB.
+- Two coexisting layers: raw SQL `query()` / `withTransaction()` from `lib/db.ts` ($1 placeholders, most routes) and Drizzle at `@/src/db`. Schema changes ONLY in `src/db/schema.ts`.
+- **RLS enabled + FORCE-d** (policies live in Neon, source: `drizzle/rls-policies.sql`). App role `clockbill_app` = `DATABASE_URL`; admin/migrations = `DATABASE_URL_ADMIN` (neondb_owner). `lib/db.ts` binds `app.current_user_id` per authed query. Keep the app-level `WHERE user_id = $n` filter anyway (defense in depth).
+- Gotcha: psql via `DATABASE_URL` silently returns 0 rows on RLS tables — inspect data with `DATABASE_URL_ADMIN`.
+- All IDs are text UUIDs (`gen_random_uuid()::text`).
 
-# Database (Drizzle Kit)
-npm run db:generate  # Generate migration from schema changes
-npm run db:apply     # Apply pending drizzle/*.sql migrations (tracked in schema_migrations)
-npm run db:push      # Push schema directly (dev)
-npm run db:studio    # Open Drizzle Studio
-```
+## Auth
 
-**Migrations:** do NOT use `db:migrate` (drizzle-kit journal is out of sync). Apply via
-`DATABASE_URL_ADMIN="<admin url>" npm run db:apply` — run against the **dev** DB, then
-**prod** (`.env.local.bak.prod-shared`), BEFORE deploying code that depends on the new
-schema. The script applies pending `drizzle/NNNN_*.sql` files in order and records them
-in `schema_migrations`; re-running is a no-op ("0 pending").
+Better Auth (email/password + Google), instance `lib/auth/better-auth.ts`. Route guard: `getUser()` from `lib/auth.ts`; null → 401 `{ success: false, message: "לא מחובר" }`. BA tables are `user`/`session`/`account`/`verification` — the legacy `users`/`sessions` tables are obsolete.
 
-Tests use a custom runner (`tests/run-tests.ts`) with `tsx`, not a framework like Jest/Vitest. Run a single test: `npx tsx tests/unit/format.test.ts`
+## Conventions
 
-## Architecture
+- API responses: `{ success, data?, message?, error_code? }`; user-facing messages in Hebrew.
+- Validation schemas live in `lib/schemas/` (this overrides the global `src/schemas` rule).
+- Radix ignores `<html dir>` — RTL comes from `Direction.Provider` in `components/providers.tsx`; don't remove it.
 
-### Dual Database Layer
+## Design system — ClickHouse dark
 
-The codebase has two coexisting database access patterns:
+Tokens in `app/[locale]/globals.css` under `@theme inline`. **Never hardcode design values** — no `bg-white`/`text-black`/`bg-gray-*`/hex in app UI (PDF templates `*pdf*` are the only light exception).
 
-1. **Raw SQL via `lib/db.ts`** — `query()` function using `pg` Pool with `$1, $2` parameterized placeholders. Used by most API routes. Also has `withTransaction()` for transactional operations.
-2. **Drizzle ORM via `src/db/index.ts`** — Type-safe queries using schema from `src/db/schema.ts`. Available for new code at `import { db } from "@/src/db"`.
-
-Schema is defined in `src/db/schema.ts` (Drizzle) and also duplicated as raw SQL in `lib/db.ts:initSchema()` (legacy, deprecated). Only modify `src/db/schema.ts` for schema changes.
-
-### Auth Pattern
-
-**Better Auth** (email/password + Google), instance in `lib/auth/better-auth.ts`, Drizzle adapter, BA tables `user`/`session`/`account`/`verification`. Client: `lib/auth/client.ts`. Handler: `app/api/auth/[...all]/route.ts`. The legacy `users`/`sessions` tables are obsolete. Every API route follows this pattern:
-
-```typescript
-const user = await getUser(); // lib/auth.ts — reads the Better Auth session
-if (!user) {
-  return NextResponse.json({ success: false, message: "לא מחובר" }, { status: 401 });
-}
-// All queries MUST filter by user.id for data isolation
-```
-
-`getUser()` returns `{ id, email, emailVerified, role }` or `null`. Google login needs `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`.
-
-**Row-Level Security is ENABLED.** The app connects as the restricted role `clockbill_app` (`DATABASE_URL`); migrations use the privileged `DATABASE_URL_ADMIN`. `lib/db.ts` sets `app.current_user_id` (transaction-local) per authed query — resolved from an explicit in-frame context (`setUserContext`, signup hook) or the BA session (`getSessionUserId`, cached; needed because `enterWith` from `getUser()` doesn't reach the Next route frame). Policies live in Neon (`drizzle/rls-policies.sql`), FORCE-d on user_profiles/clients/projects/tasks/time_entries/report_presets/custom_tags. Keep the app-level `WHERE user_id = $` filter too (defense in depth). **Prod TODO:** set Vercel `DATABASE_URL`=clockbill_app + `DATABASE_URL_ADMIN`=neondb_owner.
-
-### API Routes
-
-All under `app/api/`. Use raw `query()` from `lib/db.ts` with dynamic import: `const { query } = await import("@/lib/db")`. Return `NextResponse.json()` with `{ success: boolean, ... }` shape. Error messages are in Hebrew for user-facing strings.
-
-### Key Libraries
-
-- `@/lib/format.ts` — Number/currency/date formatting
-- `@/lib/validation.ts` — Input validation schemas
-- `@/lib/env.ts` — Env var validation with Hebrew error messages, lazy-loaded
-- `@/lib/fixed-charges.ts` — Fixed monthly charge calculations for reports
-- `@/lib/storage.ts` — File storage abstraction (local dev / Vercel Blob prod)
-
-### Frontend
-
-- Next.js 16 App Router with `app/` directory
-- Root layout: `<html lang="he" dir="rtl">` with **Heebo** font (Hebrew+Latin) + JetBrains Mono
-- Tailwind CSS v4 with `@theme inline` pattern in `globals.css`
-- shadcn/ui components in `components/ui/`
-- Path alias: `@/*` maps to project root
-
-## Design System — ClickHouse (dark)
-
-The app uses a **ClickHouse-inspired** dark theme: near-black canvas, electric-yellow
-accent, white type, hairline borders, **no drop shadows** (depth comes from
-canvas/surface contrast). All tokens live in `app/globals.css` under `@theme inline`.
-
-**🚫 NEVER hardcode design values. ALWAYS use the design tokens.**
-
-- **Colors** — use the semantic Tailwind token classes, never raw colors:
-  - Surfaces: `bg-background` (#0a0a0a), `bg-surface`, `bg-card` (#1a1a1a), `bg-card-elevated`.
-  - Text: `text-foreground` (white), `text-muted-foreground`.
-  - Accent: `bg-primary` / `bg-accent` = electric yellow (#faff69). **On a yellow background, text MUST be `text-primary-foreground` / `text-accent-foreground` (black) — never `text-white`** (low contrast).
-  - Borders: `border-border` (hairline #2a2a2a), `border-border-strong`. Focus ring: `ring-ring` (yellow).
-  - Semantic: `destructive` (red, white fg), `success` (green, `success-foreground`).
-  - ❌ No `bg-white`, `text-black`, `bg-gray-*`, or `bg-[#hex]` in app UI (PDF templates under `*pdf*` are the only exception — printed pages stay light).
-- **Radius** — `rounded-[var(--radius)]` (8px, controls) or `rounded-[var(--radius-card)]` (12px, cards). Never `rounded-[14px]` or other hardcoded px.
-- **Fonts** — `font-sans` (Heebo) for UI, `font-mono` (JetBrains Mono) for numbers/timers. Use `tabular-nums` for aligned figures; `.timer-display` for hero timer digits.
-- **To change the theme**, edit the token VALUES in `globals.css` `@theme` — do not touch components. Token names are stable so the whole app re-themes from one place.
-- **Mobile**: inputs are forced to 16px under 640px (prevents iOS zoom) — keep it. Tap targets ≥44px.
-
-### Database
-
-- **Dev:** PostgreSQL via Docker container `clockbill-db` on port 5432 (user: `clockbill`, pass: `clockbill_dev`, db: `clockbill`)
-- **Prod:** Neon PostgreSQL
-- Drizzle ORM configured for `postgresql` dialect
-- All IDs are text (UUIDs generated as `gen_random_uuid()::text`)
-
-## Important Conventions
-
-- All UI text is Hebrew. Error messages in API responses use Hebrew for user-facing strings
-- RTL layout: use logical CSS properties (`ps-4` not `pl-4`, `me-2` not `mr-2`)
-- Every database query touching user data MUST include `user_id` filter — no cross-tenant data access
-- API response shape: `{ success: boolean, data?: ..., message?: string }`
-- Env vars loaded from `.env.local`: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_APP_URL`
+- Yellow accent (`bg-primary`/`bg-accent`) → text MUST be `text-primary-foreground`/`text-accent-foreground` (black), never white. No drop shadows — depth via surface contrast.
+- Radius: `rounded-[var(--radius)]` (controls) / `rounded-[var(--radius-card)]` (cards). Numbers/timers: `font-mono` + `tabular-nums`.
+- Mobile: inputs forced to 16px under 640px (iOS zoom) — keep it; tap targets ≥44px.
