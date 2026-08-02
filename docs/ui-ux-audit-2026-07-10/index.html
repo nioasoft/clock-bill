@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ClockBill - סקירת UI/UX ותוכנית מוצר</title>
+  <meta name="description" content="סקירת UI/UX מלאה של ClockBill, כולל מסע משתמש, סדר עדיפויות, המחשות עיצוב ותוכנית עבודה.">
+  <style>
+    :root{--bg:#090a0a;--surface:#121414;--surface2:#181b1b;--line:#2a2e2d;--text:#f5f6f1;--muted:#a8aeaa;--lime:#f2ff54;--green:#6ce6a0;--orange:#ffbc6a;--red:#ff7d7d;--blue:#7fc7ff;--r:22px}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 80% 0,#1b211c 0,transparent 30%),var(--bg);color:var(--text);font-family:Arial,"Noto Sans Hebrew",sans-serif;line-height:1.65}a{color:inherit}button{font:inherit}.wrap{width:min(1180px,calc(100% - 32px));margin:auto}.top{position:sticky;top:0;z-index:20;background:#090a0adf;backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}.top .wrap{min-height:64px;display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{font-weight:900}.brand i{color:var(--lime);font-style:normal}.nav{display:flex;gap:18px;color:var(--muted);font-size:14px}.nav a{text-decoration:none}.hero{padding:90px 0 56px}.eyebrow{display:inline-flex;gap:8px;align-items:center;border:1px solid #39403d;border-radius:999px;padding:7px 13px;color:#c8ceca;font-size:13px}.dot{width:8px;height:8px;border-radius:50%;background:var(--lime);box-shadow:0 0 16px var(--lime)}h1{font-size:clamp(44px,7vw,88px);line-height:1.03;letter-spacing:-.045em;max-width:950px;margin:24px 0}h1 span,.accent{color:var(--lime)}.lead{font-size:21px;max-width:800px;color:#c5cac7}.meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}.pill{border:1px solid var(--line);border-radius:999px;padding:8px 12px;color:var(--muted);font-size:13px}.callout{margin-top:38px;background:linear-gradient(120deg,#1c231b,#111412);border:1px solid #3c4733;border-radius:var(--r);padding:24px;font-size:20px}.section{padding:64px 0;border-top:1px solid var(--line)}h2{font-size:clamp(30px,4vw,52px);line-height:1.15;margin:0 0 14px;letter-spacing:-.03em}h3{font-size:22px;line-height:1.3;margin:0 0 8px}h4{font-size:16px;margin:0 0 6px}.intro{max-width:800px;color:var(--muted);margin:0 0 30px}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}.card{background:linear-gradient(180deg,#151817,#111313);border:1px solid var(--line);border-radius:var(--r);padding:22px}.span4{grid-column:span 4}.span6{grid-column:span 6}.span8{grid-column:span 8}.span12{grid-column:span 12}.score{font-size:48px;font-weight:900;line-height:1;color:var(--lime)}.muted{color:var(--muted)}.good{color:var(--green)}.warn{color:var(--orange)}.bad{color:var(--red)}.tag{display:inline-block;font-size:12px;font-weight:800;border-radius:999px;padding:4px 9px;background:#2a2e2d}.p1{color:#160b0b;background:var(--red)}.p2{color:#171007;background:var(--orange)}.p3{color:#08110b;background:var(--green)}.priority{display:grid;grid-template-columns:52px 1fr auto;gap:18px;align-items:start;padding:20px 0;border-bottom:1px solid var(--line)}.priority:last-child{border:0}.num{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:var(--lime);color:#10110b;font-weight:900}.priority p{margin:5px 0 0;color:var(--muted)}.journey{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.step{position:relative;min-height:180px}.step b{color:var(--lime)}.step ul{padding-inline-start:20px;margin:10px 0;color:var(--muted);font-size:14px}.personas .card{min-height:230px}.quote{font-size:19px;color:#e3e7e4}.matrix{width:100%;border-collapse:collapse;font-size:14px}.matrix th,.matrix td{text-align:right;vertical-align:top;padding:14px 12px;border-bottom:1px solid var(--line)}.matrix th{position:sticky;top:64px;background:#111313;color:var(--lime);z-index:3}.matrix td:first-child{font-weight:800;white-space:nowrap}.before-after{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:stretch}.shot{background:#050606;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}.shot figcaption{padding:14px 18px;border-bottom:1px solid var(--line);font-weight:800}.shot img{width:100%;display:block}.crop{height:410px;object-fit:cover;object-position:top}.mock{direction:rtl;min-height:410px;padding:22px;background:#0d0f0f}.mockbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:26px}.logo{font-weight:900}.btn{display:inline-block;border:0;border-radius:12px;padding:11px 16px;font-weight:800;background:var(--lime);color:#10110b}.btn2{border:1px solid var(--line);background:#1b1e1d;color:white}.mock h3{font-size:34px;max-width:470px}.mock p{color:var(--muted)}.proof{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}.proof span{border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px}.trail{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}.trail>div{border:1px solid var(--line);border-radius:15px;padding:14px}.trail strong{display:block;font-size:22px}.trail .hot{border-color:#8d9637;background:#1d2113}.action{border:1px solid #454b48;border-radius:16px;padding:15px;margin-top:12px;display:flex;justify-content:space-between;gap:12px}.sheet{max-width:360px;margin:auto;background:#171a19;border:1px solid #39403c;border-radius:28px;padding:20px;box-shadow:0 24px 80px #000}.field{border:1px solid #3a403d;border-radius:13px;padding:12px;margin-top:10px;color:#dce0dd}.recent{display:flex;gap:8px;overflow:hidden}.recent span{white-space:nowrap;border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px}.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.steps div{padding:12px;border:1px solid var(--line);border-radius:14px}.steps .active{background:#202611;border-color:#99a535}.check{display:flex;gap:10px;align-items:flex-start;margin:14px 0}.check i{font-style:normal;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#294431;color:var(--green)}.feature{min-height:210px}.metric{font-size:13px;color:var(--blue);margin-top:15px}.sources li{margin-bottom:9px}.note{font-size:13px;color:var(--muted);border-inline-start:3px solid var(--lime);padding-inline-start:12px}.footer{padding:50px 0 80px;color:var(--muted)}
+    @media(max-width:850px){.nav{display:none}.span4,.span6,.span8{grid-column:span 12}.journey{grid-template-columns:1fr}.before-after{grid-template-columns:1fr}.trail,.steps{grid-template-columns:1fr 1fr}.matrix{display:block;overflow:auto;white-space:normal}.hero{padding-top:60px}.priority{grid-template-columns:44px 1fr}.priority .tag{grid-column:2}.crop{height:330px}}
+    @media print{.top{display:none}.section{break-inside:avoid}.card,.shot{break-inside:avoid}body{background:white;color:#111}.card{background:white}.muted,.intro,.priority p,.mock p{color:#444}}
+  </style>
+</head>
+<body>
+  <header class="top"><div class="wrap"><div class="brand">Clock<i>Bill</i> / בדיקת מוצר</div><nav class="nav" aria-label="ניווט בדוח"><a href="#summary">סיכום</a><a href="#journey">המסע</a><a href="#screens">כל המסכים</a><a href="#concepts">המחשות</a><a href="#roadmap">תוכנית</a></nav></div></header>
+
+  <main>
+    <section class="hero"><div class="wrap">
+      <span class="eyebrow"><span class="dot"></span>סקירת UI/UX מלאה · 10 ביולי 2026</span>
+      <h1>ClockBill צריך להרגיש כמו <span>מסלול כסף אחד</span>, לא כמו אוסף כלי ניהול.</h1>
+      <p class="lead">המוצר כבר נאה, עקבי ומדויק. החסם הבא אינו צבע או כרטיס נוסף. הוא החיבור בין הרגע שבו העבודה קרתה לבין הרגע שבו הכסף נכנס. הדוח בודק את כל המסכים והפלואים ומציע שפה מוצרית אחת: רשמתי, בדקתי, חייבתי, קיבלתי.</p>
+      <div class="meta"><span class="pill">30 מסכי Route</span><span class="pill">113 קובצי UI שנבדקו</span><span class="pill">עברית, אנגלית, RTL ו־LTR</span><span class="pill">דסקטופ ומובייל</span><span class="pill">WCAG 2.2</span></div>
+      <div class="callout"><strong>החלטת המוצר:</strong> לשמור על המראה הכהה והליים, לקצר את השיווק, להפוך את הבית ל־Money Trail, ולבנות פעולת “רישום עבודה” אחת מהירה שמסתעפת רק כשצריך.</div>
+    </div></section>
+
+    <section class="section" id="summary"><div class="wrap">
+      <h2>תמונת מצב</h2><p class="intro">הציונים הם כלי לתיעדוף. הם משלבים בדיקה בדפדפן, מעבר על הקוד, מסע משתמש, רספונסיביות, נגישות ועקביות בין שפות.</p>
+      <div class="grid">
+        <article class="card span4"><div class="score">24/40</div><h3>שימושיות היוריסטית</h3><p class="muted">טובה בבסיס, אך עומס החלטות, היררכיה אחידה מדי וחוסר חיבור בין השלבים פוגעים במהירות.</p></article>
+        <article class="card span4"><div class="score">12/20</div><h3>איכות ממשק טכנית</h3><p class="muted">מבנה RTL ו־i18n טובים. יעדי מגע קטנים, טקסט זעיר ומסכים ארוכים דורשים טיפול.</p></article>
+        <article class="card span4"><div class="score">3.1/5</div><h3>בהירות מסע הכסף</h3><p class="muted">המסר קיים בשיווק, אבל עדיין לא מנהל את חוויית המוצר אחרי הכניסה.</p></article>
+        <article class="card span6"><h3 class="good">מה עובד</h3><ul><li>זהות חזותית מובחנת ולא גנרית.</li><li>Hero עם הבטחה חדה: העבודה והכסף באותו מקום.</li><li>תמיכה טובה ב־RTL/LTR ובמטבע בדף האנגלי הציבורי.</li><li>Skip link, landmarks, מצבי טעינה, הודעות שגיאה ורכיבי Empty State.</li><li>קיימות כמה דרכי רישום: טיימר, שעות ידניות, פריטים ומשימות.</li></ul></article>
+        <article class="card span6"><h3 class="warn">מה מעכב</h3><ul><li>הבית מציג שמונה מדדים דומים, רבים מהם אפס, בלי “מה לעשות עכשיו”.</li><li>רישום עבודה מפוצל בין כמה מסכים ומודלים.</li><li>מסך החיוב בנוי כטאבים של פיצ'רים ולא כפלואו עסקי.</li><li>במובייל המדדים נערמים והפעולה החשובה יורדת מתחת לקפל.</li><li>האתר השיווקי מסביר היטב, אך חוזר על עצמו ונמשך מעל 11,000px במובייל.</li></ul></article>
+      </div>
+    </div></section>
+
+    <section class="section"><div class="wrap"><h2>12 פעולות לפי סדר</h2><p class="intro">ההמלצה היא לא לבצע Redesign מלא. עדיף שישה שינויים ממוקדים שמחזירים ערך מהר, ואז שכבה שנייה של האצה ואוטומציה.</p>
+      <div class="card">
+        <div class="priority"><span class="num">1</span><div><h3>להפוך את הדשבורד למסלול כסף</h3><p>ארבעה שלבים: נרשם, מוכן לחיוב, נשלח, התקבל. בכל שלב סכום, כמות ופעולה אחת. להציג חריגים: עבודה בלי פרויקט, חיוב שלא נשלח, תשלום באיחור.</p></div><span class="tag p1">P1</span></div>
+        <div class="priority"><span class="num">2</span><div><h3>פעולת רישום אחת</h3><p>כפתור אחד שפותח Quick Capture. כברירת מחדל: הקשר אחרון, זמן/כמות ותיאור. שדות מתקדמים נפתחים רק לפי הצורך.</p></div><span class="tag p1">P1</span></div>
+        <div class="priority"><span class="num">3</span><div><h3>Billing Run במקום טאבים</h3><p>לקוח → עבודה שלא חויבה → בדיקה → מסמך → שליחה → תשלום. לשמור טיוטה בכל צעד ולהראות מה חסר.</p></div><span class="tag p1">P1</span></div>
+        <div class="priority"><span class="num">4</span><div><h3>סגירת יום: “לא שכחת משהו?”</h3><p>סיכום יומי קצר עם פערים, טיימרים פתוחים ומשימות שהושלמו ללא רישום. זה פוגע בדיוק בבעיה שהמוצר מבטיח לפתור.</p></div><span class="tag p1">P1</span></div>
+        <div class="priority"><span class="num">5</span><div><h3>לתקן יעדי מגע וטקסט זעיר</h3><p>כפתור סגירת משימה נמדד סביב 16–17px, ניווט מובייל סביב 11px, תוויות מדדים סביב 10px. מינימום 24px לפי WCAG 2.2, ומומלץ 44px לפעולות נפוצות.</p></div><span class="tag p1">P1</span></div>
+        <div class="priority"><span class="num">6</span><div><h3>לקצר את דף הבית השיווקי</h3><p>לשמור Hero, איך זה עובד, הוכחה, התאמה לקהלים, מחיר ו־FAQ קצר. לאחד אזורים שחוזרים על אותה הבטחה. להעביר את בורר 12 הערכות לדף מוצר משני.</p></div><span class="tag p1">P1</span></div>
+        <div class="priority"><span class="num">7</span><div><h3>Onboarding מבוסס הפעלה</h3><p>Checklist קבוע: עסק, לקוח ראשון, פרויקט ותעריף, רישום ראשון, חיוב ראשון. לא מודל חד־פעמי שנעלם.</p></div><span class="tag p2">P2</span></div>
+        <div class="priority"><span class="num">8</span><div><h3>לשמור הקשר ולהציע Recent</h3><p>לקוח, פרויקט, תעריף וסוג רישום אחרונים. תבניות לעבודות חוזרות. קיצורי מקלדת למשתמש כבד.</p></div><span class="tag p2">P2</span></div>
+        <div class="priority"><span class="num">9</span><div><h3>לפצל את ההגדרות לפי משימות</h3><p>פרופיל, עסק ומסמכים, תשלומים, מראה, חשבון. תפריט משנה, שמירה דביקה ותצוגה מקדימה לצד העריכה.</p></div><span class="tag p2">P2</span></div>
+        <div class="priority"><span class="num">10</span><div><h3>להוסיף Undo, Autosave ומצב טיוטה</h3><p>במיוחד ברישומים, משימות ודוחות. משתמש צריך להיות חופשי לנסות בלי לחשוש מאובדן מידע.</p></div><span class="tag p2">P2</span></div>
+        <div class="priority"><span class="num">11</span><div><h3>לבדוק התמדה של אנגלית במסכים מוגנים</h3><p>בבדיקה, קישור ישיר ל־/en/dashboard חזר לעברית. האתר הציבורי באנגלית תקין ומציג דולר. נדרש E2E ללוקאל אחרי Login ו־Redirect.</p></div><span class="tag p2">לשחזור</span></div>
+        <div class="priority"><span class="num">12</span><div><h3>לנקות חוב מערכת עיצוב</h3><p>37 התרעות סטטיות: בעיקר side tabs, הדגשות מסגרת בכרטיסים וערכי טיפוגרפיה ב־PDF. לתעד את ה־PDF כמערכת Light/Print נפרדת.</p></div><span class="tag p3">P3</span></div>
+      </div>
+    </div></section>
+
+    <section class="section" id="journey"><div class="wrap"><h2>מסע המשתמש המלא</h2><p class="intro">המסע נבדק כשרשרת אחת. בכל שלב מופיעים היעד, החיכוך והעיקרון המוצע.</p>
+      <div class="journey">
+        <article class="card step"><b>1. מבין</b><h3>שיווק ומחיר</h3><ul><li>יעד: להבין למה זה עדיף</li><li>חיכוך: עמוד ארוך וחזרתי</li><li>תיקון: מסר, הוכחה, מחיר</li></ul></article>
+        <article class="card step"><b>2. מתחיל</b><h3>הרשמה והקמה</h3><ul><li>יעד: להגיע לערך ראשון</li><li>חיכוך: הרבה פרטים ותלות בין ישויות</li><li>תיקון: Checklist ודוגמה</li></ul></article>
+        <article class="card step"><b>3. רושם</b><h3>טיימר, משימה, שעות</h3><ul><li>יעד: לא לפספס עבודה</li><li>חיכוך: כמה כניסות ושדות</li><li>תיקון: Quick Capture אחד</li></ul></article>
+        <article class="card step"><b>4. מחייב</b><h3>בדיקה ומסמך</h3><ul><li>יעד: להפוך עבודה לכסף</li><li>חיכוך: טאבים ומצב ריק</li><li>תיקון: Billing Run מודרך</li></ul></article>
+        <article class="card step"><b>5. סוגר</b><h3>שליחה ותשלום</h3><ul><li>יעד: לדעת מה נכנס</li><li>חיכוך: המעקב לא מנהל את הבית</li><li>תיקון: סטטוס, תזכורת וחריגה</li></ul></article>
+      </div>
+      <h3 style="margin-top:32px">למי מתכננים</h3>
+      <div class="grid personas">
+        <article class="card span4"><h3>נועה, חדשה בעסק</h3><p class="quote">“תגיד לי מה הצעד הבא, בלי שאצטרך להבין את מבנה המערכת.”</p><p class="muted">צריכה דוגמה, Checklist, שפה פשוטה והצלחה ראשונה בתוך דקות.</p></article>
+        <article class="card span4"><h3>דניאל, משתמש כבד</h3><p class="quote">“אל תפתח לי טופס מלא על כל רישום.”</p><p class="muted">צריך Recent, תבניות, Bulk actions, קיצורים ודוחות חוזרים.</p></article>
+        <article class="card span4"><h3>רוני, מהנייד</h3><p class="quote">“סיימתי פגישה. יש לי עשר שניות לרשום אותה.”</p><p class="muted">צריך פעולה ביד אחת, אופליין, טיוטה וסגירת יום.</p></article>
+      </div>
+    </div></section>
+
+    <section class="section" id="screens"><div class="wrap"><h2>מפת כל המסכים</h2><p class="intro">הטבלה כוללת את המסכים הציבוריים, אזור העבודה, מסכי פרטים, הגדרות ואדמין. “עכשיו” מציין תיקון שאפשר להתחיל בלי שינוי ארכיטקטורה.</p>
+      <div class="card" style="overflow:auto"><table class="matrix"><thead><tr><th>מסך / פלואו</th><th>מה טוב</th><th>בעיה</th><th>הצעה</th><th>עדיפות</th></tr></thead><tbody>
+        <tr><td>דף הבית</td><td>Hero חזק וזהות ברורה</td><td>ארוך וחזרתי, 11,346px במובייל</td><td>לקצר ל־6 אזורים ולהקדים הוכחה</td><td>P1</td></tr>
+        <tr><td>מחיר</td><td>שלוש חבילות פשוטות</td><td>מנותק מהניווט ומהאתר, toggle קטן</td><td>השוואה תוצאתית, חבילה מומלצת, FAQ קצר</td><td>P1</td></tr>
+        <tr><td>הרשמה</td><td>שדות ברורים ותנאים</td><td>טופס ארוך לפני ערך</td><td>פחות שדות, הסבר למה צריך, המשך מודרך</td><td>P1</td></tr>
+        <tr><td>כניסה</td><td>משימה יחידה</td><td>חסר חיבור לערך שמחכה בפנים</td><td>מסר קצר, Magic link בעתיד</td><td>P3</td></tr>
+        <tr><td>שכחתי / איפוס</td><td>פלואו מופרד</td><td>נדרש חיזוק Success ו־Expiry</td><td>מסך אישור, resend ומצב קישור שפג</td><td>P2</td></tr>
+        <tr><td>דשבורד</td><td>סיכום רחב ופעולות מהירות</td><td>8 כרטיסי אפס, אין צעד הבא</td><td>Money Trail וחריגים לפעולה</td><td>P1</td></tr>
+        <tr><td>רישומים</td><td>טבלה, סינון ועריכה</td><td>מודל צפוף והרבה יעדי מגע קטנים</td><td>Quick Capture, פרטים מתקדמים מקופלים</td><td>P1</td></tr>
+        <tr><td>טיימר התחלה</td><td>נגיש מכל מסך</td><td>בחירת הקשר עלולה לעכב</td><td>Recent context והתחלה מיידית</td><td>P1</td></tr>
+        <tr><td>טיימר פעיל / עצירה</td><td>נראות קבועה</td><td>הפקדים קטנים סביב 30–32px</td><td>44px, עצירה עם Undo ועריכה מהירה</td><td>P1</td></tr>
+        <tr><td>משימות</td><td>Kanban מובן</td><td>7 החלטות במודל, X סביב 17px</td><td>Quick add בעמודה, Advanced, יעד 44px</td><td>P1</td></tr>
+        <tr><td>לקוחות</td><td>ישות עסקית ברורה</td><td>כפתורי עריכה קטנים</td><td>שורה לחיצה ותפריט פעולות 44px</td><td>P1</td></tr>
+        <tr><td>פרטי לקוח</td><td>הקשר מרוכז</td><td>המידע והפעולות מתחרים</td><td>תקציר יתרה, Timeline ופעולה הבאה</td><td>P2</td></tr>
+        <tr><td>פרויקטים</td><td>Active/Archive</td><td>פילטרים בגובה 34px</td><td>Tabs רחבים, יתרה ורישום מהיר</td><td>P2</td></tr>
+        <tr><td>פרטי פרויקט</td><td>קושר משימה, תעריף ועבודה</td><td>מסך ארוך וריבוי אחריות</td><td>Overview / Work / Billing עם Summary דביק</td><td>P2</td></tr>
+        <tr><td>דוחות: לחיוב</td><td>סכום נבחר ו־CTA דביק</td><td>מתחיל במצב ריק גדול</td><td>Checklist ובחירת לקוח עם המלצה</td><td>P1</td></tr>
+        <tr><td>דוחות: מסמכים</td><td>ארכיון עסקי</td><td>מונח Feature ולא תוצאה</td><td>סטטוסים טיוטה/נשלח/נצפה/שולם</td><td>P1</td></tr>
+        <tr><td>דוח חד־פעמי</td><td>גמישות</td><td>קובץ UI מעל 1,300 שורות</td><td>Wizard קטן ופירוק רכיבים/מצבים</td><td>P2</td></tr>
+        <tr><td>פרטי מסמך</td><td>תצוגה עשירה</td><td>הרבה פעולות סביב מסמך</td><td>Timeline שליחה, צפייה, תשלום ותזכורת</td><td>P2</td></tr>
+        <tr><td>תשלומים</td><td>רישום כסף שנכנס</td><td>לא מספיק בולט במסלול הראשי</td><td>התאמה למסמך, חלקי/מלא, יתרה</td><td>P1</td></tr>
+        <tr><td>קישור ציבורי</td><td>שיתוף בלי חשבון</td><td>אמון ונגישות קריטיים</td><td>מותג עסק, סכום, סטטוס, הורדה נגישה</td><td>P1</td></tr>
+        <tr><td>חיפוש גלובלי</td><td>גישה רוחבית</td><td>יכול להיות Finder בלבד</td><td>Command palette עם פעולות, לא רק תוצאות</td><td>P2</td></tr>
+        <tr><td>Feedback / Contact</td><td>ערוץ משוב קיים</td><td>שני מסלולים מקבילים</td><td>עזרה עקבית, קטגוריה, Screenshot בהסכמה</td><td>P3</td></tr>
+        <tr><td>הגדרות עסק</td><td>כיסוי רחב</td><td>עמוד 2,621px וקובץ 1,866 שורות</td><td>תפריט משנה, Autosave, Preview צדדי</td><td>P2</td></tr>
+        <tr><td>מראה</td><td>12 ערכות וזהות</td><td>בחירה גבוהה בחשיבותה מהעבודה</td><td>Preview קטן ולדחות לאחר הפעלה ראשונה</td><td>P3</td></tr>
+        <tr><td>חשבון ושדרוג</td><td>מופרד מפרטי עסק</td><td>חסר הסבר השפעה לפני פעולה</td><td>תוכנית, שימוש, Export ומחיקה ברורים</td><td>P2</td></tr>
+        <tr><td>אדמין / סטטיסטיקות</td><td>אחידות עם המוצר</td><td>כרטיסים דקורטיביים, 6 התרעות Accent</td><td>תור תפעולי, חריגות ומגמות</td><td>P3</td></tr>
+        <tr><td>משתמשים / פרטי משתמש</td><td>כלי תמיכה</td><td>סיכון לפעולות בלתי הפיכות</td><td>Reason, Audit log, confirmation ו־undo כשאפשר</td><td>P2</td></tr>
+        <tr><td>Privacy / Terms</td><td>מסכים ייעודיים</td><td>טקסט משפטי ארוך</td><td>תקציר אנושי, תוכן עניינים ותאריך</td><td>P2</td></tr>
+        <tr><td>נגישות</td><td>הצהרה קיימת</td><td>יש לאמת פרטי קשר ותאריך בדיקה</td><td>רכז, ערוצים, חריגים, תאריך ועדכון קבוע</td><td>P1</td></tr>
+        <tr><td>Offline / Not found</td><td>מצבים קיימים</td><td>עלולים להחזיר משתמש לנקודת אפס</td><td>טיוטות מקומיות, Retry והמשך למשימה אחרונה</td><td>P2</td></tr>
+      </tbody></table></div>
+    </div></section>
+
+    <section class="section" id="concepts"><div class="wrap"><h2>לפני ואחרי: המחשות עיצוב</h2><p class="intro">ההמחשות הן כיוון אינטראקציה והיררכיה, לא Pixel-perfect. הן נשענות על השפה הקיימת כדי שהשינוי ירגיש ClockBill.</p>
+
+      <div class="before-after">
+        <figure class="shot"><figcaption>מקור: Hero קיים</figcaption><img class="crop" src="assets/original-marketing-desktop.png" alt="צילום מסך של דף הבית הקיים"></figure>
+        <div class="shot"><div class="mock"><div class="mockbar"><span class="logo">ClockBill</span><button class="btn">התחל בחינם</button></div><span class="eyebrow">רישום עבודה שמגיע עד התשלום</span><h3>לא לפספס שעה. לא לשכוח חיוב.</h3><p>רושמים בזמן העבודה, בודקים מה מוכן לחיוב ורואים מה כבר שולם. מסלול אחד, בלי גיליונות ובלי זיכרון.</p><div><button class="btn">רשום עבודה ראשונה</button> <button class="btn btn2">ראה 90 שניות</button></div><div class="proof"><span>14 יום בלי כרטיס</span><span>עברית ואנגלית</span><span>₪ / $ / €</span></div></div></div>
+      </div>
+      <p class="note">שינוי מוצע: פחות סופרלטיבים, יותר בעיה מוכרת ותוצאה. אחרי ה־Hero: אנימציה קצרה של רשמתי → חייבתי → קיבלתי, ואז הוכחה ומחיר.</p>
+
+      <div class="before-after" style="margin-top:38px">
+        <figure class="shot"><figcaption>מקור: דשבורד במובייל</figcaption><img class="crop" src="assets/original-dashboard-mobile.png" alt="צילום מסך של הדשבורד הקיים במובייל"></figure>
+        <div class="shot"><div class="mock"><div class="mockbar"><span>יום ה', 10 ביולי</span><button class="btn">+ רישום</button></div><h3>הכסף שלך החודש</h3><div class="trail"><div><small>נרשם</small><strong>₪8,420</strong><small>32 שעות</small></div><div class="hot"><small>מוכן לחיוב</small><strong>₪3,180</strong><small>2 לקוחות</small></div><div><small>נשלח</small><strong>₪4,900</strong><small>ממתין</small></div><div><small>נכנס</small><strong>₪11,200</strong><small>החודש</small></div></div><div class="action"><span><strong>3 שעות בלי תיאור</strong><br><small class="muted">כדאי להשלים לפני החיוב</small></span><button class="btn btn2">בדיקה</button></div><div class="action"><span><strong>חיוב אחד באיחור</strong><br><small class="muted">7 ימים · ₪2,400</small></span><button class="btn">תזכורת</button></div></div></div>
+      </div>
+      <p class="note">שינוי מוצע: ארבעה שלבים עם סכום ופעולה. לא להציג שמונה כרטיסים כשאין נתונים. Empty state צריך להיות צעד, לא אפס.</p>
+
+      <div class="before-after" style="margin-top:38px">
+        <figure class="shot"><figcaption>מקור: דף מחיר</figcaption><img class="crop" src="assets/original-pricing-desktop.png" alt="צילום מסך של דף המחיר הקיים"></figure>
+        <div class="shot"><div class="mock"><span class="eyebrow">רישום חינם · תשלום רק כשצריך לשלוח</span><h3>בחר לפי הדרך שבה אתה עובד</h3><div class="trail" style="grid-template-columns:repeat(3,1fr)"><div><small>מתחיל</small><strong>₪0</strong><p>טיימר, רישומים ולקוח ראשון.</p></div><div class="hot"><small>הכי מתאים לפרילנסר פעיל</small><strong>₪39</strong><p>חיובים, מסמכים ומעקב תשלום.</p><button class="btn">נסה 14 יום</button></div><div><small>סטודיו</small><strong>₪79</strong><p>כמה מותגים, תבניות וייצוא.</p></div></div><p>מתחת לכרטיסים: טבלת 8 יכולות בלבד, שאלות על ביטול, מטבע ומסמכים, וקישור לתמיכה.</p></div></div>
+      </div>
+
+      <div class="grid" style="margin-top:38px">
+        <div class="card span6"><h3>Quick Capture לנייד</h3><div class="sheet"><div class="mockbar"><strong>רישום עבודה</strong><span>×</span></div><div class="recent"><span>אתר Acme · ₪250/ש'</span><span>ייעוץ · ₪300/ש'</span></div><div class="field">משך · 01:30</div><div class="field">מה עשית? · אפיון מסך תשלום</div><div class="field">עוד פרטים ▾</div><button class="btn" style="width:100%;margin-top:14px">שמור ₪375</button></div><p class="muted">מראה את השווי לפני השמירה, זוכר הקשר אחרון ומשאיר הערות, תאריך וסוג חיוב תחת “עוד פרטים”.</p></div>
+        <div class="card span6"><h3>Billing Run מודרך</h3><div class="steps"><div>1<br><strong>לקוח</strong></div><div class="active">2<br><strong>עבודה</strong></div><div>3<br><strong>מסמך</strong></div><div>4<br><strong>שליחה</strong></div></div><div class="check"><i>✓</i><div><strong>14 רישומים נבחרו</strong><br><span class="muted">₪8,450 · 34:20 שעות</span></div></div><div class="check"><i>!</i><div><strong>לשני רישומים חסר תיאור</strong><br><span class="muted">אפשר לתקן כאן בלי לעזוב</span></div></div><button class="btn">המשך לתצוגה מקדימה</button><p class="muted">הסכום, הבעיות והשלב הבא גלויים תמיד. טיוטה נשמרת אוטומטית.</p></div>
+        <div class="card span6"><h3>Onboarding שלא נעלם</h3><div class="check"><i>✓</i><div>פרטי העסק</div></div><div class="check"><i>✓</i><div>לקוח ראשון</div></div><div class="check"><i>3</i><div><strong>פרויקט ותעריף</strong><br><span class="muted">כ־2 דקות</span></div></div><div class="check"><i>4</i><div>רישום ראשון</div></div><div class="check"><i>5</i><div>חיוב ראשון</div></div><p class="muted">אפשר לדלג, לחזור, ולהתחיל עם נתוני דוגמה. ההתקדמות נשארת בדשבורד עד לערך הראשון.</p></div>
+        <div class="card span6"><h3>הגדרות לפי משימה</h3><div class="action"><strong>העסק והמותג</strong><span>שם, לוגו, חתימה ›</span></div><div class="action"><strong>מסמכים ותשלומים</strong><span>עיצוב, בנק, מספור ›</span></div><div class="action"><strong>מראה ושפה</strong><span>ערכת נושא, מטבע ›</span></div><div class="action"><strong>חשבון ופרטיות</strong><span>תוכנית, ייצוא, מחיקה ›</span></div><p class="muted">כל אזור מקבל Summary, מצב שמירה ותצוגה מקדימה. אין עמוד יחיד של יותר מ־2,600px.</p></div>
+      </div>
+    </div></section>
+
+    <section class="section"><div class="wrap"><h2>מובייל, RTL ונגישות</h2><div class="grid">
+      <article class="card span4"><h3>יעדי מגע</h3><p>להגדיל סגירה, עריכה, פילטרים, טיימר וניווט. WCAG 2.2 מגדיר 24×24px כמינימום ברמת AA, עם חריגים. בפעולות תכופות ובמובייל יעד של 44px נוח יותר.</p></article>
+      <article class="card span4"><h3>טקסט וקריאות</h3><p>לא להשתמש ב־10–11px למדדי כסף או ניווט. Preview של PDF יכול להיות מוקטן, אבל צריך Zoom או Open preview. לבדוק ניגודיות של muted text בכל 12 הערכות.</p></article>
+      <article class="card span4"><h3>עברית ואנגלית</h3><p>האתר הציבורי עובר נכון ל־LTR ודולר. להוסיף בדיקות E2E להתמדה אחרי כניסה, Deep links, סכומים מעורבים ותאריכים. לעטוף סכומים ב־<code>&lt;bdi&gt;</code> או Unicode isolate.</p></article>
+      <article class="card span6"><h3>ארבעת המצבים</h3><p>בכל מסך נתונים: Loading עם skeleton ששומר פריסה, Empty עם פעולה אחת, Error בעברית עם Retry ו־request ID פנימי, Success עם feedback ו־Undo. מצב ריק צריך להסביר מה המשתמש יקבל אחרי הפעולה, לא רק לומר שאין נתונים.</p></article>
+      <article class="card span6"><h3>הצהרת נגישות</h3><p>להציג רמת התאמה, מה הונגש, מגבלות ידועות, פרטי רכז/אשת קשר, כמה ערוצי פנייה ותאריך עדכון. זו המלצת מוצר, לא חוות דעת משפטית; יש לאמת תחולה בישראל, בארה״ב ובמדינות היעד באירופה.</p></article>
+    </div></div></section>
+
+    <section class="section"><div class="wrap"><h2>פיצ'רים ששווה להוסיף</h2><p class="intro">רק פיצ'רים שמחזקים את הבטחת הליבה: לא לפספס עבודה ולעקוב עד הכסף.</p><div class="grid">
+      <article class="card span4 feature"><span class="tag p1">עכשיו</span><h3>End-of-day reconciliation</h3><p>השוואה בין משימות, טיימרים ורישומים. “סיימת משימה בלי לרשום זמן?”</p><div class="metric">מדד: אחוז ימים ללא פערים</div></article>
+      <article class="card span4 feature"><span class="tag p1">עכשיו</span><h3>Outstanding & reminders</h3><p>תור אחד של מסמכים שלא נצפו, הגיע מועד התשלום או עבר.</p><div class="metric">מדד: זמן ממוצע משליחה לתשלום</div></article>
+      <article class="card span4 feature"><span class="tag p1">עכשיו</span><h3>Recurring work templates</h3><p>תבנית לרטיינר, פגישה שבועית או פריט קבוע, עם אישור לפני רישום.</p><div class="metric">מדד: זמן לרישום חוזר</div></article>
+      <article class="card span4 feature"><span class="tag p2">אחר כך</span><h3>Import & capture inbox</h3><p>CSV, Calendar או הצעות מטיוטות. כל דבר נכנס ל־Inbox לבדיקה, לא אוטומטית לספרים.</p></article>
+      <article class="card span4 feature"><span class="tag p2">אחר כך</span><h3>Client portal</h3><p>מסמך, סטטוס, תשלום והערה במקום אחד, בלי יצירת חשבון חובה.</p></article>
+      <article class="card span4 feature"><span class="tag p2">אחר כך</span><h3>Multi-currency policy</h3><p>מטבע למסמך וללקוח, מטבע בסיס לדוחות, שער ותאריך שער גלויים. לא להסיק מטבע רק מהשפה.</p></article>
+      <article class="card span4 feature"><span class="tag p3">בחינה</span><h3>Payment reconciliation</h3><p>ייבוא בנק/Stripe/PayPal והתאמה מוצעת למסמך. המשתמש מאשר התאמה.</p></article>
+      <article class="card span4 feature"><span class="tag p3">בחינה</span><h3>Command palette</h3><p>חיפוש וגם פעולות: התחל טיימר, פתח לקוח, רשום תשלום, צור חיוב.</p></article>
+      <article class="card span4 feature"><span class="tag p3">בחינה</span><h3>Insights שאפשר לפעול עליהם</h3><p>לא “עבדת 42 שעות”, אלא “₪1,850 מוכנים לחיוב” ו“לקוח אחד משלם לאט ב־9 ימים”.</p></article>
+    </div></div></section>
+
+    <section class="section" id="roadmap"><div class="wrap"><h2>תוכנית ביצוע</h2><div class="grid">
+      <article class="card span4"><h3>0–2 שבועות</h3><ul><li>יעדי מגע וטקסט זעיר</li><li>Empty states עם פעולה</li><li>קיצור שיווק ותיקון מחיר</li><li>E2E לשפה, מטבע ו־RTL</li><li>אירועי מוצר בסיסיים</li></ul></article>
+      <article class="card span4"><h3>3–6 שבועות</h3><ul><li>Money Trail בדשבורד</li><li>Quick Capture</li><li>Checklist הפעלה</li><li>Recent context ו־Undo</li><li>ארגון מחדש להגדרות</li></ul></article>
+      <article class="card span4"><h3>7–12 שבועות</h3><ul><li>Billing Run</li><li>סגירת יום</li><li>מעקב חריגות ותזכורות</li><li>תבניות חוזרות</li><li>Client portal ראשוני</li></ul></article>
+      <article class="card span12"><h3>איך נדע שזה עבד</h3><div class="trail"><div><small>Activation</small><strong>&lt; 10 דק'</strong><small>עד רישום ראשון</small></div><div><small>Capture</small><strong>&gt; 90%</strong><small>עבודה ללא פער</small></div><div><small>Billing</small><strong>−30%</strong><small>זמן מסגירה לשליחה</small></div><div><small>Mobile</small><strong>&lt; 15 שנ'</strong><small>רישום מהיר</small></div></div><p class="muted">להוסיף: אחוז עבודה שנרשמה אך לא חויבה, זמן משליחה לתשלום, אחוז משתמשים שסיימו Checklist, נטישת טפסים, טעויות שנמנעו ו־support tickets לפי מסך.</p></article>
+    </div></div></section>
+
+    <section class="section"><div class="wrap"><h2>מתודולוגיה, ראיות ומגבלות</h2><div class="grid"><article class="card span6"><h3>מה נבדק</h3><ul><li>מיפוי Routes ורכיבי UI.</li><li>בדיקה ידנית בדפדפן בדסקטופ ובמובייל.</li><li>ממדי יעדי מגע, מבנה semantic, RTL/LTR וגלישה אופקית.</li><li>מסע שיווק → הרשמה → עבודה → חיוב → תשלום.</li><li>סריקה סטטית של מערכת העיצוב: 37 התרעות לבדיקה.</li><li>דפי מקור ציבוריים ודפי אפליקציה בסשן פיתוח מקומי.</li></ul><p class="note">צילומי האפליקציה בדוח צומצמו כדי לא לשמור שם, אימייל, פרטי מס או פרטי לקוחות מהסשן המקומי.</p></article>
+      <article class="card span6"><h3>מה דורש בדיקה נוספת</h3><ul><li>בדיקת קורא מסך NVDA/VoiceOver מלאה.</li><li>בדיקת מקלדת לכל Dialog, Select ו־Kanban.</li><li>Contrast אוטומטי בכל 12 הערכות וב־PDF.</li><li>בדיקות עם משתמשים אמיתיים: חדש, כבד ומובייל.</li><li>בדיקה משפטית נפרדת לכל מדינת יעד, סוג שירות ומחזור.</li><li>שחזור מעבר אנגלית במסכים מוגנים בסביבה נקייה.</li></ul></article></div>
+      <h3 style="margin-top:28px">מקורות תקינה והנחיות</h3><ul class="sources">
+        <li><a href="https://www.w3.org/TR/WCAG22/">W3C, Web Content Accessibility Guidelines 2.2</a></li>
+        <li><a href="https://www.w3.org/WAI/standards-guidelines/wcag/new-in-22/">W3C, מה חדש ב־WCAG 2.2</a></li>
+        <li><a href="https://content.justice.gov.il/accessibility/declaration1.html">משרד המשפטים, דוגמת הצהרת נגישות</a></li>
+        <li><a href="https://www.gov.il/BlobFolder/legalinfo/israeli_accessibility_standards_pdf/he/sitedocs_si-5568-1-september-2023.pdf">ת״י 5568 חלק 1, נגישות אתרי אינטרנט</a></li>
+        <li><a href="https://commission.europa.eu/strategy-and-policy/policies/justice-and-fundamental-rights/disability/european-accessibility-act-eaa_en">European Commission, European Accessibility Act</a></li>
+        <li><a href="https://www.ada.gov/resources/web-guidance/">U.S. Department of Justice, Guidance on Web Accessibility and the ADA</a></li>
+        <li><a href="https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md">Vercel Web Interface Guidelines</a></li>
+      </ul>
+      <p class="note">הסקירה אינה ייעוץ משפטי. היא מסמנת סיכוני UX ונגישות ומפנה למקורות רשמיים עדכניים בזמן הבדיקה.</p>
+    </div></section>
+  </main>
+  <footer class="footer"><div class="wrap">ClockBill · סקירת מוצר ו־UI/UX · נוצר על בסיס הקוד והשרת המקומי, 10.07.2026</div></footer>
+</body>
+</html>
