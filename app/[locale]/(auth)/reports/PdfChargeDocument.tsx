@@ -212,9 +212,6 @@ export function PdfChargeDocument({ doc, lines, profile }: PdfChargeDocumentProp
                   {summaryMode === "project" ? t("doc.summaryColProject") : t("doc.summaryColType")}
                 </th>
                 <th style={{ padding: "0.4rem 0.85rem", textAlign: "start", fontSize: "11px", fontWeight: 600, whiteSpace: "nowrap" }}>
-                  {t("doc.summaryColHours")}
-                </th>
-                <th style={{ padding: "0.4rem 0.85rem", textAlign: "start", fontSize: "11px", fontWeight: 600, whiteSpace: "nowrap" }}>
                   {t("doc.colAmount")}
                 </th>
               </tr>
@@ -224,9 +221,6 @@ export function PdfChargeDocument({ doc, lines, profile }: PdfChargeDocumentProp
                 <tr key={g.key ?? `__none__${i}`}>
                   <td style={{ padding: "0.4rem 0.85rem", fontSize: "12px" }}>
                     <bdi>{g.key ?? t("doc.summaryNoProject")}</bdi>
-                  </td>
-                  <td style={{ padding: "0.4rem 0.85rem", fontSize: "12px", whiteSpace: "nowrap" }}>
-                    {g.hours > 0 ? t("units.hoursMeasure", { hours: tidyNumber(g.hours) }) : "—"}
                   </td>
                   <td style={{ padding: "0.4rem 0.85rem", fontSize: "12px", whiteSpace: "nowrap" }}>
                     {formatCurrency(g.amount, doc.currency)}

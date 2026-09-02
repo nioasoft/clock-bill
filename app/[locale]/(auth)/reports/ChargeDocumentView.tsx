@@ -654,7 +654,6 @@ export default function ChargeDocumentView({
                 <th className="px-3 py-2 text-start font-medium">
                   {summaryMode === "project" ? t("doc.summaryColProject") : t("doc.summaryColType")}
                 </th>
-                <th className="px-3 py-2 text-start font-medium">{t("doc.summaryColHours")}</th>
                 <th className="px-3 py-2 text-end font-medium">{t("doc.colAmount")}</th>
               </tr>
             </thead>
@@ -662,9 +661,6 @@ export default function ChargeDocumentView({
               {summary.map((g, i) => (
                 <tr key={g.key ?? `__none__${i}`} className="border-b border-border last:border-b-0">
                   <td className="px-3 py-2 text-foreground"><bdi>{g.key ?? t("doc.summaryNoProject")}</bdi></td>
-                  <td className="px-3 py-2 font-mono tabular-nums text-muted-foreground">
-                    {g.hours > 0 ? t("units.hoursMeasure", { hours: Number(g.hours.toFixed(2)) }) : "—"}
-                  </td>
                   <td className="px-3 py-2 text-end font-mono tabular-nums text-foreground">
                     {formatCurrency(g.amount, doc.currency, locale)}
                   </td>
