@@ -11,6 +11,7 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useRouter } from "@/src/i18n/navigation";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
 import { useProjects } from "@/hooks/use-clients";
@@ -196,6 +197,7 @@ function formatElapsed(minutes: number, seconds: number): string {
 
 export function TimerProvider({ children }: TimerProviderProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const isPublicRoute = PUBLIC_ROUTES.some((route) =>
     route === "/" ? pathname === "/" : pathname.startsWith(route)
   );
@@ -579,7 +581,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
             ToastAction,
             {
               altText: "צפה ברשומות",
-              onClick: () => { window.location.href = "/entries"; },
+              onClick: () => router.push("/entries"),
             },
             "צפה ברשומות"
           ) as unknown as ToastActionElement
@@ -596,7 +598,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
     } finally {
       setStoppingTimer(false);
     }
-  }, [stopTimerTargetId, stopTimerDescription, stopTimerNotes, stopTimerHours, stopTimerMinutes, stopTimerCanComplete, stopTimerMarkDone]);
+  }, [router, stopTimerTargetId, stopTimerDescription, stopTimerNotes, stopTimerHours, stopTimerMinutes, stopTimerCanComplete, stopTimerMarkDone]);
 
   const cancelStopTimer = useCallback(() => {
     setShowStopTimerModal(false);
