@@ -83,15 +83,17 @@ interface SettlementRow extends Record<string, unknown> {
 /**
  * GET /api/cron/notifications
  *
- * Fired by a Vercel cron (every 5 min) to deliver Web Push notifications that
- * must work when the app is closed:
+ * Fired by a Vercel cron (every 15 min) to deliver Web Push notifications that
+ * must work when the app is closed. Not every 5: Neon suspends after 5 idle
+ * minutes, so a 5-min cron kept the compute awake 24/7 (~$18/month for 0.25 CU).
+ * A reminder may now land up to 14 min after its set time.
  *   1. Daily reminder — at the user's LOCAL dailyReminderTime (timezone-aware),
  *      once per local day (last_reminder_date guard).
  *   2. Long timer — a running, non-paused timer past the user's threshold; a
  *      long_timer_notified_at marker makes it fire once per run.
  *
  * Cross-tenant, so it reads/writes via the privileged adminQuery() connection
- * (bypasses RLS). Protected by CRON_SECRET when set, like keep-alive.
+ * (bypasses RLS). Protected by CRON_SECRET when set.
  */
 export async function GET(request: NextRequest) {
   if (!isAuthorizedCron(request)) {
@@ -106,7 +108,7 @@ export async function GET(request: NextRequest) {
 
   try {
     if (pushOn) {
-      // ── 1. Daily reminders due in this 5-min window (user-local time) ──
+      // ── 1. Daily reminders due in this 15-min window (user-local time) ──
       const reminderRows = await adminQuery<ReminderRow>(
         `SELECT user_id, locale
          FROM user_profiles
@@ -118,7 +120,7 @@ export async function GET(request: NextRequest) {
             + EXTRACT(MINUTE FROM (now() AT TIME ZONE COALESCE(timezone, 'Asia/Jerusalem'))))
             - (split_part(daily_reminder_time, ':', 1)::int * 60
              + split_part(daily_reminder_time, ':', 2)::int)
-           ) BETWEEN 0 AND 4`
+           ) BETWEEN 0 AND 14`
       );
 
       for (const row of reminderRows.rows) {
