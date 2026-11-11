@@ -8,5 +8,7 @@ if (localePrefixFromPath("/settings") !== null) throw new Error("prefix-less rou
 
 const source = readFileSync(join(process.cwd(), "components/app-layout.tsx"), "utf8");
 if (!source.includes("if (explicitLocale)")) throw new Error("AppLayout does not protect explicit locale deep links");
-if (!source.includes("NEXT_LOCALE=${explicitLocale}")) throw new Error("explicit locale is not persisted");
+if (!source.includes("setLocaleCookie(explicitLocale)")) throw new Error("explicit locale is not persisted");
+// A fresh explicit switch (cookie == active locale) must beat the stale cached profile.
+if (!source.includes("NEXT_LOCALE=([^;]+)/)?.[1] === locale) return;")) throw new Error("profile sync can revert a fresh locale switch");
 console.log("✅ authed-locale-deeplink: explicit locale remains authoritative");
