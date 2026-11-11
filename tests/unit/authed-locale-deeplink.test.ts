@@ -12,3 +12,9 @@ if (!source.includes("setLocaleCookie(explicitLocale)")) throw new Error("explic
 // A fresh explicit switch (cookie == active locale) must beat the stale cached profile.
 if (!source.includes("NEXT_LOCALE=([^;]+)/)?.[1] === locale) return;")) throw new Error("profile sync can revert a fresh locale switch");
 console.log("✅ authed-locale-deeplink: explicit locale remains authoritative");
+
+// next-intl's middleware cookie sync stamped an in-flight /en prefetch's locale
+// back onto NEXT_LOCALE, reverting an en→he switch. We own the cookie.
+const routingSource = readFileSync(join(process.cwd(), "src/i18n/routing.ts"), "utf8");
+if (!routingSource.includes("localeCookie: false")) throw new Error("next-intl must not manage NEXT_LOCALE");
+console.log("✅ authed-locale-deeplink: next-intl cookie sync disabled");
