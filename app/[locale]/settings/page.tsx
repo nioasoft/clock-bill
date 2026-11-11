@@ -23,6 +23,7 @@ import { ROUNDING_MODES } from "@/lib/rounding";
 import { THEMES } from "@/lib/themes";
 import { useTheme } from "@/components/theme-provider";
 import { subscribeToPush, unsubscribeFromPush } from "@/lib/push-client";
+import { persistLocale } from "@/lib/locale-preference";
 
 interface Session {
   id: string;
@@ -627,16 +628,10 @@ export default function SettingsPage() {
   // email language + survives cookie loss) AND switches the UI immediately by
   // replacing the current route under the chosen locale (next-intl swaps the
   // prefix and sets NEXT_LOCALE, so the user stays on the same screen).
-  const handleLocaleChange = (next: string) => {
+  const handleLocaleChange = async (next: string) => {
     if (next !== "he" && next !== "en") return;
     if (next === locale) return;
-    void fetch("/api/profile", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ locale: next }),
-    }).catch(() => {
-      // Non-fatal: the UI still switches; the preference can be re-saved later.
-    });
+    await persistLocale(next);
     router.replace(pathname, { locale: next });
   };
 
