@@ -6,6 +6,7 @@ import { sendEmail } from "@/lib/email";
 import { chargeDocumentEmail, resolveReplyTo } from "@/lib/emails/charge-document";
 import { generatePublicToken, publicLinkExpiry } from "@/lib/public-token";
 import { formatCurrency } from "@/lib/currency";
+import { documentMoney, type DiscountType } from "@/lib/charge-documents";
 import { resolveDocumentLocale } from "@/lib/document-language";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
@@ -32,6 +33,7 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
     // Load the document + client email + the document/client language settings.
     const docRes = await query(
       `SELECT d.id, d.doc_number, d.status, d.currency, d.total, d.vat_rate_snapshot,
+              d.discount_type, d.discount_value,
               d.document_language,
               c.name AS client_name, c.email AS client_email, c.document_language AS client_doc_language
          FROM charge_documents d
@@ -45,6 +47,7 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
     const doc = docRes.rows[0] as {
       id: string; doc_number: number; status: string; currency: string; total: number | null;
       vat_rate_snapshot: number | null; document_language: string | null;
+      discount_type: DiscountType | null; discount_value: number | null;
       client_name: string; client_email: string | null; client_doc_language: string | null;
     };
 
@@ -71,21 +74,29 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
       doc.currency
     );
 
-    // Gross amount the client owes (net + VAT). `total` is the NET subtotal.
-    const net = doc.total ?? 0;
-    const gross = doc.vat_rate_snapshot ? net * (1 + doc.vat_rate_snapshot / 100) : net;
+    // Gross the client owes — same breakdown as the document itself (discount, then VAT).
+    const { gross } = documentMoney({
+      total: doc.total ?? 0,
+      discountType: doc.discount_type,
+      discountValue: doc.discount_value,
+      vatRate: doc.vat_rate_snapshot,
+    });
     const amountLabel = formatCurrency(gross, doc.currency, docLocale);
 
     // Every send rotates the bearer capability. A forwarded or leaked older
     // email therefore stops working, and the replacement expires after 30 days.
     const token = generatePublicToken();
     const expiresAt = publicLinkExpiry();
-    await query(
+    // Conditional: a cancel that committed after the read above must win.
+    const minted = await query(
       `UPDATE charge_documents
           SET public_token = $1, public_token_expires_at = $2, updated_at = NOW()
-        WHERE id = $3 AND user_id = $4`,
+        WHERE id = $3 AND user_id = $4 AND status <> 'canceled'`,
       [token, expiresAt, id, user.id]
     );
+    if (minted.rowCount === 0) {
+      return NextResponse.json({ success: false, error_code: "SEND_REQUIRES_ACTIVE", message: "לא ניתן לשלוח מסמך מבוטל" }, { status: 409 });
+    }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.clock-bill.com";
     const localePrefix = docLocale === "en" ? "/en" : "";

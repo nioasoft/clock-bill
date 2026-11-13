@@ -100,7 +100,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         item_ref: number | null;
         charge_document_id: string | null;
       }>(
-        `SELECT id, item_ref, charge_document_id FROM time_entries WHERE id = $1 AND user_id = $2`,
+        `SELECT id, item_ref, charge_document_id FROM time_entries WHERE id = $1 AND user_id = $2 FOR UPDATE`,
         [id, user.id]
       );
       if (entryCheck.rows.length === 0) return { error: "entry" as const };
@@ -156,7 +156,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
                tags = $6, notes = $7, is_billable = $8, billing_kind = $9, rate = $10,
                rate_label = $11, quantity = $12, item_ref = $13, unit = $14,
                discount_percent = $15, updated_at = NOW()
-           WHERE id = $16 AND user_id = $17
+           WHERE id = $16 AND user_id = $17 AND charge_document_id IS NULL
            RETURNING *
          )
          SELECT
@@ -186,6 +186,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
           user.id,
         ]
       );
+      if (updated.rows.length === 0) return { billed: true as const };
       return { row: updated.rows[0] };
     });
 

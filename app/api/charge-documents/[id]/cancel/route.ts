@@ -3,6 +3,7 @@ const logger = createLogger("api:charge-documents:id:cancel");
 import { NextRequest, NextResponse } from "next/server";
 import type { PoolClient } from "pg";
 import { getUser } from "@/lib/auth";
+import { chargeDocActions } from "@/lib/charge-documents";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -20,14 +21,14 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
         [id, user.id]
       );
       if (doc.rowCount === 0) throw new Error("NOT_FOUND");
-      if (doc.rows[0].status !== "pending") throw new Error("BAD_STATE");
-      if (doc.rows[0].approved_at) throw new Error("APPROVED");
-
       const pay = await client.query(
         `SELECT 1 FROM charge_document_payments WHERE document_id = $1 AND user_id = $2 LIMIT 1`,
         [id, user.id]
       );
-      if (pay.rowCount && pay.rowCount > 0) throw new Error("HAS_PAYMENTS");
+      const d = { status: doc.rows[0].status, approved: Boolean(doc.rows[0].approved_at), paidSum: pay.rowCount ?? 0 };
+      if (!chargeDocActions(d).cancel) {
+        throw new Error(d.status !== "pending" ? "BAD_STATE" : d.approved ? "APPROVED" : "HAS_PAYMENTS");
+      }
 
       await client.query(
         `UPDATE time_entries SET charge_document_id = NULL WHERE charge_document_id = $1 AND user_id = $2`,

@@ -63,6 +63,9 @@
     "tsx": {
       "esbuild": "0.28.1"
     },
+    "@vercel/cli-config": {
+      "zod": "^4.6.7"
+    },
     "undici": "^6.29.1",
     "uuid": "^11.1.1",
     "@sentry/bundler-plugins": {

@@ -26,6 +26,9 @@ import {
 import {
   applyPolarEntitlement,
   revokeEntitlement,
+  getStoredSubscription,
+  subscriptionEventDecision,
+  type SubscriptionEvent,
 } from "@/lib/entitlements";
 import {
   sendEmail,
@@ -149,6 +152,26 @@ const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 const googleEnabled = Boolean(googleClientId && googleClientSecret);
 
 /**
+ * Webhooks can arrive late or out of order; drop events that would move the
+ * profile backwards (see subscriptionEventDecision). A missing profile row is
+ * logged — the UPDATE would otherwise silently hit 0 rows.
+ */
+async function shouldApplyEvent(userId: string, event: SubscriptionEvent): Promise<boolean> {
+  // ponytail: read-then-write, not atomic; webhooks for one user rarely overlap.
+  // Upgrade to a conditional UPDATE if Polar ever delivers them concurrently.
+  const stored = await getStoredSubscription(userId);
+  if (!stored) {
+    logger.error("Polar webhook: no user_profiles row", { userId, kind: event.kind });
+    return false;
+  }
+  if (subscriptionEventDecision(stored, event) === "ignore") {
+    logger.info("Polar webhook: stale event ignored", { userId, ...event, stored });
+    return false;
+  }
+  return true;
+}
+
+/**
  * Map a Polar subscription-shaped payload → our columns and persist.
  *
  * The Polar SDK deserializes webhook payloads to camelCase with rich types
@@ -157,6 +180,7 @@ const googleEnabled = Boolean(googleClientId && googleClientSecret);
  * (Polar customer `external_id`, set via `createCustomerOnSignUp`).
  */
 async function syncSubscription(
+  kind: SubscriptionEvent["kind"],
   externalId: string | null | undefined,
   sub: {
     status?: string | null;
@@ -172,6 +196,9 @@ async function syncSubscription(
   const tier = tierForProductId(sub.productId, getProductTierMap());
   if (!tier) {
     logger.error("Polar webhook: unknown productId", { productId: sub.productId });
+    return;
+  }
+  if (sub.id && !(await shouldApplyEvent(externalId, { kind, subscriptionId: sub.id, status: sub.status ?? "" }))) {
     return;
   }
   const periodEnd =
@@ -214,16 +241,16 @@ const polarPlugin = polarEnabled
                 secret: polarWebhookSecret,
                 onSubscriptionActive: async (payload) => {
                   const sub = payload.data;
-                  await syncSubscription(sub.customer?.externalId, sub);
+                  await syncSubscription("active", sub.customer?.externalId, sub);
                 },
                 onSubscriptionUpdated: async (payload) => {
                   const sub = payload.data;
-                  await syncSubscription(sub.customer?.externalId, sub);
+                  await syncSubscription("updated", sub.customer?.externalId, sub);
                 },
                 onOrderPaid: async (payload) => {
                   const order = payload.data;
                   if (order.subscription) {
-                    await syncSubscription(order.customer?.externalId, order.subscription);
+                    await syncSubscription("order_paid", order.customer?.externalId, order.subscription);
                   }
                 },
                 onSubscriptionRevoked: async (payload) => {
@@ -232,6 +259,12 @@ const polarPlugin = polarEnabled
                     logger.error("Polar webhook: subscription revoked without customer.externalId");
                     return;
                   }
+                  const event: SubscriptionEvent = {
+                    kind: "revoked",
+                    subscriptionId: payload.data.id,
+                    status: "revoked",
+                  };
+                  if (!(await shouldApplyEvent(externalId, event))) return;
                   await revokeEntitlement(externalId);
                 },
               }),

@@ -89,6 +89,7 @@ export async function PATCH(request: NextRequest) {
       UPDATE time_entries
       SET ${updateFields.join(", ")}
       WHERE id IN (${entryIdsPlaceholder}) AND user_id = $${paramIndex}
+        AND charge_document_id IS NULL -- billed entries are frozen; updatedCount reports what changed
     `;
 
     // One transaction: the optional project-ownership check and the bulk update
@@ -166,6 +167,7 @@ export async function DELETE(request: NextRequest) {
     const deleteQuery = `
       DELETE FROM time_entries
       WHERE id IN (${entryIdsPlaceholder}) AND user_id = $${entryIds.length + 1}
+        AND charge_document_id IS NULL -- never orphan a charge-document line
     `;
 
     const result = await query(deleteQuery, [...entryIds, user.id]);
