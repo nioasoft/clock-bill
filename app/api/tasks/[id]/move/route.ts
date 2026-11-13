@@ -12,7 +12,8 @@ const logger = createLogger("tasks:move");
  * PATCH /api/tasks/[id]/move — update status + position. When a task ENTERS
  * "in_progress" from another column, start a timer for it in the SAME transaction
  * (status change + time_entry insert are atomic). Leaving "in_progress" is a plain
- * status/position update — the client opens the existing stop modal separately.
+ * status/position update, refused (409 TIMER_RUNNING) while the task's timer still
+ * runs — the client stops it via the stop modal first, then moves.
  */
 export async function PATCH(
   request: NextRequest,
@@ -48,7 +49,19 @@ export async function PATCH(
     // Return the timer entry id from the transaction so the closure variable
     // is definitely-assigned under strict TS (assigned inside the async callback,
     // then read after). Status update + timer insert are atomic in one tx.
-    const entryId = await withTransaction(async (client: PoolClient): Promise<string | null> => {
+    const leavingInProgress = task.status === "in_progress" && status !== "in_progress";
+
+    const entryId = await withTransaction(async (client: PoolClient): Promise<string | null | "running"> => {
+      if (leavingInProgress) {
+        const live = await client.query(
+          `SELECT 1 FROM time_entries
+            WHERE task_id = $1 AND user_id = $2 AND start_time IS NOT NULL AND end_time IS NULL
+            LIMIT 1 FOR UPDATE`,
+          [id, user.id]
+        );
+        if (live.rows.length > 0) return "running";
+      }
+
       await client.query(
         `UPDATE tasks SET status = $1, position = $2, updated_at = NOW() WHERE id = $3 AND user_id = $4`,
         [status, position, id, user.id]
@@ -79,6 +92,11 @@ export async function PATCH(
       return inserted.rows[0].id;
     });
 
+    if (entryId === "running")
+      return NextResponse.json(
+        { success: false, error_code: "TIMER_RUNNING", message: "יש טיימר פעיל למשימה - יש לעצור אותו קודם" },
+        { status: 409 }
+      );
     return NextResponse.json({ success: true, entryId });
   } catch (error) {
     logger.error("Failed to move task", error);

@@ -5,7 +5,8 @@ import type { PoolClient } from "pg";
 import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
 import { updatePaymentSchema } from "@/lib/schemas/charge-documents";
-import { recomputeChargeStatus } from "@/lib/charge-documents-server";
+import { documentBalance, recomputeChargeStatus } from "@/lib/charge-documents-server";
+import { outstanding } from "@/lib/charge-documents";
 
 type Ctx = { params: Promise<{ id: string; paymentId: string }> };
 
@@ -33,6 +34,14 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
       );
       if (pay.rowCount === 0) throw new Error("PAYMENT_NOT_FOUND");
 
+      if (amount != null) {
+        const bal = await documentBalance(client, id, user.id, paymentId);
+        // 0.005 absorbs float rounding on the money math (same as POST).
+        if (bal && amount > outstanding(bal.gross, bal.paidSum) + 0.005) {
+          throw new Error("AMOUNT_EXCEEDS_OUTSTANDING");
+        }
+      }
+
       await client.query(
         `UPDATE charge_document_payments
             SET amount  = COALESCE($1, amount),
@@ -57,6 +66,7 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
     const msg = error instanceof Error ? error.message : "";
     if (msg === "NOT_FOUND") return NextResponse.json({ success: false, error_code: "DOCUMENT_NOT_FOUND", message: "תעודה לא נמצאה" }, { status: 404 });
     if (msg === "PAYMENT_NOT_FOUND") return NextResponse.json({ success: false, error_code: "PAYMENT_NOT_FOUND", message: "תשלום לא נמצא" }, { status: 404 });
+    if (msg === "AMOUNT_EXCEEDS_OUTSTANDING") return NextResponse.json({ success: false, error_code: "AMOUNT_EXCEEDS_OUTSTANDING", message: "הסכום חורג מהיתרה לתשלום" }, { status: 409 });
     logger.error("PATCH payment failed:", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בעדכון תשלום" }, { status: 500 });
   }

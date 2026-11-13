@@ -5,17 +5,19 @@ import { z } from "zod";
 import { withTransaction } from "@/lib/db";
 import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
+import { timerElapsedMs } from "@/lib/time-entry-state";
 
-/** A single entry can't bill more than 24h (1440 min) — caps the client-supplied
- *  duration override so a stopped timer can't be inflated to fabricated hours. */
-const MAX_ENTRY_MINUTES = 24 * 60;
+/** A client-supplied duration may exceed the real elapsed time (forgot to start
+ *  the timer) up to 24h, never more — so it can't be inflated to fabricated hours,
+ *  while a timer that genuinely ran > 24h can still be stopped. */
+const MAX_OVERRIDE_MINUTES = 24 * 60;
 
 /** Body schema for stopping a timer. */
 const stopTimerSchema = z.object({
   entryId: z.string({ message: "הטיימר לא נמצא או כבר הופסק" }).min(1, "הטיימר לא נמצא או כבר הופסק"),
   description: z.string().max(5000).nullish(),
   notes: z.string().max(5000).nullish(),
-  duration: z.number().min(0).max(MAX_ENTRY_MINUTES).nullish(),
+  duration: z.number().min(0).nullish(),
   markTaskDone: z.boolean().nullish(),
 });
 
@@ -65,29 +67,20 @@ export async function POST(request: NextRequest) {
       const entry = entryResult.rows[0];
       const endTime = new Date();
 
-      let durationMinutes: number;
-
-      // If custom duration is provided, use it; otherwise calculate from start time
-      if (customDuration !== undefined && customDuration !== null) {
-        durationMinutes = customDuration;
-      } else {
-        const startTime = new Date(entry.start_time);
-        let durationMs = endTime.getTime() - startTime.getTime();
-
-        // Subtract total paused time if exists
-        if (entry.total_paused_time) {
-          durationMs -= entry.total_paused_time;
-        }
-
-        // If currently paused, subtract the current pause duration
-        if (entry.paused_at) {
-          const pausedAt = new Date(entry.paused_at);
-          const currentPauseMs = endTime.getTime() - pausedAt.getTime();
-          durationMs -= currentPauseMs;
-        }
-
-        durationMinutes = Math.floor(durationMs / 1000 / 60);
+      const elapsedMinutes = Math.floor(
+        timerElapsedMs(
+          {
+            start_time: entry.start_time, end_time: null, paused_at: entry.paused_at,
+            total_paused_time: entry.total_paused_time, is_billable: null,
+            charge_document_id: null, written_off_at: null,
+          },
+          endTime
+        ) / 60_000
+      );
+      if (customDuration != null && customDuration > Math.max(MAX_OVERRIDE_MINUTES, elapsedMinutes)) {
+        return { tooLong: true as const };
       }
+      const durationMinutes = customDuration ?? elapsedMinutes;
 
       // Update the entry with end_time, duration, and optionally description/notes.
       // COALESCE keeps the existing value when a field isn't sent; notes are
@@ -127,6 +120,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error_code: "TIMER_NOT_FOUND", message: "הטיימר לא נמצא או כבר הופסק" },
         { status: 404 }
+      );
+    }
+    if ("tooLong" in result) {
+      return NextResponse.json(
+        { success: false, error_code: "TIMER_DURATION_TOO_LONG", message: "משך הזמן ארוך מהזמן שהטיימר רץ בפועל" },
+        { status: 400 }
       );
     }
 

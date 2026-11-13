@@ -5,7 +5,7 @@ import { createLogger } from "@/lib/logger";
 import { isAuthorizedCron } from "@/lib/cron-auth";
 import { sendEmail } from "@/lib/email";
 import { settlementReminderEmail } from "@/lib/emails/settlement-reminder";
-import { isBillingDayToday } from "@/lib/settlements";
+import { isSettlementReminderDue } from "@/lib/settlements";
 import { formatCurrency } from "@/lib/currency";
 
 const logger = createLogger("cron:notifications");
@@ -76,6 +76,8 @@ interface SettlementRow extends Record<string, unknown> {
   local_year: number;
   local_month: number;
   local_day: number;
+  local_today: string;
+  reminded_at: string | null;
   local_minutes: number;
   anchor_minutes: number;
 }
@@ -160,6 +162,13 @@ export async function GET(request: NextRequest) {
       );
 
       for (const row of longRows.rows) {
+        // Reserve first: only the run that flips NULL -> now() sends the push.
+        const reserved = await adminQuery(
+          `UPDATE time_entries SET long_timer_notified_at = now()
+            WHERE id = $1 AND long_timer_notified_at IS NULL`,
+          [row.id]
+        );
+        if ((reserved.rowCount ?? 0) === 0) continue;
         const copy = longTimerCopy(norm(row.locale), row.elapsed_minutes);
         const sent = await sendPushToUser(row.user_id, {
           ...copy,
@@ -169,9 +178,9 @@ export async function GET(request: NextRequest) {
         });
         if (sent > 0) {
           longTimers += 1;
-          await adminQuery(`UPDATE time_entries SET long_timer_notified_at = now() WHERE id = $1`, [
-            row.id,
-          ]);
+        } else {
+          // Nothing delivered (no subscription yet) - release so a later tick can retry.
+          await adminQuery(`UPDATE time_entries SET long_timer_notified_at = NULL WHERE id = $1`, [row.id]);
         }
       }
     }
@@ -179,7 +188,7 @@ export async function GET(request: NextRequest) {
     // ── 3. Settlement reminders — once per cycle, on each client's billing day ──
     // Cheap SQL filters (billing day set, active, has unbilled work, not yet
     // reminded this cycle) + per-row user-local calendar components; the exact
-    // effective-day match is decided in JS via isBillingDayToday (handles
+    // cycle decision is made in JS via isSettlementReminderDue (catch-up +
     // end-of-month clamping). Grouped strictly per user.
     const settlementRows = await adminQuery<SettlementRow>(
       `SELECT c.id AS client_id, c.user_id, c.name AS client_name,
@@ -194,6 +203,8 @@ export async function GET(request: NextRequest) {
               EXTRACT(YEAR  FROM (now() AT TIME ZONE COALESCE(p.timezone,'Asia/Jerusalem')))::int AS local_year,
               EXTRACT(MONTH FROM (now() AT TIME ZONE COALESCE(p.timezone,'Asia/Jerusalem')))::int AS local_month,
               EXTRACT(DAY   FROM (now() AT TIME ZONE COALESCE(p.timezone,'Asia/Jerusalem')))::int AS local_day,
+              to_char(now() AT TIME ZONE COALESCE(p.timezone,'Asia/Jerusalem'), 'YYYY-MM-DD') AS local_today,
+              to_char(c.settlement_reminded_at, 'YYYY-MM-DD') AS reminded_at,
               (EXTRACT(HOUR   FROM (now() AT TIME ZONE COALESCE(p.timezone,'Asia/Jerusalem'))) * 60
              + EXTRACT(MINUTE FROM (now() AT TIME ZONE COALESCE(p.timezone,'Asia/Jerusalem'))))::int AS local_minutes,
               (split_part(COALESCE(p.daily_reminder_time,'09:00'), ':', 1)::int * 60
@@ -210,18 +221,22 @@ export async function GET(request: NextRequest) {
           AND te.written_off_at IS NULL
           AND (c.settlement_reminded_at IS NULL
                OR c.settlement_reminded_at < (now() AT TIME ZONE COALESCE(p.timezone,'Asia/Jerusalem'))::date)
-        GROUP BY c.id, c.user_id, c.name, c.currency, c.settlement_billing_day, p.locale, u.email, p.timezone, p.daily_reminder_time`
+        GROUP BY c.id, c.user_id, c.name, c.currency, c.settlement_billing_day, c.settlement_reminded_at, p.locale, u.email, p.timezone, p.daily_reminder_time`
     );
     // unbilled_total is the same APPROXIMATE figure as the due endpoint (no
     // amount column; duration is MINUTES). The INNER JOIN guarantees ≥1 unbilled
     // billable entry per row, so no HAVING is needed.
 
-    // Keep only rows where today (user-local) is the effective billing day AND
+    // Keep rows whose cycle is due (billing day reached, not reminded since) AND
     // we're past the user's morning anchor.
     const fireRows = settlementRows.rows.filter(
       (r) =>
         r.local_minutes >= r.anchor_minutes &&
-        isBillingDayToday(r.local_day, r.settlement_billing_day, r.local_year, r.local_month)
+        isSettlementReminderDue({
+          billingDay: r.settlement_billing_day,
+          remindedAt: r.reminded_at,
+          today: r.local_today,
+        })
     );
 
     // Group strictly by user (tenant isolation): one push + one email per user.

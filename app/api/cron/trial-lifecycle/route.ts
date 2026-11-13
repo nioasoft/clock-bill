@@ -5,6 +5,7 @@ import { pickDueEmail } from "@/lib/trial-emails-schedule";
 import { trialEmailFor } from "@/lib/emails/trial";
 import { createLogger } from "@/lib/logger";
 import { isAuthorizedCron } from "@/lib/cron-auth";
+import { CLIENT_LIMITS } from "@/lib/plans";
 
 const logger = createLogger("cron:trial-lifecycle");
 export const runtime = "nodejs";
@@ -69,7 +70,7 @@ export async function GET(request: NextRequest) {
     const { subject, html } = trialEmailFor(due, norm(row.locale), {
       appUrl,
       daysLeft,
-      lockedCount: Math.max(0, row.active_client_count - 1),
+      lockedCount: Math.max(0, row.active_client_count - CLIENT_LIMITS.free),
     });
     const ok = await sendEmail({ to: row.email, subject, html });
     if (ok) {

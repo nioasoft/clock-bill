@@ -19,7 +19,7 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
     const { id } = await context.params;
     const { query } = await import("@/lib/db");
     const result = await query(
-      `UPDATE clients SET plan_priority_at = NOW() WHERE id = $1 AND user_id = $2`,
+      `UPDATE clients SET plan_priority_at = NOW() WHERE id = $1 AND user_id = $2 AND is_active = true`,
       [id, user.id]
     );
     if (result.rowCount === 0) {
