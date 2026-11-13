@@ -5,6 +5,7 @@ import { Globe } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/src/i18n/navigation";
 import { routing, type Locale } from "@/src/i18n/routing";
+import { persistLocale } from "@/lib/locale-preference";
 
 interface LocaleSwitcherProps {
   /** When collapsed, render a single compact toggle instead of two buttons. */
@@ -25,19 +26,12 @@ export function LocaleSwitcher({ isCollapsed = false, className = "" }: LocaleSw
 
   const switchTo = (next: Locale) => {
     if (next === locale) return;
-    // Preserve the current path; next-intl swaps the locale prefix for us.
-    startTransition(() => {
+    // Persist (cookie + profile) BEFORE navigating, then keep the current path;
+    // next-intl swaps the locale prefix for us.
+    startTransition(async () => {
+      await persistLocale(next);
       router.replace(pathname, { locale: next });
     });
-    // Persist the choice to the profile so it survives cookie loss / a new
-    // device (and drives transactional-email language). Fire-and-forget: on
-    // public/unauthenticated pages this returns 401 — we swallow it and never
-    // block the UI on the request.
-    void fetch("/api/profile", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ locale: next }),
-    }).catch(() => {});
   };
 
   // Collapsed: a single tap target toggling between the two locales.

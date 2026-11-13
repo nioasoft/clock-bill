@@ -15,6 +15,7 @@ import { TimerDeepLink } from "./timer-deeplink";
 import { brandName } from "@/lib/brand";
 import { useProfile } from "@/hooks/use-profile";
 import { localePrefixFromPath } from "@/lib/locale-path";
+import { setLocaleCookie } from "@/lib/locale-preference";
 
 interface User {
   id: string;
@@ -110,14 +111,15 @@ export function AppLayout({ children }: AppLayoutProps) {
       // An explicit /en or /he deep link is authoritative. Persist the cookie
       // for later prefix-less navigation, but never bounce the user back to a
       // stale profile preference while the requested route is already active.
-      const secure = location.protocol === "https:" ? "; Secure" : "";
-      document.cookie = `NEXT_LOCALE=${explicitLocale}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax${secure}`;
+      setLocaleCookie(explicitLocale);
       return;
     }
+    // A cookie matching the active locale is a fresh explicit choice (the
+    // switchers write it) — the cached profile may still hold the old value.
+    if (document.cookie.match(/(?:^|;\s*)NEXT_LOCALE=([^;]+)/)?.[1] === locale) return;
     if ((stored === "he" || stored === "en") && stored !== locale) {
       // Persist so a hard reload / new visit picks it up immediately.
-      const secure = location.protocol === "https:" ? "; Secure" : "";
-      document.cookie = `NEXT_LOCALE=${stored}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax${secure}`;
+      setLocaleCookie(stored);
       // Single soft switch to the stored locale on the current path.
       router.replace(pathname, { locale: stored });
     }
