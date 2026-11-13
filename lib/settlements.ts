@@ -27,12 +27,19 @@ export function hasReachedBillingDay(
   return localDay >= effectiveBillingDay(billingDay, year, month1to12);
 }
 
-/** True exactly on the effective billing day (used for the once-per-cycle fire). */
-export function isBillingDayToday(
-  localDay: number,
-  billingDay: number,
-  year: number,
-  month1to12: number
-): boolean {
-  return localDay === effectiveBillingDay(billingDay, year, month1to12);
+/**
+ * Once-per-cycle reminder with catch-up: due once today (YYYY-MM-DD, user-local)
+ * has reached this month's effective billing day AND the last reminder predates
+ * that day. A missed cron tick fires on the next one instead of skipping a month.
+ */
+export function isSettlementReminderDue(i: {
+  billingDay: number;
+  remindedAt: string | null;
+  today: string;
+}): boolean {
+  const [y, m, d] = i.today.split("-").map(Number);
+  const eff = effectiveBillingDay(i.billingDay, y, m);
+  if (d < eff) return false;
+  const cycleStart = `${i.today.slice(0, 8)}${String(eff).padStart(2, "0")}`;
+  return i.remindedAt === null || i.remindedAt < cycleStart;
 }

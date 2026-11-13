@@ -28,11 +28,11 @@ export async function POST(request: NextRequest) {
     if (!parsed.ok) return parsed.response;
     const { entryId, notes } = parsed.data;
 
-    // Only running timers (end_time IS NULL); scoped by user_id (defense in depth + RLS).
+    // Only running timers (start_time IS NOT NULL AND end_time IS NULL); scoped by user_id (defense in depth + RLS).
     const result = await query(
       `UPDATE time_entries
        SET notes = $1, updated_at = NOW()
-       WHERE id = $2 AND user_id = $3 AND end_time IS NULL`,
+       WHERE id = $2 AND user_id = $3 AND start_time IS NOT NULL AND end_time IS NULL`,
       [notes?.trim() || null, entryId, user.id]
     );
 

@@ -3,7 +3,6 @@ import {
   daysInMonth,
   effectiveBillingDay,
   hasReachedBillingDay,
-  isBillingDayToday,
 } from "../../lib/settlements";
 
 class TestRunner {
@@ -39,11 +38,6 @@ runner.test("hasReachedBillingDay: true on/after effective day", () => {
   assert(hasReachedBillingDay(1, 1, 2026, 6) === true, "day 1, billing 1");
   assert(hasReachedBillingDay(14, 15, 2026, 6) === false, "before billing day");
   assert(hasReachedBillingDay(28, 31, 2026, 2) === true, "Feb 28 reaches clamped 31");
-});
-runner.test("isBillingDayToday: exact effective-day match", () => {
-  assert(isBillingDayToday(15, 15, 2026, 6) === true, "exact");
-  assert(isBillingDayToday(16, 15, 2026, 6) === false, "day after");
-  assert(isBillingDayToday(28, 31, 2026, 2) === true, "Feb 28 == clamped 31");
 });
 
 runner.run();

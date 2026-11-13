@@ -5,9 +5,9 @@ import type { PoolClient } from "pg";
 import { getUser } from "@/lib/auth";
 import { parseBody } from "@/lib/api-validation";
 import { patchChargeDocumentSchema } from "@/lib/schemas/charge-documents";
-import { buildLineFromEntry, computeDocumentTotal, type BillableEntry } from "@/lib/charge-documents";
+import { buildLineFromEntry, chargeDocActions, computeDocumentTotal, type BillableEntry } from "@/lib/charge-documents";
 import { resolveRounding } from "@/lib/rounding";
-import { recomputeChargeStatus } from "@/lib/charge-documents-server";
+import { documentBalance, recomputeChargeStatus } from "@/lib/charge-documents-server";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -41,7 +41,7 @@ export async function GET(_request: NextRequest, ctx: Ctx) {
   }
 }
 
-/** PATCH — only when pending: edit notes, edit a line, remove a line, add an entry. */
+/** PATCH — while open (pending/partial) and unapproved: notes, lines, discount, add an entry. */
 export async function PATCH(request: NextRequest, ctx: Ctx) {
   try {
     const user = await getUser();
@@ -58,9 +58,10 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
         [id, user.id]
       );
       if (doc.rowCount === 0) throw new Error("NOT_FOUND");
-      const docStatus: string = doc.rows[0].status;
-      if (docStatus !== "pending" && docStatus !== "partial") throw new Error("LOCKED");
-      if (doc.rows[0].approved_at) throw new Error("APPROVED");
+      const approved = Boolean(doc.rows[0].approved_at);
+      if (!chargeDocActions({ status: doc.rows[0].status, approved, paidSum: 0 }).edit) {
+        throw new Error(approved ? "APPROVED" : "LOCKED");
+      }
       const clientId: string = doc.rows[0].client_id;
 
       if (typeof notes !== "undefined") {
@@ -126,7 +127,9 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
              JOIN projects p ON te.project_id = p.id
              JOIN clients  c ON p.client_id = c.id
             WHERE te.id = $1 AND te.user_id = $2 AND p.client_id = $3
-              AND te.charge_document_id IS NULL AND te.is_billable = true AND te.written_off_at IS NULL`,
+              AND te.end_time IS NOT NULL
+              AND te.charge_document_id IS NULL AND te.is_billable = true AND te.written_off_at IS NULL
+            FOR UPDATE OF te`,
           [addTimeEntryId, user.id, clientId]
         );
         if (er.rowCount === 0) throw new Error("ENTRY_UNAVAILABLE");
@@ -162,6 +165,9 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
       const sum = await client.query(`SELECT amount FROM charge_document_lines WHERE document_id = $1 AND user_id = $2`, [id, user.id]);
       const total = computeDocumentTotal(sum.rows as Array<{ amount: number | null }>);
       await client.query(`UPDATE charge_documents SET total = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3`, [total, id, user.id]);
+      // A partially-paid document may be edited, but never below what's already paid.
+      const bal = await documentBalance(client, id, user.id);
+      if (bal && bal.paidSum > bal.gross + 0.005) throw new Error("BELOW_PAID");
       await recomputeChargeStatus(client, id, user.id);
       return total;
     });
@@ -173,6 +179,7 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
     if (msg === "LOCKED") return NextResponse.json({ success: false, error_code: "DOCUMENT_LOCKED", message: "התעודה נעולה — בטל תשלום כדי לערוך" }, { status: 409 });
     if (msg === "APPROVED") return NextResponse.json({ success: false, error_code: "DOCUMENT_APPROVED", message: "התעודה אושרה — בטל אישור כדי לערוך" }, { status: 409 });
     if (msg === "LINE_NOT_FOUND") return NextResponse.json({ success: false, error_code: "LINE_NOT_FOUND", message: "שורה לא נמצאה" }, { status: 404 });
+    if (msg === "BELOW_PAID") return NextResponse.json({ success: false, error_code: "DOCUMENT_BELOW_PAID", message: "הסכום אחרי השינוי נמוך ממה שכבר שולם — בטל תשלום קודם" }, { status: 409 });
     if (msg === "ENTRY_UNAVAILABLE") return NextResponse.json({ success: false, error_code: "ENTRY_UNAVAILABLE", message: "הפריט כבר חויב או אינו זמין" }, { status: 409 });
     logger.error("PATCH /api/charge-documents/[id] failed:", error);
     return NextResponse.json({ success: false, error_code: "SERVER_ERROR", message: "שגיאה בעדכון תעודה" }, { status: 500 });

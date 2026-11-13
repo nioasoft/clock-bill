@@ -74,6 +74,7 @@ export async function GET(request: NextRequest) {
            JOIN clients  c ON p.client_id = c.id
           WHERE te.user_id = $1
             AND c.id = $2
+            AND te.end_time IS NOT NULL
             AND te.charge_document_id IS NULL
             AND te.is_billable = true
             AND te.written_off_at IS NULL

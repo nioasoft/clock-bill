@@ -121,7 +121,9 @@ export async function POST(request: NextRequest) {
              JOIN projects p ON te.project_id = p.id
              JOIN clients  c ON p.client_id = c.id
             WHERE te.id = ANY($1::text[]) AND te.user_id = $2 AND p.client_id = $3
-              AND te.charge_document_id IS NULL AND te.is_billable = true AND te.written_off_at IS NULL`,
+              AND te.end_time IS NOT NULL
+              AND te.charge_document_id IS NULL AND te.is_billable = true AND te.written_off_at IS NULL
+            FOR UPDATE OF te`,
           [timeEntryIds, user.id, clientId]
         );
         entries = er.rows.map((row) => ({
@@ -240,11 +242,13 @@ export async function POST(request: NextRequest) {
       }
 
       if (entries.length > 0) {
-        await client.query(
+        const claim = await client.query(
           `UPDATE time_entries SET charge_document_id = $1
             WHERE id = ANY($2::text[]) AND user_id = $3 AND charge_document_id IS NULL AND written_off_at IS NULL`,
           [documentId, entries.map((e) => e.id), user.id]
         );
+        // Every selected entry must be claimed, or a line would point at an unlinked entry.
+        if (claim.rowCount !== entries.length) throw new Error("ENTRY_STATE_CHANGED");
       }
 
       return { id: documentId, docNumber: doc.rows[0].doc_number };

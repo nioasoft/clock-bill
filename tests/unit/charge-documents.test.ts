@@ -2,7 +2,6 @@
  * Unit tests for lib/charge-documents.ts — pure settlement logic.
  */
 import {
-  canTransition,
   computeDocumentTotal,
   buildLineFromEntry,
   lineQtyRate,
@@ -32,14 +31,6 @@ function assertEqual<T>(actual: T, expected: T, message?: string) {
 
 const runner = new TestRunner();
 
-runner.test("pending -> paid allowed", () => { assertEqual(canTransition("pending", "paid"), true); });
-runner.test("pending -> canceled allowed", () => { assertEqual(canTransition("pending", "canceled"), true); });
-runner.test("paid -> pending allowed (unpay)", () => { assertEqual(canTransition("paid", "pending"), true); });
-runner.test("paid -> canceled NOT allowed (must unpay first)", () => { assertEqual(canTransition("paid", "canceled"), false); });
-runner.test("canceled -> anything NOT allowed", () => {
-  assertEqual(canTransition("canceled", "pending"), false);
-  assertEqual(canTransition("canceled", "paid"), false);
-});
 
 runner.test("computeDocumentTotal sums line amounts exactly", () => {
   assertEqual(computeDocumentTotal([{ amount: 300 }, { amount: 99.99 }, { amount: 0.01 }]), 400);
